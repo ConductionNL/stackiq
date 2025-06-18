@@ -5,8 +5,11 @@ The style guide provides a general overview on styling decisicion made during th
 ## Icon Usage
 We use (material design icons)[https://pictogrammers.com/library/mdi/] in line with 
 
+APP -> https://pictogrammers.com/library/mdi/icon/code-block-tags/
 
-APP -> https://pictogrammers.com/library/mdi/icon/database-sync/
-Register -> https://pictogrammers.com/library/mdi/icon/database-outline/
-Schemas -> 
+Applicatie -> https://pictogrammers.com/library/mdi/icon/application-brackets-outline/
+Component -> https://pictogrammers.com/library/mdi/icon/application-cog/ 
+Repository ->  https://pictogrammers.com/library/mdi/icon/source-repository/
+Diensten -> https://pictogrammers.com/library/mdi/icon/face-agent/
+Installaitie -> https://pictogrammers.com/library/mdi/icon/download-network-outline/
 
