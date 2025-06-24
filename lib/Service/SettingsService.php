@@ -1,0 +1,379 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OCA\SoftwareCatalog\Service;
+
+use OCP\IAppConfig;
+use OCP\IRequest;
+use OCP\App\IAppManager;
+use Psr\Container\ContainerInterface;
+use OCP\AppFramework\Http\JSONResponse;
+use Psr\Log\LoggerInterface;
+use OC_App;
+
+/**
+ * Service for handling settings-related operations in the SoftwareCatalog.
+ *
+ * Provides functionality for retrieving, saving, and loading settings,
+ * as well as managing configuration for different object types.
+ *
+ * @category Service
+ * @package  OCA\SoftwareCatalog\Service
+ * @author   Conduction b.v. <info@conduction.nl>
+ * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @version  1.0.0
+ */
+class SettingsService
+{
+    /**
+     * The application name for identification and configuration purposes
+     *
+     * @var string The name of the app
+     */
+    private string $appName;
+
+    /**
+     * The unique identifier for the OpenRegister application
+     *
+     * @var string The ID of the OpenRegister app
+     */
+    private const OPENREGISTER_APP_ID = 'openregister';
+
+    /**
+     * The minimum version of the OpenRegister application required
+     *
+     * @var string The minimum required version of OpenRegister
+     */
+    private const MIN_OPENREGISTER_VERSION = '0.1.7';
+
+    /**
+     * SettingsService constructor
+     *
+     * @param IAppConfig         $config        App configuration interface
+     * @param IRequest           $request       Request interface
+     * @param ContainerInterface $container     Container for dependency injection
+     * @param IAppManager        $appManager    App manager interface
+     * @param LoggerInterface    $logger        Logger interface
+     */
+    public function __construct(
+        private readonly IAppConfig $config,
+        private readonly IRequest $request,
+        private readonly ContainerInterface $container,
+        private readonly IAppManager $appManager,
+        private readonly LoggerInterface $logger,
+    ) {
+        $this->appName = 'softwarecatalog';
+    }
+
+    /**
+     * Checks if OpenRegister is installed and meets version requirements
+     *
+     * @param string|null $minVersion Minimum required version
+     * @return bool True if OpenRegister is installed and meets version requirements
+     */
+    public function isOpenRegisterInstalled(?string $minVersion = self::MIN_OPENREGISTER_VERSION): bool
+    {
+        if (!$this->appManager->isInstalled(self::OPENREGISTER_APP_ID)) {
+            return false;
+        }
+
+        if ($minVersion === null) {
+            return true;
+        }
+
+        $currentVersion = $this->appManager->getAppVersion(self::OPENREGISTER_APP_ID);
+        return version_compare($currentVersion, $minVersion, '>=');
+    }
+
+    /**
+     * Checks if OpenRegister is enabled
+     *
+     * @return bool True if OpenRegister is enabled
+     */
+    public function isOpenRegisterEnabled(): bool
+    {
+        return $this->appManager->isEnabled(self::OPENREGISTER_APP_ID);
+    }
+
+    /**
+     * Attempts to retrieve the OpenRegister service from the container
+     *
+     * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available
+     * @throws \RuntimeException If the service is not available
+     */
+    public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps())) {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        }
+
+        throw new \RuntimeException('OpenRegister service is not available.');
+    }
+
+    /**
+     * Attempts to retrieve the Configuration service from the container
+     *
+     * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available
+     * @throws \RuntimeException If the service is not available
+     */
+    public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps())) {
+            return $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
+        }
+
+        throw new \RuntimeException('Configuration service is not available.');
+    }
+
+    /**
+     * Retrieve the current settings
+     *
+     * @return array The current settings configuration
+     * @throws \RuntimeException If settings retrieval fails
+     */
+    public function getSettings(): array
+    {
+        // Initialize the data array
+        $data = [];
+        $data['objectTypes'] = [
+            'organization',
+            'contact',
+            'gebruiker',
+        ];
+        $data['openRegisters'] = false;
+        $data['availableRegisters'] = [];
+
+        // Check if the OpenRegister service is available
+        try {
+            $openRegisters = $this->getObjectService();
+            if ($openRegisters !== null) {
+                $data['openRegisters'] = true;
+                $data['availableRegisters'] = $openRegisters->getRegisters();
+            }
+        } catch (\RuntimeException $e) {
+            // Service not available, continue with default values
+            $this->logger->info('OpenRegister service not available', [
+                'exception' => $e->getMessage()
+            ]);
+        }
+
+        // Build defaults array dynamically based on object types
+        $defaults = [];
+        foreach ($data['objectTypes'] as $type) {
+            // Always use openregister as source
+            $defaults["{$type}_source"] = 'openregister';
+            $defaults["{$type}_schema"] = '';
+            $defaults["{$type}_register"] = '';
+        }
+
+        // Get the current values for the object types from the configuration
+        try {
+            foreach ($defaults as $key => $defaultValue) {
+                $data['configuration'][$key] = $this->config->getValueString($this->appName, $key, $defaultValue);
+            }
+
+            return $data;
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to retrieve settings: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update the settings configuration
+     *
+     * @param array $data The settings data to update
+     * @return array The updated settings configuration
+     * @throws \RuntimeException If settings update fails
+     */
+    public function updateSettings(array $data): array
+    {
+        try {
+            // Update each setting in the configuration
+            foreach ($data as $key => $value) {
+                $this->config->setValueString($this->appName, $key, $value);
+                // Retrieve the updated value to confirm the change
+                $data[$key] = $this->config->getValueString($this->appName, $key);
+            }
+
+            $this->logger->info('Settings updated successfully', [
+                'updatedKeys' => array_keys($data)
+            ]);
+
+            return $data;
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to update settings: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Attempts to auto-configure registers and schemas
+     *
+     * @return array The updated configuration
+     * @throws \RuntimeException If auto-configuration fails
+     */
+    public function autoConfigure(): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            $registers = $objectService->getRegisters();
+
+            if (empty($registers)) {
+                return [];
+            }
+
+            $configuration = [];
+            foreach ($this->getSettings()['objectTypes'] as $type) {
+                // Try to find a register with a matching name
+                $matchingRegister = null;
+                foreach ($registers as $register) {
+                    if (stripos($register['title'], $type) !== false) {
+                        $matchingRegister = $register;
+                        break;
+                    }
+                }
+
+                if ($matchingRegister !== null) {
+                    $configuration["{$type}_register"] = $matchingRegister['id'];
+
+                    // Try to find a matching schema
+                    if (!empty($matchingRegister['schemas'])) {
+                        foreach ($matchingRegister['schemas'] as $schema) {
+                            if (stripos($schema['title'], $type) !== false) {
+                                $configuration["{$type}_schema"] = $schema['id'];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            $this->logger->info('Auto-configuration completed', [
+                'configuration' => $configuration
+            ]);
+
+            return $configuration;
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to auto-configure: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Gets the configured schema ID for a specific object type
+     *
+     * @param string $objectType The object type (organization, contact, gebruiker)
+     * @return int|null The schema ID or null if not configured
+     */
+    public function getSchemaIdForObjectType(string $objectType): ?int
+    {
+        $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
+        return $schemaId ? (int) $schemaId : null;
+    }
+
+    /**
+     * Gets the configured register ID for a specific object type
+     *
+     * @param string $objectType The object type (organization, contact, gebruiker)
+     * @return int|null The register ID or null if not configured
+     */
+    public function getRegisterIdForObjectType(string $objectType): ?int
+    {
+        $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
+        return $registerId ? (int) $registerId : null;
+    }
+
+    /**
+     * Checks if all required object types are configured
+     *
+     * @return bool True if all object types have schemas configured
+     */
+    public function isFullyConfigured(): bool
+    {
+        $objectTypes = ['organization', 'contact', 'gebruiker'];
+        
+        foreach ($objectTypes as $type) {
+            $schemaId = $this->getSchemaIdForObjectType($type);
+            if (!$schemaId) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Gets configuration status for each object type
+     *
+     * @return array Configuration status information
+     */
+    public function getConfigurationStatus(): array
+    {
+        $objectTypes = ['organization', 'contact', 'gebruiker'];
+        $status = [];
+        
+        foreach ($objectTypes as $type) {
+            $schemaId = $this->getSchemaIdForObjectType($type);
+            $registerId = $this->getRegisterIdForObjectType($type);
+            
+            $status[$type] = [
+                'configured' => !empty($schemaId) && !empty($registerId),
+                'schemaId' => $schemaId,
+                'registerId' => $registerId,
+            ];
+        }
+        
+        return $status;
+    }
+
+    /**
+     * Initializes the app with all required components
+     *
+     * @param string|null $minOpenRegisterVersion Minimum required OpenRegister version
+     * @return array The initialization results
+     */
+    public function initialize(?string $minOpenRegisterVersion = self::MIN_OPENREGISTER_VERSION): array
+    {
+        $results = [
+            'openRegister' => false,
+            'autoConfigured' => false,
+            'fullyConfigured' => false,
+            'errors' => [],
+        ];
+
+        try {
+            // Check if OpenRegister is installed and enabled
+            if (!$this->isOpenRegisterInstalled($minOpenRegisterVersion)) {
+                $results['errors'][] = 'OpenRegister is not installed or does not meet minimum version requirements';
+                return $results;
+            }
+
+            if (!$this->isOpenRegisterEnabled()) {
+                $results['errors'][] = 'OpenRegister is not enabled';
+                return $results;
+            }
+
+            $results['openRegister'] = true;
+
+            // Try auto-configuration if not already configured
+            if (!$this->isFullyConfigured()) {
+                try {
+                    $configuration = $this->autoConfigure();
+                    if (!empty($configuration)) {
+                        $this->updateSettings($configuration);
+                        $results['autoConfigured'] = true;
+                    }
+                } catch (\Exception $e) {
+                    $results['errors'][] = 'Auto-configuration failed: ' . $e->getMessage();
+                }
+            }
+
+            $results['fullyConfigured'] = $this->isFullyConfigured();
+
+        } catch (\Exception $e) {
+            $results['errors'][] = $e->getMessage();
+        }
+
+        return $results;
+    }
+} 

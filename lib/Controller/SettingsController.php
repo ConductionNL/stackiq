@@ -25,7 +25,8 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
-use OCA\OpenCatalogi\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\SettingsService;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for handling settings-related operations in the OpenCatalogi.
@@ -50,6 +51,7 @@ class SettingsController extends Controller
      * @param ContainerInterface $container       The container
      * @param IAppManager        $appManager      The app manager
      * @param SettingsService    $settingsService The settings service
+     * @param LoggerInterface    $logger          The logger instance
      */
     public function __construct(
         $appName,
@@ -58,6 +60,7 @@ class SettingsController extends Controller
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly SettingsService $settingsService,
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
 
@@ -72,7 +75,7 @@ class SettingsController extends Controller
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
+        if (in_array('openregister', $this->appManager->getInstalledApps())) {
             $this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
             return $this->objectService;
         }
@@ -91,7 +94,7 @@ class SettingsController extends Controller
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
         // Check if the 'openregister' app is installed.
-        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
+        if (in_array('openregister', $this->appManager->getInstalledApps())) {
             // Retrieve the ConfigurationService from the container.
             $configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
             return $configurationService;
@@ -117,6 +120,9 @@ class SettingsController extends Controller
             $data = $this->settingsService->getSettings();
             return new JSONResponse($data);
         } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve settings', [
+                'exception' => $e->getMessage()
+            ]);
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }
 
@@ -137,6 +143,10 @@ class SettingsController extends Controller
             $result = $this->settingsService->updateSettings($data);
             return new JSONResponse($result);
         } catch (\Exception $e) {
+            $this->logger->error('Failed to update settings', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }
 
@@ -161,5 +171,84 @@ class SettingsController extends Controller
 
     }//end load()
 
+
+    /**
+     * Initialize the SoftwareCatalog settings
+     *
+     * @return JSONResponse JSON response containing the initialization results
+     *
+     * @NoCSRFRequired
+     */
+    public function initialize(): JSONResponse
+    {
+        try {
+            $result = $this->settingsService->initialize();
+            return new JSONResponse($result);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to initialize settings', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    /**
+     * Get configuration status
+     *
+     * @return JSONResponse JSON response containing the configuration status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function status(): JSONResponse
+    {
+        try {
+            $status = $this->settingsService->getConfigurationStatus();
+            $isFullyConfigured = $this->settingsService->isFullyConfigured();
+            
+            return new JSONResponse([
+                'status' => $status,
+                'fullyConfigured' => $isFullyConfigured
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get configuration status', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    /**
+     * Auto-configure settings
+     *
+     * @return JSONResponse JSON response containing the auto-configuration results
+     *
+     * @NoCSRFRequired
+     */
+    public function autoConfigure(): JSONResponse
+    {
+        try {
+            $configuration = $this->settingsService->autoConfigure();
+            if (!empty($configuration)) {
+                $result = $this->settingsService->updateSettings($configuration);
+                return new JSONResponse([
+                    'success' => true,
+                    'configuration' => $result
+                ]);
+            } else {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'No matching registers or schemas found for auto-configuration'
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to auto-configure settings', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
 
 }//end class

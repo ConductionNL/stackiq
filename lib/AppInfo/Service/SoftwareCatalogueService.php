@@ -12,6 +12,7 @@ use React\EventLoop\Loop;
 use React\Promise\Deferred;
 use OCP\AppFramework\Db\DoesNotExistException;
 use function React\Promise\all;
+use OCA\SoftwareCatalog\Service\PhpEmailService;
 
 /**
  * Service for handling Software Catalogue operations.
@@ -52,11 +53,13 @@ class SoftwareCatalogueService
      * @param LoggerInterface $logger The logger instance
      * @param ObjectService $objectService The object service for accessing OpenRegister
      * @param SchemaMapper $schemaMapper The schema mapper for accessing OpenRegister
+     * @param PhpEmailService $emailService The email service for sending notifications
      */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ObjectService $objectService,
         private readonly SchemaMapper $schemaMapper,
+        private readonly PhpEmailService $emailService,
     ) {
     }
 
@@ -555,5 +558,299 @@ class SoftwareCatalogueService
     {
         // TODO: Implement contact deletion email logic
         $this->logger->info('Sending deletion email to contact', ['contact' => $contact]);
+    }
+
+    /**
+     * Sends a welcome email to a new organization
+     *
+     * @param ObjectEntity $organization The organization object
+     * @return void
+     * @throws \Exception If the email sending fails
+     */
+    public function sendOrganizationWelcomeEmail(ObjectEntity $organization): void
+    {
+        // Extract organization data from the object entity
+        $orgData = $organization->getObject();
+        
+        // Since organization is an array with name and email fields
+        $organizationArray = [
+            'name' => $orgData['name'] ?? 'Unknown Organization',
+            'email' => $orgData['email'] ?? null
+        ];
+        
+        if (!$organizationArray['email']) {
+            $this->logger->warning('Cannot send welcome email to organization without email', [
+                'organization' => $organizationArray
+            ]);
+            return;
+        }
+        
+        // Send welcome email using the EmailService
+        try {
+            $success = $this->emailService->sendOrganizationWelcomeEmail($organizationArray);
+            
+            if ($success) {
+                $this->logger->info('Organization welcome email sent successfully', [
+                    'organization' => $organizationArray['name'],
+                    'email' => $organizationArray['email']
+                ]);
+            } else {
+                $this->logger->error('Failed to send organization welcome email', [
+                    'organization' => $organizationArray
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Exception while sending organization welcome email', [
+                'organization' => $organizationArray,
+                'exception' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Creates a user for a contact if none exists already
+     *
+     * @param ObjectEntity $contact The contact object
+     * @return void
+     * @throws \Exception If the user creation fails
+     */
+    public function createUserForContactIfNotExists(ObjectEntity $contact): void
+    {
+        // Extract contact data
+        $contactData = $contact->getObject();
+        
+        // Since contact is an array with name and email fields
+        $contactArray = [
+            'name' => $contactData['name'] ?? 'Contact',
+            'email' => $contactData['email'] ?? null
+        ];
+        
+        if (!$contactArray['email']) {
+            $this->logger->warning('Cannot create user for contact without email', [
+                'contact' => $contactArray
+            ]);
+            return;
+        }
+        
+        // TODO: Check if user already exists in Nextcloud
+        // TODO: Create user if it doesn't exist
+        // For now, just log the action
+        $this->logger->info('Checking and creating user for contact if needed', [
+            'contact' => $contactArray
+        ]);
+        
+        // Send welcome email to the contact after user creation
+        try {
+            $success = $this->emailService->sendContactWelcomeEmail($contactArray);
+            
+            if ($success) {
+                $this->logger->info('Contact welcome email sent successfully', [
+                    'contact' => $contactArray['name'],
+                    'email' => $contactArray['email']
+                ]);
+            } else {
+                $this->logger->error('Failed to send contact welcome email', [
+                    'contact' => $contactArray
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Exception while sending contact welcome email', [
+                'contact' => $contactArray,
+                'exception' => $e->getMessage()
+            ]);
+            // Don't rethrow here as user creation succeeded
+        }
+    }
+
+    /**
+     * Handles a new gebruiker (user) in the software catalog
+     *
+     * @param ObjectEntity $gebruiker The gebruiker object
+     * @return void
+     * @throws \Exception If the operation fails
+     */
+    public function handleNewGebruiker(ObjectEntity $gebruiker): void
+    {
+        // Extract user data and create/update user account
+        $userData = $gebruiker->getObject();
+        $userEmail = $userData['email'] ?? null;
+        $userName = $userData['name'] ?? $userData['username'] ?? null;
+        
+        if ($userEmail && $userName) {
+            // TODO: Create or update user account in Nextcloud
+            $this->logger->info('Processing new gebruiker', [
+                'email' => $userEmail,
+                'name' => $userName,
+                'gebruiker' => $gebruiker
+            ]);
+        }
+    }
+
+    /**
+     * Sends a welcome email to a new gebruiker (user)
+     *
+     * @param ObjectEntity $gebruiker The gebruiker object
+     * @return void
+     * @throws \Exception If the email sending fails
+     */
+    public function sendGebruikerWelcomeEmail(ObjectEntity $gebruiker): void
+    {
+        // Extract user data from the object entity
+        $userData = $gebruiker->getObject();
+        
+        // Since gebruiker is an array with name and email fields
+        $gebruikerArray = [
+            'name' => $userData['name'] ?? $userData['username'] ?? 'User',
+            'email' => $userData['email'] ?? null
+        ];
+        
+        if (!$gebruikerArray['email']) {
+            $this->logger->warning('Cannot send welcome email to gebruiker without email', [
+                'gebruiker' => $gebruikerArray
+            ]);
+            return;
+        }
+        
+        // Send welcome email using the EmailService
+        try {
+            $success = $this->emailService->sendGebruikerWelcomeEmail($gebruikerArray);
+            
+            if ($success) {
+                $this->logger->info('Gebruiker welcome email sent successfully', [
+                    'gebruiker' => $gebruikerArray['name'],
+                    'email' => $gebruikerArray['email']
+                ]);
+            } else {
+                $this->logger->error('Failed to send gebruiker welcome email', [
+                    'gebruiker' => $gebruikerArray
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Exception while sending gebruiker welcome email', [
+                'gebruiker' => $gebruikerArray,
+                'exception' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Handles gebruiker (user) updates
+     *
+     * @param ObjectEntity $newGebruiker The updated gebruiker object
+     * @param ObjectEntity $oldGebruiker The previous gebruiker object
+     * @return void
+     * @throws \Exception If the operation fails
+     */
+    public function handleGebruikerUpdate(ObjectEntity $newGebruiker, ObjectEntity $oldGebruiker): void
+    {
+        // TODO: Compare old and new user data and update accordingly
+        $this->logger->info('Handling gebruiker update', [
+            'newGebruiker' => $newGebruiker,
+            'oldGebruiker' => $oldGebruiker
+        ]);
+    }
+
+    /**
+     * Blocks a user when their gebruiker object is deleted
+     *
+     * @param ObjectEntity $gebruiker The deleted gebruiker object
+     * @return void
+     * @throws \Exception If the user blocking fails
+     */
+    public function blockUserForGebruiker(ObjectEntity $gebruiker): void
+    {
+        // Extract user data
+        $userData = $gebruiker->getObject();
+        $userEmail = $userData['email'] ?? null;
+        $userName = $userData['name'] ?? $userData['username'] ?? null;
+        
+        if ($userEmail || $userName) {
+            // TODO: Block/disable user account in Nextcloud
+            $this->logger->info('Blocking user for deleted gebruiker', [
+                'email' => $userEmail,
+                'name' => $userName,
+                'gebruiker' => $gebruiker
+            ]);
+        }
+    }
+
+    /**
+     * Temporarily blocks a user when their gebruiker object is locked
+     *
+     * @param ObjectEntity $gebruiker The locked gebruiker object
+     * @return void
+     * @throws \Exception If the user blocking fails
+     */
+    public function temporarilyBlockUserForGebruiker(ObjectEntity $gebruiker): void
+    {
+        // Extract user data
+        $userData = $gebruiker->getObject();
+        $userEmail = $userData['email'] ?? null;
+        
+        if ($userEmail) {
+            // TODO: Temporarily disable user account in Nextcloud
+            $this->logger->info('Temporarily blocking user for locked gebruiker', [
+                'email' => $userEmail,
+                'gebruiker' => $gebruiker
+            ]);
+        }
+    }
+
+    /**
+     * Restores user access when their gebruiker object is unlocked
+     *
+     * @param ObjectEntity $gebruiker The unlocked gebruiker object
+     * @return void
+     * @throws \Exception If the user restoration fails
+     */
+    public function restoreUserAccessForGebruiker(ObjectEntity $gebruiker): void
+    {
+        // Extract user data
+        $userData = $gebruiker->getObject();
+        $userEmail = $userData['email'] ?? null;
+        
+        if ($userEmail) {
+            // TODO: Re-enable user account in Nextcloud
+            $this->logger->info('Restoring user access for unlocked gebruiker', [
+                'email' => $userEmail,
+                'gebruiker' => $gebruiker
+            ]);
+        }
+    }
+
+    /**
+     * Syncs user state with a reverted contact
+     *
+     * @param ObjectEntity $contact The reverted contact object
+     * @param \DateTime|string|null $revertPoint The point in time reverted to
+     * @return void
+     * @throws \Exception If the sync fails
+     */
+    public function syncUserWithRevertedContact(ObjectEntity $contact, $revertPoint = null): void
+    {
+        // TODO: Sync user account state with reverted contact data
+        $this->logger->info('Syncing user with reverted contact', [
+            'contact' => $contact,
+            'revertPoint' => $revertPoint
+        ]);
+    }
+
+    /**
+     * Updates user based on reverted gebruiker state
+     *
+     * @param ObjectEntity $gebruiker The reverted gebruiker object
+     * @param \DateTime|string|null $revertPoint The point in time reverted to
+     * @return void
+     * @throws \Exception If the update fails
+     */
+    public function updateUserFromRevertedGebruiker(ObjectEntity $gebruiker, $revertPoint = null): void
+    {
+        // TODO: Update user account based on reverted gebruiker data
+        $this->logger->info('Updating user from reverted gebruiker', [
+            'gebruiker' => $gebruiker,
+            'revertPoint' => $revertPoint
+        ]);
     }
 }
