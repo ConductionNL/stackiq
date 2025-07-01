@@ -140,6 +140,20 @@
 								:disabled="loading"
 								@change="validateConfiguration" />
 						</div>
+
+						<div class="object-type-section">
+							<div class="object-type-header">
+								<h5>Contactgegevens Schema</h5>
+								<span class="object-type-description">Schema for contact information in the Voorzieningen register</span>
+							</div>
+
+							<NcSelect
+								v-model="configuration.voorzieningen_contactgegevens.schema"
+								:options="availableSchemaOptions"
+								input-label="Contactgegevens Schema"
+								:disabled="loading"
+								@change="validateConfiguration" />
+						</div>
 					</div>
 
 					<!-- Generic Object Types (for backward compatibility) -->
@@ -182,6 +196,11 @@
 							<div class="status-item">
 								<span class="status-label">Organisatie:</span>
 								<span v-if="configuration.voorzieningen_organisatie?.schema" class="status-configured">✓ Configured</span>
+								<span v-else class="status-missing">⚠ Not configured</span>
+							</div>
+							<div class="status-item">
+								<span class="status-label">Contactgegevens:</span>
+								<span v-if="configuration.voorzieningen_contactgegevens?.schema" class="status-configured">✓ Configured</span>
 								<span v-else class="status-missing">⚠ Not configured</span>
 							</div>
 						</div>
@@ -348,6 +367,7 @@ export default defineComponent({
 			if (this.isRegisterType('voorzieningen')) {
 				return this.configuration.voorzieningen_gebruiker?.schema
 					|| this.configuration.voorzieningen_organisatie?.schema
+					|| this.configuration.voorzieningen_contactgegevens?.schema
 			}
 
 			// Check if at least one object type is configured (backward compatibility)
@@ -365,18 +385,8 @@ export default defineComponent({
 		 * @param {object} oldRegister - The previously selected register
 		 */
 		selectedRegister(newRegister, oldRegister) {
-			console.log('🔍 Register watcher triggered:', {
-				newRegister,
-				oldRegister,
-				hasChanged: newRegister !== oldRegister
-			})
-
-			// Only trigger if register actually changed and we have a new register
 			if (newRegister && newRegister !== oldRegister) {
-				console.log('✅ Calling handleRegisterChange()')
 				this.handleRegisterChange()
-			} else {
-				console.log('❌ Not calling handleRegisterChange - no valid change detected')
 			}
 		},
 	},
@@ -385,9 +395,7 @@ export default defineComponent({
 	 * Lifecycle hook that loads settings when component is created
 	 */
 	async created() {
-		console.log('🚀 SoftwareCatalogSettings component created - loading settings')
 		await this.loadSettings()
-		console.log('🎉 SoftwareCatalogSettings initialization complete')
 	},
 
 	methods: {
@@ -398,30 +406,23 @@ export default defineComponent({
 		 * @return {Promise<void>}
 		 */
 		async loadSettings() {
-			console.log('📡 loadSettings called - starting API request')
 			this.loading = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
-				console.log('📡 API response received:', response.status, response.statusText)
 
 				const data = await response.json()
-				console.log('📊 API data received:', data)
 
 				if (data.error) {
-					console.error('❌ API returned error:', data.error)
 					return
 				}
 
 				this.settings = data
-				console.log('✅ Settings updated:', this.settings)
 
 				this.initializeConfiguration()
 				this.autoSelectRegister()
 			} catch (error) {
-				console.error('💥 Failed to load settings:', error)
 			} finally {
 				this.loading = false
-				console.log('📡 loadSettings completed, loading:', this.loading)
 			}
 		},
 
@@ -442,6 +443,9 @@ export default defineComponent({
 				voorzieningen_organisatie: {
 					schema: null,
 				},
+				voorzieningen_contactgegevens: {
+					schema: null,
+				},
 			}
 
 			// Create empty configuration for each generic object type (backward compatibility)
@@ -458,7 +462,8 @@ export default defineComponent({
 			const configKeys = [
 				'amef_organization',
 				'voorzieningen_gebruiker',
-				'voorzieningen_organisatie'
+				'voorzieningen_organisatie',
+				'voorzieningen_contactgegevens'
 			]
 
 			configKeys.forEach(configKey => {
@@ -622,6 +627,22 @@ export default defineComponent({
 						},
 					}
 				}
+
+				const contactgegevensSchema = register.schemas.find(
+					schema => schema.title.toLowerCase().includes('contactgegevens')
+				)
+				if (contactgegevensSchema) {
+					this.configuration = {
+						...this.configuration,
+						voorzieningen_contactgegevens: {
+							...this.configuration.voorzieningen_contactgegevens,
+							schema: {
+								label: contactgegevensSchema.title,
+								value: contactgegevensSchema.id.toString(),
+							},
+						},
+					}
+				}
 			} else {
 				// Generic auto-selection for backward compatibility
 				this.settings.objectTypes.forEach(type => {
@@ -652,20 +673,15 @@ export default defineComponent({
 		 * @param {string} registerId - The ID of the selected register
 		 */
 		updateSchemaOptions(registerId) {
-			console.log('🔄 updateSchemaOptions called with registerId:', registerId)
-
 			const register = this.settings.availableRegisters.find(r => r.id.toString() === registerId)
-			console.log('🔍 Found register:', register)
 
 			if (register && Array.isArray(register.schemas)) {
 				this.schemaOptions = register.schemas.map(schema => ({
 					label: schema.title,
 					value: schema.id.toString(),
 				}))
-				console.log('📚 Updated schema options:', this.schemaOptions)
 			} else {
 				this.schemaOptions = []
-				console.log('❌ No schemas found, cleared schema options')
 			}
 		},
 
@@ -698,12 +714,7 @@ export default defineComponent({
 		 * Handles register change event
 		 */
 		handleRegisterChange() {
-			console.log('🔄 handleRegisterChange called with selectedRegister:', this.selectedRegister)
-
 			if (this.selectedRegister) {
-				console.log('📋 Updating schema options for register:', this.selectedRegister.value)
-
-				// Update schema options for the new register
 				this.updateSchemaOptions(this.selectedRegister.value)
 
 				// Clear ALL schema selections - both register-specific and generic
@@ -711,10 +722,9 @@ export default defineComponent({
 					'amef_organization',
 					'voorzieningen_gebruiker',
 					'voorzieningen_organisatie',
+					'voorzieningen_contactgegevens',
 					...this.settings.objectTypes
 				]
-
-				console.log('🗑️ Clearing schemas for keys:', allConfigKeys)
 
 				allConfigKeys.forEach(configKey => {
 					if (this.configuration[configKey]) {
@@ -728,23 +738,14 @@ export default defineComponent({
 					}
 				})
 
-				console.log('🎯 Configuration after clearing:', this.configuration)
-
 				// Auto-select matching schemas for the new register
 				const register = this.settings.availableRegisters.find(
 					r => r.id.toString() === this.selectedRegister.value,
 				)
 
-				console.log('🔍 Found register for auto-selection:', register)
-
 				if (register && Array.isArray(register.schemas)) {
-					console.log('📚 Register has schemas, calling autoSelectMatchingSchemas')
 					this.autoSelectMatchingSchemas(register)
-				} else {
-					console.log('❌ Register has no schemas or schemas is not an array')
 				}
-			} else {
-				console.log('❌ No selectedRegister available')
 			}
 		},
 
@@ -772,7 +773,8 @@ export default defineComponent({
 				const registerSpecificKeys = [
 					'amef_organization',
 					'voorzieningen_gebruiker',
-					'voorzieningen_organisatie'
+					'voorzieningen_organisatie',
+					'voorzieningen_contactgegevens'
 				]
 
 				registerSpecificKeys.forEach(configKey => {
@@ -820,12 +822,9 @@ export default defineComponent({
 
 				const result = await response.json()
 				if (result.error) {
-					console.error('Failed to save configuration:', result.error)
-				} else {
-					// Configuration saved successfully
+					// Configuration save failed, but we'll continue silently
 				}
 			} catch (error) {
-				console.error('Failed to save configuration:', error)
 			} finally {
 				this.saving = false
 			}
@@ -898,16 +897,12 @@ export default defineComponent({
 		 * @return {boolean} True if the register is of the specified type
 		 */
 		isRegisterType(type) {
-			console.log('🎯 isRegisterType called with type:', type, 'selectedRegister:', this.selectedRegister)
-
 			if (!this.selectedRegister) {
-				console.log('❌ No selectedRegister, returning false')
 				return false
 			}
 
 			const register = this.settings.availableRegisters.find(r => r.id.toString() === this.selectedRegister.value)
 			if (!register) {
-				console.log('❌ No register found for selectedRegister value, returning false')
 				return false
 			}
 
@@ -916,20 +911,12 @@ export default defineComponent({
 			const registerSlug = register.slug ? register.slug.toLowerCase() : ''
 			const typeCheck = type.toLowerCase()
 
-			console.log('🔍 Checking register type:', {
-				registerTitle,
-				registerSlug,
-				typeCheck,
-				register
-			})
-
 			// For exact matches or contains check
 			const result = registerTitle === typeCheck
 				|| registerSlug === typeCheck
 				|| registerTitle.includes(typeCheck)
 				|| registerSlug.includes(typeCheck)
 
-			console.log('✅ isRegisterType result:', result)
 			return result
 		},
 

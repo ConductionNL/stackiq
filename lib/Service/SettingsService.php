@@ -1,5 +1,16 @@
 <?php
 
+/**
+ * Service for handling settings-related operations in the SoftwareCatalog.
+ *
+ * @category Service
+ * @package  OCA\SoftwareCatalog\Service
+ * @author   Conduction b.v. <info@conduction.nl>
+ * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version  1.0.0
+ * @link     https://github.com/ConductionNL/SoftwareCatalog
+ */
+
 declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
@@ -22,8 +33,8 @@ use OC_App;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
  * @version  1.0.0
+ * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class SettingsService
 {
@@ -32,7 +43,7 @@ class SettingsService
      *
      * @var string The name of the app
      */
-    private string $appName;
+    private string $_appName;
 
     /**
      * The unique identifier for the OpenRegister application
@@ -51,11 +62,11 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig         $config        App configuration interface
-     * @param IRequest           $request       Request interface
-     * @param ContainerInterface $container     Container for dependency injection
-     * @param IAppManager        $appManager    App manager interface
-     * @param LoggerInterface    $logger        Logger interface
+     * @param IAppConfig         $config     App configuration interface
+     * @param IRequest           $request    Request interface
+     * @param ContainerInterface $container  Container for dependency injection
+     * @param IAppManager        $appManager App manager interface
+     * @param LoggerInterface    $logger     Logger interface
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -64,13 +75,14 @@ class SettingsService
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
     ) {
-        $this->appName = 'softwarecatalog';
+        $this->_appName = 'softwarecatalog';
     }
 
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
      * @param string|null $minVersion Minimum required version
+     *
      * @return bool True if OpenRegister is installed and meets version requirements
      */
     public function isOpenRegisterInstalled(?string $minVersion = self::MIN_OPENREGISTER_VERSION): bool
@@ -101,6 +113,7 @@ class SettingsService
      * Attempts to retrieve the OpenRegister service from the container
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available
+     *
      * @throws \RuntimeException If the service is not available
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
@@ -116,6 +129,7 @@ class SettingsService
      * Attempts to retrieve the Configuration service from the container
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available
+     *
      * @throws \RuntimeException If the service is not available
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
@@ -131,6 +145,7 @@ class SettingsService
      * Retrieve the current settings
      *
      * @return array The current settings configuration
+     *
      * @throws \RuntimeException If settings retrieval fails
      */
     public function getSettings(): array
@@ -148,7 +163,7 @@ class SettingsService
             'voorzieningen' => [
                 'name' => 'Voorzieningen', 
                 'description' => 'Voorzieningen register for software catalog services',
-                'objectTypes' => ['gebruiker', 'organisatie'] // Voorzieningen uses gebruiker and organisatie schemas
+                'objectTypes' => ['gebruiker', 'organisatie', 'contactgegevens'] // Voorzieningen uses gebruiker, organisatie, and contactgegevens schemas
             ]
         ];
         
@@ -171,9 +186,12 @@ class SettingsService
             }
         } catch (\RuntimeException $e) {
             // Service not available, continue with default values
-            $this->logger->info('OpenRegister service not available', [
-                'exception' => $e->getMessage()
-            ]);
+            $this->logger->info(
+                'OpenRegister service not available',
+                [
+                    'exception' => $e->getMessage()
+                ]
+            );
         }
 
         // Build defaults array dynamically based on register types and their object types
@@ -197,7 +215,7 @@ class SettingsService
         // Get the current values from the configuration
         try {
             foreach ($defaults as $key => $defaultValue) {
-                $data['configuration'][$key] = $this->config->getValueString($this->appName, $key, $defaultValue);
+                $data['configuration'][$key] = $this->config->getValueString($this->_appName, $key, $defaultValue);
             }
 
             return $data;
@@ -210,7 +228,9 @@ class SettingsService
      * Update the settings configuration
      *
      * @param array $data The settings data to update
+     *
      * @return array The updated settings configuration
+     *
      * @throws \RuntimeException If settings update fails
      */
     public function updateSettings(array $data): array
@@ -218,14 +238,17 @@ class SettingsService
         try {
             // Update each setting in the configuration
             foreach ($data as $key => $value) {
-                $this->config->setValueString($this->appName, $key, $value);
+                $this->config->setValueString($this->_appName, $key, $value);
                 // Retrieve the updated value to confirm the change
-                $data[$key] = $this->config->getValueString($this->appName, $key);
+                $data[$key] = $this->config->getValueString($this->_appName, $key);
             }
 
-            $this->logger->info('Settings updated successfully', [
-                'updatedKeys' => array_keys($data)
-            ]);
+            $this->logger->info(
+                'Settings updated successfully',
+                [
+                    'updatedKeys' => array_keys($data)
+                ]
+            );
 
             return $data;
         } catch (\Exception $e) {
@@ -237,6 +260,7 @@ class SettingsService
      * Attempts to auto-configure registers and schemas
      *
      * @return array The updated configuration
+     *
      * @throws \RuntimeException If auto-configuration fails
      */
     public function autoConfigure(): array
@@ -275,9 +299,12 @@ class SettingsService
                 }
             }
 
-            $this->logger->info('Auto-configuration completed', [
-                'configuration' => $configuration
-            ]);
+            $this->logger->info(
+                'Auto-configuration completed',
+                [
+                    'configuration' => $configuration
+                ]
+            );
 
             return $configuration;
         } catch (\Exception $e) {
@@ -288,12 +315,45 @@ class SettingsService
     /**
      * Gets the configured schema ID for a specific object type
      *
-     * @param string $objectType The object type (organization, contact, gebruiker)
+     * @param string $objectType The object type (organization, contact, gebruiker, contactgegevens)
+     *
      * @return int|null The schema ID or null if not configured
      */
     public function getSchemaIdForObjectType(string $objectType): ?int
     {
-        $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
+        // First try register-specific configuration
+        // Check for AMEF register specific schemas
+        if ($objectType === 'organization') {
+            $schemaId = $this->config->getValueString($this->_appName, 'amef_organization_schema', '');
+            if (!empty($schemaId)) {
+                return (int) $schemaId;
+            }
+        }
+        
+        // Check for Voorzieningen register specific schemas
+        if ($objectType === 'gebruiker') {
+            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_gebruiker_schema', '');
+            if (!empty($schemaId)) {
+                return (int) $schemaId;
+            }
+        }
+        
+        if ($objectType === 'organisatie') {
+            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+            if (!empty($schemaId)) {
+                return (int) $schemaId;
+            }
+        }
+        
+        if ($objectType === 'contactgegevens') {
+            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_schema', '');
+            if (!empty($schemaId)) {
+                return (int) $schemaId;
+            }
+        }
+        
+        // Fall back to generic configuration for backward compatibility
+        $schemaId = $this->config->getValueString($this->_appName, "{$objectType}_schema", '');
         return $schemaId ? (int) $schemaId : null;
     }
 
@@ -301,11 +361,12 @@ class SettingsService
      * Gets the configured register ID for a specific object type
      *
      * @param string $objectType The object type (organization, contact, gebruiker)
+     *
      * @return int|null The register ID or null if not configured
      */
     public function getRegisterIdForObjectType(string $objectType): ?int
     {
-        $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
+        $registerId = $this->config->getValueString($this->_appName, "{$objectType}_register", '');
         return $registerId ? (int) $registerId : null;
     }
 
@@ -356,6 +417,7 @@ class SettingsService
      * Initializes the app with all required components
      *
      * @param string|null $minOpenRegisterVersion Minimum required OpenRegister version
+     *
      * @return array The initialization results
      */
     public function initialize(?string $minOpenRegisterVersion = self::MIN_OPENREGISTER_VERSION): array
@@ -407,6 +469,7 @@ class SettingsService
      * Load settings from register configuration files
      *
      * @return array The loaded settings configuration
+     *
      * @throws \RuntimeException If settings loading fails
      */
     public function loadSettings(): array
