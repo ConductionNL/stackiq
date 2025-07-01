@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import AdminSettings from './views/settings/Settings.vue'
+import AdminSettings from './views/settings/SoftwareCatalogSettings.vue'
 
 Vue.mixin({ methods: { t, n } })
 

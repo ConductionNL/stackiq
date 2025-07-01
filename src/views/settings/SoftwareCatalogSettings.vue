@@ -86,29 +86,113 @@
 				<!-- Object Type Schema Configuration -->
 				<div v-if="selectedRegister && hasSchemas" class="schema-configuration">
 					<h3>Schema Configuration</h3>
-					<p>Select which schema to use for each object type</p>
+					<p>Configure schemas for each register type</p>
 
-					<div v-for="objectType in settings.objectTypes" :key="objectType" class="object-type-section">
-						<div class="object-type-header">
-							<h4>{{ formatTitle(objectType) }}</h4>
-							<span class="object-type-description">{{ getObjectTypeDescription(objectType) }}</span>
+					<!-- AMEF Register Configuration -->
+					<div v-if="isRegisterType('amef')" class="register-type-section">
+						<h4>AMEF Register Configuration</h4>
+						<p>Configure schemas for AMEF architectural elements</p>
+
+						<div class="object-type-section">
+							<div class="object-type-header">
+								<h5>Organization Schema</h5>
+								<span class="object-type-description">Schema for organizations in the AMEF register</span>
+							</div>
+
+							<NcSelect
+								v-model="configuration.amef_organization.schema"
+								:options="availableSchemaOptions"
+								input-label="Organization Schema"
+								:disabled="loading"
+								@change="validateConfiguration" />
+						</div>
+					</div>
+
+					<!-- Voorzieningen Register Configuration -->
+					<div v-if="isRegisterType('voorzieningen')" class="register-type-section">
+						<h4>Voorzieningen Register Configuration</h4>
+						<p>Configure schemas for software catalog services</p>
+
+						<div class="object-type-section">
+							<div class="object-type-header">
+								<h5>Gebruiker Schema</h5>
+								<span class="object-type-description">Schema for users in the Voorzieningen register</span>
+							</div>
+
+							<NcSelect
+								v-model="configuration.voorzieningen_gebruiker.schema"
+								:options="availableSchemaOptions"
+								input-label="Gebruiker Schema"
+								:disabled="loading"
+								@change="validateConfiguration" />
 						</div>
 
-						<NcSelect
-							v-model="configuration[objectType].schema"
-							:options="availableSchemaOptions"
-							input-label="Schema"
-							:disabled="loading"
-							@change="validateConfiguration" />
+						<div class="object-type-section">
+							<div class="object-type-header">
+								<h5>Organisatie Schema</h5>
+								<span class="object-type-description">Schema for organizations in the Voorzieningen register</span>
+							</div>
+
+							<NcSelect
+								v-model="configuration.voorzieningen_organisatie.schema"
+								:options="availableSchemaOptions"
+								input-label="Organisatie Schema"
+								:disabled="loading"
+								@change="validateConfiguration" />
+						</div>
+					</div>
+
+					<!-- Generic Object Types (for backward compatibility) -->
+					<div v-if="!isSpecificRegister()" class="register-type-section">
+						<h4>Generic Configuration</h4>
+						<div v-for="objectType in settings.objectTypes" :key="objectType" class="object-type-section">
+							<div class="object-type-header">
+								<h5>{{ formatTitle(objectType) }}</h5>
+								<span class="object-type-description">{{ getObjectTypeDescription(objectType) }}</span>
+							</div>
+
+							<NcSelect
+								v-model="configuration[objectType].schema"
+								:options="availableSchemaOptions"
+								input-label="Schema"
+								:disabled="loading"
+								@change="validateConfiguration" />
+						</div>
 					</div>
 
 					<!-- Configuration Status -->
 					<div class="configuration-status">
 						<h4>Configuration Status</h4>
-						<div v-for="objectType in settings.objectTypes" :key="objectType" class="status-item">
-							<span class="status-label">{{ formatTitle(objectType) }}:</span>
-							<span v-if="configuration[objectType].schema" class="status-configured">✓ Configured</span>
-							<span v-else class="status-missing">⚠ Not configured</span>
+						<div v-if="isRegisterType('amef')" class="status-group">
+							<h5>AMEF Register</h5>
+							<div class="status-item">
+								<span class="status-label">Organization:</span>
+								<span v-if="configuration.amef_organization?.schema" class="status-configured">✓ Configured</span>
+								<span v-else class="status-missing">⚠ Not configured</span>
+							</div>
+						</div>
+
+						<div v-if="isRegisterType('voorzieningen')" class="status-group">
+							<h5>Voorzieningen Register</h5>
+							<div class="status-item">
+								<span class="status-label">Gebruiker:</span>
+								<span v-if="configuration.voorzieningen_gebruiker?.schema" class="status-configured">✓ Configured</span>
+								<span v-else class="status-missing">⚠ Not configured</span>
+							</div>
+							<div class="status-item">
+								<span class="status-label">Organisatie:</span>
+								<span v-if="configuration.voorzieningen_organisatie?.schema" class="status-configured">✓ Configured</span>
+								<span v-else class="status-missing">⚠ Not configured</span>
+							</div>
+						</div>
+
+						<div v-if="!isSpecificRegister()" class="status-group">
+							<h5>Generic Configuration</h5>
+							<div v-for="objectType in settings.objectTypes" :key="objectType" class="status-item">
+								<span class="status-label">{{ formatTitle(objectType) }}:</span>
+								<span v-if="configuration[objectType]?.schema" class="status-configured">✓ Configured</span>
+								<span v-else class="status-missing">⚠ Not configured</span>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -256,10 +340,44 @@ export default defineComponent({
 		canSave() {
 			if (!this.selectedRegister || !this.hasSchemas) return false
 
-			// Check if at least one object type is configured
-			return this.settings.objectTypes.some(type => 
+			// Check if at least one schema is configured based on register type
+			if (this.isRegisterType('amef')) {
+				return this.configuration.amef_organization?.schema
+			}
+
+			if (this.isRegisterType('voorzieningen')) {
+				return this.configuration.voorzieningen_gebruiker?.schema
+					|| this.configuration.voorzieningen_organisatie?.schema
+			}
+
+			// Check if at least one object type is configured (backward compatibility)
+			return this.settings.objectTypes.some(type =>
 				this.configuration[type] && this.configuration[type].schema
 			)
+		},
+	},
+
+	watch: {
+		/**
+		 * Watch for changes to the selected register
+		 *
+		 * @param {object} newRegister - The newly selected register
+		 * @param {object} oldRegister - The previously selected register
+		 */
+		selectedRegister(newRegister, oldRegister) {
+			console.log('🔍 Register watcher triggered:', {
+				newRegister,
+				oldRegister,
+				hasChanged: newRegister !== oldRegister
+			})
+
+			// Only trigger if register actually changed and we have a new register
+			if (newRegister && newRegister !== oldRegister) {
+				console.log('✅ Calling handleRegisterChange()')
+				this.handleRegisterChange()
+			} else {
+				console.log('❌ Not calling handleRegisterChange - no valid change detected')
+			}
 		},
 	},
 
@@ -267,7 +385,9 @@ export default defineComponent({
 	 * Lifecycle hook that loads settings when component is created
 	 */
 	async created() {
+		console.log('🚀 SoftwareCatalogSettings component created - loading settings')
 		await this.loadSettings()
+		console.log('🎉 SoftwareCatalogSettings initialization complete')
 	},
 
 	methods: {
@@ -278,23 +398,30 @@ export default defineComponent({
 		 * @return {Promise<void>}
 		 */
 		async loadSettings() {
+			console.log('📡 loadSettings called - starting API request')
 			this.loading = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				console.log('📡 API response received:', response.status, response.statusText)
+
 				const data = await response.json()
-				
+				console.log('📊 API data received:', data)
+
 				if (data.error) {
-					console.error('Failed to load settings:', data.error)
+					console.error('❌ API returned error:', data.error)
 					return
 				}
 
 				this.settings = data
+				console.log('✅ Settings updated:', this.settings)
+
 				this.initializeConfiguration()
 				this.autoSelectRegister()
 			} catch (error) {
-				console.error('Failed to load settings:', error)
+				console.error('💥 Failed to load settings:', error)
 			} finally {
 				this.loading = false
+				console.log('📡 loadSettings completed, loading:', this.loading)
 			}
 		},
 
@@ -302,17 +429,81 @@ export default defineComponent({
 		 * Initializes the configuration object based on existing settings
 		 */
 		initializeConfiguration() {
-			// Create empty configuration for each object type
-			this.settings.objectTypes.forEach(type => {
-				const registerId = this.settings.configuration[`${type}_register`] || ''
-				const schemaId = this.settings.configuration[`${type}_schema`] || ''
+			// Initialize register-specific configuration
+			this.configuration = {
+				// AMEF register configuration
+				amef_organization: {
+					schema: null,
+				},
+				// Voorzieningen register configuration
+				voorzieningen_gebruiker: {
+					schema: null,
+				},
+				voorzieningen_organisatie: {
+					schema: null,
+				},
+			}
 
+			// Create empty configuration for each generic object type (backward compatibility)
+			this.settings.objectTypes.forEach(type => {
 				this.configuration = {
 					...this.configuration,
 					[type]: {
 						schema: null,
 					},
 				}
+			})
+
+			// Handle existing configuration for register-specific schemas
+			const configKeys = [
+				'amef_organization',
+				'voorzieningen_gebruiker',
+				'voorzieningen_organisatie'
+			]
+
+			configKeys.forEach(configKey => {
+				const registerId = this.settings.configuration[`${configKey}_register`] || ''
+				const schemaId = this.settings.configuration[`${configKey}_schema`] || ''
+
+				// If we have existing configuration, use it to set the selected register
+				if (registerId && !this.selectedRegister) {
+					const register = this.settings.availableRegisters.find(r => r.id.toString() === registerId)
+					if (register) {
+						this.selectedRegister = {
+							label: register.title,
+							value: register.id.toString(),
+						}
+						this.updateSchemaOptions(register.id.toString())
+					}
+				}
+
+				// If we have a schema configured, set it
+				if (schemaId && this.selectedRegister) {
+					const register = this.settings.availableRegisters.find(
+						r => r.id.toString() === this.selectedRegister.value,
+					)
+					if (register && Array.isArray(register.schemas)) {
+						const schema = register.schemas.find(s => s.id.toString() === schemaId)
+						if (schema) {
+							this.configuration = {
+								...this.configuration,
+								[configKey]: {
+									...this.configuration[configKey],
+									schema: {
+										label: schema.title,
+										value: schema.id.toString(),
+									},
+								},
+							}
+						}
+					}
+				}
+			})
+
+			// Handle backward compatibility for generic object types
+			this.settings.objectTypes.forEach(type => {
+				const registerId = this.settings.configuration[`${type}_register`] || ''
+				const schemaId = this.settings.configuration[`${type}_schema`] || ''
 
 				// If we have existing configuration, use it to set the selected register
 				if (registerId && !this.selectedRegister) {
@@ -380,25 +571,79 @@ export default defineComponent({
 				return
 			}
 
-			this.settings.objectTypes.forEach(type => {
-				// Look for a schema with the same name as the object type
-				const matchingSchema = register.schemas.find(
-					schema => schema.title.toLowerCase().includes(type.toLowerCase()),
+			// Handle register-specific auto-selection
+			if (this.isRegisterType('amef')) {
+				// For AMEF register, look for organization schema
+				const orgSchema = register.schemas.find(
+					schema => schema.title.toLowerCase().includes('organization')
 				)
-
-				if (matchingSchema) {
+				if (orgSchema) {
 					this.configuration = {
 						...this.configuration,
-						[type]: {
-							...this.configuration[type],
+						amef_organization: {
+							...this.configuration.amef_organization,
 							schema: {
-								label: matchingSchema.title,
-								value: matchingSchema.id.toString(),
+								label: orgSchema.title,
+								value: orgSchema.id.toString(),
 							},
 						},
 					}
 				}
-			})
+			} else if (this.isRegisterType('voorzieningen')) {
+				// For Voorzieningen register, look for gebruiker and organisatie schemas
+				const gebruikerSchema = register.schemas.find(
+					schema => schema.title.toLowerCase().includes('gebruiker')
+				)
+				if (gebruikerSchema) {
+					this.configuration = {
+						...this.configuration,
+						voorzieningen_gebruiker: {
+							...this.configuration.voorzieningen_gebruiker,
+							schema: {
+								label: gebruikerSchema.title,
+								value: gebruikerSchema.id.toString(),
+							},
+						},
+					}
+				}
+
+				const organisatieSchema = register.schemas.find(
+					schema => schema.title.toLowerCase().includes('organisatie')
+				)
+				if (organisatieSchema) {
+					this.configuration = {
+						...this.configuration,
+						voorzieningen_organisatie: {
+							...this.configuration.voorzieningen_organisatie,
+							schema: {
+								label: organisatieSchema.title,
+								value: organisatieSchema.id.toString(),
+							},
+						},
+					}
+				}
+			} else {
+				// Generic auto-selection for backward compatibility
+				this.settings.objectTypes.forEach(type => {
+					// Look for a schema with the same name as the object type
+					const matchingSchema = register.schemas.find(
+						schema => schema.title.toLowerCase().includes(type.toLowerCase()),
+					)
+
+					if (matchingSchema) {
+						this.configuration = {
+							...this.configuration,
+							[type]: {
+								...this.configuration[type],
+								schema: {
+									label: matchingSchema.title,
+									value: matchingSchema.id.toString(),
+								},
+							},
+						}
+					}
+				})
+			}
 		},
 
 		/**
@@ -407,14 +652,20 @@ export default defineComponent({
 		 * @param {string} registerId - The ID of the selected register
 		 */
 		updateSchemaOptions(registerId) {
+			console.log('🔄 updateSchemaOptions called with registerId:', registerId)
+
 			const register = this.settings.availableRegisters.find(r => r.id.toString() === registerId)
+			console.log('🔍 Found register:', register)
+
 			if (register && Array.isArray(register.schemas)) {
 				this.schemaOptions = register.schemas.map(schema => ({
 					label: schema.title,
 					value: schema.id.toString(),
 				}))
+				console.log('📚 Updated schema options:', this.schemaOptions)
 			} else {
 				this.schemaOptions = []
+				console.log('❌ No schemas found, cleared schema options')
 			}
 		},
 
@@ -447,28 +698,53 @@ export default defineComponent({
 		 * Handles register change event
 		 */
 		handleRegisterChange() {
+			console.log('🔄 handleRegisterChange called with selectedRegister:', this.selectedRegister)
+
 			if (this.selectedRegister) {
+				console.log('📋 Updating schema options for register:', this.selectedRegister.value)
+
 				// Update schema options for the new register
 				this.updateSchemaOptions(this.selectedRegister.value)
 
-				// Reset all schema selections
-				this.settings.objectTypes.forEach(type => {
-					this.configuration = {
-						...this.configuration,
-						[type]: {
-							...this.configuration[type],
-							schema: null,
-						},
+				// Clear ALL schema selections - both register-specific and generic
+				const allConfigKeys = [
+					'amef_organization',
+					'voorzieningen_gebruiker',
+					'voorzieningen_organisatie',
+					...this.settings.objectTypes
+				]
+
+				console.log('🗑️ Clearing schemas for keys:', allConfigKeys)
+
+				allConfigKeys.forEach(configKey => {
+					if (this.configuration[configKey]) {
+						this.configuration = {
+							...this.configuration,
+							[configKey]: {
+								...this.configuration[configKey],
+								schema: null,
+							},
+						}
 					}
 				})
 
-				// Auto-select matching schemas
+				console.log('🎯 Configuration after clearing:', this.configuration)
+
+				// Auto-select matching schemas for the new register
 				const register = this.settings.availableRegisters.find(
 					r => r.id.toString() === this.selectedRegister.value,
 				)
+
+				console.log('🔍 Found register for auto-selection:', register)
+
 				if (register && Array.isArray(register.schemas)) {
+					console.log('📚 Register has schemas, calling autoSelectMatchingSchemas')
 					this.autoSelectMatchingSchemas(register)
+				} else {
+					console.log('❌ Register has no schemas or schemas is not an array')
 				}
+			} else {
+				console.log('❌ No selectedRegister available')
 			}
 		},
 
@@ -477,7 +753,6 @@ export default defineComponent({
 		 */
 		validateConfiguration() {
 			// This method can be expanded to add validation logic
-			console.log('Configuration validated')
 		},
 
 		/**
@@ -493,16 +768,45 @@ export default defineComponent({
 			try {
 				const configToSave = {}
 
-				// Set all object types to use openregister as source
+				// Save register-specific configuration
+				const registerSpecificKeys = [
+					'amef_organization',
+					'voorzieningen_gebruiker',
+					'voorzieningen_organisatie'
+				]
+
+				registerSpecificKeys.forEach(configKey => {
+					const config = this.configuration[configKey]
+					if (config) {
+						// Always use openregister as source
+						configToSave[`${configKey}_source`] = 'openregister'
+
+						// Set the register ID
+						configToSave[`${configKey}_register`] = this.selectedRegister.value
+
+						// Set the schema ID if selected
+						configToSave[`${configKey}_schema`] = config.schema ? config.schema.value : ''
+					}
+				})
+
+				// Save generic object types configuration (backward compatibility)
 				Object.entries(this.configuration).forEach(([type, config]) => {
-					// Always use openregister as source
-					configToSave[`${type}_source`] = 'openregister'
+					// Skip register-specific configs as they're handled above
+					if (registerSpecificKeys.includes(type)) {
+						return
+					}
 
-					// Set the register ID for all object types
-					configToSave[`${type}_register`] = this.selectedRegister.value
+					// Only process generic object types
+					if (this.settings.objectTypes.includes(type)) {
+						// Always use openregister as source
+						configToSave[`${type}_source`] = 'openregister'
 
-					// Set the schema ID if selected
-					configToSave[`${type}_schema`] = config.schema ? config.schema.value : ''
+						// Set the register ID for all object types
+						configToSave[`${type}_register`] = this.selectedRegister.value
+
+						// Set the schema ID if selected
+						configToSave[`${type}_schema`] = config.schema ? config.schema.value : ''
+					}
 				})
 
 				// Send configuration to backend
@@ -518,7 +822,7 @@ export default defineComponent({
 				if (result.error) {
 					console.error('Failed to save configuration:', result.error)
 				} else {
-					console.log('Configuration saved successfully')
+					// Configuration saved successfully
 				}
 			} catch (error) {
 				console.error('Failed to save configuration:', error)
@@ -585,6 +889,57 @@ export default defineComponent({
 			} finally {
 				this.autoConfiguring = false
 			}
+		},
+
+		/**
+		 * Checks if a register is of a specific type
+		 *
+		 * @param {string} type - The type of the register
+		 * @return {boolean} True if the register is of the specified type
+		 */
+		isRegisterType(type) {
+			console.log('🎯 isRegisterType called with type:', type, 'selectedRegister:', this.selectedRegister)
+
+			if (!this.selectedRegister) {
+				console.log('❌ No selectedRegister, returning false')
+				return false
+			}
+
+			const register = this.settings.availableRegisters.find(r => r.id.toString() === this.selectedRegister.value)
+			if (!register) {
+				console.log('❌ No register found for selectedRegister value, returning false')
+				return false
+			}
+
+			// Check register name or slug to determine type
+			const registerTitle = register.title ? register.title.toLowerCase() : ''
+			const registerSlug = register.slug ? register.slug.toLowerCase() : ''
+			const typeCheck = type.toLowerCase()
+
+			console.log('🔍 Checking register type:', {
+				registerTitle,
+				registerSlug,
+				typeCheck,
+				register
+			})
+
+			// For exact matches or contains check
+			const result = registerTitle === typeCheck
+				|| registerSlug === typeCheck
+				|| registerTitle.includes(typeCheck)
+				|| registerSlug.includes(typeCheck)
+
+			console.log('✅ isRegisterType result:', result)
+			return result
+		},
+
+		/**
+		 * Checks if the selected register is a specific register (amef or voorzieningen)
+		 *
+		 * @return {boolean} True if the register is a specific register type
+		 */
+		isSpecificRegister() {
+			return this.isRegisterType('amef') || this.isRegisterType('voorzieningen')
 		},
 	},
 })
@@ -668,4 +1023,16 @@ export default defineComponent({
 	justify-content: center;
 	margin: 2rem 0;
 }
-</style> 
+
+.register-type-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.status-group {
+	margin-bottom: 1rem;
+}
+</style>

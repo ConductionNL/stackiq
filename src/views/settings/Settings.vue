@@ -84,7 +84,6 @@ import {
 	NcLoadingIcon,
 } from '@nextcloud/vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
-import Download from 'vue-material-design-icons/Download.vue'
 
 /**
  * @class Settings
@@ -108,7 +107,6 @@ export default defineComponent({
 		NcButton,
 		NcLoadingIcon,
 		Save,
-		Download,
 	},
 
 	/**
@@ -191,7 +189,7 @@ export default defineComponent({
 		 */
 		async loadSettings() {
 			try {
-				const response = await fetch('/index.php/apps/opencatalogi/api/settings')
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
 				const data = await response.json()
 				this.settings = data
 
@@ -411,7 +409,7 @@ export default defineComponent({
 				})
 
 				// Send configuration to backend
-				await fetch('/index.php/apps/opencatalogi/api/settings', {
+				await fetch('/index.php/apps/softwarecatalog/api/settings', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -436,7 +434,7 @@ export default defineComponent({
 			this.configurationResults = null
 
 			try {
-				const response = await fetch('/index.php/apps/opencatalogi/api/settings/load')
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/load')
 				const data = await response.json()
 
 				if (data.error) {

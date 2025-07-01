@@ -137,11 +137,28 @@ class SettingsService
     {
         // Initialize the data array
         $data = [];
+        
+        // Define the register-specific configuration
+        $data['registerTypes'] = [
+            'amef' => [
+                'name' => 'AMEF',
+                'description' => 'AMEF register for architectural elements',
+                'objectTypes' => ['organization'] // AMEF uses organization schema
+            ],
+            'voorzieningen' => [
+                'name' => 'Voorzieningen', 
+                'description' => 'Voorzieningen register for software catalog services',
+                'objectTypes' => ['gebruiker', 'organisatie'] // Voorzieningen uses gebruiker and organisatie schemas
+            ]
+        ];
+        
+        // For backward compatibility, keep the original object types structure
         $data['objectTypes'] = [
             'organization',
-            'contact',
+            'contact', 
             'gebruiker',
         ];
+        
         $data['openRegisters'] = false;
         $data['availableRegisters'] = [];
 
@@ -159,16 +176,25 @@ class SettingsService
             ]);
         }
 
-        // Build defaults array dynamically based on object types
+        // Build defaults array dynamically based on register types and their object types
         $defaults = [];
+        foreach ($data['registerTypes'] as $registerType => $config) {
+            foreach ($config['objectTypes'] as $objectType) {
+                // Always use openregister as source
+                $defaults["{$registerType}_{$objectType}_source"] = 'openregister';
+                $defaults["{$registerType}_{$objectType}_schema"] = '';
+                $defaults["{$registerType}_{$objectType}_register"] = '';
+            }
+        }
+        
+        // Also maintain backward compatibility for the old structure
         foreach ($data['objectTypes'] as $type) {
-            // Always use openregister as source
             $defaults["{$type}_source"] = 'openregister';
             $defaults["{$type}_schema"] = '';
             $defaults["{$type}_register"] = '';
         }
 
-        // Get the current values for the object types from the configuration
+        // Get the current values from the configuration
         try {
             foreach ($defaults as $key => $defaultValue) {
                 $data['configuration'][$key] = $this->config->getValueString($this->appName, $key, $defaultValue);
@@ -375,5 +401,67 @@ class SettingsService
         }
 
         return $results;
+    }
+
+    /**
+     * Load settings from register configuration files
+     *
+     * @return array The loaded settings configuration
+     * @throws \RuntimeException If settings loading fails
+     */
+    public function loadSettings(): array
+    {
+        $results = [];
+        
+        try {
+            // Load settings from voorzieningen_register.json
+            $voorzieningenPath = __DIR__ . '/../Settings/voorzieningen_register.json';
+            if (file_exists($voorzieningenPath)) {
+                $voorzieningenContent = file_get_contents($voorzieningenPath);
+                $voorzieningenSettings = json_decode($voorzieningenContent, true);
+                
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $results['voorzieningen'] = $voorzieningenSettings;
+                    
+                    // Import via configuration service if available
+                    try {
+                        $configurationService = $this->getConfigurationService();
+                        $configurationService->importFromJson($voorzieningenSettings, false);
+                        $results['voorzieningen_imported'] = true;
+                    } catch (\Exception $e) {
+                        $results['voorzieningen_import_error'] = $e->getMessage();
+                    }
+                }
+            }
+
+            // Load settings from amef_register.json  
+            $amefPath = __DIR__ . '/../Settings/amef_register.json';
+            if (file_exists($amefPath)) {
+                $amefContent = file_get_contents($amefPath);
+                $amefSettings = json_decode($amefContent, true);
+                
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $results['amef'] = $amefSettings;
+                    
+                    // Import via configuration service if available
+                    try {
+                        $configurationService = $this->getConfigurationService();
+                        $configurationService->importFromJson($amefSettings, false);
+                        $results['amef_imported'] = true;
+                    } catch (\Exception $e) {
+                        $results['amef_import_error'] = $e->getMessage();
+                    }
+                }
+            }
+
+            if (empty($results)) {
+                throw new \Exception('No register configuration files found');
+            }
+
+            return $results;
+            
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to load settings: ' . $e->getMessage());
+        }
     }
 } 
