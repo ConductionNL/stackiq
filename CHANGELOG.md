@@ -1,3 +1,8 @@
+# Version: 0.1.7
+
+* [#3](https://github.com/ConductionNL/softwarecatalog/pull/3): Users and groups generation 
+
+
 # Changelog
 
 ## [Unreleased]
