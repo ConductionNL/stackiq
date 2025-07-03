@@ -30,6 +30,7 @@ Submit a [feature request](https://github.com/OpenCatalogi/.github/issues/new/ch
     <website>https://github.com/ConductionNL/SoftwareCatalogus</website>
     <bugs>https://github.com/ConductionNL/SoftwareCatalogus/issues</bugs>
     <repository>https://github.com/ConductionNL/SoftwareCatalogus</repository>
+
     <dependencies>
         <nextcloud min-version="28" max-version="30"/>
         <php min-version="8.0" min-int-size="64"/>
@@ -37,6 +38,7 @@ Submit a [feature request](https://github.com/OpenCatalogi/.github/issues/new/ch
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
     </dependencies>
+
     <navigations>
         <navigation>
             <id>softwarecatalog</id>
@@ -45,4 +47,9 @@ Submit a [feature request](https://github.com/OpenCatalogi/.github/issues/new/ch
             <icon>app.svg</icon>
         </navigation>
     </navigations>
+
+	<settings>
+		<admin>OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin</admin>
+		<admin-section>OCA\SoftwareCatalog\Sections\SoftwareCatalogAdmin</admin-section>
+	</settings>
 </info>
