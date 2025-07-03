@@ -169,6 +169,9 @@ class SoftwareCatalogEventListener implements IEventListener
         $objectSchemaId = $object->getSchema();
         $objectId = $object->getUuid();
         
+        // Convert schema ID to integer for consistent comparison
+        $objectSchemaIdInt = (int) $objectSchemaId;
+        
         $logger->info(
             'SoftwareCatalog: Processing object creation',
             [
@@ -265,7 +268,6 @@ class SoftwareCatalogEventListener implements IEventListener
         $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
         
         // Fix potential type mismatch by ensuring both are integers
-        $objectSchemaIdInt = (int) $objectSchemaId;
         $contactgegevensSchemaIdInt = (int) $contactgegevensSchemaId;
         
         if ($contactgegevensSchemaId && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {

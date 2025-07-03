@@ -328,6 +328,12 @@ class SettingsService
             if (!empty($schemaId)) {
                 return (int) $schemaId;
             }
+            
+            // Also check voorzieningen register for organization/organisatie
+            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+            if (!empty($schemaId)) {
+                return (int) $schemaId;
+            }
         }
         
         // Check for Voorzieningen register specific schemas
