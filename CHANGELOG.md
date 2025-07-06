@@ -1,3 +1,8 @@
+# Version: 0.1.8
+
+* [#5](https://github.com/ConductionNL/softwarecatalog/pull/5): Lets try to fix composer
+
+
 # Changelog
 
 ## [Unreleased]
