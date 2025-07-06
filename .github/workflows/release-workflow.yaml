@@ -3,6 +3,7 @@ name: Release Workflow
 on:
   push:
     branches:
+      - master
       - main
   workflow_dispatch:
     inputs:
@@ -20,6 +21,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Set app env
         run: |
@@ -43,7 +45,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -am "Bump version to ${{ env.NEW_VERSION }}"
+          git commit -am "Bump version to ${{ env.NEW_VERSION }}" -m "[skip ci]"
           git push
 
       # Step 1: Prepare the signing certificate and key
@@ -85,8 +87,9 @@ jobs:
             --exclude='.vscode' \
             --exclude='docker' \
             --exclude='docs' \
+            --exclude='website' \
             --exclude='node_modules' \
-            --exclude='src' \
+            --exclude='/src' \
             --exclude='test' \
             --exclude='package-lock.json' \
             --exclude='composer.lock' \
@@ -139,14 +142,6 @@ jobs:
           description=$(jq -r '.description' <(curl -s https://api.github.com/repos/${{ github.repository }}))
           echo "REPO_DESCRIPTION=$description" >> $GITHUB_ENV
 
-      # Step 13: Run Changelog CI
-      - name: Run Changelog CI
-        if: github.ref == 'refs/heads/main'
-        uses: saadmk11/changelog-ci@v1.1.2
-        with:
-          release_version: ${{ env.NEW_VERSION }}
-          config_file: changelog-ci-config.json
-
       # Step 14: Output the version
       - name: Use the version
         run: |
@@ -194,37 +189,34 @@ jobs:
           echo "info.xml contents:"
           tar -xOf nextcloud-release.tar.gz ${{ env.APP_NAME }}/appinfo/info.xml
 
-      - name: Update CHANGELOG.md
+  update-changelog:
+    runs-on: ubuntu-latest
+    steps:
+    
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set app env
         run: |
-          if [ ! -f CHANGELOG.md ]; then
-            echo "# Changelog" > CHANGELOG.md
-            echo "" >> CHANGELOG.md
-            echo "## [Unreleased]" >> CHANGELOG.md
-            echo "### Added" >> CHANGELOG.md
-            echo "- Initial release" >> CHANGELOG.md
-            echo "" >> CHANGELOG.md
-          fi
-          
-          # Create a new entry for the current version
-          NEW_ENTRY="## ${{ env.NEW_VERSION }} – $(date +'%Y-%m-%d')"
-          echo "$NEW_ENTRY" > temp_changelog.md
-          echo "### Added" >> temp_changelog.md
-          echo "- New features for this release" >> temp_changelog.md
-          echo "" >> temp_changelog.md
-          echo "### Changed" >> temp_changelog.md
-          echo "- Changes in existing functionality for this release" >> temp_changelog.md
-          echo "" >> temp_changelog.md
-          echo "### Fixed" >> temp_changelog.md
-          echo "- Bug fixes for this release" >> temp_changelog.md
-          echo "" >> temp_changelog.md
-          
-          # Append the new entry after the Unreleased section
-          sed -i '/## \[Unreleased\]/,/^$/!b;:a;/^$/!{$!{N;ba}};/\n.*/{P;D}' CHANGELOG.md
-          sed -i '/## \[Unreleased\]/r temp_changelog.md' CHANGELOG.md
-          rm temp_changelog.md
-          
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add CHANGELOG.md
-          git commit -m "Update CHANGELOG.md for version ${{ env.NEW_VERSION }}" || echo "No changes to commit"
-          git push
+          echo "APP_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
+  
+      - name: Get current version and increment
+        id: increment_version
+        run: |
+          current_version=$(grep -oP '(?<=<version>)[^<]+' appinfo/info.xml)
+          IFS='.' read -ra version_parts <<< "$current_version"
+          ((version_parts[2]++))
+          new_version="${version_parts[0]}.${version_parts[1]}.${version_parts[2]}"
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      # Step 13: Run Changelog CI
+      - name: Run Changelog CI
+        if: github.ref == 'refs/heads/main'
+        uses: saadmk11/changelog-ci@v1.1.2
+        with:
+          persist-credentials: true
+          release_version: ${{ env.NEW_VERSION }}
+          config_file: changelog-ci-config.json
