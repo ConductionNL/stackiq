@@ -365,14 +365,21 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }
 
-        // Handle organization updates - process groups
+        // Handle organization updates - process groups and check for beoordeling changes
         $organizationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
         // Fix potential type mismatch by ensuring both are integers
         $organizationSchemaIdInt = (int) $organizationSchemaId;
         if ($organizationSchemaId && $objectSchemaIdInt === $organizationSchemaIdInt) {
             $logger->debug('SoftwareCatalog: Processing organization update');
             try {
-                $softwareCatalogueService->processOrganization($object);
+                $oldObject = $event->getOldObject();
+                if ($oldObject) {
+                    // Use the new method that checks for beoordeling changes
+                    $softwareCatalogueService->handleOrganizationUpdate($object, $oldObject);
+                } else {
+                    // Fallback to regular processing if no old object
+                    $softwareCatalogueService->processOrganization($object);
+                }
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed organization update',
@@ -419,7 +426,7 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }
 
-        // Handle contactgegevens updates - process username
+        // Handle contactgegevens updates - process username and role changes
         $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
         
         // Fix potential type mismatch by ensuring both are integers
@@ -429,7 +436,14 @@ class SoftwareCatalogEventListener implements IEventListener
         if ($contactgegevensSchemaId && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {
             $logger->debug('SoftwareCatalog: Processing contactgegevens update');
             try {
-                $softwareCatalogueService->processContactgegevens($object);
+                $oldObject = $event->getOldObject();
+                if ($oldObject) {
+                    // Use the new method that checks for role changes
+                    $softwareCatalogueService->handleContactgegevensUpdate($object, $oldObject);
+                } else {
+                    // Fallback to regular processing if no old object
+                    $softwareCatalogueService->processContactgegevens($object);
+                }
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactgegevens update',

@@ -533,4 +533,113 @@ class SettingsService
             throw new \RuntimeException('Failed to load settings: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Gets the list of generic user groups from configuration
+     *
+     * @return array Array of generic user groups
+     */
+    public function getGenericUserGroups(): array
+    {
+        $groupsJson = $this->config->getValueString($this->_appName, 'generic_user_groups', '');
+        
+        if (empty($groupsJson)) {
+            // Return default groups if no configuration exists
+            return [
+                'beheerder',
+                'inkoper',
+                'ambtenaar',
+                'software-catalog-users'
+            ];
+        }
+
+        $groups = json_decode($groupsJson, true);
+        return is_array($groups) ? $groups : [];
+    }
+
+    /**
+     * Sets the list of generic user groups in configuration
+     *
+     * @param array $groups Array of generic user groups
+     * 
+     * @return void
+     */
+    public function setGenericUserGroups(array $groups): void
+    {
+        $groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
+        $this->config->setValueString($this->_appName, 'generic_user_groups', $groupsJson);
+        
+        $this->logger->info(
+            'Updated generic user groups configuration',
+            [
+                'groups' => $groups
+            ]
+        );
+    }
+
+    /**
+     * Validates a list of group names
+     *
+     * @param array $groups Array of group names to validate
+     * 
+     * @return array Array with validation results
+     */
+    public function validateGroups(array $groups): array
+    {
+        $results = [
+            'valid' => [],
+            'invalid' => [],
+            'errors' => []
+        ];
+        
+        foreach ($groups as $groupName) {
+            if (empty($groupName) || !is_string($groupName)) {
+                $results['invalid'][] = $groupName;
+                $results['errors'][] = 'Group name cannot be empty';
+                continue;
+            }
+            
+            // Check for invalid characters
+            if (preg_match('/[^a-zA-Z0-9._-]/', $groupName)) {
+                $results['invalid'][] = $groupName;
+                $results['errors'][] = "Group name '{$groupName}' contains invalid characters";
+                continue;
+            }
+            
+            $results['valid'][] = $groupName;
+        }
+        
+        return $results;
+    }
+
+    /**
+     * Gets all available groups with their information
+     *
+     * @return array Array of group information
+     */
+    public function getAllGroups(): array
+    {
+        $groups = [];
+        
+        // Get group manager if possible
+        if ($this->appManager->isInstalled('user_management')) {
+            try {
+                $groupManager = \OC::$server->getGroupManager();
+                $allGroups = $groupManager->search('');
+                
+                foreach ($allGroups as $group) {
+                    $groups[] = [
+                        'id' => $group->getGID(),
+                        'displayName' => $group->getDisplayName(),
+                        'memberCount' => count($group->getUsers()),
+                        'isGeneric' => in_array($group->getGID(), $this->getGenericUserGroups())
+                    ];
+                }
+            } catch (\Exception $e) {
+                $this->logger->error('Failed to get all groups: ' . $e->getMessage());
+            }
+        }
+        
+        return $groups;
+    }
 } 

@@ -251,4 +251,118 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Get generic user groups configuration
+     *
+     * @return JSONResponse JSON response containing the generic user groups
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getGenericUserGroups(): JSONResponse
+    {
+        try {
+            $groups = $this->settingsService->getGenericUserGroups();
+            return new JSONResponse([
+                'groups' => $groups,
+                'allGroups' => $this->settingsService->getAllGroups()
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get generic user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update generic user groups configuration
+     *
+     * @return JSONResponse JSON response containing the update results
+     *
+     * @NoCSRFRequired
+     */
+    public function updateGenericUserGroups(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $groups = $data['groups'] ?? [];
+
+            // Validate groups
+            $validation = $this->settingsService->validateGroups($groups);
+            
+            if (!empty($validation['invalid'])) {
+                return new JSONResponse([
+                    'error' => 'Invalid group names provided',
+                    'validation' => $validation
+                ], 400);
+            }
+
+            // Update the groups
+            $this->settingsService->setGenericUserGroups($validation['valid']);
+            
+            return new JSONResponse([
+                'success' => true,
+                'groups' => $validation['valid'],
+                'message' => 'Generic user groups updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update generic user groups', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Validate generic user groups
+     *
+     * @return JSONResponse JSON response containing the validation results
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function validateGenericUserGroups(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $groups = $data['groups'] ?? [];
+
+            $validation = $this->settingsService->validateGroups($groups);
+            
+            return new JSONResponse($validation);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to validate generic user groups', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Ensure generic user groups exist
+     *
+     * @return JSONResponse JSON response containing the results
+     *
+     * @NoCSRFRequired
+     */
+    public function ensureGenericUserGroups(): JSONResponse
+    {
+        try {
+            // For this to work, we need access to the group management functionality
+            // This might require additional service integration
+            return new JSONResponse([
+                'message' => 'Group creation requires group management service integration',
+                'groups' => $this->settingsService->getGenericUserGroups()
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to ensure generic user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
 }//end class
