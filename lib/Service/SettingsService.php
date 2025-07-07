@@ -106,7 +106,7 @@ class SettingsService
      */
     public function isOpenRegisterEnabled(): bool
     {
-        return $this->appManager->isAppEnabled(self::OPENREGISTER_APP_ID);
+        return $this->appManager->isEnabledForUser(self::OPENREGISTER_APP_ID);
     }
 
     /**
