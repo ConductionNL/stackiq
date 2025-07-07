@@ -106,7 +106,7 @@ class SettingsService
      */
     public function isOpenRegisterEnabled(): bool
     {
-        return $this->appManager->isEnabled(self::OPENREGISTER_APP_ID);
+        return $this->appManager->isAppEnabled(self::OPENREGISTER_APP_ID);
     }
 
     /**
@@ -163,15 +163,14 @@ class SettingsService
             'voorzieningen' => [
                 'name' => 'Voorzieningen', 
                 'description' => 'Voorzieningen register for software catalog services',
-                'objectTypes' => ['gebruiker', 'organisatie', 'contactgegevens'] // Voorzieningen uses gebruiker, organisatie, and contactgegevens schemas
+                'objectTypes' => ['organisatie', 'contactgegevens'] // Voorzieningen uses organisatie and contactgegevens schemas
             ]
         ];
         
         // For backward compatibility, keep the original object types structure
         $data['objectTypes'] = [
             'organization',
-            'contact', 
-            'gebruiker',
+            'contact',
         ];
         
         $data['openRegisters'] = false;
@@ -336,13 +335,7 @@ class SettingsService
             }
         }
         
-        // Check for Voorzieningen register specific schemas
-        if ($objectType === 'gebruiker') {
-            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_gebruiker_schema', '');
-            if (!empty($schemaId)) {
-                return (int) $schemaId;
-            }
-        }
+
         
         if ($objectType === 'organisatie') {
             $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
@@ -383,7 +376,7 @@ class SettingsService
      */
     public function isFullyConfigured(): bool
     {
-        $objectTypes = ['organization', 'contact', 'gebruiker'];
+        $objectTypes = ['organization', 'contact'];
         
         foreach ($objectTypes as $type) {
             $schemaId = $this->getSchemaIdForObjectType($type);
@@ -402,7 +395,7 @@ class SettingsService
      */
     public function getConfigurationStatus(): array
     {
-        $objectTypes = ['organization', 'contact', 'gebruiker'];
+        $objectTypes = ['organization', 'contact'];
         $status = [];
         
         foreach ($objectTypes as $type) {
@@ -641,5 +634,327 @@ class SettingsService
         }
         
         return $groups;
+    }
+
+    /**
+     * Gets email configuration settings
+     *
+     * @return array Email settings configuration
+     */
+    public function getEmailSettings(): array
+    {
+        return [
+            'enabled' => $this->config->getValueString($this->_appName, 'email_enabled', 'false') === 'true',
+            'senderEmail' => $this->config->getValueString($this->_appName, 'sender_email', 'noreply@softwarecatalogus.nl'),
+            'senderName' => $this->config->getValueString($this->_appName, 'sender_name', 'Software Catalogus'),
+            'testReceiverOverride' => $this->config->getValueString($this->_appName, 'test_receiver_override', ''),
+            'organizationRegistrationEnabled' => $this->config->getValueString($this->_appName, 'email_org_registration_enabled', 'true') === 'true',
+            'organizationActivationEnabled' => $this->config->getValueString($this->_appName, 'email_org_activation_enabled', 'true') === 'true',
+            'userCreationEnabled' => $this->config->getValueString($this->_appName, 'email_user_creation_enabled', 'true') === 'true',
+            'userPasswordEnabled' => $this->config->getValueString($this->_appName, 'email_user_password_enabled', 'true') === 'true',
+            
+            // Symfony Mailer transport configuration
+            'transportType' => $this->config->getValueString($this->_appName, 'email_transport_type', 'smtp'),
+            
+            // SMTP configuration
+            'smtpHost' => $this->config->getValueString($this->_appName, 'email_smtp_host', 'localhost'),
+            'smtpPort' => (int) $this->config->getValueString($this->_appName, 'email_smtp_port', '587'),
+            'smtpEncryption' => $this->config->getValueString($this->_appName, 'email_smtp_encryption', 'tls'),
+            'smtpUsername' => $this->config->getValueString($this->_appName, 'email_smtp_username', ''),
+            'smtpPassword' => $this->config->getValueString($this->_appName, 'email_smtp_password', ''),
+            
+            // SendGrid configuration
+            'sendgridApiKey' => $this->config->getValueString($this->_appName, 'email_sendgrid_api_key', ''),
+            
+            // Mailgun configuration
+            'mailgunApiKey' => $this->config->getValueString($this->_appName, 'email_mailgun_api_key', ''),
+            'mailgunDomain' => $this->config->getValueString($this->_appName, 'email_mailgun_domain', ''),
+            
+            // Postmark configuration
+            'postmarkApiKey' => $this->config->getValueString($this->_appName, 'email_postmark_api_key', ''),
+            
+            // Amazon SES configuration
+            'sesAccessKey' => $this->config->getValueString($this->_appName, 'email_ses_access_key', ''),
+            'sesSecretKey' => $this->config->getValueString($this->_appName, 'email_ses_secret_key', ''),
+            'sesRegion' => $this->config->getValueString($this->_appName, 'email_ses_region', 'us-east-1'),
+            
+            // Mailjet configuration
+            'mailjetApiKey' => $this->config->getValueString($this->_appName, 'email_mailjet_api_key', ''),
+            'mailjetSecretKey' => $this->config->getValueString($this->_appName, 'email_mailjet_secret_key', ''),
+            
+            // Templates
+            'templates' => [
+                'organization_registration' => $this->getEmailTemplate('organization_registration'),
+                'organization_activation' => $this->getEmailTemplate('organization_activation'),
+                'user_creation' => $this->getEmailTemplate('user_creation'),
+                'user_password' => $this->getEmailTemplate('user_password'),
+            ],
+        ];
+    }
+
+    /**
+     * Updates email configuration settings
+     *
+     * @param array $emailSettings Email settings to update
+     *
+     * @return array Updated email settings
+     */
+    public function updateEmailSettings(array $emailSettings): array
+    {
+        $allowedSettings = [
+            'enabled' => 'email_enabled',
+            'senderEmail' => 'sender_email',
+            'senderName' => 'sender_name',
+            'testReceiverOverride' => 'test_receiver_override',
+            'organizationRegistrationEnabled' => 'email_org_registration_enabled',
+            'organizationActivationEnabled' => 'email_org_activation_enabled',
+            'userCreationEnabled' => 'email_user_creation_enabled',
+            'userPasswordEnabled' => 'email_user_password_enabled',
+            
+            // Symfony Mailer transport configuration
+            'transportType' => 'email_transport_type',
+            
+            // SMTP configuration
+            'smtpHost' => 'email_smtp_host',
+            'smtpPort' => 'email_smtp_port',
+            'smtpEncryption' => 'email_smtp_encryption',
+            'smtpUsername' => 'email_smtp_username',
+            'smtpPassword' => 'email_smtp_password',
+            
+            // SendGrid configuration
+            'sendgridApiKey' => 'email_sendgrid_api_key',
+            
+            // Mailgun configuration
+            'mailgunApiKey' => 'email_mailgun_api_key',
+            'mailgunDomain' => 'email_mailgun_domain',
+            
+            // Postmark configuration
+            'postmarkApiKey' => 'email_postmark_api_key',
+            
+            // Amazon SES configuration
+            'sesAccessKey' => 'email_ses_access_key',
+            'sesSecretKey' => 'email_ses_secret_key',
+            'sesRegion' => 'email_ses_region',
+            
+            // Mailjet configuration
+            'mailjetApiKey' => 'email_mailjet_api_key',
+            'mailjetSecretKey' => 'email_mailjet_secret_key',
+        ];
+
+        $updatedSettings = [];
+        
+        foreach ($allowedSettings as $settingKey => $configKey) {
+            if (array_key_exists($settingKey, $emailSettings)) {
+                $value = $emailSettings[$settingKey];
+                
+                // Convert boolean values to strings
+                if (is_bool($value)) {
+                    $value = $value ? 'true' : 'false';
+                }
+                
+                $this->config->setValueString($this->_appName, $configKey, (string) $value);
+                $updatedSettings[$settingKey] = $this->config->getValueString($this->_appName, $configKey);
+            }
+        }
+
+        $this->logger->info(
+            'Email settings updated successfully',
+            [
+                'updatedKeys' => array_keys($updatedSettings)
+            ]
+        );
+
+        return $updatedSettings;
+    }
+
+    /**
+     * Gets email template content for a specific template
+     *
+     * @param string $templateName The template name (organization_registration, organization_activation, user_creation)
+     *
+     * @return string The template content
+     */
+    public function getEmailTemplate(string $templateName): string
+    {
+        $configKey = "email_template_{$templateName}";
+        $defaultTemplate = $this->getDefaultEmailTemplate($templateName);
+        
+        return $this->config->getValueString($this->_appName, $configKey, $defaultTemplate);
+    }
+
+    /**
+     * Updates email template content
+     *
+     * @param string $templateName    The template name
+     * @param string $templateContent The template content
+     *
+     * @return bool True if update was successful
+     */
+    public function updateEmailTemplate(string $templateName, string $templateContent): bool
+    {
+        try {
+            $configKey = "email_template_{$templateName}";
+            $this->config->setValueString($this->_appName, $configKey, $templateContent);
+            
+            $this->logger->info(
+                'Email template updated successfully',
+                [
+                    'templateName' => $templateName
+                ]
+            );
+            
+            return true;
+        } catch (\Exception $e) {
+            $this->logger->error(
+                'Failed to update email template: ' . $e->getMessage(),
+                [
+                    'templateName' => $templateName
+                ]
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Gets default email template content
+     *
+     * @param string $templateName The template name
+     *
+     * @return string Default template content
+     */
+    private function getDefaultEmailTemplate(string $templateName): string
+    {
+        $templates = [
+            'organization_registration' => '
+<h1>Welkom bij de Software Catalogus!</h1>
+<p>Beste {{ organization.name }},</p>
+<p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>
+<p>Met de Software Catalogus kunt u:</p>
+<ul>
+    <li>Uw software overzichtelijk beheren</li>
+    <li>Software delen met andere organisaties</li>
+    <li>Ontdekken welke software andere organisaties gebruiken</li>
+</ul>
+<p>Uw organisatie heeft de status "{{ organization.beoordeling }}" en kan nu gebruik maken van alle functionaliteiten.</p>
+<p>Heeft u vragen? Neem dan contact met ons op.</p>
+<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
+            ',
+            'organization_activation' => '
+<h1>Uw organisatie is geactiveerd!</h1>
+<p>Beste {{ organization.name }},</p>
+<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>
+<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>
+<ul>
+    <li>Het delen van software informatie</li>
+    <li>Samenwerking met andere organisaties</li>
+    <li>Toegang tot alle catalogus functionaliteiten</li>
+</ul>
+<p>Status: {{ organization.beoordeling }}</p>
+<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>
+<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
+            ',
+            'user_creation' => '
+<h1>Welkom {{ user.name }}!</h1>
+<p>Beste {{ user.name }},</p>
+<p>Er is een gebruikersaccount voor u aangemaakt in de Software Catalogus.</p>
+<p>Uw accountgegevens:</p>
+<ul>
+    <li>E-mailadres: {{ user.email }}</li>
+    <li>Gebruikersnaam: {{ user.username }}</li>
+    <li>Organisatie: {{ user.organization.name if user.organization }}</li>
+</ul>
+<p>U kunt nu inloggen op het platform en gebruik maken van alle functionaliteiten.</p>
+<p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>
+<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
+            ',
+            'user_password' => '
+<h1>Uw wachtwoord voor de Software Catalogus</h1>
+<p>Beste {{ user.name }},</p>
+<p>Uw wachtwoord voor de Software Catalogus is aangepast.</p>
+<p>Uw logingegevens:</p>
+<ul>
+    <li>E-mailadres: {{ user.email }}</li>
+    <li>Gebruikersnaam: {{ user.username }}</li>
+    <li>Nieuw wachtwoord: {{ user.password }}</li>
+</ul>
+<p>U kunt nu inloggen met uw nieuwe wachtwoord.</p>
+<p>We raden u aan om uw wachtwoord te wijzigen na het eerste inloggen.</p>
+<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
+            '
+        ];
+
+        return $templates[$templateName] ?? '';
+    }
+
+    /**
+     * Gets available email template variables for a specific template
+     *
+     * @param string $templateName The template name
+     *
+     * @return array Available template variables
+     */
+    public function getEmailTemplateVariables(string $templateName): array
+    {
+        $variables = [
+            'organization_registration' => [
+                'organization.name' => 'Organization name',
+                'organization.beoordeling' => 'Organization status (e.g., Actief)',
+                'organization.type' => 'Organization type (e.g., Leverancier)',
+                'organization.website' => 'Organization website',
+            ],
+            'organization_activation' => [
+                'organization.name' => 'Organization name',
+                'organization.beoordeling' => 'Organization status (e.g., Actief)',
+                'organization.type' => 'Organization type',
+                'organization.website' => 'Organization website',
+            ],
+            'user_creation' => [
+                'user.name' => 'User display name',
+                'user.email' => 'User email address',
+                'user.username' => 'Username',
+                'user.organization.name' => 'Organization name (if applicable)',
+            ],
+            'user_password' => [
+                'user.name' => 'User display name',
+                'user.email' => 'User email address',
+                'user.username' => 'Username',
+                'user.password' => 'Auto-generated password',
+                'user.organization.name' => 'Organization name (if applicable)',
+            ]
+        ];
+
+        return $variables[$templateName] ?? [];
+    }
+
+    /**
+     * Tests email sending functionality
+     *
+     * @param string $testEmail Email address to send test email to
+     *
+     * @return array Test results
+     */
+    public function testEmailSending(string $testEmail): array
+    {
+        try {
+            // Get SymfonyEmailService
+            $emailService = $this->container->get(\OCA\SoftwareCatalog\Service\SymfonyEmailService::class);
+            
+            $success = $emailService->sendTestEmail($testEmail);
+            
+            return [
+                'success' => $success,
+                'message' => $success ? 'Test email sent successfully using Symfony Mailer!' : 'Failed to send test email using Symfony Mailer',
+                'testEmail' => $testEmail
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to test email sending: ' . $e->getMessage());
+            
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+                'testEmail' => $testEmail
+            ];
+        }
     }
 } 

@@ -6,6 +6,10 @@ namespace OCA\SoftwareCatalog\Service;
 
 use Psr\Log\LoggerInterface;
 use OCP\IConfig;
+use Twig\Environment;
+use Twig\Loader\ArrayLoader;
+use OCP\Mail\IMailer;
+use OCP\Mail\IMessage;
 
 /**
  * PHP-based email service for sending notification emails
@@ -131,123 +135,281 @@ class PhpEmailService
     private const DEFAULT_SENDER_NAME = 'Software Catalogus';
 
     /**
+     * The settings service for accessing email configuration
+     *
+     * @var SettingsService Settings service instance
+     */
+    private readonly SettingsService $settingsService;
+
+    /**
      * Constructor for PhpEmailService
      *
-     * @param IConfig         $config The Nextcloud configuration service
-     * @param LoggerInterface $logger The logger instance
+     * @param IConfig         $config          The Nextcloud configuration service
+     * @param LoggerInterface $logger          The logger instance
+     * @param SettingsService $settingsService The settings service for email configuration
      */
     public function __construct(
         private readonly IConfig $config,
         private readonly LoggerInterface $logger,
+        SettingsService $settingsService,
     ) {
+        $this->settingsService = $settingsService;
     }
 
     /**
-     * Sends a welcome email to a new organization
+     * Sends an organization registration email
      *
-     * @param array $organization The organization data containing name and email
+     * @param array $organization The organization data
      * @return bool True if email was sent successfully, false otherwise
      * @throws \Exception If email sending fails
      */
-    public function sendOrganizationWelcomeEmail(array $organization): bool
+    public function sendOrganizationRegistrationEmail(array $organization): bool
     {
-        $organizationName = $organization['name'] ?? 'Onbekende Organisatie';
-        $organizationEmail = $organization['email'] ?? null;
+        $emailSettings = $this->settingsService->getEmailSettings();
+        
+        // Check if email is enabled and organization registration emails are enabled
+        if (!$emailSettings['enabled'] || !$emailSettings['organizationRegistrationEnabled']) {
+            $this->logger->info('Organization registration email disabled', [
+                'emailEnabled' => $emailSettings['enabled'],
+                'orgRegistrationEnabled' => $emailSettings['organizationRegistrationEnabled']
+            ]);
+            return false;
+        }
 
-        if (!$organizationEmail || !$this->validateEmail($organizationEmail)) {
-            $this->logger->warning('Cannot send welcome email to organization without valid email address', [
+        $organizationName = $organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie';
+        
+        // Determine recipient email
+        $recipientEmail = $this->getRecipientEmail($organization);
+        if (!$recipientEmail) {
+            $this->logger->warning('Cannot send organization registration email without valid email address', [
                 'organization' => $organization
             ]);
             return false;
         }
 
-        // Prepare email content
-        $subject = 'Welkom bij de Software Catalogus - ' . $organizationName;
-        $htmlBody = str_replace(
-            ['{ORGANIZATION_NAME}'],
-            [$organizationName],
-            self::ORGANIZATION_WELCOME_TEMPLATE
-        );
+        // Prepare template data
+        $templateData = [
+            'organization' => [
+                'name' => $organizationName,
+                'beoordeling' => $organization['beoordeling'] ?? 'Geregistreerd',
+                'type' => $organization['type'] ?? 'Organisatie',
+                'website' => $organization['website'] ?? '',
+            ]
+        ];
 
-        // Create and send email
-        return $this->sendEmail(
-            $organizationEmail,
+        return $this->sendTemplatedEmail(
+            $recipientEmail,
             $organizationName,
-            $subject,
-            $htmlBody
+            'Welkom bij de Software Catalogus - ' . $organizationName,
+            'organization_registration',
+            $templateData
         );
     }
 
     /**
-     * Sends a welcome email to a new user (gebruiker)
+     * Sends an organization activation email
      *
-     * @param array $gebruiker The user data containing name and email
+     * @param array $organization The organization data
      * @return bool True if email was sent successfully, false otherwise
      * @throws \Exception If email sending fails
      */
-    public function sendGebruikerWelcomeEmail(array $gebruiker): bool
+    public function sendOrganizationActivationEmail(array $organization): bool
     {
-        $userName = $gebruiker['name'] ?? 'Gebruiker';
-        $userEmail = $gebruiker['email'] ?? null;
+        $emailSettings = $this->settingsService->getEmailSettings();
+        
+        // Check if email is enabled and organization activation emails are enabled
+        if (!$emailSettings['enabled'] || !$emailSettings['organizationActivationEnabled']) {
+            $this->logger->info('Organization activation email disabled', [
+                'emailEnabled' => $emailSettings['enabled'],
+                'orgActivationEnabled' => $emailSettings['organizationActivationEnabled']
+            ]);
+            return false;
+        }
+
+        $organizationName = $organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie';
+        
+        // Determine recipient email  
+        $recipientEmail = $this->getRecipientEmail($organization);
+        if (!$recipientEmail) {
+            $this->logger->warning('Cannot send organization activation email without valid email address', [
+                'organization' => $organization
+            ]);
+            return false;
+        }
+
+        // Prepare template data
+        $templateData = [
+            'organization' => [
+                'name' => $organizationName,
+                'beoordeling' => $organization['beoordeling'] ?? 'Actief',
+                'type' => $organization['type'] ?? 'Organisatie',
+                'website' => $organization['website'] ?? '',
+            ]
+        ];
+
+        return $this->sendTemplatedEmail(
+            $recipientEmail,
+            $organizationName,
+            'Uw organisatie is geactiveerd - ' . $organizationName,
+            'organization_activation',
+            $templateData
+        );
+    }
+
+    /**
+     * Sends a user creation email
+     *
+     * @param array $user The user data
+     * @param array $organization Optional organization data
+     * @return bool True if email was sent successfully, false otherwise
+     * @throws \Exception If email sending fails
+     */
+    public function sendUserCreationEmail(array $user, array $organization = []): bool
+    {
+        $emailSettings = $this->settingsService->getEmailSettings();
+        
+        // Check if email is enabled and user creation emails are enabled
+        if (!$emailSettings['enabled'] || !$emailSettings['userCreationEnabled']) {
+            $this->logger->info('User creation email disabled', [
+                'emailEnabled' => $emailSettings['enabled'],
+                'userCreationEnabled' => $emailSettings['userCreationEnabled']
+            ]);
+            return false;
+        }
+
+        $userName = $user['name'] ?? $user['voornaam'] . ' ' . $user['achternaam'] ?? 'Gebruiker';
+        $userEmail = $user['email'] ?? null;
 
         if (!$userEmail || !$this->validateEmail($userEmail)) {
-            $this->logger->warning('Cannot send welcome email to user without valid email address', [
-                'gebruiker' => $gebruiker
+            $this->logger->warning('Cannot send user creation email without valid email address', [
+                'user' => $user
             ]);
             return false;
         }
 
-        // Prepare email content
-        $subject = 'Welkom bij de Software Catalogus - ' . $userName;
-        $htmlBody = str_replace(
-            ['{USER_NAME}', '{USER_EMAIL}'],
-            [$userName, $userEmail],
-            self::GEBRUIKER_WELCOME_TEMPLATE
-        );
+        // Apply test receiver override if configured
+        $recipientEmail = $this->getTestReceiverOverride() ?: $userEmail;
 
-        // Create and send email
-        return $this->sendEmail(
-            $userEmail,
+        // Prepare template data
+        $templateData = [
+            'user' => [
+                'name' => $userName,
+                'email' => $userEmail,
+                'username' => $user['username'] ?? '',
+                'organization' => !empty($organization) ? [
+                    'name' => $organization['naam'] ?? $organization['name'] ?? ''
+                ] : null
+            ]
+        ];
+
+        return $this->sendTemplatedEmail(
+            $recipientEmail,
             $userName,
-            $subject,
-            $htmlBody
+            'Welkom bij de Software Catalogus - ' . $userName,
+            'user_creation',
+            $templateData
         );
     }
 
     /**
-     * Sends a welcome email to a new contact
+     * Sends an email using a Twig template
      *
-     * @param array $contact The contact data containing name and email
+     * @param string $recipientEmail The recipient's email address
+     * @param string $recipientName  The recipient's name
+     * @param string $subject        The email subject
+     * @param string $templateName   The template name
+     * @param array  $templateData   Data to pass to the template
      * @return bool True if email was sent successfully, false otherwise
      * @throws \Exception If email sending fails
      */
-    public function sendContactWelcomeEmail(array $contact): bool
-    {
-        $contactName = $contact['name'] ?? 'Contact';
-        $contactEmail = $contact['email'] ?? null;
+    private function sendTemplatedEmail(
+        string $recipientEmail,
+        string $recipientName,
+        string $subject,
+        string $templateName,
+        array $templateData
+    ): bool {
+        try {
+            // Get template content
+            $templateContent = $this->settingsService->getEmailTemplate($templateName);
+            
+            if (empty($templateContent)) {
+                throw new \Exception("Email template '{$templateName}' is empty or not found");
+            }
 
-        if (!$contactEmail || !$this->validateEmail($contactEmail)) {
-            $this->logger->warning('Cannot send welcome email to contact without valid email address', [
-                'contact' => $contact
+            // Create Twig environment
+            $loader = new ArrayLoader([$templateName => $templateContent]);
+            $twig = new Environment($loader);
+
+            // Render template
+            $htmlBody = $twig->render($templateName, $templateData);
+            
+            // Wrap in basic HTML structure if not already present
+            if (strpos($htmlBody, '<html>') === false) {
+                $htmlBody = '
+                <html>
+                <head>
+                    <title>' . htmlspecialchars($subject) . '</title>
+                    <meta charset="UTF-8">
+                </head>
+                <body>
+                    ' . $htmlBody . '
+                </body>
+                </html>';
+            }
+
+            return $this->sendEmail($recipientEmail, $recipientName, $subject, $htmlBody);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to send templated email', [
+                'templateName' => $templateName,
+                'recipient' => $recipientEmail,
+                'error' => $e->getMessage()
             ]);
-            return false;
+            throw $e;
+        }
+    }
+
+    /**
+     * Gets the recipient email address, applying test receiver override if configured
+     *
+     * @param array $data The data containing email information
+     * @return string|null The recipient email address or null if invalid
+     */
+    private function getRecipientEmail(array $data): ?string
+    {
+        // Try to find email in various possible fields
+        $email = $data['email'] ?? $data['contactEmail'] ?? null;
+        
+        // If no direct email, try to get from contact persons
+        if (!$email && isset($data['contactpersonen']) && is_array($data['contactpersonen'])) {
+            foreach ($data['contactpersonen'] as $contact) {
+                if (!empty($contact['email'])) {
+                    $email = $contact['email'];
+                    break;
+                }
+            }
         }
 
-        // Prepare email content
-        $subject = 'Welkom bij de Software Catalogus - ' . $contactName;
-        $htmlBody = str_replace(
-            ['{CONTACT_NAME}', '{CONTACT_EMAIL}'],
-            [$contactName, $contactEmail],
-            self::CONTACT_WELCOME_TEMPLATE
-        );
+        if (!$email || !$this->validateEmail($email)) {
+            return null;
+        }
 
-        // Create and send email
-        return $this->sendEmail(
-            $contactEmail,
-            $contactName,
-            $subject,
-            $htmlBody
-        );
+        // Apply test receiver override if configured
+        return $this->getTestReceiverOverride() ?: $email;
+    }
+
+    /**
+     * Gets the test receiver override email if configured
+     *
+     * @return string|null The test receiver email or null if not configured
+     */
+    private function getTestReceiverOverride(): ?string
+    {
+        $emailSettings = $this->settingsService->getEmailSettings();
+        $override = $emailSettings['testReceiverOverride'] ?? '';
+        
+        return (!empty($override) && $this->validateEmail($override)) ? $override : null;
     }
 
     /**
@@ -267,9 +429,10 @@ class PhpEmailService
         string $htmlBody
     ): bool {
         try {
-            // Get sender configuration
-            $senderEmail = $this->config->getAppValue('softwarecatalog', 'sender_email', self::DEFAULT_SENDER);
-            $senderName = $this->config->getAppValue('softwarecatalog', 'sender_name', self::DEFAULT_SENDER_NAME);
+            // Get sender configuration from settings service
+            $emailSettings = $this->settingsService->getEmailSettings();
+            $senderEmail = $emailSettings['senderEmail'] ?? self::DEFAULT_SENDER;
+            $senderName = $emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME;
 
             // Prepare headers
             $headers = [
@@ -339,7 +502,8 @@ class PhpEmailService
      */
     public function getSenderEmail(): string
     {
-        return $this->config->getAppValue('softwarecatalog', 'sender_email', self::DEFAULT_SENDER);
+        $emailSettings = $this->settingsService->getEmailSettings();
+        return $emailSettings['senderEmail'] ?? self::DEFAULT_SENDER;
     }
 
     /**
@@ -349,7 +513,18 @@ class PhpEmailService
      */
     public function getSenderName(): string
     {
-        return $this->config->getAppValue('softwarecatalog', 'sender_name', self::DEFAULT_SENDER_NAME);
+        $emailSettings = $this->settingsService->getEmailSettings();
+        return $emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME;
+    }
+
+    /**
+     * Gets all email settings
+     *
+     * @return array The email settings
+     */
+    public function getEmailSettings(): array
+    {
+        return $this->settingsService->getEmailSettings();
     }
 
     /**
@@ -363,7 +538,7 @@ class PhpEmailService
         if (!$this->validateEmail($email)) {
             throw new \InvalidArgumentException('Invalid email address: ' . $email);
         }
-        $this->config->setAppValue('softwarecatalog', 'sender_email', $email);
+        $this->settingsService->updateEmailSettings(['senderEmail' => $email]);
     }
 
     /**
@@ -374,7 +549,7 @@ class PhpEmailService
      */
     public function setSenderName(string $name): void
     {
-        $this->config->setAppValue('softwarecatalog', 'sender_name', $name);
+        $this->settingsService->updateEmailSettings(['senderName' => $name]);
     }
 
     /**
@@ -412,6 +587,132 @@ class PhpEmailService
             'Test Recipient',
             $subject,
             $htmlBody
+        );
+    }
+
+    /**
+     * Sets whether email notifications are enabled
+     *
+     * @param bool $enabled True to enable email notifications, false to disable
+     * @return void
+     */
+    public function setEnabled(bool $enabled): void
+    {
+        $this->settingsService->updateEmailSettings(['enabled' => $enabled]);
+    }
+
+    /**
+     * Sets the test receiver override email address
+     *
+     * @param string $email The test receiver override email address
+     * @return void
+     */
+    public function setTestReceiverOverride(string $email): void
+    {
+        if (!empty($email) && !$this->validateEmail($email)) {
+            throw new \InvalidArgumentException('Invalid test receiver override email address: ' . $email);
+        }
+        $this->settingsService->updateEmailSettings(['testReceiverOverride' => $email]);
+    }
+
+    /**
+     * Sets whether organization registration emails are enabled
+     *
+     * @param bool $enabled True to enable organization registration emails, false to disable
+     * @return void
+     */
+    public function setOrganizationRegistrationEnabled(bool $enabled): void
+    {
+        $this->settingsService->updateEmailSettings(['organizationRegistrationEnabled' => $enabled]);
+    }
+
+    /**
+     * Sets whether organization activation emails are enabled
+     *
+     * @param bool $enabled True to enable organization activation emails, false to disable
+     * @return void
+     */
+    public function setOrganizationActivationEnabled(bool $enabled): void
+    {
+        $this->settingsService->updateEmailSettings(['organizationActivationEnabled' => $enabled]);
+    }
+
+    /**
+     * Sets whether user creation emails are enabled
+     *
+     * @param bool $enabled True to enable user creation emails, false to disable
+     * @return void
+     */
+    public function setUserCreationEnabled(bool $enabled): void
+    {
+        $this->settingsService->updateEmailSettings(['userCreationEnabled' => $enabled]);
+    }
+
+    /**
+     * Sets whether user password emails are enabled
+     *
+     * @param bool $enabled True to enable user password emails, false to disable
+     * @return void
+     */
+    public function setUserPasswordEnabled(bool $enabled): void
+    {
+        $this->settingsService->updateEmailSettings(['userPasswordEnabled' => $enabled]);
+    }
+
+    /**
+     * Sends a user password email with the auto-generated password
+     *
+     * @param array $user The user data
+     * @param string $password The auto-generated password
+     * @param array $organization The organization data
+     * @return bool True if email was sent successfully, false otherwise
+     * @throws \Exception If email sending fails
+     */
+    public function sendUserPasswordEmail(array $user, string $password, array $organization = []): bool
+    {
+        $emailSettings = $this->settingsService->getEmailSettings();
+        
+        // Check if email is enabled and user password emails are enabled
+        if (!$emailSettings['enabled'] || !$emailSettings['userPasswordEnabled']) {
+            $this->logger->info('User password email disabled', [
+                'emailEnabled' => $emailSettings['enabled'],
+                'userPasswordEnabled' => $emailSettings['userPasswordEnabled']
+            ]);
+            return false;
+        }
+
+        $userName = $user['displayName'] ?? $user['fullName'] ?? $user['name'] ?? 'Gebruiker';
+        $userEmail = $user['email'] ?? $user['emailAddress'] ?? null;
+
+        if (!$userEmail) {
+            $this->logger->warning('Cannot send user password email without valid email address', [
+                'user' => $user
+            ]);
+            return false;
+        }
+
+        $organizationName = $organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie';
+
+        // Prepare template data
+        $templateData = [
+            'user' => [
+                'username' => $user['username'] ?? $user['uid'] ?? $userEmail,
+                'email' => $userEmail,
+                'displayName' => $userName,
+                'password' => $password,
+                'roles' => $user['roles'] ?? [],
+            ],
+            'organization' => [
+                'name' => $organizationName,
+            ]
+        ];
+
+        return $this->sendTemplatedEmail(
+            $userEmail,
+            $userName,
+            'Software Catalogus - Uw wachtwoord',
+            'user_password',
+            $templateData
         );
     }
 } 

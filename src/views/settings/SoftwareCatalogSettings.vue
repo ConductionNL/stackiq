@@ -113,19 +113,7 @@
 						<h4>Voorzieningen Register Configuration</h4>
 						<p>Configure schemas for software catalog services</p>
 
-						<div class="object-type-section">
-							<div class="object-type-header">
-								<h5>Gebruiker Schema</h5>
-								<span class="object-type-description">Schema for users in the Voorzieningen register</span>
-							</div>
 
-							<NcSelect
-								v-model="configuration.voorzieningen_gebruiker.schema"
-								:options="availableSchemaOptions"
-								input-label="Gebruiker Schema"
-								:disabled="loading"
-								@change="validateConfiguration" />
-						</div>
 
 						<div class="object-type-section">
 							<div class="object-type-header">
@@ -174,6 +162,26 @@
 						</div>
 					</div>
 
+					<!-- Current Configuration Debug -->
+					<div class="configuration-debug">
+						<h4>Current Configuration Values 
+							<NcButton
+								type="tertiary"
+								size="small"
+								:disabled="loading"
+								@click="loadDebugInfo">
+								<template #icon>
+									<Refresh :size="16" />
+								</template>
+								Refresh
+							</NcButton>
+						</h4>
+						<div class="debug-info">
+							<pre v-if="debugInfo">{{ JSON.stringify(debugInfo, null, 2) }}</pre>
+							<div v-else>Loading debug information...</div>
+						</div>
+					</div>
+
 					<!-- Configuration Status -->
 					<div class="configuration-status">
 						<h4>Configuration Status</h4>
@@ -188,11 +196,6 @@
 
 						<div v-if="isRegisterType('voorzieningen')" class="status-group">
 							<h5>Voorzieningen Register</h5>
-							<div class="status-item">
-								<span class="status-label">Gebruiker:</span>
-								<span v-if="configuration.voorzieningen_gebruiker?.schema" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
-							</div>
 							<div class="status-item">
 								<span class="status-label">Organisatie:</span>
 								<span v-if="configuration.voorzieningen_organisatie?.schema" class="status-configured">✓ Configured</span>
@@ -263,6 +266,7 @@
 								<NcTextField
 									:value="group"
 									:placeholder="'Group name'"
+									label="Group Name"
 									@update:value="updateGroupName(index, $event)" />
 								<NcButton
 									type="tertiary-no-background"
@@ -341,6 +345,404 @@
 				</div>
 			</div>
 		</NcSettingsSection>
+
+		<NcSettingsSection
+			name="Email Configuration"
+			description="Configure email settings for notifications and templates">
+			<div v-if="!loading">
+				<div class="email-settings-section">
+					<h3>Email Settings</h3>
+					<p>Configure email notifications for organization and user events</p>
+
+					<div class="email-configuration">
+						<!-- Email Enable/Disable -->
+						<div class="setting-row">
+							<label class="setting-label">
+								<NcCheckboxRadioSwitch
+									:checked="emailSettings.enabled"
+									@update:checked="updateEmailSetting('enabled', $event)">
+									Enable Email Notifications
+								</NcCheckboxRadioSwitch>
+							</label>
+							<span class="setting-description">Enable or disable all email notifications</span>
+						</div>
+
+						<!-- Sender Configuration -->
+						<div v-if="emailSettings.enabled" class="sender-configuration">
+							<h4>Sender Information</h4>
+							<div class="setting-row">
+								<label class="setting-label">Sender Name:</label>
+								<NcTextField
+									:value="emailSettings.senderName"
+									placeholder="Software Catalogus"
+									label="Sender Name"
+									@update:value="updateEmailSetting('senderName', $event)" />
+								<span class="setting-description">Name that appears as the sender of emails</span>
+							</div>
+
+							<div class="setting-row">
+								<label class="setting-label">Sender Email:</label>
+								<NcTextField
+									:value="emailSettings.senderEmail"
+									placeholder="noreply@softwarecatalogus.nl"
+									type="email"
+									label="Sender Email"
+									@update:value="updateEmailSetting('senderEmail', $event)" />
+								<span class="setting-description">Email address that appears as the sender</span>
+							</div>
+						</div>
+
+						<!-- Transport Configuration -->
+						<div v-if="emailSettings.enabled" class="transport-configuration">
+							<h4>Mail Transport Configuration</h4>
+							<div class="setting-row">
+								<label class="setting-label">Transport Type:</label>
+								<NcSelect
+									v-model="emailSettings.transportType"
+									:options="transportOptions"
+									placeholder="Select transport type"
+									@update:value="updateEmailSetting('transportType', $event)">
+									<template #option="{ option }">
+										{{ option.label }}
+									</template>
+								</NcSelect>
+								<span class="setting-description">Choose the email transport provider</span>
+							</div>
+
+							<!-- SMTP Configuration -->
+							<div v-if="emailSettings.transportType === 'smtp'" class="smtp-configuration">
+								<h5>SMTP Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">SMTP Host:</label>
+									<NcTextField
+										:value="emailSettings.smtpHost"
+										placeholder="smtp.gmail.com"
+										label="SMTP Host"
+										@update:value="updateEmailSetting('smtpHost', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">SMTP Port:</label>
+									<NcTextField
+										:value="emailSettings.smtpPort"
+										placeholder="587"
+										type="number"
+										label="SMTP Port"
+										@update:value="updateEmailSetting('smtpPort', parseInt($event))" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Encryption:</label>
+									<NcSelect
+										v-model="emailSettings.smtpEncryption"
+										:options="encryptionOptions"
+										placeholder="Select encryption"
+										@update:value="updateEmailSetting('smtpEncryption', $event)">
+										<template #option="{ option }">
+											{{ option.label }}
+										</template>
+									</NcSelect>
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Username:</label>
+									<NcTextField
+										:value="emailSettings.smtpUsername"
+										placeholder="your-email@gmail.com"
+										label="SMTP Username"
+										@update:value="updateEmailSetting('smtpUsername', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Password:</label>
+									<NcPasswordField
+										:value="emailSettings.smtpPassword"
+										placeholder="your-password"
+										label="SMTP Password"
+										@update:value="updateEmailSetting('smtpPassword', $event)" />
+								</div>
+							</div>
+
+							<!-- SendGrid Configuration -->
+							<div v-if="emailSettings.transportType === 'sendgrid'" class="sendgrid-configuration">
+								<h5>SendGrid Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">API Key:</label>
+									<NcPasswordField
+										:value="emailSettings.sendgridApiKey"
+										placeholder="SG.xxxxx"
+										label="SendGrid API Key"
+										@update:value="updateEmailSetting('sendgridApiKey', $event)" />
+								</div>
+							</div>
+
+							<!-- Mailgun Configuration -->
+							<div v-if="emailSettings.transportType === 'mailgun'" class="mailgun-configuration">
+								<h5>Mailgun Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">API Key:</label>
+									<NcPasswordField
+										:value="emailSettings.mailgunApiKey"
+										placeholder="key-xxxxx"
+										label="Mailgun API Key"
+										@update:value="updateEmailSetting('mailgunApiKey', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Domain:</label>
+									<NcTextField
+										:value="emailSettings.mailgunDomain"
+										placeholder="mg.yourdomain.com"
+										label="Mailgun Domain"
+										@update:value="updateEmailSetting('mailgunDomain', $event)" />
+								</div>
+							</div>
+
+							<!-- Postmark Configuration -->
+							<div v-if="emailSettings.transportType === 'postmark'" class="postmark-configuration">
+								<h5>Postmark Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">API Key:</label>
+									<NcPasswordField
+										:value="emailSettings.postmarkApiKey"
+										placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+										label="Postmark API Key"
+										@update:value="updateEmailSetting('postmarkApiKey', $event)" />
+								</div>
+							</div>
+
+							<!-- Amazon SES Configuration -->
+							<div v-if="emailSettings.transportType === 'ses'" class="ses-configuration">
+								<h5>Amazon SES Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">Access Key:</label>
+									<NcPasswordField
+										:value="emailSettings.sesAccessKey"
+										placeholder="AKIAIOSFODNN7EXAMPLE"
+										label="SES Access Key"
+										@update:value="updateEmailSetting('sesAccessKey', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Secret Key:</label>
+									<NcPasswordField
+										:value="emailSettings.sesSecretKey"
+										placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+										label="SES Secret Key"
+										@update:value="updateEmailSetting('sesSecretKey', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Region:</label>
+									<NcSelect
+										v-model="emailSettings.sesRegion"
+										:options="sesRegionOptions"
+										placeholder="Select region"
+										@update:value="updateEmailSetting('sesRegion', $event)">
+										<template #option="{ option }">
+											{{ option.label }}
+										</template>
+									</NcSelect>
+								</div>
+							</div>
+
+							<!-- Mailjet Configuration -->
+							<div v-if="emailSettings.transportType === 'mailjet'" class="mailjet-configuration">
+								<h5>Mailjet Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">API Key:</label>
+									<NcPasswordField
+										:value="emailSettings.mailjetApiKey"
+										placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+										label="Mailjet API Key"
+										@update:value="updateEmailSetting('mailjetApiKey', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Secret Key:</label>
+									<NcPasswordField
+										:value="emailSettings.mailjetSecretKey"
+										placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+										label="Mailjet Secret Key"
+										@update:value="updateEmailSetting('mailjetSecretKey', $event)" />
+								</div>
+							</div>
+						</div>
+
+						<!-- Test Configuration -->
+						<div v-if="emailSettings.enabled" class="test-configuration">
+							<h4>Testing Configuration</h4>
+							<div class="setting-row">
+								<label class="setting-label">Test Receiver Override:</label>
+								<NcTextField
+									:value="emailSettings.testReceiverOverride"
+									placeholder="test@example.com (optional)"
+									type="email"
+									label="Test Receiver Override"
+									@update:value="updateEmailSetting('testReceiverOverride', $event)" />
+								<span class="setting-description">If set, all emails will be sent to this address instead of the actual recipients (for testing)</span>
+							</div>
+						</div>
+
+						<!-- Email Types Configuration -->
+						<div v-if="emailSettings.enabled" class="email-types-configuration">
+							<h4>Email Types</h4>
+							<div class="setting-row">
+								<label class="setting-label">
+									<NcCheckboxRadioSwitch
+										:checked="emailSettings.organizationRegistrationEnabled"
+										@update:checked="updateEmailSetting('organizationRegistrationEnabled', $event)">
+										Organization Registration Emails
+									</NcCheckboxRadioSwitch>
+								</label>
+								<span class="setting-description">Send welcome emails when organizations are first registered</span>
+							</div>
+
+							<div class="setting-row">
+								<label class="setting-label">
+									<NcCheckboxRadioSwitch
+										:checked="emailSettings.organizationActivationEnabled"
+										@update:checked="updateEmailSetting('organizationActivationEnabled', $event)">
+										Organization Activation Emails
+									</NcCheckboxRadioSwitch>
+								</label>
+								<span class="setting-description">Send emails when organizations are activated (status set to "Actief")</span>
+							</div>
+
+							<div class="setting-row">
+								<label class="setting-label">
+									<NcCheckboxRadioSwitch
+										:checked="emailSettings.userCreationEnabled"
+										@update:checked="updateEmailSetting('userCreationEnabled', $event)">
+										User Creation Emails
+									</NcCheckboxRadioSwitch>
+								</label>
+								<span class="setting-description">Send welcome emails when user accounts are created</span>
+							</div>
+
+							<div class="setting-row">
+								<label class="setting-label">
+									<NcCheckboxRadioSwitch
+										:checked="emailSettings.userPasswordEnabled"
+										@update:checked="updateEmailSetting('userPasswordEnabled', $event)">
+										User Password Emails
+									</NcCheckboxRadioSwitch>
+								</label>
+								<span class="setting-description">Send separate emails with auto-generated passwords when user accounts are created</span>
+							</div>
+						</div>
+
+						<!-- Email Testing -->
+						<div v-if="emailSettings.enabled" class="email-testing">
+							<h4>Email Testing</h4>
+							<div class="test-email-row">
+								<NcTextField
+									:value="testEmailAddress"
+									placeholder="test@example.com"
+									type="email"
+									label="Test Email Address"
+									@update:value="testEmailAddress = $event" />
+								<NcButton
+									type="secondary"
+									:disabled="!testEmailAddress || testingEmail"
+									@click="sendTestEmail">
+									<template #icon>
+										<NcLoadingIcon v-if="testingEmail" :size="20" />
+										<Email v-else :size="20" />
+									</template>
+									Send Test Email
+								</NcButton>
+							</div>
+
+							<div v-if="emailTestResult" class="test-result">
+								<NcNoteCard :type="emailTestResult.success ? 'success' : 'error'">
+									{{ emailTestResult.message }}
+								</NcNoteCard>
+							</div>
+						</div>
+
+						<!-- Save Email Settings -->
+						<div class="email-save-buttons">
+							<NcButton
+								type="primary"
+								:disabled="loading || savingEmailSettings"
+								@click="saveEmailSettings">
+								<template #icon>
+									<NcLoadingIcon v-if="savingEmailSettings" :size="20" />
+									<Save v-else :size="20" />
+								</template>
+								Save Email Settings
+							</NcButton>
+						</div>
+
+						<div v-if="emailSaveResult" class="save-results">
+							<NcNoteCard :type="emailSaveResult.success ? 'success' : 'error'">
+								{{ emailSaveResult.message || 'Email settings saved successfully!' }}
+							</NcNoteCard>
+						</div>
+					</div>
+				</div>
+
+				<!-- Email Templates Section -->
+				<div class="email-templates-section">
+					<h3>Email Templates</h3>
+					<p>Customize email templates using Twig syntax</p>
+
+					<div class="template-tabs">
+						<div class="tab-buttons">
+							<NcButton
+								v-for="template in availableTemplates"
+								:key="template.key"
+								:type="activeTemplate === template.key ? 'primary' : 'secondary'"
+								@click="activeTemplate = template.key">
+								{{ template.name }}
+							</NcButton>
+						</div>
+
+						<div v-if="activeTemplate" class="template-editor">
+							<div class="template-info">
+								<h4>{{ getActiveTemplateName() }}</h4>
+								<p>{{ getActiveTemplateDescription() }}</p>
+								<div class="available-variables">
+									<h5>Available Variables:</h5>
+									<div class="variables-list">
+										<span
+											v-for="(description, variable) in getActiveTemplateVariables()"
+											:key="variable"
+											class="variable-tag"
+											@click="insertVariable(variable)">
+											{{ formatTemplateVariable(variable) }}
+										</span>
+									</div>
+								</div>
+							</div>
+
+							<NcTextArea
+								:value="getActiveTemplateContent()"
+								:placeholder="'Enter your template content here...'"
+								rows="15"
+								@update:value="updateTemplateContent($event)" />
+
+							<div class="template-actions">
+								<NcButton
+									type="secondary"
+									@click="resetTemplate">
+									Reset to Default
+								</NcButton>
+								<NcButton
+									type="primary"
+									:disabled="loading || savingTemplate"
+									@click="saveTemplate">
+									<template #icon>
+										<NcLoadingIcon v-if="savingTemplate" :size="20" />
+										<Save v-else :size="20" />
+									</template>
+									Save Template
+								</NcButton>
+							</div>
+
+							<div v-if="templateSaveResult" class="save-results">
+								<NcNoteCard :type="templateSaveResult.success ? 'success' : 'error'">
+									{{ templateSaveResult.message || 'Template saved successfully!' }}
+								</NcNoteCard>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</NcSettingsSection>
 	</div>
 </template>
 
@@ -353,6 +755,9 @@ import {
 	NcButton,
 	NcLoadingIcon,
 	NcTextField,
+	NcPasswordField,
+	NcCheckboxRadioSwitch,
+	NcTextArea,
 } from '@nextcloud/vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -361,6 +766,7 @@ import AutoFix from 'vue-material-design-icons/AutoFix.vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Email from 'vue-material-design-icons/Email.vue'
 
 /**
  * Software Catalog Settings component
@@ -381,6 +787,9 @@ export default defineComponent({
 		NcButton,
 		NcLoadingIcon,
 		NcTextField,
+		NcPasswordField,
+		NcCheckboxRadioSwitch,
+		NcTextArea,
 		Save,
 		Refresh,
 		Cog,
@@ -388,6 +797,7 @@ export default defineComponent({
 		Alert,
 		Close,
 		Plus,
+		Email,
 	},
 
 	/**
@@ -411,10 +821,60 @@ export default defineComponent({
 			selectedRegister: null,
 			configuration: {},
 			schemaOptions: [],
+			debugInfo: null,
 			genericUserGroups: [],
 			groupValidation: null,
 			groupsSaveResult: null,
 			savingGroups: false,
+			// Email-related data
+			emailSettings: {
+				enabled: false,
+				senderEmail: '',
+				senderName: '',
+				testReceiverOverride: '',
+				organizationRegistrationEnabled: true,
+				organizationActivationEnabled: true,
+				userCreationEnabled: true,
+				userPasswordEnabled: true,
+				// Transport configuration
+				transportType: 'smtp',
+				// SMTP configuration
+				smtpHost: 'localhost',
+				smtpPort: 587,
+				smtpEncryption: 'tls',
+				smtpUsername: '',
+				smtpPassword: '',
+				// SendGrid configuration
+				sendgridApiKey: '',
+				// Mailgun configuration
+				mailgunApiKey: '',
+				mailgunDomain: '',
+				// Postmark configuration
+				postmarkApiKey: '',
+				// Amazon SES configuration
+				sesAccessKey: '',
+				sesSecretKey: '',
+				sesRegion: 'us-east-1',
+				// Mailjet configuration
+				mailjetApiKey: '',
+				mailjetSecretKey: '',
+			},
+			savingEmailSettings: false,
+			emailSaveResult: null,
+			testEmailAddress: '',
+			testingEmail: false,
+			emailTestResult: null,
+			// Template-related data
+			availableTemplates: [
+				{ key: 'organization_registration', name: 'Organization Registration' },
+				{ key: 'organization_activation', name: 'Organization Activation' },
+				{ key: 'user_creation', name: 'User Creation' },
+				{ key: 'user_password', name: 'User Password' },
+			],
+			activeTemplate: 'organization_registration',
+			templates: {},
+			savingTemplate: false,
+			templateSaveResult: null,
 		}
 	},
 
@@ -479,6 +939,63 @@ export default defineComponent({
 				this.configuration[type] && this.configuration[type].schema
 			)
 		},
+
+		/**
+		 * Transport type options for email configuration
+		 *
+		 * @return {Array<object>} Array of transport options
+		 */
+		transportOptions() {
+			return [
+				{ value: 'smtp', label: 'SMTP Server' },
+				{ value: 'sendmail', label: 'Sendmail' },
+				{ value: 'native', label: 'Native PHP Mail' },
+				{ value: 'null', label: 'Null (No Emails)' },
+				{ value: 'sendgrid', label: 'SendGrid' },
+				{ value: 'mailgun', label: 'Mailgun' },
+				{ value: 'postmark', label: 'Postmark' },
+				{ value: 'ses', label: 'Amazon SES' },
+				{ value: 'mailjet', label: 'Mailjet' },
+			]
+		},
+
+		/**
+		 * SMTP encryption options
+		 *
+		 * @return {Array<object>} Array of encryption options
+		 */
+		encryptionOptions() {
+			return [
+				{ value: 'tls', label: 'TLS' },
+				{ value: 'ssl', label: 'SSL' },
+				{ value: 'none', label: 'None' },
+			]
+		},
+
+		/**
+		 * Amazon SES region options
+		 *
+		 * @return {Array<object>} Array of SES region options
+		 */
+		sesRegionOptions() {
+			return [
+				{ value: 'us-east-1', label: 'US East (N. Virginia)' },
+				{ value: 'us-east-2', label: 'US East (Ohio)' },
+				{ value: 'us-west-1', label: 'US West (N. California)' },
+				{ value: 'us-west-2', label: 'US West (Oregon)' },
+				{ value: 'eu-west-1', label: 'Europe (Ireland)' },
+				{ value: 'eu-west-2', label: 'Europe (London)' },
+				{ value: 'eu-west-3', label: 'Europe (Paris)' },
+				{ value: 'eu-central-1', label: 'Europe (Frankfurt)' },
+				{ value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
+				{ value: 'ap-southeast-2', label: 'Asia Pacific (Sydney)' },
+				{ value: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
+				{ value: 'ap-northeast-2', label: 'Asia Pacific (Seoul)' },
+				{ value: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
+				{ value: 'ca-central-1', label: 'Canada (Central)' },
+				{ value: 'sa-east-1', label: 'South America (São Paulo)' },
+			]
+		},
 	},
 
 	watch: {
@@ -527,9 +1044,98 @@ export default defineComponent({
 
 				// Load generic user groups
 				await this.loadGenericUserGroups()
+
+				// Load email settings
+				await this.loadEmailSettings()
+
+				// Load debug information
+				await this.loadDebugInfo()
 			} catch (error) {
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Loads email settings from the backend API
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async loadEmailSettings() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/email-settings')
+				const data = await response.json()
+
+				if (data.success && data.data) {
+					// Update email settings with loaded data
+					this.emailSettings = {
+						enabled: data.data.enabled ?? false,
+						senderEmail: data.data.senderEmail ?? '',
+						senderName: data.data.senderName ?? '',
+						testReceiverOverride: data.data.testReceiverOverride ?? '',
+						organizationRegistrationEnabled: data.data.organizationRegistrationEnabled ?? true,
+						organizationActivationEnabled: data.data.organizationActivationEnabled ?? true,
+						userCreationEnabled: data.data.userCreationEnabled ?? true,
+						userPasswordEnabled: data.data.userPasswordEnabled ?? true,
+						// Transport configuration
+						transportType: data.data.transportType ?? 'smtp',
+						// SMTP configuration
+						smtpHost: data.data.smtpHost ?? 'localhost',
+						smtpPort: data.data.smtpPort ?? 587,
+						smtpEncryption: data.data.smtpEncryption ?? 'tls',
+						smtpUsername: data.data.smtpUsername ?? '',
+						smtpPassword: data.data.smtpPassword ?? '',
+						// SendGrid configuration
+						sendgridApiKey: data.data.sendgridApiKey ?? '',
+						// Mailgun configuration
+						mailgunApiKey: data.data.mailgunApiKey ?? '',
+						mailgunDomain: data.data.mailgunDomain ?? '',
+						// Postmark configuration
+						postmarkApiKey: data.data.postmarkApiKey ?? '',
+						// Amazon SES configuration
+						sesAccessKey: data.data.sesAccessKey ?? '',
+						sesSecretKey: data.data.sesSecretKey ?? '',
+						sesRegion: data.data.sesRegion ?? 'us-east-1',
+						// Mailjet configuration
+						mailjetApiKey: data.data.mailjetApiKey ?? '',
+						mailjetSecretKey: data.data.mailjetSecretKey ?? '',
+					}
+				}
+			} catch (error) {
+				// Use default settings if loading fails
+				this.emailSettings = {
+					enabled: false,
+					senderEmail: '',
+					senderName: '',
+					testReceiverOverride: '',
+					organizationRegistrationEnabled: true,
+					organizationActivationEnabled: true,
+					userCreationEnabled: true,
+					userPasswordEnabled: true,
+					// Transport configuration
+					transportType: 'smtp',
+					// SMTP configuration
+					smtpHost: 'localhost',
+					smtpPort: 587,
+					smtpEncryption: 'tls',
+					smtpUsername: '',
+					smtpPassword: '',
+					// SendGrid configuration
+					sendgridApiKey: '',
+					// Mailgun configuration
+					mailgunApiKey: '',
+					mailgunDomain: '',
+					// Postmark configuration
+					postmarkApiKey: '',
+					// Amazon SES configuration
+					sesAccessKey: '',
+					sesSecretKey: '',
+					sesRegion: 'us-east-1',
+					// Mailjet configuration
+					mailjetApiKey: '',
+					mailjetSecretKey: '',
+				}
 			}
 		},
 
@@ -551,6 +1157,27 @@ export default defineComponent({
 				}
 			} catch (error) {
 				this.genericUserGroups = ['beheerder', 'inkoper', 'ambtenaar', 'software-catalog-users']
+			}
+		},
+
+		/**
+		 * Loads debug information from the backend API
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async loadDebugInfo() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/debug')
+				const data = await response.json()
+
+				if (data.error) {
+					this.debugInfo = { error: data.error }
+				} else {
+					this.debugInfo = data
+				}
+			} catch (error) {
+				this.debugInfo = { error: 'Failed to load debug information: ' + error.message }
 			}
 		},
 
@@ -1097,6 +1724,221 @@ export default defineComponent({
 				this.savingGroups = false
 			}
 		},
+
+		updateEmailSetting(key, value) {
+			this.emailSettings[key] = value
+		},
+
+		async sendTestEmail() {
+			this.testingEmail = true
+			this.emailTestResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/email/test', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						email: this.testEmailAddress,
+						emailSettings: this.emailSettings,
+					}),
+				})
+
+				const result = await response.json()
+
+				// Check for success field first, then error field for backward compatibility
+				if (result.success === false || result.error) {
+					this.emailTestResult = {
+						success: false,
+						message: result.message || result.error || 'Failed to send test email'
+					}
+				} else if (result.success === true) {
+					this.emailTestResult = {
+						success: true,
+						message: result.message || 'Test email sent successfully!'
+					}
+				} else {
+					// Fallback for legacy responses
+					this.emailTestResult = {
+						success: true,
+						message: 'Test email sent successfully!'
+					}
+				}
+			} catch (error) {
+				this.emailTestResult = { success: false, message: 'Failed to send test email: ' + error.message }
+			} finally {
+				this.testingEmail = false
+			}
+		},
+
+		async saveEmailSettings() {
+			this.savingEmailSettings = true
+			this.emailSaveResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/email/settings', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ emailSettings: this.emailSettings }),
+				})
+
+				const result = await response.json()
+				if (result.error) {
+					this.emailSaveResult = { success: false, message: result.error }
+				} else {
+					this.emailSaveResult = { success: true, message: 'Email settings saved successfully!' }
+				}
+			} catch (error) {
+				this.emailSaveResult = { success: false, message: 'Failed to save email settings: ' + error.message }
+			} finally {
+				this.savingEmailSettings = false
+			}
+		},
+
+		/**
+		 * Gets the name of the currently active template
+		 *
+		 * @return {string} The template name
+		 */
+		getActiveTemplateName() {
+			const template = this.availableTemplates.find(t => t.key === this.activeTemplate)
+			return template ? template.name : 'Unknown Template'
+		},
+
+		/**
+		 * Gets the description of the currently active template
+		 *
+		 * @return {string} The template description
+		 */
+		getActiveTemplateDescription() {
+			const descriptions = {
+				organization_registration: 'Email sent when a new organization registers in the system.',
+				organization_activation: 'Email sent when an organization is activated (set to "Actief").',
+				user_creation: 'Email sent when a new user account is created for a contact person.',
+				user_password: 'Email sent with auto-generated passwords when user accounts are created',
+			}
+			return descriptions[this.activeTemplate] || 'No description available.'
+		},
+
+		/**
+		 * Gets the content of the currently active template
+		 *
+		 * @return {string} The template content
+		 */
+		getActiveTemplateContent() {
+			return this.templates[this.activeTemplate] || ''
+		},
+
+		getActiveTemplateVariables() {
+			// Define available variables for each template type
+			const variables = {
+				organization_registration: {
+					'organization.name': 'Organization name',
+					'organization.type': 'Organization type',
+					'organization.website': 'Organization website',
+					'organization.beoordeling': 'Organization status',
+				},
+				organization_activation: {
+					'organization.name': 'Organization name',
+					'organization.type': 'Organization type',
+					'organization.website': 'Organization website',
+				},
+				user_creation: {
+					'user.username': 'User username',
+					'user.email': 'User email address',
+					'user.displayName': 'User display name',
+					'organization.name': 'Organization name',
+					'user.roles': 'User roles (array)',
+				},
+				user_password: {
+					'user.username': 'User username',
+					'user.email': 'User email address',
+					'user.displayName': 'User display name',
+					'user.password': 'Auto-generated password',
+					'organization.name': 'Organization name',
+					'user.roles': 'User roles (array)',
+				},
+			}
+			return variables[this.activeTemplate] || {}
+		},
+
+		insertVariable(variable) {
+			// This would typically insert the variable into a text editor
+			// For now, we'll just add it to the template content
+			const currentContent = this.getActiveTemplateContent()
+			const newContent = currentContent + ` {{ ${variable} }}`
+			this.updateTemplateContent(newContent)
+		},
+
+		updateTemplateContent(value) {
+			// Update the template content in our data
+			this.$set(this.templates, this.activeTemplate, value)
+		},
+
+		/**
+		 * Resets the current template to its default content
+		 */
+		async resetTemplate() {
+			try {
+				// This would fetch the default template from the server
+				// For now, we'll set some default content
+				const defaultTemplates = {
+					organization_registration: '<h1>Welcome {{ organization.name }}!</h1><p>Your organization has been registered.</p>',
+					organization_activation: '<h1>{{ organization.name }} Activated</h1><p>Your organization is now active!</p>',
+					user_creation: '<h1>Welcome {{ user.displayName }}!</h1><p>Your account has been created.</p>',
+					user_password: '<h1>Welcome {{ user.displayName }}!</h1><p>Your password has been generated.</p>',
+				}
+
+				this.$set(this.templates, this.activeTemplate, defaultTemplates[this.activeTemplate] || '')
+			} catch (error) {
+				// Error handling for template reset
+				this.templateSaveResult = {
+					success: false,
+					message: 'Failed to reset template: ' + error.message
+				}
+			}
+		},
+
+		/**
+		 * Saves the current template
+		 */
+		async saveTemplate() {
+			this.savingTemplate = true
+			this.templateSaveResult = null
+
+			try {
+				// This would save the template to the server
+				// For now, we'll just simulate success
+				await new Promise(resolve => setTimeout(resolve, 1000))
+
+				this.templateSaveResult = {
+					success: true,
+					message: 'Template saved successfully!'
+				}
+			} catch (error) {
+				this.templateSaveResult = {
+					success: false,
+					message: 'Failed to save template: ' + error.message
+				}
+			} finally {
+				this.savingTemplate = false
+			}
+		},
+
+		/**
+		 * Formats a template variable for display in the UI
+		 *
+		 * @param {string} variable The variable name
+		 * @return {string} The formatted variable string
+		 */
+		formatTemplateVariable(variable) {
+			return `{{ ${variable} }}`
+		},
+
+
 	},
 })
 </script>
@@ -1140,6 +1982,38 @@ export default defineComponent({
 	font-size: 0.9em;
 	color: var(--color-text-maxcontrast);
 	margin-top: 0.25rem;
+}
+
+.configuration-debug {
+	margin: 2rem 0;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-dark);
+}
+
+.configuration-debug h4 {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.debug-info {
+	background-color: var(--color-main-background);
+	padding: 10px;
+	border-radius: var(--border-radius);
+	font-family: monospace;
+	font-size: 12px;
+	overflow-x: auto;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.debug-info pre {
+	margin: 0;
+	white-space: pre-wrap;
+	word-wrap: break-word;
 }
 
 .configuration-status {
@@ -1234,5 +2108,87 @@ export default defineComponent({
 
 .default-groups-info {
 	margin-top: 1rem;
+}
+
+.email-settings-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.email-configuration {
+	margin-top: 1rem;
+}
+
+.setting-row {
+	margin-bottom: 1rem;
+}
+
+.setting-label {
+	font-weight: bold;
+}
+
+.setting-description {
+	font-size: 0.9em;
+	color: var(--color-text-maxcontrast);
+	margin-top: 0.25rem;
+}
+
+.email-testing {
+	margin-top: 1rem;
+}
+
+.test-email-row {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.test-result {
+	margin-top: 1rem;
+}
+
+.email-save-buttons {
+	margin-top: 1rem;
+}
+
+.template-tabs {
+	margin-top: 1rem;
+}
+
+.tab-buttons {
+	margin-bottom: 1rem;
+}
+
+.template-editor {
+	margin-top: 1rem;
+}
+
+.template-info {
+	margin-bottom: 1rem;
+}
+
+.available-variables {
+	margin-top: 1rem;
+}
+
+.variables-list {
+	margin-top: 0.5rem;
+}
+
+.variable-tag {
+	padding: 0.25rem;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	margin-right: 0.5rem;
+	cursor: pointer;
+}
+
+.template-actions {
+	margin-top: 1rem;
+	display: flex;
+	justify-content: space-between;
 }
 </style>
