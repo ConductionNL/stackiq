@@ -1,3 +1,9 @@
+# Version: 0.1.11
+
+* [#9](https://github.com/ConductionNL/softwarecatalog/pull/9): Lets try to test user creation
+* [#11](https://github.com/ConductionNL/softwarecatalog/pull/11): Organisation on uuid
+
+
 # Changelog
 
 ## [Unreleased]
