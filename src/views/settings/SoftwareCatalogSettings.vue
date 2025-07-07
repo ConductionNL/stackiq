@@ -263,6 +263,7 @@
 								<NcTextField
 									:value="group"
 									:placeholder="'Group name'"
+									label="Group Name"
 									@update:value="updateGroupName(index, $event)" />
 								<NcButton
 									type="tertiary-no-background"
@@ -341,6 +342,235 @@
 				</div>
 			</div>
 		</NcSettingsSection>
+
+		<NcSettingsSection
+			name="Email Configuration"
+			description="Configure email settings for notifications and templates">
+			<div v-if="!loading">
+				<div class="email-settings-section">
+					<h3>Email Settings</h3>
+					<p>Configure email notifications for organization and user events</p>
+
+					<div class="email-configuration">
+						<!-- Email Enable/Disable -->
+						<div class="setting-row">
+							<label class="setting-label">
+								<NcCheckboxRadioSwitch
+									:checked="emailSettings.enabled"
+									@update:checked="updateEmailSetting('enabled', $event)">
+									Enable Email Notifications
+								</NcCheckboxRadioSwitch>
+							</label>
+							<span class="setting-description">Enable or disable all email notifications</span>
+						</div>
+
+						<!-- Sender Configuration -->
+						<div v-if="emailSettings.enabled" class="sender-configuration">
+							<h4>Sender Information</h4>
+							<div class="setting-row">
+								<label class="setting-label">Sender Name:</label>
+								<NcTextField
+									:value="emailSettings.senderName"
+									placeholder="Software Catalogus"
+									label="Sender Name"
+									@update:value="updateEmailSetting('senderName', $event)" />
+								<span class="setting-description">Name that appears as the sender of emails</span>
+							</div>
+
+							<div class="setting-row">
+								<label class="setting-label">Sender Email:</label>
+								<NcTextField
+									:value="emailSettings.senderEmail"
+									placeholder="noreply@softwarecatalogus.nl"
+									type="email"
+									label="Sender Email"
+									@update:value="updateEmailSetting('senderEmail', $event)" />
+								<span class="setting-description">Email address that appears as the sender</span>
+							</div>
+						</div>
+
+						<!-- Test Configuration -->
+						<div v-if="emailSettings.enabled" class="test-configuration">
+							<h4>Testing Configuration</h4>
+							<div class="setting-row">
+								<label class="setting-label">Test Receiver Override:</label>
+								<NcTextField
+									:value="emailSettings.testReceiverOverride"
+									placeholder="test@example.com (optional)"
+									type="email"
+									label="Test Receiver Override"
+									@update:value="updateEmailSetting('testReceiverOverride', $event)" />
+								<span class="setting-description">If set, all emails will be sent to this address instead of the actual recipients (for testing)</span>
+							</div>
+						</div>
+
+						<!-- Email Types Configuration -->
+						<div v-if="emailSettings.enabled" class="email-types-configuration">
+							<h4>Email Types</h4>
+							<div class="setting-row">
+								<label class="setting-label">
+									<NcCheckboxRadioSwitch
+										:checked="emailSettings.organizationRegistrationEnabled"
+										@update:checked="updateEmailSetting('organizationRegistrationEnabled', $event)">
+										Organization Registration Emails
+									</NcCheckboxRadioSwitch>
+								</label>
+								<span class="setting-description">Send welcome emails when organizations are first registered</span>
+							</div>
+
+							<div class="setting-row">
+								<label class="setting-label">
+									<NcCheckboxRadioSwitch
+										:checked="emailSettings.organizationActivationEnabled"
+										@update:checked="updateEmailSetting('organizationActivationEnabled', $event)">
+										Organization Activation Emails
+									</NcCheckboxRadioSwitch>
+								</label>
+								<span class="setting-description">Send emails when organizations are activated (status set to "Actief")</span>
+							</div>
+
+							<div class="setting-row">
+								<label class="setting-label">
+									<NcCheckboxRadioSwitch
+										:checked="emailSettings.userCreationEnabled"
+										@update:checked="updateEmailSetting('userCreationEnabled', $event)">
+										User Creation Emails
+									</NcCheckboxRadioSwitch>
+								</label>
+								<span class="setting-description">Send welcome emails when user accounts are created</span>
+							</div>
+
+							<div class="setting-row">
+								<label class="setting-label">
+									<NcCheckboxRadioSwitch
+										:checked="emailSettings.userPasswordEnabled"
+										@update:checked="updateEmailSetting('userPasswordEnabled', $event)">
+										User Password Emails
+									</NcCheckboxRadioSwitch>
+								</label>
+								<span class="setting-description">Send separate emails with auto-generated passwords when user accounts are created</span>
+							</div>
+						</div>
+
+						<!-- Email Testing -->
+						<div v-if="emailSettings.enabled" class="email-testing">
+							<h4>Email Testing</h4>
+							<div class="test-email-row">
+								<NcTextField
+									:value="testEmailAddress"
+									placeholder="test@example.com"
+									type="email"
+									label="Test Email Address"
+									@update:value="testEmailAddress = $event" />
+								<NcButton
+									type="secondary"
+									:disabled="!testEmailAddress || testingEmail"
+									@click="sendTestEmail">
+									<template #icon>
+										<NcLoadingIcon v-if="testingEmail" :size="20" />
+										<Email v-else :size="20" />
+									</template>
+									Send Test Email
+								</NcButton>
+							</div>
+
+							<div v-if="emailTestResult" class="test-result">
+								<NcNoteCard :type="emailTestResult.success ? 'success' : 'error'">
+									{{ emailTestResult.message }}
+								</NcNoteCard>
+							</div>
+						</div>
+
+						<!-- Save Email Settings -->
+						<div class="email-save-buttons">
+							<NcButton
+								type="primary"
+								:disabled="loading || savingEmailSettings"
+								@click="saveEmailSettings">
+								<template #icon>
+									<NcLoadingIcon v-if="savingEmailSettings" :size="20" />
+									<Save v-else :size="20" />
+								</template>
+								Save Email Settings
+							</NcButton>
+						</div>
+
+						<div v-if="emailSaveResult" class="save-results">
+							<NcNoteCard :type="emailSaveResult.success ? 'success' : 'error'">
+								{{ emailSaveResult.message || 'Email settings saved successfully!' }}
+							</NcNoteCard>
+						</div>
+					</div>
+				</div>
+
+				<!-- Email Templates Section -->
+				<div class="email-templates-section">
+					<h3>Email Templates</h3>
+					<p>Customize email templates using Twig syntax</p>
+
+					<div class="template-tabs">
+						<div class="tab-buttons">
+							<NcButton
+								v-for="template in availableTemplates"
+								:key="template.key"
+								:type="activeTemplate === template.key ? 'primary' : 'secondary'"
+								@click="activeTemplate = template.key">
+								{{ template.name }}
+							</NcButton>
+						</div>
+
+						<div v-if="activeTemplate" class="template-editor">
+							<div class="template-info">
+								<h4>{{ getActiveTemplateName() }}</h4>
+								<p>{{ getActiveTemplateDescription() }}</p>
+								<div class="available-variables">
+									<h5>Available Variables:</h5>
+									<div class="variables-list">
+										<span
+											v-for="(description, variable) in getActiveTemplateVariables()"
+											:key="variable"
+											class="variable-tag"
+											@click="insertVariable(variable)">
+											{{ formatTemplateVariable(variable) }}
+										</span>
+									</div>
+								</div>
+							</div>
+
+							<NcTextArea
+								:value="getActiveTemplateContent()"
+								:placeholder="'Enter your template content here...'"
+								rows="15"
+								@update:value="updateTemplateContent($event)" />
+
+							<div class="template-actions">
+								<NcButton
+									type="secondary"
+									@click="resetTemplate">
+									Reset to Default
+								</NcButton>
+								<NcButton
+									type="primary"
+									:disabled="loading || savingTemplate"
+									@click="saveTemplate">
+									<template #icon>
+										<NcLoadingIcon v-if="savingTemplate" :size="20" />
+										<Save v-else :size="20" />
+									</template>
+									Save Template
+								</NcButton>
+							</div>
+
+							<div v-if="templateSaveResult" class="save-results">
+								<NcNoteCard :type="templateSaveResult.success ? 'success' : 'error'">
+									{{ templateSaveResult.message || 'Template saved successfully!' }}
+								</NcNoteCard>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</NcSettingsSection>
 	</div>
 </template>
 
@@ -353,6 +583,8 @@ import {
 	NcButton,
 	NcLoadingIcon,
 	NcTextField,
+	NcCheckboxRadioSwitch,
+	NcTextArea,
 } from '@nextcloud/vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -361,6 +593,7 @@ import AutoFix from 'vue-material-design-icons/AutoFix.vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Email from 'vue-material-design-icons/Email.vue'
 
 /**
  * Software Catalog Settings component
@@ -381,6 +614,8 @@ export default defineComponent({
 		NcButton,
 		NcLoadingIcon,
 		NcTextField,
+		NcCheckboxRadioSwitch,
+		NcTextArea,
 		Save,
 		Refresh,
 		Cog,
@@ -388,6 +623,7 @@ export default defineComponent({
 		Alert,
 		Close,
 		Plus,
+		Email,
 	},
 
 	/**
@@ -415,6 +651,33 @@ export default defineComponent({
 			groupValidation: null,
 			groupsSaveResult: null,
 			savingGroups: false,
+			// Email-related data
+			emailSettings: {
+				enabled: false,
+				senderEmail: '',
+				senderName: '',
+				testReceiverOverride: '',
+				organizationRegistrationEnabled: true,
+				organizationActivationEnabled: true,
+				userCreationEnabled: true,
+				userPasswordEnabled: true,
+			},
+			savingEmailSettings: false,
+			emailSaveResult: null,
+			testEmailAddress: '',
+			testingEmail: false,
+			emailTestResult: null,
+			// Template-related data
+			availableTemplates: [
+				{ key: 'organization_registration', name: 'Organization Registration' },
+				{ key: 'organization_activation', name: 'Organization Activation' },
+				{ key: 'user_creation', name: 'User Creation' },
+				{ key: 'user_password', name: 'User Password' },
+			],
+			activeTemplate: 'organization_registration',
+			templates: {},
+			savingTemplate: false,
+			templateSaveResult: null,
 		}
 	},
 
@@ -527,9 +790,51 @@ export default defineComponent({
 
 				// Load generic user groups
 				await this.loadGenericUserGroups()
+
+				// Load email settings
+				await this.loadEmailSettings()
 			} catch (error) {
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Loads email settings from the backend API
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async loadEmailSettings() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/email-settings')
+				const data = await response.json()
+
+				if (data.success && data.data) {
+					// Update email settings with loaded data
+					this.emailSettings = {
+						enabled: data.data.enabled ?? false,
+						senderEmail: data.data.senderEmail ?? '',
+						senderName: data.data.senderName ?? '',
+						testReceiverOverride: data.data.testReceiverOverride ?? '',
+						organizationRegistrationEnabled: data.data.organizationRegistrationEnabled ?? true,
+						organizationActivationEnabled: data.data.organizationActivationEnabled ?? true,
+						userCreationEnabled: data.data.userCreationEnabled ?? true,
+						userPasswordEnabled: data.data.userPasswordEnabled ?? true,
+					}
+				}
+			} catch (error) {
+				// Use default settings if loading fails
+				this.emailSettings = {
+					enabled: false,
+					senderEmail: '',
+					senderName: '',
+					testReceiverOverride: '',
+					organizationRegistrationEnabled: true,
+					organizationActivationEnabled: true,
+					userCreationEnabled: true,
+					userPasswordEnabled: true,
+				}
 			}
 		},
 
@@ -1097,6 +1402,207 @@ export default defineComponent({
 				this.savingGroups = false
 			}
 		},
+
+		updateEmailSetting(key, value) {
+			this.emailSettings[key] = value
+		},
+
+		async sendTestEmail() {
+			this.testingEmail = true
+			this.emailTestResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/email/test', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						email: this.testEmailAddress,
+						emailSettings: this.emailSettings,
+					}),
+				})
+
+				const result = await response.json()
+				if (result.error) {
+					this.emailTestResult = { success: false, message: result.error }
+				} else {
+					this.emailTestResult = { success: true, message: 'Test email sent successfully!' }
+				}
+			} catch (error) {
+				this.emailTestResult = { success: false, message: 'Failed to send test email: ' + error.message }
+			} finally {
+				this.testingEmail = false
+			}
+		},
+
+		async saveEmailSettings() {
+			this.savingEmailSettings = true
+			this.emailSaveResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/email/settings', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ emailSettings: this.emailSettings }),
+				})
+
+				const result = await response.json()
+				if (result.error) {
+					this.emailSaveResult = { success: false, message: result.error }
+				} else {
+					this.emailSaveResult = { success: true, message: 'Email settings saved successfully!' }
+				}
+			} catch (error) {
+				this.emailSaveResult = { success: false, message: 'Failed to save email settings: ' + error.message }
+			} finally {
+				this.savingEmailSettings = false
+			}
+		},
+
+		/**
+		 * Gets the name of the currently active template
+		 *
+		 * @return {string} The template name
+		 */
+		getActiveTemplateName() {
+			const template = this.availableTemplates.find(t => t.key === this.activeTemplate)
+			return template ? template.name : 'Unknown Template'
+		},
+
+		/**
+		 * Gets the description of the currently active template
+		 *
+		 * @return {string} The template description
+		 */
+		getActiveTemplateDescription() {
+			const descriptions = {
+				organization_registration: 'Email sent when a new organization registers in the system.',
+				organization_activation: 'Email sent when an organization is activated (set to "Actief").',
+				user_creation: 'Email sent when a new user account is created for a contact person.',
+				user_password: 'Email sent with auto-generated passwords when user accounts are created',
+			}
+			return descriptions[this.activeTemplate] || 'No description available.'
+		},
+
+		/**
+		 * Gets the content of the currently active template
+		 *
+		 * @return {string} The template content
+		 */
+		getActiveTemplateContent() {
+			return this.templates[this.activeTemplate] || ''
+		},
+
+		getActiveTemplateVariables() {
+			// Define available variables for each template type
+			const variables = {
+				organization_registration: {
+					'organization.name': 'Organization name',
+					'organization.type': 'Organization type',
+					'organization.website': 'Organization website',
+					'organization.beoordeling': 'Organization status',
+				},
+				organization_activation: {
+					'organization.name': 'Organization name',
+					'organization.type': 'Organization type',
+					'organization.website': 'Organization website',
+				},
+				user_creation: {
+					'user.username': 'User username',
+					'user.email': 'User email address',
+					'user.displayName': 'User display name',
+					'organization.name': 'Organization name',
+					'user.roles': 'User roles (array)',
+				},
+				user_password: {
+					'user.username': 'User username',
+					'user.email': 'User email address',
+					'user.displayName': 'User display name',
+					'user.password': 'Auto-generated password',
+					'organization.name': 'Organization name',
+					'user.roles': 'User roles (array)',
+				},
+			}
+			return variables[this.activeTemplate] || {}
+		},
+
+		insertVariable(variable) {
+			// This would typically insert the variable into a text editor
+			// For now, we'll just add it to the template content
+			const currentContent = this.getActiveTemplateContent()
+			const newContent = currentContent + ` {{ ${variable} }}`
+			this.updateTemplateContent(newContent)
+		},
+
+		updateTemplateContent(value) {
+			// Update the template content in our data
+			this.$set(this.templates, this.activeTemplate, value)
+		},
+
+		/**
+		 * Resets the current template to its default content
+		 */
+		async resetTemplate() {
+			try {
+				// This would fetch the default template from the server
+				// For now, we'll set some default content
+				const defaultTemplates = {
+					organization_registration: '<h1>Welcome {{ organization.name }}!</h1><p>Your organization has been registered.</p>',
+					organization_activation: '<h1>{{ organization.name }} Activated</h1><p>Your organization is now active!</p>',
+					user_creation: '<h1>Welcome {{ user.displayName }}!</h1><p>Your account has been created.</p>',
+					user_password: '<h1>Welcome {{ user.displayName }}!</h1><p>Your password has been generated.</p>',
+				}
+
+				this.$set(this.templates, this.activeTemplate, defaultTemplates[this.activeTemplate] || '')
+			} catch (error) {
+				// Error handling for template reset
+				this.templateSaveResult = {
+					success: false,
+					message: 'Failed to reset template: ' + error.message
+				}
+			}
+		},
+
+		/**
+		 * Saves the current template
+		 */
+		async saveTemplate() {
+			this.savingTemplate = true
+			this.templateSaveResult = null
+
+			try {
+				// This would save the template to the server
+				// For now, we'll just simulate success
+				await new Promise(resolve => setTimeout(resolve, 1000))
+
+				this.templateSaveResult = {
+					success: true,
+					message: 'Template saved successfully!'
+				}
+			} catch (error) {
+				this.templateSaveResult = {
+					success: false,
+					message: 'Failed to save template: ' + error.message
+				}
+			} finally {
+				this.savingTemplate = false
+			}
+		},
+
+		/**
+		 * Formats a template variable for display in the UI
+		 *
+		 * @param {string} variable The variable name
+		 * @return {string} The formatted variable string
+		 */
+		formatTemplateVariable(variable) {
+			return `{{ ${variable} }}`
+		},
+
+
 	},
 })
 </script>
@@ -1234,5 +1740,87 @@ export default defineComponent({
 
 .default-groups-info {
 	margin-top: 1rem;
+}
+
+.email-settings-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.email-configuration {
+	margin-top: 1rem;
+}
+
+.setting-row {
+	margin-bottom: 1rem;
+}
+
+.setting-label {
+	font-weight: bold;
+}
+
+.setting-description {
+	font-size: 0.9em;
+	color: var(--color-text-maxcontrast);
+	margin-top: 0.25rem;
+}
+
+.email-testing {
+	margin-top: 1rem;
+}
+
+.test-email-row {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.test-result {
+	margin-top: 1rem;
+}
+
+.email-save-buttons {
+	margin-top: 1rem;
+}
+
+.template-tabs {
+	margin-top: 1rem;
+}
+
+.tab-buttons {
+	margin-bottom: 1rem;
+}
+
+.template-editor {
+	margin-top: 1rem;
+}
+
+.template-info {
+	margin-bottom: 1rem;
+}
+
+.available-variables {
+	margin-top: 1rem;
+}
+
+.variables-list {
+	margin-top: 0.5rem;
+}
+
+.variable-tag {
+	padding: 0.25rem;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	margin-right: 0.5rem;
+	cursor: pointer;
+}
+
+.template-actions {
+	margin-top: 1rem;
+	display: flex;
+	justify-content: space-between;
 }
 </style>

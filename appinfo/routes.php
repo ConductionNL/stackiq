@@ -34,10 +34,14 @@ return [
         ['name' => 'settings#validate_generic_user_groups', 'url' => '/api/settings/generic-user-groups/validate', 'verb' => 'POST'],
         ['name' => 'settings#ensure_generic_user_groups', 'url' => '/api/settings/generic-user-groups/ensure', 'verb' => 'POST'],
 
-        // Email Settings API routes
-        ['name' => 'email_settings#index', 'url' => '/api/email-settings', 'verb' => 'GET'],
-        ['name' => 'email_settings#update', 'url' => '/api/email-settings', 'verb' => 'POST'],
-        ['name' => 'email_settings#test', 'url' => '/api/email-settings/test', 'verb' => 'POST'],
-        ['name' => 'email_settings#status', 'url' => '/api/email-settings/status', 'verb' => 'GET'],
+        // Email Settings API routes (consolidated into main SettingsController)
+        ['name' => 'settings#get_email_settings', 'url' => '/api/email-settings', 'verb' => 'GET'],
+        ['name' => 'settings#update_email_settings', 'url' => '/api/email-settings', 'verb' => 'POST'],
+        ['name' => 'settings#test_email_sending', 'url' => '/api/email/test', 'verb' => 'POST'],
+        ['name' => 'settings#get_email_template', 'url' => '/api/email/template', 'verb' => 'GET'],
+        ['name' => 'settings#update_email_template', 'url' => '/api/email/template', 'verb' => 'POST'],
+        
+        // Simplified email settings routes (matching frontend expectations)
+        ['name' => 'settings#update_email_settings', 'url' => '/api/email/settings', 'verb' => 'POST'],
     ],
 ];

@@ -26,6 +26,7 @@ use OCP\IGroup;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
+use OCA\SoftwareCatalog\Service\PhpEmailService;
 
 /**
  * Handler for contact person-related operations
@@ -48,6 +49,7 @@ class ContactPersonHandler
      * @param ContainerInterface     $_container      Container interface
      * @param IAppManager            $_appManager     App manager interface
      * @param LoggerInterface        $_logger         Logger interface
+     * @param PhpEmailService        $_emailService   Email service
      */
     public function __construct(
         private readonly IUserManager $_userManager,
@@ -56,6 +58,7 @@ class ContactPersonHandler
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
         private readonly LoggerInterface $_logger,
+        private readonly PhpEmailService $_emailService,
     ) {
     }
 
@@ -414,6 +417,9 @@ class ContactPersonHandler
                 // Update contactgegevens with username
                 $objectData['username'] = $username;
                 $contactgegevensObject->setObject($objectData);
+                
+                // Send user creation email
+                $this->sendUserCreationEmail($user, $objectData);
                 
                 $this->_logger->info(
                     'Created user account for contact person',
@@ -987,6 +993,9 @@ class ContactPersonHandler
                             'contactId' => $contactObject->getId()
                         ]
                     );
+                    
+                    // Send account suspension notification email
+                    $this->sendAccountSuspensionEmail($user, $objectData);
                 }
             }
 
@@ -1186,4 +1195,106 @@ class ContactPersonHandler
             return '';
         }
     }
-} 
+
+    /**
+     * Sends user creation email
+     *
+     * @param \OCP\IUser $user       The created user
+     * @param array      $objectData The contact person data
+     * 
+     * @return void
+     */
+    private function sendUserCreationEmail(\OCP\IUser $user, array $objectData): void
+    {
+        try {
+            $this->_logger->info('Sending user creation email', [
+                'username' => $user->getUID(),
+                'email' => $user->getEMailAddress()
+            ]);
+            
+            // Prepare user data for email
+            $userData = [
+                'username' => $user->getUID(),
+                'email' => $user->getEMailAddress(),
+                'displayName' => $user->getDisplayName(),
+                'voornaam' => $objectData['voornaam'] ?? '',
+                'achternaam' => $objectData['achternaam'] ?? '',
+                'roles' => $objectData['roles'] ?? []
+            ];
+            
+            // Get organization data if available
+            $organizationData = [];
+            $organizationId = $objectData['organisation'] ?? '';
+            if (!empty($organizationId)) {
+                try {
+                    $objectService = $this->_getObjectService();
+                    $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
+                    if ($organizationObject) {
+                        $organizationData = $organizationObject->getObject();
+                    }
+                } catch (\Exception $e) {
+                    $this->_logger->warning('Failed to get organization data for email: ' . $e->getMessage(), [
+                        'organizationId' => $organizationId
+                    ]);
+                }
+            }
+            
+            // Send user creation email
+            $success = $this->_emailService->sendUserCreationEmail($userData, $organizationData);
+            
+            if ($success) {
+                $this->_logger->info('User creation email sent successfully', [
+                    'username' => $user->getUID(),
+                    'email' => $user->getEMailAddress()
+                ]);
+            } else {
+                $this->_logger->warning('Failed to send user creation email', [
+                    'username' => $user->getUID(),
+                    'email' => $user->getEMailAddress()
+                ]);
+            }
+            
+                 } catch (\Exception $e) {
+             $this->_logger->error('Exception sending user creation email: ' . $e->getMessage(), [
+                 'username' => $user->getUID(),
+                 'email' => $user->getEMailAddress(),
+                 'exception' => $e
+             ]);
+         }
+     }
+
+    /**
+     * Sends account suspension notification email
+     *
+     * @param \OCP\IUser $user       The suspended user
+     * @param array      $objectData The contact person data
+     * 
+     * @return void
+     */
+    private function sendAccountSuspensionEmail(\OCP\IUser $user, array $objectData): void
+    {
+        try {
+            $this->_logger->info('Sending account suspension email', [
+                'username' => $user->getUID(),
+                'email' => $user->getEMailAddress()
+            ]);
+            
+            // For now, we'll use a simple log message as the PhpEmailService 
+            // doesn't have a specific suspension email method yet
+            // This can be extended later if needed
+            
+            $this->_logger->info('Account suspension email would be sent here', [
+                'username' => $user->getUID(),
+                'email' => $user->getEMailAddress(),
+                'displayName' => $user->getDisplayName()
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->_logger->error('Exception sending account suspension email: ' . $e->getMessage(), [
+                'username' => $user->getUID(),
+                'email' => $user->getEMailAddress(),
+                'exception' => $e
+            ]);
+        }
+    }
+}  

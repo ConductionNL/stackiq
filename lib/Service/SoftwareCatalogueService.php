@@ -22,7 +22,7 @@ use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
-use OCA\SoftwareCatalog\Service\EmailService;
+use OCA\SoftwareCatalog\Service\PhpEmailService;
 use Psr\Log\LoggerInterface;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
@@ -56,7 +56,7 @@ class SoftwareCatalogueService
      * @param ContactPersonHandler  $_contactPersonHandler Contact person handler
      * @param GroupHandler          $_groupHandler         Group handler
      * @param HierarchyHandler      $_hierarchyHandler     Hierarchy handler
-     * @param EmailService          $_emailService         Email service
+     * @param PhpEmailService       $_emailService         Email service
      * @param LoggerInterface       $_logger               Logger interface
      */
     public function __construct(
@@ -64,7 +64,7 @@ class SoftwareCatalogueService
         private readonly ContactPersonHandler $_contactPersonHandler,
         private readonly GroupHandler $_groupHandler,
         private readonly HierarchyHandler $_hierarchyHandler,
-        private readonly EmailService $_emailService,
+        private readonly PhpEmailService $_emailService,
         private readonly LoggerInterface $_logger,
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
@@ -293,8 +293,30 @@ class SoftwareCatalogueService
                 'objectId' => $organizationObject->getId()
             ]);
 
+            // Send welcome email for new organization
+            $this->sendOrganizationWelcomeEmail($organizationObject);
+            
             // Process the organization which will handle contactpersonen if active
             $this->processOrganization($organizationObject);
+            
+            // If organization is active, send activation email too
+            $objectData = $organizationObject->getObject();
+            $beoordeling = strtolower($objectData['beoordeling'] ?? '');
+            
+            if ($beoordeling === 'actief') {
+                try {
+                    $success = $this->_emailService->sendOrganizationActivationEmail($objectData);
+                    $this->_logger->info('Organization activation email sent', [
+                        'objectId' => $organizationObject->getId(),
+                        'success' => $success
+                    ]);
+                } catch (\Exception $e) {
+                    $this->_logger->error('Failed to send organization activation email: ' . $e->getMessage(), [
+                        'objectId' => $organizationObject->getId(),
+                        'exception' => $e
+                    ]);
+                }
+            }
             
         } catch (\Exception $e) {
             $this->_logger->error(
@@ -328,31 +350,47 @@ class SoftwareCatalogueService
             $newBeoordeling = strtolower($newData['beoordeling'] ?? '');
             $oldBeoordeling = strtolower($oldData['beoordeling'] ?? '');
             
-                    // Process organization if it's currently active
-        if ($newBeoordeling === 'actief') {
-            $becameActive = ($oldBeoordeling !== 'actief');
-            
-            $this->_logger->info(
-                $becameActive ? 'Organization became active, processing contactpersonen' : 'Organization is active, processing update',
-                [
-                    'organizationId' => $organizationObject->getId(),
-                    'oldBeoordeling' => $oldBeoordeling,
-                    'newBeoordeling' => $newBeoordeling,
-                    'becameActive' => $becameActive
-                ]
-            );
-            
-            // Process the organization since it's active
-            $this->processOrganization($organizationObject);
-        } else {
-            $this->_logger->info(
-                'Organization not active, skipping processing',
-                [
-                    'organizationId' => $organizationObject->getId(),
-                    'beoordeling' => $newBeoordeling
-                ]
-            );
-        }
+            // Process organization if it's currently active
+            if ($newBeoordeling === 'actief') {
+                $becameActive = ($oldBeoordeling !== 'actief');
+                
+                $this->_logger->info(
+                    $becameActive ? 'Organization became active, processing contactpersonen' : 'Organization is active, processing update',
+                    [
+                        'organizationId' => $organizationObject->getId(),
+                        'oldBeoordeling' => $oldBeoordeling,
+                        'newBeoordeling' => $newBeoordeling,
+                        'becameActive' => $becameActive
+                    ]
+                );
+                
+                // Send activation email if organization just became active
+                if ($becameActive) {
+                    try {
+                        $success = $this->_emailService->sendOrganizationActivationEmail($newData);
+                        $this->_logger->info('Organization activation email sent', [
+                            'objectId' => $organizationObject->getId(),
+                            'success' => $success
+                        ]);
+                    } catch (\Exception $e) {
+                        $this->_logger->error('Failed to send organization activation email: ' . $e->getMessage(), [
+                            'objectId' => $organizationObject->getId(),
+                            'exception' => $e
+                        ]);
+                    }
+                }
+                
+                // Process the organization since it's active
+                $this->processOrganization($organizationObject);
+            } else {
+                $this->_logger->info(
+                    'Organization not active, skipping processing',
+                    [
+                        'organizationId' => $organizationObject->getId(),
+                        'beoordeling' => $newBeoordeling
+                    ]
+                );
+            }
             
         } catch (\Exception $e) {
             $this->_logger->error(
@@ -374,10 +412,31 @@ class SoftwareCatalogueService
      */
     public function sendOrganizationWelcomeEmail(object $organizationObject): void
     {
-        // Implementation for sending organization welcome email
-        $this->_logger->info('Sending organization welcome email', [
-            'objectId' => $organizationObject->getId()
-        ]);
+        try {
+            $this->_logger->info('Sending organization welcome email', [
+                'objectId' => $organizationObject->getId()
+            ]);
+            
+            $objectData = $organizationObject->getObject();
+            
+            // Send organization registration email
+            $success = $this->_emailService->sendOrganizationRegistrationEmail($objectData);
+            
+            if ($success) {
+                $this->_logger->info('Organization welcome email sent successfully', [
+                    'objectId' => $organizationObject->getId()
+                ]);
+            } else {
+                $this->_logger->warning('Failed to send organization welcome email', [
+                    'objectId' => $organizationObject->getId()
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->_logger->error('Exception sending organization welcome email: ' . $e->getMessage(), [
+                'objectId' => $organizationObject->getId(),
+                'exception' => $e
+            ]);
+        }
     }
 
     /**

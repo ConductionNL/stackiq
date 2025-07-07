@@ -365,4 +365,211 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Get email settings configuration
+     *
+     * @return JSONResponse JSON response containing the email settings
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getEmailSettings(): JSONResponse
+    {
+        try {
+            $emailSettings = $this->settingsService->getEmailSettings();
+            return new JSONResponse([
+                'success' => true,
+                'data' => $emailSettings
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get email settings', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update email settings configuration
+     *
+     * @return JSONResponse JSON response containing the update results
+     *
+     * @NoCSRFRequired
+     */
+    public function updateEmailSettings(): JSONResponse
+    {
+        try {
+            // Get request data from POST params or JSON body
+            $data = $this->request->getParams();
+            
+            // If no emailSettings in params, try to parse JSON from input
+            if (!isset($data['emailSettings'])) {
+                $input = file_get_contents('php://input');
+                if ($input) {
+                    $requestData = json_decode($input, true);
+                    if ($requestData && isset($requestData['emailSettings'])) {
+                        $data = $requestData['emailSettings'];
+                    }
+                }
+            } else {
+                $data = $data['emailSettings'];
+            }
+            
+            $result = $this->settingsService->updateEmailSettings($data);
+            
+            return new JSONResponse([
+                'success' => true,
+                'data' => $result,
+                'message' => 'Email settings updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update email settings', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get email template content
+     *
+     * @return JSONResponse JSON response containing the template content
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getEmailTemplate(): JSONResponse
+    {
+        try {
+            $templateName = $this->request->getParam('templateName');
+            
+            if (!$templateName) {
+                return new JSONResponse(['error' => 'Template name is required'], 400);
+            }
+
+            $templateContent = $this->settingsService->getEmailTemplate($templateName);
+            $templateVariables = $this->settingsService->getEmailTemplateVariables($templateName);
+            
+            return new JSONResponse([
+                'success' => true,
+                'templateName' => $templateName,
+                'templateContent' => $templateContent,
+                'templateVariables' => $templateVariables
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get email template', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update email template content
+     *
+     * @return JSONResponse JSON response containing the update results
+     *
+     * @NoCSRFRequired
+     */
+    public function updateEmailTemplate(): JSONResponse
+    {
+        try {
+            $templateName = $this->request->getParam('templateName');
+            $templateContent = $this->request->getParam('templateContent');
+            
+            if (!$templateName || !$templateContent) {
+                return new JSONResponse(['error' => 'Template name and content are required'], 400);
+            }
+
+            $success = $this->settingsService->updateEmailTemplate($templateName, $templateContent);
+            
+            if ($success) {
+                return new JSONResponse([
+                    'success' => true,
+                    'message' => 'Email template updated successfully'
+                ]);
+            } else {
+                return new JSONResponse(['error' => 'Failed to update email template'], 500);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update email template', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Test email sending functionality
+     *
+     * @return JSONResponse JSON response containing the test results
+     *
+     * @NoCSRFRequired
+     */
+    public function testEmailSending(): JSONResponse
+    {
+        try {
+            // Get request data from POST params or JSON body
+            $params = $this->request->getParams();
+            $testEmail = null;
+            $emailSettings = null;
+            
+            // Try to get email from POST params first
+            if (isset($params['testEmail']) && is_string($params['testEmail'])) {
+                $testEmail = $params['testEmail'];
+            } elseif (isset($params['email']) && is_string($params['email'])) {
+                $testEmail = $params['email'];
+            }
+            
+            // If no testEmail in params, try to parse JSON from input
+            if (!$testEmail) {
+                $input = file_get_contents('php://input');
+                if ($input) {
+                    $requestData = json_decode($input, true);
+                    if ($requestData && is_array($requestData)) {
+                        if (isset($requestData['email']) && is_string($requestData['email'])) {
+                            $testEmail = $requestData['email'];
+                        }
+                        if (isset($requestData['emailSettings']) && is_array($requestData['emailSettings'])) {
+                            $emailSettings = $requestData['emailSettings'];
+                        }
+                    }
+                }
+            }
+            
+            if (!$testEmail || !is_string($testEmail)) {
+                return new JSONResponse([
+                    'success' => false,
+                    'error' => 'Test email address is required'
+                ], 400);
+            }
+
+            // Apply temporary email settings if provided
+            if ($emailSettings && is_array($emailSettings)) {
+                $this->settingsService->updateEmailSettings($emailSettings);
+            }
+
+            $result = $this->settingsService->testEmailSending($testEmail);
+            
+            return new JSONResponse($result);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to test email sending', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }//end class

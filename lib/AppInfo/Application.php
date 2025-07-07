@@ -90,7 +90,8 @@ class Application extends App implements IBootstrap
                 $c->get(IGroupManager::class),
                 $c,
                 $c->get(IAppManager::class),
-                $c->get(\Psr\Log\LoggerInterface::class)
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get('OCA\SoftwareCatalog\Service\PhpEmailService')
             );
         });
 
