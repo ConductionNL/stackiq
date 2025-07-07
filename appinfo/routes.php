@@ -28,6 +28,12 @@ return [
         ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
         ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
 
+        // Generic User Groups API routes
+        ['name' => 'settings#get_generic_user_groups', 'url' => '/api/settings/generic-user-groups', 'verb' => 'GET'],
+        ['name' => 'settings#update_generic_user_groups', 'url' => '/api/settings/generic-user-groups', 'verb' => 'POST'],
+        ['name' => 'settings#validate_generic_user_groups', 'url' => '/api/settings/generic-user-groups/validate', 'verb' => 'POST'],
+        ['name' => 'settings#ensure_generic_user_groups', 'url' => '/api/settings/generic-user-groups/ensure', 'verb' => 'POST'],
+
         // Email Settings API routes
         ['name' => 'email_settings#index', 'url' => '/api/email-settings', 'verb' => 'GET'],
         ['name' => 'email_settings#update', 'url' => '/api/email-settings', 'verb' => 'POST'],

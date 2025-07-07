@@ -28,6 +28,13 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
+use OCP\IUserManager;
+use OCP\IGroupManager;
+use OCP\IAppConfig;
+use OCP\App\IAppManager;
+use Psr\Log\LoggerInterface;
+use OCP\Security\ISecureRandom;
+use Psr\Container\ContainerInterface;
 
 /**
  * Main Application class for SoftwareCatalog
@@ -65,6 +72,47 @@ class Application extends App implements IBootstrap
     {
         include_once __DIR__ . '/../../vendor/autoload.php';
         
+        // Register the handlers as services
+        $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler', function (ContainerInterface $c) {
+            return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler(
+                $c->get(IGroupManager::class),
+                $c->get(IUserManager::class),
+                $c,
+                $c->get(IAppManager::class),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
+
+        $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler', function (ContainerInterface $c) {
+            return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler(
+                $c->get(IUserManager::class),
+                $c->get(\OCP\Security\ISecureRandom::class),
+                $c->get(IGroupManager::class),
+                $c,
+                $c->get(IAppManager::class),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
+
+        $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler', function (ContainerInterface $c) {
+            return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler(
+                $c->get(IGroupManager::class),
+                $c->get(IUserManager::class),
+                $c->get(IAppConfig::class),
+                $c,
+                $c->get(IAppManager::class),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
+
+        $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler', function (ContainerInterface $c) {
+            return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler(
+                $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler'),
+                $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
+
         // Register event listeners for OpenRegister events
         $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);

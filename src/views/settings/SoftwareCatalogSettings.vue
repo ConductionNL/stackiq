@@ -247,6 +247,100 @@
 				:size="64"
 				appearance="dark" />
 		</NcSettingsSection>
+
+		<NcSettingsSection
+			name="Generic User Groups"
+			description="Configure which user groups are available for assignment to users">
+			<div v-if="!loading">
+				<div class="generic-groups-section">
+					<h3>User Group Management</h3>
+					<p>Define the list of generic user groups that can be assigned to users based on their roles</p>
+
+					<div class="groups-configuration">
+						<h4>Current Generic User Groups</h4>
+						<div class="group-list">
+							<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
+								<NcTextField
+									:value="group"
+									:placeholder="'Group name'"
+									@update:value="updateGroupName(index, $event)" />
+								<NcButton
+									type="tertiary-no-background"
+									:aria-label="'Remove group'"
+									@click="removeGroup(index)">
+									<template #icon>
+										<Close :size="16" />
+									</template>
+								</NcButton>
+							</div>
+						</div>
+
+						<div class="group-actions">
+							<NcButton
+								type="secondary"
+								@click="addGroup">
+								<template #icon>
+									<Plus :size="20" />
+								</template>
+								Add Group
+							</NcButton>
+
+							<NcButton
+								type="primary"
+								:disabled="loading || savingGroups"
+								@click="saveGenericUserGroups">
+								<template #icon>
+									<NcLoadingIcon v-if="savingGroups" :size="20" />
+									<Save v-else :size="20" />
+								</template>
+								Save Groups
+							</NcButton>
+						</div>
+
+						<div v-if="groupValidation && groupValidation.errors.length > 0" class="validation-errors">
+							<NcNoteCard type="error">
+								<template #icon>
+									<Alert :size="20" />
+								</template>
+								<strong>Validation Errors:</strong>
+								<ul>
+									<li v-for="error in groupValidation.errors" :key="error">{{ error }}</li>
+								</ul>
+							</NcNoteCard>
+						</div>
+
+						<div v-if="groupsSaveResult" class="save-results">
+							<NcNoteCard v-if="groupsSaveResult.success" type="success">
+								Groups saved successfully!
+							</NcNoteCard>
+							<NcNoteCard v-else type="error">
+								{{ groupsSaveResult.error || 'Failed to save groups' }}
+							</NcNoteCard>
+						</div>
+
+						<div class="groups-info">
+							<h4>Group Information</h4>
+							<p>These groups will be used for:</p>
+							<ul>
+								<li><strong>Role-based assignment:</strong> Users will be automatically assigned to groups based on their roles</li>
+								<li><strong>Permission management:</strong> Groups can be used to control access to different parts of the system</li>
+								<li><strong>Organization structure:</strong> Special groups like 'ambtenaar' are assigned based on organization type</li>
+							</ul>
+
+							<div class="default-groups-info">
+								<h5>Recommended Groups:</h5>
+								<ul>
+									<li><code>beheerder</code> - System administrators and managers</li>
+									<li><code>inkoper</code> - Procurement specialists</li>
+									<li><code>ambtenaar</code> - Civil servants (auto-assigned for gemeente organizations)</li>
+									<li><code>software-catalog-users</code> - All software catalog users</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</NcSettingsSection>
 	</div>
 </template>
 
@@ -258,12 +352,15 @@ import {
 	NcSelect,
 	NcButton,
 	NcLoadingIcon,
+	NcTextField,
 } from '@nextcloud/vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import AutoFix from 'vue-material-design-icons/AutoFix.vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
+import Close from 'vue-material-design-icons/Close.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 
 /**
  * Software Catalog Settings component
@@ -283,11 +380,14 @@ export default defineComponent({
 		NcSelect,
 		NcButton,
 		NcLoadingIcon,
+		NcTextField,
 		Save,
 		Refresh,
 		Cog,
 		AutoFix,
 		Alert,
+		Close,
+		Plus,
 	},
 
 	/**
@@ -311,6 +411,10 @@ export default defineComponent({
 			selectedRegister: null,
 			configuration: {},
 			schemaOptions: [],
+			genericUserGroups: [],
+			groupValidation: null,
+			groupsSaveResult: null,
+			savingGroups: false,
 		}
 	},
 
@@ -420,9 +524,33 @@ export default defineComponent({
 
 				this.initializeConfiguration()
 				this.autoSelectRegister()
+
+				// Load generic user groups
+				await this.loadGenericUserGroups()
 			} catch (error) {
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Loads generic user groups from the backend API
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async loadGenericUserGroups() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/generic-user-groups')
+				const data = await response.json()
+
+				if (data.error) {
+					this.genericUserGroups = ['beheerder', 'inkoper', 'ambtenaar', 'software-catalog-users']
+				} else {
+					this.genericUserGroups = data.groups || []
+				}
+			} catch (error) {
+				this.genericUserGroups = ['beheerder', 'inkoper', 'ambtenaar', 'software-catalog-users']
 			}
 		},
 
@@ -928,6 +1056,47 @@ export default defineComponent({
 		isSpecificRegister() {
 			return this.isRegisterType('amef') || this.isRegisterType('voorzieningen')
 		},
+
+		updateGroupName(index, value) {
+			this.genericUserGroups[index] = value
+		},
+
+		removeGroup(index) {
+			this.genericUserGroups.splice(index, 1)
+		},
+
+		addGroup() {
+			this.genericUserGroups.push('')
+		},
+
+		async saveGenericUserGroups() {
+			this.savingGroups = true
+			this.groupValidation = null
+			this.groupsSaveResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/generic-user-groups', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ groups: this.genericUserGroups }),
+				})
+
+				const result = await response.json()
+				if (result.error) {
+					this.groupValidation = { errors: [result.error] }
+				} else {
+					this.groupsSaveResult = { success: true }
+					// Reload settings to reflect any changes
+					await this.loadSettings()
+				}
+			} catch (error) {
+				this.groupValidation = { errors: ['Failed to save groups: ' + error.message] }
+			} finally {
+				this.savingGroups = false
+			}
+		},
 	},
 })
 </script>
@@ -1021,5 +1190,49 @@ export default defineComponent({
 
 .status-group {
 	margin-bottom: 1rem;
+}
+
+.generic-groups-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.groups-configuration {
+	margin-top: 1rem;
+}
+
+.group-list {
+	margin-bottom: 1rem;
+}
+
+.group-item {
+	display: flex;
+	align-items: center;
+	margin-bottom: 0.5rem;
+}
+
+.group-actions {
+	margin-bottom: 1rem;
+	display: flex;
+	gap: 1rem;
+}
+
+.validation-errors {
+	margin-bottom: 1rem;
+}
+
+.save-results {
+	margin-bottom: 1rem;
+}
+
+.groups-info {
+	margin-top: 1rem;
+}
+
+.default-groups-info {
+	margin-top: 1rem;
 }
 </style>
