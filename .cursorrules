@@ -1,0 +1,80 @@
+# Cursor Rules for Nextcloud SoftwareCatalog API Testing
+
+## Testing the Nextcloud API in Docker Environment
+
+### Prerequisites
+- Docker Compose setup running with Nextcloud container
+- SoftwareCatalog and OpenRegister apps enabled
+- Admin credentials (admin:admin)
+
+### API Testing Commands
+
+#### 1. Test API from inside the container
+```bash
+cd /home/rubenlinde/nextcloud-docker-dev
+docker-compose exec nextcloud curl -X GET "http://localhost/index.php/apps/openregister/api/objects/6/35/OBJECT_ID" -H "Content-Type: application/json" -u admin:admin
+```
+
+#### 2. Create a new organization (should trigger EventListener)
+```bash
+docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/openregister/api/objects/6/35" -H "Content-Type: application/json" -u admin:admin -d '{
+  "naam": "Test Organization",
+  "website": "www.test.com",
+  "beoordeling": "Actief",
+  "contactpersonen": [
+    {
+      "voornaam": "John",
+      "achternaam": "Doe",
+      "email": "john@test.com",
+      "functie": "beheerder"
+    }
+  ],
+  "type": "Leverancier",
+  "beschrijvingKort": "Test organization"
+}'
+```
+
+#### 3. Update an organization (should trigger EventListener)
+```bash
+docker-compose exec nextcloud curl -X PUT "http://localhost/index.php/apps/openregister/api/objects/6/35/OBJECT_ID" -H "Content-Type: application/json" -u admin:admin -d '{
+  "id": "OBJECT_ID",
+  "naam": "Updated Organization",
+  "beoordeling": "Actief",
+  "contactpersonen": [
+    {
+      "voornaam": "John",
+      "achternaam": "Doe",
+      "email": "john@test.com",
+      "functie": "beheerder"
+    }
+  ],
+  "type": "Leverancier"
+}'
+```
+
+#### 4. Check EventListener logs
+```bash
+docker-compose exec nextcloud tail -n 100 /var/www/html/data/nextcloud.log | grep -i "softwarecatalog"
+```
+
+#### 5. Check configuration
+```bash
+docker-compose exec -u 33 nextcloud php occ config:app:get softwarecatalog voorzieningen_organisatie_schema
+```
+
+### Expected Behavior
+- **Successful processing**: `contactpersonen` array should become empty, `groups` array should be populated
+- **Failed processing**: `contactpersonen` array remains populated, `groups` array stays empty
+- **EventListener triggered**: Log entries with "SoftwareCatalog" should appear
+
+### Common Issues
+1. **EventListener not registered**: Check `lib/AppInfo/Application.php` for correct event class names
+2. **Dependency injection errors**: Verify all interface imports are correct
+3. **Schema ID mismatch**: Ensure configuration matches object schema (35 for organisatie)
+4. **Container permissions**: Use `-u 33` for PHP commands requiring file access
+
+### Schema Configuration
+- **Register ID**: 6 (Voorzieningen)
+- **Organisatie Schema ID**: 35
+- **Contactgegevens Schema ID**: 34
+- **Gebruiker Schema ID**: 42 

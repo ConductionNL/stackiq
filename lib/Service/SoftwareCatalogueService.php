@@ -24,6 +24,8 @@ use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
 use OCA\SoftwareCatalog\Service\EmailService;
 use Psr\Log\LoggerInterface;
+use Psr\Container\ContainerInterface;
+use OCP\App\IAppManager;
 
 /**
  * Service for handling software catalog operations
@@ -64,8 +66,29 @@ class SoftwareCatalogueService
         private readonly HierarchyHandler $_hierarchyHandler,
         private readonly EmailService $_emailService,
         private readonly LoggerInterface $_logger,
+        private readonly ContainerInterface $_container,
+        private readonly IAppManager $_appManager,
     ) {
         $this->_appName = 'softwarecatalog';
+    }
+
+    /**
+     * Gets the ObjectService instance
+     *
+     * @return \OCA\OpenRegister\Service\ObjectService|null
+     */
+    private function _getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
+    {
+        if (!$this->_appManager->isEnabledForUser('openregister')) {
+            return null;
+        }
+
+        try {
+            return $this->_container->get('OCA\\OpenRegister\\Service\\ObjectService');
+        } catch (\Exception $e) {
+            $this->_logger->error('Failed to get ObjectService: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
@@ -141,9 +164,13 @@ class SoftwareCatalogueService
                     $createdContacts = $this->_organizationHandler->processContactpersonen($organizationObject);
                     
                     // Process each created contactgegevens to create users and set up groups
+                    $successfullyProcessed = 0;
                     foreach ($createdContacts as $contactgegevensObject) {
                         try {
-                            $this->processContactgegevens($contactgegevensObject);
+                            $result = $this->processContactgegevens($contactgegevensObject);
+                            if ($result) {
+                                $successfullyProcessed++;
+                            }
                         } catch (\Exception $e) {
                             $this->_logger->error(
                                 'Failed to process created contactgegevens: ' . $e->getMessage(),
@@ -156,11 +183,42 @@ class SoftwareCatalogueService
                         }
                     }
                     
+                    // If all contactgegevens were processed successfully, clean up contactpersonen array
+                    if ($successfullyProcessed === count($createdContacts) && count($createdContacts) > 0) {
+                        try {
+                            $objectData['contactpersonen'] = [];
+                            $organizationObject->setObject($objectData);
+                            
+                            // Save the updated organization object
+                            $objectService = $this->_getObjectService();
+                            if ($objectService) {
+                                $objectService->saveObject($objectData, [], null, null, $organizationObject->getUuid());
+                                
+                                $this->_logger->info(
+                                    'Emptied contactpersonen array after successful processing',
+                                    [
+                                        'organizationId' => $organizationObject->getId(),
+                                        'processedContactsCount' => $successfullyProcessed
+                                    ]
+                                );
+                            }
+                        } catch (\Exception $e) {
+                            $this->_logger->error(
+                                'Failed to empty contactpersonen array: ' . $e->getMessage(),
+                                [
+                                    'organizationId' => $organizationObject->getId(),
+                                    'exception' => $e
+                                ]
+                            );
+                        }
+                    }
+                    
                     $this->_logger->info(
                         'Successfully processed organization and contactpersonen',
                         [
                             'organizationId' => $organizationObject->getId(),
-                            'createdContactsCount' => count($createdContacts)
+                            'createdContactsCount' => count($createdContacts),
+                            'successfullyProcessedCount' => $successfullyProcessed
                         ]
                     );
                 }
@@ -270,28 +328,31 @@ class SoftwareCatalogueService
             $newBeoordeling = strtolower($newData['beoordeling'] ?? '');
             $oldBeoordeling = strtolower($oldData['beoordeling'] ?? '');
             
-            // Check if beoordeling changed to 'actief'
-            if ($newBeoordeling === 'actief' && $oldBeoordeling !== 'actief') {
-                $this->_logger->info(
-                    'Organization became active, processing contactpersonen',
-                    [
-                        'organizationId' => $organizationObject->getId(),
-                        'oldBeoordeling' => $oldBeoordeling,
-                        'newBeoordeling' => $newBeoordeling
-                    ]
-                );
-                
-                // Process the organization now that it's active
-                $this->processOrganization($organizationObject);
-            } else {
-                $this->_logger->info(
-                    'Organization beoordeling unchanged or not active',
-                    [
-                        'organizationId' => $organizationObject->getId(),
-                        'beoordeling' => $newBeoordeling
-                    ]
-                );
-            }
+                    // Process organization if it's currently active
+        if ($newBeoordeling === 'actief') {
+            $becameActive = ($oldBeoordeling !== 'actief');
+            
+            $this->_logger->info(
+                $becameActive ? 'Organization became active, processing contactpersonen' : 'Organization is active, processing update',
+                [
+                    'organizationId' => $organizationObject->getId(),
+                    'oldBeoordeling' => $oldBeoordeling,
+                    'newBeoordeling' => $newBeoordeling,
+                    'becameActive' => $becameActive
+                ]
+            );
+            
+            // Process the organization since it's active
+            $this->processOrganization($organizationObject);
+        } else {
+            $this->_logger->info(
+                'Organization not active, skipping processing',
+                [
+                    'organizationId' => $organizationObject->getId(),
+                    'beoordeling' => $newBeoordeling
+                ]
+            );
+        }
             
         } catch (\Exception $e) {
             $this->_logger->error(

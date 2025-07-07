@@ -153,7 +153,7 @@ class ContactPersonHandler
     }
 
     /**
-     * Generates a username from contact data
+     * Generates a username from contact data with fallback strategies
      *
      * @param array $contactData The contact data array
      * 
@@ -161,39 +161,145 @@ class ContactPersonHandler
      */
     public function generateUsernameFromContactData(array $contactData): string
     {
+        $this->_logger->info(
+            'DEBUG: Starting username generation',
+            [
+                'contactData' => $contactData,
+                'contactData_keys' => array_keys($contactData),
+                'contactData_count' => count($contactData),
+                'voornaam' => $contactData['voornaam'] ?? 'NOT_SET',
+                'tussenvoegsel' => $contactData['tussenvoegsel'] ?? 'NOT_SET',
+                'achternaam' => $contactData['achternaam'] ?? 'NOT_SET',
+                'email' => $contactData['email'] ?? 'NOT_SET'
+            ]
+        );
+
         $voornaam = $contactData['voornaam'] ?? '';
         $tussenvoegsel = $contactData['tussenvoegsel'] ?? '';
         $achternaam = $contactData['achternaam'] ?? '';
+        $email = $contactData['email'] ?? '';
         
-        // Start with first name
-        $username = strtolower(trim($voornaam));
-        
-        // Add tussenvoegsel if present
-        if (!empty($tussenvoegsel)) {
-            $username .= '.' . strtolower(trim($tussenvoegsel));
+        $this->_logger->info(
+            'DEBUG: Extracted field values',
+            [
+                'voornaam' => $voornaam,
+                'voornaam_length' => strlen($voornaam),
+                'tussenvoegsel' => $tussenvoegsel,
+                'achternaam' => $achternaam,
+                'achternaam_length' => strlen($achternaam),
+                'email' => $email
+            ]
+        );
+
+        // Strategy 1: firstname.lastname (with dots)
+        if (!empty($voornaam) && !empty($achternaam)) {
+            $username = strtolower($voornaam) . '.' . strtolower($achternaam);
+            $this->_logger->info('DEBUG: Strategy 1 - firstname.lastname', ['username' => $username]);
+            if ($this->isValidUsername($username)) {
+                $this->_logger->info('DEBUG: Strategy 1 PASSED validation', ['username' => $username]);
+                return $username;
+            } else {
+                $this->_logger->warning('DEBUG: Strategy 1 FAILED validation', ['username' => $username]);
+            }
+        } else {
+            $this->_logger->warning('DEBUG: Strategy 1 - missing required fields', ['voornaam' => $voornaam, 'achternaam' => $achternaam]);
         }
-        
-        // Add last name
-        if (!empty($achternaam)) {
-            $username .= '.' . strtolower(trim($achternaam));
+
+        // Strategy 2: firstnamelastname (no dots)
+        if (!empty($voornaam) && !empty($achternaam)) {
+            $username = strtolower($voornaam) . strtolower($achternaam);
+            $this->_logger->info('DEBUG: Strategy 2 - firstnamelastname', ['username' => $username]);
+            if ($this->isValidUsername($username)) {
+                $this->_logger->info('DEBUG: Strategy 2 PASSED validation', ['username' => $username]);
+                return $username;
+            } else {
+                $this->_logger->warning('DEBUG: Strategy 2 FAILED validation', ['username' => $username]);
+            }
+        } else {
+            $this->_logger->warning('DEBUG: Strategy 2 - missing required fields', ['voornaam' => $voornaam, 'achternaam' => $achternaam]);
         }
+
+        // Strategy 3: email prefix (part before @)
+        if (!empty($email) && strpos($email, '@') !== false) {
+            $username = strtolower(explode('@', $email)[0]);
+            $this->_logger->info('DEBUG: Strategy 3 - email prefix', ['username' => $username]);
+            if ($this->isValidUsername($username)) {
+                $this->_logger->info('DEBUG: Strategy 3 PASSED validation', ['username' => $username]);
+                return $username;
+            } else {
+                $this->_logger->warning('DEBUG: Strategy 3 FAILED validation', ['username' => $username]);
+            }
+        } else {
+            $this->_logger->warning('DEBUG: Strategy 3 - invalid email', ['email' => $email]);
+        }
+
+        // Strategy 4: timestamp fallback
+        $username = 'user' . time();
+        $this->_logger->info('DEBUG: Strategy 4 - timestamp fallback', ['username' => $username]);
+        if ($this->isValidUsername($username)) {
+            $this->_logger->info('DEBUG: Strategy 4 PASSED validation', ['username' => $username]);
+            return $username;
+        } else {
+            $this->_logger->warning('DEBUG: Strategy 4 FAILED validation', ['username' => $username]);
+        }
+
+        // If all strategies fail, log error and return empty string
+        $this->_logger->error('DEBUG: All username generation strategies failed', ['contactData' => $contactData]);
+        return '';
+    }
+    
+    /**
+     * Validates if a username meets Nextcloud requirements
+     */
+    private function isValidUsername(string $username): bool
+    {
+        $this->_logger->info('DEBUG: Username validation started', ['username' => $username, 'length' => strlen($username)]);
         
-        // Clean up username (remove special characters, spaces)
-        $username = preg_replace('/[^a-z0-9._-]/', '', $username);
-        $username = preg_replace('/\.+/', '.', $username); // Remove duplicate dots
-        $username = trim($username, '.');
-        
-        // Ensure username is not empty
         if (empty($username)) {
-            $username = 'user' . time();
+            $this->_logger->warning('DEBUG: Username validation failed - empty username');
+            return false;
         }
         
-        // Ensure username is unique
+        // Basic validation rules (adjust based on your Nextcloud configuration)
+        if (strlen($username) < 3 || strlen($username) > 64) {
+            $this->_logger->warning('DEBUG: Username validation failed - length check', ['length' => strlen($username)]);
+            return false;
+        }
+        
+        // Must start with alphanumeric
+        if (!preg_match('/^[a-z0-9]/', $username)) {
+            $this->_logger->warning('DEBUG: Username validation failed - must start with alphanumeric', ['first_char' => substr($username, 0, 1)]);
+            return false;
+        }
+        
+        // Only allow alphanumeric, dots, underscores, and dashes
+        if (!preg_match('/^[a-z0-9._-]+$/', $username)) {
+            $this->_logger->warning('DEBUG: Username validation failed - invalid characters', ['pattern' => '/^[a-z0-9._-]+$/']);
+            return false;
+        }
+        
+        $this->_logger->info('DEBUG: Username validation passed', ['username' => $username]);
+        return true;
+    }
+    
+    /**
+     * Ensures username is unique by adding counter if needed
+     */
+    private function ensureUniqueUsername(string $username): string
+    {
         $originalUsername = $username;
         $counter = 1;
+        
         while ($this->_userManager->userExists($username)) {
             $username = $originalUsername . $counter;
             $counter++;
+            $this->_logger->info('DEBUG: Username exists, trying', ['username' => $username, 'counter' => $counter]);
+            
+            // Safety check to prevent infinite loop
+            if ($counter > 9999) {
+                $username = $originalUsername . uniqid();
+                break;
+            }
         }
         
         return $username;
@@ -212,6 +318,15 @@ class ContactPersonHandler
             $objectData = $contactgegevensObject->getObject();
             $email = $objectData['email'] ?? '';
             
+            $this->_logger->info(
+                'DEBUG: Starting user account creation',
+                [
+                    'contactgegevensId' => $contactgegevensObject->getId(),
+                    'email' => $email,
+                    'objectData' => $objectData
+                ]
+            );
+            
             if (empty($email)) {
                 $this->_logger->warning(
                     'Cannot create user account: no email address provided',
@@ -220,22 +335,75 @@ class ContactPersonHandler
                 return null;
             }
             
-            // Check if user already exists
+            // Generate username first to check both email and username existence
+            $username = $objectData['username'] ?? '';
+            if (empty($username)) {
+                $username = $this->generateUsernameFromContactData($objectData);
+                $this->_logger->info('DEBUG: Generated username for existence check', ['username' => $username]);
+            }
+            
+            // Check if user already exists by email
             if ($this->_userManager->userExists($email)) {
                 $this->_logger->info(
                     'User already exists with email',
                     ['email' => $email, 'contactgegevensId' => $contactgegevensObject->getId()]
                 );
-                return $this->_userManager->get($email);
+                $existingUser = $this->_userManager->get($email);
+                if ($existingUser) {
+                    // Update groups for existing user
+                    $this->assignUserGroups($existingUser, $objectData);
+                    return $existingUser;
+                }
             }
             
-            // Generate username if not provided
-            $username = $objectData['username'] ?? $this->generateUsernameFromContactData($objectData);
+            // Check if user already exists by username
+            $existingUserByUsername = $this->_userManager->get($username);
+            if ($existingUserByUsername) {
+                $this->_logger->info(
+                    'User already exists with username',
+                    ['username' => $username, 'contactgegevensId' => $contactgegevensObject->getId()]
+                );
+                // Update groups for existing user
+                $this->assignUserGroups($existingUserByUsername, $objectData);
+                return $existingUserByUsername;
+            }
+            
+            // Username already generated above for existence checks
+            $this->_logger->info(
+                'DEBUG: About to create new user',
+                [
+                    'username' => $username,
+                    'username_length' => strlen($username),
+                    'contactgegevensId' => $contactgegevensObject->getId()
+                ]
+            );
+            
+            $this->_logger->info(
+                'DEBUG: About to create user with Nextcloud',
+                [
+                    'username' => $username,
+                    'username_length' => strlen($username),
+                    'username_raw_bytes' => bin2hex($username),
+                    'password' => $username, // Using username as password
+                    'email' => $email,
+                    'contactgegevensId' => $contactgegevensObject->getId()
+                ]
+            );
             
             // Create user account
             $user = $this->_userManager->createUser($username, $username);
             
             if ($user) {
+                $this->_logger->info(
+                    'DEBUG: User creation successful',
+                    [
+                        'username' => $username,
+                        'userId' => $user->getUID(),
+                        'email' => $email,
+                        'contactgegevensId' => $contactgegevensObject->getId()
+                    ]
+                );
+                
                 // Set user details
                 $user->setEMailAddress($email);
                 $user->setDisplayName($this->getDisplayNameFromContactData($objectData));
@@ -257,6 +425,15 @@ class ContactPersonHandler
                 );
                 
                 return $user;
+            } else {
+                $this->_logger->error(
+                    'DEBUG: User creation returned null (no exception thrown)',
+                    [
+                        'username' => $username,
+                        'email' => $email,
+                        'contactgegevensId' => $contactgegevensObject->getId()
+                    ]
+                );
             }
             
             return null;
@@ -266,7 +443,10 @@ class ContactPersonHandler
                 'Failed to create user account: ' . $e->getMessage(),
                 [
                     'contactgegevensId' => $contactgegevensObject->getId(),
-                    'exception' => $e
+                    'exception' => $e,
+                    'exception_class' => get_class($e),
+                    'exception_code' => $e->getCode(),
+                    'trace' => $e->getTraceAsString()
                 ]
             );
             return null;
@@ -287,6 +467,17 @@ class ContactPersonHandler
             $roles = $objectData['roles'] ?? [];
             $organizationId = $objectData['organisation'] ?? '';
             
+            $this->_logger->info(
+                'DEBUG: Starting user group assignment',
+                [
+                    'username' => $user->getUID(),
+                    'organizationId' => $organizationId,
+                    'organizationId_type' => gettype($organizationId),
+                    'roles' => $roles,
+                    'objectData_keys' => array_keys($objectData)
+                ]
+            );
+            
             // Ensure roles is an array
             if (!is_array($roles)) {
                 $roles = [$roles];
@@ -305,7 +496,26 @@ class ContactPersonHandler
             
             // Add user to organization group if available
             if (!empty($organizationId)) {
-                $organizationGroup = $this->getOrganizationGroup($organizationId);
+                $this->_logger->info(
+                    'DEBUG: Attempting to get organization group',
+                    [
+                        'username' => $user->getUID(),
+                        'organizationId' => $organizationId
+                    ]
+                );
+                
+                $organizationGroup = $this->getOrganizationGroup((string)$organizationId);
+                
+                $this->_logger->info(
+                    'DEBUG: Organization group lookup result',
+                    [
+                        'username' => $user->getUID(),
+                        'organizationId' => $organizationId,
+                        'organizationGroup_found' => $organizationGroup !== null,
+                        'organizationGroup_name' => $organizationGroup ? $organizationGroup->getGID() : 'NULL'
+                    ]
+                );
+                
                 if ($organizationGroup && !$organizationGroup->inGroup($user)) {
                     $organizationGroup->addUser($user);
                     $this->_logger->info(
@@ -316,10 +526,27 @@ class ContactPersonHandler
                             'groupName' => $organizationGroup->getGID()
                         ]
                     );
+                } elseif ($organizationGroup && $organizationGroup->inGroup($user)) {
+                    $this->_logger->info(
+                        'DEBUG: User already in organization group',
+                        [
+                            'username' => $user->getUID(),
+                            'organizationId' => $organizationId,
+                            'groupName' => $organizationGroup->getGID()
+                        ]
+                    );
+                } elseif (!$organizationGroup) {
+                    $this->_logger->warning(
+                        'DEBUG: Organization group not found',
+                        [
+                            'username' => $user->getUID(),
+                            'organizationId' => $organizationId
+                        ]
+                    );
                 }
                 
                 // Check if organization is of type "Gemeente" and add to "ambtenaar" group
-                $organizationType = $this->getOrganizationType($organizationId);
+                $organizationType = $this->getOrganizationType((string)$organizationId);
                 if (strtolower($organizationType) === 'gemeente') {
                     $this->addUserToGroup($user, 'ambtenaar', 'gemeente-organization');
                     $this->_logger->info(
@@ -331,6 +558,14 @@ class ContactPersonHandler
                         ]
                     );
                 }
+            } else {
+                $this->_logger->warning(
+                    'DEBUG: No organization ID provided for group assignment',
+                    [
+                        'username' => $user->getUID(),
+                        'objectData_keys' => array_keys($objectData)
+                    ]
+                );
             }
             
             // Always add organization contacts to "Organisaties-beheerder" group
@@ -560,17 +795,74 @@ class ContactPersonHandler
     private function getOrganizationGroup(string $organizationId): ?\OCP\IGroup
     {
         try {
+            $this->_logger->info(
+                'DEBUG: getOrganizationGroup called',
+                [
+                    'organizationId' => $organizationId,
+                    'organizationId_length' => strlen($organizationId)
+                ]
+            );
+            
             // Get the organization object to find its group
             $objectService = $this->_getObjectService();
-            $organizationObject = $objectService->getObject($organizationId);
+            if (!$objectService) {
+                $this->_logger->warning('DEBUG: ObjectService not available');
+                return null;
+            }
+            
+            // Use find() method with proper register/schema context
+            $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
+            $this->_logger->info(
+                'DEBUG: Organization object lookup result',
+                [
+                    'organizationId' => $organizationId,
+                    'organizationObject_found' => $organizationObject !== null,
+                    'organizationObject_id' => $organizationObject ? $organizationObject->getId() : 'NULL'
+                ]
+            );
             
             if ($organizationObject) {
                 $organizationData = $organizationObject->getObject();
                 $groupId = $organizationData['group'] ?? '';
                 
+                $this->_logger->info(
+                    'DEBUG: Organization data and group extraction',
+                    [
+                        'organizationId' => $organizationId,
+                        'groupId' => $groupId,
+                        'groupId_empty' => empty($groupId),
+                        'organizationData_keys' => array_keys($organizationData)
+                    ]
+                );
+                
                 if (!empty($groupId)) {
-                    return $this->_groupManager->get($groupId);
+                    $group = $this->_groupManager->get($groupId);
+                    $this->_logger->info(
+                        'DEBUG: Group manager lookup result',
+                        [
+                            'organizationId' => $organizationId,
+                            'groupId' => $groupId,
+                            'group_found' => $group !== null,
+                            'group_gid' => $group ? $group->getGID() : 'NULL'
+                        ]
+                    );
+                    return $group;
+                } else {
+                    $this->_logger->warning(
+                        'DEBUG: No group ID found in organization data',
+                        [
+                            'organizationId' => $organizationId,
+                            'organizationData_keys' => array_keys($organizationData)
+                        ]
+                    );
                 }
+            } else {
+                $this->_logger->warning(
+                    'DEBUG: Organization object not found',
+                    [
+                        'organizationId' => $organizationId
+                    ]
+                );
             }
             
             return null;
@@ -874,7 +1166,7 @@ class ContactPersonHandler
         try {
             // Get the organization object to find its type
             $objectService = $this->_getObjectService();
-            $organizationObject = $objectService->getObject($organizationId);
+            $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
             
             if ($organizationObject) {
                 $organizationData = $organizationObject->getObject();

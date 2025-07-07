@@ -71,14 +71,56 @@ class SoftwareCatalogEventListener implements IEventListener
             // Get services from the server container like OpenCatalogi does
             $softwareCatalogueService = \OC::$server->get(SoftwareCatalogueService::class);
             $settingsService = \OC::$server->get(SettingsService::class);
-            $logger = \OC::$server->get(LoggerInterface::class);
+            $logger = \OC::$server->get(\Psr\Log\LoggerInterface::class);
 
             $logger->info(
                 'SoftwareCatalog: Received event',
                 [
-                    'eventType' => $eventType
+                    'eventType' => $eventType,
+                    'timestamp' => date('Y-m-d H:i:s')
                 ]
             );
+            
+            // Log current configuration to debug schema mapping
+            try {
+                $currentSettings = $settingsService->getSettings();
+                $logger->info(
+                    'SoftwareCatalog: Current configuration at event time',
+                    [
+                        'eventType' => $eventType,
+                        'organizationSchemaId' => $settingsService->getSchemaIdForObjectType('organization'),
+                        'organisatieSchemaId' => $settingsService->getSchemaIdForObjectType('organisatie'),
+                        'contactSchemaId' => $settingsService->getSchemaIdForObjectType('contact'),
+                        'gebruikerSchemaId' => $settingsService->getSchemaIdForObjectType('gebruiker'),
+                        'contactgegevensSchemaId' => $settingsService->getSchemaIdForObjectType('contactgegevens'),
+                        'configuration' => $currentSettings['configuration'] ?? 'No configuration found'
+                    ]
+                );
+            } catch (\Exception $e) {
+                $logger->warning(
+                    'SoftwareCatalog: Failed to get current configuration',
+                    [
+                        'eventType' => $eventType,
+                        'error' => $e->getMessage()
+                    ]
+                );
+            }
+
+            // Add extra debug for update events
+            if ($event instanceof ObjectUpdatedEvent) {
+                $object = $event->getNewObject();
+                if ($object) {
+                    $logger->info(
+                        'SoftwareCatalog: ObjectUpdatedEvent details',
+                        [
+                            'objectId' => $object->getUuid(),
+                            'schemaId' => $object->getSchema(),
+                            'registerId' => $object->getRegister(),
+                            'objectData' => json_encode($object->getObject())
+                        ]
+                    );
+                }
+            }
 
             // Handle object creation
             if ($event instanceof ObjectCreatedEvent) {
@@ -134,7 +176,7 @@ class SoftwareCatalogEventListener implements IEventListener
             // Log unexpected errors and continue gracefully
             error_log('SoftwareCatalog EventListener: Exception - ' . $e->getMessage());
             try {
-                $logger = \OC::$server->get(LoggerInterface::class);
+                $logger = \OC::$server->get(\Psr\Log\LoggerInterface::class);
                 $logger->error(
                     'SoftwareCatalog: Exception in event listener',
                     [
@@ -182,9 +224,24 @@ class SoftwareCatalogEventListener implements IEventListener
         
         // Handle organization creation - process groups and send welcome email
         $organizationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
+        $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+        
+        // Debug logging for schema ID detection
+        $logger->info(
+            'SoftwareCatalog: Debug schema ID detection for organization creation',
+            [
+                'objectId' => $objectId,
+                'objectSchemaId' => $objectSchemaId,
+                'organizationSchemaId' => $organizationSchemaId,
+                'organisatieSchemaId' => $organisatieSchemaId
+            ]
+        );
+        
         // Fix potential type mismatch by ensuring both are integers
         $organizationSchemaIdInt = (int) $organizationSchemaId;
-        if ($organizationSchemaId && $objectSchemaIdInt === $organizationSchemaIdInt) {
+        $organisatieSchemaIdInt = (int) $organisatieSchemaId;
+        if (($organizationSchemaId && $objectSchemaIdInt === $organizationSchemaIdInt) || 
+            ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt)) {
             $logger->debug('SoftwareCatalog: Processing organization creation');
             try {
                 $softwareCatalogueService->processOrganization($object);
@@ -302,6 +359,7 @@ class SoftwareCatalogEventListener implements IEventListener
                 'schemaId' => $objectSchemaId,
                 'knownSchemas' => [
                     'organization' => $organizationSchemaId,
+                    'organisatie' => $organisatieSchemaId,
                     'contact' => $contactSchemaId,
                     'gebruiker' => $gebruikerSchemaId,
                     'contactgegevens' => $contactgegevensSchemaId
@@ -330,16 +388,35 @@ class SoftwareCatalogEventListener implements IEventListener
         $objectSchemaId = $object->getSchema();
         $objectId = $object->getUuid();
         
+        // Convert object schema ID to integer for consistent comparison
+        $objectSchemaIdInt = (int) $objectSchemaId;
+        
         $logger->info(
             'SoftwareCatalog: Processing object update',
             [
                 'objectId' => $objectId,
-                'schemaId' => $objectSchemaId
+                'schemaId' => $objectSchemaId,
+                'schemaIdInt' => $objectSchemaIdInt
+            ]
+        );
+
+        // DEBUG: Log what's happening with contact schema check
+        $contactSchemaId = $settingsService->getSchemaIdForObjectType('contact');
+        $logger->info(
+            'SoftwareCatalog: DEBUG - Contact schema check',
+            [
+                'objectId' => $objectId,
+                'contactSchemaId' => $contactSchemaId,
+                'contactSchemaIdType' => gettype($contactSchemaId),
+                'objectSchemaId' => $objectSchemaId,
+                'objectSchemaIdType' => gettype($objectSchemaId),
+                'contactCondition' => ($contactSchemaId && $objectSchemaId === $contactSchemaId),
+                'contactSchemaIdEmpty' => empty($contactSchemaId),
+                'contactSchemaIdNull' => $contactSchemaId === null
             ]
         );
 
         // Handle contact updates - create user if none exists
-        $contactSchemaId = $settingsService->getSchemaIdForObjectType('contact');
         if ($contactSchemaId && $objectSchemaId === $contactSchemaId) {
             $logger->debug('SoftwareCatalog: Processing contact update');
             try {
@@ -367,29 +444,110 @@ class SoftwareCatalogEventListener implements IEventListener
 
         // Handle organization updates - process groups and check for beoordeling changes
         $organizationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
-        // Fix potential type mismatch by ensuring both are integers
+        $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+        
+        // DEBUG: Log what we got from schema retrieval
+        $logger->info(
+            'SoftwareCatalog: DEBUG - Organization schema retrieval',
+            [
+                'objectId' => $objectId,
+                'organizationSchemaId' => $organizationSchemaId,
+                'organizationSchemaIdType' => gettype($organizationSchemaId),
+                'organizationSchemaIdEmpty' => empty($organizationSchemaId),
+                'organizationSchemaIdNull' => $organizationSchemaId === null,
+                'organisatieSchemaId' => $organisatieSchemaId,
+                'organisatieSchemaIdType' => gettype($organisatieSchemaId),
+                'organisatieSchemaIdEmpty' => empty($organisatieSchemaId),
+                'organisatieSchemaIdNull' => $organisatieSchemaId === null
+            ]
+        );
+        
+        // Convert to integers for consistent comparison
         $organizationSchemaIdInt = (int) $organizationSchemaId;
-        if ($organizationSchemaId && $objectSchemaIdInt === $organizationSchemaIdInt) {
-            $logger->debug('SoftwareCatalog: Processing organization update');
+        $organisatieSchemaIdInt = (int) $organisatieSchemaId;
+        
+        // Enhanced debug logging for schema ID detection
+        $logger->info(
+            'SoftwareCatalog: Enhanced schema ID detection for organization update',
+            [
+                'objectId' => $objectId,
+                'objectSchemaId' => $objectSchemaId,
+                'objectSchemaIdInt' => $objectSchemaIdInt,
+                'objectSchemaIdType' => gettype($objectSchemaId),
+                'organizationSchemaId' => $organizationSchemaId,
+                'organizationSchemaIdInt' => $organizationSchemaIdInt,
+                'organizationSchemaIdType' => gettype($organizationSchemaId),
+                'organisatieSchemaId' => $organisatieSchemaId,
+                'organisatieSchemaIdInt' => $organisatieSchemaIdInt,
+                'organisatieSchemaIdType' => gettype($organisatieSchemaId),
+                'organizationMatch' => ($organizationSchemaId && $objectSchemaIdInt === $organizationSchemaIdInt),
+                'organisatieMatch' => ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt)
+            ]
+        );
+        
+        // Debug: Show the current SoftwareCatalog configuration
+        try {
+            $settings = $settingsService->getSettings();
+            $logger->info(
+                'SoftwareCatalog: Current configuration settings',
+                [
+                    'objectId' => $objectId,
+                    'configuration' => $settings['configuration'] ?? 'No configuration found'
+                ]
+            );
+        } catch (\Exception $e) {
+            $logger->warning(
+                'SoftwareCatalog: Failed to get configuration settings',
+                [
+                    'objectId' => $objectId,
+                    'error' => $e->getMessage()
+                ]
+            );
+        }
+        
+        if (($organizationSchemaId && $objectSchemaIdInt === $organizationSchemaIdInt) || 
+            ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt)) {
+            $logger->info(
+                'SoftwareCatalog: ✓ MATCH FOUND - Processing organization update',
+                [
+                    'objectId' => $objectId,
+                    'matchedSchema' => $organizationSchemaId && $objectSchemaIdInt === $organizationSchemaIdInt ? 'organization' : 'organisatie',
+                    'matchedSchemaId' => $organizationSchemaId && $objectSchemaIdInt === $organizationSchemaIdInt ? $organizationSchemaId : $organisatieSchemaId
+                ]
+            );
             try {
                 $oldObject = $event->getOldObject();
                 if ($oldObject) {
+                    $logger->info(
+                        'SoftwareCatalog: Calling handleOrganizationUpdate with old object',
+                        [
+                            'objectId' => $objectId,
+                            'hasOldObject' => true
+                        ]
+                    );
                     // Use the new method that checks for beoordeling changes
                     $softwareCatalogueService->handleOrganizationUpdate($object, $oldObject);
                 } else {
+                    $logger->info(
+                        'SoftwareCatalog: Calling processOrganization (no old object)',
+                        [
+                            'objectId' => $objectId,
+                            'hasOldObject' => false
+                        ]
+                    );
                     // Fallback to regular processing if no old object
                     $softwareCatalogueService->processOrganization($object);
                 }
                 
                 $logger->info(
-                    'SoftwareCatalog: Successfully processed organization update',
+                    'SoftwareCatalog: ✓ Successfully processed organization update',
                     [
                         'objectId' => $objectId
                     ]
                 );
             } catch (\Exception $e) {
                 $logger->error(
-                    'SoftwareCatalog: Failed to process organization update',
+                    'SoftwareCatalog: ✗ Failed to process organization update',
                     [
                         'exception' => $e->getMessage(),
                         'objectId' => $objectId,
@@ -465,16 +623,26 @@ class SoftwareCatalogEventListener implements IEventListener
         }
 
         // Log if we don't handle this schema type
-        $logger->debug(
+        $logger->info(
             'SoftwareCatalog: Object update not handled - no matching schema',
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
+                'schemaIdInt' => $objectSchemaIdInt,
+                'schemaIdType' => gettype($objectSchemaId),
                 'knownSchemas' => [
                     'contact' => $contactSchemaId,
                     'organization' => $organizationSchemaId,
+                    'organisatie' => $organisatieSchemaId,
                     'gebruiker' => $gebruikerSchemaId,
                     'contactgegevens' => $contactgegevensSchemaId
+                ],
+                'knownSchemasInt' => [
+                    'contact' => (int) $contactSchemaId,
+                    'organization' => (int) $organizationSchemaId,
+                    'organisatie' => (int) $organisatieSchemaId,
+                    'gebruiker' => (int) $gebruikerSchemaId,
+                    'contactgegevens' => (int) $contactgegevensSchemaId
                 ]
             ]
         );

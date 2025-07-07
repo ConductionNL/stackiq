@@ -31,9 +31,9 @@ use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCP\IUserManager;
 use OCP\IGroupManager;
 use OCP\IAppConfig;
-use OCP\IAppManager;
-use OCP\LoggerInterface;
-use OCP\ISecureRandom;
+use OCP\App\IAppManager;
+use Psr\Log\LoggerInterface;
+use OCP\Security\ISecureRandom;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -79,18 +79,18 @@ class Application extends App implements IBootstrap
                 $c->get(IUserManager::class),
                 $c,
                 $c->get(IAppManager::class),
-                $c->get(LoggerInterface::class)
+                $c->get(\Psr\Log\LoggerInterface::class)
             );
         });
 
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler', function (ContainerInterface $c) {
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler(
                 $c->get(IUserManager::class),
-                $c->get(ISecureRandom::class),
+                $c->get(\OCP\Security\ISecureRandom::class),
                 $c->get(IGroupManager::class),
                 $c,
                 $c->get(IAppManager::class),
-                $c->get(LoggerInterface::class)
+                $c->get(\Psr\Log\LoggerInterface::class)
             );
         });
 
@@ -101,7 +101,7 @@ class Application extends App implements IBootstrap
                 $c->get(IAppConfig::class),
                 $c,
                 $c->get(IAppManager::class),
-                $c->get(LoggerInterface::class)
+                $c->get(\Psr\Log\LoggerInterface::class)
             );
         });
 
@@ -109,14 +109,17 @@ class Application extends App implements IBootstrap
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler(
                 $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler'),
                 $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
-                $c->get(LoggerInterface::class)
+                $c->get(\Psr\Log\LoggerInterface::class)
             );
         });
 
         // Register event listeners for OpenRegister events
-        $context->registerEventListener('OCA\\OpenRegister\\Events\\ObjectCreatedEvent', SoftwareCatalogEventListener::class);
-        $context->registerEventListener('OCA\\OpenRegister\\Events\\ObjectUpdatedEvent', SoftwareCatalogEventListener::class);
-        $context->registerEventListener('OCA\\OpenRegister\\Events\\ObjectDeletedEvent', SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectDeletedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
     }
 
     /**

@@ -279,8 +279,31 @@ class OrganizationHandler
 
             foreach ($contactpersonen as $index => $contactpersoon) {
                 try {
-                    // Create contactgegevens object
+                    // Get the contactgegevens schema ID from settings
+                    $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                    $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+                    
+                    $this->_logger->info(
+                        'Creating contactgegevens object with schema',
+                        [
+                            'contactgegevensSchemaId' => $contactgegevensSchemaId,
+                            'organizationUuid' => $organizationUuid,
+                            'contactpersoonIndex' => $index,
+                            'email' => $contactpersoon['email'] ?? $contactpersoon['e-mailadres'] ?? ''
+                        ]
+                    );
+                    
+                    // Generate title from name components
+                    $titleParts = array_filter([
+                        $contactpersoon['voornaam'] ?? '',
+                        $contactpersoon['tussenvoegsel'] ?? '',
+                        $contactpersoon['achternaam'] ?? ''
+                    ]);
+                    $title = !empty($titleParts) ? implode(' ', $titleParts) : ($contactpersoon['email'] ?? 'Contact Person');
+                    
+                    // Create contactgegevens object with proper schema
                     $contactgegevensData = [
+                        'title' => $title, // Required by OpenRegister
                         'voornaam' => $contactpersoon['voornaam'] ?? '',
                         'tussenvoegsel' => $contactpersoon['tussenvoegsel'] ?? '',
                         'achternaam' => $contactpersoon['achternaam'] ?? '',
@@ -289,11 +312,13 @@ class OrganizationHandler
                         'functie' => $contactpersoon['functie'] ?? '',
                         'organisation' => $organizationUuid, // Link to organization
                         'roles' => $this->mapFunctieToRoles($contactpersoon['functie'] ?? ''),
-                        'username' => '' // Will be set when user is created
+                        'username' => '', // Will be set when user is created
+                        'schema' => $contactgegevensSchemaId, // Specify the correct schema
+                        'register' => '6' // Voorzieningen register
                     ];
 
                     // Create the contactgegevens object via ObjectService
-                    $contactgegevensObject = $objectService->createObject($contactgegevensData, 'contactgegevens');
+                    $contactgegevensObject = $objectService->saveObject($contactgegevensData);
                     
                     if ($contactgegevensObject) {
                         $createdContacts[] = $contactgegevensObject;
@@ -489,17 +514,19 @@ class OrganizationHandler
     public function userBelongsToOrganization(IUser $user, string $organizationUuid): bool
     {
         try {
-            // Find contactgegevens objects for this user
-            $objectService = $this->_getObjectService();
-            $contactgegevensObjects = $objectService->getObjects([
-                'username' => $user->getUID()
-            ]);
+            // Check if user is in the organization-specific group
+            $organizationGroupName = $this->sanitizeGroupName($organizationUuid);
+            $organizationGroup = $this->_groupManager->get($organizationGroupName);
             
-            foreach ($contactgegevensObjects as $obj) {
-                $objData = $obj->getObject();
-                $userOrg = $objData['organisation'] ?? $objData['organization'] ?? '';
-                
-                if ($userOrg === $organizationUuid) {
+            if ($organizationGroup && $organizationGroup->inGroup($user)) {
+                return true;
+            }
+            
+            // Alternative approach: check user's groups for organization-specific groups
+            $userGroups = $this->_groupManager->getUserGroups($user);
+            foreach ($userGroups as $group) {
+                // Check if any group name contains the organization UUID
+                if (strpos($group->getGID(), $organizationUuid) !== false) {
                     return true;
                 }
             }

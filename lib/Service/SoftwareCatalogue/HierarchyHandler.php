@@ -60,7 +60,7 @@ class HierarchyHandler
     {
         try {
             $objectData = $contactgegevensObject->getObject();
-            $organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
+            $organizationUuid = (string)($objectData['organisation'] ?? $objectData['organization'] ?? '');
             
             if (empty($organizationUuid)) {
                 $this->_logger->debug('No organization linked to contactgegevens');
