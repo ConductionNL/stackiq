@@ -370,6 +370,29 @@ class SettingsService
     }
 
     /**
+     * Gets the configured register ID for the voorzieningen register
+     *
+     * @return int|null The register ID or null if not configured
+     */
+    public function getVoorzieningenRegisterId(): ?int
+    {
+        // Try voorzieningen-specific configuration first
+        $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_register', '');
+        if (!empty($registerId)) {
+            return (int) $registerId;
+        }
+        
+        // Also try contactgegevens as fallback
+        $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_register', '');
+        if (!empty($registerId)) {
+            return (int) $registerId;
+        }
+        
+        // Fall back to organization register for backward compatibility
+        return $this->getRegisterIdForObjectType('organization');
+    }
+
+    /**
      * Checks if all required object types are configured
      *
      * @return bool True if all object types have schemas configured

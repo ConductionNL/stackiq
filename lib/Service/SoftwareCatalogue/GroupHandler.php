@@ -333,7 +333,18 @@ class GroupHandler
             try {
                 // Get organization object
                 $objectService = $this->_getObjectService();
-                $organizationObject = $objectService->find($organizationUuid, [], false, 6, 35);
+                
+                // Get register and schema IDs dynamically from configuration
+                $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                $registerId = $settingsService->getVoorzieningenRegisterId();
+                $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+                
+                if (!$registerId || !$organisatieSchemaId) {
+                    $this->_logger->warning('Register or schema ID not configured for organisatie');
+                    return;
+                }
+                
+                $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
                 
                 if ($organizationObject) {
                     $orgData = $organizationObject->getObject();
@@ -394,7 +405,18 @@ class GroupHandler
             try {
                 // Get organization object
                 $objectService = $this->_getObjectService();
-                $organizationObject = $objectService->find($organizationUuid, [], false, 6, 35);
+                
+                // Get register and schema IDs dynamically from configuration
+                $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                $registerId = $settingsService->getVoorzieningenRegisterId();
+                $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+                
+                if (!$registerId || !$organisatieSchemaId) {
+                    $this->_logger->warning('Register or schema ID not configured for organisatie');
+                    return;
+                }
+                
+                $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
                 
                 if ($organizationObject) {
                     $orgData = $organizationObject->getObject();
