@@ -317,12 +317,20 @@ class OrganizationHandler
 
                     ];
 
+                    // Get register ID dynamically from configuration
+                    $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                    $registerId = $settingsService->getVoorzieningenRegisterId();
+                    
+                    if (!$registerId) {
+                        throw new \Exception('Voorzieningen register ID not configured');
+                    }
+                    
                     // Create the contactgegevens object via ObjectService with proper schema/register parameters
                     $contactgegevensObject = $objectService->saveObject(
                         object: $contactgegevensData,
                         extend: [],
-                        register: 6, // Voorzieningen register
-                        schema: $contactgegevensSchemaId // Schema ID 34 for contactgegevens
+                        register: $registerId, // Dynamic register ID from configuration
+                        schema: $contactgegevensSchemaId // Schema ID from configuration
                     );
                     
                     if ($contactgegevensObject) {

@@ -855,8 +855,18 @@ class ContactPersonHandler
                 return null;
             }
             
+            // Get register and schema IDs dynamically from configuration
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+            
+            if (!$registerId || !$organisatieSchemaId) {
+                $this->_logger->warning('Register or schema ID not configured for organisatie');
+                return null;
+            }
+            
             // Use find() method with proper register/schema context
-            $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
+            $organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisatieSchemaId);
             $this->_logger->info(
                 'DEBUG: Organization object lookup result',
                 [
@@ -951,8 +961,17 @@ class ContactPersonHandler
                 'organisation' => $organizationId
             ];
             
-            // Get contactgegevens objects (schema 34)
-            $allContactgegevens = $objectService->findAll(filters: $searchFilters, register: 6, schema: 34);
+            // Get register and schema IDs dynamically from configuration
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+            
+            if (!$registerId || !$contactgegevensSchemaId) {
+                throw new \Exception('Register or schema ID not configured for contactgegevens');
+            }
+            
+            // Get contactgegevens objects
+            $allContactgegevens = $objectService->findAll($searchFilters, $registerId, $contactgegevensSchemaId);
             
             $this->_logger->info(
                 'Checking if first contact for organization',
@@ -1335,8 +1354,18 @@ class ContactPersonHandler
             // Get the organization object to find its type
             $objectService = $this->_getObjectService();
             
+            // Get register and schema IDs dynamically from configuration
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+            
+            if (!$registerId || !$organisatieSchemaId) {
+                $this->_logger->warning('Register or schema ID not configured for organisatie');
+                return '';
+            }
+            
             // Try to find by UUID first, then by database ID if needed
-            $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
+            $organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisatieSchemaId);
             
             if ($organizationObject) {
                 $organizationData = $organizationObject->getObject();
@@ -1397,7 +1426,17 @@ class ContactPersonHandler
             if (!empty($organizationId)) {
                 try {
                     $objectService = $this->_getObjectService();
-                    $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
+                    // Get register and schema IDs dynamically from configuration
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+            
+            if (!$registerId || !$organisatieSchemaId) {
+                $this->_logger->warning('Register or schema ID not configured for organisatie');
+                return;
+            }
+            
+            $organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisatieSchemaId);
                     if ($organizationObject) {
                         $organizationData = $organizationObject->getObject();
                         $this->_logger->info('Retrieved organization data for email', [
