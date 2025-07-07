@@ -1,3 +1,8 @@
+# Version: 0.1.9
+
+* [#7](https://github.com/ConductionNL/softwarecatalog/pull/7): Lets try to fix user creation
+
+
 # Changelog
 
 ## [Unreleased]
