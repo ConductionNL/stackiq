@@ -32,10 +32,10 @@
 		"php": "^8.1",
 		"adbario/php-dot-notation": "^3.3.0",
 		"bamarni/composer-bin-plugin": "^1.8",
-		"react/promise": "^3.2",
 		"react/event-loop": "^1.5",
-		"twig/twig": "^3.8",
-		"symfony/mailer": "^6.0|^7.0"
+		"react/promise": "^3.2",
+		"symfony/mailer": "^6.4",
+		"twig/twig": "^3.8"
 	},
 	"require-dev": {
 		"nextcloud/ocp": "dev-stable29",

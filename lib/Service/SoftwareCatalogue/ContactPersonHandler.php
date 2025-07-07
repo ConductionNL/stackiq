@@ -110,8 +110,11 @@ class ContactPersonHandler
                 // Generate username from name fields
                 $username = $this->generateUsernameFromContactData($objectData);
                 
+                // Determine if this is the first contact for the organization
+                $isFirstContact = $this->isFirstContactForOrganization($contactgegevensObject, $objectData);
+                
                 // Create the user account
-                $user = $this->createUserAccount($contactgegevensObject);
+                $user = $this->createUserAccount($contactgegevensObject, $isFirstContact);
                 
                 if ($user === null) {
                     throw new \Exception('Failed to create user account');
@@ -318,7 +321,7 @@ class ContactPersonHandler
      * 
      * @return \OCP\IUser|null The created user or null if failed
      */
-    public function createUserAccount(object $contactgegevensObject): ?\OCP\IUser
+    public function createUserAccount(object $contactgegevensObject, bool $isFirstContact = false): ?\OCP\IUser
     {
         try {
             $objectData = $contactgegevensObject->getObject();
@@ -363,7 +366,7 @@ class ContactPersonHandler
                     }
                     
                     // Update groups for existing user
-                    $this->assignUserGroups($existingUser, $objectData);
+                    $this->assignUserGroups($existingUser, $objectData, $isFirstContact);
                     return $existingUser;
                 }
             }
@@ -383,7 +386,7 @@ class ContactPersonHandler
                 }
                 
                 // Update groups for existing user
-                $this->assignUserGroups($existingUserByUsername, $objectData);
+                $this->assignUserGroups($existingUserByUsername, $objectData, $isFirstContact);
                 return $existingUserByUsername;
             }
             
@@ -434,7 +437,7 @@ class ContactPersonHandler
                 }
                 
                 // Set user groups based on roles and organization
-                $this->assignUserGroups($user, $objectData);
+                $this->assignUserGroups($user, $objectData, $isFirstContact);
                 
                 // Update contactgegevens with username
                 $objectData['username'] = $username;
@@ -489,7 +492,7 @@ class ContactPersonHandler
      * 
      * @return void
      */
-    private function assignUserGroups(\OCP\IUser $user, array $objectData): void
+    private function assignUserGroups(\OCP\IUser $user, array $objectData, bool $isFirstContact = false): void
     {
         try {
             $roles = $objectData['roles'] ?? [];
@@ -546,14 +549,28 @@ class ContactPersonHandler
                 
                 if ($organizationGroup && !$organizationGroup->inGroup($user)) {
                     $organizationGroup->addUser($user);
-                    $this->_logger->info(
-                        'Added user to organization group',
-                        [
-                            'username' => $user->getUID(),
-                            'organizationId' => $organizationId,
-                            'groupName' => $organizationGroup->getGID()
-                        ]
-                    );
+                    
+                    // If this is the first contact, make them a subadmin of the organization group
+                    if ($isFirstContact) {
+                        $this->_groupManager->addSubAdmin($user, $organizationGroup);
+                        $this->_logger->info(
+                            'Added user to organization group as subadmin (first contact)',
+                            [
+                                'username' => $user->getUID(),
+                                'organizationId' => $organizationId,
+                                'groupName' => $organizationGroup->getGID()
+                            ]
+                        );
+                    } else {
+                        $this->_logger->info(
+                            'Added user to organization group',
+                            [
+                                'username' => $user->getUID(),
+                                'organizationId' => $organizationId,
+                                'groupName' => $organizationGroup->getGID()
+                            ]
+                        );
+                    }
                 } elseif ($organizationGroup && $organizationGroup->inGroup($user)) {
                     $this->_logger->info(
                         'DEBUG: User already in organization group',
@@ -905,6 +922,78 @@ class ContactPersonHandler
                 ]
             );
             return null;
+        }
+    }
+
+    /**
+     * Determines if this contactgegevens object is the first contact for the organization
+     *
+     * @param object $contactgegevensObject The contactgegevens object being processed
+     * @param array  $objectData           The contact data
+     * 
+     * @return bool True if this is the first contact for the organization
+     */
+    private function isFirstContactForOrganization(object $contactgegevensObject, array $objectData): bool
+    {
+        try {
+            $organizationId = $objectData['organisation'] ?? '';
+            
+            if (empty($organizationId)) {
+                $this->_logger->warning('No organization ID found for contactgegevens');
+                return false;
+            }
+            
+            // Get all contactgegevens objects for this organization
+            $objectService = $this->_getObjectService();
+            
+            // Search for all contactgegevens with this organization
+            $searchFilters = [
+                'organisation' => $organizationId
+            ];
+            
+            // Get contactgegevens objects (schema 34)
+            $allContactgegevens = $objectService->findAll(filters: $searchFilters, register: 6, schema: 34);
+            
+            $this->_logger->info(
+                'Checking if first contact for organization',
+                [
+                    'organizationId' => $organizationId,
+                    'currentContactgegevensId' => $contactgegevensObject->getId(),
+                    'totalContactgegevensCount' => count($allContactgegevens)
+                ]
+            );
+            
+            // If this is the only contactgegevens object, or it's the oldest one, it's the first contact
+            if (count($allContactgegevens) <= 1) {
+                $this->_logger->info('This is the first (or only) contact for organization');
+                return true;
+            }
+            
+            // If there are multiple, check creation dates to determine the first one
+            $currentId = $contactgegevensObject->getId();
+            $currentCreated = $contactgegevensObject->getCreated();
+            
+            foreach ($allContactgegevens as $other) {
+                if ($other->getId() !== $currentId && $other->getCreated() < $currentCreated) {
+                    // Found an older contactgegevens object
+                    $this->_logger->info('Found older contact, this is not the first contact');
+                    return false;
+                }
+            }
+            
+            $this->_logger->info('This is the first contact for organization (oldest creation date)');
+            return true;
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to determine if first contact: ' . $e->getMessage(),
+                [
+                    'contactgegevensId' => $contactgegevensObject->getId(),
+                    'exception' => $e
+                ]
+            );
+            // Default to false for safety
+            return false;
         }
     }
 
