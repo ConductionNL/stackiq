@@ -1,3 +1,8 @@
+# Version: 0.1.13
+
+* [#15](https://github.com/ConductionNL/softwarecatalog/pull/15): Uuid fixes
+
+
 # Changelog
 
 ## [Unreleased]
