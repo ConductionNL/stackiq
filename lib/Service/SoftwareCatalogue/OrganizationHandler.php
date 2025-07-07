@@ -265,7 +265,8 @@ class OrganizationHandler
         try {
             $objectData = $organizationObject->getObject();
             $contactpersonen = $objectData['contactpersonen'] ?? [];
-            $organizationUuid = $organizationObject->getId();
+            // Get the actual UUID from object data instead of database ID
+            $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
             $createdContacts = [];
 
             if (!is_array($contactpersonen) || empty($contactpersonen)) {
@@ -311,14 +312,18 @@ class OrganizationHandler
                         'email' => $contactpersoon['email'] ?? $contactpersoon['e-mailadres'] ?? '',
                         'functie' => $contactpersoon['functie'] ?? '',
                         'organisation' => $organizationUuid, // Link to organization
-                        'roles' => $this->mapFunctieToRoles($contactpersoon['functie'] ?? ''),
+                        'roles' => $this->mapFunctieToRoles($contactpersoon['functie'] ?? '', $index === 0),
                         'username' => '', // Will be set when user is created
-                        'schema' => $contactgegevensSchemaId, // Specify the correct schema
-                        'register' => '6' // Voorzieningen register
+
                     ];
 
-                    // Create the contactgegevens object via ObjectService
-                    $contactgegevensObject = $objectService->saveObject($contactgegevensData);
+                    // Create the contactgegevens object via ObjectService with proper schema/register parameters
+                    $contactgegevensObject = $objectService->saveObject(
+                        object: $contactgegevensData,
+                        extend: [],
+                        register: 6, // Voorzieningen register
+                        schema: $contactgegevensSchemaId // Schema ID 34 for contactgegevens
+                    );
                     
                     if ($contactgegevensObject) {
                         $createdContacts[] = $contactgegevensObject;
@@ -362,21 +367,45 @@ class OrganizationHandler
     }
 
     /**
+     * Gets all available roles in the system
+     *
+     * @return array Array of all available roles
+     */
+    private function getAllAvailableRoles(): array
+    {
+        return [
+            'Functioneel-beheerder',
+            'Aanbod-beheerder',
+            'Gebruik-beheerder',
+            'Gebruik-raadpleger',
+            'VNG-raadpleger',
+            'beheerder' // Add beheerder role for group assignment
+        ];
+    }
+
+    /**
      * Maps functie (job function) to appropriate roles
      *
      * @param string $functie The job function
+     * @param bool   $isFirstContact Whether this is the first contact in the organization
      * 
      * @return array Array of roles
      */
-    private function mapFunctieToRoles(string $functie): array
+    private function mapFunctieToRoles(string $functie, bool $isFirstContact = false): array
     {
+        // If this is the first contact, give them all available roles
+        if ($isFirstContact) {
+            $this->_logger->info('Assigning all roles to first contact', ['functie' => $functie]);
+            return $this->getAllAvailableRoles();
+        }
+        
         $functie = strtolower(trim($functie));
         
         // Default role mappings based on common job functions
         $roleMapping = [
             'ceo' => ['Functioneel-beheerder', 'Aanbod-beheerder'],
             'manager' => ['Functioneel-beheerder', 'Gebruik-beheerder'],
-            'beheerder' => ['Gebruik-beheerder'],
+            'beheerder' => ['Gebruik-beheerder', 'beheerder'],
             'administrator' => ['Functioneel-beheerder'],
             'inkoper' => ['Gebruik-beheerder'],
             'procurement' => ['Gebruik-beheerder'],

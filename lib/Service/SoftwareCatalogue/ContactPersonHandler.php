@@ -23,10 +23,11 @@ use OCP\IUser;
 use OCP\Security\ISecureRandom;
 use OCP\IGroupManager;
 use OCP\IGroup;
+use OCP\IConfig;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
-use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCA\SoftwareCatalog\Service\PhpEmailService;
 
 /**
  * Handler for contact person-related operations
@@ -46,19 +47,21 @@ class ContactPersonHandler
      * @param IUserManager           $_userManager    User manager interface
      * @param ISecureRandom          $_secureRandom   Secure random generator
      * @param IGroupManager          $_groupManager   Group manager interface
+     * @param IConfig                $_config         Config interface
      * @param ContainerInterface     $_container      Container interface
      * @param IAppManager            $_appManager     App manager interface
      * @param LoggerInterface        $_logger         Logger interface
-     * @param SymfonyEmailService    $_emailService   Email service
+     * @param PhpEmailService        $_emailService   Email service
      */
     public function __construct(
         private readonly IUserManager $_userManager,
         private readonly ISecureRandom $_secureRandom,
         private readonly IGroupManager $_groupManager,
+        private readonly IConfig $_config,
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
         private readonly LoggerInterface $_logger,
-        private readonly SymfonyEmailService $_emailService,
+        private readonly PhpEmailService $_emailService,
     ) {
     }
 
@@ -194,10 +197,10 @@ class ContactPersonHandler
             ]
         );
 
-        // Strategy 1: firstname.lastname (with dots)
-        if (!empty($voornaam) && !empty($achternaam)) {
-            $username = strtolower($voornaam) . '.' . strtolower($achternaam);
-            $this->_logger->info('DEBUG: Strategy 1 - firstname.lastname', ['username' => $username]);
+        // Strategy 1: full email address (PRIORITY)
+        if (!empty($email) && strpos($email, '@') !== false) {
+            $username = strtolower($email);
+            $this->_logger->info('DEBUG: Strategy 1 - full email address (PRIORITY)', ['username' => $username]);
             if ($this->isValidUsername($username)) {
                 $this->_logger->info('DEBUG: Strategy 1 PASSED validation', ['username' => $username]);
                 return $username;
@@ -205,13 +208,13 @@ class ContactPersonHandler
                 $this->_logger->warning('DEBUG: Strategy 1 FAILED validation', ['username' => $username]);
             }
         } else {
-            $this->_logger->warning('DEBUG: Strategy 1 - missing required fields', ['voornaam' => $voornaam, 'achternaam' => $achternaam]);
+            $this->_logger->warning('DEBUG: Strategy 1 - invalid email', ['email' => $email]);
         }
 
-        // Strategy 2: firstnamelastname (no dots)
+        // Strategy 2: firstname.lastname (fallback)
         if (!empty($voornaam) && !empty($achternaam)) {
-            $username = strtolower($voornaam) . strtolower($achternaam);
-            $this->_logger->info('DEBUG: Strategy 2 - firstnamelastname', ['username' => $username]);
+            $username = strtolower($voornaam) . '.' . strtolower($achternaam);
+            $this->_logger->info('DEBUG: Strategy 2 - firstname.lastname (fallback)', ['username' => $username]);
             if ($this->isValidUsername($username)) {
                 $this->_logger->info('DEBUG: Strategy 2 PASSED validation', ['username' => $username]);
                 return $username;
@@ -222,10 +225,10 @@ class ContactPersonHandler
             $this->_logger->warning('DEBUG: Strategy 2 - missing required fields', ['voornaam' => $voornaam, 'achternaam' => $achternaam]);
         }
 
-        // Strategy 3: email prefix (part before @)
-        if (!empty($email) && strpos($email, '@') !== false) {
-            $username = strtolower(explode('@', $email)[0]);
-            $this->_logger->info('DEBUG: Strategy 3 - email prefix', ['username' => $username]);
+        // Strategy 3: firstnamelastname (fallback)
+        if (!empty($voornaam) && !empty($achternaam)) {
+            $username = strtolower($voornaam) . strtolower($achternaam);
+            $this->_logger->info('DEBUG: Strategy 3 - firstnamelastname (fallback)', ['username' => $username]);
             if ($this->isValidUsername($username)) {
                 $this->_logger->info('DEBUG: Strategy 3 PASSED validation', ['username' => $username]);
                 return $username;
@@ -233,7 +236,7 @@ class ContactPersonHandler
                 $this->_logger->warning('DEBUG: Strategy 3 FAILED validation', ['username' => $username]);
             }
         } else {
-            $this->_logger->warning('DEBUG: Strategy 3 - invalid email', ['email' => $email]);
+            $this->_logger->warning('DEBUG: Strategy 3 - missing required fields', ['voornaam' => $voornaam, 'achternaam' => $achternaam]);
         }
 
         // Strategy 4: timestamp fallback
@@ -275,9 +278,9 @@ class ContactPersonHandler
             return false;
         }
         
-        // Only allow alphanumeric, dots, underscores, and dashes
-        if (!preg_match('/^[a-z0-9._-]+$/', $username)) {
-            $this->_logger->warning('DEBUG: Username validation failed - invalid characters', ['pattern' => '/^[a-z0-9._-]+$/']);
+        // Only allow alphanumeric, dots, underscores, dashes, and @ symbol (for email addresses)
+        if (!preg_match('/^[a-z0-9._@-]+$/', $username)) {
+            $this->_logger->warning('DEBUG: Username validation failed - invalid characters', ['pattern' => '/^[a-z0-9._@-]+$/']);
             return false;
         }
         
@@ -353,6 +356,12 @@ class ContactPersonHandler
                 );
                 $existingUser = $this->_userManager->get($email);
                 if ($existingUser) {
+                    // Store organization UUID for existing user
+                    $organizationUuid = $objectData['organisation'] ?? '';
+                    if (!empty($organizationUuid)) {
+                        $this->storeUserOrganizationUuid($existingUser, $organizationUuid);
+                    }
+                    
                     // Update groups for existing user
                     $this->assignUserGroups($existingUser, $objectData);
                     return $existingUser;
@@ -366,6 +375,13 @@ class ContactPersonHandler
                     'User already exists with username',
                     ['username' => $username, 'contactgegevensId' => $contactgegevensObject->getId()]
                 );
+                
+                // Store organization UUID for existing user
+                $organizationUuid = $objectData['organisation'] ?? '';
+                if (!empty($organizationUuid)) {
+                    $this->storeUserOrganizationUuid($existingUserByUsername, $organizationUuid);
+                }
+                
                 // Update groups for existing user
                 $this->assignUserGroups($existingUserByUsername, $objectData);
                 return $existingUserByUsername;
@@ -410,6 +426,12 @@ class ContactPersonHandler
                 // Set user details
                 $user->setEMailAddress($email);
                 $user->setDisplayName($this->getDisplayNameFromContactData($objectData));
+                
+                // Store organization UUID in user config for OpenConnector access
+                $organizationUuid = $objectData['organisation'] ?? '';
+                if (!empty($organizationUuid)) {
+                    $this->storeUserOrganizationUuid($user, $organizationUuid);
+                }
                 
                 // Set user groups based on roles and organization
                 $this->assignUserGroups($user, $objectData);
@@ -823,7 +845,8 @@ class ContactPersonHandler
                 [
                     'organizationId' => $organizationId,
                     'organizationObject_found' => $organizationObject !== null,
-                    'organizationObject_id' => $organizationObject ? $organizationObject->getId() : 'NULL'
+                    'organizationObject_id' => $organizationObject ? $organizationObject->getId() : 'NULL',
+                    'organizationObject_uuid' => $organizationObject ? ($organizationObject->getObject()['id'] ?? 'NOT_SET') : 'NULL'
                 ]
             );
             
@@ -882,6 +905,53 @@ class ContactPersonHandler
                 ]
             );
             return null;
+        }
+    }
+
+    /**
+     * Stores organization UUID in user config for OpenConnector access
+     *
+     * This method stores the organization UUID in the user's 'core' namespace
+     * configuration, making it accessible to other apps like OpenConnector.
+     *
+     * @param IUser $user           The user object
+     * @param string|int $organizationUuid The organization UUID (can be string or int)
+     * 
+     * @return void
+     */
+    private function storeUserOrganizationUuid(IUser $user, string|int $organizationUuid): void
+    {
+        try {
+            if (!empty($organizationUuid)) {
+                // Convert to string to ensure consistent storage
+                $organizationUuidStr = (string)$organizationUuid;
+                
+                $this->_config->setUserValue(
+                    $user->getUID(),
+                    'core',
+                    'organisation',
+                    $organizationUuidStr
+                );
+                
+                $this->_logger->info(
+                    'Stored organization UUID in user config',
+                    [
+                        'username' => $user->getUID(),
+                        'organizationUuid' => $organizationUuidStr,
+                        'organizationUuid_type' => gettype($organizationUuid)
+                    ]
+                );
+            }
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to store organization UUID in user config: ' . $e->getMessage(),
+                [
+                    'username' => $user->getUID(),
+                    'organizationUuid' => $organizationUuid,
+                    'organizationUuid_type' => gettype($organizationUuid),
+                    'exception' => $e
+                ]
+            );
         }
     }
 
@@ -1175,10 +1245,20 @@ class ContactPersonHandler
         try {
             // Get the organization object to find its type
             $objectService = $this->_getObjectService();
+            
+            // Try to find by UUID first, then by database ID if needed
             $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
             
             if ($organizationObject) {
                 $organizationData = $organizationObject->getObject();
+                $this->_logger->info(
+                    'DEBUG: Organization type lookup',
+                    [
+                        'organizationId' => $organizationId,
+                        'organizationUuid' => $organizationData['id'] ?? 'NOT_SET',
+                        'organizationType' => $organizationData['type'] ?? 'NOT_SET'
+                    ]
+                );
                 return $organizationData['type'] ?? '';
             }
             
@@ -1231,6 +1311,11 @@ class ContactPersonHandler
                     $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
                     if ($organizationObject) {
                         $organizationData = $organizationObject->getObject();
+                        $this->_logger->info('Retrieved organization data for email', [
+                            'organizationId' => $organizationId,
+                            'organizationUuid' => $organizationData['id'] ?? 'NOT_SET',
+                            'organizationName' => $organizationData['naam'] ?? 'NOT_SET'
+                        ]);
                     }
                 } catch (\Exception $e) {
                     $this->_logger->warning('Failed to get organization data for email: ' . $e->getMessage(), [

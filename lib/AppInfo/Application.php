@@ -31,10 +31,12 @@ use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCP\IUserManager;
 use OCP\IGroupManager;
 use OCP\IAppConfig;
+use OCP\IConfig;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
 use OCP\Security\ISecureRandom;
 use Psr\Container\ContainerInterface;
+use OCA\SoftwareCatalog\Service\PhpEmailService;
 
 /**
  * Main Application class for SoftwareCatalog
@@ -88,10 +90,11 @@ class Application extends App implements IBootstrap
                 $c->get(IUserManager::class),
                 $c->get(\OCP\Security\ISecureRandom::class),
                 $c->get(IGroupManager::class),
+                $c->get(IConfig::class),
                 $c,
                 $c->get(IAppManager::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
-                $c->get('OCA\SoftwareCatalog\Service\PhpEmailService')
+                $c->get(PhpEmailService::class)
             );
         });
 

@@ -333,11 +333,22 @@ class GroupHandler
             try {
                 // Get organization object
                 $objectService = $this->_getObjectService();
-                $organizationObject = $objectService->getObject($organizationUuid);
+                $organizationObject = $objectService->find($organizationUuid, [], false, 6, 35);
                 
                 if ($organizationObject) {
                     $orgData = $organizationObject->getObject();
+                    $actualUuid = $orgData['id'] ?? $organizationUuid;
                     $groupId = $orgData['group'] ?? '';
+                    
+                    $this->_logger->info(
+                        'DEBUG: Organization group lookup for user',
+                        [
+                            'username' => $user->getUID(),
+                            'inputOrganizationUuid' => $organizationUuid,
+                            'actualOrganizationUuid' => $actualUuid,
+                            'groupId' => $groupId
+                        ]
+                    );
                     
                     if (!empty($groupId)) {
                         $group = $this->_groupManager->get($groupId);
@@ -349,7 +360,7 @@ class GroupHandler
                                 [
                                     'username' => $user->getUID(),
                                     'group' => $groupId,
-                                    'organization' => $organizationUuid
+                                    'organizationUuid' => $actualUuid
                                 ]
                             );
                         }
@@ -383,10 +394,11 @@ class GroupHandler
             try {
                 // Get organization object
                 $objectService = $this->_getObjectService();
-                $organizationObject = $objectService->getObject($organizationUuid);
+                $organizationObject = $objectService->find($organizationUuid, [], false, 6, 35);
                 
                 if ($organizationObject) {
                     $orgData = $organizationObject->getObject();
+                    $actualUuid = $orgData['id'] ?? $organizationUuid;
                     $orgType = strtolower($orgData['type'] ?? $orgData['soort'] ?? '');
                     
                     if ($orgType === 'gemeente') {
@@ -398,7 +410,7 @@ class GroupHandler
                                 'Added user to ambtenaar group (gemeente)',
                                 [
                                     'username' => $user->getUID(),
-                                    'organization' => $organizationUuid
+                                    'organizationUuid' => $actualUuid
                                 ]
                             );
                         }
