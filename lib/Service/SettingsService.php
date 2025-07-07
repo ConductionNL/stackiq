@@ -106,7 +106,7 @@ class SettingsService
      */
     public function isOpenRegisterEnabled(): bool
     {
-        return $this->appManager->isEnabled(self::OPENREGISTER_APP_ID);
+        return $this->appManager->isAppEnabled(self::OPENREGISTER_APP_ID);
     }
 
     /**
@@ -163,15 +163,14 @@ class SettingsService
             'voorzieningen' => [
                 'name' => 'Voorzieningen', 
                 'description' => 'Voorzieningen register for software catalog services',
-                'objectTypes' => ['gebruiker', 'organisatie', 'contactgegevens'] // Voorzieningen uses gebruiker, organisatie, and contactgegevens schemas
+                'objectTypes' => ['organisatie', 'contactgegevens'] // Voorzieningen uses organisatie and contactgegevens schemas
             ]
         ];
         
         // For backward compatibility, keep the original object types structure
         $data['objectTypes'] = [
             'organization',
-            'contact', 
-            'gebruiker',
+            'contact',
         ];
         
         $data['openRegisters'] = false;
@@ -336,13 +335,7 @@ class SettingsService
             }
         }
         
-        // Check for Voorzieningen register specific schemas
-        if ($objectType === 'gebruiker') {
-            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_gebruiker_schema', '');
-            if (!empty($schemaId)) {
-                return (int) $schemaId;
-            }
-        }
+
         
         if ($objectType === 'organisatie') {
             $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
@@ -383,7 +376,7 @@ class SettingsService
      */
     public function isFullyConfigured(): bool
     {
-        $objectTypes = ['organization', 'contact', 'gebruiker'];
+        $objectTypes = ['organization', 'contact'];
         
         foreach ($objectTypes as $type) {
             $schemaId = $this->getSchemaIdForObjectType($type);
@@ -402,7 +395,7 @@ class SettingsService
      */
     public function getConfigurationStatus(): array
     {
-        $objectTypes = ['organization', 'contact', 'gebruiker'];
+        $objectTypes = ['organization', 'contact'];
         $status = [];
         
         foreach ($objectTypes as $type) {
@@ -659,6 +652,43 @@ class SettingsService
             'organizationActivationEnabled' => $this->config->getValueString($this->_appName, 'email_org_activation_enabled', 'true') === 'true',
             'userCreationEnabled' => $this->config->getValueString($this->_appName, 'email_user_creation_enabled', 'true') === 'true',
             'userPasswordEnabled' => $this->config->getValueString($this->_appName, 'email_user_password_enabled', 'true') === 'true',
+            
+            // Symfony Mailer transport configuration
+            'transportType' => $this->config->getValueString($this->_appName, 'email_transport_type', 'smtp'),
+            
+            // SMTP configuration
+            'smtpHost' => $this->config->getValueString($this->_appName, 'email_smtp_host', 'localhost'),
+            'smtpPort' => (int) $this->config->getValueString($this->_appName, 'email_smtp_port', '587'),
+            'smtpEncryption' => $this->config->getValueString($this->_appName, 'email_smtp_encryption', 'tls'),
+            'smtpUsername' => $this->config->getValueString($this->_appName, 'email_smtp_username', ''),
+            'smtpPassword' => $this->config->getValueString($this->_appName, 'email_smtp_password', ''),
+            
+            // SendGrid configuration
+            'sendgridApiKey' => $this->config->getValueString($this->_appName, 'email_sendgrid_api_key', ''),
+            
+            // Mailgun configuration
+            'mailgunApiKey' => $this->config->getValueString($this->_appName, 'email_mailgun_api_key', ''),
+            'mailgunDomain' => $this->config->getValueString($this->_appName, 'email_mailgun_domain', ''),
+            
+            // Postmark configuration
+            'postmarkApiKey' => $this->config->getValueString($this->_appName, 'email_postmark_api_key', ''),
+            
+            // Amazon SES configuration
+            'sesAccessKey' => $this->config->getValueString($this->_appName, 'email_ses_access_key', ''),
+            'sesSecretKey' => $this->config->getValueString($this->_appName, 'email_ses_secret_key', ''),
+            'sesRegion' => $this->config->getValueString($this->_appName, 'email_ses_region', 'us-east-1'),
+            
+            // Mailjet configuration
+            'mailjetApiKey' => $this->config->getValueString($this->_appName, 'email_mailjet_api_key', ''),
+            'mailjetSecretKey' => $this->config->getValueString($this->_appName, 'email_mailjet_secret_key', ''),
+            
+            // Templates
+            'templates' => [
+                'organization_registration' => $this->getEmailTemplate('organization_registration'),
+                'organization_activation' => $this->getEmailTemplate('organization_activation'),
+                'user_creation' => $this->getEmailTemplate('user_creation'),
+                'user_password' => $this->getEmailTemplate('user_password'),
+            ],
         ];
     }
 
@@ -680,6 +710,35 @@ class SettingsService
             'organizationActivationEnabled' => 'email_org_activation_enabled',
             'userCreationEnabled' => 'email_user_creation_enabled',
             'userPasswordEnabled' => 'email_user_password_enabled',
+            
+            // Symfony Mailer transport configuration
+            'transportType' => 'email_transport_type',
+            
+            // SMTP configuration
+            'smtpHost' => 'email_smtp_host',
+            'smtpPort' => 'email_smtp_port',
+            'smtpEncryption' => 'email_smtp_encryption',
+            'smtpUsername' => 'email_smtp_username',
+            'smtpPassword' => 'email_smtp_password',
+            
+            // SendGrid configuration
+            'sendgridApiKey' => 'email_sendgrid_api_key',
+            
+            // Mailgun configuration
+            'mailgunApiKey' => 'email_mailgun_api_key',
+            'mailgunDomain' => 'email_mailgun_domain',
+            
+            // Postmark configuration
+            'postmarkApiKey' => 'email_postmark_api_key',
+            
+            // Amazon SES configuration
+            'sesAccessKey' => 'email_ses_access_key',
+            'sesSecretKey' => 'email_ses_secret_key',
+            'sesRegion' => 'email_ses_region',
+            
+            // Mailjet configuration
+            'mailjetApiKey' => 'email_mailjet_api_key',
+            'mailjetSecretKey' => 'email_mailjet_secret_key',
         ];
 
         $updatedSettings = [];
@@ -877,14 +936,14 @@ class SettingsService
     public function testEmailSending(string $testEmail): array
     {
         try {
-            // Get PhpEmailService
-            $emailService = $this->container->get(\OCA\SoftwareCatalog\Service\PhpEmailService::class);
+            // Get SymfonyEmailService
+            $emailService = $this->container->get(\OCA\SoftwareCatalog\Service\SymfonyEmailService::class);
             
             $success = $emailService->sendTestEmail($testEmail);
             
             return [
                 'success' => $success,
-                'message' => $success ? 'Test email sent successfully!' : 'Failed to send test email',
+                'message' => $success ? 'Test email sent successfully using Symfony Mailer!' : 'Failed to send test email using Symfony Mailer',
                 'testEmail' => $testEmail
             ];
             

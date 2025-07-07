@@ -219,6 +219,74 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Get debug information about current configuration
+     *
+     * @return JSONResponse JSON response containing debug information
+     *
+     * @NoCSRFRequired
+     */
+    public function debug(): JSONResponse
+    {
+        try {
+            $debug = [];
+            
+            // Get all app config values
+            $appName = $this->appName;
+            $allKeys = $this->config->getKeys($appName);
+            
+            $debug['app_config'] = [];
+            foreach ($allKeys as $key) {
+                $debug['app_config'][$key] = $this->config->getValueString($appName, $key);
+            }
+            
+            // Get schema IDs for each object type
+            $debug['schema_ids'] = [
+                'organization' => $this->settingsService->getSchemaIdForObjectType('organization'),
+                'contact' => $this->settingsService->getSchemaIdForObjectType('contact'),
+                'organisatie' => $this->settingsService->getSchemaIdForObjectType('organisatie'),
+                'contactgegevens' => $this->settingsService->getSchemaIdForObjectType('contactgegevens'),
+            ];
+            
+            // Get register IDs for each object type
+            $debug['register_ids'] = [
+                'organization' => $this->settingsService->getRegisterIdForObjectType('organization'),
+                'contact' => $this->settingsService->getRegisterIdForObjectType('contact'),
+            ];
+            
+            // Get OpenRegister status
+            $debug['openregister_status'] = [
+                'installed' => $this->settingsService->isOpenRegisterInstalled(),
+                'enabled' => $this->settingsService->isOpenRegisterEnabled(),
+                'fully_configured' => $this->settingsService->isFullyConfigured(),
+            ];
+            
+            // Try to get available schemas and registers
+            try {
+                $objectService = $this->getObjectService();
+                $registers = $objectService->getRegisters();
+                $debug['available_registers'] = $registers;
+                
+                // Get schemas for each register
+                $debug['available_schemas'] = [];
+                foreach ($registers as $register) {
+                    if (isset($register['schemas'])) {
+                        $debug['available_schemas'][$register['id']] = $register['schemas'];
+                    }
+                }
+            } catch (\Exception $e) {
+                $debug['openregister_error'] = $e->getMessage();
+            }
+            
+            return new JSONResponse($debug);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get debug information', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
 
     /**
      * Auto-configure settings

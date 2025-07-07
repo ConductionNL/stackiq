@@ -25,7 +25,8 @@ return [
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'GET'],
         ['name' => 'settings#initialize', 'url' => '/api/settings/initialize', 'verb' => 'POST'],
-        ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
+        		['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
+		['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
         ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
 
         // Generic User Groups API routes

@@ -8,6 +8,8 @@ use Psr\Log\LoggerInterface;
 use OCP\IConfig;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
+use OCP\Mail\IMailer;
+use OCP\Mail\IMessage;
 
 /**
  * PHP-based email service for sending notification emails

@@ -113,19 +113,7 @@
 						<h4>Voorzieningen Register Configuration</h4>
 						<p>Configure schemas for software catalog services</p>
 
-						<div class="object-type-section">
-							<div class="object-type-header">
-								<h5>Gebruiker Schema</h5>
-								<span class="object-type-description">Schema for users in the Voorzieningen register</span>
-							</div>
 
-							<NcSelect
-								v-model="configuration.voorzieningen_gebruiker.schema"
-								:options="availableSchemaOptions"
-								input-label="Gebruiker Schema"
-								:disabled="loading"
-								@change="validateConfiguration" />
-						</div>
 
 						<div class="object-type-section">
 							<div class="object-type-header">
@@ -174,6 +162,26 @@
 						</div>
 					</div>
 
+					<!-- Current Configuration Debug -->
+					<div class="configuration-debug">
+						<h4>Current Configuration Values 
+							<NcButton
+								type="tertiary"
+								size="small"
+								:disabled="loading"
+								@click="loadDebugInfo">
+								<template #icon>
+									<Refresh :size="16" />
+								</template>
+								Refresh
+							</NcButton>
+						</h4>
+						<div class="debug-info">
+							<pre v-if="debugInfo">{{ JSON.stringify(debugInfo, null, 2) }}</pre>
+							<div v-else>Loading debug information...</div>
+						</div>
+					</div>
+
 					<!-- Configuration Status -->
 					<div class="configuration-status">
 						<h4>Configuration Status</h4>
@@ -188,11 +196,6 @@
 
 						<div v-if="isRegisterType('voorzieningen')" class="status-group">
 							<h5>Voorzieningen Register</h5>
-							<div class="status-item">
-								<span class="status-label">Gebruiker:</span>
-								<span v-if="configuration.voorzieningen_gebruiker?.schema" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
-							</div>
 							<div class="status-item">
 								<span class="status-label">Organisatie:</span>
 								<span v-if="configuration.voorzieningen_organisatie?.schema" class="status-configured">✓ Configured</span>
@@ -386,6 +389,175 @@
 									label="Sender Email"
 									@update:value="updateEmailSetting('senderEmail', $event)" />
 								<span class="setting-description">Email address that appears as the sender</span>
+							</div>
+						</div>
+
+						<!-- Transport Configuration -->
+						<div v-if="emailSettings.enabled" class="transport-configuration">
+							<h4>Mail Transport Configuration</h4>
+							<div class="setting-row">
+								<label class="setting-label">Transport Type:</label>
+								<NcSelect
+									v-model="emailSettings.transportType"
+									:options="transportOptions"
+									placeholder="Select transport type"
+									@update:value="updateEmailSetting('transportType', $event)">
+									<template #option="{ option }">
+										{{ option.label }}
+									</template>
+								</NcSelect>
+								<span class="setting-description">Choose the email transport provider</span>
+							</div>
+
+							<!-- SMTP Configuration -->
+							<div v-if="emailSettings.transportType === 'smtp'" class="smtp-configuration">
+								<h5>SMTP Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">SMTP Host:</label>
+									<NcTextField
+										:value="emailSettings.smtpHost"
+										placeholder="smtp.gmail.com"
+										label="SMTP Host"
+										@update:value="updateEmailSetting('smtpHost', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">SMTP Port:</label>
+									<NcTextField
+										:value="emailSettings.smtpPort"
+										placeholder="587"
+										type="number"
+										label="SMTP Port"
+										@update:value="updateEmailSetting('smtpPort', parseInt($event))" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Encryption:</label>
+									<NcSelect
+										v-model="emailSettings.smtpEncryption"
+										:options="encryptionOptions"
+										placeholder="Select encryption"
+										@update:value="updateEmailSetting('smtpEncryption', $event)">
+										<template #option="{ option }">
+											{{ option.label }}
+										</template>
+									</NcSelect>
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Username:</label>
+									<NcTextField
+										:value="emailSettings.smtpUsername"
+										placeholder="your-email@gmail.com"
+										label="SMTP Username"
+										@update:value="updateEmailSetting('smtpUsername', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Password:</label>
+									<NcPasswordField
+										:value="emailSettings.smtpPassword"
+										placeholder="your-password"
+										label="SMTP Password"
+										@update:value="updateEmailSetting('smtpPassword', $event)" />
+								</div>
+							</div>
+
+							<!-- SendGrid Configuration -->
+							<div v-if="emailSettings.transportType === 'sendgrid'" class="sendgrid-configuration">
+								<h5>SendGrid Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">API Key:</label>
+									<NcPasswordField
+										:value="emailSettings.sendgridApiKey"
+										placeholder="SG.xxxxx"
+										label="SendGrid API Key"
+										@update:value="updateEmailSetting('sendgridApiKey', $event)" />
+								</div>
+							</div>
+
+							<!-- Mailgun Configuration -->
+							<div v-if="emailSettings.transportType === 'mailgun'" class="mailgun-configuration">
+								<h5>Mailgun Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">API Key:</label>
+									<NcPasswordField
+										:value="emailSettings.mailgunApiKey"
+										placeholder="key-xxxxx"
+										label="Mailgun API Key"
+										@update:value="updateEmailSetting('mailgunApiKey', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Domain:</label>
+									<NcTextField
+										:value="emailSettings.mailgunDomain"
+										placeholder="mg.yourdomain.com"
+										label="Mailgun Domain"
+										@update:value="updateEmailSetting('mailgunDomain', $event)" />
+								</div>
+							</div>
+
+							<!-- Postmark Configuration -->
+							<div v-if="emailSettings.transportType === 'postmark'" class="postmark-configuration">
+								<h5>Postmark Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">API Key:</label>
+									<NcPasswordField
+										:value="emailSettings.postmarkApiKey"
+										placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+										label="Postmark API Key"
+										@update:value="updateEmailSetting('postmarkApiKey', $event)" />
+								</div>
+							</div>
+
+							<!-- Amazon SES Configuration -->
+							<div v-if="emailSettings.transportType === 'ses'" class="ses-configuration">
+								<h5>Amazon SES Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">Access Key:</label>
+									<NcPasswordField
+										:value="emailSettings.sesAccessKey"
+										placeholder="AKIAIOSFODNN7EXAMPLE"
+										label="SES Access Key"
+										@update:value="updateEmailSetting('sesAccessKey', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Secret Key:</label>
+									<NcPasswordField
+										:value="emailSettings.sesSecretKey"
+										placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+										label="SES Secret Key"
+										@update:value="updateEmailSetting('sesSecretKey', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Region:</label>
+									<NcSelect
+										v-model="emailSettings.sesRegion"
+										:options="sesRegionOptions"
+										placeholder="Select region"
+										@update:value="updateEmailSetting('sesRegion', $event)">
+										<template #option="{ option }">
+											{{ option.label }}
+										</template>
+									</NcSelect>
+								</div>
+							</div>
+
+							<!-- Mailjet Configuration -->
+							<div v-if="emailSettings.transportType === 'mailjet'" class="mailjet-configuration">
+								<h5>Mailjet Configuration</h5>
+								<div class="setting-row">
+									<label class="setting-label">API Key:</label>
+									<NcPasswordField
+										:value="emailSettings.mailjetApiKey"
+										placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+										label="Mailjet API Key"
+										@update:value="updateEmailSetting('mailjetApiKey', $event)" />
+								</div>
+								<div class="setting-row">
+									<label class="setting-label">Secret Key:</label>
+									<NcPasswordField
+										:value="emailSettings.mailjetSecretKey"
+										placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+										label="Mailjet Secret Key"
+										@update:value="updateEmailSetting('mailjetSecretKey', $event)" />
+								</div>
 							</div>
 						</div>
 
@@ -583,6 +755,7 @@ import {
 	NcButton,
 	NcLoadingIcon,
 	NcTextField,
+	NcPasswordField,
 	NcCheckboxRadioSwitch,
 	NcTextArea,
 } from '@nextcloud/vue'
@@ -614,6 +787,7 @@ export default defineComponent({
 		NcButton,
 		NcLoadingIcon,
 		NcTextField,
+		NcPasswordField,
 		NcCheckboxRadioSwitch,
 		NcTextArea,
 		Save,
@@ -647,6 +821,7 @@ export default defineComponent({
 			selectedRegister: null,
 			configuration: {},
 			schemaOptions: [],
+			debugInfo: null,
 			genericUserGroups: [],
 			groupValidation: null,
 			groupsSaveResult: null,
@@ -661,6 +836,28 @@ export default defineComponent({
 				organizationActivationEnabled: true,
 				userCreationEnabled: true,
 				userPasswordEnabled: true,
+				// Transport configuration
+				transportType: 'smtp',
+				// SMTP configuration
+				smtpHost: 'localhost',
+				smtpPort: 587,
+				smtpEncryption: 'tls',
+				smtpUsername: '',
+				smtpPassword: '',
+				// SendGrid configuration
+				sendgridApiKey: '',
+				// Mailgun configuration
+				mailgunApiKey: '',
+				mailgunDomain: '',
+				// Postmark configuration
+				postmarkApiKey: '',
+				// Amazon SES configuration
+				sesAccessKey: '',
+				sesSecretKey: '',
+				sesRegion: 'us-east-1',
+				// Mailjet configuration
+				mailjetApiKey: '',
+				mailjetSecretKey: '',
 			},
 			savingEmailSettings: false,
 			emailSaveResult: null,
@@ -742,6 +939,63 @@ export default defineComponent({
 				this.configuration[type] && this.configuration[type].schema
 			)
 		},
+
+		/**
+		 * Transport type options for email configuration
+		 *
+		 * @return {Array<object>} Array of transport options
+		 */
+		transportOptions() {
+			return [
+				{ value: 'smtp', label: 'SMTP Server' },
+				{ value: 'sendmail', label: 'Sendmail' },
+				{ value: 'native', label: 'Native PHP Mail' },
+				{ value: 'null', label: 'Null (No Emails)' },
+				{ value: 'sendgrid', label: 'SendGrid' },
+				{ value: 'mailgun', label: 'Mailgun' },
+				{ value: 'postmark', label: 'Postmark' },
+				{ value: 'ses', label: 'Amazon SES' },
+				{ value: 'mailjet', label: 'Mailjet' },
+			]
+		},
+
+		/**
+		 * SMTP encryption options
+		 *
+		 * @return {Array<object>} Array of encryption options
+		 */
+		encryptionOptions() {
+			return [
+				{ value: 'tls', label: 'TLS' },
+				{ value: 'ssl', label: 'SSL' },
+				{ value: 'none', label: 'None' },
+			]
+		},
+
+		/**
+		 * Amazon SES region options
+		 *
+		 * @return {Array<object>} Array of SES region options
+		 */
+		sesRegionOptions() {
+			return [
+				{ value: 'us-east-1', label: 'US East (N. Virginia)' },
+				{ value: 'us-east-2', label: 'US East (Ohio)' },
+				{ value: 'us-west-1', label: 'US West (N. California)' },
+				{ value: 'us-west-2', label: 'US West (Oregon)' },
+				{ value: 'eu-west-1', label: 'Europe (Ireland)' },
+				{ value: 'eu-west-2', label: 'Europe (London)' },
+				{ value: 'eu-west-3', label: 'Europe (Paris)' },
+				{ value: 'eu-central-1', label: 'Europe (Frankfurt)' },
+				{ value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
+				{ value: 'ap-southeast-2', label: 'Asia Pacific (Sydney)' },
+				{ value: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
+				{ value: 'ap-northeast-2', label: 'Asia Pacific (Seoul)' },
+				{ value: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
+				{ value: 'ca-central-1', label: 'Canada (Central)' },
+				{ value: 'sa-east-1', label: 'South America (São Paulo)' },
+			]
+		},
 	},
 
 	watch: {
@@ -793,6 +1047,9 @@ export default defineComponent({
 
 				// Load email settings
 				await this.loadEmailSettings()
+
+				// Load debug information
+				await this.loadDebugInfo()
 			} catch (error) {
 			} finally {
 				this.loading = false
@@ -821,6 +1078,28 @@ export default defineComponent({
 						organizationActivationEnabled: data.data.organizationActivationEnabled ?? true,
 						userCreationEnabled: data.data.userCreationEnabled ?? true,
 						userPasswordEnabled: data.data.userPasswordEnabled ?? true,
+						// Transport configuration
+						transportType: data.data.transportType ?? 'smtp',
+						// SMTP configuration
+						smtpHost: data.data.smtpHost ?? 'localhost',
+						smtpPort: data.data.smtpPort ?? 587,
+						smtpEncryption: data.data.smtpEncryption ?? 'tls',
+						smtpUsername: data.data.smtpUsername ?? '',
+						smtpPassword: data.data.smtpPassword ?? '',
+						// SendGrid configuration
+						sendgridApiKey: data.data.sendgridApiKey ?? '',
+						// Mailgun configuration
+						mailgunApiKey: data.data.mailgunApiKey ?? '',
+						mailgunDomain: data.data.mailgunDomain ?? '',
+						// Postmark configuration
+						postmarkApiKey: data.data.postmarkApiKey ?? '',
+						// Amazon SES configuration
+						sesAccessKey: data.data.sesAccessKey ?? '',
+						sesSecretKey: data.data.sesSecretKey ?? '',
+						sesRegion: data.data.sesRegion ?? 'us-east-1',
+						// Mailjet configuration
+						mailjetApiKey: data.data.mailjetApiKey ?? '',
+						mailjetSecretKey: data.data.mailjetSecretKey ?? '',
 					}
 				}
 			} catch (error) {
@@ -834,6 +1113,28 @@ export default defineComponent({
 					organizationActivationEnabled: true,
 					userCreationEnabled: true,
 					userPasswordEnabled: true,
+					// Transport configuration
+					transportType: 'smtp',
+					// SMTP configuration
+					smtpHost: 'localhost',
+					smtpPort: 587,
+					smtpEncryption: 'tls',
+					smtpUsername: '',
+					smtpPassword: '',
+					// SendGrid configuration
+					sendgridApiKey: '',
+					// Mailgun configuration
+					mailgunApiKey: '',
+					mailgunDomain: '',
+					// Postmark configuration
+					postmarkApiKey: '',
+					// Amazon SES configuration
+					sesAccessKey: '',
+					sesSecretKey: '',
+					sesRegion: 'us-east-1',
+					// Mailjet configuration
+					mailjetApiKey: '',
+					mailjetSecretKey: '',
 				}
 			}
 		},
@@ -856,6 +1157,27 @@ export default defineComponent({
 				}
 			} catch (error) {
 				this.genericUserGroups = ['beheerder', 'inkoper', 'ambtenaar', 'software-catalog-users']
+			}
+		},
+
+		/**
+		 * Loads debug information from the backend API
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async loadDebugInfo() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/debug')
+				const data = await response.json()
+
+				if (data.error) {
+					this.debugInfo = { error: data.error }
+				} else {
+					this.debugInfo = data
+				}
+			} catch (error) {
+				this.debugInfo = { error: 'Failed to load debug information: ' + error.message }
 			}
 		},
 
@@ -1424,10 +1746,24 @@ export default defineComponent({
 				})
 
 				const result = await response.json()
-				if (result.error) {
-					this.emailTestResult = { success: false, message: result.error }
+
+				// Check for success field first, then error field for backward compatibility
+				if (result.success === false || result.error) {
+					this.emailTestResult = {
+						success: false,
+						message: result.message || result.error || 'Failed to send test email'
+					}
+				} else if (result.success === true) {
+					this.emailTestResult = {
+						success: true,
+						message: result.message || 'Test email sent successfully!'
+					}
 				} else {
-					this.emailTestResult = { success: true, message: 'Test email sent successfully!' }
+					// Fallback for legacy responses
+					this.emailTestResult = {
+						success: true,
+						message: 'Test email sent successfully!'
+					}
 				}
 			} catch (error) {
 				this.emailTestResult = { success: false, message: 'Failed to send test email: ' + error.message }
@@ -1646,6 +1982,38 @@ export default defineComponent({
 	font-size: 0.9em;
 	color: var(--color-text-maxcontrast);
 	margin-top: 0.25rem;
+}
+
+.configuration-debug {
+	margin: 2rem 0;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-dark);
+}
+
+.configuration-debug h4 {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.debug-info {
+	background-color: var(--color-main-background);
+	padding: 10px;
+	border-radius: var(--border-radius);
+	font-family: monospace;
+	font-size: 12px;
+	overflow-x: auto;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.debug-info pre {
+	margin: 0;
+	white-space: pre-wrap;
+	word-wrap: break-word;
 }
 
 .configuration-status {

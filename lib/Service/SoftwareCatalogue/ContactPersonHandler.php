@@ -26,7 +26,7 @@ use OCP\IGroup;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
-use OCA\SoftwareCatalog\Service\PhpEmailService;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 
 /**
  * Handler for contact person-related operations
@@ -49,7 +49,7 @@ class ContactPersonHandler
      * @param ContainerInterface     $_container      Container interface
      * @param IAppManager            $_appManager     App manager interface
      * @param LoggerInterface        $_logger         Logger interface
-     * @param PhpEmailService        $_emailService   Email service
+     * @param SymfonyEmailService    $_emailService   Email service
      */
     public function __construct(
         private readonly IUserManager $_userManager,
@@ -58,7 +58,7 @@ class ContactPersonHandler
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
         private readonly LoggerInterface $_logger,
-        private readonly PhpEmailService $_emailService,
+        private readonly SymfonyEmailService $_emailService,
     ) {
     }
 

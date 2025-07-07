@@ -22,7 +22,7 @@ use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
-use OCA\SoftwareCatalog\Service\PhpEmailService;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 use Psr\Log\LoggerInterface;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
@@ -56,7 +56,7 @@ class SoftwareCatalogueService
      * @param ContactPersonHandler  $_contactPersonHandler Contact person handler
      * @param GroupHandler          $_groupHandler         Group handler
      * @param HierarchyHandler      $_hierarchyHandler     Hierarchy handler
-     * @param PhpEmailService       $_emailService         Email service
+     * @param SymfonyEmailService   $_emailService         Email service
      * @param LoggerInterface       $_logger               Logger interface
      */
     public function __construct(
@@ -64,7 +64,7 @@ class SoftwareCatalogueService
         private readonly ContactPersonHandler $_contactPersonHandler,
         private readonly GroupHandler $_groupHandler,
         private readonly HierarchyHandler $_hierarchyHandler,
-        private readonly PhpEmailService $_emailService,
+        private readonly SymfonyEmailService $_emailService,
         private readonly LoggerInterface $_logger,
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
