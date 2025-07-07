@@ -1,3 +1,8 @@
+# Version: 0.1.10
+
+* [#9](https://github.com/ConductionNL/softwarecatalog/pull/9): Lets try to test user creation
+
+
 # Changelog
 
 ## [Unreleased]
