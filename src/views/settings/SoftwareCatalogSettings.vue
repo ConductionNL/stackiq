@@ -131,14 +131,14 @@
 
 						<div class="object-type-section">
 							<div class="object-type-header">
-								<h5>Contactgegevens Schema</h5>
-								<span class="object-type-description">Schema for contact information in the Voorzieningen register</span>
+								<h5>Contactpersoon Schema</h5>
+								<span class="object-type-description">Schema for contact persons in the Voorzieningen register</span>
 							</div>
 
 							<NcSelect
-								v-model="configuration.voorzieningen_contactgegevens.schema"
+								v-model="configuration.voorzieningen_contactpersoon.schema"
 								:options="availableSchemaOptions"
-								input-label="Contactgegevens Schema"
+								input-label="Contactpersoon Schema"
 								:disabled="loading"
 								@change="validateConfiguration" />
 						</div>
@@ -199,6 +199,11 @@
 							<div class="status-item">
 								<span class="status-label">Organisatie:</span>
 								<span v-if="configuration.voorzieningen_organisatie?.schema" class="status-configured">✓ Configured</span>
+								<span v-else class="status-missing">⚠ Not configured</span>
+							</div>
+							<div class="status-item">
+								<span class="status-label">Contactpersoon:</span>
+								<span v-if="configuration.voorzieningen_contactpersoon?.schema" class="status-configured">✓ Configured</span>
 								<span v-else class="status-missing">⚠ Not configured</span>
 							</div>
 							<div class="status-item">
@@ -931,6 +936,7 @@ export default defineComponent({
 			if (this.isRegisterType('voorzieningen')) {
 				return this.configuration.voorzieningen_gebruiker?.schema
 					|| this.configuration.voorzieningen_organisatie?.schema
+					|| this.configuration.voorzieningen_contactpersoon?.schema
 					|| this.configuration.voorzieningen_contactgegevens?.schema
 			}
 
@@ -1198,6 +1204,9 @@ export default defineComponent({
 				voorzieningen_organisatie: {
 					schema: null,
 				},
+				voorzieningen_contactpersoon: {
+					schema: null,
+				},
 				voorzieningen_contactgegevens: {
 					schema: null,
 				},
@@ -1218,6 +1227,7 @@ export default defineComponent({
 				'amef_organization',
 				'voorzieningen_gebruiker',
 				'voorzieningen_organisatie',
+				'voorzieningen_contactpersoon',
 				'voorzieningen_contactgegevens'
 			]
 
@@ -1383,6 +1393,22 @@ export default defineComponent({
 					}
 				}
 
+				const contactpersoonSchema = register.schemas.find(
+					schema => schema.title.toLowerCase().includes('contactpersoon')
+				)
+				if (contactpersoonSchema) {
+					this.configuration = {
+						...this.configuration,
+						voorzieningen_contactpersoon: {
+							...this.configuration.voorzieningen_contactpersoon,
+							schema: {
+								label: contactpersoonSchema.title,
+								value: contactpersoonSchema.id.toString(),
+							},
+						},
+					}
+				}
+
 				const contactgegevensSchema = register.schemas.find(
 					schema => schema.title.toLowerCase().includes('contactgegevens')
 				)
@@ -1477,6 +1503,7 @@ export default defineComponent({
 					'amef_organization',
 					'voorzieningen_gebruiker',
 					'voorzieningen_organisatie',
+					'voorzieningen_contactpersoon',
 					'voorzieningen_contactgegevens',
 					...this.settings.objectTypes
 				]
@@ -1529,6 +1556,7 @@ export default defineComponent({
 					'amef_organization',
 					'voorzieningen_gebruiker',
 					'voorzieningen_organisatie',
+					'voorzieningen_contactpersoon',
 					'voorzieningen_contactgegevens'
 				]
 

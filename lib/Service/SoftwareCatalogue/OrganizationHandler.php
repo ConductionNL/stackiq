@@ -258,7 +258,7 @@ class OrganizationHandler
      *
      * @param object $organizationObject The organization object
      * 
-     * @return array Array of created contactgegevens objects
+     * @return array Array of created or updated contactgegevens objects
      */
     public function processContactpersonen(object $organizationObject): array
     {
@@ -267,13 +267,13 @@ class OrganizationHandler
             $contactpersonen = $objectData['contactpersonen'] ?? [];
             // Get the actual UUID from object data instead of database ID
             $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
-            $createdContacts = [];
+            $processedContacts = [];
 
             if (!is_array($contactpersonen) || empty($contactpersonen)) {
                 $this->_logger->info('No contactpersonen found in organization', [
                     'organizationId' => $organizationUuid
                 ]);
-                return $createdContacts;
+                return $processedContacts;
             }
 
             $objectService = $this->_getObjectService();
@@ -283,14 +283,25 @@ class OrganizationHandler
                     // Get the contactgegevens schema ID from settings
                     $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
                     $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+                    $registerId = $settingsService->getVoorzieningenRegisterId();
+                    
+                    if (!$registerId) {
+                        throw new \Exception('Voorzieningen register ID not configured');
+                    }
+                    
+                    $contactEmail = $contactpersoon['email'] ?? $contactpersoon['e-mailadres'] ?? '';
+                    
+                    // Check if contactgegevens object already exists for this email + organization
+                    $existingContactgegevens = $this->findExistingContactgegevens($contactEmail, $organizationUuid, $objectService, $registerId, $contactgegevensSchemaId);
                     
                     $this->_logger->info(
-                        'Creating contactgegevens object with schema',
+                        $existingContactgegevens ? 'Updating existing contactgegevens object' : 'Creating new contactgegevens object',
                         [
                             'contactgegevensSchemaId' => $contactgegevensSchemaId,
                             'organizationUuid' => $organizationUuid,
                             'contactpersoonIndex' => $index,
-                            'email' => $contactpersoon['email'] ?? $contactpersoon['e-mailadres'] ?? ''
+                            'email' => $contactEmail,
+                            'existingId' => $existingContactgegevens ? $existingContactgegevens->getUuid() : null
                         ]
                     );
                     
@@ -309,47 +320,57 @@ class OrganizationHandler
                         'tussenvoegsel' => $contactpersoon['tussenvoegsel'] ?? '',
                         'achternaam' => $contactpersoon['achternaam'] ?? '',
                         'telefoon' => $contactpersoon['telefoon'] ?? '',
-                        'email' => $contactpersoon['email'] ?? $contactpersoon['e-mailadres'] ?? '',
+                        'email' => $contactEmail,
                         'functie' => $contactpersoon['functie'] ?? '',
                         'organisation' => $organizationUuid, // Link to organization
                         'roles' => $this->mapFunctieToRoles($contactpersoon['functie'] ?? '', $index === 0),
                         'username' => '', // Will be set when user is created
-
                     ];
 
-                    // Get register ID dynamically from configuration
-                    $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-                    $registerId = $settingsService->getVoorzieningenRegisterId();
-                    
-                    if (!$registerId) {
-                        throw new \Exception('Voorzieningen register ID not configured');
+                    // If updating existing contactgegevens, preserve the username if it exists
+                    if ($existingContactgegevens) {
+                        $existingData = $existingContactgegevens->getObject();
+                        $contactgegevensData['username'] = $existingData['username'] ?? '';
+                    }
+
+                    // Create or update the contactgegevens object via ObjectService
+                    if ($existingContactgegevens) {
+                        // Update existing contactgegevens object
+                        $contactgegevensObject = $objectService->saveObject(
+                            $contactgegevensData,
+                            [],
+                            $registerId, // Dynamic register ID from configuration
+                            $contactgegevensSchemaId, // Schema ID from configuration  
+                            $existingContactgegevens->getUuid() // Pass existing UUID to update
+                        );
+                    } else {
+                        // Create new contactgegevens object
+                        $contactgegevensObject = $objectService->saveObject(
+                            $contactgegevensData,
+                            [],
+                            $registerId, // Dynamic register ID from configuration
+                            $contactgegevensSchemaId // Schema ID from configuration
+                        );
                     }
                     
-                    // Create the contactgegevens object via ObjectService with proper schema/register parameters
-                    $contactgegevensObject = $objectService->saveObject(
-                        object: $contactgegevensData,
-                        extend: [],
-                        register: $registerId, // Dynamic register ID from configuration
-                        schema: $contactgegevensSchemaId // Schema ID from configuration
-                    );
-                    
                     if ($contactgegevensObject) {
-                        $createdContacts[] = $contactgegevensObject;
+                        $processedContacts[] = $contactgegevensObject;
                         
                         $this->_logger->info(
-                            'Created contactgegevens from contactpersoon',
+                            $existingContactgegevens ? 'Updated existing contactgegevens from contactpersoon' : 'Created new contactgegevens from contactpersoon',
                             [
                                 'organizationId' => $organizationUuid,
                                 'contactgegevensId' => $contactgegevensObject->getId(),
                                 'contactpersoonIndex' => $index,
-                                'email' => $contactgegevensData['email']
+                                'email' => $contactgegevensData['email'],
+                                'action' => $existingContactgegevens ? 'update' : 'create'
                             ]
                         );
                     }
 
                 } catch (\Exception $e) {
                     $this->_logger->error(
-                        'Failed to create contactgegevens from contactpersoon: ' . $e->getMessage(),
+                        'Failed to process contactpersoon: ' . $e->getMessage(),
                         [
                             'organizationId' => $organizationUuid,
                             'contactpersoonIndex' => $index,
@@ -360,7 +381,7 @@ class OrganizationHandler
                 }
             }
 
-            return $createdContacts;
+            return $processedContacts;
 
         } catch (\Exception $e) {
             $this->_logger->error(
@@ -371,6 +392,60 @@ class OrganizationHandler
                 ]
             );
             return [];
+        }
+    }
+
+    /**
+     * Finds existing contactgegevens object for a given email and organization
+     *
+     * @param string $email The email address to search for
+     * @param string $organizationUuid The organization UUID
+     * @param \OCA\OpenRegister\Service\ObjectService $objectService The object service
+     * @param int $registerId The register ID
+     * @param int $contactgegevensSchemaId The contactgegevens schema ID
+     * 
+     * @return object|null The existing contactgegevens object or null if not found
+     */
+    private function findExistingContactgegevens(string $email, string $organizationUuid, \OCA\OpenRegister\Service\ObjectService $objectService, int $registerId, int $contactgegevensSchemaId): ?object
+    {
+        try {
+            if (empty($email) || empty($organizationUuid)) {
+                return null;
+            }
+
+            // Search for existing contactgegevens with this email and organization
+            $searchFilters = [
+                'email' => $email,
+                'organisation' => $organizationUuid
+            ];
+
+            $existingObjects = $objectService->findAll($searchFilters, $registerId, $contactgegevensSchemaId);
+
+            if (!empty($existingObjects)) {
+                $this->_logger->info(
+                    'Found existing contactgegevens object',
+                    [
+                        'email' => $email,
+                        'organizationUuid' => $organizationUuid,
+                        'existingId' => $existingObjects[0]->getUuid(),
+                        'totalFound' => count($existingObjects)
+                    ]
+                );
+                return $existingObjects[0]; // Return the first match
+            }
+
+            return null;
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to find existing contactgegevens: ' . $e->getMessage(),
+                [
+                    'email' => $email,
+                    'organizationUuid' => $organizationUuid,
+                    'exception' => $e
+                ]
+            );
+            return null;
         }
     }
 
@@ -456,13 +531,13 @@ class OrganizationHandler
                 $beoordeling = strtolower($objectData['beoordeling'] ?? '');
                 
                 if ($beoordeling === 'actief') {
-                    $createdContacts = $this->processContactpersonen($organizationObject);
+                    $processedContacts = $this->processContactpersonen($organizationObject);
                     
                     $this->_logger->info(
-                        'Processed organization and created contactgegevens',
+                        'Processed organization and contactgegevens',
                         [
                             'organizationId' => $organizationObject->getId(),
-                            'contactgegevensCount' => count($createdContacts)
+                            'contactgegevensCount' => count($processedContacts)
                         ]
                     );
                 }
