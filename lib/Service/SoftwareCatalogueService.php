@@ -344,7 +344,7 @@ class SoftwareCatalogueService
                 $becameActive = ($oldBeoordeling !== 'actief');
                 
                 $this->_logger->info(
-                    $becameActive ? 'Organization became active, sending activation email' : 'Organization is active',
+                    $becameActive ? 'Organization became active, sending activation email and activating contactpersonen' : 'Organization is active',
                     [
                         'organizationId' => $organizationObject->getId(),
                         'oldBeoordeling' => $oldBeoordeling,
@@ -367,6 +367,16 @@ class SoftwareCatalogueService
                             'exception' => $e
                         ]);
                     }
+                    
+                    // Activate related contactpersonen users
+                    try {
+                        $this->activateContactpersonenForOrganization($organizationObject->getUuid());
+                    } catch (\Exception $e) {
+                        $this->_logger->error('Failed to activate contactpersonen users: ' . $e->getMessage(), [
+                            'objectId' => $organizationObject->getId(),
+                            'exception' => $e
+                        ]);
+                    }
                 }
             } else {
                 $this->_logger->info(
@@ -383,6 +393,113 @@ class SoftwareCatalogueService
                 'Failed to handle organization update: ' . $e->getMessage(),
                 [
                     'objectId' => $organizationObject->getId(),
+                    'exception' => $e
+                ]
+            );
+        }
+    }
+
+    /**
+     * Activates contactpersonen users for an organization
+     *
+     * @param string $organizationId The organization ID
+     * 
+     * @return void
+     */
+    private function activateContactpersonenForOrganization(string $organizationId): void
+    {
+        try {
+            $this->_logger->info('Activating contactpersonen for organization', [
+                'organizationId' => $organizationId
+            ]);
+            
+            // Get ObjectService to find contactpersonen
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                $this->_logger->error('ObjectService not available');
+                return;
+            }
+            
+            // Get settings service to get schema IDs
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $registerId = $settingsService->getVoorzieningenRegisterId() ?? '6';
+            
+            // Find contactpersonen related to this organization
+            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon') ?? '34';
+            $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens') ?? '34';
+            
+            $this->_logger->info('Schema IDs for contactpersonen search', [
+                'organizationId' => $organizationId,
+                'registerId' => $registerId,
+                'contactpersoonSchemaId' => $contactpersoonSchemaId,
+                'contactgegevensSchemaId' => $contactgegevensSchemaId
+            ]);
+            
+            $activatedUsers = [];
+            
+            // Check contactpersoon objects (new data model)
+            if ($contactpersoonSchemaId) {
+                $contactpersoonObjects = $objectService->findAll(
+                    (int) $registerId,
+                    (int) $contactpersoonSchemaId,
+                    ['organisation' => $organizationId]
+                );
+                
+                foreach ($contactpersoonObjects as $contactpersoonObject) {
+                    $contactData = $contactpersoonObject->getObject();
+                    $username = $contactData['username'] ?? '';
+                    
+                    if (!empty($username)) {
+                        $success = $this->_contactPersonHandler->setUserActive($username);
+                        if ($success) {
+                            $activatedUsers[] = $username;
+                            $this->_logger->info('Activated contactpersoon user', [
+                                'username' => $username,
+                                'organizationId' => $organizationId,
+                                'contactpersoonId' => $contactpersoonObject->getId()
+                            ]);
+                        }
+                    }
+                }
+            }
+            
+            // Check contactgegevens objects (backward compatibility)
+            if ($contactgegevensSchemaId && $contactgegevensSchemaId !== $contactpersoonSchemaId) {
+                $contactgegevensObjects = $objectService->findAll(
+                    (int) $registerId,
+                    (int) $contactgegevensSchemaId,
+                    ['organisation' => $organizationId]
+                );
+                
+                foreach ($contactgegevensObjects as $contactgegevensObject) {
+                    $contactData = $contactgegevensObject->getObject();
+                    $username = $contactData['username'] ?? '';
+                    
+                    if (!empty($username) && !in_array($username, $activatedUsers)) {
+                        $success = $this->_contactPersonHandler->setUserActive($username);
+                        if ($success) {
+                            $activatedUsers[] = $username;
+                            $this->_logger->info('Activated contactgegevens user', [
+                                'username' => $username,
+                                'organizationId' => $organizationId,
+                                'contactgegevensId' => $contactgegevensObject->getId()
+                            ]);
+                        }
+                    }
+                }
+            }
+            
+            $this->_logger->info('Completed contactpersonen activation for organization', [
+                'organizationId' => $organizationId,
+                'activatedUsers' => $activatedUsers,
+                'totalActivated' => count($activatedUsers)
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to activate contactpersonen for organization: ' . $e->getMessage(),
+                [
+                    'organizationId' => $organizationId,
                     'exception' => $e
                 ]
             );

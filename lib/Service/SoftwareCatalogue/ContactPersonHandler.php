@@ -1635,6 +1635,53 @@ class ContactPersonHandler
     }
 
     /**
+     * Sets a user account to active
+     *
+     * @param string $username The username to set as active
+     * 
+     * @return bool True if successful
+     */
+    public function setUserActive(string $username): bool
+    {
+        try {
+            $user = $this->_userManager->get($username);
+            
+            if ($user) {
+                $user->setEnabled(true);
+                
+                $this->_logger->info(
+                    'Set user account to active',
+                    [
+                        'username' => $username
+                    ]
+                );
+                
+                return true;
+            } else {
+                $this->_logger->warning(
+                    'User not found when trying to set active',
+                    [
+                        'username' => $username
+                    ]
+                );
+                
+                return false;
+            }
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to set user active: ' . $e->getMessage(),
+                [
+                    'username' => $username,
+                    'exception' => $e
+                ]
+            );
+            
+            return false;
+        }
+    }
+
+    /**
      * Handles contactpersoon updates, particularly role changes
      *
      * @param object $contactpersoonObject    The updated contactpersoon object
