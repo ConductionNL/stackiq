@@ -817,13 +817,22 @@ class ContactPersonHandler
     {
         try {
             $objectService = $this->_getObjectService();
+            $settingsService = $this->_getSettingsService();
+            
+            // Get configuration values
+            $registerId = $settingsService->getRegisterId();
+            $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+            
+            if (!$registerId || !$contactgegevensSchemaId) {
+                throw new \Exception('Register or schema ID not configured for contactgegevens');
+            }
             
             // Search for contactgegevens with the given username
             $searchFilters = [
                 'username' => $username
             ];
             
-            $results = $objectService->findObjects('contactgegevens', $searchFilters);
+            $results = $objectService->findAll($searchFilters, $registerId, $contactgegevensSchemaId);
             
             if (!empty($results)) {
                 return $results[0]; // Return the first match
