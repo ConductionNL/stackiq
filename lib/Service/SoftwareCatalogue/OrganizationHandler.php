@@ -155,9 +155,30 @@ class OrganizationHandler
                 $objectData['group'] = $group->getGID();
                 $organizationObject->setObject($objectData);
                 
-                // Save the updated organization
+                // Save the updated organization with correct register/schema IDs
                 $objectService = $this->_getObjectService();
-                $objectService->saveObject($organizationObject);
+                $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                $registerId = $settingsService->getVoorzieningenRegisterId();
+                $organizationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+                
+                if ($registerId && $organizationSchemaId) {
+                    $objectService->saveObject(
+                        $organizationObject,
+                        [],
+                        (int) $registerId,
+                        (int) $organizationSchemaId,
+                        $organizationObject->getUuid()
+                    );
+                } else {
+                    $this->_logger->warning(
+                        'Missing register or schema ID for organization, using fallback save method',
+                        [
+                            'registerId' => $registerId,
+                            'organizationSchemaId' => $organizationSchemaId
+                        ]
+                    );
+                    $objectService->saveObject($organizationObject);
+                }
                 
                 $this->_logger->info(
                     'Created and assigned unique group to organization',

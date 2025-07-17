@@ -245,7 +245,7 @@ class SettingsController extends Controller
                 'organization' => $this->settingsService->getSchemaIdForObjectType('organization'),
                 'contact' => $this->settingsService->getSchemaIdForObjectType('contact'),
                 'organisatie' => $this->settingsService->getSchemaIdForObjectType('organisatie'),
-                'contactgegevens' => $this->settingsService->getSchemaIdForObjectType('contactgegevens'),
+                'contactpersoon' => $this->settingsService->getSchemaIdForObjectType('contactpersoon'),
             ];
             
             // Get register IDs for each object type

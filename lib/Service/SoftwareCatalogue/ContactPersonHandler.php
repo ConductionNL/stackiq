@@ -124,9 +124,35 @@ class ContactPersonHandler
                 $objectData['username'] = $username;
                 $contactgegevensObject->setObject($objectData);
                 
-                // Save the updated object via ObjectService
+                // Save the updated object via ObjectService with correct register/schema IDs
                 $objectService = $this->_getObjectService();
-                $objectService->saveObject($contactgegevensObject);
+                $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                $registerId = $settingsService->getVoorzieningenRegisterId();
+                $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+                
+                // Use contactpersoon schema as fallback if contactgegevens schema not configured
+                if (!$contactgegevensSchemaId) {
+                    $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+                }
+                
+                if ($registerId && $contactgegevensSchemaId) {
+                    $objectService->saveObject(
+                        $contactgegevensObject,
+                        [],
+                        (int) $registerId,
+                        (int) $contactgegevensSchemaId,
+                        $contactgegevensObject->getUuid()
+                    );
+                } else {
+                    $this->_logger->warning(
+                        'Missing register or schema ID for contactgegevens, using fallback save method',
+                        [
+                            'registerId' => $registerId,
+                            'contactgegevensSchemaId' => $contactgegevensSchemaId
+                        ]
+                    );
+                    $objectService->saveObject($contactgegevensObject);
+                }
                 
                 $this->_logger->info(
                     'Successfully created user and updated contactgegevens', 
@@ -1251,9 +1277,35 @@ class ContactPersonHandler
                 $objectData['roles'] = $currentRoles;
                 $contactgegevensObject->setObject($objectData);
                 
-                // Save the updated object
+                // Save the updated object with correct register/schema IDs
                 $objectService = $this->_getObjectService();
-                $objectService->saveObject($contactgegevensObject);
+                $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                $registerId = $settingsService->getVoorzieningenRegisterId();
+                $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+                
+                // Use contactpersoon schema as fallback if contactgegevens schema not configured
+                if (!$contactgegevensSchemaId) {
+                    $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+                }
+                
+                if ($registerId && $contactgegevensSchemaId) {
+                    $objectService->saveObject(
+                        $contactgegevensObject,
+                        [],
+                        (int) $registerId,
+                        (int) $contactgegevensSchemaId,
+                        $contactgegevensObject->getUuid()
+                    );
+                } else {
+                    $this->_logger->warning(
+                        'Missing register or schema ID for contactgegevens, using fallback save method',
+                        [
+                            'registerId' => $registerId,
+                            'contactgegevensSchemaId' => $contactgegevensSchemaId
+                        ]
+                    );
+                    $objectService->saveObject($contactgegevensObject);
+                }
                 
                 // Add user to beheerder group
                 $beheerderGroup = $this->_groupManager->get('beheerder');
@@ -1559,9 +1611,30 @@ class ContactPersonHandler
                 $objectData['username'] = $username;
                 $contactpersoonObject->setObject($objectData);
                 
-                // Save the updated object via ObjectService
+                // Save the updated object via ObjectService with correct register/schema IDs
                 $objectService = $this->_getObjectService();
-                $objectService->saveObject($contactpersoonObject);
+                $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                $registerId = $settingsService->getVoorzieningenRegisterId();
+                $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+                
+                if ($registerId && $contactpersoonSchemaId) {
+                    $objectService->saveObject(
+                        $contactpersoonObject,
+                        [],
+                        (int) $registerId,
+                        (int) $contactpersoonSchemaId,
+                        $contactpersoonObject->getUuid()
+                    );
+                } else {
+                    $this->_logger->warning(
+                        'Missing register or schema ID for contactpersoon, using fallback save method',
+                        [
+                            'registerId' => $registerId,
+                            'contactpersoonSchemaId' => $contactpersoonSchemaId
+                        ]
+                    );
+                    $objectService->saveObject($contactpersoonObject);
+                }
                 
                 $this->_logger->info(
                     'Successfully created inactive user and updated contactpersoon', 

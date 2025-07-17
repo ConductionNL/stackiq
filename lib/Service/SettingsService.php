@@ -351,13 +351,6 @@ class SettingsService
             }
         }
         
-        if ($objectType === 'contactgegevens') {
-            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_schema', '');
-            if (!empty($schemaId)) {
-                return (int) $schemaId;
-            }
-        }
-        
         // Fall back to generic configuration for backward compatibility
         $schemaId = $this->config->getValueString($this->_appName, "{$objectType}_schema", '');
         return $schemaId ? (int) $schemaId : null;
@@ -389,8 +382,8 @@ class SettingsService
             return (int) $registerId;
         }
         
-        // Also try contactgegevens as fallback
-        $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_register', '');
+        // Also try contactpersoon as fallback
+        $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_register', '');
         if (!empty($registerId)) {
             return (int) $registerId;
         }
