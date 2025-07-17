@@ -92,7 +92,59 @@ class SoftwareCatalogueService
     }
 
     /**
-     * Processes a contactgegevens object to ensure it has a username
+     * Processes a contactpersoon object to create an inactive user
+     *
+     * If the contactpersoon object doesn't have a user or the user is missing,
+     * this method will create an inactive user account.
+     *
+     * @param object $contactpersoonObject The contactpersoon object to process
+     * 
+     * @return bool True if processing was successful
+     * @throws \Exception If processing fails
+     */
+    public function processContactpersoon(object $contactpersoonObject): bool
+    {
+        try {
+            $this->_logger->info('Processing contactpersoon object', [
+                'objectId' => $contactpersoonObject->getId()
+            ]);
+
+            // Delegate to contact person handler
+            $result = $this->_contactPersonHandler->processContactpersoon($contactpersoonObject);
+            
+            if ($result) {
+                // Get the username from the processed object
+                $objectData = $contactpersoonObject->getObject();
+                $username = $objectData['username'] ?? '';
+                
+                if (!empty($username)) {
+                    // Update user groups
+                    $this->_groupHandler->updateUserGroups($contactpersoonObject, $username);
+                    
+                    // Ensure organization has beheerder and set up manager relationships
+                    $this->_hierarchyHandler->ensureOrganizationBeheerder($contactpersoonObject, $username);
+                    
+                    // Set user to inactive initially
+                    $this->_contactPersonHandler->setUserInactive($username);
+                }
+            }
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to process contactpersoon object: ' . $e->getMessage(), 
+                [
+                    'exception' => $e,
+                    'objectId' => $contactpersoonObject->getId() ?? 'unknown'
+                ]
+            );
+            throw $e;
+        }
+    }
+
+    /**
+     * Processes a contactgegevens object to ensure it has a username (for backward compatibility)
      *
      * If the contactgegevens object doesn't have a username or it's empty,
      * this method will create a user account and set the username property.
@@ -105,7 +157,7 @@ class SoftwareCatalogueService
     public function processContactgegevens(object $contactgegevensObject): bool
     {
         try {
-            $this->_logger->info('Processing contactgegevens object', [
+            $this->_logger->info('Processing contactgegevens object (backward compatibility)', [
                 'objectId' => $contactgegevensObject->getId()
             ]);
 
@@ -141,7 +193,7 @@ class SoftwareCatalogueService
     }
 
     /**
-     * Processes organization groups and ensures proper group assignment
+     * Processes organization without contactpersonen processing
      *
      * @param object $organizationObject The organization object to process
      * 
@@ -151,78 +203,15 @@ class SoftwareCatalogueService
     public function processOrganization(object $organizationObject): bool
     {
         try {
-            // Delegate to organization handler
+            // Delegate to organization handler for basic processing
             $processed = $this->_organizationHandler->processOrganization($organizationObject);
             
-            if ($processed) {
-                // Check if organization is active and process contactpersonen
-                $objectData = $organizationObject->getObject();
-                $beoordeling = strtolower($objectData['beoordeling'] ?? '');
-                
-                if ($beoordeling === 'actief') {
-                    // Process contactpersonen into contactgegevens objects
-                    $createdContacts = $this->_organizationHandler->processContactpersonen($organizationObject);
-                    
-                    // Process each created contactgegevens to create users and set up groups
-                    $successfullyProcessed = 0;
-                    foreach ($createdContacts as $contactgegevensObject) {
-                        try {
-                            $result = $this->processContactgegevens($contactgegevensObject);
-                            if ($result) {
-                                $successfullyProcessed++;
-                            }
-                        } catch (\Exception $e) {
-                            $this->_logger->error(
-                                'Failed to process created contactgegevens: ' . $e->getMessage(),
-                                [
-                                    'contactgegevensId' => $contactgegevensObject->getId(),
-                                    'organizationId' => $organizationObject->getId(),
-                                    'exception' => $e
-                                ]
-                            );
-                        }
-                    }
-                    
-                    // If all contactgegevens were processed successfully, clean up contactpersonen array
-                    if ($successfullyProcessed === count($createdContacts) && count($createdContacts) > 0) {
-                        try {
-                            $objectData['contactpersonen'] = [];
-                            $organizationObject->setObject($objectData);
-                            
-                            // Save the updated organization object
-                            $objectService = $this->_getObjectService();
-                            if ($objectService) {
-                                $objectService->saveObject($objectData, [], null, null, $organizationObject->getUuid());
-                                
-                                $this->_logger->info(
-                                    'Emptied contactpersonen array after successful processing',
-                                    [
-                                        'organizationId' => $organizationObject->getId(),
-                                        'processedContactsCount' => $successfullyProcessed
-                                    ]
-                                );
-                            }
-                        } catch (\Exception $e) {
-                            $this->_logger->error(
-                                'Failed to empty contactpersonen array: ' . $e->getMessage(),
-                                [
-                                    'organizationId' => $organizationObject->getId(),
-                                    'exception' => $e
-                                ]
-                            );
-                        }
-                    }
-                    
-                    $this->_logger->info(
-                        'Successfully processed organization and contactpersonen',
-                        [
-                            'organizationId' => $organizationObject->getId(),
-                            'createdContactsCount' => count($createdContacts),
-                            'successfullyProcessedCount' => $successfullyProcessed
-                        ]
-                    );
-                }
-            }
+            $this->_logger->info(
+                'Successfully processed organization without contactpersonen',
+                [
+                    'organizationId' => $organizationObject->getId()
+                ]
+            );
             
             return $processed;
             
@@ -350,12 +339,12 @@ class SoftwareCatalogueService
             $newBeoordeling = strtolower($newData['beoordeling'] ?? '');
             $oldBeoordeling = strtolower($oldData['beoordeling'] ?? '');
             
-            // Process organization if it's currently active
+            // Check if organization status changed to active
             if ($newBeoordeling === 'actief') {
                 $becameActive = ($oldBeoordeling !== 'actief');
                 
                 $this->_logger->info(
-                    $becameActive ? 'Organization became active, processing contactpersonen' : 'Organization is active, processing update',
+                    $becameActive ? 'Organization became active, sending activation email and activating contactpersonen' : 'Organization is active',
                     [
                         'organizationId' => $organizationObject->getId(),
                         'oldBeoordeling' => $oldBeoordeling,
@@ -378,13 +367,20 @@ class SoftwareCatalogueService
                             'exception' => $e
                         ]);
                     }
+                    
+                    // Activate related contactpersonen users
+                    try {
+                        $this->activateContactpersonenForOrganization($organizationObject->getUuid());
+                    } catch (\Exception $e) {
+                        $this->_logger->error('Failed to activate contactpersonen users: ' . $e->getMessage(), [
+                            'objectId' => $organizationObject->getId(),
+                            'exception' => $e
+                        ]);
+                    }
                 }
-                
-                // Process the organization since it's active
-                $this->processOrganization($organizationObject);
             } else {
                 $this->_logger->info(
-                    'Organization not active, skipping processing',
+                    'Organization not active, no special processing needed',
                     [
                         'organizationId' => $organizationObject->getId(),
                         'beoordeling' => $newBeoordeling
@@ -397,6 +393,113 @@ class SoftwareCatalogueService
                 'Failed to handle organization update: ' . $e->getMessage(),
                 [
                     'objectId' => $organizationObject->getId(),
+                    'exception' => $e
+                ]
+            );
+        }
+    }
+
+    /**
+     * Activates contactpersonen users for an organization
+     *
+     * @param string $organizationId The organization ID
+     * 
+     * @return void
+     */
+    private function activateContactpersonenForOrganization(string $organizationId): void
+    {
+        try {
+            $this->_logger->info('Activating contactpersonen for organization', [
+                'organizationId' => $organizationId
+            ]);
+            
+            // Get ObjectService to find contactpersonen
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                $this->_logger->error('ObjectService not available');
+                return;
+            }
+            
+            // Get settings service to get schema IDs
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $registerId = $settingsService->getVoorzieningenRegisterId() ?? '6';
+            
+            // Find contactpersonen related to this organization
+            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon') ?? '34';
+            $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens') ?? '34';
+            
+            $this->_logger->info('Schema IDs for contactpersonen search', [
+                'organizationId' => $organizationId,
+                'registerId' => $registerId,
+                'contactpersoonSchemaId' => $contactpersoonSchemaId,
+                'contactgegevensSchemaId' => $contactgegevensSchemaId
+            ]);
+            
+            $activatedUsers = [];
+            
+            // Check contactpersoon objects (new data model)
+            if ($contactpersoonSchemaId) {
+                $contactpersoonObjects = $objectService->findAll(
+                    (int) $registerId,
+                    (int) $contactpersoonSchemaId,
+                    ['organisation' => $organizationId]
+                );
+                
+                foreach ($contactpersoonObjects as $contactpersoonObject) {
+                    $contactData = $contactpersoonObject->getObject();
+                    $username = $contactData['username'] ?? '';
+                    
+                    if (!empty($username)) {
+                        $success = $this->_contactPersonHandler->setUserActive($username);
+                        if ($success) {
+                            $activatedUsers[] = $username;
+                            $this->_logger->info('Activated contactpersoon user', [
+                                'username' => $username,
+                                'organizationId' => $organizationId,
+                                'contactpersoonId' => $contactpersoonObject->getId()
+                            ]);
+                        }
+                    }
+                }
+            }
+            
+            // Check contactgegevens objects (backward compatibility)
+            if ($contactgegevensSchemaId && $contactgegevensSchemaId !== $contactpersoonSchemaId) {
+                $contactgegevensObjects = $objectService->findAll(
+                    (int) $registerId,
+                    (int) $contactgegevensSchemaId,
+                    ['organisation' => $organizationId]
+                );
+                
+                foreach ($contactgegevensObjects as $contactgegevensObject) {
+                    $contactData = $contactgegevensObject->getObject();
+                    $username = $contactData['username'] ?? '';
+                    
+                    if (!empty($username) && !in_array($username, $activatedUsers)) {
+                        $success = $this->_contactPersonHandler->setUserActive($username);
+                        if ($success) {
+                            $activatedUsers[] = $username;
+                            $this->_logger->info('Activated contactgegevens user', [
+                                'username' => $username,
+                                'organizationId' => $organizationId,
+                                'contactgegevensId' => $contactgegevensObject->getId()
+                            ]);
+                        }
+                    }
+                }
+            }
+            
+            $this->_logger->info('Completed contactpersonen activation for organization', [
+                'organizationId' => $organizationId,
+                'activatedUsers' => $activatedUsers,
+                'totalActivated' => count($activatedUsers)
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to activate contactpersonen for organization: ' . $e->getMessage(),
+                [
+                    'organizationId' => $organizationId,
                     'exception' => $e
                 ]
             );
@@ -673,7 +776,75 @@ class SoftwareCatalogueService
     }
 
     /**
-     * Handles contactgegevens updates, particularly role changes
+     * Handles contactpersoon updates, particularly role changes
+     *
+     * @param object $contactpersoonObject    The updated contactpersoon object
+     * @param object $oldContactpersoonObject The previous contactpersoon object (optional)
+     * 
+     * @return void
+     */
+    public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject = null): void
+    {
+        try {
+            $this->_logger->info('Handling contactpersoon update', [
+                'objectId' => $contactpersoonObject->getId()
+            ]);
+
+            // Process the contactpersoon to ensure user exists
+            $result = $this->processContactpersoon($contactpersoonObject);
+            
+            if ($result && $oldContactpersoonObject) {
+                // Check for role changes and update groups accordingly
+                $newData = $contactpersoonObject->getObject();
+                $oldData = $oldContactpersoonObject->getObject();
+                
+                $newRoles = $newData['roles'] ?? [];
+                $oldRoles = $oldData['roles'] ?? [];
+                
+                // Ensure both are arrays
+                if (!is_array($newRoles)) {
+                    $newRoles = [$newRoles];
+                }
+                if (!is_array($oldRoles)) {
+                    $oldRoles = [$oldRoles];
+                }
+                
+                // Check if roles have changed
+                if ($newRoles !== $oldRoles) {
+                    $username = $newData['username'] ?? '';
+                    if (!empty($username)) {
+                        $this->_logger->info(
+                            'Roles changed for contactpersoon, updating user groups',
+                            [
+                                'contactpersoonId' => $contactpersoonObject->getId(),
+                                'username' => $username,
+                                'oldRoles' => $oldRoles,
+                                'newRoles' => $newRoles
+                            ]
+                        );
+                        
+                        // Update user groups based on role changes
+                        $user = $this->_container->get(\OCP\IUserManager::class)->get($username);
+                        if ($user) {
+                            $this->_contactPersonHandler->updateUserGroupsFromRoles($user, $newRoles, $oldRoles);
+                        }
+                    }
+                }
+            }
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to handle contactpersoon update: ' . $e->getMessage(),
+                [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'exception' => $e
+                ]
+            );
+        }
+    }
+
+    /**
+     * Handles contactgegevens updates, particularly role changes (for backward compatibility)
      *
      * @param object $contactgegevensObject    The updated contactgegevens object
      * @param object $oldContactgegevensObject The previous contactgegevens object (optional)
@@ -683,7 +854,7 @@ class SoftwareCatalogueService
     public function handleContactgegevensUpdate(object $contactgegevensObject, object $oldContactgegevensObject = null): void
     {
         try {
-            $this->_logger->info('Handling contactgegevens update', [
+            $this->_logger->info('Handling contactgegevens update (backward compatibility)', [
                 'objectId' => $contactgegevensObject->getId()
             ]);
 

@@ -163,7 +163,7 @@ class SettingsService
             'voorzieningen' => [
                 'name' => 'Voorzieningen', 
                 'description' => 'Voorzieningen register for software catalog services',
-                'objectTypes' => ['organisatie', 'contactgegevens'] // Voorzieningen uses organisatie and contactgegevens schemas
+                'objectTypes' => ['organisatie', 'contactpersoon'] // Voorzieningen uses organisatie and contactpersoon schemas
             ]
         ];
         
@@ -339,6 +339,13 @@ class SettingsService
         
         if ($objectType === 'organisatie') {
             $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+            if (!empty($schemaId)) {
+                return (int) $schemaId;
+            }
+        }
+        
+        if ($objectType === 'contactpersoon') {
+            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', '');
             if (!empty($schemaId)) {
                 return (int) $schemaId;
             }

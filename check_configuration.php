@@ -47,7 +47,7 @@ echo "1. Checking current configuration...\n";
 $needsUpdate = false;
 
 foreach ($expectedConfig as $key => $expectedValue) {
-    $currentValue = $config->getValueString($appName, $key, '');
+    $currentValue = $config->getAppValue($appName, $key, '');
     $currentInt = $currentValue ? (int)$currentValue : null;
     
     if ($currentInt === $expectedValue) {
@@ -57,7 +57,7 @@ foreach ($expectedConfig as $key => $expectedValue) {
         $needsUpdate = true;
         
         if ($fixMode) {
-            $config->setValueString($appName, $key, (string)$expectedValue);
+            $config->setAppValue($appName, $key, (string)$expectedValue);
             echo "   🔧 Updated $key to $expectedValue\n";
         }
     }

@@ -552,15 +552,28 @@ class ContactPersonHandler
                     
                     // If this is the first contact, make them a subadmin of the organization group
                     if ($isFirstContact) {
-                        $this->_groupManager->addSubAdmin($user, $organizationGroup);
-                        $this->_logger->info(
-                            'Added user to organization group as subadmin (first contact)',
-                            [
-                                'username' => $user->getUID(),
-                                'organizationId' => $organizationId,
-                                'groupName' => $organizationGroup->getGID()
-                            ]
-                        );
+                        try {
+                            $subAdminManager = \OC::$server->getSubAdminManager();
+                            $subAdminManager->createSubAdmin($user, $organizationGroup);
+                            $this->_logger->info(
+                                'Added user to organization group as subadmin (first contact)',
+                                [
+                                    'username' => $user->getUID(),
+                                    'organizationId' => $organizationId,
+                                    'groupName' => $organizationGroup->getGID()
+                                ]
+                            );
+                        } catch (\Exception $e) {
+                            $this->_logger->warning(
+                                'Failed to make user subadmin of organization group: ' . $e->getMessage(),
+                                [
+                                    'username' => $user->getUID(),
+                                    'organizationId' => $organizationId,
+                                    'groupName' => $organizationGroup->getGID(),
+                                    'error' => $e->getMessage()
+                                ]
+                            );
+                        }
                     } else {
                         $this->_logger->info(
                             'Added user to organization group',
@@ -804,13 +817,22 @@ class ContactPersonHandler
     {
         try {
             $objectService = $this->_getObjectService();
+            $settingsService = $this->_getSettingsService();
+            
+            // Get configuration values
+            $registerId = $settingsService->getRegisterId();
+            $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+            
+            if (!$registerId || !$contactgegevensSchemaId) {
+                throw new \Exception('Register or schema ID not configured for contactgegevens');
+            }
             
             // Search for contactgegevens with the given username
             $searchFilters = [
                 'username' => $username
             ];
             
-            $results = $objectService->findObjects('contactgegevens', $searchFilters);
+            $results = $objectService->findAll($searchFilters, $registerId, $contactgegevensSchemaId);
             
             if (!empty($results)) {
                 return $results[0]; // Return the first match
@@ -936,14 +958,14 @@ class ContactPersonHandler
     }
 
     /**
-     * Determines if this contactgegevens object is the first contact for the organization
+     * Determines if this contact object is the first contact for the organization
      *
-     * @param object $contactgegevensObject The contactgegevens object being processed
-     * @param array  $objectData           The contact data
+     * @param object $contactObject The contact object being processed (contactgegevens or contactpersoon)
+     * @param array  $objectData   The contact data
      * 
      * @return bool True if this is the first contact for the organization
      */
-    private function isFirstContactForOrganization(object $contactgegevensObject, array $objectData): bool
+    private function isFirstContactForOrganization(object $contactObject, array $objectData): bool
     {
         try {
             $organizationId = $objectData['organisation'] ?? '';
@@ -964,37 +986,51 @@ class ContactPersonHandler
             // Get register and schema IDs dynamically from configuration
             $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
             $registerId = $settingsService->getVoorzieningenRegisterId();
+            
+            // Try to get contactpersoon schema first, fallback to contactgegevens
+            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
             $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
             
-            if (!$registerId || !$contactgegevensSchemaId) {
-                throw new \Exception('Register or schema ID not configured for contactgegevens');
+            if (!$registerId || (!$contactpersoonSchemaId && !$contactgegevensSchemaId)) {
+                throw new \Exception('Register or schema ID not configured for contacts');
             }
             
-            // Get contactgegevens objects
-            $allContactgegevens = $objectService->findAll($searchFilters, $registerId, $contactgegevensSchemaId);
+            // Get both contactpersoon and contactgegevens objects
+            $allContacts = [];
+            if ($contactpersoonSchemaId) {
+                $contactpersoonObjects = $objectService->findAll($searchFilters, $registerId, $contactpersoonSchemaId);
+                $allContacts = array_merge($allContacts, $contactpersoonObjects);
+            }
+            if ($contactgegevensSchemaId) {
+                $contactgegevensObjects = $objectService->findAll($searchFilters, $registerId, $contactgegevensSchemaId);
+                $allContacts = array_merge($allContacts, $contactgegevensObjects);
+            }
+            
+            // Keep the old variable name for backward compatibility
+            $allContactgegevens = $allContacts;
             
             $this->_logger->info(
                 'Checking if first contact for organization',
                 [
                     'organizationId' => $organizationId,
-                    'currentContactgegevensId' => $contactgegevensObject->getId(),
-                    'totalContactgegevensCount' => count($allContactgegevens)
+                    'currentContactId' => $contactObject->getId(),
+                    'totalContactsCount' => count($allContactgegevens)
                 ]
             );
             
-            // If this is the only contactgegevens object, or it's the oldest one, it's the first contact
+            // If this is the only contact object, or it's the oldest one, it's the first contact
             if (count($allContactgegevens) <= 1) {
                 $this->_logger->info('This is the first (or only) contact for organization');
                 return true;
             }
             
             // If there are multiple, check creation dates to determine the first one
-            $currentId = $contactgegevensObject->getId();
-            $currentCreated = $contactgegevensObject->getCreated();
+            $currentId = $contactObject->getId();
+            $currentCreated = $contactObject->getCreated();
             
             foreach ($allContactgegevens as $other) {
                 if ($other->getId() !== $currentId && $other->getCreated() < $currentCreated) {
-                    // Found an older contactgegevens object
+                    // Found an older contact object
                     $this->_logger->info('Found older contact, this is not the first contact');
                     return false;
                 }
@@ -1007,7 +1043,7 @@ class ContactPersonHandler
             $this->_logger->error(
                 'Failed to determine if first contact: ' . $e->getMessage(),
                 [
-                    'contactgegevensId' => $contactgegevensObject->getId(),
+                    'contactId' => $contactObject->getId(),
                     'exception' => $e
                 ]
             );
@@ -1475,6 +1511,250 @@ class ContactPersonHandler
              ]);
          }
      }
+
+    /**
+     * Processes a contactpersoon object to create an inactive user
+     *
+     * If the contactpersoon object doesn't have a username or user,
+     * this method will create an inactive user account and set the username property.
+     *
+     * @param object $contactpersoonObject The contactpersoon object to process
+     * 
+     * @return bool True if processing was successful
+     * @throws \Exception If processing fails
+     */
+    public function processContactpersoon(object $contactpersoonObject): bool
+    {
+        try {
+            $this->_logger->info('Processing contactpersoon object', [
+                'objectId' => $contactpersoonObject->getId()
+            ]);
+
+            // Get object data
+            $objectData = $contactpersoonObject->getObject();
+            
+            // Check if username exists and is filled
+            $username = $objectData['username'] ?? '';
+            
+            if (empty($username)) {
+                $this->_logger->info('Username not found or empty, creating inactive user account');
+                
+                // Generate username from name fields
+                $username = $this->generateUsernameFromContactData($objectData);
+                
+                // Determine if this is the first contact for the organization
+                $isFirstContact = $this->isFirstContactForOrganization($contactpersoonObject, $objectData);
+                
+                // Create the user account
+                $user = $this->createUserAccount($contactpersoonObject, $isFirstContact);
+                
+                if ($user === null) {
+                    throw new \Exception('Failed to create user account');
+                }
+                
+                // Set user to inactive initially
+                $this->setUserInactive($user->getUID());
+                
+                // Update the contactpersoon object with the username
+                $objectData['username'] = $username;
+                $contactpersoonObject->setObject($objectData);
+                
+                // Save the updated object via ObjectService
+                $objectService = $this->_getObjectService();
+                $objectService->saveObject($contactpersoonObject);
+                
+                $this->_logger->info(
+                    'Successfully created inactive user and updated contactpersoon', 
+                    [
+                        'username' => $username,
+                        'objectId' => $contactpersoonObject->getId()
+                    ]
+                );
+                
+                return true;
+            }
+            
+            $this->_logger->info(
+                'Username already exists, contactpersoon processed', 
+                [
+                    'username' => $username,
+                    'objectId' => $contactpersoonObject->getId()
+                ]
+            );
+            
+            return true;
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to process contactpersoon object: ' . $e->getMessage(), 
+                [
+                    'exception' => $e,
+                    'objectId' => $contactpersoonObject->getId() ?? 'unknown'
+                ]
+            );
+            throw $e;
+        }
+    }
+
+    /**
+     * Sets a user account to inactive
+     *
+     * @param string $username The username to set as inactive
+     * 
+     * @return bool True if successful
+     */
+    public function setUserInactive(string $username): bool
+    {
+        try {
+            $user = $this->_userManager->get($username);
+            
+            if ($user) {
+                $user->setEnabled(false);
+                
+                $this->_logger->info(
+                    'Set user account to inactive',
+                    [
+                        'username' => $username
+                    ]
+                );
+                
+                return true;
+            } else {
+                $this->_logger->warning(
+                    'User not found when trying to set inactive',
+                    [
+                        'username' => $username
+                    ]
+                );
+                
+                return false;
+            }
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to set user inactive: ' . $e->getMessage(),
+                [
+                    'username' => $username,
+                    'exception' => $e
+                ]
+            );
+            
+            return false;
+        }
+    }
+
+    /**
+     * Sets a user account to active
+     *
+     * @param string $username The username to set as active
+     * 
+     * @return bool True if successful
+     */
+    public function setUserActive(string $username): bool
+    {
+        try {
+            $user = $this->_userManager->get($username);
+            
+            if ($user) {
+                $user->setEnabled(true);
+                
+                $this->_logger->info(
+                    'Set user account to active',
+                    [
+                        'username' => $username
+                    ]
+                );
+                
+                return true;
+            } else {
+                $this->_logger->warning(
+                    'User not found when trying to set active',
+                    [
+                        'username' => $username
+                    ]
+                );
+                
+                return false;
+            }
+            
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to set user active: ' . $e->getMessage(),
+                [
+                    'username' => $username,
+                    'exception' => $e
+                ]
+            );
+            
+            return false;
+        }
+    }
+
+    /**
+     * Handles contactpersoon updates, particularly role changes
+     *
+     * @param object $contactpersoonObject    The updated contactpersoon object
+     * @param object $oldContactpersoonObject The previous contactpersoon object
+     * 
+     * @return void
+     */
+    public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject): void
+    {
+        try {
+            $this->_logger->info('Handling contactpersoon update', [
+                'objectId' => $contactpersoonObject->getId()
+            ]);
+
+            // Process the updated contactpersoon
+            $this->processContactpersoon($contactpersoonObject);
+            
+            // Check for role changes and update groups accordingly
+            $newData = $contactpersoonObject->getObject();
+            $oldData = $oldContactpersoonObject->getObject();
+            
+            $newRoles = $newData['roles'] ?? [];
+            $oldRoles = $oldData['roles'] ?? [];
+            
+            // Ensure both are arrays
+            if (!is_array($newRoles)) {
+                $newRoles = [$newRoles];
+            }
+            if (!is_array($oldRoles)) {
+                $oldRoles = [$oldRoles];
+            }
+            
+            // Check if roles have changed
+            if ($newRoles !== $oldRoles) {
+                $username = $newData['username'] ?? '';
+                if (!empty($username)) {
+                    $user = $this->_userManager->get($username);
+                    if ($user) {
+                        $this->_logger->info(
+                            'Roles changed for contactpersoon, updating user groups',
+                            [
+                                'contactpersoonId' => $contactpersoonObject->getId(),
+                                'username' => $username,
+                                'oldRoles' => $oldRoles,
+                                'newRoles' => $newRoles
+                            ]
+                        );
+                        
+                        // Update user groups based on role changes
+                        $this->updateUserGroupsFromRoles($user, $newRoles, $oldRoles);
+                    }
+                }
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to handle contactpersoon update: ' . $e->getMessage(),
+                [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'exception' => $e
+                ]
+            );
+        }
+    }
 
     /**
      * Sends account suspension notification email
