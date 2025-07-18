@@ -113,8 +113,6 @@
 						<h4>Voorzieningen Register Configuration</h4>
 						<p>Configure schemas for software catalog services</p>
 
-
-
 						<div class="object-type-section">
 							<div class="object-type-header">
 								<h5>Organisatie Schema</h5>
@@ -164,7 +162,7 @@
 
 					<!-- Current Configuration Debug -->
 					<div class="configuration-debug">
-						<h4>Current Configuration Values 
+						<h4>Current Configuration Values
 							<NcButton
 								type="tertiary"
 								size="small"
@@ -204,11 +202,6 @@
 							<div class="status-item">
 								<span class="status-label">Contactpersoon:</span>
 								<span v-if="configuration.voorzieningen_contactpersoon?.schema" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
-							</div>
-							<div class="status-item">
-								<span class="status-label">Contactgegevens:</span>
-								<span v-if="configuration.voorzieningen_contactgegevens?.schema" class="status-configured">✓ Configured</span>
 								<span v-else class="status-missing">⚠ Not configured</span>
 							</div>
 						</div>
@@ -937,7 +930,6 @@ export default defineComponent({
 				return this.configuration.voorzieningen_gebruiker?.schema
 					|| this.configuration.voorzieningen_organisatie?.schema
 					|| this.configuration.voorzieningen_contactpersoon?.schema
-					|| this.configuration.voorzieningen_contactgegevens?.schema
 			}
 
 			// Check if at least one object type is configured (backward compatibility)
@@ -1207,9 +1199,6 @@ export default defineComponent({
 				voorzieningen_contactpersoon: {
 					schema: null,
 				},
-				voorzieningen_contactgegevens: {
-					schema: null,
-				},
 			}
 
 			// Create empty configuration for each generic object type (backward compatibility)
@@ -1227,8 +1216,7 @@ export default defineComponent({
 				'amef_organization',
 				'voorzieningen_gebruiker',
 				'voorzieningen_organisatie',
-				'voorzieningen_contactpersoon',
-				'voorzieningen_contactgegevens'
+				'voorzieningen_contactpersoon'
 			]
 
 			configKeys.forEach(configKey => {
@@ -1408,22 +1396,6 @@ export default defineComponent({
 						},
 					}
 				}
-
-				const contactgegevensSchema = register.schemas.find(
-					schema => schema.title.toLowerCase().includes('contactgegevens')
-				)
-				if (contactgegevensSchema) {
-					this.configuration = {
-						...this.configuration,
-						voorzieningen_contactgegevens: {
-							...this.configuration.voorzieningen_contactgegevens,
-							schema: {
-								label: contactgegevensSchema.title,
-								value: contactgegevensSchema.id.toString(),
-							},
-						},
-					}
-				}
 			} else {
 				// Generic auto-selection for backward compatibility
 				this.settings.objectTypes.forEach(type => {
@@ -1504,7 +1476,6 @@ export default defineComponent({
 					'voorzieningen_gebruiker',
 					'voorzieningen_organisatie',
 					'voorzieningen_contactpersoon',
-					'voorzieningen_contactgegevens',
 					...this.settings.objectTypes
 				]
 
@@ -1556,8 +1527,7 @@ export default defineComponent({
 					'amef_organization',
 					'voorzieningen_gebruiker',
 					'voorzieningen_organisatie',
-					'voorzieningen_contactpersoon',
-					'voorzieningen_contactgegevens'
+					'voorzieningen_contactpersoon'
 				]
 
 				registerSpecificKeys.forEach(configKey => {

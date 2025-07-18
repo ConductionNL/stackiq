@@ -320,47 +320,151 @@ class SettingsService
      */
     public function getSchemaIdForObjectType(string $objectType): ?int
     {
+        $startTime = microtime(true);
+        
+        $this->logger->debug("SettingsService: Starting schema ID lookup", [
+            'objectType' => $objectType,
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+        
         // First try register-specific configuration
         // Check for AMEF register specific schemas
         if ($objectType === 'organization') {
+            $this->logger->debug("SettingsService: Checking AMEF organization schema", [
+                'objectType' => $objectType
+            ]);
+            
             $schemaId = $this->config->getValueString($this->_appName, 'amef_organization_schema', '');
+            
+            $this->logger->debug("SettingsService: AMEF organization schema result", [
+                'objectType' => $objectType,
+                'configKey' => 'amef_organization_schema',
+                'rawValue' => $schemaId,
+                'isEmpty' => empty($schemaId)
+            ]);
+            
             if (!empty($schemaId)) {
-                return (int) $schemaId;
+                $result = (int) $schemaId;
+                $this->logger->info("SettingsService: Found AMEF organization schema", [
+                    'objectType' => $objectType,
+                    'schemaId' => $result,
+                    'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+                ]);
+                return $result;
             }
             
             // Also check voorzieningen register for organization/organisatie
+            $this->logger->debug("SettingsService: Checking voorzieningen organisatie schema for organization", [
+                'objectType' => $objectType
+            ]);
+            
             $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+            
+            $this->logger->debug("SettingsService: Voorzieningen organisatie schema result", [
+                'objectType' => $objectType,
+                'configKey' => 'voorzieningen_organisatie_schema',
+                'rawValue' => $schemaId,
+                'isEmpty' => empty($schemaId)
+            ]);
+            
             if (!empty($schemaId)) {
-                return (int) $schemaId;
+                $result = (int) $schemaId;
+                $this->logger->info("SettingsService: Found voorzieningen organisatie schema for organization", [
+                    'objectType' => $objectType,
+                    'schemaId' => $result,
+                    'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+                ]);
+                return $result;
             }
         }
         
-
-        
         if ($objectType === 'organisatie') {
+            $this->logger->debug("SettingsService: Checking voorzieningen organisatie schema", [
+                'objectType' => $objectType
+            ]);
+            
             $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+            
+            $this->logger->debug("SettingsService: Voorzieningen organisatie schema result", [
+                'objectType' => $objectType,
+                'configKey' => 'voorzieningen_organisatie_schema',
+                'rawValue' => $schemaId,
+                'isEmpty' => empty($schemaId)
+            ]);
+            
             if (!empty($schemaId)) {
-                return (int) $schemaId;
+                $result = (int) $schemaId;
+                $this->logger->info("SettingsService: Found voorzieningen organisatie schema", [
+                    'objectType' => $objectType,
+                    'schemaId' => $result,
+                    'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+                ]);
+                return $result;
             }
         }
         
         if ($objectType === 'contactpersoon') {
+            $this->logger->debug("SettingsService: Checking voorzieningen contactpersoon schema", [
+                'objectType' => $objectType
+            ]);
+            
             $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', '');
+            
+            $this->logger->debug("SettingsService: Voorzieningen contactpersoon schema result", [
+                'objectType' => $objectType,
+                'configKey' => 'voorzieningen_contactpersoon_schema',
+                'rawValue' => $schemaId,
+                'isEmpty' => empty($schemaId)
+            ]);
+            
             if (!empty($schemaId)) {
-                return (int) $schemaId;
-            }
-        }
-        
-        if ($objectType === 'contactgegevens') {
-            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_schema', '');
-            if (!empty($schemaId)) {
-                return (int) $schemaId;
+                $result = (int) $schemaId;
+                $this->logger->info("SettingsService: Found voorzieningen contactpersoon schema", [
+                    'objectType' => $objectType,
+                    'schemaId' => $result,
+                    'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+                ]);
+                return $result;
             }
         }
         
         // Fall back to generic configuration for backward compatibility
+        $this->logger->debug("SettingsService: Checking generic configuration", [
+            'objectType' => $objectType,
+            'configKey' => "{$objectType}_schema"
+        ]);
+        
         $schemaId = $this->config->getValueString($this->_appName, "{$objectType}_schema", '');
-        return $schemaId ? (int) $schemaId : null;
+        
+        $this->logger->debug("SettingsService: Generic configuration result", [
+            'objectType' => $objectType,
+            'configKey' => "{$objectType}_schema",
+            'rawValue' => $schemaId,
+            'isEmpty' => empty($schemaId)
+        ]);
+        
+        if ($schemaId) {
+            $result = (int) $schemaId;
+            $this->logger->info("SettingsService: Found generic schema configuration", [
+                'objectType' => $objectType,
+                'schemaId' => $result,
+                'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+            ]);
+            return $result;
+        }
+        
+        $this->logger->warning("SettingsService: No schema ID found for object type", [
+            'objectType' => $objectType,
+            'checkedConfigurations' => [
+                'amef_organization_schema' => ($objectType === 'organization'),
+                'voorzieningen_organisatie_schema' => ($objectType === 'organization' || $objectType === 'organisatie'),
+                'voorzieningen_contactpersoon_schema' => ($objectType === 'contactpersoon'),
+                "{$objectType}_schema" => true
+            ],
+            'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+        ]);
+        
+        return null;
     }
 
     /**
@@ -383,20 +487,81 @@ class SettingsService
      */
     public function getVoorzieningenRegisterId(): ?int
     {
+        $startTime = microtime(true);
+        
+        $this->logger->debug("SettingsService: Starting voorzieningen register ID lookup", [
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+        
         // Try voorzieningen-specific configuration first
+        $this->logger->debug("SettingsService: Checking voorzieningen organisatie register", [
+            'configKey' => 'voorzieningen_organisatie_register'
+        ]);
+        
         $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_register', '');
+        
+        $this->logger->debug("SettingsService: Voorzieningen organisatie register result", [
+            'configKey' => 'voorzieningen_organisatie_register',
+            'rawValue' => $registerId,
+            'isEmpty' => empty($registerId)
+        ]);
+        
         if (!empty($registerId)) {
-            return (int) $registerId;
+            $result = (int) $registerId;
+            $this->logger->info("SettingsService: Found voorzieningen organisatie register", [
+                'registerId' => $result,
+                'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+            ]);
+            return $result;
         }
         
-        // Also try contactgegevens as fallback
-        $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_register', '');
+        // Also try contactpersoon as fallback
+        $this->logger->debug("SettingsService: Checking voorzieningen contactpersoon register", [
+            'configKey' => 'voorzieningen_contactpersoon_register'
+        ]);
+        
+        $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_register', '');
+        
+        $this->logger->debug("SettingsService: Voorzieningen contactpersoon register result", [
+            'configKey' => 'voorzieningen_contactpersoon_register',
+            'rawValue' => $registerId,
+            'isEmpty' => empty($registerId)
+        ]);
+        
         if (!empty($registerId)) {
-            return (int) $registerId;
+            $result = (int) $registerId;
+            $this->logger->info("SettingsService: Found voorzieningen contactpersoon register", [
+                'registerId' => $result,
+                'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+            ]);
+            return $result;
         }
         
         // Fall back to organization register for backward compatibility
-        return $this->getRegisterIdForObjectType('organization');
+        $this->logger->debug("SettingsService: Checking organization register for backward compatibility", [
+            'configKey' => 'organization_register'
+        ]);
+        
+        $result = $this->getRegisterIdForObjectType('organization');
+        
+        if ($result !== null) {
+            $this->logger->info("SettingsService: Found organization register for backward compatibility", [
+                'registerId' => $result,
+                'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+            ]);
+            return $result;
+        }
+        
+        $this->logger->warning("SettingsService: No register ID found for voorzieningen", [
+            'checkedConfigurations' => [
+                'voorzieningen_organisatie_register' => true,
+                'voorzieningen_contactpersoon_register' => true,
+                'organization_register' => true
+            ],
+            'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+        ]);
+        
+        return null;
     }
 
     /**
@@ -956,35 +1121,5 @@ class SettingsService
         return $variables[$templateName] ?? [];
     }
 
-    /**
-     * Tests email sending functionality
-     *
-     * @param string $testEmail Email address to send test email to
-     *
-     * @return array Test results
-     */
-    public function testEmailSending(string $testEmail): array
-    {
-        try {
-            // Get SymfonyEmailService
-            $emailService = $this->container->get(\OCA\SoftwareCatalog\Service\SymfonyEmailService::class);
-            
-            $success = $emailService->sendTestEmail($testEmail);
-            
-            return [
-                'success' => $success,
-                'message' => $success ? 'Test email sent successfully using Symfony Mailer!' : 'Failed to send test email using Symfony Mailer',
-                'testEmail' => $testEmail
-            ];
-            
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to test email sending: ' . $e->getMessage());
-            
-            return [
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-                'testEmail' => $testEmail
-            ];
-        }
-    }
+
 } 

@@ -25,8 +25,7 @@ return [
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'GET'],
         ['name' => 'settings#initialize', 'url' => '/api/settings/initialize', 'verb' => 'POST'],
-        		['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
-		['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
+        ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
         ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
 
         // Generic User Groups API routes
@@ -38,7 +37,7 @@ return [
         // Email Settings API routes (consolidated into main SettingsController)
         ['name' => 'settings#get_email_settings', 'url' => '/api/email-settings', 'verb' => 'GET'],
         ['name' => 'settings#update_email_settings', 'url' => '/api/email-settings', 'verb' => 'POST'],
-        ['name' => 'settings#test_email_sending', 'url' => '/api/email/test', 'verb' => 'POST'],
+
         ['name' => 'settings#get_email_template', 'url' => '/api/email/template', 'verb' => 'GET'],
         ['name' => 'settings#update_email_template', 'url' => '/api/email/template', 'verb' => 'POST'],
         

@@ -72,10 +72,14 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
+        // Log registration start
+        error_log("SoftwareCatalog Application: Starting registration process");
+        
         include_once __DIR__ . '/../../vendor/autoload.php';
         
         // Register the handlers as services
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler', function (ContainerInterface $c) {
+            error_log("SoftwareCatalog Application: Creating OrganizationHandler service");
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler(
                 $c->get(IGroupManager::class),
                 $c->get(IUserManager::class),
@@ -86,6 +90,7 @@ class Application extends App implements IBootstrap
         });
 
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler', function (ContainerInterface $c) {
+            error_log("SoftwareCatalog Application: Creating ContactPersonHandler service");
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler(
                 $c->get(IUserManager::class),
                 $c->get(\OCP\Security\ISecureRandom::class),
@@ -99,6 +104,7 @@ class Application extends App implements IBootstrap
         });
 
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler', function (ContainerInterface $c) {
+            error_log("SoftwareCatalog Application: Creating GroupHandler service");
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler(
                 $c->get(IGroupManager::class),
                 $c->get(IUserManager::class),
@@ -110,6 +116,7 @@ class Application extends App implements IBootstrap
         });
 
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler', function (ContainerInterface $c) {
+            error_log("SoftwareCatalog Application: Creating HierarchyHandler service");
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler(
                 $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler'),
                 $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
@@ -118,12 +125,27 @@ class Application extends App implements IBootstrap
         });
 
         // Register event listeners for OpenRegister events
+        error_log("SoftwareCatalog Application: Registering event listeners");
+        
         $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
+        error_log("SoftwareCatalog Application: Registered ObjectCreatedEvent listener");
+        
         $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
+        error_log("SoftwareCatalog Application: Registered ObjectUpdatedEvent listener");
+        
         $context->registerEventListener(ObjectDeletedEvent::class, SoftwareCatalogEventListener::class);
+        error_log("SoftwareCatalog Application: Registered ObjectDeletedEvent listener");
+        
         $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
+        error_log("SoftwareCatalog Application: Registered ObjectLockedEvent listener");
+        
         $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
+        error_log("SoftwareCatalog Application: Registered ObjectUnlockedEvent listener");
+        
         $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
+        error_log("SoftwareCatalog Application: Registered ObjectRevertedEvent listener");
+        
+        error_log("SoftwareCatalog Application: Registration process completed");
     }
 
     /**
@@ -135,6 +157,9 @@ class Application extends App implements IBootstrap
      */
     public function boot(IBootContext $context): void
     {
+        error_log("SoftwareCatalog Application: Boot process started");
+        
         // Application boot completed
+        error_log("SoftwareCatalog Application: Boot process completed");
     }
 }

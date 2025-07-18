@@ -98,45 +98,104 @@ class SoftwareCatalogueService
      * this method will create an inactive user account.
      *
      * @param object $contactpersoonObject The contactpersoon object to process
+     * @param bool   $isUpdate             Whether this is an update operation (defaults to false)
      * 
      * @return bool True if processing was successful
      * @throws \Exception If processing fails
      */
-    public function processContactpersoon(object $contactpersoonObject): bool
+    public function processContactpersoon(object $contactpersoonObject, bool $isUpdate = false): bool
     {
+        $startTime = microtime(true);
+        
         try {
-            $this->_logger->info('Processing contactpersoon object', [
-                'objectId' => $contactpersoonObject->getId()
+            $objectId = $contactpersoonObject->getId();
+            $objectData = $contactpersoonObject->getObject();
+            
+            $this->_logger->info('SoftwareCatalogueService: Starting contactpersoon processing', [
+                'objectId' => $objectId,
+                'objectData' => $objectData,
+                'timestamp' => date('Y-m-d H:i:s')
             ]);
 
             // Delegate to contact person handler
-            $result = $this->_contactPersonHandler->processContactpersoon($contactpersoonObject);
+            $this->_logger->debug('SoftwareCatalogueService: Delegating to ContactPersonHandler for contactpersoon processing', [
+                'objectId' => $objectId
+            ]);
+            
+            $result = $this->_contactPersonHandler->processContactpersoon($contactpersoonObject, $isUpdate);
+            
+            $this->_logger->info('SoftwareCatalogueService: ContactPersonHandler processing completed', [
+                'objectId' => $objectId,
+                'result' => $result,
+                'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+            ]);
             
             if ($result) {
                 // Get the username from the processed object
-                $objectData = $contactpersoonObject->getObject();
-                $username = $objectData['username'] ?? '';
+                $updatedObjectData = $contactpersoonObject->getObject();
+                $username = $updatedObjectData['username'] ?? '';
+                
+                $this->_logger->info('SoftwareCatalogueService: Username extracted from processed object', [
+                    'objectId' => $objectId,
+                    'username' => $username,
+                    'hasUsername' => !empty($username)
+                ]);
                 
                 if (!empty($username)) {
                     // Update user groups
+                    $this->_logger->debug('SoftwareCatalogueService: Updating user groups', [
+                        'objectId' => $objectId,
+                        'username' => $username
+                    ]);
+                    
                     $this->_groupHandler->updateUserGroups($contactpersoonObject, $username);
                     
                     // Ensure organization has beheerder and set up manager relationships
+                    $this->_logger->debug('SoftwareCatalogueService: Ensuring organization beheerder', [
+                        'objectId' => $objectId,
+                        'username' => $username
+                    ]);
+                    
                     $this->_hierarchyHandler->ensureOrganizationBeheerder($contactpersoonObject, $username);
                     
                     // Set user to inactive initially
+                    $this->_logger->debug('SoftwareCatalogueService: Setting user to inactive', [
+                        'objectId' => $objectId,
+                        'username' => $username
+                    ]);
+                    
                     $this->_contactPersonHandler->setUserInactive($username);
+                    
+                    $this->_logger->info('SoftwareCatalogueService: User setup completed', [
+                        'objectId' => $objectId,
+                        'username' => $username,
+                        'totalProcessingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+                    ]);
+                } else {
+                    $this->_logger->warning('SoftwareCatalogueService: No username generated for contactpersoon', [
+                        'objectId' => $objectId,
+                        'objectData' => $updatedObjectData
+                    ]);
                 }
+            } else {
+                $this->_logger->warning('SoftwareCatalogueService: ContactPersonHandler returned false', [
+                    'objectId' => $objectId,
+                    'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+                ]);
             }
             
             return $result;
             
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to process contactpersoon object: ' . $e->getMessage(), 
+                'SoftwareCatalogueService: Failed to process contactpersoon object: ' . $e->getMessage(), 
                 [
-                    'exception' => $e,
-                    'objectId' => $contactpersoonObject->getId() ?? 'unknown'
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                    'objectId' => $contactpersoonObject->getId() ?? 'unknown',
+                    'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
                 ]
             );
             throw $e;
@@ -194,7 +253,8 @@ class SoftwareCatalogueService
 
     /**
      * Processes organization without contactpersonen processing
-     *
+     * 
+     * @deprecated This method is disabled to prevent organization duplication
      * @param object $organizationObject The organization object to process
      * 
      * @return bool True if processing was successful
@@ -202,6 +262,17 @@ class SoftwareCatalogueService
      */
     public function processOrganization(object $organizationObject): bool
     {
+        // DISABLED: Organization processing is disabled to prevent duplication
+        $this->_logger->info(
+            'Organization processing is disabled to prevent duplication',
+            [
+                'organizationId' => $organizationObject->getId()
+            ]
+        );
+        
+        return false;
+        
+        /*
         try {
             // Delegate to organization handler for basic processing
             $processed = $this->_organizationHandler->processOrganization($organizationObject);
@@ -225,6 +296,7 @@ class SoftwareCatalogueService
             );
             throw $e;
         }
+        */
     }
 
     /**
@@ -270,13 +342,25 @@ class SoftwareCatalogueService
 
     /**
      * Handles new organization creation
-     *
+     * 
+     * @deprecated This method is disabled to prevent organization duplication
      * @param object $organizationObject The organization object
      * 
      * @return void
      */
     public function handleNewOrganization(object $organizationObject): void
     {
+        // DISABLED: Organization handling is disabled to prevent duplication
+        $this->_logger->info(
+            'Organization handling is disabled to prevent duplication',
+            [
+                'organizationId' => $organizationObject->getId()
+            ]
+        );
+        
+        return;
+        
+        /*
         try {
             $this->_logger->info('Handling new organization via main service', [
                 'objectId' => $organizationObject->getId()
@@ -316,11 +400,13 @@ class SoftwareCatalogueService
                 ]
             );
         }
+        */
     }
 
     /**
      * Handles organization updates - specifically checking for beoordeling status changes
-     *
+     * 
+     * @deprecated This method is disabled to prevent organization duplication
      * @param object $organizationObject    The updated organization object
      * @param object $oldOrganizationObject The previous organization object
      * 
@@ -328,6 +414,17 @@ class SoftwareCatalogueService
      */
     public function handleOrganizationUpdate(object $organizationObject, object $oldOrganizationObject): void
     {
+        // DISABLED: Organization handling is disabled to prevent duplication
+        $this->_logger->info(
+            'Organization update handling is disabled to prevent duplication',
+            [
+                'organizationId' => $organizationObject->getId()
+            ]
+        );
+        
+        return;
+        
+        /*
         try {
             $this->_logger->info('Handling organization update', [
                 'objectId' => $organizationObject->getId()
@@ -397,17 +494,30 @@ class SoftwareCatalogueService
                 ]
             );
         }
+        */
     }
 
     /**
      * Activates contactpersonen users for an organization
-     *
+     * 
+     * @deprecated This method is disabled to prevent organization duplication
      * @param string $organizationId The organization ID
      * 
      * @return void
      */
     private function activateContactpersonenForOrganization(string $organizationId): void
     {
+        // DISABLED: Organization handling is disabled to prevent duplication
+        $this->_logger->info(
+            'Organization contactpersonen activation is disabled to prevent duplication',
+            [
+                'organizationId' => $organizationId
+            ]
+        );
+        
+        return;
+        
+        /*
         try {
             $this->_logger->info('Activating contactpersonen for organization', [
                 'organizationId' => $organizationId
@@ -504,17 +614,30 @@ class SoftwareCatalogueService
                 ]
             );
         }
+        */
     }
 
     /**
      * Sends welcome email to organization
-     *
+     * 
+     * @deprecated This method is disabled to prevent organization duplication
      * @param object $organizationObject The organization object
      * 
      * @return void
      */
     public function sendOrganizationWelcomeEmail(object $organizationObject): void
     {
+        // DISABLED: Organization handling is disabled to prevent duplication
+        $this->_logger->info(
+            'Organization welcome email sending is disabled to prevent duplication',
+            [
+                'organizationId' => $organizationObject->getId()
+            ]
+        );
+        
+        return;
+        
+        /*
         try {
             $this->_logger->info('Sending organization welcome email', [
                 'objectId' => $organizationObject->getId()
@@ -540,6 +663,7 @@ class SoftwareCatalogueService
                 'exception' => $e
             ]);
         }
+        */
     }
 
     /**
@@ -785,59 +909,147 @@ class SoftwareCatalogueService
      */
     public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject = null): void
     {
+        $startTime = microtime(true);
+        
         try {
-            $this->_logger->info('Handling contactpersoon update', [
-                'objectId' => $contactpersoonObject->getId()
+            $objectId = $contactpersoonObject->getId();
+            $this->_logger->info('SoftwareCatalogueService: Starting contactpersoon update handling', [
+                'objectId' => $objectId,
+                'hasOldObject' => $oldContactpersoonObject !== null,
+                'timestamp' => date('Y-m-d H:i:s')
             ]);
 
-            // Process the contactpersoon to ensure user exists
-            $result = $this->processContactpersoon($contactpersoonObject);
+            // Get current and old data for comparison
+            $newData = $contactpersoonObject->getObject();
+            $oldData = $oldContactpersoonObject ? $oldContactpersoonObject->getObject() : [];
             
-            if ($result && $oldContactpersoonObject) {
-                // Check for role changes and update groups accordingly
-                $newData = $contactpersoonObject->getObject();
-                $oldData = $oldContactpersoonObject->getObject();
+            $newRoles = $newData['roles'] ?? [];
+            $oldRoles = $oldData['roles'] ?? [];
+            
+            $this->_logger->debug('SoftwareCatalogueService: Comparing roles for contactpersoon update', [
+                'objectId' => $objectId,
+                'newRoles' => $newRoles,
+                'oldRoles' => $oldRoles,
+                'newRolesType' => gettype($newRoles),
+                'oldRolesType' => gettype($oldRoles)
+            ]);
+            
+            // Ensure both are arrays
+            if (!is_array($newRoles)) {
+                $newRoles = [$newRoles];
+                $this->_logger->debug('SoftwareCatalogueService: Converted newRoles to array', [
+                    'objectId' => $objectId,
+                    'newRoles' => $newRoles
+                ]);
+            }
+            if (!is_array($oldRoles)) {
+                $oldRoles = [$oldRoles];
+                $this->_logger->debug('SoftwareCatalogueService: Converted oldRoles to array', [
+                    'objectId' => $objectId,
+                    'oldRoles' => $oldRoles
+                ]);
+            }
+            
+            // Process the contactpersoon to ensure user exists and is properly set up
+            $this->_logger->debug('SoftwareCatalogueService: Processing contactpersoon to ensure user exists', [
+                'objectId' => $objectId
+            ]);
+            
+            $result = $this->processContactpersoon($contactpersoonObject, true);
+            
+            $this->_logger->info('SoftwareCatalogueService: Contactpersoon processing completed', [
+                'objectId' => $objectId,
+                'result' => $result,
+                'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+            ]);
+            
+            if ($result) {
+                $username = $newData['username'] ?? '';
                 
-                $newRoles = $newData['roles'] ?? [];
-                $oldRoles = $oldData['roles'] ?? [];
+                $this->_logger->info('SoftwareCatalogueService: Username extracted from updated object', [
+                    'objectId' => $objectId,
+                    'username' => $username,
+                    'hasUsername' => !empty($username)
+                ]);
                 
-                // Ensure both are arrays
-                if (!is_array($newRoles)) {
-                    $newRoles = [$newRoles];
-                }
-                if (!is_array($oldRoles)) {
-                    $oldRoles = [$oldRoles];
-                }
-                
-                // Check if roles have changed
-                if ($newRoles !== $oldRoles) {
-                    $username = $newData['username'] ?? '';
-                    if (!empty($username)) {
+                if (!empty($username)) {
+                    // Check if roles have changed - if so, handle role-specific group updates
+                    if ($newRoles !== $oldRoles) {
                         $this->_logger->info(
-                            'Roles changed for contactpersoon, updating user groups',
+                            'SoftwareCatalogueService: Roles changed for contactpersoon, updating user groups specifically for role changes',
                             [
-                                'contactpersoonId' => $contactpersoonObject->getId(),
+                                'contactpersoonId' => $objectId,
                                 'username' => $username,
                                 'oldRoles' => $oldRoles,
-                                'newRoles' => $newRoles
+                                'newRoles' => $newRoles,
+                                'addedRoles' => array_diff($newRoles, $oldRoles),
+                                'removedRoles' => array_diff($oldRoles, $newRoles)
                             ]
                         );
                         
-                        // Update user groups based on role changes
+                        // Get the user and update groups based on specific role changes
+                        $this->_logger->debug('SoftwareCatalogueService: Getting user object for role-specific group updates', [
+                            'username' => $username,
+                            'objectId' => $objectId
+                        ]);
+                        
                         $user = $this->_container->get(\OCP\IUserManager::class)->get($username);
                         if ($user) {
+                            $this->_logger->debug('SoftwareCatalogueService: User object found, updating groups from roles', [
+                                'username' => $username,
+                                'objectId' => $objectId,
+                                'userExists' => true
+                            ]);
+                            
                             $this->_contactPersonHandler->updateUserGroupsFromRoles($user, $newRoles, $oldRoles);
+                            
+                            $this->_logger->info('SoftwareCatalogueService: Role-specific group updates completed', [
+                                'username' => $username,
+                                'objectId' => $objectId
+                            ]);
+                        } else {
+                            $this->_logger->warning('SoftwareCatalogueService: User not found for role-specific group updates', [
+                                'username' => $username,
+                                'objectId' => $objectId
+                            ]);
                         }
+                    } else {
+                        $this->_logger->info(
+                            'SoftwareCatalogueService: No role changes detected for contactpersoon, groups updated via processContactpersoon',
+                            [
+                                'contactpersoonId' => $objectId,
+                                'username' => $username,
+                                'roles' => $newRoles
+                            ]
+                        );
                     }
+                } else {
+                    $this->_logger->warning('SoftwareCatalogueService: No username available for contactpersoon update', [
+                        'objectId' => $objectId,
+                        'newData' => $newData
+                    ]);
                 }
+            } else {
+                $this->_logger->warning('SoftwareCatalogueService: Contactpersoon processing returned false', [
+                    'objectId' => $objectId
+                ]);
             }
+            
+            $this->_logger->info('SoftwareCatalogueService: Contactpersoon update handling completed', [
+                'objectId' => $objectId,
+                'totalProcessingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
+            ]);
             
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to handle contactpersoon update: ' . $e->getMessage(),
+                'SoftwareCatalogueService: Failed to handle contactpersoon update: ' . $e->getMessage(),
                 [
                     'objectId' => $contactpersoonObject->getId(),
-                    'exception' => $e
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                    'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
                 ]
             );
         }
@@ -858,39 +1070,55 @@ class SoftwareCatalogueService
                 'objectId' => $contactgegevensObject->getId()
             ]);
 
-            // Process the contactgegevens to ensure user exists
-            $user = $this->processContactgegevens($contactgegevensObject);
+            // Get current and old data for comparison
+            $newData = $contactgegevensObject->getObject();
+            $oldData = $oldContactgegevensObject ? $oldContactgegevensObject->getObject() : [];
             
-            if ($user && $oldContactgegevensObject) {
-                // Check for role changes and update groups accordingly
-                $newData = $contactgegevensObject->getObject();
-                $oldData = $oldContactgegevensObject->getObject();
+            $newRoles = $newData['roles'] ?? [];
+            $oldRoles = $oldData['roles'] ?? [];
+            
+            // Ensure both are arrays
+            if (!is_array($newRoles)) {
+                $newRoles = [$newRoles];
+            }
+            if (!is_array($oldRoles)) {
+                $oldRoles = [$oldRoles];
+            }
+
+            // Process the contactgegevens to ensure user exists and is properly set up
+            $result = $this->processContactgegevens($contactgegevensObject);
+            
+            if ($result) {
+                $username = $newData['username'] ?? '';
                 
-                $newRoles = $newData['roles'] ?? [];
-                $oldRoles = $oldData['roles'] ?? [];
-                
-                // Ensure both are arrays
-                if (!is_array($newRoles)) {
-                    $newRoles = [$newRoles];
-                }
-                if (!is_array($oldRoles)) {
-                    $oldRoles = [$oldRoles];
-                }
-                
-                // Check if roles have changed
-                if ($newRoles !== $oldRoles) {
-                    $this->_logger->info(
-                        'Roles changed for contactgegevens, updating user groups',
-                        [
-                            'contactgegevensId' => $contactgegevensObject->getId(),
-                            'username' => $user->getUID(),
-                            'oldRoles' => $oldRoles,
-                            'newRoles' => $newRoles
-                        ]
-                    );
-                    
-                    // Update user groups based on role changes
-                    $this->_contactPersonHandler->updateUserGroupsFromRoles($user, $newRoles, $oldRoles);
+                if (!empty($username)) {
+                    // Check if roles have changed - if so, handle role-specific group updates
+                    if ($newRoles !== $oldRoles) {
+                        $this->_logger->info(
+                            'Roles changed for contactgegevens, updating user groups specifically for role changes',
+                            [
+                                'contactgegevensId' => $contactgegevensObject->getId(),
+                                'username' => $username,
+                                'oldRoles' => $oldRoles,
+                                'newRoles' => $newRoles
+                            ]
+                        );
+                        
+                        // Get the user and update groups based on specific role changes
+                        $user = $this->_container->get(\OCP\IUserManager::class)->get($username);
+                        if ($user) {
+                            $this->_contactPersonHandler->updateUserGroupsFromRoles($user, $newRoles, $oldRoles);
+                        }
+                    } else {
+                        $this->_logger->info(
+                            'No role changes detected for contactgegevens, groups updated via processContactgegevens',
+                            [
+                                'contactgegevensId' => $contactgegevensObject->getId(),
+                                'username' => $username,
+                                'roles' => $newRoles
+                            ]
+                        );
+                    }
                 }
             }
             
