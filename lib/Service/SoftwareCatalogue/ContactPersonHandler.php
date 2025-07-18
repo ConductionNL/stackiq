@@ -178,7 +178,7 @@ class ContactPersonHandler
         $voornaam = $contactData['voornaam'] ?? '';
         $tussenvoegsel = $contactData['tussenvoegsel'] ?? '';
         $achternaam = $contactData['achternaam'] ?? '';
-        $email = $contactData['email'] ?? '';
+        $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
         
 
 
@@ -278,7 +278,7 @@ class ContactPersonHandler
     {
         try {
             $objectData = $contactgegevensObject->getObject();
-            $email = $objectData['email'] ?? '';
+            $email = $objectData['email'] ?? $objectData['e-mailadres'] ?? '';
             
 
             
@@ -306,7 +306,7 @@ class ContactPersonHandler
                 $existingUser = $this->_userManager->get($email);
                 if ($existingUser) {
                     // Store organization UUID for existing user
-                    $organizationUuid = $objectData['organisation'] ?? '';
+                    $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
                     if (!empty($organizationUuid)) {
                         $this->storeUserOrganizationUuid($existingUser, $organizationUuid);
                     }
@@ -326,7 +326,7 @@ class ContactPersonHandler
                 );
                 
                 // Store organization UUID for existing user
-                $organizationUuid = $objectData['organisation'] ?? '';
+                $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
                 if (!empty($organizationUuid)) {
                     $this->storeUserOrganizationUuid($existingUserByUsername, $organizationUuid);
                 }
@@ -348,7 +348,7 @@ class ContactPersonHandler
                 $user->setDisplayName($this->getDisplayNameFromContactData($objectData));
                 
                 // Store organization UUID in user config for OpenConnector access
-                $organizationUuid = $objectData['organisation'] ?? '';
+                $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
                 if (!empty($organizationUuid)) {
                     $this->storeUserOrganizationUuid($user, $organizationUuid);
                 }
@@ -413,7 +413,7 @@ class ContactPersonHandler
     {
         try {
             $roles = $objectData['roles'] ?? [];
-            $organizationId = $objectData['organisation'] ?? '';
+            $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
             
 
             
@@ -783,7 +783,7 @@ class ContactPersonHandler
     private function isFirstContactForOrganization(object $contactObject, array $objectData): bool
     {
         try {
-            $organizationId = $objectData['organisation'] ?? '';
+            $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
             
             if (empty($organizationId)) {
                 $this->_logger->warning('No organization ID found for contact object');
@@ -908,7 +908,7 @@ class ContactPersonHandler
             $contactData['achternaam'] ?? ''
         ]);
         
-        return implode(' ', $parts) ?: ($contactData['email'] ?? 'Unknown User');
+        return implode(' ', $parts) ?: ($contactData['email'] ?? $contactData['e-mailadres'] ?? 'Unknown User');
     }
 
     /**
@@ -1249,7 +1249,7 @@ class ContactPersonHandler
             
             // Get organization data if available
             $organizationData = [];
-            $organizationId = $objectData['organisation'] ?? '';
+            $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
             if (!empty($organizationId)) {
                 try {
                     $objectService = $this->_getObjectService();
