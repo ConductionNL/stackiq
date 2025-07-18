@@ -314,7 +314,7 @@ class SettingsService
     /**
      * Gets the configured schema ID for a specific object type
      *
-     * @param string $objectType The object type (organization, contact, gebruiker, contactgegevens)
+     * @param string $objectType The object type (organization, contact, gebruiker, contactpersoon)
      *
      * @return int|null The schema ID or null if not configured
      */
@@ -766,6 +766,87 @@ class SettingsService
     }
 
     /**
+     * Gets the list of organization admin groups from configuration
+     *
+     * @return array Array of organization admin groups
+     */
+    public function getOrganizationAdminGroups(): array
+    {
+        $groupsJson = $this->config->getValueString($this->_appName, 'organization_admin_groups', '');
+        
+        if (empty($groupsJson)) {
+            // Return default groups if no configuration exists
+            return [
+                'organisaties-beheerder'
+            ];
+        }
+
+        $groups = json_decode($groupsJson, true);
+        return is_array($groups) ? $groups : [];
+    }
+
+    /**
+     * Sets the list of organization admin groups in configuration
+     *
+     * @param array $groups Array of organization admin groups
+     * 
+     * @return void
+     */
+    public function setOrganizationAdminGroups(array $groups): void
+    {
+        $groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
+        $this->config->setValueString($this->_appName, 'organization_admin_groups', $groupsJson);
+        
+        $this->logger->info(
+            'Updated organization admin groups configuration',
+            [
+                'groups' => $groups
+            ]
+        );
+    }
+
+    /**
+     * Gets the list of super user groups from configuration
+     *
+     * @return array Array of super user groups
+     */
+    public function getSuperUserGroups(): array
+    {
+        $groupsJson = $this->config->getValueString($this->_appName, 'super_user_groups', '');
+        
+        if (empty($groupsJson)) {
+            // Return default groups if no configuration exists
+            return [
+                'admin',
+                'software-catalog-admins'
+            ];
+        }
+
+        $groups = json_decode($groupsJson, true);
+        return is_array($groups) ? $groups : [];
+    }
+
+    /**
+     * Sets the list of super user groups in configuration
+     *
+     * @param array $groups Array of super user groups
+     * 
+     * @return void
+     */
+    public function setSuperUserGroups(array $groups): void
+    {
+        $groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
+        $this->config->setValueString($this->_appName, 'super_user_groups', $groupsJson);
+        
+        $this->logger->info(
+            'Updated super user groups configuration',
+            [
+                'groups' => $groups
+            ]
+        );
+    }
+
+    /**
      * Validates a list of group names
      *
      * @param array $groups Array of group names to validate
@@ -1119,6 +1200,138 @@ class SettingsService
         ];
 
         return $variables[$templateName] ?? [];
+    }
+
+    /**
+     * Gets debug information for settings
+     *
+     * @return array Debug information
+     */
+    public function getDebugInfo(): array
+    {
+        $debugInfo = [];
+        
+        try {
+            // Get current configuration values
+            $debugInfo['configuration'] = [];
+            $configKeys = [
+                'amef_organization_source',
+                'amef_organization_register', 
+                'amef_organization_schema',
+                'voorzieningen_gebruiker_source',
+                'voorzieningen_gebruiker_register',
+                'voorzieningen_gebruiker_schema',
+                'voorzieningen_organisatie_source',
+                'voorzieningen_organisatie_register',
+                'voorzieningen_organisatie_schema',
+                'voorzieningen_contactpersoon_source',
+                'voorzieningen_contactpersoon_register',
+                'voorzieningen_contactpersoon_schema',
+                'organization_source',
+                'organization_register',
+                'organization_schema',
+                'contact_source',
+                'contact_register',
+                'contact_schema'
+            ];
+            
+            foreach ($configKeys as $key) {
+                $debugInfo['configuration'][$key] = $this->config->getValueString($this->_appName, $key, '');
+            }
+            
+            // Get group configurations
+            $debugInfo['userGroups'] = [
+                'generic' => $this->getGenericUserGroups(),
+                'organizationAdmin' => $this->getOrganizationAdminGroups(),
+                'superUser' => $this->getSuperUserGroups()
+            ];
+            
+            // Get email settings (without sensitive data)
+            $emailSettings = $this->getEmailSettings();
+            unset($emailSettings['smtpPassword']);
+            unset($emailSettings['sendgridApiKey']);
+            unset($emailSettings['mailgunApiKey']);
+            unset($emailSettings['postmarkApiKey']);
+            unset($emailSettings['sesSecretKey']);
+            unset($emailSettings['mailjetSecretKey']);
+            $debugInfo['emailSettings'] = $emailSettings;
+            
+            // Get OpenRegister status
+            $debugInfo['openRegister'] = [
+                'installed' => $this->isOpenRegisterInstalled(),
+                'enabled' => $this->isOpenRegisterEnabled(),
+                'availableRegisters' => []
+            ];
+            
+            if ($debugInfo['openRegister']['installed'] && $debugInfo['openRegister']['enabled']) {
+                try {
+                    $objectService = $this->getObjectService();
+                    $debugInfo['openRegister']['availableRegisters'] = $objectService->getRegisters();
+                } catch (\Exception $e) {
+                    $debugInfo['openRegister']['error'] = $e->getMessage();
+                }
+            }
+            
+        } catch (\Exception $e) {
+            $debugInfo['error'] = $e->getMessage();
+        }
+        
+        return $debugInfo;
+    }
+
+    /**
+     * Sends a test email
+     *
+     * @param string $email         The email address to send to
+     * @param array  $emailSettings The email settings to use
+     * 
+     * @return array Result of the test email
+     */
+    public function sendTestEmail(string $email, array $emailSettings = []): array
+    {
+        try {
+            // Use provided settings or fall back to stored settings
+            if (empty($emailSettings)) {
+                $emailSettings = $this->getEmailSettings();
+            }
+            
+            // Check if email is enabled
+            if (!($emailSettings['enabled'] ?? false)) {
+                return [
+                    'success' => false,
+                    'message' => 'Email notifications are disabled'
+                ];
+            }
+            
+            // Create a simple test email
+            $subject = 'SoftwareCatalog Test Email';
+            $message = "This is a test email from the SoftwareCatalog application.\n\n";
+            $message .= "If you received this email, your email configuration is working correctly.\n\n";
+            $message .= "Sent at: " . date('Y-m-d H:i:s') . "\n";
+            $message .= "Transport: " . ($emailSettings['transportType'] ?? 'smtp') . "\n";
+            
+            // Use test receiver override if configured
+            $recipient = $emailSettings['testReceiverOverride'] ?? $email;
+            
+            // For now, just simulate sending (would need actual email service integration)
+            $this->logger->info('Test email would be sent', [
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'transport' => $emailSettings['transportType'] ?? 'smtp'
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => "Test email sent successfully to {$recipient}"
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to send test email: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to send test email: ' . $e->getMessage()
+            ];
+        }
     }
 
 

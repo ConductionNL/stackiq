@@ -20,28 +20,16 @@ return [
         // Dashboard route
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
         
-        // Settings API routes
+        // Unified Settings API routes
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'GET'],
         ['name' => 'settings#initialize', 'url' => '/api/settings/initialize', 'verb' => 'POST'],
         ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
         ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
+        ['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
 
-        // Generic User Groups API routes
-        ['name' => 'settings#get_generic_user_groups', 'url' => '/api/settings/generic-user-groups', 'verb' => 'GET'],
-        ['name' => 'settings#update_generic_user_groups', 'url' => '/api/settings/generic-user-groups', 'verb' => 'POST'],
-        ['name' => 'settings#validate_generic_user_groups', 'url' => '/api/settings/generic-user-groups/validate', 'verb' => 'POST'],
-        ['name' => 'settings#ensure_generic_user_groups', 'url' => '/api/settings/generic-user-groups/ensure', 'verb' => 'POST'],
-
-        // Email Settings API routes (consolidated into main SettingsController)
-        ['name' => 'settings#get_email_settings', 'url' => '/api/email-settings', 'verb' => 'GET'],
-        ['name' => 'settings#update_email_settings', 'url' => '/api/email-settings', 'verb' => 'POST'],
-
-        ['name' => 'settings#get_email_template', 'url' => '/api/email/template', 'verb' => 'GET'],
-        ['name' => 'settings#update_email_template', 'url' => '/api/email/template', 'verb' => 'POST'],
-        
-        // Simplified email settings routes (matching frontend expectations)
-        ['name' => 'settings#update_email_settings', 'url' => '/api/email/settings', 'verb' => 'POST'],
+        // Legacy email routes (for backward compatibility)
+        ['name' => 'settings#send_test_email', 'url' => '/api/email/test', 'verb' => 'POST'],
     ],
 ];

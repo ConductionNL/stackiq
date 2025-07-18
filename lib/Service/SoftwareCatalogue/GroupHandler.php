@@ -215,14 +215,14 @@ class GroupHandler
     }
 
     /**
-     * Updates user groups based on contactgegevens data
+     * Updates user groups based on contactpersoon data
      *
-     * @param object $contactgegevensObject The contactgegevens object
+     * @param object $contactpersoonObject The contactpersoon object
      * @param string $username              The username to update groups for
      * 
      * @return void
      */
-    public function updateUserGroups(object $contactgegevensObject, string $username): void
+    public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
         try {
             $user = $this->_userManager->get($username);
@@ -231,7 +231,7 @@ class GroupHandler
                 return;
             }
 
-            $objectData = $contactgegevensObject->getObject();
+            $objectData = $contactpersoonObject->getObject();
             
             // Handle role-based groups
             $this->updateRoleBasedGroups($user, $objectData);
@@ -265,7 +265,7 @@ class GroupHandler
      * Updates role-based groups for a user
      *
      * @param IUser $user       The user to update
-     * @param array $objectData The contactgegevens data
+     * @param array $objectData The contactpersoon data
      * 
      * @return void
      */
@@ -276,9 +276,14 @@ class GroupHandler
             $userRoles = [];
         }
 
-        // Convert roles to lowercase for comparison
-        $userRolesLower = array_map('strtolower', $userRoles);
-        
+        $this->_logger->info(
+            'Updating role-based groups for user',
+            [
+                'username' => $user->getUID(),
+                'userRoles' => $userRoles
+            ]
+        );
+
         // Get the configured generic user groups
         $genericGroups = $this->getGenericUserGroups();
         
@@ -286,7 +291,7 @@ class GroupHandler
             $group = $this->createGroupIfNotExists($groupName);
             
             if ($group) {
-                $hasRole = in_array(strtolower($groupName), $userRolesLower);
+                $hasRole = in_array($groupName, $userRoles);
                 $inGroup = $group->inGroup($user);
                 
                 if ($hasRole && !$inGroup) {
@@ -321,7 +326,7 @@ class GroupHandler
      * Updates organization-based groups for a user
      *
      * @param IUser $user       The user to update
-     * @param array $objectData The contactgegevens data
+     * @param array $objectData The contactpersoon data
      * 
      * @return void
      */
@@ -393,7 +398,7 @@ class GroupHandler
      * Updates gemeente-specific groups for a user
      *
      * @param IUser $user       The user to update
-     * @param array $objectData The contactgegevens data
+     * @param array $objectData The contactpersoon data
      * 
      * @return void
      */
