@@ -73,7 +73,7 @@
 					<NcSelect
 						v-model="selectedRegister"
 						:options="registerOptions"
-						input-label="Register"
+						input-label="Select Register"
 						:disabled="loading"
 						@change="handleRegisterChange" />
 				</div>
@@ -332,10 +332,137 @@
 							<div class="default-groups-info">
 								<h5>Recommended Groups:</h5>
 								<ul>
-									<li><code>beheerder</code> - System administrators and managers</li>
-									<li><code>inkoper</code> - Procurement specialists</li>
-									<li><code>ambtenaar</code> - Civil servants (auto-assigned for gemeente organizations)</li>
-									<li><code>software-catalog-users</code> - All software catalog users</li>
+									<li v-for="group in genericUserGroups" :key="group"><code>{{ group }}</code> - {{ getGroupDescription(group) }}</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<!-- Organization Admin Groups -->
+					<div class="organization-admin-groups-section">
+						<h3>Organization Admin Groups</h3>
+						<p>Define groups that organization administrators (first contacts) are automatically assigned to</p>
+
+						<div class="groups-configuration">
+							<h4>Current Organization Admin Groups</h4>
+							<div class="group-list">
+								<div v-for="(group, index) in organizationAdminGroups" :key="index" class="group-item">
+									<NcTextField
+										:value="group"
+										:placeholder="'Group name'"
+										label="Group Name"
+										@update:value="updateOrganizationAdminGroupName(index, $event)" />
+									<NcButton
+										type="tertiary-no-background"
+										:aria-label="'Remove group'"
+										@click="removeOrganizationAdminGroup(index)">
+										<template #icon>
+											<Close :size="16" />
+										</template>
+									</NcButton>
+								</div>
+							</div>
+
+							<div class="group-actions">
+								<NcButton
+									type="secondary"
+									@click="addOrganizationAdminGroup">
+									<template #icon>
+										<Plus :size="20" />
+									</template>
+									Add Organization Admin Group
+								</NcButton>
+
+								<NcButton
+									type="primary"
+									:disabled="loading || savingOrganizationAdminGroups"
+									@click="saveOrganizationAdminGroups">
+									<template #icon>
+										<NcLoadingIcon v-if="savingOrganizationAdminGroups" :size="20" />
+										<Save v-else :size="20" />
+									</template>
+									Save Organization Admin Groups
+								</NcButton>
+							</div>
+
+							<div v-if="organizationAdminGroupsSaveResult" class="save-results">
+								<NcNoteCard :type="organizationAdminGroupsSaveResult.success ? 'success' : 'error'">
+									{{ organizationAdminGroupsSaveResult.success ? 'Organization admin groups saved successfully!' : organizationAdminGroupsSaveResult.error }}
+								</NcNoteCard>
+							</div>
+
+							<div class="groups-info">
+								<h4>Organization Admin Group Information</h4>
+								<p>These groups will be assigned to:</p>
+								<ul>
+									<li><strong>First contacts:</strong> The first contact person created for an organization</li>
+									<li><strong>Organization administrators:</strong> Users designated as organization administrators</li>
+									<li><strong>Management permissions:</strong> Users who need to manage their organization's data</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<!-- Super User Groups -->
+					<div class="super-user-groups-section">
+						<h3>Super User Groups</h3>
+						<p>Define groups that super users (system administrators) are automatically assigned to</p>
+
+						<div class="groups-configuration">
+							<h4>Current Super User Groups</h4>
+							<div class="group-list">
+								<div v-for="(group, index) in superUserGroups" :key="index" class="group-item">
+									<NcTextField
+										:value="group"
+										:placeholder="'Group name'"
+										label="Group Name"
+										@update:value="updateSuperUserGroupName(index, $event)" />
+									<NcButton
+										type="tertiary-no-background"
+										:aria-label="'Remove group'"
+										@click="removeSuperUserGroup(index)">
+										<template #icon>
+											<Close :size="16" />
+										</template>
+									</NcButton>
+								</div>
+							</div>
+
+							<div class="group-actions">
+								<NcButton
+									type="secondary"
+									@click="addSuperUserGroup">
+									<template #icon>
+										<Plus :size="20" />
+									</template>
+									Add Super User Group
+								</NcButton>
+
+								<NcButton
+									type="primary"
+									:disabled="loading || savingSuperUserGroups"
+									@click="saveSuperUserGroups">
+									<template #icon>
+										<NcLoadingIcon v-if="savingSuperUserGroups" :size="20" />
+										<Save v-else :size="20" />
+									</template>
+									Save Super User Groups
+								</NcButton>
+							</div>
+
+							<div v-if="superUserGroupsSaveResult" class="save-results">
+								<NcNoteCard :type="superUserGroupsSaveResult.success ? 'success' : 'error'">
+									{{ superUserGroupsSaveResult.success ? 'Super user groups saved successfully!' : superUserGroupsSaveResult.error }}
+								</NcNoteCard>
+							</div>
+
+							<div class="groups-info">
+								<h4>Super User Group Information</h4>
+								<p>These groups will be assigned to:</p>
+								<ul>
+									<li><strong>System administrators:</strong> Users with full system access</li>
+									<li><strong>Platform managers:</strong> Users who manage the entire platform</li>
+									<li><strong>Advanced permissions:</strong> Users who need access to all system features</li>
 								</ul>
 							</div>
 						</div>
@@ -398,6 +525,7 @@
 								<NcSelect
 									v-model="emailSettings.transportType"
 									:options="transportOptions"
+									input-label="Transport Type"
 									placeholder="Select transport type"
 									@update:value="updateEmailSetting('transportType', $event)">
 									<template #option="{ option }">
@@ -432,6 +560,7 @@
 									<NcSelect
 										v-model="emailSettings.smtpEncryption"
 										:options="encryptionOptions"
+										input-label="Encryption"
 										placeholder="Select encryption"
 										@update:value="updateEmailSetting('smtpEncryption', $event)">
 										<template #option="{ option }">
@@ -528,6 +657,7 @@
 									<NcSelect
 										v-model="emailSettings.sesRegion"
 										:options="sesRegionOptions"
+										input-label="Region"
 										placeholder="Select region"
 										@update:value="updateEmailSetting('sesRegion', $event)">
 										<template #option="{ option }">
@@ -824,6 +954,14 @@ export default defineComponent({
 			groupValidation: null,
 			groupsSaveResult: null,
 			savingGroups: false,
+			// Organization admin groups
+			organizationAdminGroups: [],
+			organizationAdminGroupsSaveResult: null,
+			savingOrganizationAdminGroups: false,
+			// Super user groups
+			superUserGroups: [],
+			superUserGroupsSaveResult: null,
+			savingSuperUserGroups: false,
 			// Email-related data
 			emailSettings: {
 				enabled: false,
@@ -1037,14 +1175,56 @@ export default defineComponent({
 
 				this.settings = data
 
+				// Load user groups from the unified response
+				if (data.userGroups) {
+					this.genericUserGroups = data.userGroups.generic || ['Aanbod-beheerder', 'Gebruik-beheerder', 'Gebruik-raadpleger', 'Functioneel-beheerder', 'VNG-raadpleger', 'Organisatie-beheerder', 'Bezoeker']
+					this.organizationAdminGroups = data.userGroups.organizationAdmin || ['organisaties-beheerder']
+					this.superUserGroups = data.userGroups.superUser || ['admin', 'software-catalog-admins']
+				} else {
+					// Fallback to defaults
+					this.genericUserGroups = ['Aanbod-beheerder', 'Gebruik-beheerder', 'Gebruik-raadpleger', 'Functioneel-beheerder', 'VNG-raadpleger', 'Organisatie-beheerder', 'Bezoeker']
+					this.organizationAdminGroups = ['organisaties-beheerder']
+					this.superUserGroups = ['admin', 'software-catalog-admins']
+				}
+
+				// Load email settings from the unified response
+				if (data.emailSettings) {
+					this.emailSettings = {
+						enabled: data.emailSettings.enabled ?? false,
+						senderEmail: data.emailSettings.senderEmail ?? '',
+						senderName: data.emailSettings.senderName ?? '',
+						testReceiverOverride: data.emailSettings.testReceiverOverride ?? '',
+						organizationRegistrationEnabled: data.emailSettings.organizationRegistrationEnabled ?? true,
+						organizationActivationEnabled: data.emailSettings.organizationActivationEnabled ?? true,
+						userCreationEnabled: data.emailSettings.userCreationEnabled ?? true,
+						userPasswordEnabled: data.emailSettings.userPasswordEnabled ?? true,
+						// Transport configuration
+						transportType: data.emailSettings.transportType ?? 'smtp',
+						// SMTP configuration
+						smtpHost: data.emailSettings.smtpHost ?? 'localhost',
+						smtpPort: data.emailSettings.smtpPort ?? 587,
+						smtpEncryption: data.emailSettings.smtpEncryption ?? 'tls',
+						smtpUsername: data.emailSettings.smtpUsername ?? '',
+						smtpPassword: data.emailSettings.smtpPassword ?? '',
+						// SendGrid configuration
+						sendgridApiKey: data.emailSettings.sendgridApiKey ?? '',
+						// Mailgun configuration
+						mailgunApiKey: data.emailSettings.mailgunApiKey ?? '',
+						mailgunDomain: data.emailSettings.mailgunDomain ?? '',
+						// Postmark configuration
+						postmarkApiKey: data.emailSettings.postmarkApiKey ?? '',
+						// Amazon SES configuration
+						sesAccessKey: data.emailSettings.sesAccessKey ?? '',
+						sesSecretKey: data.emailSettings.sesSecretKey ?? '',
+						sesRegion: data.emailSettings.sesRegion ?? 'us-east-1',
+						// Mailjet configuration
+						mailjetApiKey: data.emailSettings.mailjetApiKey ?? '',
+						mailjetSecretKey: data.emailSettings.mailjetSecretKey ?? '',
+					}
+				}
+
 				this.initializeConfiguration()
 				this.autoSelectRegister()
-
-				// Load generic user groups
-				await this.loadGenericUserGroups()
-
-				// Load email settings
-				await this.loadEmailSettings()
 
 				// Load debug information
 				await this.loadDebugInfo()
@@ -1055,107 +1235,14 @@ export default defineComponent({
 		},
 
 		/**
-		 * Loads email settings from the backend API
-		 *
-		 * @async
-		 * @return {Promise<void>}
-		 */
-		async loadEmailSettings() {
-			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/email-settings')
-				const data = await response.json()
-
-				if (data.success && data.data) {
-					// Update email settings with loaded data
-					this.emailSettings = {
-						enabled: data.data.enabled ?? false,
-						senderEmail: data.data.senderEmail ?? '',
-						senderName: data.data.senderName ?? '',
-						testReceiverOverride: data.data.testReceiverOverride ?? '',
-						organizationRegistrationEnabled: data.data.organizationRegistrationEnabled ?? true,
-						organizationActivationEnabled: data.data.organizationActivationEnabled ?? true,
-						userCreationEnabled: data.data.userCreationEnabled ?? true,
-						userPasswordEnabled: data.data.userPasswordEnabled ?? true,
-						// Transport configuration
-						transportType: data.data.transportType ?? 'smtp',
-						// SMTP configuration
-						smtpHost: data.data.smtpHost ?? 'localhost',
-						smtpPort: data.data.smtpPort ?? 587,
-						smtpEncryption: data.data.smtpEncryption ?? 'tls',
-						smtpUsername: data.data.smtpUsername ?? '',
-						smtpPassword: data.data.smtpPassword ?? '',
-						// SendGrid configuration
-						sendgridApiKey: data.data.sendgridApiKey ?? '',
-						// Mailgun configuration
-						mailgunApiKey: data.data.mailgunApiKey ?? '',
-						mailgunDomain: data.data.mailgunDomain ?? '',
-						// Postmark configuration
-						postmarkApiKey: data.data.postmarkApiKey ?? '',
-						// Amazon SES configuration
-						sesAccessKey: data.data.sesAccessKey ?? '',
-						sesSecretKey: data.data.sesSecretKey ?? '',
-						sesRegion: data.data.sesRegion ?? 'us-east-1',
-						// Mailjet configuration
-						mailjetApiKey: data.data.mailjetApiKey ?? '',
-						mailjetSecretKey: data.data.mailjetSecretKey ?? '',
-					}
-				}
-			} catch (error) {
-				// Use default settings if loading fails
-				this.emailSettings = {
-					enabled: false,
-					senderEmail: '',
-					senderName: '',
-					testReceiverOverride: '',
-					organizationRegistrationEnabled: true,
-					organizationActivationEnabled: true,
-					userCreationEnabled: true,
-					userPasswordEnabled: true,
-					// Transport configuration
-					transportType: 'smtp',
-					// SMTP configuration
-					smtpHost: 'localhost',
-					smtpPort: 587,
-					smtpEncryption: 'tls',
-					smtpUsername: '',
-					smtpPassword: '',
-					// SendGrid configuration
-					sendgridApiKey: '',
-					// Mailgun configuration
-					mailgunApiKey: '',
-					mailgunDomain: '',
-					// Postmark configuration
-					postmarkApiKey: '',
-					// Amazon SES configuration
-					sesAccessKey: '',
-					sesSecretKey: '',
-					sesRegion: 'us-east-1',
-					// Mailjet configuration
-					mailjetApiKey: '',
-					mailjetSecretKey: '',
-				}
-			}
-		},
-
-		/**
-		 * Loads generic user groups from the backend API
+		 * Loads all user groups from the unified settings API
 		 *
 		 * @async
 		 * @return {Promise<void>}
 		 */
 		async loadGenericUserGroups() {
-			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/generic-user-groups')
-				const data = await response.json()
-
-				if (data.error) {
-					this.genericUserGroups = ['beheerder', 'inkoper', 'ambtenaar', 'software-catalog-users']
-				} else {
-					this.genericUserGroups = data.groups || []
-				}
-			} catch (error) {
-				this.genericUserGroups = ['beheerder', 'inkoper', 'ambtenaar', 'software-catalog-users']
-			}
+			// This method is now handled by loadSettings() which loads all data at once
+			// Keep this method for backward compatibility but make it a no-op
 		},
 
 		/**
@@ -1700,12 +1787,16 @@ export default defineComponent({
 			this.groupsSaveResult = null
 
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/generic-user-groups', {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ groups: this.genericUserGroups }),
+					body: JSON.stringify({
+						userGroups: {
+							generic: this.genericUserGroups
+						}
+					}),
 				})
 
 				const result = await response.json()
@@ -1721,6 +1812,114 @@ export default defineComponent({
 			} finally {
 				this.savingGroups = false
 			}
+		},
+
+		// Organization Admin Groups methods
+		updateOrganizationAdminGroupName(index, value) {
+			this.organizationAdminGroups[index] = value
+		},
+
+		removeOrganizationAdminGroup(index) {
+			this.organizationAdminGroups.splice(index, 1)
+		},
+
+		addOrganizationAdminGroup() {
+			this.organizationAdminGroups.push('')
+		},
+
+		async saveOrganizationAdminGroups() {
+			this.savingOrganizationAdminGroups = true
+			this.organizationAdminGroupsSaveResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ 
+						userGroups: {
+							organizationAdmin: this.organizationAdminGroups
+						}
+					}),
+				})
+
+				const result = await response.json()
+				if (result.error) {
+					this.organizationAdminGroupsSaveResult = { success: false, error: result.error }
+				} else {
+					this.organizationAdminGroupsSaveResult = { success: true }
+					// Reload settings to reflect any changes
+					await this.loadSettings()
+				}
+			} catch (error) {
+				this.organizationAdminGroupsSaveResult = { success: false, error: 'Failed to save organization admin groups: ' + error.message }
+			} finally {
+				this.savingOrganizationAdminGroups = false
+			}
+		},
+
+		// Super User Groups methods
+		updateSuperUserGroupName(index, value) {
+			this.superUserGroups[index] = value
+		},
+
+		removeSuperUserGroup(index) {
+			this.superUserGroups.splice(index, 1)
+		},
+
+		addSuperUserGroup() {
+			this.superUserGroups.push('')
+		},
+
+		async saveSuperUserGroups() {
+			this.savingSuperUserGroups = true
+			this.superUserGroupsSaveResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ 
+						userGroups: {
+							superUser: this.superUserGroups
+						}
+					}),
+				})
+
+				const result = await response.json()
+				if (result.error) {
+					this.superUserGroupsSaveResult = { success: false, error: result.error }
+				} else {
+					this.superUserGroupsSaveResult = { success: true }
+					// Reload settings to reflect any changes
+					await this.loadSettings()
+				}
+			} catch (error) {
+				this.superUserGroupsSaveResult = { success: false, error: 'Failed to save super user groups: ' + error.message }
+			} finally {
+				this.savingSuperUserGroups = false
+			}
+		},
+
+		// Group description helper
+		getGroupDescription(group) {
+			const descriptions = {
+				'Aanbod-beheerder': 'Manages software offerings and catalog content',
+				'Gebruik-beheerder': 'Manages software usage and procurement',
+				'Gebruik-raadpleger': 'Views software usage and procurement data',
+				'Functioneel-beheerder': 'Manages functional aspects of the system',
+				'VNG-raadpleger': 'Views VNG-related information',
+				'Organisatie-beheerder': 'Manages organization-specific settings and users',
+				'Bezoeker': 'Basic visitor access to the catalog',
+				'beheerder': 'System administrators and managers',
+				'inkoper': 'Procurement specialists',
+				'ambtenaar': 'Civil servants (auto-assigned for gemeente organizations)',
+				'software-catalog-users': 'All software catalog users',
+			}
+			return descriptions[group] || 'User group for role-based access control'
 		},
 
 		updateEmailSetting(key, value) {
@@ -1775,12 +1974,14 @@ export default defineComponent({
 			this.emailSaveResult = null
 
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/email/settings', {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ emailSettings: this.emailSettings }),
+					body: JSON.stringify({ 
+						emailSettings: this.emailSettings
+					}),
 				})
 
 				const result = await response.json()
@@ -2188,5 +2389,21 @@ export default defineComponent({
 	margin-top: 1rem;
 	display: flex;
 	justify-content: space-between;
+}
+
+.organization-admin-groups-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.super-user-groups-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
 }
 </style>

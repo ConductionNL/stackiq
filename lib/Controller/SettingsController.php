@@ -118,6 +118,17 @@ class SettingsController extends Controller
     {
         try {
             $data = $this->settingsService->getSettings();
+            
+            // Add user group configurations
+            $data['userGroups'] = [
+                'generic' => $this->settingsService->getGenericUserGroups(),
+                'organizationAdmin' => $this->settingsService->getOrganizationAdminGroups(),
+                'superUser' => $this->settingsService->getSuperUserGroups()
+            ];
+            
+            // Add email settings
+            $data['emailSettings'] = $this->settingsService->getEmailSettings();
+            
             return new JSONResponse($data);
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve settings', [
@@ -139,9 +150,74 @@ class SettingsController extends Controller
     public function create(): JSONResponse
     {
         try {
-            $data   = $this->request->getParams();
-            $result = $this->settingsService->updateSettings($data);
-            return new JSONResponse($result);
+            $data = $this->request->getParams();
+            
+            // Handle different types of settings updates
+            $result = [];
+            
+            // Update schema/register configuration
+            if (isset($data['configuration']) || isset($data['selectedRegister'])) {
+                $configData = array_filter($data, function($key) {
+                    return !in_array($key, ['userGroups', 'emailSettings']);
+                }, ARRAY_FILTER_USE_KEY);
+                
+                if (!empty($configData)) {
+                    $result['configuration'] = $this->settingsService->updateSettings($configData);
+                }
+            }
+            
+            // Update user groups
+            if (isset($data['userGroups'])) {
+                $userGroups = $data['userGroups'];
+                
+                if (isset($userGroups['generic'])) {
+                    $validation = $this->settingsService->validateGroups($userGroups['generic']);
+                    if (!empty($validation['invalid'])) {
+                        return new JSONResponse([
+                            'error' => 'Invalid generic group names provided',
+                            'validation' => $validation
+                        ], 400);
+                    }
+                    $this->settingsService->setGenericUserGroups($validation['valid']);
+                    $result['userGroups']['generic'] = $validation['valid'];
+                }
+                
+                if (isset($userGroups['organizationAdmin'])) {
+                    $validation = $this->settingsService->validateGroups($userGroups['organizationAdmin']);
+                    if (!empty($validation['invalid'])) {
+                        return new JSONResponse([
+                            'error' => 'Invalid organization admin group names provided',
+                            'validation' => $validation
+                        ], 400);
+                    }
+                    $this->settingsService->setOrganizationAdminGroups($validation['valid']);
+                    $result['userGroups']['organizationAdmin'] = $validation['valid'];
+                }
+                
+                if (isset($userGroups['superUser'])) {
+                    $validation = $this->settingsService->validateGroups($userGroups['superUser']);
+                    if (!empty($validation['invalid'])) {
+                        return new JSONResponse([
+                            'error' => 'Invalid super user group names provided',
+                            'validation' => $validation
+                        ], 400);
+                    }
+                    $this->settingsService->setSuperUserGroups($validation['valid']);
+                    $result['userGroups']['superUser'] = $validation['valid'];
+                }
+            }
+            
+            // Update email settings
+            if (isset($data['emailSettings'])) {
+                $result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+            }
+            
+            return new JSONResponse([
+                'success' => true,
+                'data' => $result,
+                'message' => 'Settings updated successfully'
+            ]);
+            
         } catch (\Exception $e) {
             $this->logger->error('Failed to update settings', [
                 'exception' => $e->getMessage(),
@@ -254,23 +330,20 @@ class SettingsController extends Controller
     }
 
     /**
-     * Get generic user groups configuration
+     * Get debug information for settings
      *
-     * @return JSONResponse JSON response containing the generic user groups
+     * @return JSONResponse JSON response containing debug information
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function getGenericUserGroups(): JSONResponse
+    public function debug(): JSONResponse
     {
         try {
-            $groups = $this->settingsService->getGenericUserGroups();
-            return new JSONResponse([
-                'groups' => $groups,
-                'allGroups' => $this->settingsService->getAllGroups()
-            ]);
+            $debugInfo = $this->settingsService->getDebugInfo();
+            return new JSONResponse($debugInfo);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get generic user groups', [
+            $this->logger->error('Failed to get debug information', [
                 'exception' => $e->getMessage()
             ]);
             return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -278,236 +351,46 @@ class SettingsController extends Controller
     }
 
     /**
-     * Update generic user groups configuration
+     * Send test email
      *
-     * @return JSONResponse JSON response containing the update results
+     * @return JSONResponse JSON response containing test email results
      *
      * @NoCSRFRequired
      */
-    public function updateGenericUserGroups(): JSONResponse
+    public function sendTestEmail(): JSONResponse
     {
         try {
             $data = $this->request->getParams();
-            $groups = $data['groups'] ?? [];
-
-            // Validate groups
-            $validation = $this->settingsService->validateGroups($groups);
+            $email = $data['email'] ?? '';
+            $emailSettings = $data['emailSettings'] ?? [];
             
-            if (!empty($validation['invalid'])) {
+            if (empty($email)) {
                 return new JSONResponse([
-                    'error' => 'Invalid group names provided',
-                    'validation' => $validation
+                    'success' => false,
+                    'message' => 'Email address is required'
                 ], 400);
             }
-
-            // Update the groups
-            $this->settingsService->setGenericUserGroups($validation['valid']);
+            
+            $result = $this->settingsService->sendTestEmail($email, $emailSettings);
             
             return new JSONResponse([
-                'success' => true,
-                'groups' => $validation['valid'],
-                'message' => 'Generic user groups updated successfully'
+                'success' => $result['success'],
+                'message' => $result['message']
             ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to update generic user groups', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Validate generic user groups
-     *
-     * @return JSONResponse JSON response containing the validation results
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function validateGenericUserGroups(): JSONResponse
-    {
-        try {
-            $data = $this->request->getParams();
-            $groups = $data['groups'] ?? [];
-
-            $validation = $this->settingsService->validateGroups($groups);
             
-            return new JSONResponse($validation);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to validate generic user groups', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Ensure generic user groups exist
-     *
-     * @return JSONResponse JSON response containing the results
-     *
-     * @NoCSRFRequired
-     */
-    public function ensureGenericUserGroups(): JSONResponse
-    {
-        try {
-            // For this to work, we need access to the group management functionality
-            // This might require additional service integration
-            return new JSONResponse([
-                'message' => 'Group creation requires group management service integration',
-                'groups' => $this->settingsService->getGenericUserGroups()
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to ensure generic user groups', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Get email settings configuration
-     *
-     * @return JSONResponse JSON response containing the email settings
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function getEmailSettings(): JSONResponse
-    {
-        try {
-            $emailSettings = $this->settingsService->getEmailSettings();
-            return new JSONResponse([
-                'success' => true,
-                'data' => $emailSettings
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to get email settings', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Update email settings configuration
-     *
-     * @return JSONResponse JSON response containing the update results
-     *
-     * @NoCSRFRequired
-     */
-    public function updateEmailSettings(): JSONResponse
-    {
-        try {
-            // Get request data from POST params or JSON body
-            $data = $this->request->getParams();
-            
-            // If no emailSettings in params, try to parse JSON from input
-            if (!isset($data['emailSettings'])) {
-                $input = file_get_contents('php://input');
-                if ($input) {
-                    $requestData = json_decode($input, true);
-                    if ($requestData && isset($requestData['emailSettings'])) {
-                        $data = $requestData['emailSettings'];
-                    }
-                }
-            } else {
-                $data = $data['emailSettings'];
-            }
-            
-            $result = $this->settingsService->updateEmailSettings($data);
-            
-            return new JSONResponse([
-                'success' => true,
-                'data' => $result,
-                'message' => 'Email settings updated successfully'
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to update email settings', [
+            $this->logger->error('Failed to send test email', [
                 'exception' => $e->getMessage(),
                 'requestData' => $this->request->getParams()
             ]);
             return new JSONResponse([
                 'success' => false,
-                'error' => $e->getMessage()
+                'message' => 'Failed to send test email: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Get email template content
-     *
-     * @return JSONResponse JSON response containing the template content
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function getEmailTemplate(): JSONResponse
-    {
-        try {
-            $templateName = $this->request->getParam('templateName');
-            
-            if (!$templateName) {
-                return new JSONResponse(['error' => 'Template name is required'], 400);
-            }
 
-            $templateContent = $this->settingsService->getEmailTemplate($templateName);
-            $templateVariables = $this->settingsService->getEmailTemplateVariables($templateName);
-            
-            return new JSONResponse([
-                'success' => true,
-                'templateName' => $templateName,
-                'templateContent' => $templateContent,
-                'templateVariables' => $templateVariables
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to get email template', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Update email template content
-     *
-     * @return JSONResponse JSON response containing the update results
-     *
-     * @NoCSRFRequired
-     */
-    public function updateEmailTemplate(): JSONResponse
-    {
-        try {
-            $templateName = $this->request->getParam('templateName');
-            $templateContent = $this->request->getParam('templateContent');
-            
-            if (!$templateName || !$templateContent) {
-                return new JSONResponse(['error' => 'Template name and content are required'], 400);
-            }
-
-            $success = $this->settingsService->updateEmailTemplate($templateName, $templateContent);
-            
-            if ($success) {
-                return new JSONResponse([
-                    'success' => true,
-                    'message' => 'Email template updated successfully'
-                ]);
-            } else {
-                return new JSONResponse(['error' => 'Failed to update email template'], 500);
-            }
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to update email template', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
-    }
 
 
 
