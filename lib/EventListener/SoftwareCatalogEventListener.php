@@ -63,66 +63,16 @@ class SoftwareCatalogEventListener implements IEventListener
      */
     public function handle(Event $event): void
     {
-        // Log all incoming events for debugging
-        $eventType = get_class($event);
-        error_log('SoftwareCatalog EventListener: Received event - ' . $eventType);
-
+        // Simple debug logging
+        error_log("SoftwareCatalog: Event received - " . get_class($event));
+        
         try {
-            // Get services from the server container like OpenCatalogi does
+            // Get services from the server container
             $softwareCatalogueService = \OC::$server->get(SoftwareCatalogueService::class);
             $settingsService = \OC::$server->get(SettingsService::class);
             $logger = \OC::$server->get(\Psr\Log\LoggerInterface::class);
-
-            $logger->info(
-                'SoftwareCatalog: Received event',
-                [
-                    'eventType' => $eventType,
-                    'timestamp' => date('Y-m-d H:i:s')
-                ]
-            );
             
-            // Log current configuration to debug schema mapping
-            try {
-                $currentSettings = $settingsService->getSettings();
-                $logger->info(
-                    'SoftwareCatalog: Current configuration at event time',
-                    [
-                        'eventType' => $eventType,
-                        'organizationSchemaId' => $settingsService->getSchemaIdForObjectType('organization'),
-                        'organisatieSchemaId' => $settingsService->getSchemaIdForObjectType('organisatie'),
-                        'contactSchemaId' => $settingsService->getSchemaIdForObjectType('contact'),
-                        'gebruikerSchemaId' => $settingsService->getSchemaIdForObjectType('gebruiker'),
-                        'contactgegevensSchemaId' => $settingsService->getSchemaIdForObjectType('contactgegevens'),
-                        'configuration' => $currentSettings['configuration'] ?? 'No configuration found'
-                    ]
-                );
-            } catch (\Exception $e) {
-                $logger->warning(
-                    'SoftwareCatalog: Failed to get current configuration',
-                    [
-                        'eventType' => $eventType,
-                        'error' => $e->getMessage()
-                    ]
-                );
-            }
-
-            // Add extra debug for update events
-            if ($event instanceof ObjectUpdatedEvent) {
-                $object = $event->getNewObject();
-                if ($object) {
-                    $logger->info(
-                        'SoftwareCatalog: ObjectUpdatedEvent details',
-                        [
-                            'objectId' => $object->getUuid(),
-                            'schemaId' => $object->getSchema(),
-                            'registerId' => $object->getRegister(),
-                            'objectData' => json_encode($object->getObject())
-                        ]
-                    );
-                }
-            }
-
-            // Handle object creation
+            // Handle different event types
             if ($event instanceof ObjectCreatedEvent) {
                 $logger->debug('SoftwareCatalog: Processing ObjectCreatedEvent');
                 $this->handleObjectCreated($event, $softwareCatalogueService, $settingsService, $logger);
@@ -168,28 +118,36 @@ class SoftwareCatalogEventListener implements IEventListener
             $logger->warning(
                 'SoftwareCatalog: Received unexpected event type',
                 [
-                    'eventType' => $eventType
+                    'eventType' => $eventType,
+                    'timestamp' => $timestamp
                 ]
             );
 
         } catch (\Exception $e) {
             // Log unexpected errors and continue gracefully
-            error_log('SoftwareCatalog EventListener: Exception - ' . $e->getMessage());
+            $errorMessage = "SoftwareCatalog EventListener: [{$timestamp}] Exception - {$e->getMessage()}";
+            error_log($errorMessage);
+            
             try {
                 $logger = \OC::$server->get(\Psr\Log\LoggerInterface::class);
                 $logger->error(
-                    'SoftwareCatalog: Exception in event listener',
+                    'SoftwareCatalog: Critical exception in event listener',
                     [
-                        'exception' => $e->getMessage(),
                         'eventType' => $eventType,
+                        'timestamp' => $timestamp,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
                         'trace' => $e->getTraceAsString()
                     ]
                 );
             } catch (\Exception $logException) {
-                error_log('SoftwareCatalog EventListener: Logger exception - ' . $logException->getMessage());
+                error_log("SoftwareCatalog EventListener: [{$timestamp}] Logger exception - {$logException->getMessage()}");
             }
         }
     }
+
+
 
     /**
      * Handles object creation events
@@ -210,6 +168,7 @@ class SoftwareCatalogEventListener implements IEventListener
 
         $objectSchemaId = $object->getSchema();
         $objectId = $object->getUuid();
+        $objectRegisterId = $object->getRegister();
         
         // Convert schema ID to integer for consistent comparison
         $objectSchemaIdInt = (int) $objectSchemaId;
@@ -218,7 +177,11 @@ class SoftwareCatalogEventListener implements IEventListener
             'SoftwareCatalog: Processing object creation',
             [
                 'objectId' => $objectId,
-                'schemaId' => $objectSchemaId
+                'schemaId' => $objectSchemaId,
+                'schemaIdInt' => $objectSchemaIdInt,
+                'registerId' => $objectRegisterId,
+                'objectType' => gettype($object),
+                'objectMethods' => get_class_methods($object)
             ]
         );
         
@@ -229,52 +192,76 @@ class SoftwareCatalogEventListener implements IEventListener
         $contactpersoonSchemaIdInt = (int) $contactpersoonSchemaId;
         
         if ($contactpersoonSchemaId && $objectSchemaIdInt === $contactpersoonSchemaIdInt) {
-            $logger->debug('SoftwareCatalog: Processing contactpersoon creation');
+            $logger->info(
+                'SoftwareCatalog: Matched contactpersoon schema - processing creation',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $contactpersoonSchemaId,
+                    'objectData' => $object->getObject()
+                ]
+            );
+            
             try {
-                $softwareCatalogueService->processContactpersoon($object);
+                $result = $softwareCatalogueService->processContactpersoon($object);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactpersoon creation',
                     [
-                        'objectId' => $objectId
+                        'objectId' => $objectId,
+                        'result' => $result,
+                        'timestamp' => date('Y-m-d H:i:s')
                     ]
                 );
             } catch (\Exception $e) {
                 $logger->error(
-                    'SoftwareCatalog: Failed to process contactpersoon',
+                    'SoftwareCatalog: Failed to process contactpersoon creation',
                     [
-                        'exception' => $e->getMessage(),
                         'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
                         'trace' => $e->getTraceAsString()
                     ]
                 );
             }
             return;
         }
-
-        // Handle contactgegevens creation - process username (for backward compatibility)
-        $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
         
-        // Fix potential type mismatch by ensuring both are integers
+        // Handle contactgegevens creation (backward compatibility)
+        $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
         $contactgegevensSchemaIdInt = (int) $contactgegevensSchemaId;
         
         if ($contactgegevensSchemaId && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {
-            $logger->debug('SoftwareCatalog: Processing contactgegevens creation (backward compatibility)');
+            $logger->info(
+                'SoftwareCatalog: Matched contactgegevens schema - processing creation (backward compatibility)',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $contactgegevensSchemaId,
+                    'objectData' => $object->getObject()
+                ]
+            );
+            
             try {
-                $softwareCatalogueService->processContactgegevens($object);
+                $result = $softwareCatalogueService->processContactgegevens($object);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactgegevens creation',
                     [
-                        'objectId' => $objectId
+                        'objectId' => $objectId,
+                        'result' => $result,
+                        'timestamp' => date('Y-m-d H:i:s')
                     ]
                 );
             } catch (\Exception $e) {
                 $logger->error(
-                    'SoftwareCatalog: Failed to process contactgegevens',
+                    'SoftwareCatalog: Failed to process contactgegevens creation',
                     [
-                        'exception' => $e->getMessage(),
                         'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
                         'trace' => $e->getTraceAsString()
                     ]
                 );
@@ -288,6 +275,8 @@ class SoftwareCatalogEventListener implements IEventListener
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
+                'schemaIdInt' => $objectSchemaIdInt,
+                'registerId' => $objectRegisterId,
                 'handledSchemas' => [
                     'contactpersoon' => $contactpersoonSchemaId,
                     'contactgegevens' => $contactgegevensSchemaId
@@ -308,6 +297,8 @@ class SoftwareCatalogEventListener implements IEventListener
     private function handleObjectUpdated(ObjectUpdatedEvent $event, SoftwareCatalogueService $softwareCatalogueService, SettingsService $settingsService, LoggerInterface $logger): void
     {
         $object = $event->getNewObject();
+        $oldObject = $event->getOldObject();
+        
         if ($object === null) {
             $logger->warning('SoftwareCatalog: ObjectUpdatedEvent received with null object');
             return;
@@ -315,8 +306,9 @@ class SoftwareCatalogEventListener implements IEventListener
 
         $objectSchemaId = $object->getSchema();
         $objectId = $object->getUuid();
+        $objectRegisterId = $object->getRegister();
         
-        // Convert object schema ID to integer for consistent comparison
+        // Convert schema ID to integer for consistent comparison
         $objectSchemaIdInt = (int) $objectSchemaId;
         
         $logger->info(
@@ -324,77 +316,85 @@ class SoftwareCatalogEventListener implements IEventListener
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
-                'schemaIdInt' => $objectSchemaIdInt
+                'schemaIdInt' => $objectSchemaIdInt,
+                'registerId' => $objectRegisterId,
+                'hasOldObject' => $oldObject !== null,
+                'newObjectData' => $object->getObject(),
+                'oldObjectData' => $oldObject ? $oldObject->getObject() : null
             ]
         );
-
-        // Handle contactpersoon updates - create inactive user if needed
-        $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
         
-        // Fix potential type mismatch by ensuring both are integers
+        // Handle contactpersoon updates
+        $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
         $contactpersoonSchemaIdInt = (int) $contactpersoonSchemaId;
         
         if ($contactpersoonSchemaId && $objectSchemaIdInt === $contactpersoonSchemaIdInt) {
-            $logger->debug('SoftwareCatalog: Processing contactpersoon update');
+            $logger->info(
+                'SoftwareCatalog: Matched contactpersoon schema - processing update',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $contactpersoonSchemaId
+                ]
+            );
+            
             try {
-                $oldObject = $event->getOldObject();
-                if ($oldObject) {
-                    // Use the new method that checks for role changes
-                    $softwareCatalogueService->handleContactpersoonUpdate($object, $oldObject);
-                } else {
-                    // Fallback to regular processing if no old object
-                    $softwareCatalogueService->processContactpersoon($object);
-                }
+                $softwareCatalogueService->handleContactpersoonUpdate($object, $oldObject);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactpersoon update',
                     [
-                        'objectId' => $objectId
+                        'objectId' => $objectId,
+                        'timestamp' => date('Y-m-d H:i:s')
                     ]
                 );
             } catch (\Exception $e) {
                 $logger->error(
                     'SoftwareCatalog: Failed to process contactpersoon update',
                     [
-                        'exception' => $e->getMessage(),
                         'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
                         'trace' => $e->getTraceAsString()
                     ]
                 );
             }
             return;
         }
-
-        // Handle contactgegevens updates - process username and role changes (for backward compatibility)
-        $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
         
-        // Fix potential type mismatch by ensuring both are integers
+        // Handle contactgegevens updates (backward compatibility)
+        $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
         $contactgegevensSchemaIdInt = (int) $contactgegevensSchemaId;
         
         if ($contactgegevensSchemaId && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {
-            $logger->debug('SoftwareCatalog: Processing contactgegevens update (backward compatibility)');
+            $logger->info(
+                'SoftwareCatalog: Matched contactgegevens schema - processing update (backward compatibility)',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $contactgegevensSchemaId
+                ]
+            );
+            
             try {
-                $oldObject = $event->getOldObject();
-                if ($oldObject) {
-                    // Use the new method that checks for role changes
-                    $softwareCatalogueService->handleContactgegevensUpdate($object, $oldObject);
-                } else {
-                    // Fallback to regular processing if no old object
-                    $softwareCatalogueService->processContactgegevens($object);
-                }
+                $softwareCatalogueService->handleContactgegevensUpdate($object, $oldObject);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactgegevens update',
                     [
-                        'objectId' => $objectId
+                        'objectId' => $objectId,
+                        'timestamp' => date('Y-m-d H:i:s')
                     ]
                 );
             } catch (\Exception $e) {
                 $logger->error(
                     'SoftwareCatalog: Failed to process contactgegevens update',
                     [
-                        'exception' => $e->getMessage(),
                         'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
                         'trace' => $e->getTraceAsString()
                     ]
                 );
@@ -403,13 +403,14 @@ class SoftwareCatalogEventListener implements IEventListener
         }
 
         // Log if we don't handle this schema type
-        $logger->info(
+        $logger->debug(
             'SoftwareCatalog: Object update not handled - focusing only on contactpersonen',
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
                 'schemaIdInt' => $objectSchemaIdInt,
                 'schemaIdType' => gettype($objectSchemaId),
+                'registerId' => $objectRegisterId,
                 'handledSchemas' => [
                     'contactpersoon' => $contactpersoonSchemaId,
                     'contactgegevens' => $contactgegevensSchemaId
@@ -437,60 +438,90 @@ class SoftwareCatalogEventListener implements IEventListener
 
         $objectSchemaId = $object->getSchema();
         $objectId = $object->getUuid();
+        $objectRegisterId = $object->getRegister();
         
         $logger->info(
             'SoftwareCatalog: Processing object deletion',
             [
                 'objectId' => $objectId,
-                'schemaId' => $objectSchemaId
+                'schemaId' => $objectSchemaId,
+                'registerId' => $objectRegisterId,
+                'objectData' => $object->getObject()
             ]
         );
-
+        
         // Handle contactpersoon deletion
         $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-        if ($contactpersoonSchemaId && $objectSchemaId === $contactpersoonSchemaId) {
-            $logger->debug('SoftwareCatalog: Processing contactpersoon deletion');
+        $contactpersoonSchemaIdInt = (int) $contactpersoonSchemaId;
+        $objectSchemaIdInt = (int) $objectSchemaId;
+        
+        if ($contactpersoonSchemaId && $objectSchemaIdInt === $contactpersoonSchemaIdInt) {
+            $logger->info(
+                'SoftwareCatalog: Matched contactpersoon schema - processing deletion',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $contactpersoonSchemaId
+                ]
+            );
+            
             try {
                 $softwareCatalogueService->handleContactDeletion($object);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactpersoon deletion',
                     [
-                        'objectId' => $objectId
+                        'objectId' => $objectId,
+                        'timestamp' => date('Y-m-d H:i:s')
                     ]
                 );
             } catch (\Exception $e) {
                 $logger->error(
-                    'SoftwareCatalog: Failed to handle contactpersoon deletion',
+                    'SoftwareCatalog: Failed to process contactpersoon deletion',
                     [
-                        'exception' => $e->getMessage(),
                         'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
                         'trace' => $e->getTraceAsString()
                     ]
                 );
             }
             return;
         }
-
-        // Handle contactgegevens deletion (for backward compatibility)
+        
+        // Handle contactgegevens deletion (backward compatibility)
         $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
-        if ($contactgegevensSchemaId && $objectSchemaId === $contactgegevensSchemaId) {
-            $logger->debug('SoftwareCatalog: Processing contactgegevens deletion');
+        $contactgegevensSchemaIdInt = (int) $contactgegevensSchemaId;
+        
+        if ($contactgegevensSchemaId && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {
+            $logger->info(
+                'SoftwareCatalog: Matched contactgegevens schema - processing deletion (backward compatibility)',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $contactgegevensSchemaId
+                ]
+            );
+            
             try {
                 $softwareCatalogueService->handleContactDeletion($object);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactgegevens deletion',
                     [
-                        'objectId' => $objectId
+                        'objectId' => $objectId,
+                        'timestamp' => date('Y-m-d H:i:s')
                     ]
                 );
             } catch (\Exception $e) {
                 $logger->error(
-                    'SoftwareCatalog: Failed to handle contactgegevens deletion',
+                    'SoftwareCatalog: Failed to process contactgegevens deletion',
                     [
-                        'exception' => $e->getMessage(),
                         'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
                         'trace' => $e->getTraceAsString()
                     ]
                 );
@@ -504,6 +535,7 @@ class SoftwareCatalogEventListener implements IEventListener
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
+                'registerId' => $objectRegisterId,
                 'handledSchemas' => [
                     'contactpersoon' => $contactpersoonSchemaId,
                     'contactgegevens' => $contactgegevensSchemaId
@@ -536,13 +568,14 @@ class SoftwareCatalogEventListener implements IEventListener
             'SoftwareCatalog: Processing object locking',
             [
                 'objectId' => $objectId,
-                'schemaId' => $objectSchemaId
+                'schemaId' => $objectSchemaId,
+                'timestamp' => date('Y-m-d H:i:s')
             ]
         );
-
-        // Log if we don't handle this schema type (we don't handle locking for contactpersonen)
+        
+        // Currently no specific handling for locking events
         $logger->debug(
-            'SoftwareCatalog: Object locking not handled - focusing only on contactpersonen creation/updates',
+            'SoftwareCatalog: Object locking event received but no specific handling implemented',
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId
@@ -574,13 +607,14 @@ class SoftwareCatalogEventListener implements IEventListener
             'SoftwareCatalog: Processing object unlocking',
             [
                 'objectId' => $objectId,
-                'schemaId' => $objectSchemaId
+                'schemaId' => $objectSchemaId,
+                'timestamp' => date('Y-m-d H:i:s')
             ]
         );
-
-        // Log if we don't handle this schema type (we don't handle unlocking for contactpersonen)
+        
+        // Currently no specific handling for unlocking events
         $logger->debug(
-            'SoftwareCatalog: Object unlocking not handled - focusing only on contactpersonen creation/updates',
+            'SoftwareCatalog: Object unlocking event received but no specific handling implemented',
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId
@@ -613,74 +647,16 @@ class SoftwareCatalogEventListener implements IEventListener
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
-                'revertPoint' => $event->getRevertPoint()
+                'timestamp' => date('Y-m-d H:i:s')
             ]
         );
-
-        // Handle contactpersoon reversion - sync user state with reverted contact
-        $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-        if ($contactpersoonSchemaId && $objectSchemaId === $contactpersoonSchemaId) {
-            $logger->debug('SoftwareCatalog: Processing contactpersoon reversion');
-            try {
-                $softwareCatalogueService->syncUserWithRevertedContact($object, $event->getRevertPoint());
-                
-                $logger->info(
-                    'SoftwareCatalog: Successfully processed contactpersoon reversion',
-                    [
-                        'objectId' => $objectId
-                    ]
-                );
-            } catch (\Exception $e) {
-                $logger->error(
-                    'SoftwareCatalog: Failed to sync user with reverted contactpersoon',
-                    [
-                        'exception' => $e->getMessage(),
-                        'objectId' => $objectId,
-                        'revertPoint' => $event->getRevertPoint(),
-                        'trace' => $e->getTraceAsString()
-                    ]
-                );
-            }
-            return;
-        }
-
-        // Handle contactgegevens reversion (for backward compatibility)
-        $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
-        if ($contactgegevensSchemaId && $objectSchemaId === $contactgegevensSchemaId) {
-            $logger->debug('SoftwareCatalog: Processing contactgegevens reversion');
-            try {
-                $softwareCatalogueService->syncUserWithRevertedContact($object, $event->getRevertPoint());
-                
-                $logger->info(
-                    'SoftwareCatalog: Successfully processed contactgegevens reversion',
-                    [
-                        'objectId' => $objectId
-                    ]
-                );
-            } catch (\Exception $e) {
-                $logger->error(
-                    'SoftwareCatalog: Failed to sync user with reverted contactgegevens',
-                    [
-                        'exception' => $e->getMessage(),
-                        'objectId' => $objectId,
-                        'revertPoint' => $event->getRevertPoint(),
-                        'trace' => $e->getTraceAsString()
-                    ]
-                );
-            }
-            return;
-        }
-
-        // Log if we don't handle this schema type
+        
+        // Currently no specific handling for reversion events
         $logger->debug(
-            'SoftwareCatalog: Object reversion not handled - focusing only on contactpersonen',
+            'SoftwareCatalog: Object reversion event received but no specific handling implemented',
             [
                 'objectId' => $objectId,
-                'schemaId' => $objectSchemaId,
-                'handledSchemas' => [
-                    'contactpersoon' => $contactpersoonSchemaId,
-                    'contactgegevens' => $contactgegevensSchemaId
-                ]
+                'schemaId' => $objectSchemaId
             ]
         );
     }
