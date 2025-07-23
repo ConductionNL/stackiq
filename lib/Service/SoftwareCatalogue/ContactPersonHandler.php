@@ -708,13 +708,22 @@ class ContactPersonHandler
     {
         try {
             $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+            $currentContactId = $contactObject->getId();
             
             if (empty($organizationId)) {
                 $this->_logger->warning('No organization ID found for contact object');
                 return false;
             }
             
-            // Simple approach: Check if any users exist with this organization UUID
+            $this->_logger->info(
+                'Checking if contact is first for organization',
+                [
+                    'contactId' => $currentContactId,
+                    'organizationId' => $organizationId
+                ]
+            );
+            
+            // Simple approach: Check if any OTHER users exist with this organization UUID
             $objectService = $this->_getObjectService();
             if (!$objectService) {
                 $this->_logger->error('ObjectService not available for first contact check');
@@ -725,7 +734,7 @@ class ContactPersonHandler
             $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
             $registerId = $settingsService->getVoorzieningenRegisterId();
             
-            // Check contactpersoon schema first (new data model)
+            // Check contactpersoon schema
             $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
             if ($contactpersoonSchemaId) {
                 $existingContacts = $objectService->findAll(
@@ -734,22 +743,24 @@ class ContactPersonHandler
                     $contactpersoonSchemaId
                 );
                 
-                // If there are any existing contacts, this is not the first
-                if (!empty($existingContacts)) {
-                    return false;
-                }
-            }
-            
-                    // Only use contactpersoon schema now
-        if ($contactpersoonSchemaId) {
-                $existingContacts = $objectService->findAll(
-                    ['organisation' => $organizationId],
-                    $registerId,
-                    $contactpersoonSchemaId
+                // Filter out the current contact being processed
+                $otherContacts = array_filter($existingContacts, function($contact) use ($currentContactId) {
+                    return $contact->getId() !== $currentContactId;
+                });
+                
+                $this->_logger->info(
+                    'Found existing contacts for organization',
+                    [
+                        'organizationId' => $organizationId,
+                        'totalContacts' => count($existingContacts),
+                        'otherContacts' => count($otherContacts),
+                        'currentContactId' => $currentContactId,
+                        'isFirstContact' => empty($otherContacts)
+                    ]
                 );
                 
-                // If there are any existing contacts, this is not the first
-                if (!empty($existingContacts)) {
+                // If there are any OTHER existing contacts, this is not the first
+                if (!empty($otherContacts)) {
                     return false;
                 }
             }
@@ -1277,6 +1288,9 @@ class ContactPersonHandler
                             'objectId' => $contactpersoonObject->getId()
                         ]);
                         
+                        // Ensure contactpersoon is added to organization
+                        $this->ensureContactpersoonInOrganization($contactpersoonObject);
+                        
                         return true;
                     }
                 }
@@ -1305,6 +1319,9 @@ class ContactPersonHandler
                     'objectId' => $contactpersoonObject->getId()
                 ]);
                 
+                // Ensure contactpersoon is added to organization
+                $this->ensureContactpersoonInOrganization($contactpersoonObject);
+                
                 $this->_logger->info(
                     'Successfully created inactive user and updated contactpersoon', 
                     [
@@ -1323,6 +1340,9 @@ class ContactPersonHandler
                     'objectId' => $contactpersoonObject->getId()
                 ]
             );
+            
+            // Ensure contactpersoon is added to organization (even for existing users)
+            $this->ensureContactpersoonInOrganization($contactpersoonObject);
             
             return true;
             
@@ -1532,4 +1552,223 @@ class ContactPersonHandler
             ]);
         }
     }
+
+    /**
+     * Checks if a contactpersoon username is in the organization's users list
+     *
+     * @param object $contactpersoonObject The contactpersoon object
+     * 
+     * @return bool True if the user should be added to the organization
+     */
+    public function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool
+    {
+        try {
+            $objectData = $contactpersoonObject->getObject();
+            $username = $objectData['username'] ?? '';
+            $organizationUuid = $objectData['organisation'] ?? '';
+
+            if (empty($username) || empty($organizationUuid)) {
+                return false;
+            }
+
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                return false;
+            }
+
+            // Get the organization object
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+
+            if (!$registerId || !$organisatieSchemaId) {
+                return false;
+            }
+
+            try {
+                $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+                $organizationData = $organizationObject->getObject();
+                
+                // Check if the username is already in the organization's users
+                $organizationUsers = $organizationData['users'] ?? [];
+                
+                if (is_array($organizationUsers) && !in_array($username, $organizationUsers)) {
+                    $this->_logger->info('ContactPersonHandler: Contactpersoon should be added to organization', [
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid,
+                        'currentUsers' => $organizationUsers
+                    ]);
+                    return true;
+                }
+
+                return false;
+
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                // Organization doesn't exist, so we can't add the user
+                $this->_logger->warning('ContactPersonHandler: Organization not found for contactpersoon', [
+                    'username' => $username,
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'ContactPersonHandler: Failed to check if contactpersoon should be added to organization: ' . $e->getMessage(),
+                [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'exception' => $e->getMessage()
+                ]
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Adds a contactpersoon username to the organization's users list
+     *
+     * @param object $contactpersoonObject The contactpersoon object
+     * 
+     * @return bool True if the user was successfully added
+     */
+    public function addContactpersoonToOrganization(object $contactpersoonObject): bool
+    {
+        try {
+            $objectData = $contactpersoonObject->getObject();
+            $username = $objectData['username'] ?? '';
+            $organizationUuid = $objectData['organisation'] ?? '';
+
+            if (empty($username) || empty($organizationUuid)) {
+                $this->_logger->warning('ContactPersonHandler: Cannot add contactpersoon to organization - missing username or organization', [
+                    'username' => $username,
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return false;
+            }
+
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                $this->_logger->error('ContactPersonHandler: OpenRegister ObjectService not available');
+                return false;
+            }
+
+            // Get the organization object
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+
+            if (!$registerId || !$organisatieSchemaId) {
+                $this->_logger->error('ContactPersonHandler: Register or schema not configured for organisatie');
+                return false;
+            }
+
+            try {
+                $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+                $organizationData = $organizationObject->getObject();
+                
+                // Add the username to the organization's users list
+                $organizationUsers = $organizationData['users'] ?? [];
+                if (!is_array($organizationUsers)) {
+                    $organizationUsers = [];
+                }
+                
+                if (!in_array($username, $organizationUsers)) {
+                    $organizationUsers[] = $username;
+                    $organizationData['users'] = $organizationUsers;
+                    
+                    // Update the organization object
+                    $updatedOrganization = $objectService->saveObject(
+                        $organizationData,
+                        [],
+                        $registerId,
+                        $organisatieSchemaId,
+                        $organizationUuid
+                    );
+
+                    $this->_logger->info('ContactPersonHandler: Successfully added contactpersoon to organization', [
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid,
+                        'updatedUsers' => $organizationUsers
+                    ]);
+
+                    return true;
+                } else {
+                    $this->_logger->debug('ContactPersonHandler: Contactpersoon already in organization', [
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid
+                    ]);
+                    return true; // Already there, consider it successful
+                }
+
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                $this->_logger->error('ContactPersonHandler: Organization not found for contactpersoon', [
+                    'username' => $username,
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'ContactPersonHandler: Failed to add contactpersoon to organization: ' . $e->getMessage(),
+                [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Ensures contactpersoon is added to organization after user creation/update
+     *
+     * @param object $contactpersoonObject The contactpersoon object
+     * 
+     * @return void
+     */
+    public function ensureContactpersoonInOrganization(object $contactpersoonObject): void
+    {
+        try {
+            $this->_logger->info('ContactPersonHandler: Ensuring contactpersoon is in organization', [
+                'objectId' => $contactpersoonObject->getId()
+            ]);
+
+            // Check if user should be added to organization
+            if ($this->shouldAddContactpersoonToOrganization($contactpersoonObject)) {
+                // Add user to organization
+                $result = $this->addContactpersoonToOrganization($contactpersoonObject);
+                
+                if ($result) {
+                    $this->_logger->info('ContactPersonHandler: Successfully ensured contactpersoon in organization', [
+                        'objectId' => $contactpersoonObject->getId()
+                    ]);
+                } else {
+                    $this->_logger->warning('ContactPersonHandler: Failed to add contactpersoon to organization', [
+                        'objectId' => $contactpersoonObject->getId()
+                    ]);
+                }
+            } else {
+                $this->_logger->debug('ContactPersonHandler: Contactpersoon already in organization or no action needed', [
+                    'objectId' => $contactpersoonObject->getId()
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'ContactPersonHandler: Failed to ensure contactpersoon in organization: ' . $e->getMessage(),
+                [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+        }
+    }
+
 }  
