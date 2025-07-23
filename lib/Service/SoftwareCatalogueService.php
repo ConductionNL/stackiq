@@ -92,6 +92,25 @@ class SoftwareCatalogueService
     }
 
     /**
+     * Gets the OrganisationService instance
+     *
+     * @return \OCA\OpenRegister\Service\OrganisationService|null
+     */
+    private function _getOrganisationService(): ?\OCA\OpenRegister\Service\OrganisationService
+    {
+        if (!$this->_appManager->isEnabledForUser('openregister')) {
+            return null;
+        }
+
+        try {
+            return $this->_container->get('OCA\\OpenRegister\\Service\\OrganisationService');
+        } catch (\Exception $e) {
+            $this->_logger->error('Failed to get OrganisationService: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Processes a contactpersoon object to create an inactive user
      *
      * If the contactpersoon object doesn't have a user or the user is missing,
@@ -301,36 +320,42 @@ class SoftwareCatalogueService
     }
 
     /**
-     * Handles new organization creation
-     * 
-     * @deprecated This method is disabled to prevent organization duplication
-     * @param object $organizationObject The organization object
+     * Handles new organization creation - syncs with OpenRegister and processes organization
+     *
+     * @param object $organizationObject The new organization object
      * 
      * @return void
      */
     public function handleNewOrganization(object $organizationObject): void
     {
-        // DISABLED: Organization handling is disabled to prevent duplication
-        $this->_logger->info(
-            'Organization handling is disabled to prevent duplication',
-            [
-                'organizationId' => $organizationObject->getId()
-            ]
-        );
-        
-        return;
-        
-        /*
         try {
-            $this->_logger->info('Handling new organization via main service', [
+            $this->_logger->info('SoftwareCatalogueService: Handling new organization', [
                 'objectId' => $organizationObject->getId()
             ]);
 
+            // First, sync the organization with OpenRegister
+            $syncResult = $this->syncOrganizationWithOpenRegister($organizationObject);
+            
+            if ($syncResult) {
+                $this->_logger->info('SoftwareCatalogueService: Successfully synced organization with OpenRegister', [
+                    'objectId' => $organizationObject->getId()
+                ]);
+            } else {
+                $this->_logger->warning('SoftwareCatalogueService: Failed to sync organization with OpenRegister', [
+                    'objectId' => $organizationObject->getId()
+                ]);
+            }
+
+            // Process the organization (existing functionality)
+            $this->processOrganization($organizationObject);
+            
+            // Add all admin group users to the organization
+            $objectData = $organizationObject->getObject();
+            $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
+            $this->addAdminGroupUsersToOrganization($organizationUuid);
+            
             // Send welcome email for new organization
             $this->sendOrganizationWelcomeEmail($organizationObject);
-            
-            // Process the organization which will handle contactpersonen if active
-            $this->processOrganization($organizationObject);
             
             // If organization is active, send activation email too
             $objectData = $organizationObject->getObject();
@@ -353,20 +378,21 @@ class SoftwareCatalogueService
             
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to handle new organization in main service: ' . $e->getMessage(),
+                'SoftwareCatalogueService: Failed to handle new organization: ' . $e->getMessage(),
                 [
                     'objectId' => $organizationObject->getId(),
-                    'exception' => $e
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
                 ]
             );
         }
-        */
     }
 
     /**
-     * Handles organization updates - specifically checking for beoordeling status changes
-     * 
-     * @deprecated This method is disabled to prevent organization duplication
+     * Handles organization updates - syncs with OpenRegister and manages user status based on organization status
+     *
      * @param object $organizationObject    The updated organization object
      * @param object $oldOrganizationObject The previous organization object
      * 
@@ -374,19 +400,8 @@ class SoftwareCatalogueService
      */
     public function handleOrganizationUpdate(object $organizationObject, object $oldOrganizationObject): void
     {
-        // DISABLED: Organization handling is disabled to prevent duplication
-        $this->_logger->info(
-            'Organization update handling is disabled to prevent duplication',
-            [
-                'organizationId' => $organizationObject->getId()
-            ]
-        );
-        
-        return;
-        
-        /*
         try {
-            $this->_logger->info('Handling organization update', [
+            $this->_logger->info('SoftwareCatalogueService: Handling organization update', [
                 'objectId' => $organizationObject->getId()
             ]);
 
@@ -396,12 +411,29 @@ class SoftwareCatalogueService
             $newBeoordeling = strtolower($newData['beoordeling'] ?? '');
             $oldBeoordeling = strtolower($oldData['beoordeling'] ?? '');
             
+            // Sync the organization with OpenRegister
+            $syncResult = $this->syncOrganizationWithOpenRegister($organizationObject);
+            
+            if ($syncResult) {
+                $this->_logger->info('SoftwareCatalogueService: Successfully synced organization with OpenRegister', [
+                    'objectId' => $organizationObject->getId()
+                ]);
+            } else {
+                $this->_logger->warning('SoftwareCatalogueService: Failed to sync organization with OpenRegister', [
+                    'objectId' => $organizationObject->getId()
+                ]);
+            }
+            
+            // Add all admin group users to the organization (ensure they're always included)
+            $organizationUuid = $newData['id'] ?? $organizationObject->getId();
+            $this->addAdminGroupUsersToOrganization($organizationUuid);
+            
             // Check if organization status changed to active
             if ($newBeoordeling === 'actief') {
                 $becameActive = ($oldBeoordeling !== 'actief');
                 
                 $this->_logger->info(
-                    $becameActive ? 'Organization became active, sending activation email and activating contactpersonen' : 'Organization is active',
+                    $becameActive ? 'Organization became active, activating users' : 'Organization is active',
                     [
                         'organizationId' => $organizationObject->getId(),
                         'oldBeoordeling' => $oldBeoordeling,
@@ -410,8 +442,12 @@ class SoftwareCatalogueService
                     ]
                 );
                 
-                // Send activation email if organization just became active
                 if ($becameActive) {
+                    // Activate SoftwareCatalog-specific users in this organization
+                    $organizationUuid = $newData['id'] ?? $organizationObject->getId();
+                    $this->activateSoftwareCatalogUsersForOrganization($organizationUuid);
+                    
+                    // Send activation email
                     try {
                         $success = $this->_emailService->sendOrganizationActivationEmail($newData);
                         $this->_logger->info('Organization activation email sent', [
@@ -424,37 +460,42 @@ class SoftwareCatalogueService
                             'exception' => $e
                         ]);
                     }
-                    
-                    // Activate related contactpersonen users
-                    try {
-                        $this->activateContactpersonenForOrganization($organizationObject->getUuid());
-                    } catch (\Exception $e) {
-                        $this->_logger->error('Failed to activate contactpersonen users: ' . $e->getMessage(), [
-                            'objectId' => $organizationObject->getId(),
-                            'exception' => $e
-                        ]);
-                    }
                 }
-            } else {
+            }
+            
+            // Check if organization status changed to inactive
+            if ($newBeoordeling === 'inactief' || $newBeoordeling === 'deactief') {
+                $becameInactive = ($oldBeoordeling === 'actief');
+                
                 $this->_logger->info(
-                    'Organization not active, no special processing needed',
+                    $becameInactive ? 'Organization became inactive, deactivating users' : 'Organization is inactive',
                     [
                         'organizationId' => $organizationObject->getId(),
-                        'beoordeling' => $newBeoordeling
+                        'oldBeoordeling' => $oldBeoordeling,
+                        'newBeoordeling' => $newBeoordeling,
+                        'becameInactive' => $becameInactive
                     ]
                 );
+                
+                if ($becameInactive) {
+                    // Deactivate SoftwareCatalog-specific users in this organization
+                    $organizationUuid = $newData['id'] ?? $organizationObject->getId();
+                    $this->deactivateSoftwareCatalogUsersForOrganization($organizationUuid);
+                }
             }
             
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to handle organization update: ' . $e->getMessage(),
+                'SoftwareCatalogueService: Failed to handle organization update: ' . $e->getMessage(),
                 [
                     'objectId' => $organizationObject->getId(),
-                    'exception' => $e
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
                 ]
             );
         }
-        */
     }
 
     /**
@@ -965,6 +1006,993 @@ class SoftwareCatalogueService
                     'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
                 ]
             );
+        }
+    }
+
+
+    /**
+     * Handles organization deletion - deactivates all users in the organization
+     *
+     * @param object $organizationObject The organization object being deleted
+     * 
+     * @return void
+     */
+    public function handleOrganizationDeletion(object $organizationObject): void
+    {
+        try {
+            $this->_logger->info('SoftwareCatalogueService: Handling organization deletion', [
+                'objectId' => $organizationObject->getId()
+            ]);
+
+            $objectData = $organizationObject->getObject();
+            $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
+
+            // Deactivate all users in this organization
+            $this->deactivateUsersForOrganization($organizationUuid);
+
+            $this->_logger->info(
+                'SoftwareCatalogueService: Successfully handled organization deletion',
+                [
+                    'organizationId' => $organizationUuid,
+                    'timestamp' => date('Y-m-d H:i:s')
+                ]
+            );
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'SoftwareCatalogueService: Failed to handle organization deletion: ' . $e->getMessage(),
+                [
+                    'objectId' => $organizationObject->getId(),
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+        }
+    }
+
+    /**
+     * Syncs organization data with OpenRegister
+     *
+     * @param object $organizationObject The organization object to sync
+     * 
+     * @return bool True if sync was successful
+     */
+    public function syncOrganizationWithOpenRegister(object $organizationObject): bool
+    {
+        try {
+            $this->_logger->info('SoftwareCatalogueService: Syncing organization with OpenRegister', [
+                'objectId' => $organizationObject->getId()
+            ]);
+
+            $objectData = $organizationObject->getObject();
+            $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
+
+            // Get OpenRegister OrganisationService for proper organization entity management
+            $organisationService = $this->_getOrganisationService();
+            if (!$organisationService) {
+                $this->_logger->error('SoftwareCatalogueService: OpenRegister OrganisationService not available');
+                return false;
+            }
+
+            $this->_logger->info('SoftwareCatalogueService: OpenRegister configuration', [
+                'organizationUuid' => $organizationUuid,
+                'organizationName' => $objectData['naam'] ?? 'Unknown'
+            ]);
+
+            // Check if organization already exists in OpenRegister
+            try {
+                $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+                $existingOrganisation = $organisationMapper->findByUuid($organizationUuid);
+                
+                // Organization exists - update it
+                $this->_logger->info('SoftwareCatalogueService: Organization exists in OpenRegister, updating', [
+                    'organizationId' => $organizationUuid
+                ]);
+
+                // Map status from SoftwareCatalog to OpenRegister
+                $mappedData = $this->mapOrganizationDataForOpenRegister($objectData);
+                
+                // Update the organization using OrganisationService
+                $updatedOrganisation = $this->updateOrganisationInOpenRegister($organisationService, $existingOrganisation, $mappedData);
+
+                $this->_logger->info('SoftwareCatalogueService: Successfully updated organization in OpenRegister', [
+                    'organizationId' => $organizationUuid,
+                    'openRegisterId' => $updatedOrganisation->getUuid()
+                ]);
+
+                return true;
+
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                // Organization doesn't exist - create it
+                $this->_logger->info('SoftwareCatalogueService: Organization not found in OpenRegister, creating', [
+                    'organizationId' => $organizationUuid
+                ]);
+
+                // Map status from SoftwareCatalog to OpenRegister
+                $mappedData = $this->mapOrganizationDataForOpenRegister($objectData);
+                
+                // Create the organization using OrganisationService
+                $createdOrganisation = $this->createOrganisationInOpenRegister($organisationService, $mappedData, $organizationUuid);
+
+                $this->_logger->info('SoftwareCatalogueService: Successfully created organization in OpenRegister', [
+                    'organizationId' => $organizationUuid,
+                    'openRegisterId' => $createdOrganisation->getUuid()
+                ]);
+
+                return true;
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'SoftwareCatalogueService: Failed to sync organization with OpenRegister: ' . $e->getMessage(),
+                [
+                    'objectId' => $organizationObject->getId(),
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Creates an organization in OpenRegister using OrganisationService
+     *
+     * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The OpenRegister organisation service
+     * @param array $mappedData The mapped organization data
+     * @param string $organizationUuid The organization UUID to use
+     * 
+     * @return \OCA\OpenRegister\Db\Organisation The created organization
+     */
+    private function createOrganisationInOpenRegister(
+        \OCA\OpenRegister\Service\OrganisationService $organisationService,
+        array $mappedData,
+        string $organizationUuid
+    ): \OCA\OpenRegister\Db\Organisation {
+        $this->_logger->info('SoftwareCatalogueService: Creating organization in OpenRegister', [
+            'organizationUuid' => $organizationUuid,
+            'name' => $mappedData['name'] ?? 'Unknown'
+        ]);
+
+        // Create organization using OrganisationService
+        $organisation = $organisationService->createOrganisation(
+            $mappedData['name'] ?? 'Unknown Organization',
+            $mappedData['description'] ?? '',
+            false // Don't add current user automatically
+        );
+
+        // Set the UUID to match the SoftwareCatalog organization
+        $organisation->setUuid($organizationUuid);
+        
+        // Note: OpenRegister Organisation entity doesn't have status or type fields
+        // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation
+
+        // Save the updated organization
+        $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+        $savedOrganisation = $organisationMapper->save($organisation);
+
+        $this->_logger->info('SoftwareCatalogueService: Successfully created organization in OpenRegister', [
+            'organizationUuid' => $organizationUuid,
+            'openRegisterId' => $savedOrganisation->getUuid()
+        ]);
+
+        return $savedOrganisation;
+    }
+
+    /**
+     * Updates an organization in OpenRegister using OrganisationService
+     *
+     * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The OpenRegister organisation service
+     * @param \OCA\OpenRegister\Db\Organisation $existingOrganisation The existing organization
+     * @param array $mappedData The mapped organization data
+     * 
+     * @return \OCA\OpenRegister\Db\Organisation The updated organization
+     */
+    private function updateOrganisationInOpenRegister(
+        \OCA\OpenRegister\Service\OrganisationService $organisationService,
+        \OCA\OpenRegister\Db\Organisation $existingOrganisation,
+        array $mappedData
+    ): \OCA\OpenRegister\Db\Organisation {
+        $this->_logger->info('SoftwareCatalogueService: Updating organization in OpenRegister', [
+            'organizationUuid' => $existingOrganisation->getUuid(),
+            'name' => $mappedData['name'] ?? 'Unknown'
+        ]);
+
+        // Update organization fields (only those that exist on the Organisation entity)
+        if (isset($mappedData['name'])) {
+            $existingOrganisation->setName($mappedData['name']);
+        }
+        
+        if (isset($mappedData['description'])) {
+            $existingOrganisation->setDescription($mappedData['description']);
+        }
+        
+        // Note: OpenRegister Organisation entity doesn't have status or type fields
+        // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation
+
+        // Save the updated organization
+        $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+        $updatedOrganisation = $organisationMapper->save($existingOrganisation);
+
+        $this->_logger->info('SoftwareCatalogueService: Successfully updated organization in OpenRegister', [
+            'organizationUuid' => $existingOrganisation->getUuid(),
+            'openRegisterId' => $updatedOrganisation->getUuid()
+        ]);
+
+        return $updatedOrganisation;
+    }
+
+    /**
+     * Maps organization data from SoftwareCatalog format to OpenRegister format
+     *
+     * @param array $objectData The organization data from SoftwareCatalog
+     * 
+     * @return array The mapped data for OpenRegister
+     */
+    private function mapOrganizationDataForOpenRegister(array $objectData): array
+    {
+        $mappedData = [
+            'naam' => $objectData['naam'] ?? $objectData['name'] ?? '',
+            'type' => $objectData['type'] ?? '',
+            'website' => $objectData['website'] ?? '',
+            'status' => 'concept', // Default status for new organizations
+            'contactpersonen' => [],
+            'deelnemers' => []
+        ];
+
+        // Map status from SoftwareCatalog to OpenRegister
+        $beoordeling = strtolower($objectData['beoordeling'] ?? '');
+        if ($beoordeling === 'actief') {
+            $mappedData['status'] = 'active';
+        } elseif ($beoordeling === 'inactief' || $beoordeling === 'deactief') {
+            $mappedData['status'] = 'inactive';
+        }
+
+        // Map other fields if they exist
+        if (isset($objectData['adres'])) {
+            $mappedData['adres'] = $objectData['adres'];
+        }
+        if (isset($objectData['postcode'])) {
+            $mappedData['postcode'] = $objectData['postcode'];
+        }
+        if (isset($objectData['plaats'])) {
+            $mappedData['plaats'] = $objectData['plaats'];
+        }
+        if (isset($objectData['telefoon'])) {
+            $mappedData['telefoon'] = $objectData['telefoon'];
+        }
+        if (isset($objectData['email'])) {
+            $mappedData['email'] = $objectData['email'];
+        }
+
+        return $mappedData;
+    }
+
+    /**
+     * Activates all users in an organization when the organization becomes active
+     *
+     * @param string $organizationUuid The organization UUID
+     * 
+     * @return void
+     */
+    private function activateUsersForOrganization(string $organizationUuid): void
+    {
+        try {
+            $this->_logger->info('SoftwareCatalogueService: Activating users for organization', [
+                'organizationUuid' => $organizationUuid
+            ]);
+
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                $this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
+                return;
+            }
+
+            // Get all contactpersonen for this organization
+            $settingsService = $this->_container->get(SettingsService::class);
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+
+            if (!$registerId || !$contactpersoonSchemaId) {
+                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersonen');
+                return;
+            }
+
+            $contactpersonen = $objectService->findAll(
+                ['organisation' => $organizationUuid],
+                $registerId,
+                $contactpersoonSchemaId
+            );
+
+            $userManager = $this->_container->get(\OCP\IUserManager::class);
+            $activatedCount = 0;
+
+            foreach ($contactpersonen as $contactpersoon) {
+                $contactData = $contactpersoon->getObject();
+                $username = $contactData['username'] ?? '';
+
+                if (!empty($username)) {
+                    $user = $userManager->get($username);
+                    if ($user && !$user->isEnabled()) {
+                        $user->setEnabled(true);
+                        $activatedCount++;
+
+                        $this->_logger->info('SoftwareCatalogueService: Activated user for organization', [
+                            'username' => $username,
+                            'organizationUuid' => $organizationUuid
+                        ]);
+                    }
+                }
+            }
+
+            $this->_logger->info('SoftwareCatalogueService: Completed user activation for organization', [
+                'organizationUuid' => $organizationUuid,
+                'totalContactpersonen' => count($contactpersonen),
+                'activatedUsers' => $activatedCount
+            ]);
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'SoftwareCatalogueService: Failed to activate users for organization: ' . $e->getMessage(),
+                [
+                    'organizationUuid' => $organizationUuid,
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+        }
+    }
+
+    /**
+     * Deactivates all users in an organization when the organization becomes inactive
+     *
+     * @param string $organizationUuid The organization UUID
+     * 
+     * @return void
+     */
+    private function deactivateUsersForOrganization(string $organizationUuid): void
+    {
+        try {
+            $this->_logger->info('SoftwareCatalogueService: Deactivating users for organization', [
+                'organizationUuid' => $organizationUuid
+            ]);
+
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                $this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
+                return;
+            }
+
+            // Get all contactpersonen for this organization
+            $settingsService = $this->_container->get(SettingsService::class);
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+
+            if (!$registerId || !$contactpersoonSchemaId) {
+                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersonen');
+                return;
+            }
+
+            $contactpersonen = $objectService->findAll(
+                ['organisation' => $organizationUuid],
+                $registerId,
+                $contactpersoonSchemaId
+            );
+
+            $userManager = $this->_container->get(\OCP\IUserManager::class);
+            $deactivatedCount = 0;
+
+            foreach ($contactpersonen as $contactpersoon) {
+                $contactData = $contactpersoon->getObject();
+                $username = $contactData['username'] ?? '';
+
+                if (!empty($username)) {
+                    $user = $userManager->get($username);
+                    if ($user && $user->isEnabled()) {
+                        $user->setEnabled(false);
+                        $deactivatedCount++;
+
+                        $this->_logger->info('SoftwareCatalogueService: Deactivated user for organization', [
+                            'username' => $username,
+                            'organizationUuid' => $organizationUuid
+                        ]);
+                    }
+                }
+            }
+
+            $this->_logger->info('SoftwareCatalogueService: Completed user deactivation for organization', [
+                'organizationUuid' => $organizationUuid,
+                'totalContactpersonen' => count($contactpersonen),
+                'deactivatedUsers' => $deactivatedCount
+            ]);
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'SoftwareCatalogueService: Failed to deactivate users for organization: ' . $e->getMessage(),
+                [
+                    'organizationUuid' => $organizationUuid,
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+        }
+    }
+
+    /**
+     * Activates SoftwareCatalog-specific users for an organization
+     * Only affects users from contactpersoon objects, not admin group users
+     *
+     * @param string $organizationUuid The organization UUID
+     * 
+     * @return void
+     */
+    private function activateSoftwareCatalogUsersForOrganization(string $organizationUuid): void
+    {
+        try {
+            $this->_logger->info('SoftwareCatalogueService: Activating SoftwareCatalog users for organization', [
+                'organizationUuid' => $organizationUuid
+            ]);
+
+            // Get SoftwareCatalog-specific users (from contactpersonen)
+            $softwareCatalogUsers = $this->getSoftwareCatalogUsersForOrganization($organizationUuid);
+            
+            if (empty($softwareCatalogUsers)) {
+                $this->_logger->info('SoftwareCatalogueService: No SoftwareCatalog users found for organization', [
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return;
+            }
+
+            $this->_logger->info('SoftwareCatalogueService: Found SoftwareCatalog users to activate', [
+                'organizationUuid' => $organizationUuid,
+                'userCount' => count($softwareCatalogUsers),
+                'users' => $softwareCatalogUsers
+            ]);
+
+            // Get the user manager
+            $userManager = \OC::$server->getUserManager();
+            $activatedUsers = [];
+            $failedUsers = [];
+
+            foreach ($softwareCatalogUsers as $username) {
+                try {
+                    $user = $userManager->get($username);
+                    if ($user && !$user->isEnabled()) {
+                        $user->setEnabled(true);
+                        $activatedUsers[] = $username;
+                        $this->_logger->debug('SoftwareCatalogueService: Activated SoftwareCatalog user', [
+                            'organizationUuid' => $organizationUuid,
+                            'username' => $username
+                        ]);
+                    } elseif ($user && $user->isEnabled()) {
+                        $this->_logger->debug('SoftwareCatalogueService: SoftwareCatalog user already active', [
+                            'organizationUuid' => $organizationUuid,
+                            'username' => $username
+                        ]);
+                    } else {
+                        $failedUsers[] = $username;
+                        $this->_logger->warning('SoftwareCatalogueService: SoftwareCatalog user not found', [
+                            'organizationUuid' => $organizationUuid,
+                            'username' => $username
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    $failedUsers[] = $username;
+                    $this->_logger->error('SoftwareCatalogueService: Failed to activate SoftwareCatalog user', [
+                        'organizationUuid' => $organizationUuid,
+                        'username' => $username,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            $this->_logger->info('SoftwareCatalogueService: SoftwareCatalog user activation complete', [
+                'organizationUuid' => $organizationUuid,
+                'activatedUsers' => $activatedUsers,
+                'failedUsers' => $failedUsers,
+                'totalProcessed' => count($softwareCatalogUsers)
+            ]);
+
+        } catch (\Exception $e) {
+            $this->_logger->error('SoftwareCatalogueService: Error activating SoftwareCatalog users for organization', [
+                'organizationUuid' => $organizationUuid,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Deactivates SoftwareCatalog-specific users for an organization
+     * Only affects users from contactpersoon objects, not admin group users
+     *
+     * @param string $organizationUuid The organization UUID
+     * 
+     * @return void
+     */
+    private function deactivateSoftwareCatalogUsersForOrganization(string $organizationUuid): void
+    {
+        try {
+            $this->_logger->info('SoftwareCatalogueService: Deactivating SoftwareCatalog users for organization', [
+                'organizationUuid' => $organizationUuid
+            ]);
+
+            // Get SoftwareCatalog-specific users (from contactpersonen)
+            $softwareCatalogUsers = $this->getSoftwareCatalogUsersForOrganization($organizationUuid);
+            
+            if (empty($softwareCatalogUsers)) {
+                $this->_logger->info('SoftwareCatalogueService: No SoftwareCatalog users found for organization', [
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return;
+            }
+
+            $this->_logger->info('SoftwareCatalogueService: Found SoftwareCatalog users to deactivate', [
+                'organizationUuid' => $organizationUuid,
+                'userCount' => count($softwareCatalogUsers),
+                'users' => $softwareCatalogUsers
+            ]);
+
+            // Get the user manager
+            $userManager = \OC::$server->getUserManager();
+            $deactivatedUsers = [];
+            $failedUsers = [];
+
+            foreach ($softwareCatalogUsers as $username) {
+                try {
+                    $user = $userManager->get($username);
+                    if ($user && $user->isEnabled()) {
+                        $user->setEnabled(false);
+                        $deactivatedUsers[] = $username;
+                        $this->_logger->debug('SoftwareCatalogueService: Deactivated SoftwareCatalog user', [
+                            'organizationUuid' => $organizationUuid,
+                            'username' => $username
+                        ]);
+                    } elseif ($user && !$user->isEnabled()) {
+                        $this->_logger->debug('SoftwareCatalogueService: SoftwareCatalog user already inactive', [
+                            'organizationUuid' => $organizationUuid,
+                            'username' => $username
+                        ]);
+                    } else {
+                        $failedUsers[] = $username;
+                        $this->_logger->warning('SoftwareCatalogueService: SoftwareCatalog user not found', [
+                            'organizationUuid' => $organizationUuid,
+                            'username' => $username
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    $failedUsers[] = $username;
+                    $this->_logger->error('SoftwareCatalogueService: Failed to deactivate SoftwareCatalog user', [
+                        'organizationUuid' => $organizationUuid,
+                        'username' => $username,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            $this->_logger->info('SoftwareCatalogueService: SoftwareCatalog user deactivation complete', [
+                'organizationUuid' => $organizationUuid,
+                'deactivatedUsers' => $deactivatedUsers,
+                'failedUsers' => $failedUsers,
+                'totalProcessed' => count($softwareCatalogUsers)
+            ]);
+
+        } catch (\Exception $e) {
+            $this->_logger->error('SoftwareCatalogueService: Error deactivating SoftwareCatalog users for organization', [
+                'organizationUuid' => $organizationUuid,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Gets SoftwareCatalog-specific users for an organization
+     * These are users from contactpersoon objects, excluding admin group users
+     *
+     * @param string $organizationUuid The organization UUID
+     * 
+     * @return array Array of usernames
+     */
+    private function getSoftwareCatalogUsersForOrganization(string $organizationUuid): array
+    {
+        try {
+            $this->_logger->debug('SoftwareCatalogueService: Getting SoftwareCatalog users for organization', [
+                'organizationUuid' => $organizationUuid
+            ]);
+
+            // Get the object service to find contactpersonen
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                $this->_logger->error('SoftwareCatalogueService: ObjectService not available for getting SoftwareCatalog users');
+                return [];
+            }
+
+            // Find all contactpersonen for this organization
+            $contactpersonen = $objectService->findAll([
+                'filters' => [
+                    'register' => 6, // Voorzieningen register
+                    'schema' => 38   // Contactpersoon schema
+                ]
+            ]);
+
+            $softwareCatalogUsers = [];
+            $adminGroupUsers = $this->getAdminGroupUsernames();
+
+            foreach ($contactpersonen as $contactpersoonObject) {
+                $contactData = $contactpersoonObject->getObject();
+                $contactOrganisatie = $contactData['organisatie'] ?? null;
+                
+                // Check if this contactpersoon belongs to our organization
+                if ($contactOrganisatie === $organizationUuid) {
+                    // Extract username from contactpersoon object data
+                    $contactData = $contactpersoonObject->getObject();
+                    $username = $contactData['username'] ?? null;
+                    
+                    if ($username && !in_array($username, $adminGroupUsers)) {
+                        $softwareCatalogUsers[] = $username;
+                        $this->_logger->debug('SoftwareCatalogueService: Found SoftwareCatalog user', [
+                            'organizationUuid' => $organizationUuid,
+                            'username' => $username,
+                            'contactpersoonId' => $contactpersoonObject->getId()
+                        ]);
+                    }
+                }
+            }
+
+            $this->_logger->info('SoftwareCatalogueService: Found SoftwareCatalog users for organization', [
+                'organizationUuid' => $organizationUuid,
+                'userCount' => count($softwareCatalogUsers),
+                'users' => $softwareCatalogUsers
+            ]);
+
+            return $softwareCatalogUsers;
+
+        } catch (\Exception $e) {
+            $this->_logger->error('SoftwareCatalogueService: Error getting SoftwareCatalog users for organization', [
+                'organizationUuid' => $organizationUuid,
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Gets all usernames from the admin group
+     *
+     * @return array Array of admin usernames
+     */
+    private function getAdminGroupUsernames(): array
+    {
+        try {
+            $groupManager = \OC::$server->getGroupManager();
+            $adminGroup = $groupManager->get('admin');
+            
+            if (!$adminGroup) {
+                $this->_logger->warning('SoftwareCatalogueService: Admin group not found');
+                return [];
+            }
+
+            $adminUsers = $adminGroup->getUsers();
+            $adminUsernames = [];
+            
+            foreach ($adminUsers as $adminUser) {
+                $adminUsernames[] = $adminUser->getUID();
+            }
+
+            $this->_logger->debug('SoftwareCatalogueService: Found admin group users', [
+                'adminUserCount' => count($adminUsernames),
+                'adminUsers' => $adminUsernames
+            ]);
+
+            return $adminUsernames;
+
+        } catch (\Exception $e) {
+            $this->_logger->error('SoftwareCatalogueService: Error getting admin group usernames', [
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Adds all users from the admin group to the organization entity
+     *
+     * @param string $organizationUuid The organization UUID
+     * 
+     * @return void
+     */
+    private function addAdminGroupUsersToOrganization(string $organizationUuid): void
+    {
+        try {
+            $this->_logger->info('SoftwareCatalogueService: Adding admin group users to organization entity', [
+                'organizationUuid' => $organizationUuid
+            ]);
+
+            // Get the group manager to access admin group users
+            $groupManager = \OC::$server->getGroupManager();
+            $adminGroup = $groupManager->get('admin');
+            
+            if (!$adminGroup) {
+                $this->_logger->warning('SoftwareCatalogueService: Admin group not found');
+                return;
+            }
+
+            $adminUsers = $adminGroup->getUsers();
+            $this->_logger->info('SoftwareCatalogueService: Found admin group users', [
+                'organizationUuid' => $organizationUuid,
+                'adminUserCount' => count($adminUsers)
+            ]);
+
+            // Get the organization entity (not object) to update its users list
+            $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+            if (!$organisationMapper) {
+                $this->_logger->error('SoftwareCatalogueService: OrganisationMapper not available for adding admin users');
+                return;
+            }
+
+            // Find the organization entity by UUID
+            $this->_logger->info('SoftwareCatalogueService: Searching for organization entity', [
+                'organizationUuid' => $organizationUuid
+            ]);
+            
+            try {
+                $targetOrganisation = $organisationMapper->findByUuid($organizationUuid);
+                
+                $this->_logger->info('SoftwareCatalogueService: Found target organization entity', [
+                    'organizationUuid' => $organizationUuid,
+                    'entityId' => $targetOrganisation->getId()
+                ]);
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                $this->_logger->warning('SoftwareCatalogueService: Organization entity not found for adding admin users', [
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return;
+            }
+
+            // Get current users list from the entity
+            $currentUsers = $targetOrganisation->getUsers() ?? [];
+            
+            $this->_logger->info('SoftwareCatalogueService: Current organization entity users', [
+                'organizationUuid' => $organizationUuid,
+                'currentUsers' => $currentUsers,
+                'currentUserCount' => count($currentUsers)
+            ]);
+            
+            // Add admin users to the list
+            $updatedUsers = $currentUsers;
+            $addedUsers = [];
+            foreach ($adminUsers as $adminUser) {
+                $adminUsername = $adminUser->getUID();
+                if (!in_array($adminUsername, $updatedUsers)) {
+                    $updatedUsers[] = $adminUsername;
+                    $addedUsers[] = $adminUsername;
+                    $this->_logger->debug('SoftwareCatalogueService: Added admin user to organization entity', [
+                        'organizationUuid' => $organizationUuid,
+                        'adminUsername' => $adminUsername
+                    ]);
+                }
+            }
+            
+            $this->_logger->info('SoftwareCatalogueService: Admin users processing complete', [
+                'organizationUuid' => $organizationUuid,
+                'addedUsers' => $addedUsers,
+                'totalUsersAfterUpdate' => count($updatedUsers)
+            ]);
+
+            // Update the organization entity with the new users list
+            if (count($updatedUsers) > count($currentUsers)) {
+                $this->_logger->info('SoftwareCatalogueService: Updating organization entity with new users', [
+                    'organizationUuid' => $organizationUuid,
+                    'entityId' => $targetOrganisation->getId(),
+                    'usersToAdd' => count($updatedUsers) - count($currentUsers)
+                ]);
+                
+                // Set the updated users list on the entity
+                $targetOrganisation->setUsers($updatedUsers);
+                
+                $this->_logger->info('SoftwareCatalogueService: Saving updated organization entity', [
+                    'organizationUuid' => $organizationUuid,
+                    'entityId' => $targetOrganisation->getId(),
+                    'newUserCount' => count($updatedUsers)
+                ]);
+                
+                // Save the updated organization entity
+                $savedOrganisation = $organisationMapper->save($targetOrganisation);
+                
+                $this->_logger->info('SoftwareCatalogueService: Successfully added admin users to organization entity', [
+                    'organizationUuid' => $organizationUuid,
+                    'addedUsers' => count($updatedUsers) - count($currentUsers),
+                    'totalUsers' => count($updatedUsers)
+                ]);
+            } else {
+                $this->_logger->info('SoftwareCatalogueService: All admin users already in organization entity', [
+                    'organizationUuid' => $organizationUuid,
+                    'totalUsers' => count($updatedUsers)
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error('SoftwareCatalogueService: Failed to add admin users to organization entity: ' . $e->getMessage(), [
+                'organizationUuid' => $organizationUuid,
+                'exception' => $e
+            ]);
+        }
+    }
+
+    /**
+     * Checks if a contactpersoon username is in the organization's users list
+     *
+     * @param object $contactpersoonObject The contactpersoon object
+     * 
+     * @return bool True if the user should be added to the organization
+     */
+    public function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool
+    {
+        try {
+            $objectData = $contactpersoonObject->getObject();
+            $username = $objectData['username'] ?? '';
+            $organizationUuid = $objectData['organisation'] ?? '';
+
+            if (empty($username) || empty($organizationUuid)) {
+                return false;
+            }
+
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                return false;
+            }
+
+            // Get the organization object
+            $settingsService = $this->_container->get(SettingsService::class);
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+
+            if (!$registerId || !$organisatieSchemaId) {
+                return false;
+            }
+
+            try {
+                $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+                $organizationData = $organizationObject->getObject();
+                
+                // Check if the username is already in the organization's users
+                $organizationUsers = $organizationData['users'] ?? [];
+                
+                if (is_array($organizationUsers) && !in_array($username, $organizationUsers)) {
+                    $this->_logger->info('SoftwareCatalogueService: Contactpersoon should be added to organization', [
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid,
+                        'currentUsers' => $organizationUsers
+                    ]);
+                    return true;
+                }
+
+                return false;
+
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                // Organization doesn't exist, so we can't add the user
+                $this->_logger->warning('SoftwareCatalogueService: Organization not found for contactpersoon', [
+                    'username' => $username,
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'SoftwareCatalogueService: Failed to check if contactpersoon should be added to organization: ' . $e->getMessage(),
+                [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'exception' => $e->getMessage()
+                ]
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Adds a contactpersoon username to the organization's users list
+     *
+     * @param object $contactpersoonObject The contactpersoon object
+     * 
+     * @return bool True if the user was successfully added
+     */
+    public function addContactpersoonToOrganization(object $contactpersoonObject): bool
+    {
+        try {
+            $objectData = $contactpersoonObject->getObject();
+            $username = $objectData['username'] ?? '';
+            $organizationUuid = $objectData['organisation'] ?? '';
+
+            if (empty($username) || empty($organizationUuid)) {
+                $this->_logger->warning('SoftwareCatalogueService: Cannot add contactpersoon to organization - missing username or organization', [
+                    'username' => $username,
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return false;
+            }
+
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                $this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
+                return false;
+            }
+
+            // Get the organization object
+            $settingsService = $this->_container->get(SettingsService::class);
+            $registerId = $settingsService->getVoorzieningenRegisterId();
+            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+
+            if (!$registerId || !$organisatieSchemaId) {
+                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for organisatie');
+                return false;
+            }
+
+            try {
+                $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+                $organizationData = $organizationObject->getObject();
+                
+                // Add the username to the organization's users list
+                $organizationUsers = $organizationData['users'] ?? [];
+                if (!is_array($organizationUsers)) {
+                    $organizationUsers = [];
+                }
+                
+                if (!in_array($username, $organizationUsers)) {
+                    $organizationUsers[] = $username;
+                    $organizationData['users'] = $organizationUsers;
+                    
+                    // Update the organization object
+                    $updatedOrganization = $objectService->saveObject(
+                        $organizationData,
+                        [],
+                        $registerId,
+                        $organisatieSchemaId,
+                        $organizationUuid
+                    );
+
+                    $this->_logger->info('SoftwareCatalogueService: Successfully added contactpersoon to organization', [
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid,
+                        'updatedUsers' => $organizationUsers
+                    ]);
+
+                    return true;
+                } else {
+                    $this->_logger->debug('SoftwareCatalogueService: Contactpersoon already in organization', [
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid
+                    ]);
+                    return true; // Already there, consider it successful
+                }
+
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                $this->_logger->error('SoftwareCatalogueService: Organization not found for contactpersoon', [
+                    'username' => $username,
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'SoftwareCatalogueService: Failed to add contactpersoon to organization: ' . $e->getMessage(),
+                [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+            return false;
         }
     }
 
