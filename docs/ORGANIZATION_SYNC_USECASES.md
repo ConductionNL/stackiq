@@ -210,6 +210,96 @@ This document outlines the use cases and testing scenarios for the new organizat
 7. Reactivate organization
 8. Verify all contact person users are reactivated
 
+### 12. Nested Contact Person Objects
+
+**Scenario:** Contact persons are created as nested objects within organizations rather than as separate objects.
+
+**Expected Behavior:**
+- Organizations can contain nested contact person objects
+- Nested contact persons are automatically processed for user creation
+- User accounts are created for each nested contact person
+- User status matches organization status
+- Nested contact persons respond to organization status changes
+
+**Test Steps:**
+1. Create organization with nested contact persons in the `contactpersonen` array
+2. Verify contact persons are properly linked to the organization
+3. Verify user accounts are created for each nested contact person
+4. Test organization status changes affect nested contact person users
+5. Verify admin users remain unaffected
+
+### 13. Mixed Contact Person Creation Methods
+
+**Scenario:** Organizations can have both nested contact persons and separately created contact persons.
+
+**Expected Behavior:**
+- Organizations can contain both nested and separate contact persons
+- All contact persons (nested and separate) are properly managed
+- User management works consistently regardless of creation method
+- Organization status changes affect all contact person users uniformly
+
+**Test Steps:**
+1. Create organization with some nested contact persons
+2. Add additional contact persons via separate API calls
+3. Verify all contact persons are properly linked and managed
+4. Test organization status changes affect all users consistently
+5. Verify admin users remain protected throughout the process
+
+### 14. Anonymous User Registration via OpenConnector
+
+**Scenario:** Anonymous users register organizations through OpenConnector without having existing user accounts or organization entities.
+
+**Expected Behavior:**
+- Anonymous user can create organization via OpenConnector endpoint
+- System automatically creates organization entity in OpenRegister
+- System creates user account for primary contact person
+- Newly created user becomes owner of organization and contact person objects
+- Organization entity is properly linked to all objects
+- User can log in and access their organization
+
+**Test Steps:**
+1. Anonymous user submits organization registration via OpenConnector
+2. Verify organization object is created with admin as temporary owner
+3. Verify organization entity is created in OpenRegister
+4. Verify user account is created for primary contact person
+5. Verify ownership is transferred to newly created user
+6. Verify organization references are properly set
+7. Test user login and access to their organization
+
+### 15. OpenRegister Objects vs Entities Architecture
+
+**Scenario:** Understanding the distinction between OpenRegister objects and entities for proper system integration.
+
+**OpenRegister Objects:**
+- Abstract data structures managed by schemas
+- Stored in `oc_openregister_objects` table
+- Have UUID, owner, organization, and schema-specific fields
+- Examples: `organisatie` (schema 35), `contactpersoon` (schema 34)
+- Created via REST API endpoints with register/schema parameters
+- Support complex relationships and nested structures
+
+**OpenRegister Entities:**
+- Classic Nextcloud entities with dedicated tables
+- Stored in specific entity tables (e.g., `oc_openregister_organisations`)
+- Have ID, UUID, name, status, and entity-specific fields
+- Examples: `organisation` entity, `user` entity
+- Created via entity-specific API endpoints
+- Support standard Nextcloud entity operations
+
+**Conversion Process:**
+1. Object creation triggers event listeners
+2. Event listeners create corresponding entities
+3. Entities are linked back to objects via UUID references
+4. Ownership and relationships are established
+5. System maintains consistency between objects and entities
+
+**Expected Behavior:**
+- Objects and entities maintain UUID consistency
+- Changes to objects trigger entity updates
+- Entity changes can trigger object updates (bidirectional sync)
+- Proper ownership and relationship management
+- Consistent data across both systems
+
 ## Testing Scenarios
 
 ### Test Environment Setup
