@@ -171,6 +171,14 @@ docker-compose exec nextcloud grep -i "sync.*organization" /var/www/html/data/ne
 - **Solution**: ✅ Ownership assignment sets `organisation` field on all objects
 - **Status**: ✅ IMPLEMENTED
 
+#### 4. UUID Format Mismatch (CURRENT ISSUE)
+- **Problem**: Organization object UUIDs use standard format (with hyphens: `ddaf232b-acbc-4396-946d-f80ccc2d3eb1`) but OpenRegister expects 32-character hex strings (without hyphens: `ddaf232bacbc4396946df80ccc2d3eb1`)
+- **Error**: `"Field 'uuid' doesn't have a default value"` when creating organization entities
+- **Root Cause**: OpenConnector tries to create organization entity immediately, before SoftwareCatalog event listener can process it
+- **Solution**: ✅ Implemented UUID format conversion in `createOrganisationInOpenRegister()` method
+- **Status**: 🔄 **PARTIALLY FIXED** - Works for authenticated API calls, but OpenConnector still has the issue
+- **Next Steps**: Need to fix OpenConnector's `ObjectService::createFromArray()` method to handle UUID format conversion
+
 ### Next Steps for New Conversation
 
 1. **Test Anonymous User Registration**: Use OpenConnector endpoint with Postman/curl
@@ -178,6 +186,31 @@ docker-compose exec nextcloud grep -i "sync.*organization" /var/www/html/data/ne
 3. **Verify Ownership Assignment**: Check object ownership and organization references
 4. **Test User Status Changes**: Activate/deactivate organization and verify user status
 5. **Test Nested Contact Persons**: Create organization with nested contactpersonen array
+
+### Current Workaround for UUID Issue
+
+Since the OpenConnector endpoint has a UUID format issue, you can test the organization creation flow using the authenticated OpenRegister API as a workaround:
+
+```bash
+# Test organization creation via authenticated API (workaround)
+docker-compose exec nextcloud curl -s -u 'admin:admin' -H 'Content-Type: application/json' -X POST 'http://localhost/index.php/apps/openregister/api/objects/6/35' -d '{
+  "naam": "Test Organization",
+  "website": "https://test.org",
+  "type": "Gemeente",
+  "beoordeling": "actief",
+  "contactpersonen": [
+    {
+      "voornaam": "Test",
+      "achternaam": "Contact",
+      "email": "test.contact@test.org",
+      "telefoon": "+31 555 555 555",
+      "functie": "Manager"
+    }
+  ]
+}'
+```
+
+This will trigger the same SoftwareCatalog event listener and test our UUID fix without the OpenConnector issue.
 
 ### Debugging Commands
 
@@ -742,7 +775,7 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info mixed.conta
 }
 ```
 
-**cURL Command:**
+**cURL Command (from host machine):**
 ```bash
 curl -X POST "http://nextcloud.local/index.php/apps/openconnector/api/endpoint/register" \
   -H "Content-Type: application/json" \
@@ -770,40 +803,46 @@ curl -X POST "http://nextcloud.local/index.php/apps/openconnector/api/endpoint/r
   }'
 ```
 
-2. Verify the organization object was created:
+**cURL Command (from within Docker container):**
 ```bash
-# Check organization object (replace with actual UUID from response)
-docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_UUID}'"
+docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/openconnector/api/endpoint/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "naam": "Anonymous Test Org",
+    "website": "https://anonymous-test.org",
+    "type": "Gemeente",
+    "beoordeling": "actief",
+    "contactpersonen": [
+      {
+        "voornaam": "Anonymous",
+        "achternaam": "Contact1",
+        "email": "anonymous.contact1@test.org",
+        "telefoon": "+31 555 555 555",
+        "functie": "Manager"
+      },
+      {
+        "voornaam": "Anonymous",
+        "achternaam": "Contact2",
+        "email": "anonymous.contact2@test.org",
+        "telefoon": "+31 666 666 666",
+        "functie": "Developer"
+      }
+    ]
+  }'
 ```
 
-3. Verify the organization entity was created:
-```bash
-# Check organization entity
-docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/organisations/{ORGANIZATION_UUID}'"
-```
+**Current Status**: 
+- ✅ **Endpoint accessible**: The OpenConnector endpoint is working and accessible from within the Docker container
+- ❌ **UUID Issue**: Currently getting "Field 'uuid' doesn't have a default value" error when creating organization entities
+- 🔄 **Fix in progress**: UUID format conversion implemented in SoftwareCatalog service (standard UUID with hyphens → 32-char hex string)
+- ⚠️ **OpenConnector Issue**: The error occurs in OpenConnector before SoftwareCatalog event listener can process it
 
-4. Verify user accounts were created:
-```bash
-# Check if users were created
-docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:list | grep -E "anonymous.contact1|anonymous.contact2"
-
-# Check user status
-docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info anonymous.contact1@test.org
-docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info anonymous.contact2@test.org
-```
-
-**Expected Results**:
+**Expected Results** (once UUID issue is resolved):
 - Organization object created successfully via OpenConnector
-- Organization entity created in OpenRegister
+- Organization entity created in OpenRegister with matching UUID
 - User accounts created for contact persons
 - Primary contact person user becomes owner of organization object
 - Organization entity is set as organization on both objects
-
-**Note**: This test should now work correctly. The system has been updated to handle anonymous user creation by:
-1. Creating the organization entity directly via mapper (bypassing user context requirements)
-2. Creating user accounts for contact persons
-3. Assigning ownership of objects to the newly created users
-4. Setting proper organization references on all objects
 
 #### 12.2 Verify Ownership Assignment
 1. Check organization object ownership:
@@ -903,54 +942,5 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -X DELET
 
 ### Bulk Organization Creation
 Test creating multiple organizations to verify performance:
-```bash
-for i in {1..10}; do
-  docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X POST -d '{\"naam\":\"Bulk Test Org $i\",\"status\":\"actief\"}' 'http://localhost/index.php/apps/openregister/api/objects/6/35'"
-done
 ```
-
-## Security Testing
-
-### Authentication Tests
-- Test API calls without authentication
-- Test with invalid credentials
-- Test with different user roles
-
-### Authorization Tests
-- Test organization access permissions
-- Test user management permissions
-- Test synchronization permissions
-
-## Integration Testing
-
-### End-to-End Workflow
-1. Create organization in Software Catalog
-2. Add contact persons to organization
-3. Verify synchronization to OpenRegister
-4. Update organization status
-5. Verify user status changes
-6. Delete organization
-7. Verify cleanup
-
-## Monitoring and Metrics
-
-### Key Metrics to Monitor
-- Synchronization success rate
-- Processing time for organization operations
-- Error rates and types
-- User activation/deactivation success rate
-
-### Health Checks
-```bash
-# Check Software Catalog health
-docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings'"
-
-# Check OpenRegister health
-docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/registers'"
 ```
-
-## Conclusion
-
-This testing guide provides a comprehensive framework for validating the organization synchronization functionality. Regular testing ensures that the integration between Software Catalog and OpenRegister remains reliable and performs as expected.
-
-For additional testing scenarios or troubleshooting, refer to the main documentation in `docs/ORGANIZATION_SYNC_USECASES.md`. 
