@@ -346,6 +346,322 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:list | grep -E "
 - All users reactivated when organization reactivated
 - Admin users remain unaffected throughout the process
 
+### 11. Nested Contactpersoon Objects Test
+
+**Objective**: Verify that contact persons can be created as nested objects within organizations and are properly processed for user management.
+
+**Test Steps**:
+
+#### 11.1 Create Organization with Nested Contact Persons
+1. Create an organization with nested contact persons:
+```bash
+# Create organization with nested contact persons
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X POST -d '{
+  \"naam\": \"Nested Contact Test Org\",
+  \"website\": \"https://nested-contact-test.org\",
+  \"type\": \"Gemeente\",
+  \"beoordeling\": \"actief\",
+  \"contactpersonen\": [
+    {
+      \"voornaam\": \"Nested\",
+      \"achternaam\": \"Contact1\",
+      \"email\": \"nested.contact1@test.org\",
+      \"telefoon\": \"+31 111 111 111\",
+      \"functie\": \"Manager\"
+    },
+    {
+      \"voornaam\": \"Nested\",
+      \"achternaam\": \"Contact2\",
+      \"email\": \"nested.contact2@test.org\",
+      \"telefoon\": \"+31 222 222 222\",
+      \"functie\": \"Developer\"
+    }
+  ]
+}' 'http://localhost/index.php/apps/openregister/api/objects/6/35'"
+```
+
+2. Verify the organization was created with nested contact persons:
+```bash
+# Check organization structure
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
+```
+
+3. Verify contact persons were processed and users created:
+```bash
+# Check if users were created
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:list | grep -E "nested.contact1|nested.contact2"
+
+# Check user status
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info nested.contact1@test.org
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info nested.contact2@test.org
+```
+
+**Expected Results**:
+- Organization created successfully with nested contact persons
+- Contact persons are properly linked to the organization
+- User accounts are created for each contact person
+- Users are active (matching organization status)
+
+#### 11.2 Test User Status Changes with Nested Contact Persons
+1. Deactivate the organization:
+```bash
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X PUT -d '{
+  \"naam\": \"Nested Contact Test Org\",
+  \"website\": \"https://nested-contact-test.org\",
+  \"type\": \"Gemeente\",
+  \"beoordeling\": \"inactief\"
+}' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
+```
+
+2. Verify nested contact person users are deactivated:
+```bash
+# Check user status after deactivation
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info nested.contact1@test.org | grep enabled
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info nested.contact2@test.org | grep enabled
+```
+
+3. Reactivate the organization:
+```bash
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X PUT -d '{
+  \"naam\": \"Nested Contact Test Org\",
+  \"website\": \"https://nested-contact-test.org\",
+  \"type\": \"Gemeente\",
+  \"beoordeling\": \"actief\"
+}' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
+```
+
+4. Verify nested contact person users are reactivated:
+```bash
+# Check user status after reactivation
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info nested.contact1@test.org | grep enabled
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info nested.contact2@test.org | grep enabled
+```
+
+**Expected Results**:
+- Nested contact person users are deactivated when organization becomes inactive
+- Nested contact person users are reactivated when organization becomes active
+- Admin users remain unaffected throughout the process
+
+#### 11.3 Test Mixed Contact Person Creation Methods
+1. Create organization with some nested contact persons:
+```bash
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X POST -d '{
+  \"naam\": \"Mixed Contact Test Org\",
+  \"website\": \"https://mixed-contact-test.org\",
+  \"type\": \"Leverancier\",
+  \"beoordeling\": \"actief\",
+  \"contactpersonen\": [
+    {
+      \"voornaam\": \"Mixed\",
+      \"achternaam\": \"Contact1\",
+      \"email\": \"mixed.contact1@test.org\",
+      \"telefoon\": \"+31 333 333 333\",
+      \"functie\": \"Manager\"
+    }
+  ]
+}' 'http://localhost/index.php/apps/openregister/api/objects/6/35'"
+```
+
+2. Add additional contact person via separate API call:
+```bash
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X POST -d '{
+  \"voornaam\": \"Mixed\",
+  \"achternaam\": \"Contact2\",
+  \"email\": \"mixed.contact2@test.org\",
+  \"telefoon\": \"+31 444 444 444\",
+  \"functie\": \"Developer\",
+  \"organisatie\": \"{ORGANIZATION_UUID}\"
+}' 'http://localhost/index.php/apps/openregister/api/objects/6/34'"
+```
+
+3. Verify all contact persons are properly managed:
+```bash
+# Check all users are created
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:list | grep -E "mixed.contact1|mixed.contact2"
+
+# Test organization status changes affect all users
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X PUT -d '{
+  \"beoordeling\": \"inactief\"
+}' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
+
+# Verify all users are deactivated
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info mixed.contact1@test.org | grep enabled
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info mixed.contact2@test.org | grep enabled
+```
+
+**Expected Results**:
+- Both nested and separately created contact persons are properly managed
+- All contact person users respond to organization status changes
+- User management works consistently regardless of creation method
+
+### 12. Anonymous User Registration via OpenConnector
+
+**Objective**: Test organization registration by anonymous users through OpenConnector, ensuring proper ownership assignment and entity creation.
+
+**Background - OpenRegister Objects vs Entities**:
+- **OpenRegister Objects**: Abstract data structures managed by schemas (e.g., `organisatie` object at register 6, schema 35)
+- **OpenRegister Entities**: Classic Nextcloud entities (e.g., `organisation` entity, `user` entity)
+- **Flow**: Anonymous user creates `organisatie` object → System creates `organisation` entity and `user` entity → New user becomes owner of both objects
+
+**Test Steps**:
+
+#### 12.1 Anonymous User Registration via OpenConnector
+1. Register organization as anonymous user through OpenConnector:
+
+**Postman Configuration:**
+- **Method**: POST
+- **URL**: `http://nextcloud.local/index.php/apps/openconnector/api/endpoint/register`
+- **Headers**: 
+  - `Content-Type: application/json`
+- **Body** (raw JSON):
+```json
+{
+  "naam": "Anonymous Test Org",
+  "website": "https://anonymous-test.org",
+  "type": "Gemeente",
+  "beoordeling": "actief",
+  "contactpersonen": [
+    {
+      "voornaam": "Anonymous",
+      "achternaam": "Contact1",
+      "email": "anonymous.contact1@test.org",
+      "telefoon": "+31 555 555 555",
+      "functie": "Manager"
+    },
+    {
+      "voornaam": "Anonymous",
+      "achternaam": "Contact2",
+      "email": "anonymous.contact2@test.org",
+      "telefoon": "+31 666 666 666",
+      "functie": "Developer"
+    }
+  ]
+}
+```
+
+**cURL Command:**
+```bash
+curl -X POST "http://nextcloud.local/index.php/apps/openconnector/api/endpoint/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "naam": "Anonymous Test Org",
+    "website": "https://anonymous-test.org",
+    "type": "Gemeente",
+    "beoordeling": "actief",
+    "contactpersonen": [
+      {
+        "voornaam": "Anonymous",
+        "achternaam": "Contact1",
+        "email": "anonymous.contact1@test.org",
+        "telefoon": "+31 555 555 555",
+        "functie": "Manager"
+      },
+      {
+        "voornaam": "Anonymous",
+        "achternaam": "Contact2",
+        "email": "anonymous.contact2@test.org",
+        "telefoon": "+31 666 666 666",
+        "functie": "Developer"
+      }
+    ]
+  }'
+```
+
+2. Verify the organization object was created:
+```bash
+# Check organization object (replace with actual UUID from response)
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_UUID}'"
+```
+
+3. Verify the organization entity was created:
+```bash
+# Check organization entity
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/organisations/{ORGANIZATION_UUID}'"
+```
+
+4. Verify user accounts were created:
+```bash
+# Check if users were created
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:list | grep -E "anonymous.contact1|anonymous.contact2"
+
+# Check user status
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info anonymous.contact1@test.org
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info anonymous.contact2@test.org
+```
+
+**Expected Results**:
+- Organization object created successfully via OpenConnector
+- Organization entity created in OpenRegister
+- User accounts created for contact persons
+- Primary contact person user becomes owner of organization object
+- Organization entity is set as organization on both objects
+
+**Note**: This test should now work correctly. The system has been updated to handle anonymous user creation by:
+1. Creating the organization entity directly via mapper (bypassing user context requirements)
+2. Creating user accounts for contact persons
+3. Assigning ownership of objects to the newly created users
+4. Setting proper organization references on all objects
+
+#### 12.2 Verify Ownership Assignment
+1. Check organization object ownership:
+```bash
+# Verify the newly created user is the owner
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_UUID}' | jq '.@self.owner'"
+```
+
+2. Check contact person object ownership:
+```bash
+# Verify contact person objects have correct ownership and organization
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/34/{CONTACT_UUID}' | jq '.@self.owner, .organisatie'"
+```
+
+**Expected Results**:
+- Organization object owner is the newly created user (not admin)
+- Contact person objects owner is the newly created user
+- Contact person objects have organization field set to organization entity UUID
+
+#### 12.3 Test User Login and Access
+1. Test user login with newly created credentials:
+```bash
+# Test login (this would be done via web interface)
+# The user should be able to log in and access their organization
+```
+
+2. Verify user can access their organization:
+```bash
+# Check user permissions and access
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info anonymous.contact1@test.org
+```
+
+**Expected Results**:
+- User can log in successfully
+- User has appropriate permissions for their organization
+- User can access and modify their organization data
+
+### 13. OpenRegister Objects vs Entities - Technical Details
+
+**OpenRegister Objects**:
+- Managed by schemas and registers
+- Stored in `oc_openregister_objects` table
+- Have UUID, owner, organization fields
+- Examples: `organisatie` (schema 35), `contactpersoon` (schema 34)
+- Created via `/apps/openregister/api/objects/{register}/{schema}`
+
+**OpenRegister Entities**:
+- Classic Nextcloud entities
+- Stored in dedicated tables (e.g., `oc_openregister_organisations`)
+- Have ID, UUID, name, status fields
+- Examples: `organisation` entity, `user` entity
+- Created via `/apps/openregister/api/organisations`
+
+**Conversion Flow**:
+1. Anonymous user creates `organisatie` object via OpenConnector
+2. Event listener triggers organization sync
+3. System creates `organisation` entity
+4. System creates `user` entity for primary contact
+5. System updates object ownership and organization references
+6. User becomes owner of their objects
+
 ## Debugging and Troubleshooting
 
 ### Check Event Logs

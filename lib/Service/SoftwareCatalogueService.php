@@ -354,6 +354,9 @@ class SoftwareCatalogueService
             $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
             $this->addAdminGroupUsersToOrganization($organizationUuid);
             
+            // Handle ownership assignment for anonymous user registrations
+            $this->handleOwnershipAssignment($organizationObject);
+            
             // Send welcome email for new organization
             $this->sendOrganizationWelcomeEmail($organizationObject);
             
@@ -1158,29 +1161,64 @@ class SoftwareCatalogueService
             'name' => $mappedData['name'] ?? 'Unknown'
         ]);
 
-        // Create organization using OrganisationService
-        $organisation = $organisationService->createOrganisation(
-            $mappedData['name'] ?? 'Unknown Organization',
-            $mappedData['description'] ?? '',
-            false // Don't add current user automatically
-        );
-
-        // Set the UUID to match the SoftwareCatalog organization
-        $organisation->setUuid($organizationUuid);
+        // Check if we're in an anonymous context (no logged-in user)
+        $userSession = \OC::$server->getUserSession();
+        $currentUser = $userSession->getUser();
         
-        // Note: OpenRegister Organisation entity doesn't have status or type fields
-        // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation
+        if (!$currentUser) {
+            $this->_logger->info('SoftwareCatalogueService: No user logged in, creating organization directly via mapper', [
+                'organizationUuid' => $organizationUuid
+            ]);
+            
+            // Create organization directly via mapper to avoid user context requirements
+            $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+            
+            // Create a new Organisation entity
+            $organisation = new \OCA\OpenRegister\Db\Organisation();
+            $organisation->setName($mappedData['name'] ?? 'Unknown Organization');
+            $organisation->setDescription($mappedData['description'] ?? '');
+            $organisation->setUuid($organizationUuid);
+            $organisation->setStatus('active'); // Default status for new organizations
+            
+            // Save the organization
+            $savedOrganisation = $organisationMapper->save($organisation);
+            
+            $this->_logger->info('SoftwareCatalogueService: Successfully created organization in OpenRegister via mapper', [
+                'organizationUuid' => $organizationUuid,
+                'openRegisterId' => $savedOrganisation->getUuid()
+            ]);
+            
+            return $savedOrganisation;
+        } else {
+            $this->_logger->info('SoftwareCatalogueService: User logged in, creating organization via service', [
+                'organizationUuid' => $organizationUuid,
+                'currentUser' => $currentUser->getUID()
+            ]);
+            
+            // Create organization using OrganisationService (normal flow)
+            $organisation = $organisationService->createOrganisation(
+                $mappedData['name'] ?? 'Unknown Organization',
+                $mappedData['description'] ?? '',
+                false // Don't add current user automatically
+            );
 
-        // Save the updated organization
-        $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
-        $savedOrganisation = $organisationMapper->save($organisation);
+            // Set the UUID to match the SoftwareCatalog organization
+            $organisation->setUuid($organizationUuid);
+            
+            // Note: OpenRegister Organisation entity doesn't have status or type fields
+            // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation
 
-        $this->_logger->info('SoftwareCatalogueService: Successfully created organization in OpenRegister', [
-            'organizationUuid' => $organizationUuid,
-            'openRegisterId' => $savedOrganisation->getUuid()
-        ]);
+            // Save the updated organization
+            $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+            $savedOrganisation = $organisationMapper->save($organisation);
 
-        return $savedOrganisation;
+            $this->_logger->info('SoftwareCatalogueService: Successfully created organization in OpenRegister via service', [
+                'organizationUuid' => $organizationUuid,
+                'openRegisterId' => $savedOrganisation->getUuid()
+            ]);
+
+            return $savedOrganisation;
+        }
     }
 
     /**
@@ -1993,6 +2031,145 @@ class SoftwareCatalogueService
                 ]
             );
             return false;
+        }
+    }
+
+    /**
+     * Handles ownership assignment for anonymous user registrations
+     * 
+     * @param object $organizationObject The organization object
+     * 
+     * @return void
+     */
+    private function handleOwnershipAssignment(object $organizationObject): void
+    {
+        try {
+            $this->_logger->info('SoftwareCatalogueService: Handling ownership assignment for organization', [
+                'objectId' => $organizationObject->getId()
+            ]);
+
+            $objectData = $organizationObject->getObject();
+            $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
+            $contactpersonen = $objectData['contactpersonen'] ?? [];
+
+            if (empty($contactpersonen)) {
+                $this->_logger->info('SoftwareCatalogueService: No contact persons found for ownership assignment', [
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return;
+            }
+
+            // Get the first contact person as the primary owner
+            $primaryContactUuid = $contactpersonen[0];
+            
+            $objectService = $this->_getObjectService();
+            if (!$objectService) {
+                $this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available for ownership assignment');
+                return;
+            }
+
+                            // Get the primary contact person object
+                $settingsService = $this->_container->get(SettingsService::class);
+                $registerId = $settingsService->getVoorzieningenRegisterId();
+                $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+                $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+
+                if (!$registerId || !$contactpersoonSchemaId || !$organisatieSchemaId) {
+                    $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersoon or organisatie');
+                    return;
+                }
+
+            try {
+                $primaryContactObject = $objectService->find($primaryContactUuid, [], false, $registerId, $contactpersoonSchemaId);
+                $primaryContactData = $primaryContactObject->getObject();
+                $primaryUsername = $primaryContactData['username'] ?? '';
+
+                if (empty($primaryUsername)) {
+                    $this->_logger->warning('SoftwareCatalogueService: Primary contact person has no username for ownership assignment', [
+                        'contactUuid' => $primaryContactUuid,
+                        'organizationUuid' => $organizationUuid
+                    ]);
+                    return;
+                }
+
+                // Get the organization entity UUID
+                $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+                $organisation = $organisationMapper->findByUuid($organizationUuid);
+                $organisationEntityUuid = $organisation->getUuid();
+
+                // Update organization object ownership and organization reference
+                $organizationData['owner'] = $primaryUsername;
+                $organizationData['organisation'] = $organisationEntityUuid;
+                
+                $updatedOrganization = $objectService->saveObject(
+                    $organizationData,
+                    [],
+                    $registerId,
+                    $organisatieSchemaId,
+                    $organizationUuid
+                );
+
+                // Update primary contact person object ownership and organization reference
+                $primaryContactData['owner'] = $primaryUsername;
+                $primaryContactData['organisatie'] = $organisationEntityUuid;
+                
+                $updatedPrimaryContact = $objectService->saveObject(
+                    $primaryContactData,
+                    [],
+                    $registerId,
+                    $contactpersoonSchemaId,
+                    $primaryContactUuid
+                );
+
+                // Update other contact persons with organization reference
+                for ($i = 1; $i < count($contactpersonen); $i++) {
+                    $contactUuid = $contactpersonen[$i];
+                    try {
+                        $contactObject = $objectService->find($contactUuid, [], false, $registerId, $contactpersoonSchemaId);
+                        $contactData = $contactObject->getObject();
+                        $contactUsername = $contactData['username'] ?? '';
+
+                        if (!empty($contactUsername)) {
+                            $contactData['owner'] = $contactUsername;
+                            $contactData['organisatie'] = $organisationEntityUuid;
+                            
+                            $objectService->saveObject(
+                                $contactData,
+                                [],
+                                $registerId,
+                                $contactpersoonSchemaId,
+                                $contactUuid
+                            );
+                        }
+                    } catch (\Exception $e) {
+                        $this->_logger->warning('SoftwareCatalogueService: Failed to update contact person ownership', [
+                            'contactUuid' => $contactUuid,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+
+                $this->_logger->info('SoftwareCatalogueService: Successfully assigned ownership for organization', [
+                    'organizationUuid' => $organizationUuid,
+                    'primaryOwner' => $primaryUsername,
+                    'organisationEntityUuid' => $organisationEntityUuid,
+                    'contactPersonCount' => count($contactpersonen)
+                ]);
+
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                $this->_logger->error('SoftwareCatalogueService: Primary contact person not found for ownership assignment', [
+                    'contactUuid' => $primaryContactUuid,
+                    'organizationUuid' => $organizationUuid
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            $this->_logger->error('SoftwareCatalogueService: Error handling ownership assignment', [
+                'objectId' => $organizationObject->getId(),
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
         }
     }
 
