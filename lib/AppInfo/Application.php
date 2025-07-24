@@ -145,6 +145,29 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
         error_log("SoftwareCatalog Application: Registered ObjectRevertedEvent listener");
         
+        // Organization event listeners removed - now using cron job for organization synchronization
+        // Contact person event listeners are still active for real-time processing
+        
+                            // Register organization sync service
+                    $context->registerService(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class, function ($container) {
+                        return new \OCA\SoftwareCatalog\Service\OrganizationSyncService(
+                            $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogueService::class),
+                            $container->get('OCP\IConfig'),
+                            $container->get('Psr\Log\LoggerInterface')
+                        );
+                    });
+
+                    // Register background job for organization contact synchronization
+                    $context->registerService(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, function ($container) {
+                        return new \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob(
+                            $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                            $container->get(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class),
+                            $container->get('OCP\IConfig'),
+                            $container->get('Psr\Log\LoggerInterface')
+                        );
+                    });
+        error_log("SoftwareCatalog Application: Registered OrganizationContactSyncJob");
+        
         error_log("SoftwareCatalog Application: Registration process completed");
     }
 
@@ -158,6 +181,15 @@ class Application extends App implements IBootstrap
     public function boot(IBootContext $context): void
     {
         error_log("SoftwareCatalog Application: Boot process started");
+        
+        // Register background job for organization contact synchronization
+        $jobList = $context->getServerContainer()->get('OCP\BackgroundJob\IJobList');
+        if (!$jobList->has(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, null)) {
+            $jobList->add(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class);
+            error_log("SoftwareCatalog Application: Added OrganizationContactSyncJob to job list");
+        } else {
+            error_log("SoftwareCatalog Application: OrganizationContactSyncJob already registered");
+        }
         
         // Application boot completed
         error_log("SoftwareCatalog Application: Boot process completed");

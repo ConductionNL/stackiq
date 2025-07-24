@@ -188,11 +188,10 @@ class SoftwareCatalogEventListener implements IEventListener
         
         error_log("SoftwareCatalog: Configuration - Organisatie: $organisatieSchemaId, Contactpersoon: $contactpersoonSchemaId, Contactgegevens: $contactgegevensSchemaId");
 
-        // Check if this is an organization object
+        // Organization processing is now handled by cron job - skip organization events
         if ($organisatieSchemaId && $objectSchemaIdInt === (int) $organisatieSchemaId) {
-            $logger->info('SoftwareCatalog: Processing organization creation', ['objectId' => $objectId]);
-            error_log("SoftwareCatalog: Processing organization creation for object: $objectId");
-            $softwareCatalogueService->handleNewOrganization($object);
+            $logger->info('SoftwareCatalog: Skipping organization creation - handled by cron job', ['objectId' => $objectId]);
+            error_log("SoftwareCatalog: Skipping organization creation for object: $objectId - handled by cron job");
             return;
         }
 
@@ -201,6 +200,20 @@ class SoftwareCatalogEventListener implements IEventListener
             $logger->info('SoftwareCatalog: Processing contactpersoon creation', ['objectId' => $objectId]);
             error_log("SoftwareCatalog: Processing contactpersoon creation for object: $objectId");
             $softwareCatalogueService->processContactpersoon($object);
+            
+            // Ensure contact person username is in organization entity
+            $softwareCatalogueService->ensureContactPersonInOrganization($object);
+            
+            // Also trigger full synchronization of the organization to ensure all contact persons are included
+            $contactData = $object->getObject();
+            $organisatie = $contactData['organisatie'] ?? null;
+            if ($organisatie) {
+                $softwareCatalogueService->syncContactPersonUsernamesWithOrganization($organisatie);
+                $logger->info('SoftwareCatalog: Triggered full organization synchronization after contact person creation', [
+                    'contactPersonId' => $objectId,
+                    'organizationUuid' => $organisatie
+                ]);
+            }
             return;
         }
 
@@ -269,42 +282,19 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
         
-        // Handle organisation updates - sync with OpenRegister and manage user status
+        // Organization updates are now handled by cron job - skip organization events
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
         
         if ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt) {
             $logger->info(
-                'SoftwareCatalog: Matched organisatie schema - processing update',
+                'SoftwareCatalog: Skipping organisatie update - handled by cron job',
                 [
                     'objectId' => $objectId,
                     'schemaId' => $objectSchemaId,
                     'configuredSchemaId' => $organisatieSchemaId
                 ]
             );
-            
-            try {
-                $softwareCatalogueService->handleOrganizationUpdate($object, $oldObject);
-                
-                $logger->info(
-                    'SoftwareCatalog: Successfully processed organisatie update',
-                    [
-                        'objectId' => $objectId,
-                        'timestamp' => date('Y-m-d H:i:s')
-                    ]
-                );
-            } catch (\Exception $e) {
-                $logger->error(
-                    'SoftwareCatalog: Failed to process organisatie update',
-                    [
-                        'objectId' => $objectId,
-                        'exception' => $e->getMessage(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                        'trace' => $e->getTraceAsString()
-                    ]
-                );
-            }
             return;
         }
         
@@ -325,8 +315,11 @@ class SoftwareCatalogEventListener implements IEventListener
             try {
                 $softwareCatalogueService->handleContactpersoonUpdate($object, $oldObject);
                 
+                // Ensure contact person username is in organization entity
+                $softwareCatalogueService->ensureContactPersonInOrganization($object);
+                
                 $logger->info(
-                    'SoftwareCatalog: Successfully processed contactpersoon update',
+                    'SoftwareCatalog: Successfully processed contactpersoon update and ensured organization membership',
                     [
                         'objectId' => $objectId,
                         'timestamp' => date('Y-m-d H:i:s')

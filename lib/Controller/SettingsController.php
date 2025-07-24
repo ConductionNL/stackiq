@@ -26,6 +26,7 @@ use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,13 +46,14 @@ class SettingsController extends Controller
     /**
      * SettingsController constructor.
      *
-     * @param string             $appName         The name of the app
-     * @param IRequest           $request         The request object
-     * @param IAppConfig         $config          The app configuration
-     * @param ContainerInterface $container       The container
-     * @param IAppManager        $appManager      The app manager
-     * @param SettingsService    $settingsService The settings service
-     * @param LoggerInterface    $logger          The logger instance
+     * @param string                  $appName                The name of the app
+     * @param IRequest                $request                The request object
+     * @param IAppConfig              $config                 The app configuration
+     * @param ContainerInterface      $container              The container
+     * @param IAppManager             $appManager             The app manager
+     * @param SettingsService         $settingsService        The settings service
+     * @param OrganizationSyncService $organizationSyncService The organization sync service
+     * @param LoggerInterface         $logger                 The logger instance
      */
     public function __construct(
         $appName,
@@ -60,6 +62,7 @@ class SettingsController extends Controller
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly SettingsService $settingsService,
+        private readonly OrganizationSyncService $organizationSyncService,
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
@@ -386,6 +389,74 @@ class SettingsController extends Controller
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Failed to send test email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get organization synchronization status
+     *
+     * @return JSONResponse JSON response containing sync status information
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getSyncStatus(): JSONResponse
+    {
+        try {
+            $status = $this->organizationSyncService->getSyncStatus();
+            return new JSONResponse($status);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get sync status', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'configured' => false,
+                'message' => 'Error getting sync status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Perform manual organization synchronization
+     *
+     * @return JSONResponse JSON response containing sync results
+     *
+     * @NoCSRFRequired
+     */
+    public function performSync(): JSONResponse
+    {
+        try {
+            $this->logger->info('Manual organization synchronization started via API');
+            
+            $syncResults = $this->organizationSyncService->performFullSync();
+            
+            // Record the sync time
+            $this->organizationSyncService->recordSyncTime();
+            
+            $this->logger->info('Manual organization synchronization completed via API', [
+                'organizationsProcessed' => $syncResults['organizationsProcessed'],
+                'entitiesCreated' => $syncResults['entitiesCreated'],
+                'entitiesUpdated' => $syncResults['entitiesUpdated'],
+                'usersCreated' => $syncResults['usersCreated'],
+                'errorCount' => count($syncResults['errors'])
+            ]);
+            
+            return new JSONResponse([
+                'success' => true,
+                'results' => $syncResults,
+                'message' => 'Synchronization completed successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Manual organization synchronization failed via API', [
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Synchronization failed: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -230,7 +230,7 @@ class OrganizationSyncTest extends TestCase
             'naam' => $objectData['naam'] ?? $objectData['name'] ?? '',
             'type' => $objectData['type'] ?? '',
             'website' => $objectData['website'] ?? '',
-            'status' => 'concept', // Default status for new organizations
+            'active' => false, // Default to inactive for new organizations
             'contactpersonen' => [],
             'deelnemers' => []
         ];
@@ -238,9 +238,9 @@ class OrganizationSyncTest extends TestCase
         // Map status from SoftwareCatalog to OpenRegister
         $beoordeling = strtolower($objectData['beoordeling'] ?? '');
         if ($beoordeling === 'actief') {
-            $mappedData['status'] = 'active';
+            $mappedData['active'] = true;
         } elseif ($beoordeling === 'inactief' || $beoordeling === 'deactief') {
-            $mappedData['status'] = 'inactive';
+            $mappedData['active'] = false;
         }
 
         return $mappedData;

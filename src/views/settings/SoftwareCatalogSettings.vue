@@ -472,6 +472,125 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			name="Organization Synchronization"
+			description="Monitor and manage organization and contact person synchronization">
+			<div v-if="!loading">
+				<div class="sync-section">
+					<h3>Synchronization Status</h3>
+					<p>Monitor the status of organization and contact person synchronization</p>
+
+					<div class="sync-status">
+						<div v-if="syncStatus" class="status-info">
+							<div class="status-row">
+								<span class="status-label">Configuration:</span>
+								<span v-if="syncStatus.configured" class="status-configured">✓ Configured</span>
+								<span v-else class="status-missing">⚠ Not configured</span>
+							</div>
+							<div v-if="syncStatus.configured" class="status-details">
+								<div class="status-row">
+									<span class="status-label">Organization Objects:</span>
+									<span class="status-value">{{ syncStatus.organizationObjects || 0 }}</span>
+								</div>
+								<div class="status-row">
+									<span class="status-label">Organization Entities:</span>
+									<span class="status-value">{{ syncStatus.organizationEntities || 0 }}</span>
+								</div>
+								<div class="status-row">
+									<span class="status-label">Contact Schema:</span>
+									<span v-if="syncStatus.contactSchemaConfigured" class="status-configured">✓ Configured</span>
+									<span v-else class="status-missing">⚠ Not configured</span>
+								</div>
+								<div class="status-row">
+									<span class="status-label">Last Sync:</span>
+									<span class="status-value">{{ syncStatus.lastSyncTime || 'Never' }}</span>
+								</div>
+							</div>
+							<div v-if="syncStatus.message" class="status-message">
+								{{ syncStatus.message }}
+							</div>
+						</div>
+						<div v-else class="status-loading">
+							<NcLoadingIcon :size="20" />
+							Loading sync status...
+						</div>
+					</div>
+
+					<div class="sync-actions">
+						<NcButton
+							type="secondary"
+							:disabled="loading || loadingSyncStatus"
+							@click="loadSyncStatus">
+							<template #icon>
+								<NcLoadingIcon v-if="loadingSyncStatus" :size="20" />
+								<Refresh v-else :size="20" />
+							</template>
+							Refresh Status
+						</NcButton>
+
+						<NcButton
+							type="primary"
+							:disabled="loading || performingSync || !syncStatus?.configured"
+							@click="performManualSync">
+							<template #icon>
+								<NcLoadingIcon v-if="performingSync" :size="20" />
+								<Sync v-else :size="20" />
+							</template>
+							Synchronize Now
+						</NcButton>
+					</div>
+
+					<div v-if="syncResult" class="sync-result">
+						<NcNoteCard :type="syncResult.success ? 'success' : 'error'">
+							<template #icon>
+								<CheckCircle v-if="syncResult.success" :size="20" />
+								<Alert v-else :size="20" />
+							</template>
+							<div class="sync-result-content">
+								<strong>{{ syncResult.message }}</strong>
+								<div v-if="syncResult.success && syncResult.results" class="sync-statistics">
+									<h5>Synchronization Results:</h5>
+									<ul>
+										<li>Organizations processed: {{ syncResult.results.organizationsProcessed }}</li>
+										<li>Entities created: {{ syncResult.results.entitiesCreated }}</li>
+										<li>Entities updated: {{ syncResult.results.entitiesUpdated }}</li>
+										<li>Contact persons processed: {{ syncResult.results.contactPersonsProcessed }}</li>
+										<li>Users created: {{ syncResult.results.usersCreated }}</li>
+										<li>Users updated: {{ syncResult.results.usersUpdated }}</li>
+										<li>Duration: {{ syncResult.results.duration }}</li>
+									</ul>
+									<div v-if="syncResult.results.errors && syncResult.results.errors.length > 0" class="sync-errors">
+										<h5>Errors encountered:</h5>
+										<ul>
+											<li v-for="error in syncResult.results.errors" :key="error">{{ error }}</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</NcNoteCard>
+					</div>
+
+					<div class="sync-info">
+						<h4>About Synchronization</h4>
+						<p>The synchronization process ensures that:</p>
+						<ul>
+							<li><strong>Organization entities:</strong> Every organization object has a corresponding organization entity</li>
+							<li><strong>User accounts:</strong> Contact persons have Nextcloud user accounts</li>
+							<li><strong>Relationships:</strong> Organization entities maintain correct user lists</li>
+							<li><strong>Status consistency:</strong> Organization active status reflects the 'beoordeling' field</li>
+						</ul>
+						<p><strong>Automatic synchronization:</strong> This process runs every 5 minutes in the background. Use manual sync for immediate updates or troubleshooting.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Loading State -->
+			<NcLoadingIcon v-else
+				class="loading-icon"
+				:size="64"
+				appearance="dark" />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			name="Email Configuration"
 			description="Configure email settings for notifications and templates">
 			<div v-if="!loading">
@@ -895,6 +1014,8 @@ import Alert from 'vue-material-design-icons/Alert.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Email from 'vue-material-design-icons/Email.vue'
+import Sync from 'vue-material-design-icons/Sync.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 
 /**
  * Software Catalog Settings component
@@ -926,6 +1047,8 @@ export default defineComponent({
 		Close,
 		Plus,
 		Email,
+		Sync,
+		CheckCircle,
 	},
 
 	/**
@@ -1011,6 +1134,11 @@ export default defineComponent({
 			templates: {},
 			savingTemplate: false,
 			templateSaveResult: null,
+			// Sync-related data
+			syncStatus: null,
+			loadingSyncStatus: false,
+			performingSync: false,
+			syncResult: null,
 		}
 	},
 
@@ -1148,12 +1276,13 @@ export default defineComponent({
 		},
 	},
 
-	/**
-	 * Lifecycle hook that loads settings when component is created
-	 */
-	async created() {
-		await this.loadSettings()
-	},
+			/**
+		 * Lifecycle hook that loads settings when component is created
+		 */
+		async created() {
+			await this.loadSettings()
+			await this.loadSyncStatus()
+		},
 
 	methods: {
 		/**
@@ -2137,6 +2266,76 @@ export default defineComponent({
 			return `{{ ${variable} }}`
 		},
 
+		/**
+		 * Loads sync status from the backend
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async loadSyncStatus() {
+			this.loadingSyncStatus = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync-status')
+				const data = await response.json()
+
+				if (data.error) {
+					this.syncStatus = {
+						configured: false,
+						message: data.error
+					}
+				} else {
+					this.syncStatus = data
+				}
+			} catch (error) {
+				this.syncStatus = {
+					configured: false,
+					message: 'Failed to load sync status: ' + error.message
+				}
+			} finally {
+				this.loadingSyncStatus = false
+			}
+		},
+
+		/**
+		 * Performs manual synchronization
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async performManualSync() {
+			this.performingSync = true
+			this.syncResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/perform-sync', {
+					method: 'POST',
+				})
+
+				const data = await response.json()
+
+				if (data.success) {
+					this.syncResult = {
+						success: true,
+						message: data.message || 'Synchronization completed successfully!',
+						results: data.results
+					}
+					// Refresh sync status after successful sync
+					await this.loadSyncStatus()
+				} else {
+					this.syncResult = {
+						success: false,
+						message: data.message || 'Synchronization failed'
+					}
+				}
+			} catch (error) {
+				this.syncResult = {
+					success: false,
+					message: 'Failed to perform synchronization: ' + error.message
+				}
+			} finally {
+				this.performingSync = false
+			}
+		},
 
 	},
 })
@@ -2405,5 +2604,153 @@ export default defineComponent({
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	background-color: var(--color-background-hover);
+}
+
+.sync-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.sync-status {
+	margin: 1rem 0;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-main-background);
+}
+
+.status-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.status-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.status-label {
+	font-weight: bold;
+	min-width: 150px;
+}
+
+.status-value {
+	color: var(--color-text-maxcontrast);
+}
+
+.status-configured {
+	color: var(--color-success);
+	font-weight: bold;
+}
+
+.status-missing {
+	color: var(--color-warning);
+	font-weight: bold;
+}
+
+.status-details {
+	margin-left: 1rem;
+	padding-left: 1rem;
+	border-left: 2px solid var(--color-border);
+}
+
+.status-message {
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	font-style: italic;
+}
+
+.status-loading {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.sync-actions {
+	margin: 1rem 0;
+	display: flex;
+	gap: 1rem;
+}
+
+.sync-result {
+	margin: 1rem 0;
+}
+
+.sync-result-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.sync-statistics {
+	margin-top: 1rem;
+}
+
+.sync-statistics h5 {
+	margin: 0.5rem 0;
+	font-weight: bold;
+}
+
+.sync-statistics ul {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+}
+
+.sync-statistics li {
+	margin: 0.25rem 0;
+}
+
+.sync-errors {
+	margin-top: 1rem;
+	padding: 0.5rem;
+	background-color: var(--color-error-hover);
+	border-radius: var(--border-radius);
+}
+
+.sync-errors h5 {
+	color: var(--color-error);
+	margin: 0 0 0.5rem 0;
+}
+
+.sync-errors ul {
+	margin: 0;
+	padding-left: 1.5rem;
+}
+
+.sync-errors li {
+	color: var(--color-error);
+	margin: 0.25rem 0;
+}
+
+.sync-info {
+	margin-top: 2rem;
+	padding: 1rem;
+	background-color: var(--color-background-dark);
+	border-radius: var(--border-radius);
+}
+
+.sync-info h4 {
+	margin: 0 0 1rem 0;
+}
+
+.sync-info p {
+	margin: 0.5rem 0;
+}
+
+.sync-info ul {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+}
+
+.sync-info li {
+	margin: 0.25rem 0;
 }
 </style>
