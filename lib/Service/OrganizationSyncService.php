@@ -20,6 +20,7 @@ namespace OCA\SoftwareCatalog\Service;
 
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
@@ -53,6 +54,13 @@ class OrganizationSyncService
     private ContactpersoonService $contactpersoonService;
 
     /**
+     * SymfonyEmailService instance
+     *
+     * @var SymfonyEmailService The service for sending emails
+     */
+    private SymfonyEmailService $emailService;
+
+    /**
      * Configuration service instance
      *
      * @var IConfig The Nextcloud configuration service
@@ -71,17 +79,20 @@ class OrganizationSyncService
      *
      * @param OrganisatieService      $organisatieService      The organization service
      * @param ContactpersoonService   $contactpersoonService   The contact person service
+     * @param SymfonyEmailService     $emailService            The email service
      * @param IConfig                 $config                  The configuration service
      * @param LoggerInterface         $logger                  The logger instance
      */
     public function __construct(
         OrganisatieService $organisatieService,
         ContactpersoonService $contactpersoonService,
+        SymfonyEmailService $emailService,
         IConfig $config,
         LoggerInterface $logger
     ) {
         $this->organisatieService = $organisatieService;
         $this->contactpersoonService = $contactpersoonService;
+        $this->emailService = $emailService;
         $this->config = $config;
         $this->logger = $logger;
     }
@@ -328,6 +339,21 @@ class OrganizationSyncService
                     $organisationEntity->setActive($shouldBeActive);
                     $organisationMapper->save($organisationEntity);
                     $stats['entitiesUpdated']++;
+
+                    // Send activation email if organization became active
+                    if ($shouldBeActive && !$organisationEntity->getActive()) {
+                        try {
+                            $this->emailService->sendOrganizationActivationEmail($objectData);
+                            $this->logger->info('OrganizationSyncService: Sent organization activation email', [
+                                'organisatieId' => $organisatieId
+                            ]);
+                        } catch (\Exception $e) {
+                            $this->logger->warning('OrganizationSyncService: Failed to send organization activation email', [
+                                'organisatieId' => $organisatieId,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
                 }
                 
                 $this->logger->debug('OrganizationSyncService: Found existing organisation entity', [
@@ -350,6 +376,19 @@ class OrganizationSyncService
                         'entityId' => $organisationEntity->getId(),
                         'active' => $organisationEntity->getActive()
                     ]);
+
+                    // Send registration email for new organization
+                    try {
+                        $this->emailService->sendOrganizationRegistrationEmail($objectData);
+                        $this->logger->info('OrganizationSyncService: Sent organization registration email', [
+                            'organisatieId' => $organisatieId
+                        ]);
+                    } catch (\Exception $e) {
+                        $this->logger->warning('OrganizationSyncService: Failed to send organization registration email', [
+                            'organisatieId' => $organisatieId,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
                 }
                 return $organisationEntity;
             }

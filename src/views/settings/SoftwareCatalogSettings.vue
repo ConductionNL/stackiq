@@ -533,7 +533,7 @@
 									<span v-if="syncStatus.configured" class="status-configured">✓ Configured</span>
 									<span v-else class="status-missing">⚠ Not configured</span>
 								</div>
-								
+
 								<div v-if="syncStatus.configured" class="config-details">
 									<div class="config-item">
 										<span class="config-label">Sync Mode:</span>
@@ -624,7 +624,8 @@
 							<li><strong>Relationships:</strong> Organization entities maintain correct user lists</li>
 							<li><strong>Status consistency:</strong> Organization active status reflects the 'beoordeling' field</li>
 						</ul>
-						<p><strong>Automatic synchronization:</strong> This process runs every 5 minutes in the background. Use manual sync for immediate updates or troubleshooting.</p>
+						<p><strong>Time-based filtering:</strong> Organizations remain in the sync queue based on their last update time in OpenRegister, not when they were last processed. An organization will naturally "age out" of the time window once it hasn't been updated for longer than the selected time period.</p>
+						<p><strong>Automatic synchronization:</strong> This process runs every 5 minutes in the background using incremental sync (10-minute window by default). Use manual sync for immediate updates or troubleshooting.</p>
 					</div>
 				</div>
 			</div>
@@ -692,11 +693,7 @@
 									:options="transportOptions"
 									input-label="Transport Type"
 									placeholder="Select transport type"
-									@update:value="updateEmailSetting('transportType', $event)">
-									<template #option="{ option }">
-										{{ option.label }}
-									</template>
-								</NcSelect>
+									@change="updateEmailSetting('transportType', $event)" />
 								<span class="setting-description">Choose the email transport provider</span>
 							</div>
 
@@ -727,11 +724,7 @@
 										:options="encryptionOptions"
 										input-label="Encryption"
 										placeholder="Select encryption"
-										@update:value="updateEmailSetting('smtpEncryption', $event)">
-										<template #option="{ option }">
-											{{ option.label }}
-										</template>
-									</NcSelect>
+										@change="updateEmailSetting('smtpEncryption', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Username:</label>
@@ -824,11 +817,7 @@
 										:options="sesRegionOptions"
 										input-label="Region"
 										placeholder="Select region"
-										@update:value="updateEmailSetting('sesRegion', $event)">
-										<template #option="{ option }">
-											{{ option.label }}
-										</template>
-									</NcSelect>
+										@change="updateEmailSetting('sesRegion', $event)" />
 								</div>
 							</div>
 
@@ -2376,14 +2365,11 @@ export default defineComponent({
 
 			try {
 				const minutesBack = this.selectedTimeWindow ? this.selectedTimeWindow.value : 10
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync', {
+				const response = await fetch(`/index.php/apps/softwarecatalog/api/settings/sync?minutesBack=${minutesBack}`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({
-						minutesBack: minutesBack
-					}),
 				})
 
 				const data = await response.json()
@@ -2562,32 +2548,7 @@ export default defineComponent({
 			return ''
 		},
 
-		/**
-		 * Formats a number with commas for better readability
-		 *
-		 * @param {number} number - The number to format
-		 * @return {string} Formatted number
-		 */
-		formatNumber(number) {
-			if (!number) return '0'
-			return number.toLocaleString()
-		},
 
-		/**
-		 * Formats the last sync time for display
-		 *
-		 * @param {string} lastSyncTime - Last sync time string
-		 * @return {string} Formatted time
-		 */
-		formatLastSyncTime(lastSyncTime) {
-			if (!lastSyncTime || lastSyncTime === 'Never') return 'Never'
-			try {
-				const date = new Date(lastSyncTime)
-				return date.toLocaleString()
-			} catch (error) {
-				return lastSyncTime
-			}
-		},
 
 	},
 })

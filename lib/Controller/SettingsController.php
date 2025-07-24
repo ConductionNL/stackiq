@@ -412,13 +412,15 @@ class SettingsController extends Controller
     /**
      * Perform manual organization synchronization
      *
+     * @param int $minutesBack Number of minutes to look back for changes (default: 0 for full sync)
+     *
      * @return JSONResponse JSON response containing sync results
      *
      * @NoCSRFRequired
      */
-    public function performSync(): JSONResponse
+    public function performSync(int $minutesBack = 0): JSONResponse
     {
-        $result = $this->organizationSyncService->performManualSync();
+        $result = $this->organizationSyncService->performManualSync($minutesBack);
         
         if ($result['success']) {
             return new JSONResponse($result);

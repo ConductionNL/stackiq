@@ -36,7 +36,8 @@ use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
 use OCP\Security\ISecureRandom;
 use Psr\Container\ContainerInterface;
-use OCA\SoftwareCatalog\Service\PhpEmailService;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCA\SoftwareCatalog\Service\SettingsService;
 
 /**
  * Main Application class for SoftwareCatalog
@@ -99,7 +100,7 @@ class Application extends App implements IBootstrap
                 $c,
                 $c->get(IAppManager::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
-                $c->get(PhpEmailService::class)
+                $c->get(SymfonyEmailService::class)
             );
         });
 
@@ -171,11 +172,32 @@ class Application extends App implements IBootstrap
                         );
                     });
 
+                    // Register email service
+                    $context->registerService(SymfonyEmailService::class, function ($container) {
+                        return new SymfonyEmailService(
+                            $container->get('OCP\IConfig'),
+                            $container->get('Psr\Log\LoggerInterface'),
+                            $container->get(SettingsService::class)
+                        );
+                    });
+
+                    // Register settings service
+                    $context->registerService(SettingsService::class, function ($container) {
+                        return new SettingsService(
+                            $container->get('OCP\IAppConfig'),
+                            $container->get('OCP\IRequest'),
+                            $container,
+                            $container->get('OCP\App\IAppManager'),
+                            $container->get('Psr\Log\LoggerInterface')
+                        );
+                    });
+
                     // Register organization sync service
                     $context->registerService(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class, function ($container) {
                         return new \OCA\SoftwareCatalog\Service\OrganizationSyncService(
                             $container->get(\OCA\SoftwareCatalog\Service\OrganisatieService::class),
                             $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
+                            $container->get(SymfonyEmailService::class),
                             $container->get('OCP\IConfig'),
                             $container->get('Psr\Log\LoggerInterface')
                         );
