@@ -173,12 +173,12 @@ class OrganizationSyncService
     }
 
     /**
-     * Gets organisatie objects from the specified register and schema based on time window
+     * Gets organisatie objects filtered by time window
      *
      * @param string $register The register ID
      * @param string $organizationSchema The organization schema ID
      * @param int $minutesBack Number of minutes to look back (0 = all objects)
-     *
+     * 
      * @return array Array of organisatie objects
      */
     private function getOrganisatieObjectsByTimeWindow(string $register, string $organizationSchema, int $minutesBack): array
@@ -186,59 +186,61 @@ class OrganizationSyncService
         try {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
             
-            // Build query configuration
-            $config = [
-                'filters' => [
+            // Build base query for register and schema
+            $query = [
+                '@self' => [
                     'register' => (int) $register,
                     'schema' => (int) $organizationSchema
                 ]
             ];
-
+            
             // Add time-based filtering if minutesBack > 0
             if ($minutesBack > 0) {
                 $cutoffTime = new \DateTime();
                 $cutoffTime->sub(new \DateInterval('PT' . $minutesBack . 'M'));
+                $cutoffTimeString = $cutoffTime->format('Y-m-d\TH:i:sP');
                 
-                // Use searchObjects method with time-based filtering
-                $query = [
-                    '@self' => [
-                        'register' => (int) $register,
-                        'schema' => (int) $organizationSchema,
-                        'updated' => [
-                            'gte' => $cutoffTime->format('Y-m-d H:i:s')
-                        ]
-                    ]
-                ];
+                // Add time filtering to the query
+                // Filter objects that were updated within the time window
+                $query['@self']['updated'] = ['gte' => $cutoffTimeString];
                 
-                $objects = $objectService->searchObjects($query);
-                
-                $this->logger->debug('OrganizationSyncService: Retrieved organisatie objects with time filter', [
+                $this->logger->debug('OrganizationSyncService: Using searchObjects with time-based filtering', [
                     'register' => $register,
                     'schema' => $organizationSchema,
                     'minutesBack' => $minutesBack,
-                    'cutoffTime' => $cutoffTime->format('Y-m-d H:i:s'),
-                    'count' => count($objects)
+                    'cutoffTime' => $cutoffTimeString,
+                    'currentTime' => (new \DateTime())->format('Y-m-d\TH:i:sP'),
+                    'timeWindowStart' => $cutoffTimeString,
+                    'query' => $query
                 ]);
             } else {
-                // Get all objects when minutesBack = 0
-                $objects = $objectService->findAll($config);
-                
-                $this->logger->debug('OrganizationSyncService: Retrieved all organisatie objects', [
+                $this->logger->debug('OrganizationSyncService: Using searchObjects for all objects', [
                     'register' => $register,
                     'schema' => $organizationSchema,
-                    'count' => count($objects)
+                    'query' => $query
                 ]);
             }
-
-            return $objects;
-
-        } catch (\Exception $e) {
-            $this->logger->error('OrganizationSyncService: Failed to get organisatie objects', [
+            
+            // Use searchObjects method for filtering
+            $objects = $objectService->searchObjects($query);
+            
+            $this->logger->debug('OrganizationSyncService: Retrieved organisatie objects with searchObjects', [
                 'register' => $register,
                 'schema' => $organizationSchema,
                 'minutesBack' => $minutesBack,
-                'exception' => $e->getMessage()
+                'count' => count($objects)
             ]);
+
+            return $objects;
+        } catch (\Exception $e) {
+            $this->logger->error('OrganizationSyncService: Failed to retrieve organisatie objects with searchObjects', [
+                'register' => $register,
+                'schema' => $organizationSchema,
+                'minutesBack' => $minutesBack,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return [];
         }
     }
