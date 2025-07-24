@@ -1,4 +1,207 @@
-# Software Catalog - Organization Synchronization Testing Guide
+# Organization Synchronization Testing Guide
+
+**Date:** July 24, 2025  
+**App:** SoftwareCatalog  
+**Feature:** Organization Synchronization with OpenRegister
+
+## 🚨 ESSENTIAL INFORMATION FOR NEW CONVERSATION
+
+### Current Status
+- ✅ **Anonymous user registration fix implemented**: Modified `createOrganisationInOpenRegister()` to handle no-user context
+- ✅ **Ownership assignment implemented**: Added `handleOwnershipAssignment()` method
+- ✅ **Nested contactpersoon testing documented**: Added test scenarios for nested objects
+- 🔄 **Testing in progress**: Anonymous user registration via OpenConnector needs verification
+
+### Critical API Endpoints
+
+#### OpenRegister API (Authenticated)
+```bash
+# Create organization object
+curl -u 'admin:admin' -H 'Content-Type: application/json' -X POST \
+  'http://localhost/index.php/apps/openregister/api/objects/6/35' \
+  -d '{"naam":"Test Org","website":"https://test.org","type":"Leverancier","beoordeling":"actief"}'
+
+# Update organization object
+curl -u 'admin:admin' -H 'Content-Type: application/json' -X PUT \
+  'http://localhost/index.php/apps/openregister/api/objects/6/35/{UUID}' \
+  -d '{"naam":"Updated Org","beoordeling":"inactief"}'
+
+# Get organization object
+curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{UUID}'
+
+# Get organization entity
+curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/organisations/{UUID}'
+```
+
+#### OpenConnector API (Anonymous)
+```bash
+# Anonymous user registration (MAIN TEST SCENARIO)
+curl -X POST 'http://nextcloud.local/index.php/apps/openconnector/api/endpoint/register' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "naam": "Anonymous Test Org",
+    "website": "https://anonymous-test.org",
+    "type": "Gemeente",
+    "beoordeling": "actief",
+    "contactpersonen": [
+      {
+        "voornaam": "Anonymous",
+        "achternaam": "Contact1",
+        "email": "anonymous.contact1@test.org",
+        "telefoon": "+31 555 555 555",
+        "functie": "Manager"
+      }
+    ]
+  }'
+```
+
+### Essential Commands
+
+#### Docker Container Access
+```bash
+# Access Nextcloud container
+cd /home/rubenlinde/nextcloud-docker-dev
+docker-compose exec nextcloud bash
+
+# Run commands as www-data user (required for file operations)
+docker-compose exec -u 33 nextcloud bash
+```
+
+#### User Management
+```bash
+# List all users
+docker-compose exec -u 33 nextcloud php /var/www/html/occ user:list
+
+# Get user details
+docker-compose exec -u 33 nextcloud php /var/www/html/occ user:info {username}
+
+# Check user status (enabled/disabled)
+docker-compose exec -u 33 nextcloud php /var/www/html/occ user:info {username} | grep enabled
+```
+
+#### Configuration
+```bash
+# Check SoftwareCatalog configuration
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_organisatie_schema
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_contactpersoon_schema
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_register
+```
+
+### Log Reading
+
+#### Real-time Log Monitoring
+```bash
+# Follow logs in real-time
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log
+
+# Filter for SoftwareCatalog events
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "softwarecatalog"
+
+# Filter for specific organization UUID
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep "{UUID}"
+
+# Filter for user activation/deactivation
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -E "becameActive|becameInactive|activate|deactivate"
+```
+
+#### Log Analysis
+```bash
+# Get last 50 log entries
+docker-compose exec nextcloud tail -n 50 /var/www/html/data/nextcloud.log
+
+# Search for specific error
+docker-compose exec nextcloud grep -i "no user logged in" /var/www/html/data/nextcloud.log
+
+# Search for organization sync events
+docker-compose exec nextcloud grep -i "sync.*organization" /var/www/html/data/nextcloud.log
+```
+
+### Schema Configuration
+- **Register ID**: 6 (Voorzieningen)
+- **Organisatie Schema ID**: 35
+- **Contactpersoon Schema ID**: 34
+- **Gebruiker Schema ID**: 42
+
+### Key Architecture Concepts
+
+#### OpenRegister Objects vs Entities
+- **Objects**: Abstract data structures managed by schemas (e.g., `organisatie` object at register 6, schema 35)
+- **Entities**: Classic Nextcloud entities (e.g., `organisation` entity, `user` entity)
+- **Flow**: Anonymous user creates `organisatie` object → System creates `organisation` entity and `user` entity → New user becomes owner
+
+#### Event Flow
+1. Object creation triggers `ObjectCreatedEvent`
+2. Event listener calls `handleNewOrganization()`
+3. `syncOrganizationWithOpenRegister()` creates organization entity
+4. `processOrganization()` creates user accounts
+5. `handleOwnershipAssignment()` transfers ownership to new users
+
+### Current Test Scenarios
+
+#### 1. Anonymous User Registration (PRIORITY)
+- **Status**: ✅ Code implemented, 🔄 Testing needed
+- **Endpoint**: `POST /apps/openconnector/api/endpoint/register`
+- **Expected**: Organization created, users created, ownership assigned
+- **Previous Error**: "No user logged in" - ✅ FIXED
+
+#### 2. Nested Contactpersoon Objects
+- **Status**: ✅ Documented, 🔄 Testing needed
+- **Endpoint**: `POST /apps/openregister/api/objects/6/35` with nested contactpersonen
+- **Expected**: Contact persons processed, users created
+
+#### 3. User Status Management
+- **Status**: ✅ Implemented, 🔄 Testing needed
+- **Test**: Change organization `beoordeling` from `actief` to `inactief`
+- **Expected**: Only SoftwareCatalog users deactivated, admin users protected
+
+### Known Issues and Solutions
+
+#### 1. "No user logged in" Error
+- **Problem**: `OrganisationService->createOrganisation()` requires user context
+- **Solution**: ✅ Modified `createOrganisationInOpenRegister()` to detect anonymous context and use mapper directly
+- **Status**: ✅ FIXED
+
+#### 2. Ownership Assignment
+- **Problem**: Anonymous users need ownership transferred after creation
+- **Solution**: ✅ Added `handleOwnershipAssignment()` method
+- **Status**: ✅ IMPLEMENTED
+
+#### 3. Organization References
+- **Problem**: Objects need proper organization entity references
+- **Solution**: ✅ Ownership assignment sets `organisation` field on all objects
+- **Status**: ✅ IMPLEMENTED
+
+### Next Steps for New Conversation
+
+1. **Test Anonymous User Registration**: Use OpenConnector endpoint with Postman/curl
+2. **Verify User Creation**: Check if contact person users are created
+3. **Verify Ownership Assignment**: Check object ownership and organization references
+4. **Test User Status Changes**: Activate/deactivate organization and verify user status
+5. **Test Nested Contact Persons**: Create organization with nested contactpersonen array
+
+### Debugging Commands
+
+```bash
+# Check if users were created
+docker-compose exec -u 33 nextcloud php /var/www/html/occ user:list | grep -E "anonymous|test"
+
+# Check organization entity
+curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/organisations/{UUID}'
+
+# Check object ownership
+curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{UUID}' | jq '.@self.owner'
+
+# Monitor logs during test
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -E "ownership|assignment|anonymous"
+```
+
+### File Locations
+- **Main Service**: `/var/www/html/apps-extra/softwarecatalog/lib/Service/SoftwareCatalogueService.php`
+- **Event Listener**: `/var/www/html/apps-extra/softwarecatalog/lib/EventListener/SoftwareCatalogEventListener.php`
+- **Logs**: `/var/www/html/data/nextcloud.log`
+- **Configuration**: `/var/www/html/config/config.php`
+
+---
 
 ## Overview
 This document provides comprehensive testing scenarios for the organization synchronization functionality between the Software Catalog app and OpenRegister. The synchronization ensures that `organisatie` objects in the Software Catalog are properly synchronized with organization objects in OpenRegister.
