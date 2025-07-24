@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Software Catalog app is a Nextcloud application that provides automated user management, group assignment, and organizational hierarchy management based on OpenRegister object events.
+The Software Catalog app is a Nextcloud application that provides automated user management, group assignment, and organizational hierarchy management. The system has evolved from an event-driven architecture to a **cron-based synchronization system** with manual trigger capabilities to avoid racing conditions and ensure data consistency.
 
 ## System Components
 
@@ -25,6 +25,23 @@ The main service handling all user and organization management logic:
 - 'ensureOrganizationBeheerder()' - Manages organizational hierarchy
 - 'getUserManager()' - Retrieves user manager information
 
+#### OrganizationSyncService
+**Location**: 'lib/Service/OrganizationSyncService.php'
+
+**NEW**: The dedicated service for organization synchronization between SoftwareCatalog objects and OpenRegister entities:
+- Comprehensive organization and contact person synchronization
+- User account management for contact persons
+- Organization entity creation and management
+- Admin user protection during status changes
+- Detailed logging for all synchronization steps
+
+**Key Methods:**
+- 'performFullSync()' - Core synchronization logic
+- 'performScheduledSync()' - Scheduled (cron) synchronization with logging
+- 'performManualSync()' - Manual (API) synchronization with logging
+- 'getSyncStatus()' - Synchronization status and statistics
+- 'recordSyncTime()' - Track last synchronization time
+
 #### SettingsService
 **Location**: 'lib/Service/SettingsService.php'
 
@@ -41,10 +58,29 @@ Handles automated email notifications:
 - User creation notifications
 - Role assignment notifications
 
-### Event Handling
+### Background Job System
+
+#### OrganizationContactSyncJob
+**Location**: 'lib/BackgroundJob/OrganizationContactSyncJob.php'
+
+**NEW**: Background job that runs every 5 minutes to ensure data consistency:
+- Delegates all business logic to OrganizationSyncService
+- No direct business logic - pure orchestration
+- Handles job scheduling and execution
+- Minimal dependencies for reliability
+
+**Key Features:**
+- Runs every 5 minutes (300 seconds)
+- Calls 'OrganizationSyncService::performScheduledSync()'
+- Comprehensive error handling and logging
+- No direct database or service dependencies
+
+### Event Handling (Legacy)
 
 #### SoftwareCatalogEventListener
 **Location**: 'lib/EventListener/SoftwareCatalogEventListener.php'
+
+**NOTE**: Event listeners are now primarily used for contact person processing, while organization synchronization uses the cron-based system.
 
 Central event listener that processes OpenRegister object events:
 - Listens to ObjectCreatedEvent, ObjectUpdatedEvent, ObjectDeletedEvent
@@ -68,6 +104,7 @@ Defines API endpoints:
 - Settings management endpoints
 - Schema configuration endpoints
 - Load configuration endpoints
+- **NEW**: Manual synchronization trigger endpoint
 
 #### Application Bootstrap
 **Location**: 'lib/AppInfo/Application.php'
@@ -76,10 +113,38 @@ Handles application initialization:
 - Event listener registration
 - Service container setup
 - Dependency injection configuration
+- **NEW**: Background job registration
 
 ## Data Flow
 
-### User Creation Flow
+### Organization Synchronization Flow (NEW)
+
+```
+1. Cron Job Trigger (every 5 minutes)
+   ↓
+2. OrganizationContactSyncJob.run()
+   ↓
+3. OrganizationSyncService.performScheduledSync()
+   ↓
+4. OrganizationSyncService.performFullSync()
+   ├── Get all organisatie objects from OpenRegister
+   ├── For each organization:
+   │   ├── Ensure organization entity exists
+   │   ├── Get all contact persons for organization
+   │   ├── Process each contact person (create/update users)
+   │   └── Update organization entity with all usernames
+   └── Record sync time and log results
+   ↓
+5. Manual Trigger (API endpoint)
+   ↓
+6. SettingsController.performSync()
+   ↓
+7. OrganizationSyncService.performManualSync()
+   ↓
+8. Same core logic as scheduled sync
+```
+
+### User Creation Flow (Updated)
 
 ```
 1. Contactgegevens Object Created/Updated
@@ -103,12 +168,12 @@ Handles application initialization:
 10. Object updated with username
 ```
 
-### Organization Processing Flow
+### Organization Processing Flow (Updated)
 
 ```
 1. Organization Object Created/Updated
    ↓
-2. SoftwareCatalogEventListener receives event
+2. SoftwareCatalogEventListener receives event (legacy)
    ↓
 3. Event routed to handleObjectCreated/Updated
    ↓
@@ -119,6 +184,8 @@ Handles application initialization:
 6. Group ID stored back to organization object
    ↓
 7. Existing users linked to organization group
+   ↓
+8. NEW: Organization sync job will handle entity creation
 ```
 
 ### Group Assignment Flow
@@ -144,6 +211,80 @@ Handles application initialization:
    ├── Check organization type
    ├── Create ambtenaar group if needed
    └── Add user to ambtenaar group
+```
+
+## Synchronization Architecture (NEW)
+
+### Why Cron-Based Instead of Event-Driven?
+
+**Problems with Event-Driven System:**
+- Racing conditions between multiple event listeners
+- Inconsistent state when events fire out of order
+- Difficult to debug and trace execution flow
+- No guarantee of completion order
+
+**Benefits of Cron-Based System:**
+- Predictable execution every 5 minutes
+- Comprehensive logging of all steps
+- Manual trigger capability for immediate sync
+- No racing conditions - single execution path
+- Easy to test and debug
+
+### Synchronization Steps
+
+#### 1. Configuration Validation
+- Check register and schema configuration
+- Validate required services are available
+- Log configuration status
+
+#### 2. Organization Object Retrieval
+- Get all organisatie objects from specified register/schema
+- Log count of objects found
+- Handle retrieval errors gracefully
+
+#### 3. Organization Entity Management
+- For each organization object:
+  - Check if organization entity exists
+  - Create entity if missing
+  - Update entity if needed
+  - Log creation/update operations
+
+#### 4. Contact Person Processing
+- For each organization:
+  - Get all contact persons for the organization
+  - Process each contact person:
+    - Check if user account exists
+    - Create user account if missing
+    - Update user if needed
+    - Log user operations
+
+#### 5. Organization User List Updates
+- Update organization entity with all usernames
+- Include admin users in the list
+- Log user list changes
+- Handle update errors
+
+#### 6. Status Tracking
+- Record synchronization completion time
+- Log comprehensive statistics
+- Handle and log any errors
+
+### Manual Synchronization
+
+#### API Endpoint
+- **URL**: `POST /apps/softwarecatalog/api/settings/sync`
+- **Authentication**: Required (admin or authorized user)
+- **Response**: JSON with sync results and statistics
+
+#### Manual Trigger Flow
+```
+1. API Request to SettingsController.performSync()
+   ↓
+2. OrganizationSyncService.performManualSync()
+   ↓
+3. Same core logic as scheduled sync
+   ↓
+4. API Response with results
 ```
 
 ## Database Integration
@@ -176,6 +317,11 @@ The system depends on OpenRegister for object storage and events:
 - Event listener registration
 - Type-safe event handling
 
+**Entity System:**
+- Organization entities for user management
+- Entity-Object relationship management
+- UUID consistency across systems
+
 ## Configuration Architecture
 
 ### Schema Mapping
@@ -187,6 +333,7 @@ The system uses schema IDs to identify object types:
 'amef_organization_schema' => '123'
 'voorzieningen_gebruiker_schema' => '456'
 'voorzieningen_organisatie_schema' => '789'
+'voorzieningen_contactpersoon_schema' => '101'
 
 // Generic schemas (fallback)
 'organization_schema' => '123'
@@ -208,20 +355,30 @@ The system supports multiple register types:
 - Group-based access control
 - Manager hierarchy for authorization
 - Role-based feature access
+- Admin user protection during sync
 
 ### Data Validation
 
 - Input sanitization for group names
 - Type safety for schema ID comparisons
 - Graceful handling of malformed data
+- UUID format validation and conversion
 
 ### Error Handling
 
 - Comprehensive exception catching
 - Detailed error logging
 - Graceful degradation on service failures
+- Sync error tracking and reporting
 
 ## Performance Considerations
+
+### Synchronization Performance
+
+- Batch processing of organizations
+- Efficient user lookup and creation
+- Minimal database operations
+- Progress tracking and logging
 
 ### Event Processing
 
@@ -240,6 +397,7 @@ The system supports multiple register types:
 - Appropriate log levels to avoid spam
 - Contextual information for debugging
 - Performance-critical path optimization
+- Structured logging for analysis
 
 ## Extension Points
 
@@ -262,6 +420,12 @@ The system supports multiple register types:
 2. Create custom event handler methods
 3. Integrate with existing service methods
 
+### Synchronization Extensions
+
+1. Add new sync methods to OrganizationSyncService
+2. Extend sync statistics and reporting
+3. Add custom sync triggers or conditions
+
 ## Dependencies
 
 ### Required Nextcloud APIs
@@ -271,6 +435,8 @@ The system supports multiple register types:
 - Configuration API ('OCP\IConfig')
 - Logger API ('Psr\Log\LoggerInterface')
 - Event Dispatcher ('OCP\EventDispatcher\IEventDispatcher')
+- **NEW**: Background Job API ('OCP\BackgroundJob\IJobList')
+- **NEW**: Time Factory API ('OCP\AppFramework\Utility\ITimeFactory')
 
 ### Required Apps
 
@@ -295,9 +461,15 @@ softwarecatalog/
 ├── lib/
 │   ├── AppInfo/
 │   │   └── Application.php     # App bootstrap
+│   ├── BackgroundJob/          # NEW: Background jobs
+│   │   └── OrganizationContactSyncJob.php
 │   ├── Controller/             # API controllers
 │   ├── EventListener/          # Event handling
 │   ├── Service/               # Business logic
+│   │   ├── SoftwareCatalogueService.php
+│   │   ├── OrganizationSyncService.php  # NEW
+│   │   ├── SettingsService.php
+│   │   └── EmailService.php
 │   └── ...
 ├── src/                       # Frontend assets
 ├── docs/                      # Documentation
@@ -309,4 +481,43 @@ softwarecatalog/
 - **Schema Configuration**: Stored in Nextcloud app config
 - **Register Settings**: JSON files in app directory
 - **User Preferences**: Nextcloud user preference system
-- **Group Memberships**: Nextcloud group system 
+- **Group Memberships**: Nextcloud group system
+- **Sync Configuration**: Stored in Nextcloud app config
+
+## Testing Architecture
+
+### Synchronization Testing
+
+**Manual Testing:**
+- Use "Sync Now" button in settings UI
+- Monitor logs for detailed execution steps
+- Verify organization and user creation
+- Check entity-object consistency
+
+**Automated Testing:**
+- Background job execution testing
+- API endpoint testing
+- Service method unit testing
+- Integration testing with OpenRegister
+
+### Log Analysis
+
+**Key Log Patterns:**
+- `OrganizationSyncService: Starting comprehensive organization synchronization`
+- `OrganizationSyncService: Found organisatie objects`
+- `OrganizationSyncService: Processing organisatie object`
+- `OrganizationSyncService: Creating new organisation entity`
+- `OrganizationSyncService: Creating user account for contact person`
+- `OrganizationSyncService: Successfully updated organisation entity users`
+
+**Debug Commands:**
+```bash
+# Monitor sync logs
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationsyncservice"
+
+# Check sync status
+curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+
+# Manual sync trigger
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+``` 

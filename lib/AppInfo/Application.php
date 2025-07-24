@@ -148,10 +148,34 @@ class Application extends App implements IBootstrap
         // Organization event listeners removed - now using cron job for organization synchronization
         // Contact person event listeners are still active for real-time processing
         
-                            // Register organization sync service
+                            // Register new focused services
+                    $context->registerService(\OCA\SoftwareCatalog\Service\OrganisatieService::class, function ($container) {
+                        return new \OCA\SoftwareCatalog\Service\OrganisatieService(
+                            $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler::class),
+                            $container->get('Psr\Log\LoggerInterface'),
+                            $container,
+                            $container->get('OCP\App\IAppManager'),
+                            $container->get('OCP\IConfig')
+                        );
+                    });
+
+                    $context->registerService(\OCA\SoftwareCatalog\Service\ContactpersoonService::class, function ($container) {
+                        return new \OCA\SoftwareCatalog\Service\ContactpersoonService(
+                            $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler::class),
+                            $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler::class),
+                            $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler::class),
+                            $container->get('Psr\Log\LoggerInterface'),
+                            $container,
+                            $container->get('OCP\App\IAppManager'),
+                            $container->get('OCP\IConfig')
+                        );
+                    });
+
+                    // Register organization sync service
                     $context->registerService(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class, function ($container) {
                         return new \OCA\SoftwareCatalog\Service\OrganizationSyncService(
-                            $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogueService::class),
+                            $container->get(\OCA\SoftwareCatalog\Service\OrganisatieService::class),
+                            $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
                             $container->get('OCP\IConfig'),
                             $container->get('Psr\Log\LoggerInterface')
                         );
@@ -161,9 +185,7 @@ class Application extends App implements IBootstrap
                     $context->registerService(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, function ($container) {
                         return new \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob(
                             $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-                            $container->get(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class),
-                            $container->get('OCP\IConfig'),
-                            $container->get('Psr\Log\LoggerInterface')
+                            $container->get(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class)
                         );
                     });
         error_log("SoftwareCatalog Application: Registered OrganizationContactSyncJob");

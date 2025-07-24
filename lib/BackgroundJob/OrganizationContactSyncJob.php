@@ -21,15 +21,12 @@ namespace OCA\SoftwareCatalog\BackgroundJob;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
-use OCP\IConfig;
-use Psr\Log\LoggerInterface;
 
 /**
  * Background job for comprehensive organization and contact person synchronization
  * 
  * This job runs every 5 minutes to ensure data consistency between SoftwareCatalog objects
- * and OpenRegister entities. It handles organization entity creation, user account management,
- * and maintains proper relationships between all components.
+ * and OpenRegister entities. All business logic is delegated to the OrganizationSyncService.
  * 
  * @category BackgroundJob
  * @package  OCA\SoftwareCatalog\BackgroundJob
@@ -48,45 +45,25 @@ class OrganizationContactSyncJob extends TimedJob
     private OrganizationSyncService $organizationSyncService;
 
     /**
-     * Configuration service instance
-     *
-     * @var IConfig The Nextcloud configuration service
-     */
-    private IConfig $config;
-
-    /**
-     * Logger instance
-     *
-     * @var LoggerInterface The logger for background job operations
-     */
-    private LoggerInterface $logger;
-
-    /**
      * Constructor for OrganizationContactSyncJob
      *
      * @param ITimeFactory            $timeFactory             The time factory for job scheduling
      * @param OrganizationSyncService $organizationSyncService The sync service
-     * @param IConfig                 $config                  The configuration service
-     * @param LoggerInterface         $logger                  The logger instance
      */
     public function __construct(
         ITimeFactory $timeFactory,
-        OrganizationSyncService $organizationSyncService,
-        IConfig $config,
-        LoggerInterface $logger
+        OrganizationSyncService $organizationSyncService
     ) {
         parent::__construct($timeFactory);
         $this->setInterval(300); // 5 minutes
         $this->organizationSyncService = $organizationSyncService;
-        $this->config = $config;
-        $this->logger = $logger;
     }
 
     /**
      * Runs the background job
      *
-     * This method performs comprehensive organization synchronization using the
-     * OrganizationSyncService and logs the results.
+     * This method delegates all synchronization logic to the OrganizationSyncService.
+     * The service handles all business logic, logging, and error handling.
      *
      * @param mixed $argument Job arguments (not used)
      *
@@ -94,41 +71,7 @@ class OrganizationContactSyncJob extends TimedJob
      */
     protected function run($argument): void
     {
-        $this->logger->info('OrganizationContactSyncJob: Starting scheduled synchronization');
-
-        try {
-            // Perform the synchronization using the service
-            $syncResults = $this->organizationSyncService->performFullSync();
-
-            // Record the sync time
-            $this->organizationSyncService->recordSyncTime();
-
-            // Log summary results
-            $this->logger->info('OrganizationContactSyncJob: Scheduled synchronization completed', [
-                'organizationsProcessed' => $syncResults['organizationsProcessed'],
-                'entitiesCreated' => $syncResults['entitiesCreated'],
-                'entitiesUpdated' => $syncResults['entitiesUpdated'],
-                'contactPersonsProcessed' => $syncResults['contactPersonsProcessed'],
-                'usersCreated' => $syncResults['usersCreated'],
-                'usersUpdated' => $syncResults['usersUpdated'],
-                'errorCount' => count($syncResults['errors']),
-                'duration' => $syncResults['duration']
-            ]);
-
-            // Log errors if any occurred
-            if (!empty($syncResults['errors'])) {
-                $this->logger->warning('OrganizationContactSyncJob: Synchronization completed with errors', [
-                    'errors' => $syncResults['errors']
-                ]);
-            }
-
-        } catch (\Exception $e) {
-            $this->logger->error('OrganizationContactSyncJob: Scheduled synchronization failed', [
-                'exception' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
+        // Delegate all synchronization logic to the service
+        $this->organizationSyncService->performScheduledSync();
     }
 } 

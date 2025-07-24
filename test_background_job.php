@@ -15,12 +15,17 @@ try {
     $config = \OC::$server->get('OCP\IConfig');
     $logger = \OC::$server->get('Psr\Log\LoggerInterface');
     
-    // Create job instance
-    $job = new \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob(
-        $timeFactory,
+    // Create OrganizationSyncService
+    $organizationSyncService = new \OCA\SoftwareCatalog\Service\OrganizationSyncService(
         $softwareCatalogueService,
         $config,
         $logger
+    );
+    
+    // Create job instance
+    $job = new \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob(
+        $timeFactory,
+        $organizationSyncService
     );
     
     echo "Job instance created, executing...\n";

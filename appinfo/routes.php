@@ -28,6 +28,10 @@ return [
         ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
         ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
         ['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
+        
+        // Organization synchronization routes
+        ['name' => 'settings#getSyncStatus', 'url' => '/api/settings/sync-status', 'verb' => 'GET'],
+        ['name' => 'settings#performSync', 'url' => '/api/settings/sync', 'verb' => 'POST'],
 
         // Legacy email routes (for backward compatibility)
         ['name' => 'settings#send_test_email', 'url' => '/api/email/test', 'verb' => 'POST'],

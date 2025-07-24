@@ -7,12 +7,25 @@
 ## 🚨 ESSENTIAL INFORMATION FOR NEW CONVERSATION
 
 ### Current Status
-- ✅ **Anonymous user registration fix implemented**: Modified `createOrganisationInOpenRegister()` to handle no-user context
-- ✅ **Ownership assignment implemented**: Added `handleOwnershipAssignment()` method
-- ✅ **Nested contactpersoon testing documented**: Added test scenarios for nested objects
-- 🔄 **Testing in progress**: Anonymous user registration via OpenConnector needs verification
+- ✅ **Cron-based synchronization implemented**: Replaced event-driven system with `OrganizationSyncService`
+- ✅ **Manual sync trigger available**: "Sync Now" button in settings UI
+- ✅ **Comprehensive logging implemented**: All sync steps logged for debugging
+- ✅ **Background job registered**: `OrganizationContactSyncJob` runs every 5 minutes
+- 🔄 **Testing needed**: Verify cron job execution and manual sync functionality
 
 ### Critical API Endpoints
+
+#### SoftwareCatalog Sync API (NEW)
+```bash
+# Manual sync trigger
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+
+# Get sync status
+curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+
+# Check sync configuration
+curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings'
+```
 
 #### OpenRegister API (Authenticated)
 ```bash
@@ -94,6 +107,9 @@ docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwar
 # Follow logs in real-time
 docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log
 
+# Filter for OrganizationSyncService events (NEW)
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationsyncservice"
+
 # Filter for SoftwareCatalog events
 docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "softwarecatalog"
 
@@ -114,6 +130,9 @@ docker-compose exec nextcloud grep -i "no user logged in" /var/www/html/data/nex
 
 # Search for organization sync events
 docker-compose exec nextcloud grep -i "sync.*organization" /var/www/html/data/nextcloud.log
+
+# Search for background job execution
+docker-compose exec nextcloud grep -i "organizationcontactsyncjob" /var/www/html/data/nextcloud.log
 ```
 
 ### Schema Configuration
@@ -123,6 +142,12 @@ docker-compose exec nextcloud grep -i "sync.*organization" /var/www/html/data/ne
 - **Gebruiker Schema ID**: 42
 
 ### Key Architecture Concepts
+
+#### Cron-Based Synchronization (NEW)
+- **Background Job**: `OrganizationContactSyncJob` runs every 5 minutes
+- **Service**: `OrganizationSyncService` handles all synchronization logic
+- **Manual Trigger**: "Sync Now" button in settings UI or API endpoint
+- **Flow**: Cron job → Service → Object processing → Entity creation → User management
 
 #### OpenRegister Objects vs Entities
 - **Objects**: Abstract data structures managed by schemas (e.g., `organisatie` object at register 6, schema 35)
@@ -138,7 +163,14 @@ docker-compose exec nextcloud grep -i "sync.*organization" /var/www/html/data/ne
 
 ### Current Test Scenarios
 
-#### 1. Anonymous User Registration (PRIORITY)
+#### 1. Cron-Based Synchronization (PRIORITY)
+- **Status**: ✅ Code implemented, 🔄 Testing needed
+- **Background Job**: `OrganizationContactSyncJob` runs every 5 minutes
+- **Manual Trigger**: `POST /apps/softwarecatalog/api/settings/sync`
+- **Expected**: Organizations synchronized, entities created, users managed
+- **Logging**: Comprehensive step-by-step logging in `OrganizationSyncService`
+
+#### 2. Anonymous User Registration (PRIORITY)
 - **Status**: ✅ Code implemented, 🔄 Testing needed
 - **Endpoint**: `POST /apps/openconnector/api/endpoint/register`
 - **Expected**: Organization created, users created, ownership assigned
@@ -181,11 +213,13 @@ docker-compose exec nextcloud grep -i "sync.*organization" /var/www/html/data/ne
 
 ### Next Steps for New Conversation
 
-1. **Test Anonymous User Registration**: Use OpenConnector endpoint with Postman/curl
-2. **Verify User Creation**: Check if contact person users are created
-3. **Verify Ownership Assignment**: Check object ownership and organization references
-4. **Test User Status Changes**: Activate/deactivate organization and verify user status
-5. **Test Nested Contact Persons**: Create organization with nested contactpersonen array
+1. **Test Cron-Based Synchronization**: Monitor background job execution and logs
+2. **Test Manual Sync Trigger**: Use "Sync Now" button or API endpoint
+3. **Test Anonymous User Registration**: Use OpenConnector endpoint with Postman/curl
+4. **Verify User Creation**: Check if contact person users are created
+5. **Verify Ownership Assignment**: Check object ownership and organization references
+6. **Test User Status Changes**: Activate/deactivate organization and verify user status
+7. **Test Nested Contact Persons**: Create organization with nested contactpersonen array
 
 ### Current Workaround for UUID Issue
 
@@ -214,6 +248,22 @@ This will trigger the same SoftwareCatalog event listener and test our UUID fix 
 
 ### Debugging Commands
 
+#### Synchronization Testing (NEW)
+```bash
+# Test manual synchronization
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+
+# Check sync status
+curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+
+# Monitor synchronization logs
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationsyncservice"
+
+# Check background job execution
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationcontactsyncjob"
+```
+
+#### User and Organization Testing
 ```bash
 # Check if users were created
 docker-compose exec -u 33 nextcloud php /var/www/html/occ user:list | grep -E "anonymous|test"
@@ -258,6 +308,58 @@ Expected configuration:
 - `voorzieningen_organisatie_schema`: "35"
 
 ## Test Scenarios
+
+### 0. Cron-Based Synchronization Test (NEW)
+
+**Objective**: Verify that the background job and manual sync trigger work correctly.
+
+**Test Steps**:
+
+#### 0.1 Manual Synchronization Test
+1. Trigger manual synchronization:
+```bash
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+```
+
+2. Monitor the logs for detailed execution steps:
+```bash
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationsyncservice"
+```
+
+3. Check sync status:
+```bash
+curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+```
+
+**Expected Log Output**:
+```
+OrganizationSyncService: Starting manual organization synchronization started via API
+OrganizationSyncService: Starting comprehensive organization synchronization
+OrganizationSyncService: Found organisatie objects
+OrganizationSyncService: Processing organisatie object
+OrganizationSyncService: Creating new organisation entity (if needed)
+OrganizationSyncService: Creating user account for contact person (if needed)
+OrganizationSyncService: Successfully updated organisation entity users
+OrganizationSyncService: Manual organization synchronization completed via API
+```
+
+#### 0.2 Background Job Test
+1. Monitor background job execution:
+```bash
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationcontactsyncjob"
+```
+
+2. Wait for the next 5-minute interval or check job status:
+```bash
+docker-compose exec -u 33 nextcloud php /var/www/html/occ background:job:list | grep OrganizationContactSyncJob
+```
+
+**Expected Results**:
+- Manual sync completes successfully with detailed logging
+- Background job runs every 5 minutes
+- All organizations are processed and synchronized
+- User accounts are created/updated as needed
+- Organization entities are created/updated as needed
 
 ### 1. Organization Creation Test
 

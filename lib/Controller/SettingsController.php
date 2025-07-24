@@ -394,27 +394,19 @@ class SettingsController extends Controller
     }
 
     /**
-     * Get organization synchronization status
+     * Get organization synchronization status with processing predictions
      *
+     * @param int $minutesBack Number of minutes to look back for prediction (default: 10)
+     * 
      * @return JSONResponse JSON response containing sync status information
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function getSyncStatus(): JSONResponse
+    public function getSyncStatus(int $minutesBack = 10): JSONResponse
     {
-        try {
-            $status = $this->organizationSyncService->getSyncStatus();
-            return new JSONResponse($status);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to get sync status', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'configured' => false,
-                'message' => 'Error getting sync status: ' . $e->getMessage()
-            ], 500);
-        }
+        $status = $this->organizationSyncService->getSyncStatusWithErrorHandling($minutesBack);
+        return new JSONResponse($status);
     }
 
     /**
@@ -426,38 +418,12 @@ class SettingsController extends Controller
      */
     public function performSync(): JSONResponse
     {
-        try {
-            $this->logger->info('Manual organization synchronization started via API');
-            
-            $syncResults = $this->organizationSyncService->performFullSync();
-            
-            // Record the sync time
-            $this->organizationSyncService->recordSyncTime();
-            
-            $this->logger->info('Manual organization synchronization completed via API', [
-                'organizationsProcessed' => $syncResults['organizationsProcessed'],
-                'entitiesCreated' => $syncResults['entitiesCreated'],
-                'entitiesUpdated' => $syncResults['entitiesUpdated'],
-                'usersCreated' => $syncResults['usersCreated'],
-                'errorCount' => count($syncResults['errors'])
-            ]);
-            
-            return new JSONResponse([
-                'success' => true,
-                'results' => $syncResults,
-                'message' => 'Synchronization completed successfully'
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->logger->error('Manual organization synchronization failed via API', [
-                'exception' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Synchronization failed: ' . $e->getMessage()
-            ], 500);
+        $result = $this->organizationSyncService->performManualSync();
+        
+        if ($result['success']) {
+            return new JSONResponse($result);
+        } else {
+            return new JSONResponse($result, 500);
         }
     }
 
