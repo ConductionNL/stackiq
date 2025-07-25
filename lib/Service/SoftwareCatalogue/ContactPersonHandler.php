@@ -27,7 +27,7 @@ use OCP\IConfig;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
-use OCA\SoftwareCatalog\Service\PhpEmailService;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 
 /**
  * Handler for contact person-related operations
@@ -51,7 +51,7 @@ class ContactPersonHandler
      * @param ContainerInterface     $_container      Container interface
      * @param IAppManager            $_appManager     App manager interface
      * @param LoggerInterface        $_logger         Logger interface
-     * @param PhpEmailService        $_emailService   Email service
+     * @param SymfonyEmailService    $_emailService   Email service
      */
     public function __construct(
         private readonly IUserManager $_userManager,
@@ -61,7 +61,7 @@ class ContactPersonHandler
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
         private readonly LoggerInterface $_logger,
-        private readonly PhpEmailService $_emailService,
+        private readonly SymfonyEmailService $_emailService,
     ) {
     }
 
@@ -1322,6 +1322,9 @@ class ContactPersonHandler
                 // Ensure contactpersoon is added to organization
                 $this->ensureContactpersoonInOrganization($contactpersoonObject);
                 
+                // Also add user to organization entity (OpenRegister entity, not object)
+                $this->addUserToOrganizationEntity($contactpersoonObject, $username);
+                
                 $this->_logger->info(
                     'Successfully created inactive user and updated contactpersoon', 
                     [
@@ -1768,6 +1771,82 @@ class ContactPersonHandler
                     'trace' => $e->getTraceAsString()
                 ]
             );
+        }
+    }
+    
+    /**
+     * Adds a user to the organization entity (OpenRegister entity, not object)
+     *
+     * @param object $contactpersoonObject The contactpersoon object
+     * @param string $username The username to add
+     * 
+     * @return void
+     */
+    private function addUserToOrganizationEntity(object $contactpersoonObject, string $username): void
+    {
+        try {
+            $objectData = $contactpersoonObject->getObject();
+            $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+            
+            if (empty($organizationUuid)) {
+                $this->_logger->warning('ContactPersonHandler: No organization reference found for contact person', [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'username' => $username
+                ]);
+                return;
+            }
+            
+            $this->_logger->info('ContactPersonHandler: Adding user to organization entity', [
+                'objectId' => $contactpersoonObject->getId(),
+                'username' => $username,
+                'organizationUuid' => $organizationUuid
+            ]);
+            
+            try {
+                $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+                $organisation = $organisationMapper->findByUuid($organizationUuid);
+                
+                if ($organisation) {
+                    $currentUsers = $organisation->getUsers() ?? [];
+                    if (!in_array($username, $currentUsers)) {
+                        $currentUsers[] = $username;
+                        $organisation->setUsers($currentUsers);
+                        $organisationMapper->save($organisation);
+                        
+                        $this->_logger->info('ContactPersonHandler: Successfully added user to organization entity', [
+                            'objectId' => $contactpersoonObject->getId(),
+                            'username' => $username,
+                            'organizationUuid' => $organizationUuid,
+                            'totalUsers' => count($currentUsers)
+                        ]);
+                    } else {
+                        $this->_logger->info('ContactPersonHandler: User already in organization entity', [
+                            'objectId' => $contactpersoonObject->getId(),
+                            'username' => $username,
+                            'organizationUuid' => $organizationUuid
+                        ]);
+                    }
+                } else {
+                    $this->_logger->warning('ContactPersonHandler: Organization entity not found', [
+                        'objectId' => $contactpersoonObject->getId(),
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $this->_logger->error('ContactPersonHandler: Failed to add user to organization entity', [
+                    'objectId' => $contactpersoonObject->getId(),
+                    'username' => $username,
+                    'organizationUuid' => $organizationUuid,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->_logger->error('ContactPersonHandler: Exception in addUserToOrganizationEntity', [
+                'objectId' => $contactpersoonObject->getId(),
+                'username' => $username,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 

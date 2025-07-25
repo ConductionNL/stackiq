@@ -39,6 +39,10 @@ Submit a [feature request](https://github.com/OpenCatalogi/.github/issues/new/ch
         <database min-version="8.0">mysql</database>
     </dependencies>
 
+	<background-jobs>
+		<job>OCA\SoftwareCatalog\Cron\OrganizationSync</job>
+	</background-jobs>
+
     <navigations>
         <navigation>
             <id>softwarecatalog</id>

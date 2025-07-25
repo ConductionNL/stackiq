@@ -472,6 +472,171 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			name="Organization Synchronization"
+			description="Monitor and manage organization and contact person synchronization">
+			<div v-if="!loading">
+				<div class="sync-section">
+					<h3>Synchronization Status</h3>
+					<p>Monitor the status of organization and contact person synchronization</p>
+
+					<!-- Time Window Configuration -->
+					<div class="time-window-configuration">
+						<h4>Incremental Sync Time Window</h4>
+						<p>Configure how far back to look for updated organizations during incremental synchronization</p>
+
+						<div class="time-window-row">
+							<div class="time-window-selector">
+								<NcSelect
+									v-model="selectedTimeWindow"
+									:options="timeWindowOptions"
+									input-label="Time Window"
+									:disabled="loading || loadingSyncStatus"
+									@change="handleTimeWindowChange" />
+							</div>
+
+							<!-- Sync Actions in same row -->
+							<div class="sync-actions">
+								<NcButton
+									type="secondary"
+									:disabled="loading || loadingSyncStatus"
+									@click="loadSyncStatus">
+									<template #icon>
+										<NcLoadingIcon v-if="loadingSyncStatus" :size="20" />
+										<Refresh v-else :size="20" />
+									</template>
+									Refresh Status
+								</NcButton>
+
+								<NcButton
+									type="primary"
+									:disabled="loading || performingSync || !syncStatus?.configured"
+									@click="performManualSync">
+									<template #icon>
+										<NcLoadingIcon v-if="performingSync" :size="20" />
+										<Sync v-else :size="20" />
+									</template>
+									{{ selectedTimeWindow && selectedTimeWindow.value === 0 ? 'Full Sync Now' : 'Incremental Sync Now' }}
+								</NcButton>
+							</div>
+						</div>
+
+						<div class="time-window-description">
+							{{ getTimeWindowDescription() }}
+						</div>
+					</div>
+
+					<div class="sync-status">
+						<div v-if="syncStatus" class="status-info">
+							<div class="configuration-overview">
+								<div class="config-item">
+									<span class="config-label">Configuration:</span>
+									<span v-if="syncStatus.configured" class="status-configured">✓ Configured</span>
+									<span v-else class="status-missing">⚠ Not configured</span>
+								</div>
+
+								<div v-if="syncStatus.configured" class="config-details">
+									<div class="config-item">
+										<span class="config-label">Sync Mode:</span>
+										<span class="config-value">{{ syncStatus.syncMode || 'Unknown' }}</span>
+									</div>
+									<div class="config-item">
+										<span class="config-label">Time Window:</span>
+										<span class="config-value">{{ formatTimeWindow(syncStatus.timeWindow) }}</span>
+									</div>
+									<div class="config-item">
+										<span class="config-label">Total Organizations:</span>
+										<span class="config-value">{{ formatNumber(syncStatus.totalOrganizationObjects) || 0 }}</span>
+									</div>
+									<div class="config-item">
+										<span class="config-label">Organizations to Process:</span>
+										<span class="config-value" :class="getProcessingClass(syncStatus.organizationsToProcess)">{{ syncStatus.organizationsToProcess || 0 }}</span>
+									</div>
+									<div class="config-item">
+										<span class="config-label">Contact Persons to Process:</span>
+										<span class="config-value" :class="getProcessingClass(syncStatus.contactPersonsToProcess)">{{ syncStatus.contactPersonsToProcess || 0 }}</span>
+									</div>
+									<div v-if="syncStatus.efficiencyImprovement" class="config-item">
+										<span class="config-label">Efficiency Improvement:</span>
+										<span class="config-value efficiency-highlight">{{ syncStatus.efficiencyImprovement }}</span>
+									</div>
+									<div class="config-item">
+										<span class="config-label">Organization Entities:</span>
+										<span class="config-value">{{ formatNumber(syncStatus.totalOrganizationEntities) || 0 }}</span>
+									</div>
+									<div class="config-item">
+										<span class="config-label">Contact Schema:</span>
+										<span v-if="syncStatus.contactSchemaConfigured" class="status-configured">✓ Configured</span>
+										<span v-else class="status-missing">⚠ Not configured</span>
+									</div>
+									<div class="config-item">
+										<span class="config-label">Last Sync:</span>
+										<span class="config-value">{{ formatLastSyncTime(syncStatus.lastSyncTime) }}</span>
+									</div>
+								</div>
+							</div>
+							<div v-if="syncStatus.message" class="status-message">
+								{{ syncStatus.message }}
+							</div>
+						</div>
+						<div v-else class="status-loading">
+							<NcLoadingIcon :size="20" />
+							Loading sync status...
+						</div>
+					</div>
+
+					<div v-if="syncResult" class="sync-result">
+						<NcNoteCard :type="syncResult.success ? 'success' : 'error'">
+							<template #icon>
+								<CheckCircle v-if="syncResult.success" :size="20" />
+								<Alert v-else :size="20" />
+							</template>
+							<div class="sync-result-content">
+								<strong>{{ syncResult.message }}</strong>
+								<div v-if="syncResult.success && syncResult.results" class="sync-statistics">
+									<h5>Synchronization Results:</h5>
+									<ul>
+										<li>Organizations processed: {{ syncResult.results.organizationsProcessed }}</li>
+										<li>Entities created: {{ syncResult.results.entitiesCreated }}</li>
+										<li>Entities updated: {{ syncResult.results.entitiesUpdated }}</li>
+										<li>Contact persons processed: {{ syncResult.results.contactPersonsProcessed }}</li>
+										<li>Users created: {{ syncResult.results.usersCreated }}</li>
+										<li>Users updated: {{ syncResult.results.usersUpdated }}</li>
+										<li>Duration: {{ syncResult.results.duration }}</li>
+									</ul>
+									<div v-if="syncResult.results.errors && syncResult.results.errors.length > 0" class="sync-errors">
+										<h5>Errors encountered:</h5>
+										<ul>
+											<li v-for="error in syncResult.results.errors" :key="error">{{ error }}</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</NcNoteCard>
+					</div>
+
+					<div class="sync-info">
+						<h4>About Synchronization</h4>
+						<p>The synchronization process ensures that:</p>
+						<ul>
+							<li><strong>Organization entities:</strong> Every organization object has a corresponding organization entity</li>
+							<li><strong>User accounts:</strong> Contact persons have Nextcloud user accounts</li>
+							<li><strong>Relationships:</strong> Organization entities maintain correct user lists</li>
+							<li><strong>Status consistency:</strong> Organization active status reflects the 'beoordeling' field</li>
+						</ul>
+						<p><strong>Time-based filtering:</strong> Organizations remain in the sync queue based on their last update time in OpenRegister, not when they were last processed. An organization will naturally "age out" of the time window once it hasn't been updated for longer than the selected time period.</p>
+						<p><strong>Automatic synchronization:</strong> This process runs every 5 minutes in the background using incremental sync (10-minute window by default). Use manual sync for immediate updates or troubleshooting.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Loading State -->
+			<NcLoadingIcon v-else
+				class="loading-icon"
+				:size="64"
+				appearance="dark" />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			name="Email Configuration"
 			description="Configure email settings for notifications and templates">
 			<div v-if="!loading">
@@ -523,15 +688,11 @@
 							<div class="setting-row">
 								<label class="setting-label">Transport Type:</label>
 								<NcSelect
-									v-model="emailSettings.transportType"
+									:value="emailSettings.transportType"
 									:options="transportOptions"
 									input-label="Transport Type"
 									placeholder="Select transport type"
-									@update:value="updateEmailSetting('transportType', $event)">
-									<template #option="{ option }">
-										{{ option.label }}
-									</template>
-								</NcSelect>
+									@input="updateEmailSetting('transportType', $event)" />
 								<span class="setting-description">Choose the email transport provider</span>
 							</div>
 
@@ -558,15 +719,11 @@
 								<div class="setting-row">
 									<label class="setting-label">Encryption:</label>
 									<NcSelect
-										v-model="emailSettings.smtpEncryption"
+										:value="emailSettings.smtpEncryption"
 										:options="encryptionOptions"
 										input-label="Encryption"
 										placeholder="Select encryption"
-										@update:value="updateEmailSetting('smtpEncryption', $event)">
-										<template #option="{ option }">
-											{{ option.label }}
-										</template>
-									</NcSelect>
+										@input="updateEmailSetting('smtpEncryption', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Username:</label>
@@ -655,15 +812,11 @@
 								<div class="setting-row">
 									<label class="setting-label">Region:</label>
 									<NcSelect
-										v-model="emailSettings.sesRegion"
+										:value="emailSettings.sesRegion"
 										:options="sesRegionOptions"
 										input-label="Region"
 										placeholder="Select region"
-										@update:value="updateEmailSetting('sesRegion', $event)">
-										<template #option="{ option }">
-											{{ option.label }}
-										</template>
-									</NcSelect>
+										@input="updateEmailSetting('sesRegion', $event)" />
 								</div>
 							</div>
 
@@ -840,6 +993,7 @@
 							<NcTextArea
 								:value="getActiveTemplateContent()"
 								:placeholder="'Enter your template content here...'"
+								label="Template Content"
 								rows="15"
 								@update:value="updateTemplateContent($event)" />
 
@@ -895,6 +1049,8 @@ import Alert from 'vue-material-design-icons/Alert.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Email from 'vue-material-design-icons/Email.vue'
+import Sync from 'vue-material-design-icons/Sync.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 
 /**
  * Software Catalog Settings component
@@ -926,6 +1082,8 @@ export default defineComponent({
 		Close,
 		Plus,
 		Email,
+		Sync,
+		CheckCircle,
 	},
 
 	/**
@@ -1011,6 +1169,12 @@ export default defineComponent({
 			templates: {},
 			savingTemplate: false,
 			templateSaveResult: null,
+			// Sync-related data
+			syncStatus: null,
+			loadingSyncStatus: false,
+			performingSync: false,
+			syncResult: null,
+			selectedTimeWindow: { value: 10, label: '10 minutes' },
 		}
 	},
 
@@ -1132,6 +1296,26 @@ export default defineComponent({
 				{ value: 'sa-east-1', label: 'South America (São Paulo)' },
 			]
 		},
+
+		/**
+		 * Time window options for incremental synchronization
+		 *
+		 * @return {Array<object>} Array of time window options
+		 */
+		timeWindowOptions() {
+			return [
+				{ value: 5, label: '5 minutes' },
+				{ value: 10, label: '10 minutes' },
+				{ value: 30, label: '30 minutes' },
+				{ value: 60, label: '1 hour' },
+				{ value: 720, label: '12 hours' },
+				{ value: 1440, label: '1 day' },
+				{ value: 10080, label: '1 week' },
+				{ value: 43200, label: '1 month' },
+				{ value: 525600, label: '1 year' },
+				{ value: 0, label: 'All time (full sync)' },
+			]
+		},
 	},
 
 	watch: {
@@ -1153,6 +1337,7 @@ export default defineComponent({
 	 */
 	async created() {
 		await this.loadSettings()
+		await this.loadSyncStatus()
 	},
 
 	methods: {
@@ -1837,7 +2022,7 @@ export default defineComponent({
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ 
+					body: JSON.stringify({
 						userGroups: {
 							organizationAdmin: this.organizationAdminGroups
 						}
@@ -1882,7 +2067,7 @@ export default defineComponent({
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ 
+					body: JSON.stringify({
 						userGroups: {
 							superUser: this.superUserGroups
 						}
@@ -1913,17 +2098,22 @@ export default defineComponent({
 				'Functioneel-beheerder': 'Manages functional aspects of the system',
 				'VNG-raadpleger': 'Views VNG-related information',
 				'Organisatie-beheerder': 'Manages organization-specific settings and users',
-				'Bezoeker': 'Basic visitor access to the catalog',
-				'beheerder': 'System administrators and managers',
-				'inkoper': 'Procurement specialists',
-				'ambtenaar': 'Civil servants (auto-assigned for gemeente organizations)',
+				Bezoeker: 'Basic visitor access to the catalog',
+				beheerder: 'System administrators and managers',
+				inkoper: 'Procurement specialists',
+				ambtenaar: 'Civil servants (auto-assigned for gemeente organizations)',
 				'software-catalog-users': 'All software catalog users',
 			}
 			return descriptions[group] || 'User group for role-based access control'
 		},
 
 		updateEmailSetting(key, value) {
-			this.emailSettings[key] = value
+			// Handle case where NcSelect returns an option object instead of just the value
+			if (value && typeof value === 'object' && value.value !== undefined) {
+				this.emailSettings[key] = value.value
+			} else {
+				this.emailSettings[key] = value
+			}
 		},
 
 		async sendTestEmail() {
@@ -1979,7 +2169,7 @@ export default defineComponent({
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ 
+					body: JSON.stringify({
 						emailSettings: this.emailSettings
 					}),
 				})
@@ -2137,6 +2327,231 @@ export default defineComponent({
 			return `{{ ${variable} }}`
 		},
 
+		/**
+		 * Loads sync status from the backend
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async loadSyncStatus() {
+			this.loadingSyncStatus = true
+			try {
+				const minutesBack = this.selectedTimeWindow ? this.selectedTimeWindow.value : 10
+				const response = await fetch(`/index.php/apps/softwarecatalog/api/settings/sync-status?minutesBack=${minutesBack}`)
+				const data = await response.json()
+
+				if (data.error) {
+					this.syncStatus = {
+						configured: false,
+						message: data.error
+					}
+				} else {
+					this.syncStatus = data
+				}
+			} catch (error) {
+				this.syncStatus = {
+					configured: false,
+					message: 'Failed to load sync status: ' + error.message
+				}
+			} finally {
+				this.loadingSyncStatus = false
+			}
+		},
+
+		/**
+		 * Performs manual synchronization
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async performManualSync() {
+			this.performingSync = true
+			this.syncResult = null
+
+			try {
+				const minutesBack = this.selectedTimeWindow ? this.selectedTimeWindow.value : 10
+				const response = await fetch(`/index.php/apps/softwarecatalog/api/settings/sync?minutesBack=${minutesBack}`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				})
+
+				const data = await response.json()
+
+				if (data.success) {
+					this.syncResult = {
+						success: true,
+						message: data.message || 'Synchronization completed successfully!',
+						results: data
+					}
+					// Refresh sync status after successful sync
+					await this.loadSyncStatus()
+				} else {
+					this.syncResult = {
+						success: false,
+						message: data.message || 'Synchronization failed'
+					}
+				}
+			} catch (error) {
+				this.syncResult = {
+					success: false,
+					message: 'Failed to perform synchronization: ' + error.message
+				}
+			} finally {
+				this.performingSync = false
+			}
+		},
+
+		/**
+		 * Handles time window selection change
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async handleTimeWindowChange() {
+			// Reload sync status with new time window
+			await this.loadSyncStatus()
+		},
+
+		/**
+		 * Formats time window value for display
+		 *
+		 * @param {number} minutes - Time window in minutes
+		 * @return {string} Formatted time window string
+		 */
+		formatTimeWindow(minutes) {
+			if (minutes === 0) {
+				return 'All time (full sync)'
+			} else if (minutes < 60) {
+				return `${minutes} minutes`
+			} else if (minutes < 1440) {
+				const hours = Math.floor(minutes / 60)
+				return hours === 1 ? '1 hour' : `${hours} hours`
+			} else if (minutes < 10080) {
+				const days = Math.floor(minutes / 1440)
+				return days === 1 ? '1 day' : `${days} days`
+			} else if (minutes < 43200) {
+				const weeks = Math.floor(minutes / 10080)
+				return weeks === 1 ? '1 week' : `${weeks} weeks`
+			} else if (minutes < 525600) {
+				const months = Math.floor(minutes / 43200)
+				return months === 1 ? '1 month' : `${months} months`
+			} else {
+				const years = Math.floor(minutes / 525600)
+				return years === 1 ? '1 year' : `${years} years`
+			}
+		},
+
+		/**
+		 * Gets description for the current time window selection
+		 *
+		 * @return {string} Time window description
+		 */
+		getTimeWindowDescription() {
+			if (!this.selectedTimeWindow) {
+				return 'Select a time window to see predictions'
+			}
+
+			const minutes = this.selectedTimeWindow.value
+			if (minutes === 0) {
+				return 'Full synchronization - processes all organizations regardless of when they were last updated'
+			} else {
+				return `Incremental synchronization - only processes organizations updated in the last ${this.formatTimeWindow(minutes)}`
+			}
+		},
+
+		/**
+		 * Gets the efficiency class based on the efficiency improvement percentage
+		 *
+		 * @param {number} efficiency - Efficiency improvement percentage
+		 * @return {string} Efficiency class
+		 */
+		getEfficiencyClass(efficiency) {
+			if (efficiency > 0) {
+				return 'positive'
+			} else if (efficiency < 0) {
+				return 'negative'
+			} else {
+				return 'neutral'
+			}
+		},
+
+		/**
+		 * Formats a number with commas
+		 *
+		 * @param {number} number - The number to format
+		 * @return {string} Formatted number
+		 */
+		formatNumber(number) {
+			return number.toLocaleString()
+		},
+
+		/**
+		 * Formats the last sync time
+		 *
+		 * @param {string} lastSyncTime - Last sync time in ISO format
+		 * @return {string} Formatted last sync time
+		 */
+		formatLastSyncTime(lastSyncTime) {
+			if (!lastSyncTime || lastSyncTime === 'Never') return 'Never'
+			try {
+				const date = new Date(lastSyncTime)
+				return date.toLocaleString()
+			} catch (error) {
+				return lastSyncTime
+			}
+		},
+
+		/**
+		 * Gets the message class based on the sync status
+		 *
+		 * @return {string} Message class
+		 */
+		getMessageClass() {
+			if (this.syncStatus.message) {
+				return 'error'
+			} else if (this.syncStatus.configured) {
+				return 'success'
+			} else {
+				return 'warning'
+			}
+		},
+
+		/**
+		 * Gets the message icon based on the sync status
+		 *
+		 * @return {string} Message icon
+		 */
+		getMessageIcon() {
+			if (this.syncStatus.message) {
+				return '❌'
+			} else if (this.syncStatus.configured) {
+				return '✅'
+			} else {
+				return '⚠️'
+			}
+		},
+
+		/**
+		 * Gets the estimated duration based on the sync status
+		 *
+		 * @return {string} Estimated duration
+		 */
+		getEstimatedDuration() {
+			if (!this.syncStatus.organizationsToProcess || !this.syncStatus.contactPersonsToProcess) return 'N/A'
+			const organizationsPerMinute = 1 / 60
+			const contactPersonsPerMinute = 1 / 60
+			const totalMinutes = (this.syncStatus.organizationsToProcess / organizationsPerMinute) + (this.syncStatus.contactPersonsToProcess / contactPersonsPerMinute)
+			return this.formatTimeWindow(totalMinutes)
+		},
+
+		getProcessingClass(value) {
+			if (value > 100) return 'high-load'
+			if (value > 10 && value <= 100) return 'medium-load'
+			if (value <= 10) return 'low-load'
+			return ''
+		},
 
 	},
 })
@@ -2405,5 +2820,405 @@ export default defineComponent({
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	background-color: var(--color-background-hover);
+}
+
+.sync-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.sync-status {
+	margin: 1rem 0;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-main-background);
+}
+
+.status-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.configuration-overview {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.config-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.config-label {
+	font-weight: bold;
+	min-width: 200px;
+	color: var(--color-main-text);
+}
+
+.config-value {
+	color: var(--color-text-maxcontrast);
+	text-align: right;
+}
+
+.status-configured {
+	color: var(--color-success);
+	font-weight: bold;
+}
+
+.status-missing {
+	color: var(--color-warning);
+	font-weight: bold;
+}
+
+.config-details {
+	margin-top: 0.5rem;
+}
+
+.status-message {
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	font-style: italic;
+}
+
+.status-loading {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.sync-actions {
+	margin: 1rem 0;
+	display: flex;
+	gap: 1rem;
+}
+
+.sync-result {
+	margin: 1rem 0;
+}
+
+.sync-result-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.sync-statistics {
+	margin-top: 1rem;
+}
+
+.sync-statistics h5 {
+	margin: 0.5rem 0;
+	font-weight: bold;
+}
+
+.sync-statistics ul {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+}
+
+.sync-statistics li {
+	margin: 0.25rem 0;
+}
+
+.sync-errors {
+	margin-top: 1rem;
+	padding: 0.5rem;
+	background-color: var(--color-error-hover);
+	border-radius: var(--border-radius);
+}
+
+.sync-errors h5 {
+	color: var(--color-error);
+	margin: 0 0 0.5rem 0;
+}
+
+.sync-errors ul {
+	margin: 0;
+	padding-left: 1.5rem;
+}
+
+.sync-errors li {
+	color: var(--color-error);
+	margin: 0.25rem 0;
+}
+
+.sync-info {
+	margin-top: 2rem;
+	padding: 1rem;
+	background-color: var(--color-background-dark);
+	border-radius: var(--border-radius);
+}
+
+.sync-info h4 {
+	margin: 0 0 1rem 0;
+}
+
+.sync-info p {
+	margin: 0.5rem 0;
+}
+
+.sync-info ul {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+}
+
+.sync-info li {
+	margin: 0.25rem 0;
+}
+
+.time-window-configuration {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-dark);
+}
+
+.time-window-configuration h4 {
+	margin: 0 0 0.5rem 0;
+	color: var(--color-main-text);
+}
+
+.time-window-configuration p {
+	margin: 0 0 1rem 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.time-window-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.time-window-selector {
+	flex: 1;
+	min-width: 200px;
+	max-width: 300px;
+}
+
+.sync-actions {
+	display: flex;
+	gap: 1rem;
+}
+
+.time-window-description {
+	font-size: 0.9em;
+	color: var(--color-text-maxcontrast);
+	font-style: italic;
+	line-height: 1.4;
+}
+
+.sync-predictions {
+	margin-bottom: 1rem;
+}
+
+.prediction-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.prediction-card {
+	flex: 1;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.prediction-label {
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+.prediction-value {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+.prediction-value.full-sync {
+	color: var(--color-success);
+}
+
+.prediction-value.incremental-sync {
+	color: var(--color-warning);
+}
+
+.prediction-value.high-load {
+	color: var(--color-error);
+}
+
+.prediction-value.medium-load {
+	color: var(--color-warning);
+}
+
+.prediction-value.low-load {
+	color: var(--color-success);
+	font-weight: bold;
+}
+
+.efficiency-metrics {
+	margin-top: 1rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.efficiency-card {
+	flex: 1;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.efficiency-label {
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+.efficiency-value {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+.efficiency-value.positive {
+	color: var(--color-success);
+}
+
+.efficiency-value.negative {
+	color: var(--color-error);
+}
+
+.efficiency-value.neutral {
+	color: var(--color-warning);
+}
+
+.processing-estimate {
+	margin-top: 1rem;
+}
+
+.estimate-header {
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+.estimate-subtitle {
+	font-size: 0.9em;
+	color: var(--color-text-maxcontrast);
+	font-style: italic;
+}
+
+.estimate-content {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.estimate-item {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.estimate-icon {
+	font-size: 1.2em;
+}
+
+.estimate-text {
+	font-size: 1.2em;
+}
+
+.system-status-details {
+	margin-top: 1rem;
+}
+
+.status-message {
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	font-style: italic;
+}
+
+.message-icon {
+	font-size: 1.2em;
+	margin-right: 0.5rem;
+}
+
+.message-text {
+	font-size: 1.2em;
+}
+
+.error .message-icon {
+	color: var(--color-error);
+}
+
+.warning .message-icon {
+	color: var(--color-warning);
+}
+
+.success .message-icon {
+	color: var(--color-success);
+}
+
+.efficiency-highlight {
+	font-weight: bold;
+}
+
+.high-load {
+	color: var(--color-error);
+	font-weight: bold;
+}
+
+.medium-load {
+	color: var(--color-warning);
+	font-weight: bold;
+}
+
+.low-load {
+	color: var(--color-success);
+	font-weight: bold;
+}
+
+.sync-status-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 1rem;
+}
+
+.sync-status-table td {
+	padding: 0.5rem;
+	border: 1px solid var(--color-border);
+	vertical-align: top;
+}
+
+.sync-status-table .status-label {
+	font-weight: bold;
+	background-color: var(--color-background-hover);
+	min-width: 150px;
+}
+
+.sync-status-table .status-value {
+	background-color: var(--color-main-background);
+}
+
+.status-table {
+	margin-top: 1rem;
 }
 </style>

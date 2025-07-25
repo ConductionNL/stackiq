@@ -1,8 +1,53 @@
 # Organization Synchronization Use Cases and Testing
 
-**Date:** July 23, 2025  
+**Date:** July 24, 2025  
 **App:** SoftwareCatalog  
 **Feature:** Organization Synchronization with OpenRegister
+
+## 🚨 QUICK REFERENCE FOR NEW CONVERSATION
+
+### Current Implementation Status
+- ✅ **Anonymous user registration**: Fixed "No user logged in" error
+- ✅ **Ownership assignment**: Implemented automatic ownership transfer
+- ✅ **User status management**: Implemented activation/deactivation based on organization status
+- ✅ **Admin user protection**: Admin users remain unaffected by organization status changes
+- 🔄 **Testing needed**: Anonymous user registration via OpenConnector
+
+### Key API Endpoints
+```bash
+# Anonymous registration (MAIN TEST)
+POST http://nextcloud.local/index.php/apps/openconnector/api/endpoint/register
+
+# Authenticated organization management
+POST http://localhost/index.php/apps/openregister/api/objects/6/35
+PUT http://localhost/index.php/apps/openregister/api/objects/6/35/{UUID}
+GET http://localhost/index.php/apps/openregister/api/organisations/{UUID}
+```
+
+### Essential Commands
+```bash
+# User management
+docker-compose exec -u 33 nextcloud php /var/www/html/occ user:list
+docker-compose exec -u 33 nextcloud php /var/www/html/occ user:info {username}
+
+# Log monitoring
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "softwarecatalog"
+
+# Configuration
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_organisatie_schema
+```
+
+### Architecture Summary
+- **Objects**: OpenRegister schema-managed data (organisatie, contactpersoon)
+- **Entities**: Nextcloud entities (organisation, user)
+- **Flow**: Object creation → Entity creation → User creation → Ownership assignment
+
+### Next Priority Test
+1. Test anonymous user registration via OpenConnector
+2. Verify user creation and ownership assignment
+3. Test organization status changes affect user status
+
+---
 
 ## Overview
 
@@ -16,13 +61,13 @@ This document outlines the use cases and testing scenarios for the new organizat
 
 **Expected Behavior:**
 - Organization data is automatically synced to OpenRegister
-- Status mapping: `actief` → `active`, `inactief`/`deactief` → `inactive`
+- Status mapping: `actief` → `active: true`, `inactief`/`deactief` → `active: false`
 - Organization UUID is preserved across both systems
 - Contactpersonen are processed and users are created (inactive initially)
 
 **Test Steps:**
 1. Create a new organization in SoftwareCatalog with status `actief`
-2. Verify organization appears in OpenRegister with status `active`
+2. Verify organization appears in OpenRegister with `active: true`
 3. Verify organization UUID is identical in both systems
 4. Create contactpersonen for the organization
 5. Verify users are created but set to inactive initially
@@ -32,7 +77,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 **Scenario:** Organization status changes from `inactief` to `actief`
 
 **Expected Behavior:**
-- Organization is updated in OpenRegister with status `active`
+- Organization is updated in OpenRegister with `active: true`
 - All users in the organization are activated
 - Activation email is sent to the organization
 - Contactpersonen processing continues normally
@@ -43,14 +88,14 @@ This document outlines the use cases and testing scenarios for the new organizat
 3. Change organization status to `actief`
 4. Verify all users become active
 5. Verify activation email is sent
-6. Verify organization status is `active` in OpenRegister
+6. Verify organization has `active: true` in OpenRegister
 
 ### 3. Organization Status Change - Deactivation
 
 **Scenario:** Organization status changes from `actief` to `inactief`
 
 **Expected Behavior:**
-- Organization is updated in OpenRegister with status `inactive`
+- Organization is updated in OpenRegister with `active: false`
 - All users in the organization are deactivated
 - Users cannot log in but accounts are preserved
 

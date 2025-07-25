@@ -26,6 +26,7 @@ use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,13 +46,14 @@ class SettingsController extends Controller
     /**
      * SettingsController constructor.
      *
-     * @param string             $appName         The name of the app
-     * @param IRequest           $request         The request object
-     * @param IAppConfig         $config          The app configuration
-     * @param ContainerInterface $container       The container
-     * @param IAppManager        $appManager      The app manager
-     * @param SettingsService    $settingsService The settings service
-     * @param LoggerInterface    $logger          The logger instance
+     * @param string                  $appName                The name of the app
+     * @param IRequest                $request                The request object
+     * @param IAppConfig              $config                 The app configuration
+     * @param ContainerInterface      $container              The container
+     * @param IAppManager             $appManager             The app manager
+     * @param SettingsService         $settingsService        The settings service
+     * @param OrganizationSyncService $organizationSyncService The organization sync service
+     * @param LoggerInterface         $logger                 The logger instance
      */
     public function __construct(
         $appName,
@@ -60,6 +62,7 @@ class SettingsController extends Controller
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly SettingsService $settingsService,
+        private readonly OrganizationSyncService $organizationSyncService,
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
@@ -351,27 +354,42 @@ class SettingsController extends Controller
     }
 
     /**
-     * Send test email
+     * Send a test email
      *
-     * @return JSONResponse JSON response containing test email results
+     * @return JSONResponse
      *
      * @NoCSRFRequired
      */
     public function sendTestEmail(): JSONResponse
     {
+        $this->logger->info('SoftwareCatalog: Test email endpoint called');
+        
         try {
             $data = $this->request->getParams();
             $email = $data['email'] ?? '';
             $emailSettings = $data['emailSettings'] ?? [];
             
+            $this->logger->info('SoftwareCatalog: Test email request data', [
+                'email' => $email,
+                'has_email_settings' => !empty($emailSettings),
+                'transport_type' => $emailSettings['transportType'] ?? 'not specified'
+            ]);
+            
             if (empty($email)) {
+                $this->logger->warning('SoftwareCatalog: Test email request missing email address');
                 return new JSONResponse([
                     'success' => false,
                     'message' => 'Email address is required'
                 ], 400);
             }
             
+            $this->logger->info('SoftwareCatalog: Delegating to SettingsService.sendTestEmail');
             $result = $this->settingsService->sendTestEmail($email, $emailSettings);
+            
+            $this->logger->info('SoftwareCatalog: Test email result from service', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'no message'
+            ]);
             
             return new JSONResponse([
                 'success' => $result['success'],
@@ -379,14 +397,51 @@ class SettingsController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            $this->logger->error('Failed to send test email', [
-                'exception' => $e->getMessage(),
+            $this->logger->error('SoftwareCatalog: Failed to send test email in controller', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
                 'requestData' => $this->request->getParams()
             ]);
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Failed to send test email: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Get organization synchronization status with processing predictions
+     *
+     * @param int $minutesBack Number of minutes to look back for prediction (default: 10)
+     * 
+     * @return JSONResponse JSON response containing sync status information
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getSyncStatus(int $minutesBack = 10): JSONResponse
+    {
+        $status = $this->organizationSyncService->getSyncStatusWithErrorHandling($minutesBack);
+        return new JSONResponse($status);
+    }
+
+    /**
+     * Perform manual organization synchronization
+     *
+     * @param int $minutesBack Number of minutes to look back for changes (default: 0 for full sync)
+     *
+     * @return JSONResponse JSON response containing sync results
+     *
+     * @NoCSRFRequired
+     */
+    public function performSync(int $minutesBack = 0): JSONResponse
+    {
+        $result = $this->organizationSyncService->performManualSync($minutesBack);
+        
+        if ($result['success']) {
+            return new JSONResponse($result);
+        } else {
+            return new JSONResponse($result, 500);
         }
     }
 

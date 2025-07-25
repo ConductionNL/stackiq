@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\EventListener;
 
-use OCA\SoftwareCatalog\Service\SoftwareCatalogueService;
+use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -56,6 +56,9 @@ class SoftwareCatalogEventListener implements IEventListener
 
     /**
      * Handles events related to software catalog objects
+     * 
+     * DISABLED: All processing is now handled by cron-based OrganizationSyncService
+     * to avoid race conditions and ensure consistent processing.
      *
      * @param  Event $event The event to handle
      *
@@ -63,72 +66,21 @@ class SoftwareCatalogEventListener implements IEventListener
      */
     public function handle(Event $event): void
     {
-        // Enhanced debug logging
-        error_log("SoftwareCatalog: Event received - " . get_class($event) . " at " . date('Y-m-d H:i:s'));
+        // All processing is now handled by the cron-based OrganizationSyncService
+        // This prevents race conditions, infinite loops, and ensures consistent processing
         
         try {
-            // Get services from the server container with detailed logging
-            error_log("SoftwareCatalog: Attempting to get services from container");
-            
-            $softwareCatalogueService = \OC::$server->get(SoftwareCatalogueService::class);
-            error_log("SoftwareCatalog: SoftwareCatalogueService retrieved successfully");
-            
-            $settingsService = \OC::$server->get(SettingsService::class);
-            error_log("SoftwareCatalog: SettingsService retrieved successfully");
-            
             $logger = \OC::$server->get(LoggerInterface::class);
-            error_log("SoftwareCatalog: Logger retrieved successfully");
-            
-            // Log event details
-            $logger->info('SoftwareCatalog: Event received and services retrieved', [
-                'eventClass' => get_class($event),
-                'timestamp' => date('Y-m-d H:i:s'),
-                'servicesRetrieved' => json_encode([
-                    'softwareCatalogueService' => $softwareCatalogueService !== null,
-                    'settingsService' => $settingsService !== null,
-                    'logger' => $logger !== null
-                ])
+            $logger->debug('SoftwareCatalog: Event processing disabled - using cron-based sync', [
+                'eventType' => get_class($event),
+                'message' => 'All processing is handled by OrganizationSyncService cron job to avoid race conditions'
             ]);
-
-            // Handle different event types
-            if ($event instanceof ObjectCreatedEvent) {
-                error_log("SoftwareCatalog: Processing ObjectCreatedEvent");
-                $logger->info('SoftwareCatalog: Processing ObjectCreatedEvent');
-                $this->handleObjectCreated($event, $softwareCatalogueService, $settingsService, $logger);
-            } elseif ($event instanceof ObjectUpdatedEvent) {
-                error_log("SoftwareCatalog: Processing ObjectUpdatedEvent");
-                $logger->info('SoftwareCatalog: Processing ObjectUpdatedEvent');
-                $this->handleObjectUpdated($event, $softwareCatalogueService, $settingsService, $logger);
-            } elseif ($event instanceof ObjectDeletedEvent) {
-                error_log("SoftwareCatalog: Processing ObjectDeletedEvent");
-                $logger->info('SoftwareCatalog: Processing ObjectDeletedEvent');
-                $this->handleObjectDeleted($event, $softwareCatalogueService, $settingsService, $logger);
-            } else {
-                error_log("SoftwareCatalog: Unknown event type: " . get_class($event));
-                $logger->warning('SoftwareCatalog: Unknown event type', [
-                    'eventClass' => get_class($event)
-                ]);
-            }
-            
         } catch (\Exception $e) {
-            error_log("SoftwareCatalog: Error in event handler: " . $e->getMessage());
-            error_log("SoftwareCatalog: Error trace: " . $e->getTraceAsString());
-            
-            // Try to get logger for error logging
-            try {
-                $logger = \OC::$server->get(LoggerInterface::class);
-                if ($logger) {
-                    $logger->error('SoftwareCatalog: Error in event handler: ' . $e->getMessage(), [
-                        'exception' => $e->getMessage(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-                }
-            } catch (\Exception $logError) {
-                error_log("SoftwareCatalog: Failed to log error: " . $logError->getMessage());
-            }
+            // Silently fail - logging is not critical
         }
+        
+        // Early return - no processing
+        return;
     }
 
 
@@ -137,17 +89,16 @@ class SoftwareCatalogEventListener implements IEventListener
      * Handles object creation events
      *
      * @param ObjectCreatedEvent $event The creation event
-     * @param SoftwareCatalogueService $softwareCatalogueService The software catalog service
+     * @param ContactpersoonService $contactpersoonService The contact person service
      * @param SettingsService $settingsService The settings service
      * @param LoggerInterface $logger The logger instance
      * @return void
      */
-    private function handleObjectCreated(ObjectCreatedEvent $event, SoftwareCatalogueService $softwareCatalogueService, SettingsService $settingsService, LoggerInterface $logger): void
+    private function handleObjectCreated(ObjectCreatedEvent $event, ContactpersoonService $contactpersoonService, SettingsService $settingsService, LoggerInterface $logger): void
     {
         $object = $event->getObject();
         if ($object === null) {
             $logger->warning('SoftwareCatalog: ObjectCreatedEvent received with null object');
-            error_log("SoftwareCatalog: ObjectCreatedEvent received with null object");
             return;
         }
 
@@ -168,15 +119,13 @@ class SoftwareCatalogEventListener implements IEventListener
                 'objectData' => json_encode($object->getObject())
             ]
         );
-        
-        error_log("SoftwareCatalog: Processing object creation - ObjectId: $objectId, SchemaId: $objectSchemaId, RegisterId: $objectRegisterId");
 
         // Get configuration for different object types
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
         $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
 
-        $logger->info(
+        $logger->debug(
             'SoftwareCatalog: Configuration lookup results',
             [
                 'organisatieSchemaId' => $organisatieSchemaId,
@@ -185,35 +134,29 @@ class SoftwareCatalogEventListener implements IEventListener
                 'objectSchemaId' => $objectSchemaIdInt
             ]
         );
-        
-        error_log("SoftwareCatalog: Configuration - Organisatie: $organisatieSchemaId, Contactpersoon: $contactpersoonSchemaId, Contactgegevens: $contactgegevensSchemaId");
 
-        // Check if this is an organization object
+        // Organization processing is now handled by cron job - skip organization events
         if ($organisatieSchemaId && $objectSchemaIdInt === (int) $organisatieSchemaId) {
-            $logger->info('SoftwareCatalog: Processing organization creation', ['objectId' => $objectId]);
-            error_log("SoftwareCatalog: Processing organization creation for object: $objectId");
-            $softwareCatalogueService->handleNewOrganization($object);
+            $logger->debug('SoftwareCatalog: Skipping organization creation - handled by cron job', ['objectId' => $objectId]);
             return;
         }
 
         // Check if this is a contactpersoon object
         if ($contactpersoonSchemaId && $objectSchemaIdInt === (int) $contactpersoonSchemaId) {
             $logger->info('SoftwareCatalog: Processing contactpersoon creation', ['objectId' => $objectId]);
-            error_log("SoftwareCatalog: Processing contactpersoon creation for object: $objectId");
-            $softwareCatalogueService->processContactpersoon($object);
+            $contactpersoonService->processContactpersoon($object);
             return;
         }
 
         // Check if this is a contactgegevens object (deprecated - use contactpersoon instead)
         if ($contactgegevensSchemaId && $objectSchemaIdInt === (int) $contactgegevensSchemaId) {
             $logger->info('SoftwareCatalog: Processing contactgegevens creation (deprecated)', ['objectId' => $objectId]);
-            error_log("SoftwareCatalog: Processing contactgegevens creation (deprecated) for object: $objectId");
             // Contactgegevens is deprecated, use contactpersoon instead
             return;
         }
 
         // Log unhandled object types
-        $logger->info(
+        $logger->debug(
             'SoftwareCatalog: Object creation not handled - not a supported object type',
             [
                 'objectId' => $objectId,
@@ -226,20 +169,18 @@ class SoftwareCatalogEventListener implements IEventListener
                 ]
             ]
         );
-        
-        error_log("SoftwareCatalog: Object creation not handled - SchemaId: $objectSchemaIdInt not in supported schemas");
     }
 
     /**
      * Handles object update events
      *
      * @param ObjectUpdatedEvent $event The update event
-     * @param SoftwareCatalogueService $softwareCatalogueService The software catalog service
+     * @param ContactpersoonService $contactpersoonService The contact person service
      * @param SettingsService $settingsService The settings service
      * @param LoggerInterface $logger The logger instance
      * @return void
      */
-    private function handleObjectUpdated(ObjectUpdatedEvent $event, SoftwareCatalogueService $softwareCatalogueService, SettingsService $settingsService, LoggerInterface $logger): void
+    private function handleObjectUpdated(ObjectUpdatedEvent $event, ContactpersoonService $contactpersoonService, SettingsService $settingsService, LoggerInterface $logger): void
     {
         $object = $event->getNewObject();
         $oldObject = $event->getOldObject();
@@ -269,42 +210,19 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
         
-        // Handle organisation updates - sync with OpenRegister and manage user status
+        // Organization updates are now handled by cron job - skip organization events
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
         
         if ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt) {
             $logger->info(
-                'SoftwareCatalog: Matched organisatie schema - processing update',
+                'SoftwareCatalog: Skipping organisatie update - handled by cron job',
                 [
                     'objectId' => $objectId,
                     'schemaId' => $objectSchemaId,
                     'configuredSchemaId' => $organisatieSchemaId
                 ]
             );
-            
-            try {
-                $softwareCatalogueService->handleOrganizationUpdate($object, $oldObject);
-                
-                $logger->info(
-                    'SoftwareCatalog: Successfully processed organisatie update',
-                    [
-                        'objectId' => $objectId,
-                        'timestamp' => date('Y-m-d H:i:s')
-                    ]
-                );
-            } catch (\Exception $e) {
-                $logger->error(
-                    'SoftwareCatalog: Failed to process organisatie update',
-                    [
-                        'objectId' => $objectId,
-                        'exception' => $e->getMessage(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                        'trace' => $e->getTraceAsString()
-                    ]
-                );
-            }
             return;
         }
         
@@ -323,7 +241,7 @@ class SoftwareCatalogEventListener implements IEventListener
             );
             
             try {
-                $softwareCatalogueService->handleContactpersoonUpdate($object, $oldObject);
+                $contactpersoonService->handleContactpersoonUpdate($object, $oldObject);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactpersoon update',
@@ -362,10 +280,11 @@ class SoftwareCatalogEventListener implements IEventListener
             );
             
             try {
-                $softwareCatalogueService->handleContactgegevensUpdate($object, $oldObject);
+                // Handle contactgegevens as contactpersoon (backward compatibility)
+                $contactpersoonService->handleContactpersoonUpdate($object, $oldObject);
                 
                 $logger->info(
-                    'SoftwareCatalog: Successfully processed contactgegevens update',
+                    'SoftwareCatalog: Successfully processed contactgegevens update (as contactpersoon)',
                     [
                         'objectId' => $objectId,
                         'timestamp' => date('Y-m-d H:i:s')
@@ -408,12 +327,12 @@ class SoftwareCatalogEventListener implements IEventListener
      * Handles object deletion events
      *
      * @param ObjectDeletedEvent $event The deletion event
-     * @param SoftwareCatalogueService $softwareCatalogueService The software catalog service
+     * @param ContactpersoonService $contactpersoonService The contact person service
      * @param SettingsService $settingsService The settings service
      * @param LoggerInterface $logger The logger instance
      * @return void
      */
-    private function handleObjectDeleted(ObjectDeletedEvent $event, SoftwareCatalogueService $softwareCatalogueService, SettingsService $settingsService, LoggerInterface $logger): void
+    private function handleObjectDeleted(ObjectDeletedEvent $event, ContactpersoonService $contactpersoonService, SettingsService $settingsService, LoggerInterface $logger): void
     {
         $object = $event->getObject();
         if ($object === null) {
@@ -435,43 +354,13 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
         
-        // Handle organisation deletion - deactivate users
+        // Organization deletion is now handled by cron job - skip organization events
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
         $objectSchemaIdInt = (int) $objectSchemaId;
         
         if ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt) {
-            $logger->info(
-                'SoftwareCatalog: Matched organisatie schema - processing deletion',
-                [
-                    'objectId' => $objectId,
-                    'schemaId' => $objectSchemaId,
-                    'configuredSchemaId' => $organisatieSchemaId
-                ]
-            );
-            
-            try {
-                $softwareCatalogueService->handleOrganizationDeletion($object);
-                
-                $logger->info(
-                    'SoftwareCatalog: Successfully processed organisatie deletion',
-                    [
-                        'objectId' => $objectId,
-                        'timestamp' => date('Y-m-d H:i:s')
-                    ]
-                );
-            } catch (\Exception $e) {
-                $logger->error(
-                    'SoftwareCatalog: Failed to process organisatie deletion',
-                    [
-                        'objectId' => $objectId,
-                        'exception' => $e->getMessage(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                        'trace' => $e->getTraceAsString()
-                    ]
-                );
-            }
+            $logger->info('SoftwareCatalog: Skipping organization deletion - handled by cron job', ['objectId' => $objectId]);
             return;
         }
         
@@ -490,7 +379,7 @@ class SoftwareCatalogEventListener implements IEventListener
             );
             
             try {
-                $softwareCatalogueService->handleContactDeletion($object);
+                $contactpersoonService->handleContactDeletion($object);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactpersoon deletion',
@@ -529,7 +418,7 @@ class SoftwareCatalogEventListener implements IEventListener
             );
             
             try {
-                $softwareCatalogueService->handleContactDeletion($object);
+                $contactpersoonService->handleContactDeletion($object);
                 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactgegevens deletion',

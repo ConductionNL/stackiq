@@ -36,7 +36,8 @@ use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
 use OCP\Security\ISecureRandom;
 use Psr\Container\ContainerInterface;
-use OCA\SoftwareCatalog\Service\PhpEmailService;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCA\SoftwareCatalog\Service\SettingsService;
 
 /**
  * Main Application class for SoftwareCatalog
@@ -72,14 +73,10 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
-        // Log registration start
-        error_log("SoftwareCatalog Application: Starting registration process");
-        
         include_once __DIR__ . '/../../vendor/autoload.php';
         
         // Register the handlers as services
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler', function (ContainerInterface $c) {
-            error_log("SoftwareCatalog Application: Creating OrganizationHandler service");
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler(
                 $c->get(IGroupManager::class),
                 $c->get(IUserManager::class),
@@ -90,7 +87,6 @@ class Application extends App implements IBootstrap
         });
 
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler', function (ContainerInterface $c) {
-            error_log("SoftwareCatalog Application: Creating ContactPersonHandler service");
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler(
                 $c->get(IUserManager::class),
                 $c->get(\OCP\Security\ISecureRandom::class),
@@ -99,12 +95,11 @@ class Application extends App implements IBootstrap
                 $c,
                 $c->get(IAppManager::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
-                $c->get(PhpEmailService::class)
+                $c->get(SymfonyEmailService::class)
             );
         });
 
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler', function (ContainerInterface $c) {
-            error_log("SoftwareCatalog Application: Creating GroupHandler service");
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler(
                 $c->get(IGroupManager::class),
                 $c->get(IUserManager::class),
@@ -116,7 +111,6 @@ class Application extends App implements IBootstrap
         });
 
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler', function (ContainerInterface $c) {
-            error_log("SoftwareCatalog Application: Creating HierarchyHandler service");
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler(
                 $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler'),
                 $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
@@ -125,27 +119,77 @@ class Application extends App implements IBootstrap
         });
 
         // Register event listeners for OpenRegister events
-        error_log("SoftwareCatalog Application: Registering event listeners");
-        
         $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
-        error_log("SoftwareCatalog Application: Registered ObjectCreatedEvent listener");
-        
         $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
-        error_log("SoftwareCatalog Application: Registered ObjectUpdatedEvent listener");
-        
         $context->registerEventListener(ObjectDeletedEvent::class, SoftwareCatalogEventListener::class);
-        error_log("SoftwareCatalog Application: Registered ObjectDeletedEvent listener");
-        
         $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
-        error_log("SoftwareCatalog Application: Registered ObjectLockedEvent listener");
-        
         $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
-        error_log("SoftwareCatalog Application: Registered ObjectUnlockedEvent listener");
-        
         $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
-        error_log("SoftwareCatalog Application: Registered ObjectRevertedEvent listener");
         
-        error_log("SoftwareCatalog Application: Registration process completed");
+        // Organization event listeners removed - now using cron job for organization synchronization
+        // Contact person event listeners are still active for real-time processing
+        
+        // Register new focused services
+        $context->registerService(\OCA\SoftwareCatalog\Service\OrganisatieService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\OrganisatieService(
+                $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler::class),
+                $container->get('Psr\Log\LoggerInterface'),
+                $container,
+                $container->get('OCP\App\IAppManager'),
+                $container->get('OCP\IConfig')
+            );
+        });
+
+        $context->registerService(\OCA\SoftwareCatalog\Service\ContactpersoonService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ContactpersoonService(
+                $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler::class),
+                $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler::class),
+                $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler::class),
+                $container->get('Psr\Log\LoggerInterface'),
+                $container,
+                $container->get('OCP\App\IAppManager'),
+                $container->get('OCP\IConfig')
+            );
+        });
+
+        // Register email service
+        $context->registerService(SymfonyEmailService::class, function ($container) {
+            return new SymfonyEmailService(
+                $container->get('OCP\IConfig'),
+                $container->get('Psr\Log\LoggerInterface'),
+                $container->get(SettingsService::class)
+            );
+        });
+
+        // Register settings service
+        $context->registerService(SettingsService::class, function ($container) {
+            return new SettingsService(
+                $container->get('OCP\IAppConfig'),
+                $container->get('OCP\IRequest'),
+                $container,
+                $container->get('OCP\App\IAppManager'),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
+
+        // Register organization sync service
+        $context->registerService(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\OrganizationSyncService(
+                $container->get(\OCA\SoftwareCatalog\Service\OrganisatieService::class),
+                $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
+                $container->get(SymfonyEmailService::class),
+                $container->get('OCP\IConfig'),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
+
+        // Register background job for organization contact synchronization
+        $context->registerService(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, function ($container) {
+            return new \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob(
+                $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                $container->get(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class)
+            );
+        });
     }
 
     /**
@@ -157,9 +201,10 @@ class Application extends App implements IBootstrap
      */
     public function boot(IBootContext $context): void
     {
-        error_log("SoftwareCatalog Application: Boot process started");
-        
-        // Application boot completed
-        error_log("SoftwareCatalog Application: Boot process completed");
+        // Register background job for organization contact synchronization
+        $jobList = $context->getServerContainer()->get('OCP\BackgroundJob\IJobList');
+        if (!$jobList->has(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, null)) {
+            $jobList->add(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class);
+        }
     }
 }
