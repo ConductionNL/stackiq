@@ -342,15 +342,14 @@ class OrganizationSyncService
 
                     // Send activation email if organization became active
                     if ($shouldBeActive && !$organisationEntity->getActive()) {
-                        try {
-                            $this->emailService->sendOrganizationActivationEmail($objectData);
-                            $this->logger->info('OrganizationSyncService: Sent organization activation email', [
+                        $emailSent = $this->sendOrganizationActivationEmail($objectData);
+                        if ($emailSent) {
+                            $this->logger->info('OrganizationSyncService: Organization activation email sent successfully', [
                                 'organisatieId' => $organisatieId
                             ]);
-                        } catch (\Exception $e) {
-                            $this->logger->warning('OrganizationSyncService: Failed to send organization activation email', [
-                                'organisatieId' => $organisatieId,
-                                'error' => $e->getMessage()
+                        } else {
+                            $this->logger->info('OrganizationSyncService: Organization activation email not sent (disabled or not configured)', [
+                                'organisatieId' => $organisatieId
                             ]);
                         }
                     }
@@ -378,15 +377,14 @@ class OrganizationSyncService
                     ]);
 
                     // Send registration email for new organization
-                    try {
-                        $this->emailService->sendOrganizationRegistrationEmail($objectData);
-                        $this->logger->info('OrganizationSyncService: Sent organization registration email', [
+                    $emailSent = $this->sendOrganizationRegistrationEmail($objectData);
+                    if ($emailSent) {
+                        $this->logger->info('OrganizationSyncService: Organization registration email sent successfully', [
                             'organisatieId' => $organisatieId
                         ]);
-                    } catch (\Exception $e) {
-                        $this->logger->warning('OrganizationSyncService: Failed to send organization registration email', [
-                            'organisatieId' => $organisatieId,
-                            'error' => $e->getMessage()
+                    } else {
+                        $this->logger->info('OrganizationSyncService: Organization registration email not sent (disabled or not configured)', [
+                            'organisatieId' => $organisatieId
                         ]);
                     }
                 }
@@ -399,6 +397,46 @@ class OrganizationSyncService
                 'exception' => $e
             ]);
             return null;
+        }
+    }
+    
+    /**
+     * Safely sends organization registration email with error handling
+     *
+     * @param array $organizationData The organization data
+     * @return bool True if email was sent successfully, false otherwise
+     */
+    private function sendOrganizationRegistrationEmail(array $organizationData): bool
+    {
+        try {
+            return $this->emailService->sendOrganizationRegistrationEmail($organizationData);
+        } catch (\Exception $e) {
+            $this->logger->warning('OrganizationSyncService: Organization registration email failed', [
+                'organizationId' => $organizationData['id'] ?? 'unknown',
+                'organizationName' => $organizationData['naam'] ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+    
+    /**
+     * Safely sends organization activation email with error handling
+     *
+     * @param array $organizationData The organization data
+     * @return bool True if email was sent successfully, false otherwise
+     */
+    private function sendOrganizationActivationEmail(array $organizationData): bool
+    {
+        try {
+            return $this->emailService->sendOrganizationActivationEmail($organizationData);
+        } catch (\Exception $e) {
+            $this->logger->warning('OrganizationSyncService: Organization activation email failed', [
+                'organizationId' => $organizationData['id'] ?? 'unknown',
+                'organizationName' => $organizationData['naam'] ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+            return false;
         }
     }
 
@@ -686,6 +724,9 @@ class OrganizationSyncService
                 'contactSchemaConfigured' => !empty($contactSchema),
                 'lastSyncTime' => $this->config->getAppValue('softwarecatalog', 'last_sync_time', 'Never'),
                 
+                // Email configuration status
+                'emailStatus' => $this->getEmailConfigurationStatus(),
+                
                 // Status messages
                 'message' => count($incrementalOrganisatieObjects) > 0 
                     ? "Ready to process {$this->formatNumber(count($incrementalOrganisatieObjects))} organizations and {$this->formatNumber($predictedContactPersonsToProcess)} contact persons"
@@ -699,6 +740,28 @@ class OrganizationSyncService
             return [
                 'configured' => false,
                 'message' => 'Error checking sync status: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Gets email configuration status for sync reporting
+     *
+     * @return array Email configuration status
+     */
+    private function getEmailConfigurationStatus(): array
+    {
+        try {
+            return $this->emailService->isEmailSystemConfigured();
+        } catch (\Exception $e) {
+            $this->logger->warning('OrganizationSyncService: Failed to check email configuration status', [
+                'error' => $e->getMessage()
+            ]);
+            return [
+                'configured' => false,
+                'reason' => 'Error checking email configuration: ' . $e->getMessage(),
+                'hasCredentials' => false,
+                'hasTemplates' => false
             ];
         }
     }

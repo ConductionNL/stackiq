@@ -354,27 +354,42 @@ class SettingsController extends Controller
     }
 
     /**
-     * Send test email
+     * Send a test email
      *
-     * @return JSONResponse JSON response containing test email results
+     * @return JSONResponse
      *
      * @NoCSRFRequired
      */
     public function sendTestEmail(): JSONResponse
     {
+        $this->logger->info('SoftwareCatalog: Test email endpoint called');
+        
         try {
             $data = $this->request->getParams();
             $email = $data['email'] ?? '';
             $emailSettings = $data['emailSettings'] ?? [];
             
+            $this->logger->info('SoftwareCatalog: Test email request data', [
+                'email' => $email,
+                'has_email_settings' => !empty($emailSettings),
+                'transport_type' => $emailSettings['transportType'] ?? 'not specified'
+            ]);
+            
             if (empty($email)) {
+                $this->logger->warning('SoftwareCatalog: Test email request missing email address');
                 return new JSONResponse([
                     'success' => false,
                     'message' => 'Email address is required'
                 ], 400);
             }
             
+            $this->logger->info('SoftwareCatalog: Delegating to SettingsService.sendTestEmail');
             $result = $this->settingsService->sendTestEmail($email, $emailSettings);
+            
+            $this->logger->info('SoftwareCatalog: Test email result from service', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'no message'
+            ]);
             
             return new JSONResponse([
                 'success' => $result['success'],
@@ -382,8 +397,9 @@ class SettingsController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            $this->logger->error('Failed to send test email', [
-                'exception' => $e->getMessage(),
+            $this->logger->error('SoftwareCatalog: Failed to send test email in controller', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
                 'requestData' => $this->request->getParams()
             ]);
             return new JSONResponse([

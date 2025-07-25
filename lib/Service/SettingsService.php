@@ -22,6 +22,10 @@ use Psr\Container\ContainerInterface;
 use OCP\AppFramework\Http\JSONResponse;
 use Psr\Log\LoggerInterface;
 use OC_App;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Address;
 
 /**
  * Service for handling settings-related operations in the SoftwareCatalog.
@@ -62,11 +66,11 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig         $config     App configuration interface
-     * @param IRequest           $request    Request interface
-     * @param ContainerInterface $container  Container for dependency injection
-     * @param IAppManager        $appManager App manager interface
-     * @param LoggerInterface    $logger     Logger interface
+     * @param IAppConfig         $config       App configuration interface
+     * @param IRequest           $request      Request interface
+     * @param ContainerInterface $container    Container for dependency injection
+     * @param IAppManager        $appManager   App manager interface
+     * @param LoggerInterface    $logger       Logger interface
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -919,7 +923,9 @@ class SettingsService
      */
     public function getEmailSettings(): array
     {
-        return [
+        $this->logger->debug('SoftwareCatalog: Loading email settings from configuration');
+        
+        $settings = [
             'enabled' => $this->config->getValueString($this->_appName, 'email_enabled', 'false') === 'true',
             'senderEmail' => $this->config->getValueString($this->_appName, 'sender_email', 'noreply@softwarecatalogus.nl'),
             'senderName' => $this->config->getValueString($this->_appName, 'sender_name', 'Software Catalogus'),
@@ -964,8 +970,21 @@ class SettingsService
                 'organization_activation' => $this->getEmailTemplate('organization_activation'),
                 'user_creation' => $this->getEmailTemplate('user_creation'),
                 'user_password' => $this->getEmailTemplate('user_password'),
-            ],
+            ]
         ];
+        
+        $this->logger->info('SoftwareCatalog: Email settings loaded from configuration', [
+            'enabled' => $settings['enabled'],
+            'transport_type' => $settings['transportType'],
+            'sender_email' => $settings['senderEmail'],
+            'has_mailjet_api_key' => !empty($settings['mailjetApiKey']),
+            'mailjet_api_key_length' => strlen($settings['mailjetApiKey']),
+            'has_mailjet_secret_key' => !empty($settings['mailjetSecretKey']),
+            'mailjet_secret_key_length' => strlen($settings['mailjetSecretKey']),
+            'test_receiver_override' => $settings['testReceiverOverride']
+        ]);
+        
+        return $settings;
     }
 
     /**
@@ -1289,48 +1308,246 @@ class SettingsService
      */
     public function sendTestEmail(string $email, array $emailSettings = []): array
     {
+        $this->logger->info('SoftwareCatalog: Starting sendTestEmail process', [
+            'recipient' => $email,
+            'has_email_settings' => !empty($emailSettings)
+        ]);
+        
         try {
+            // Ensure vendor autoloader is loaded
+            include_once __DIR__ . '/../../vendor/autoload.php';
+            $this->logger->debug('SoftwareCatalog: Vendor autoloader loaded');
+            
             // Use provided settings or fall back to stored settings
             if (empty($emailSettings)) {
                 $emailSettings = $this->getEmailSettings();
+                $this->logger->info('SoftwareCatalog: Loaded email settings from storage');
+            } else {
+                $this->logger->info('SoftwareCatalog: Using provided email settings');
             }
+            
+            // Log the email configuration (without sensitive data)
+            $this->logger->info('SoftwareCatalog: Email configuration', [
+                'enabled' => $emailSettings['enabled'] ?? false,
+                'transport_type' => $emailSettings['transportType'] ?? 'unknown',
+                'sender_email' => $emailSettings['senderEmail'] ?? 'not set',
+                'sender_name' => $emailSettings['senderName'] ?? 'not set',
+                'has_mailjet_api_key' => !empty($emailSettings['mailjetApiKey']),
+                'has_mailjet_secret_key' => !empty($emailSettings['mailjetSecretKey']),
+            ]);
             
             // Check if email is enabled
             if (!($emailSettings['enabled'] ?? false)) {
+                $this->logger->warning('SoftwareCatalog: Email notifications are disabled');
                 return [
                     'success' => false,
                     'message' => 'Email notifications are disabled'
                 ];
             }
             
-            // Create a simple test email
-            $subject = 'SoftwareCatalog Test Email';
-            $message = "This is a test email from the SoftwareCatalog application.\n\n";
-            $message .= "If you received this email, your email configuration is working correctly.\n\n";
-            $message .= "Sent at: " . date('Y-m-d H:i:s') . "\n";
-            $message .= "Transport: " . ($emailSettings['transportType'] ?? 'smtp') . "\n";
-            
             // Use test receiver override if configured
             $recipient = $emailSettings['testReceiverOverride'] ?? $email;
+            $this->logger->info('SoftwareCatalog: Final recipient determined', [
+                'original_recipient' => $email,
+                'final_recipient' => $recipient,
+                'using_override' => !empty($emailSettings['testReceiverOverride'])
+            ]);
             
-            // For now, just simulate sending (would need actual email service integration)
-            $this->logger->info('Test email would be sent', [
+            // Create transport based on configuration
+            $this->logger->info('SoftwareCatalog: Creating email transport');
+            $transport = $this->createEmailTransport($emailSettings);
+            $this->logger->info('SoftwareCatalog: Email transport created successfully');
+            
+            $mailer = new Mailer($transport);
+            $this->logger->info('SoftwareCatalog: Mailer instance created');
+            
+            // Create test email
+            $senderEmail = $emailSettings['senderEmail'] ?? 'noreply@softwarecatalogus.nl';
+            $senderName = $emailSettings['senderName'] ?? 'Software Catalogus';
+            $transportType = $emailSettings['transportType'] ?? 'smtp';
+            
+            $this->logger->info('SoftwareCatalog: Creating email message', [
+                'sender_email' => $senderEmail,
+                'sender_name' => $senderName,
+                'transport_type' => $transportType,
+                'recipient' => $recipient
+            ]);
+            
+            $email = (new Email())
+                ->from(new Address($senderEmail, $senderName))
+                ->to($recipient)
+                ->subject('Software Catalogus - Test Email')
+                ->html('
+                    <h1>Test Email - Software Catalogus</h1>
+                    <p>Dit is een test email van de Software Catalogus.</p>
+                    <p>Als u deze email ontvangt, werkt het email systeem correct.</p>
+                    <p><strong>Transport Type:</strong> ' . htmlspecialchars($transportType) . '</p>
+                    <p><strong>Datum:</strong> ' . date('Y-m-d H:i:s') . '</p>
+                    <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
+                ');
+            
+            $this->logger->info('SoftwareCatalog: Email message created, attempting to send');
+            
+            // Send the email
+            $mailer->send($email);
+            
+            $this->logger->info('SoftwareCatalog: Email sent successfully via Symfony Mailer', [
                 'recipient' => $recipient,
-                'subject' => $subject,
-                'transport' => $emailSettings['transportType'] ?? 'smtp'
+                'transport' => $transportType,
+                'sender' => $senderEmail
             ]);
             
             return [
                 'success' => true,
-                'message' => "Test email sent successfully to {$recipient}"
+                'message' => "Test email sent successfully to {$recipient} via {$transportType}"
             ];
             
         } catch (\Exception $e) {
-            $this->logger->error('Failed to send test email: ' . $e->getMessage());
+            $this->logger->error('SoftwareCatalog: Failed to send test email', [
+                'recipient' => $email,
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return [
                 'success' => false,
                 'message' => 'Failed to send test email: ' . $e->getMessage()
             ];
+        }
+    }
+    
+    /**
+     * Creates an email transport based on configuration
+     *
+     * @param array $emailSettings Email settings
+     * @return \Symfony\Component\Mailer\Transport\TransportInterface
+     * @throws \Exception If transport configuration is invalid
+     */
+    private function createEmailTransport(array $emailSettings): \Symfony\Component\Mailer\Transport\TransportInterface
+    {
+        $transportType = $emailSettings['transportType'] ?? 'smtp';
+        
+        $this->logger->info('SoftwareCatalog: Creating transport', [
+            'transport_type' => $transportType
+        ]);
+        
+        switch ($transportType) {
+            case 'mailjet':
+                $this->logger->info('SoftwareCatalog: Creating Mailjet transport');
+                return $this->createMailjetTransport($emailSettings);
+            case 'smtp':
+                $this->logger->info('SoftwareCatalog: Creating SMTP transport');
+                return $this->createSmtpTransport($emailSettings);
+            default:
+                $this->logger->error('SoftwareCatalog: Unsupported transport type', [
+                    'transport_type' => $transportType
+                ]);
+                throw new \InvalidArgumentException("Unsupported transport type: {$transportType}");
+        }
+    }
+    
+    /**
+     * Creates a Mailjet transport
+     *
+     * @param array $settings Email settings
+     * @return \Symfony\Component\Mailer\Transport\TransportInterface
+     */
+    private function createMailjetTransport(array $settings): \Symfony\Component\Mailer\Transport\TransportInterface
+    {
+        $apiKey = $settings['mailjetApiKey'] ?? '';
+        $secretKey = $settings['mailjetSecretKey'] ?? '';
+        
+        $this->logger->info('SoftwareCatalog: Mailjet transport configuration', [
+            'has_api_key' => !empty($apiKey),
+            'api_key_length' => strlen($apiKey),
+            'has_secret_key' => !empty($secretKey),
+            'secret_key_length' => strlen($secretKey)
+        ]);
+        
+        if (empty($apiKey) || empty($secretKey)) {
+            $this->logger->error('SoftwareCatalog: Mailjet API key and secret key are required', [
+                'api_key_empty' => empty($apiKey),
+                'secret_key_empty' => empty($secretKey)
+            ]);
+            throw new \InvalidArgumentException('Mailjet API key and secret key are required');
+        }
+
+        $dsn = sprintf(
+            'mailjet+api://%s:%s@default',
+            urlencode($apiKey),
+            urlencode($secretKey)
+        );
+        
+        $this->logger->info('SoftwareCatalog: Creating Mailjet transport with DSN', [
+            'dsn_pattern' => 'mailjet+api://***:***@default'
+        ]);
+        
+        try {
+            $transport = Transport::fromDsn($dsn);
+            $this->logger->info('SoftwareCatalog: Mailjet transport created successfully', [
+                'transport_class' => get_class($transport)
+            ]);
+            return $transport;
+        } catch (\Exception $e) {
+            $this->logger->error('SoftwareCatalog: Failed to create Mailjet transport', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+    
+    /**
+     * Creates an SMTP transport
+     *
+     * @param array $settings Email settings
+     * @return \Symfony\Component\Mailer\Transport\TransportInterface
+     */
+    private function createSmtpTransport(array $settings): \Symfony\Component\Mailer\Transport\TransportInterface
+    {
+        $host = $settings['smtpHost'] ?? 'localhost';
+        $port = $settings['smtpPort'] ?? 587;
+        $encryption = $settings['smtpEncryption'] ?? 'tls';
+        $username = $settings['smtpUsername'] ?? '';
+        $password = $settings['smtpPassword'] ?? '';
+        
+        $this->logger->info('SoftwareCatalog: SMTP transport configuration', [
+            'host' => $host,
+            'port' => $port,
+            'encryption' => $encryption,
+            'has_username' => !empty($username),
+            'has_password' => !empty($password)
+        ]);
+        
+        $dsn = sprintf(
+            'smtp://%s:%s@%s:%d',
+            urlencode($username),
+            urlencode($password),
+            $host,
+            $port
+        );
+        
+        if ($encryption && $encryption !== 'none') {
+            $dsn .= '?encryption=' . $encryption;
+        }
+        
+        $this->logger->info('SoftwareCatalog: Creating SMTP transport with DSN', [
+            'dsn_pattern' => sprintf('smtp://***:***@%s:%d%s', $host, $port, $encryption && $encryption !== 'none' ? '?encryption=' . $encryption : '')
+        ]);
+        
+        try {
+            $transport = Transport::fromDsn($dsn);
+            $this->logger->info('SoftwareCatalog: SMTP transport created successfully', [
+                'transport_class' => get_class($transport)
+            ]);
+            return $transport;
+        } catch (\Exception $e) {
+            $this->logger->error('SoftwareCatalog: Failed to create SMTP transport', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage()
+            ]);
+            throw $e;
         }
     }
 

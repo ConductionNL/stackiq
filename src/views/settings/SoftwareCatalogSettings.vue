@@ -574,7 +574,6 @@
 									</div>
 								</div>
 							</div>
-							
 							<div v-if="syncStatus.message" class="status-message">
 								{{ syncStatus.message }}
 							</div>
@@ -689,11 +688,11 @@
 							<div class="setting-row">
 								<label class="setting-label">Transport Type:</label>
 								<NcSelect
-									v-model="emailSettings.transportType"
+									:value="emailSettings.transportType"
 									:options="transportOptions"
 									input-label="Transport Type"
 									placeholder="Select transport type"
-									@change="updateEmailSetting('transportType', $event)" />
+									@input="updateEmailSetting('transportType', $event)" />
 								<span class="setting-description">Choose the email transport provider</span>
 							</div>
 
@@ -720,11 +719,11 @@
 								<div class="setting-row">
 									<label class="setting-label">Encryption:</label>
 									<NcSelect
-										v-model="emailSettings.smtpEncryption"
+										:value="emailSettings.smtpEncryption"
 										:options="encryptionOptions"
 										input-label="Encryption"
 										placeholder="Select encryption"
-										@change="updateEmailSetting('smtpEncryption', $event)" />
+										@input="updateEmailSetting('smtpEncryption', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Username:</label>
@@ -813,11 +812,11 @@
 								<div class="setting-row">
 									<label class="setting-label">Region:</label>
 									<NcSelect
-										v-model="emailSettings.sesRegion"
+										:value="emailSettings.sesRegion"
 										:options="sesRegionOptions"
 										input-label="Region"
 										placeholder="Select region"
-										@change="updateEmailSetting('sesRegion', $event)" />
+										@input="updateEmailSetting('sesRegion', $event)" />
 								</div>
 							</div>
 
@@ -994,6 +993,7 @@
 							<NcTextArea
 								:value="getActiveTemplateContent()"
 								:placeholder="'Enter your template content here...'"
+								label="Template Content"
 								rows="15"
 								@update:value="updateTemplateContent($event)" />
 
@@ -1330,7 +1330,7 @@ export default defineComponent({
 				this.handleRegisterChange()
 			}
 		},
-		},
+	},
 
 	/**
 	 * Lifecycle hook that loads settings when component is created
@@ -2022,7 +2022,7 @@ export default defineComponent({
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ 
+					body: JSON.stringify({
 						userGroups: {
 							organizationAdmin: this.organizationAdminGroups
 						}
@@ -2067,7 +2067,7 @@ export default defineComponent({
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ 
+					body: JSON.stringify({
 						userGroups: {
 							superUser: this.superUserGroups
 						}
@@ -2108,7 +2108,12 @@ export default defineComponent({
 		},
 
 		updateEmailSetting(key, value) {
-			this.emailSettings[key] = value
+			// Handle case where NcSelect returns an option object instead of just the value
+			if (value && typeof value === 'object' && value.value !== undefined) {
+				this.emailSettings[key] = value.value
+			} else {
+				this.emailSettings[key] = value
+			}
 		},
 
 		async sendTestEmail() {
@@ -2164,7 +2169,7 @@ export default defineComponent({
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ 
+					body: JSON.stringify({
 						emailSettings: this.emailSettings
 					}),
 				})
@@ -2547,8 +2552,6 @@ export default defineComponent({
 			if (value <= 10) return 'low-load'
 			return ''
 		},
-
-
 
 	},
 })
@@ -3144,8 +3147,6 @@ export default defineComponent({
 .system-status-details {
 	margin-top: 1rem;
 }
-
-
 
 .status-message {
 	margin-top: 0.5rem;

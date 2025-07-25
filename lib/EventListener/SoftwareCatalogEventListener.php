@@ -69,16 +69,14 @@ class SoftwareCatalogEventListener implements IEventListener
         // All processing is now handled by the cron-based OrganizationSyncService
         // This prevents race conditions, infinite loops, and ensures consistent processing
         
-        error_log("SoftwareCatalog: Event received but SKIPPED - using cron-based sync: " . get_class($event) . " at " . date('Y-m-d H:i:s'));
-        
         try {
             $logger = \OC::$server->get(LoggerInterface::class);
-            $logger->info('SoftwareCatalog: Event processing disabled - using cron-based sync', [
+            $logger->debug('SoftwareCatalog: Event processing disabled - using cron-based sync', [
                 'eventType' => get_class($event),
                 'message' => 'All processing is handled by OrganizationSyncService cron job to avoid race conditions'
             ]);
         } catch (\Exception $e) {
-            error_log("SoftwareCatalog: Error logging event skip: " . $e->getMessage());
+            // Silently fail - logging is not critical
         }
         
         // Early return - no processing
@@ -101,7 +99,6 @@ class SoftwareCatalogEventListener implements IEventListener
         $object = $event->getObject();
         if ($object === null) {
             $logger->warning('SoftwareCatalog: ObjectCreatedEvent received with null object');
-            error_log("SoftwareCatalog: ObjectCreatedEvent received with null object");
             return;
         }
 
@@ -122,15 +119,13 @@ class SoftwareCatalogEventListener implements IEventListener
                 'objectData' => json_encode($object->getObject())
             ]
         );
-        
-        error_log("SoftwareCatalog: Processing object creation - ObjectId: $objectId, SchemaId: $objectSchemaId, RegisterId: $objectRegisterId");
 
         // Get configuration for different object types
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
         $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
 
-        $logger->info(
+        $logger->debug(
             'SoftwareCatalog: Configuration lookup results',
             [
                 'organisatieSchemaId' => $organisatieSchemaId,
@@ -139,20 +134,16 @@ class SoftwareCatalogEventListener implements IEventListener
                 'objectSchemaId' => $objectSchemaIdInt
             ]
         );
-        
-        error_log("SoftwareCatalog: Configuration - Organisatie: $organisatieSchemaId, Contactpersoon: $contactpersoonSchemaId, Contactgegevens: $contactgegevensSchemaId");
 
         // Organization processing is now handled by cron job - skip organization events
         if ($organisatieSchemaId && $objectSchemaIdInt === (int) $organisatieSchemaId) {
-            $logger->info('SoftwareCatalog: Skipping organization creation - handled by cron job', ['objectId' => $objectId]);
-            error_log("SoftwareCatalog: Skipping organization creation for object: $objectId - handled by cron job");
+            $logger->debug('SoftwareCatalog: Skipping organization creation - handled by cron job', ['objectId' => $objectId]);
             return;
         }
 
         // Check if this is a contactpersoon object
         if ($contactpersoonSchemaId && $objectSchemaIdInt === (int) $contactpersoonSchemaId) {
             $logger->info('SoftwareCatalog: Processing contactpersoon creation', ['objectId' => $objectId]);
-            error_log("SoftwareCatalog: Processing contactpersoon creation for object: $objectId");
             $contactpersoonService->processContactpersoon($object);
             return;
         }
@@ -160,13 +151,12 @@ class SoftwareCatalogEventListener implements IEventListener
         // Check if this is a contactgegevens object (deprecated - use contactpersoon instead)
         if ($contactgegevensSchemaId && $objectSchemaIdInt === (int) $contactgegevensSchemaId) {
             $logger->info('SoftwareCatalog: Processing contactgegevens creation (deprecated)', ['objectId' => $objectId]);
-            error_log("SoftwareCatalog: Processing contactgegevens creation (deprecated) for object: $objectId");
             // Contactgegevens is deprecated, use contactpersoon instead
             return;
         }
 
         // Log unhandled object types
-        $logger->info(
+        $logger->debug(
             'SoftwareCatalog: Object creation not handled - not a supported object type',
             [
                 'objectId' => $objectId,
@@ -179,8 +169,6 @@ class SoftwareCatalogEventListener implements IEventListener
                 ]
             ]
         );
-        
-        error_log("SoftwareCatalog: Object creation not handled - SchemaId: $objectSchemaIdInt not in supported schemas");
     }
 
     /**
