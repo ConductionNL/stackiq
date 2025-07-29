@@ -1479,6 +1479,17 @@ export default defineComponent({
 						this.loadVersionInfo(),
 						this.loadSettings()
 					])
+					
+					// If auto-configuration was successful, show additional success info
+					if (result.autoConfigResult && Object.keys(result.autoConfigResult).length > 0) {
+						console.log('Auto-configuration completed:', result.autoConfigResult)
+						
+						// Show a more detailed success message
+						this.importResult = {
+							...result,
+							message: result.message + ' Auto-configured voorzieningen register with organisatie and contactpersoon schemas.'
+						}
+					}
 				}
 			} catch (error) {
 				console.error('Failed to perform manual import:', error)
