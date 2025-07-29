@@ -241,7 +241,9 @@ class SettingsService
         try {
             // Update each setting in the configuration
             foreach ($data as $key => $value) {
-                $this->config->setValueString($this->_appName, $key, $value);
+                // Ensure value is converted to string as required by setValueString
+                $stringValue = is_string($value) ? $value : (string) $value;
+                $this->config->setValueString($this->_appName, $key, $stringValue);
                 // Retrieve the updated value to confirm the change
                 $data[$key] = $this->config->getValueString($this->_appName, $key);
             }
@@ -288,13 +290,13 @@ class SettingsService
                 }
 
                 if ($matchingRegister !== null) {
-                    $configuration["{$type}_register"] = $matchingRegister['id'];
+                    $configuration["{$type}_register"] = (string) $matchingRegister['id'];
 
                     // Try to find a matching schema
                     if (!empty($matchingRegister['schemas'])) {
                         foreach ($matchingRegister['schemas'] as $schema) {
                             if (stripos($schema['title'], $type) !== false) {
-                                $configuration["{$type}_schema"] = $schema['id'];
+                                $configuration["{$type}_schema"] = (string) $schema['id'];
                                 break;
                             }
                         }
@@ -312,6 +314,122 @@ class SettingsService
             return $configuration;
         } catch (\Exception $e) {
             throw new \RuntimeException('Failed to auto-configure: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Auto-configures settings specifically after importing the softwarecatalogus_register.json
+     * 
+     * This method looks for the voorzieningen register and automatically configures
+     * the organisatie and contactpersoon schemas.
+     *
+     * @return array The updated configuration
+     *
+     * @throws \RuntimeException If auto-configuration fails
+     */
+    public function autoConfigureAfterImport(): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            $registers = $objectService->getRegisters();
+
+            if (empty($registers)) {
+                $this->logger->info('No registers available for auto-configuration after import');
+                return [];
+            }
+
+            $configuration = [];
+            
+            // Look for the voorzieningen register
+            $voorzieningenRegister = null;
+            foreach ($registers as $register) {
+                $registerTitle = strtolower($register['title'] ?? '');
+                $registerSlug = strtolower($register['slug'] ?? '');
+                
+                if (stripos($registerTitle, 'voorzieningen') !== false || 
+                    stripos($registerSlug, 'voorzieningen') !== false ||
+                    $registerTitle === 'voorzieningen' ||
+                    $registerSlug === 'voorzieningen') {
+                    $voorzieningenRegister = $register;
+                    break;
+                }
+            }
+
+            if ($voorzieningenRegister === null) {
+                $this->logger->info('No voorzieningen register found for auto-configuration after import');
+                return [];
+            }
+
+            $this->logger->info('Found voorzieningen register for auto-configuration', [
+                'register_id' => $voorzieningenRegister['id'],
+                'register_title' => $voorzieningenRegister['title'],
+                'schemas_count' => count($voorzieningenRegister['schemas'] ?? [])
+            ]);
+
+            // Configure schemas within the voorzieningen register
+            if (!empty($voorzieningenRegister['schemas'])) {
+                foreach ($voorzieningenRegister['schemas'] as $schema) {
+                    $schemaTitle = strtolower($schema['title'] ?? '');
+                    $schemaSlug = strtolower($schema['slug'] ?? '');
+                    
+                    // Look for organisatie schema
+                    if (stripos($schemaTitle, 'organisatie') !== false || 
+                        stripos($schemaSlug, 'organisatie') !== false ||
+                        $schemaTitle === 'organisatie' ||
+                        $schemaSlug === 'organisatie') {
+                        
+                                                 // Set voorzieningen_organisatie configuration
+                         $configuration['voorzieningen_organisatie_source'] = 'openregister';
+                         $configuration['voorzieningen_organisatie_register'] = (string) $voorzieningenRegister['id'];
+                         $configuration['voorzieningen_organisatie_schema'] = (string) $schema['id'];
+                         
+                         // Also set backward compatibility organization configuration
+                         $configuration['organization_source'] = 'openregister';
+                         $configuration['organization_register'] = (string) $voorzieningenRegister['id'];
+                         $configuration['organization_schema'] = (string) $schema['id'];
+                        
+                        $this->logger->info('Configured organisatie schema', [
+                            'schema_id' => $schema['id'],
+                            'schema_title' => $schema['title']
+                        ]);
+                    }
+                    // Look for contactpersoon schema
+                    else if (stripos($schemaTitle, 'contactpersoon') !== false || 
+                             stripos($schemaSlug, 'contactpersoon') !== false ||
+                             $schemaTitle === 'contactpersoon' ||
+                             $schemaSlug === 'contactpersoon') {
+                        
+                                                 // Set voorzieningen_contactpersoon configuration
+                         $configuration['voorzieningen_contactpersoon_source'] = 'openregister';
+                         $configuration['voorzieningen_contactpersoon_register'] = (string) $voorzieningenRegister['id'];
+                         $configuration['voorzieningen_contactpersoon_schema'] = (string) $schema['id'];
+                         
+                         // Also set backward compatibility contact configuration
+                         $configuration['contact_source'] = 'openregister';
+                         $configuration['contact_register'] = (string) $voorzieningenRegister['id'];
+                         $configuration['contact_schema'] = (string) $schema['id'];
+                        
+                        $this->logger->info('Configured contactpersoon schema', [
+                            'schema_id' => $schema['id'],
+                            'schema_title' => $schema['title']
+                        ]);
+                    }
+                }
+            }
+
+            if (empty($configuration)) {
+                $this->logger->info('No matching schemas found in voorzieningen register for auto-configuration');
+            } else {
+                $this->logger->info('Auto-configuration after import completed successfully', [
+                    'configuration_keys' => array_keys($configuration),
+                    'register_used' => $voorzieningenRegister['title']
+                ]);
+            }
+
+            return $configuration;
+            
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to auto-configure after import: ' . $e->getMessage());
         }
     }
 
@@ -1655,13 +1773,29 @@ class SettingsService
             // Perform the import
             $importResult = $this->loadSettings($forceImport);
             
+            // Auto-configure after successful import
+            $autoConfigResult = null;
+            try {
+                $autoConfigResult = $this->autoConfigureAfterImport();
+                if (!empty($autoConfigResult)) {
+                    $this->updateSettings($autoConfigResult);
+                    $this->logger->info('Auto-configuration completed after import', [
+                        'configuration' => $autoConfigResult
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $this->logger->warning('Auto-configuration failed after import: ' . $e->getMessage());
+                // Don't fail the entire import if auto-configuration fails
+            }
+            
             // Get updated version info
             $updatedVersionInfo = $this->getVersionInfo();
             
             return [
                 'success' => true,
-                'message' => 'Configuration imported successfully.',
+                'message' => 'Configuration imported successfully' . (!empty($autoConfigResult) ? ' and auto-configured.' : '.'),
                 'importResult' => $importResult,
+                'autoConfigResult' => $autoConfigResult,
                 'versionInfo' => $updatedVersionInfo
             ];
             
