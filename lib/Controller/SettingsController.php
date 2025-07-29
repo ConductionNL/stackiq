@@ -447,6 +447,52 @@ class SettingsController extends Controller
 
 
 
+    /**
+     * Get version information for the app and configuration.
+     *
+     * @return JSONResponse JSON response containing version information.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getVersionInfo(): JSONResponse
+    {
+        try {
+            $data = $this->settingsService->getVersionInfo();
+            return new JSONResponse($data);
+        } catch (\Exception $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }
+    }//end getVersionInfo()
+
+    /**
+     * Manually trigger configuration import.
+     *
+     * @return JSONResponse JSON response containing import results.
+     *
+     * @NoCSRFRequired
+     */
+    public function manualImport(): JSONResponse
+    {
+        try {
+            $params = $this->request->getParams();
+            $forceImport = isset($params['force']) && $params['force'] === true;
+            
+            $result = $this->settingsService->manualImport($forceImport);
+            
+            if ($result['success']) {
+                return new JSONResponse($result);
+            } else {
+                return new JSONResponse($result, 400);
+            }
+        } catch (\Exception $e) {
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }//end manualImport()
 
 
 }//end class

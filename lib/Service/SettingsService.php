@@ -624,6 +624,7 @@ class SettingsService
             'openRegister' => false,
             'autoConfigured' => false,
             'fullyConfigured' => false,
+            'settingsLoaded' => false,
             'errors' => [],
         ];
 
@@ -656,6 +657,14 @@ class SettingsService
 
             $results['fullyConfigured'] = $this->isFullyConfigured();
 
+            // Load settings from file only if needed
+            if ($this->shouldLoadSettings()) {
+                $this->loadSettings();
+                $results['settingsLoaded'] = true;
+            } else {
+                $results['settingsLoaded'] = true; // Already up to date
+            }
+
         } catch (\Exception $e) {
             $results['errors'][] = $e->getMessage();
         }
@@ -666,51 +675,48 @@ class SettingsService
     /**
      * Load settings from register configuration files
      *
+     * @param bool $force Whether to force the import regardless of version checks.
+     *
      * @return array The loaded settings configuration
      *
      * @throws \RuntimeException If settings loading fails
      */
-    public function loadSettings(): array
+    public function loadSettings(bool $force = false): array
     {
         $results = [];
         
         try {
-            // Load settings from voorzieningen_register.json
-            $voorzieningenPath = __DIR__ . '/../Settings/voorzieningen_register.json';
-            if (file_exists($voorzieningenPath)) {
-                $voorzieningenContent = file_get_contents($voorzieningenPath);
-                $voorzieningenSettings = json_decode($voorzieningenContent, true);
+            // Load settings from merged softwarecatalogus_register.json
+            $softwareCatalogPath = __DIR__ . '/../Settings/softwarecatalogus_register.json';
+            if (file_exists($softwareCatalogPath)) {
+                $softwareCatalogContent = file_get_contents($softwareCatalogPath);
+                $softwareCatalogSettings = json_decode($softwareCatalogContent, true);
                 
                 if (json_last_error() === JSON_ERROR_NONE) {
-                    $results['voorzieningen'] = $voorzieningenSettings;
+                    $results['softwarecatalog'] = $softwareCatalogSettings;
                     
-                    // Import via configuration service if available
+                    // Import via configuration service if available with version checking
                     try {
                         $configurationService = $this->getConfigurationService();
-                        $configurationService->importFromJson($voorzieningenSettings, false);
-                        $results['voorzieningen_imported'] = true;
+                        
+                        // Get the current app version dynamically
+                        $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+                        
+                        $importResult = $configurationService->importFromJson(
+                            data: $softwareCatalogSettings,
+                            owner: null,
+                            appId: \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
+                            version: $currentAppVersion,
+                            force: $force
+                        );
+                        
+                        $results['softwarecatalog_imported'] = true;
+                        $results['import_result'] = $importResult;
                     } catch (\Exception $e) {
-                        $results['voorzieningen_import_error'] = $e->getMessage();
-                    }
-                }
-            }
-
-            // Load settings from amef_register.json  
-            $amefPath = __DIR__ . '/../Settings/amef_register.json';
-            if (file_exists($amefPath)) {
-                $amefContent = file_get_contents($amefPath);
-                $amefSettings = json_decode($amefContent, true);
-                
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $results['amef'] = $amefSettings;
-                    
-                    // Import via configuration service if available
-                    try {
-                        $configurationService = $this->getConfigurationService();
-                        $configurationService->importFromJson($amefSettings, false);
-                        $results['amef_imported'] = true;
-                    } catch (\Exception $e) {
-                        $results['amef_import_error'] = $e->getMessage();
+                        $results['softwarecatalog_import_error'] = $e->getMessage();
+                        $this->logger->error('Failed to import softwarecatalog settings: ' . $e->getMessage(), [
+                            'exception' => $e
+                        ]);
                     }
                 }
             }
@@ -1548,6 +1554,123 @@ class SettingsService
                 'exception_message' => $e->getMessage()
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Check if settings should be loaded based on version comparison.
+     *
+     * This method compares the current app version with the stored configuration
+     * version to determine if a settings import is needed.
+     *
+     * @return bool True if settings should be loaded, false otherwise.
+     */
+    private function shouldLoadSettings(): bool
+    {
+        try {
+            // Get the current app version
+            $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+            
+            // Get the configuration service to check stored version
+            $configurationService = $this->getConfigurationService();
+            $storedVersion = $configurationService->getConfiguredAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+            
+            // If no stored version exists, we need to load settings
+            if ($storedVersion === null) {
+                return true;
+            }
+            
+            // Compare versions using semantic versioning
+            // Load settings if current version is newer than stored version
+            return version_compare($currentAppVersion, $storedVersion, '>');
+            
+        } catch (\Exception $e) {
+            // If we can't determine versions, err on the side of loading settings
+            $this->logger->warning('Failed to check if settings should be loaded: ' . $e->getMessage());
+            return true;
+        }
+    }
+
+    /**
+     * Get version information for the app and configuration.
+     *
+     * This method returns version information including the current app version
+     * and the stored configuration version in OpenRegister.
+     *
+     * @return array Version information with app and configuration versions.
+     * @throws \RuntimeException If version retrieval fails.
+     */
+    public function getVersionInfo(): array
+    {
+        try {
+            // Get the current app version
+            $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+            
+            // Get the configuration service to check stored version
+            $configurationService = $this->getConfigurationService();
+            $storedConfigVersion = $configurationService->getConfiguredAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+            
+            // Determine if versions match
+            $versionsMatch = $storedConfigVersion !== null && 
+                           version_compare($currentAppVersion, $storedConfigVersion, '=');
+            
+            return [
+                'appName' => 'SoftwareCatalog',
+                'appVersion' => $currentAppVersion,
+                'configuredVersion' => $storedConfigVersion,
+                'versionsMatch' => $versionsMatch,
+                'needsUpdate' => $storedConfigVersion === null || 
+                               version_compare($currentAppVersion, $storedConfigVersion, '>')
+            ];
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to get version information: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Manually trigger configuration import from JSON.
+     *
+     * This method allows system administrators to manually trigger the import
+     * process, bypassing version checks.
+     *
+     * @param bool $forceImport Whether to force import regardless of version.
+     *
+     * @return array The import results with success/error information.
+     */
+    public function manualImport(bool $forceImport = false): array
+    {
+        try {
+            // Get version info first
+            $versionInfo = $this->getVersionInfo();
+            
+            // Check if import is needed (unless forced)
+            if (!$forceImport && $versionInfo['versionsMatch']) {
+                return [
+                    'success' => false,
+                    'message' => 'Configuration is already up to date. Use force import if you want to reimport.',
+                    'versionInfo' => $versionInfo
+                ];
+            }
+            
+            // Perform the import
+            $importResult = $this->loadSettings($forceImport);
+            
+            // Get updated version info
+            $updatedVersionInfo = $this->getVersionInfo();
+            
+            return [
+                'success' => true,
+                'message' => 'Configuration imported successfully.',
+                'importResult' => $importResult,
+                'versionInfo' => $updatedVersionInfo
+            ];
+            
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
         }
     }
 

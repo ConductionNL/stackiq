@@ -6,6 +6,77 @@
 			doc-url="https://docs.opencatalogi.nl" />
 
 		<NcSettingsSection
+			name="Version Information"
+			description="Current application and configuration versions">
+			<div v-if="!loadingVersionInfo" class="version-info">
+				<div class="version-details">
+					<div class="version-item">
+						<strong>Application:</strong> {{ versionInfo.appName }} v{{ versionInfo.appVersion }}
+					</div>
+					<div class="version-item">
+						<strong>Configured Version:</strong> 
+						<span v-if="versionInfo.configuredVersion">{{ versionInfo.configuredVersion }}</span>
+						<span v-else class="no-version">Not configured</span>
+					</div>
+					<div class="version-item">
+						<strong>Status:</strong>
+						<span v-if="versionInfo.versionsMatch" class="status-ok">✓ Up to date</span>
+						<span v-else-if="versionInfo.needsUpdate" class="status-warning">⚠ Update needed</span>
+						<span v-else class="status-error">✗ Version mismatch</span>
+					</div>
+				</div>
+
+				<!-- Manual Import Section -->
+				<div class="manual-import">
+					<div class="import-actions">
+						<NcButton
+							type="secondary"
+							:disabled="importing"
+							@click="manualImport(false)">
+							<template #icon>
+								<NcLoadingIcon v-if="importing" :size="20" />
+								<Refresh v-else :size="20" />
+							</template>
+							{{ versionInfo.needsUpdate ? 'Update Configuration' : 'Reimport Configuration' }}
+						</NcButton>
+						
+						<NcButton
+							v-if="!versionInfo.versionsMatch"
+							type="primary"
+							:disabled="importing"
+							@click="manualImport(true)">
+							<template #icon>
+								<NcLoadingIcon v-if="importing" :size="20" />
+								<Refresh v-else :size="20" />
+							</template>
+							Force Import
+						</NcButton>
+					</div>
+
+					<!-- Import Results -->
+					<div v-if="importResult" class="import-result">
+						<NcNoteCard 
+							v-if="importResult.success" 
+							type="success">
+							{{ importResult.message }}
+						</NcNoteCard>
+						<NcNoteCard 
+							v-else 
+							type="error">
+							{{ importResult.message }}
+						</NcNoteCard>
+					</div>
+				</div>
+			</div>
+
+			<!-- Loading State -->
+			<NcLoadingIcon v-else
+				class="loading-icon"
+				:size="64"
+				appearance="dark" />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			name="OpenRegister Integration"
 			description="Configure which schemas to use for organizations, contacts, and users">
 			<div v-if="!loading">
@@ -1098,6 +1169,8 @@ export default defineComponent({
 			initializing: false,
 			autoConfiguring: false,
 			initializationResults: null,
+			loadingVersionInfo: true,
+			importing: false,
 			settings: {
 				objectTypes: [],
 				openRegisters: false,
@@ -1175,6 +1248,15 @@ export default defineComponent({
 			performingSync: false,
 			syncResult: null,
 			selectedTimeWindow: { value: 10, label: '10 minutes' },
+			// Version-related data
+			versionInfo: {
+				appName: '',
+				appVersion: '',
+				configuredVersion: null,
+				versionsMatch: false,
+				needsUpdate: false,
+			},
+			importResult: null,
 		}
 	},
 
@@ -1336,11 +1418,79 @@ export default defineComponent({
 	 * Lifecycle hook that loads settings when component is created
 	 */
 	async created() {
-		await this.loadSettings()
-		await this.loadSyncStatus()
+		await Promise.all([
+			this.loadSettings(),
+			this.loadSyncStatus(),
+			this.loadVersionInfo()
+		])
 	},
 
 	methods: {
+		/**
+		 * Loads version information from the backend
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async loadVersionInfo() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
+				const data = await response.json()
+
+				if (!data.error) {
+					this.versionInfo = data
+				} else {
+					console.error('Failed to load version info:', data.error)
+				}
+
+				this.loadingVersionInfo = false
+			} catch (error) {
+				console.error('Failed to load version info:', error)
+				this.loadingVersionInfo = false
+			}
+		},
+
+		/**
+		 * Manually trigger configuration import
+		 *
+		 * @param {boolean} force Whether to force the import
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async manualImport(force = false) {
+			this.importing = true
+			this.importResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/import', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ force }),
+				})
+
+				const result = await response.json()
+				this.importResult = result
+
+				// If successful, update version info and reload settings
+				if (result.success) {
+					await Promise.all([
+						this.loadVersionInfo(),
+						this.loadSettings()
+					])
+				}
+			} catch (error) {
+				console.error('Failed to perform manual import:', error)
+				this.importResult = {
+					success: false,
+					message: 'Import failed: ' + error.message,
+				}
+			} finally {
+				this.importing = false
+			}
+		},
+
 		/**
 		 * Loads settings from the backend API
 		 *
@@ -3219,6 +3369,62 @@ export default defineComponent({
 }
 
 .status-table {
+	margin-top: 1rem;
+}
+
+.version-info {
+	max-width: 600px;
+}
+
+.version-details {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius-large);
+}
+
+.version-item {
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.version-item:last-child {
+	margin-bottom: 0;
+}
+
+.no-version {
+	color: var(--color-text-lighter);
+	font-style: italic;
+}
+
+.status-ok {
+	color: var(--color-success);
+	font-weight: bold;
+}
+
+.status-warning {
+	color: var(--color-warning);
+	font-weight: bold;
+}
+
+.status-error {
+	color: var(--color-error);
+	font-weight: bold;
+}
+
+.manual-import {
+	margin-top: 1.5rem;
+}
+
+.import-actions {
+	display: flex;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.import-result {
 	margin-top: 1rem;
 }
 </style>

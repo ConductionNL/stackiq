@@ -33,6 +33,10 @@ return [
         ['name' => 'settings#getSyncStatus', 'url' => '/api/settings/sync-status', 'verb' => 'GET'],
         ['name' => 'settings#performSync', 'url' => '/api/settings/sync', 'verb' => 'POST'],
 
+        // Version and import management routes
+        ['name' => 'settings#getVersionInfo', 'url' => '/api/settings/version', 'verb' => 'GET'],
+        ['name' => 'settings#manualImport', 'url' => '/api/settings/import', 'verb' => 'POST'],
+
         // Legacy email routes (for backward compatibility)
         ['name' => 'settings#send_test_email', 'url' => '/api/email/test', 'verb' => 'POST'],
     ],

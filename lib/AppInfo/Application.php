@@ -201,10 +201,44 @@ class Application extends App implements IBootstrap
      */
     public function boot(IBootContext $context): void
     {
+        $container = $context->getServerContainer();
+        
+        try {
+            // Performance optimization: Only initialize settings if app version has changed
+            $config = $container->get(IConfig::class);
+            $currentAppVersion = $container->get(IAppManager::class)->getAppVersion(self::APP_ID);
+            $lastInitializedVersion = $config->getAppValue(self::APP_ID, 'last_initialized_version', '');
+
+            if ($lastInitializedVersion !== $currentAppVersion) {
+                $settingsService = $container->get(SettingsService::class);
+                $settingsService->initialize();
+                $config->setAppValue(self::APP_ID, 'last_initialized_version', $currentAppVersion);
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the boot process
+            $logger = $container->get(LoggerInterface::class);
+            $logger->error('SoftwareCatalog boot error during initialization: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+        }
+
         // Register background job for organization contact synchronization
-        $jobList = $context->getServerContainer()->get('OCP\BackgroundJob\IJobList');
+        $jobList = $container->get('OCP\BackgroundJob\IJobList');
         if (!$jobList->has(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, null)) {
             $jobList->add(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class);
+        }
+
+        // Check if initial sync has been done
+        try {
+            $initialSyncDone = $config->getAppValue(self::APP_ID, 'initial_sync_done', 'false');
+            if ($initialSyncDone === 'false') {
+                // Mark as done to prevent repeated attempts
+                $config->setAppValue(self::APP_ID, 'initial_sync_done', 'true');
+            }
+        } catch (\Exception $e) {
+            // Log but don't fail
+            $logger = $container->get(LoggerInterface::class);
+            $logger->error('SoftwareCatalog boot error during sync check: ' . $e->getMessage());
         }
     }
 }
