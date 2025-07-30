@@ -343,6 +343,19 @@
 						Save Configuration
 					</NcButton>
 
+					<!-- Quick Save Schema Values Button -->
+					<NcButton
+						v-if="isRegisterType('voorzieningen')"
+						type="primary"
+						:disabled="loading || savingSchemas || !hasSchemaValuesToSave"
+						@click="saveSchemaValues">
+						<template #icon>
+							<NcLoadingIcon v-if="savingSchemas" :size="20" />
+							<Save v-else :size="20" />
+						</template>
+						Save Schema Values
+					</NcButton>
+
 					<NcButton
 						type="secondary"
 						:disabled="loading"
@@ -352,6 +365,13 @@
 						</template>
 						Refresh
 					</NcButton>
+				</div>
+
+				<!-- Schema Save Results -->
+				<div v-if="schemaSaveResult" class="schema-save-result">
+					<NcNoteCard :type="schemaSaveResult.success ? 'success' : 'error'">
+						{{ schemaSaveResult.message }}
+					</NcNoteCard>
 				</div>
 			</div>
 
@@ -1210,6 +1230,8 @@ export default defineComponent({
 		return {
 			loading: true,
 			saving: false,
+			savingSchemas: false,
+			schemaSaveResult: null,
 			initializing: false,
 			autoConfiguring: false,
 			initializationResults: null,
@@ -1369,6 +1391,21 @@ export default defineComponent({
 		},
 
 		/**
+		 * Determines if there are schema values to save specifically for Voorzieningen register
+		 *
+		 * @return {boolean} True if schema values can be saved
+		 */
+		hasSchemaValuesToSave() {
+			if (!this.selectedRegister || !this.hasSchemas || !this.isRegisterType('voorzieningen')) {
+				return false
+			}
+
+			// Check if at least organisatie or contactpersoon schema is configured
+			return this.configuration.voorzieningen_organisatie?.schema 
+				|| this.configuration.voorzieningen_contactpersoon?.schema
+		},
+
+		/**
 		 * Transport type options for email configuration
 		 *
 		 * @return {Array<object>} Array of transport options
@@ -1481,17 +1518,40 @@ export default defineComponent({
 		async loadVersionInfo() {
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
+				
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				
 				const data = await response.json()
 
-				if (!data.error) {
-					this.versionInfo = data
-				} else {
+				if (data.error) {
 					console.error('Failed to load version info:', data.error)
+				} else if (data.message === '') {
+					console.error('Empty response from version API - likely uncaught exception')
+					// Set some default version info so the UI can still function
+					this.versionInfo = {
+						appName: 'SoftwareCatalog',
+						appVersion: 'Unknown',
+						configuredVersion: null,
+						versionsMatch: false,
+						needsUpdate: true
+					}
+				} else {
+					this.versionInfo = data
 				}
 
 				this.loadingVersionInfo = false
 			} catch (error) {
 				console.error('Failed to load version info:', error)
+				// Set default values so the UI can still function
+				this.versionInfo = {
+					appName: 'SoftwareCatalog',
+					appVersion: 'Unknown',
+					configuredVersion: null,
+					versionsMatch: false,
+					needsUpdate: true
+				}
 				this.loadingVersionInfo = false
 			}
 		},
@@ -1559,13 +1619,38 @@ export default defineComponent({
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
 
-				const data = await response.json()
-
-				if (data.error) {
-					return
+				// Check if response is ok first
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
 
-				this.settings = data
+				const data = await response.json()
+
+				// Handle different error response formats
+				if (data.error) {
+					console.error('Settings API error:', data.error)
+					if (data.type === 'runtime_error') {
+						console.error('Runtime error - likely OpenRegister dependency issue')
+					}
+					// Still continue to use defaults if possible
+					this.settings = {
+						objectTypes: ['organization', 'contact'],
+						openRegisters: false,
+						availableRegisters: [],
+						configuration: {},
+					}
+				} else if (data.message === '') {
+					// Handle the empty message case
+					console.error('Empty response from settings API - likely uncaught exception')
+					this.settings = {
+						objectTypes: ['organization', 'contact'],
+						openRegisters: false,
+						availableRegisters: [],
+						configuration: {},
+					}
+				} else {
+					this.settings = data
+				}
 
 				// Load user groups from the unified response
 				if (data.userGroups) {
@@ -1621,6 +1706,14 @@ export default defineComponent({
 				// Load debug information
 				await this.loadDebugInfo()
 			} catch (error) {
+				console.error('Failed to load settings:', error)
+				// Set defaults to allow the component to function
+				this.settings = {
+					objectTypes: ['organization', 'contact'],
+					openRegisters: false,
+					availableRegisters: [],
+					configuration: {},
+				}
 			} finally {
 				this.loading = false
 			}
@@ -1646,15 +1739,29 @@ export default defineComponent({
 		async loadDebugInfo() {
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/debug')
+				
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				
 				const data = await response.json()
 
 				if (data.error) {
 					this.debugInfo = { error: data.error }
+				} else if (data.message === '') {
+					// Handle empty message response which indicates uncaught exception
+					this.debugInfo = { 
+						error: 'Empty response from debug API - likely uncaught exception in backend',
+						suggestion: 'Check server logs or try running manual import/initialization'
+					}
 				} else {
 					this.debugInfo = data
 				}
 			} catch (error) {
-				this.debugInfo = { error: 'Failed to load debug information: ' + error.message }
+				this.debugInfo = { 
+					error: 'Failed to load debug information: ' + error.message,
+					suggestion: 'Check if the SoftwareCatalog app is properly installed and OpenRegister is available'
+				}
 			}
 		},
 
@@ -2059,6 +2166,69 @@ export default defineComponent({
 			} catch (error) {
 			} finally {
 				this.saving = false
+			}
+		},
+
+		/**
+		 * Saves only the schema values for Voorzieningen register
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async saveSchemaValues() {
+			if (!this.hasSchemaValuesToSave) return
+
+			this.savingSchemas = true
+			this.schemaSaveResult = null
+
+			try {
+				const configToSave = {}
+
+				// Only save voorzieningen schema configuration
+				if (this.configuration.voorzieningen_organisatie?.schema) {
+					configToSave['voorzieningen_organisatie_source'] = 'openregister'
+					configToSave['voorzieningen_organisatie_register'] = this.selectedRegister.value
+					configToSave['voorzieningen_organisatie_schema'] = this.configuration.voorzieningen_organisatie.schema.value
+				}
+
+				if (this.configuration.voorzieningen_contactpersoon?.schema) {
+					configToSave['voorzieningen_contactpersoon_source'] = 'openregister'
+					configToSave['voorzieningen_contactpersoon_register'] = this.selectedRegister.value
+					configToSave['voorzieningen_contactpersoon_schema'] = this.configuration.voorzieningen_contactpersoon.schema.value
+				}
+
+				// Send configuration to backend
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(configToSave),
+				})
+
+				const result = await response.json()
+				
+				if (result.error) {
+					this.schemaSaveResult = {
+						success: false,
+						message: 'Failed to save schema values: ' + result.error
+					}
+				} else {
+					this.schemaSaveResult = {
+						success: true,
+						message: 'Schema values saved successfully! Organisatie and Contactpersoon schemas are now configured.'
+					}
+					
+					// Reload settings to reflect changes
+					await this.loadSettings()
+				}
+			} catch (error) {
+				this.schemaSaveResult = {
+					success: false,
+					message: 'Failed to save schema values: ' + error.message
+				}
+			} finally {
+				this.savingSchemas = false
 			}
 		},
 
@@ -2951,6 +3121,10 @@ export default defineComponent({
 
 .save-results {
 	margin-bottom: 1rem;
+}
+
+.schema-save-result {
+	margin-top: 1rem;
 }
 
 .groups-info {

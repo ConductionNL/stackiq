@@ -754,53 +754,141 @@ class SettingsService
      */
     public function initialize(?string $minOpenRegisterVersion = self::MIN_OPENREGISTER_VERSION): array
     {
+        $startTime = microtime(true);
         $results = [
             'openRegister' => false,
             'autoConfigured' => false,
             'fullyConfigured' => false,
             'settingsLoaded' => false,
+            'configurationImported' => false,
+            'autoConfigAfterImport' => false,
             'errors' => [],
+            'warnings' => [],
+            'timing' => []
         ];
+
+        $this->logger->info('SettingsService: Starting initialization', [
+            'minOpenRegisterVersion' => $minOpenRegisterVersion
+        ]);
 
         try {
             // Check if OpenRegister is installed and enabled
+            $checkStart = microtime(true);
+            
             if (!$this->isOpenRegisterInstalled($minOpenRegisterVersion)) {
-                $results['errors'][] = 'OpenRegister is not installed or does not meet minimum version requirements';
+                $error = 'OpenRegister is not installed or does not meet minimum version requirements';
+                $results['errors'][] = $error;
+                $this->logger->error('SettingsService: ' . $error);
                 return $results;
             }
 
             if (!$this->isOpenRegisterEnabled()) {
-                $results['errors'][] = 'OpenRegister is not enabled';
+                $error = 'OpenRegister is not enabled';
+                $results['errors'][] = $error;
+                $this->logger->error('SettingsService: ' . $error);
                 return $results;
             }
 
             $results['openRegister'] = true;
+            $results['timing']['openregister_check'] = round((microtime(true) - $checkStart) * 1000, 2) . 'ms';
+            
+            $this->logger->info('SettingsService: OpenRegister is available');
 
-            // Try auto-configuration if not already configured
+            // Load settings from file if needed (do this first)
+            $loadStart = microtime(true);
+            try {
+                if ($this->shouldLoadSettings()) {
+                    $this->logger->info('SettingsService: Loading settings from file');
+                    $loadResult = $this->loadSettings();
+                    $results['settingsLoaded'] = true;
+                    $results['configurationImported'] = !empty($loadResult['softwarecatalog_imported']);
+                    $this->logger->info('SettingsService: Settings loaded successfully', [
+                        'imported' => $results['configurationImported']
+                    ]);
+                } else {
+                    $results['settingsLoaded'] = true; // Already up to date
+                    $this->logger->info('SettingsService: Settings already up to date');
+                }
+            } catch (\Exception $e) {
+                $error = 'Settings loading failed: ' . $e->getMessage();
+                $results['errors'][] = $error;
+                $this->logger->error('SettingsService: ' . $error, [
+                    'exception' => $e
+                ]);
+            }
+            $results['timing']['settings_load'] = round((microtime(true) - $loadStart) * 1000, 2) . 'ms';
+
+            // Try auto-configuration after import if not already configured
+            $autoConfigStart = microtime(true);
             if (!$this->isFullyConfigured()) {
+                $this->logger->info('SettingsService: App not fully configured, attempting auto-configuration');
+                
                 try {
-                    $configuration = $this->autoConfigure();
+                    // First try the post-import auto-configuration (more specific)
+                    $configuration = $this->autoConfigureAfterImport();
                     if (!empty($configuration)) {
                         $this->updateSettings($configuration);
+                        $results['autoConfigAfterImport'] = true;
                         $results['autoConfigured'] = true;
+                        $this->logger->info('SettingsService: Auto-configuration after import successful', [
+                            'configuration' => array_keys($configuration)
+                        ]);
+                    } else {
+                        // Fallback to general auto-configuration
+                        $this->logger->info('SettingsService: Post-import auto-config yielded no results, trying general auto-config');
+                        $configuration = $this->autoConfigure();
+                        if (!empty($configuration)) {
+                            $this->updateSettings($configuration);
+                            $results['autoConfigured'] = true;
+                            $this->logger->info('SettingsService: General auto-configuration successful', [
+                                'configuration' => array_keys($configuration)
+                            ]);
+                        }
                     }
                 } catch (\Exception $e) {
-                    $results['errors'][] = 'Auto-configuration failed: ' . $e->getMessage();
+                    $error = 'Auto-configuration failed: ' . $e->getMessage();
+                    $results['errors'][] = $error;
+                    $this->logger->error('SettingsService: ' . $error, [
+                        'exception' => $e
+                    ]);
                 }
-            }
-
-            $results['fullyConfigured'] = $this->isFullyConfigured();
-
-            // Load settings from file only if needed
-            if ($this->shouldLoadSettings()) {
-                $this->loadSettings();
-                $results['settingsLoaded'] = true;
             } else {
-                $results['settingsLoaded'] = true; // Already up to date
+                $this->logger->info('SettingsService: App is already fully configured');
             }
+            $results['timing']['auto_config'] = round((microtime(true) - $autoConfigStart) * 1000, 2) . 'ms';
+
+            // Final configuration status check
+            $results['fullyConfigured'] = $this->isFullyConfigured();
+            
+            if (!$results['fullyConfigured']) {
+                $warning = 'App is not fully configured after initialization. Manual configuration may be required.';
+                $results['warnings'][] = $warning;
+                $this->logger->warning('SettingsService: ' . $warning, [
+                    'configStatus' => $this->getConfigurationStatus()
+                ]);
+            }
+
+            $results['timing']['total'] = round((microtime(true) - $startTime) * 1000, 2) . 'ms';
+            
+            $this->logger->info('SettingsService: Initialization completed', [
+                'results' => [
+                    'openRegister' => $results['openRegister'],
+                    'autoConfigured' => $results['autoConfigured'], 
+                    'fullyConfigured' => $results['fullyConfigured'],
+                    'settingsLoaded' => $results['settingsLoaded'],
+                    'errors' => count($results['errors']),
+                    'warnings' => count($results['warnings'])
+                ],
+                'timing' => $results['timing']
+            ]);
 
         } catch (\Exception $e) {
-            $results['errors'][] = $e->getMessage();
+            $error = 'Initialization failed: ' . $e->getMessage();
+            $results['errors'][] = $error;
+            $this->logger->error('SettingsService: ' . $error, [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
         }
 
         return $results;

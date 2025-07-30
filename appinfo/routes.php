@@ -40,5 +40,8 @@ return [
 
         // Legacy email routes (for backward compatibility)
         ['name' => 'settings#send_test_email', 'url' => '/api/email/test', 'verb' => 'POST'],
+        
+        // Health check endpoint
+        ['name' => 'settings#health_check', 'url' => '/api/health', 'verb' => 'GET'],
     ],
 ];
