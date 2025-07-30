@@ -2862,27 +2862,35 @@
         "summary": "",
         "icon": null,
         "required": [
-          "organisatieId",
-          "voorzieningId",
+          "organisatie",
+          "voorziening",
           "status"
         ],
         "properties": {
-          "organisatieId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "ID van de organisatie die de voorziening gebruikt",
-            "required": true,
+          "organisatie": {
+            "type": "object",
+            "format": "",
+            "title": "Organisatie",
+            "description": "De organisatie die de voorziening gebruikt",
             "facetable": false,
-            "title": "OrganisatieId",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/organisatie",
+            "required": true,
             "order": 11
           },
-          "voorzieningId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "ID van de voorziening die gebruikt wordt",
-            "required": true,
+          "voorziening": {
+            "type": "object",
+            "format": "",
+            "title": "Voorziening",
+            "description": "De voorziening die gebruikt wordt",
             "facetable": false,
-            "title": "VoorzieningId",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/voorziening",
+            "required": true,
             "order": 19
           },
           "versieId": {
