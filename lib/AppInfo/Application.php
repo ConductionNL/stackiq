@@ -216,10 +216,33 @@ class Application extends App implements IBootstrap
                 'versionChanged' => $lastInitializedVersion !== $currentAppVersion
             ]);
 
-            // Only initialize if version has changed or if never initialized
+            // Check if we actually have a valid configuration, not just version matching
+            $needsInitialization = false;
+            $initReason = '';
+            
             if ($lastInitializedVersion !== $currentAppVersion || empty($lastInitializedVersion)) {
+                $needsInitialization = true;
+                $initReason = empty($lastInitializedVersion) ? 'never_initialized' : 'version_changed';
+            } else {
+                // Even if version matches, check if we have valid configuration
+                $hasValidConfig = $config->getAppValue(self::APP_ID, 'voorzieningen_organisatie_schema', '') !== '' ||
+                                  $config->getAppValue(self::APP_ID, 'organization_schema', '') !== '';
+                
+                if (!$hasValidConfig) {
+                    $needsInitialization = true;
+                    $initReason = 'missing_configuration';
+                    $logger->warning('SoftwareCatalog boot: No valid configuration found despite version match', [
+                        'currentVersion' => $currentAppVersion,
+                        'lastInitializedVersion' => $lastInitializedVersion
+                    ]);
+                }
+            }
+            
+            if ($needsInitialization) {
                 $logger->info('SoftwareCatalog boot: Starting initialization', [
-                    'reason' => empty($lastInitializedVersion) ? 'never_initialized' : 'version_changed'
+                    'reason' => $initReason,
+                    'currentVersion' => $currentAppVersion,
+                    'lastInitializedVersion' => $lastInitializedVersion
                 ]);
                 
                 try {
@@ -227,32 +250,38 @@ class Application extends App implements IBootstrap
                     $initResult = $settingsService->initialize();
                     
                     $logger->info('SoftwareCatalog boot: Initialization completed', [
-                        'result' => $initResult
+                        'result' => $initResult,
+                        'hasErrors' => !empty($initResult['errors'])
                     ]);
                     
-                    // Only update version if initialization was successful
-                    if (empty($initResult['errors'])) {
+                    // Only update version if initialization was actually successful
+                    if (empty($initResult['errors']) && 
+                        ($initResult['autoConfigured'] || $initResult['fullyConfigured'])) {
                         $config->setAppValue(self::APP_ID, 'last_initialized_version', $currentAppVersion);
-                        $logger->info('SoftwareCatalog boot: Version updated to ' . $currentAppVersion);
+                        $logger->info('SoftwareCatalog boot: Version updated to ' . $currentAppVersion . ' (successful init)');
                     } else {
-                        $logger->warning('SoftwareCatalog boot: Initialization had errors, not updating version', [
-                            'errors' => $initResult['errors']
+                        $logger->warning('SoftwareCatalog boot: Initialization incomplete, not updating version', [
+                            'errors' => $initResult['errors'] ?? [],
+                            'autoConfigured' => $initResult['autoConfigured'] ?? false,
+                            'fullyConfigured' => $initResult['fullyConfigured'] ?? false
                         ]);
                     }
                     
                 } catch (\RuntimeException $e) {
                     // Don't update version if OpenRegister is not available
                     $logger->warning('SoftwareCatalog boot: OpenRegister not available during initialization', [
-                        'exception' => $e->getMessage()
+                        'exception' => $e->getMessage(),
+                        'initReason' => $initReason
                     ]);
                 } catch (\Exception $e) {
                     $logger->error('SoftwareCatalog boot: Initialization failed', [
                         'exception' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'trace' => $e->getTraceAsString(),
+                        'initReason' => $initReason
                     ]);
                 }
             } else {
-                $logger->debug('SoftwareCatalog boot: Skipping initialization (version unchanged)');
+                $logger->debug('SoftwareCatalog boot: Skipping initialization (version unchanged and config valid)');
             }
             
         } catch (\Exception $e) {

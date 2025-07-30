@@ -43,5 +43,8 @@ return [
         
         // Health check endpoint
         ['name' => 'settings#health_check', 'url' => '/api/health', 'verb' => 'GET'],
+        
+        // Force re-initialization endpoint
+        ['name' => 'settings#force_reinit', 'url' => '/api/settings/force-reinit', 'verb' => 'POST'],
     ],
 ];
