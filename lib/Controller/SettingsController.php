@@ -133,11 +133,24 @@ class SettingsController extends Controller
             $data['emailSettings'] = $this->settingsService->getEmailSettings();
             
             return new JSONResponse($data);
+        } catch (\RuntimeException $e) {
+            $this->logger->error('RuntimeException in settings index', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return new JSONResponse([
+                'error' => 'Settings service not available: ' . $e->getMessage(),
+                'type' => 'runtime_error'
+            ], 503);
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve settings', [
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            return new JSONResponse(['error' => $e->getMessage()], 500);
+            return new JSONResponse([
+                'error' => $e->getMessage(),
+                'type' => 'general_error'
+            ], 500);
         }
 
     }//end index()
@@ -522,6 +535,146 @@ class SettingsController extends Controller
             ], 500);
         }
     }//end manualImport()
+
+    /**
+     * Health check endpoint to verify app and dependencies status
+     *
+     * @return JSONResponse JSON response containing health status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function healthCheck(): JSONResponse
+    {
+        $health = [
+            'app' => 'SoftwareCatalog',
+            'status' => 'healthy',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'checks' => []
+        ];
+        
+        try {
+            // Check if SoftwareCatalog app is enabled
+            $health['checks']['app_enabled'] = [
+                'status' => $this->appManager->isEnabledForUser('softwarecatalog') ? 'pass' : 'fail',
+                'message' => 'SoftwareCatalog app enabled check'
+            ];
+            
+            // Check OpenRegister availability
+            try {
+                $isInstalled = $this->settingsService->isOpenRegisterInstalled();
+                $isEnabled = $this->settingsService->isOpenRegisterEnabled();
+                
+                $health['checks']['openregister_installed'] = [
+                    'status' => $isInstalled ? 'pass' : 'fail',
+                    'message' => 'OpenRegister installation check'
+                ];
+                
+                $health['checks']['openregister_enabled'] = [
+                    'status' => $isEnabled ? 'pass' : 'fail',
+                    'message' => 'OpenRegister enabled check'
+                ];
+                
+                // Try to get ObjectService
+                if ($isInstalled && $isEnabled) {
+                    try {
+                        $objectService = $this->settingsService->getObjectService();
+                        $health['checks']['openregister_service'] = [
+                            'status' => 'pass',
+                            'message' => 'OpenRegister ObjectService accessible'
+                        ];
+                        
+                        // Try to get registers
+                        $registers = $objectService->getRegisters();
+                        $health['checks']['openregister_registers'] = [
+                            'status' => 'pass',
+                            'message' => 'Found ' . count($registers) . ' registers',
+                            'data' => array_map(function($reg) {
+                                return [
+                                    'id' => $reg['id'] ?? 'unknown',
+                                    'title' => $reg['title'] ?? 'unknown',
+                                    'schemas' => count($reg['schemas'] ?? [])
+                                ];
+                            }, $registers)
+                        ];
+                    } catch (\Exception $e) {
+                        $health['checks']['openregister_service'] = [
+                            'status' => 'fail',
+                            'message' => 'OpenRegister service error: ' . $e->getMessage()
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                $health['checks']['openregister_check'] = [
+                    'status' => 'fail',
+                    'message' => 'OpenRegister check failed: ' . $e->getMessage()
+                ];
+            }
+            
+            // Check settings service
+            try {
+                $settings = $this->settingsService->getSettings();
+                $health['checks']['settings_service'] = [
+                    'status' => 'pass',
+                    'message' => 'Settings service accessible'
+                ];
+                
+                // Check configuration status
+                $configStatus = $this->settingsService->getConfigurationStatus();
+                $health['checks']['configuration_status'] = [
+                    'status' => $this->settingsService->isFullyConfigured() ? 'pass' : 'warn',
+                    'message' => 'Configuration check',
+                    'data' => $configStatus
+                ];
+            } catch (\Exception $e) {
+                $health['checks']['settings_service'] = [
+                    'status' => 'fail',
+                    'message' => 'Settings service error: ' . $e->getMessage()
+                ];
+                $health['status'] = 'unhealthy';
+            }
+            
+            // Check version info
+            try {
+                $versionInfo = $this->settingsService->getVersionInfo();
+                $health['checks']['version_info'] = [
+                    'status' => 'pass',
+                    'message' => 'Version information available',
+                    'data' => $versionInfo
+                ];
+            } catch (\Exception $e) {
+                $health['checks']['version_info'] = [
+                    'status' => 'fail',
+                    'message' => 'Version check failed: ' . $e->getMessage()
+                ];
+            }
+            
+            // Determine overall status
+            $failedChecks = array_filter($health['checks'], function($check) {
+                return $check['status'] === 'fail';
+            });
+            
+            if (count($failedChecks) > 0) {
+                $health['status'] = 'unhealthy';
+            }
+            
+            return new JSONResponse($health);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Health check failed', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return new JSONResponse([
+                'app' => 'SoftwareCatalog',
+                'status' => 'unhealthy',
+                'timestamp' => date('Y-m-d H:i:s'),
+                'error' => $e->getMessage(),
+                'checks' => []
+            ], 500);
+        }
+    }
 
 
 }//end class

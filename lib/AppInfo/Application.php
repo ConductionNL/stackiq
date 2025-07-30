@@ -202,43 +202,94 @@ class Application extends App implements IBootstrap
     public function boot(IBootContext $context): void
     {
         $container = $context->getServerContainer();
+        $logger = $container->get(LoggerInterface::class);
         
         try {
-            // Performance optimization: Only initialize settings if app version has changed
             $config = $container->get(IConfig::class);
-            $currentAppVersion = $container->get(IAppManager::class)->getAppVersion(self::APP_ID);
+            $appManager = $container->get(IAppManager::class);
+            $currentAppVersion = $appManager->getAppVersion(self::APP_ID);
             $lastInitializedVersion = $config->getAppValue(self::APP_ID, 'last_initialized_version', '');
 
-            if ($lastInitializedVersion !== $currentAppVersion) {
-                $settingsService = $container->get(SettingsService::class);
-                $settingsService->initialize();
-                $config->setAppValue(self::APP_ID, 'last_initialized_version', $currentAppVersion);
+            $logger->info('SoftwareCatalog boot: Version check', [
+                'currentVersion' => $currentAppVersion,
+                'lastInitializedVersion' => $lastInitializedVersion,
+                'versionChanged' => $lastInitializedVersion !== $currentAppVersion
+            ]);
+
+            // Only initialize if version has changed or if never initialized
+            if ($lastInitializedVersion !== $currentAppVersion || empty($lastInitializedVersion)) {
+                $logger->info('SoftwareCatalog boot: Starting initialization', [
+                    'reason' => empty($lastInitializedVersion) ? 'never_initialized' : 'version_changed'
+                ]);
+                
+                try {
+                    $settingsService = $container->get(SettingsService::class);
+                    $initResult = $settingsService->initialize();
+                    
+                    $logger->info('SoftwareCatalog boot: Initialization completed', [
+                        'result' => $initResult
+                    ]);
+                    
+                    // Only update version if initialization was successful
+                    if (empty($initResult['errors'])) {
+                        $config->setAppValue(self::APP_ID, 'last_initialized_version', $currentAppVersion);
+                        $logger->info('SoftwareCatalog boot: Version updated to ' . $currentAppVersion);
+                    } else {
+                        $logger->warning('SoftwareCatalog boot: Initialization had errors, not updating version', [
+                            'errors' => $initResult['errors']
+                        ]);
+                    }
+                    
+                } catch (\RuntimeException $e) {
+                    // Don't update version if OpenRegister is not available
+                    $logger->warning('SoftwareCatalog boot: OpenRegister not available during initialization', [
+                        'exception' => $e->getMessage()
+                    ]);
+                } catch (\Exception $e) {
+                    $logger->error('SoftwareCatalog boot: Initialization failed', [
+                        'exception' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                }
+            } else {
+                $logger->debug('SoftwareCatalog boot: Skipping initialization (version unchanged)');
             }
+            
         } catch (\Exception $e) {
             // Log error but don't fail the boot process
-            $logger = $container->get(LoggerInterface::class);
-            $logger->error('SoftwareCatalog boot error during initialization: ' . $e->getMessage(), [
-                'exception' => $e
+            $logger->error('SoftwareCatalog boot error during version check: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
             ]);
         }
 
         // Register background job for organization contact synchronization
-        $jobList = $container->get('OCP\BackgroundJob\IJobList');
-        if (!$jobList->has(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, null)) {
-            $jobList->add(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class);
+        try {
+            $jobList = $container->get('OCP\BackgroundJob\IJobList');
+            if (!$jobList->has(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, null)) {
+                $jobList->add(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class);
+                $logger->info('SoftwareCatalog boot: Background job registered');
+            }
+        } catch (\Exception $e) {
+            $logger->error('SoftwareCatalog boot: Failed to register background job', [
+                'exception' => $e->getMessage()
+            ]);
         }
 
         // Check if initial sync has been done
         try {
+            $config = $container->get(IConfig::class);
             $initialSyncDone = $config->getAppValue(self::APP_ID, 'initial_sync_done', 'false');
             if ($initialSyncDone === 'false') {
                 // Mark as done to prevent repeated attempts
                 $config->setAppValue(self::APP_ID, 'initial_sync_done', 'true');
+                $logger->info('SoftwareCatalog boot: Initial sync flag set');
             }
         } catch (\Exception $e) {
             // Log but don't fail
-            $logger = $container->get(LoggerInterface::class);
-            $logger->error('SoftwareCatalog boot error during sync check: ' . $e->getMessage());
+            $logger->error('SoftwareCatalog boot error during sync check: ' . $e->getMessage(), [
+                'exception' => $e->getMessage()
+            ]);
         }
     }
 }
