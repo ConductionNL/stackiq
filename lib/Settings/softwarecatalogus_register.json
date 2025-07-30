@@ -611,6 +611,7 @@
           "organization",
           "property-definition",
           "relation",
+          "view",
           "extendview"
         ],
         "source": "",
@@ -4567,8 +4568,8 @@
         "deleted": null,
         "configuration": null
       },
-      "": {
-        "slug": "amef-view",
+      "view": {
+        "slug": "view",
         "title": "View",
         "description": "AMEF View",
         "version": "0.0.1",
