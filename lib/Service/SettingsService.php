@@ -321,7 +321,7 @@ class SettingsService
      * Auto-configures settings specifically after importing the softwarecatalogus_register.json
      * 
      * This method looks for the voorzieningen register and automatically configures
-     * the organisatie and contactpersoon schemas.
+     * the organisatie and contactpersoon schemas, and creates required user groups.
      *
      * @return array The updated configuration
      *
@@ -330,6 +330,13 @@ class SettingsService
     public function autoConfigureAfterImport(): array
     {
         try {
+            // Check if auto-configuration has already been completed
+            $autoConfigCompleted = $this->config->getValueString($this->_appName, 'auto_config_completed', 'false') === 'true';
+            if ($autoConfigCompleted) {
+                $this->logger->info('Auto-configuration already completed, skipping');
+                return [];
+            }
+
             $objectService = $this->getObjectService();
             $registers = $objectService->getRegisters();
 
@@ -339,6 +346,11 @@ class SettingsService
             }
 
             $configuration = [];
+            
+            // Step 1: Create required user groups
+            $this->logger->info('Creating required user groups');
+            $this->createRequiredUserGroups();
+            $this->logger->info('User groups created successfully');
             
             // Look for the voorzieningen register
             $voorzieningenRegister = null;
@@ -425,6 +437,10 @@ class SettingsService
                     'register_used' => $voorzieningenRegister['title']
                 ]);
             }
+
+            // Mark auto-configuration as completed
+            $this->config->setValueString($this->_appName, 'auto_config_completed', 'true');
+            $this->logger->info('Auto-configuration marked as completed');
 
             return $configuration;
             
@@ -1007,6 +1023,106 @@ class SettingsService
         }
         
         return $results;
+    }
+
+    /**
+     * Creates required user groups for the software catalog
+     *
+     * This method creates the default user groups needed for proper operation:
+     * - Generic user groups for general access
+     * - Organization admin groups for managing organizations  
+     * - Super user groups for system administration
+     *
+     * @return void
+     *
+     * @throws \RuntimeException If group creation fails
+     */
+    private function createRequiredUserGroups(): void
+    {
+        try {
+            $this->logger->info('Starting creation of required user groups');
+            
+            // Get the group manager
+            $groupManager = \OC::$server->getGroupManager();
+            
+            // Define the required groups (matching role-based system)
+            $requiredGroups = [
+                // Role-based user groups (exact match with ContactPersoon roles)
+                'aanbod-beheerder' => 'Manages software offerings and catalog content',
+                'gebruik-beheerder' => 'Manages software usage and procurement',
+                'gebruik-raadpleger' => 'Views software usage and procurement data',
+                'functioneel-beheerder' => 'Manages functional aspects of the system',
+                'vng-raadpleger' => 'Views VNG-related information',
+                'organisatie-beheerder' => 'Manages organization data and settings',
+                
+                // Plural form for organization contacts
+                'organisaties-beheerder' => 'Organization administrators (plural)',
+                
+                // Special groups
+                'ambtenaar' => 'Civil servants from Gemeente organizations',
+                'software-catalog-users' => 'General software catalog users',
+                
+                // Super user groups
+                'software-catalog-admins' => 'Software catalog system administrators'
+            ];
+            
+            $createdGroups = [];
+            $existingGroups = [];
+            
+            foreach ($requiredGroups as $groupId => $description) {
+                $this->logger->debug("Processing group: {$groupId}");
+                
+                // Check if group already exists
+                if ($groupManager->groupExists($groupId)) {
+                    $existingGroups[] = $groupId;
+                    $this->logger->debug("Group {$groupId} already exists, skipping");
+                    continue;
+                }
+                
+                // Create the group
+                $group = $groupManager->createGroup($groupId);
+                if ($group !== false) {
+                    $createdGroups[] = $groupId;
+                    $this->logger->info("Created user group: {$groupId}");
+                } else {
+                    $this->logger->warning("Failed to create user group: {$groupId}");
+                }
+            }
+            
+            // Update the configuration with the correct role-based groups
+            $this->setGenericUserGroups([
+                'aanbod-beheerder',
+                'gebruik-beheerder', 
+                'gebruik-raadpleger',
+                'functioneel-beheerder',
+                'vng-raadpleger',
+                'organisatie-beheerder',
+                'ambtenaar',
+                'software-catalog-users'
+            ]);
+            
+            $this->setOrganizationAdminGroups([
+                'organisaties-beheerder',
+                'organisatie-beheerder'
+            ]);
+            
+            $this->setSuperUserGroups([
+                'admin', // Keep existing admin group
+                'software-catalog-admins'
+            ]);
+            
+            $this->logger->info('User group creation completed', [
+                'created_groups' => $createdGroups,
+                'existing_groups' => $existingGroups,
+                'total_required' => count($requiredGroups)
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to create required user groups: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            throw new \RuntimeException('Failed to create required user groups: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -1746,6 +1862,72 @@ class SettingsService
     }
 
     /**
+     * Resets the auto-configuration to allow it to run again
+     *
+     * This method clears the auto-configuration completion flag and
+     * optionally resets schema/register configurations for testing.
+     *
+     * @param bool $resetConfiguration Whether to also clear schema/register settings
+     *
+     * @return array The reset results
+     */
+    public function resetAutoConfiguration(bool $resetConfiguration = false): array
+    {
+        try {
+            $this->logger->info('Resetting auto-configuration', [
+                'reset_configuration' => $resetConfiguration
+            ]);
+            
+            // Reset the auto-configuration completion flag
+            $this->config->setValueString($this->_appName, 'auto_config_completed', 'false');
+            
+            $resetItems = ['auto_config_completed_flag'];
+            
+            if ($resetConfiguration) {
+                // Reset schema and register configurations
+                $configKeysToReset = [
+                    'voorzieningen_organisatie_source',
+                    'voorzieningen_organisatie_register',
+                    'voorzieningen_organisatie_schema',
+                    'voorzieningen_contactpersoon_source',
+                    'voorzieningen_contactpersoon_register',
+                    'voorzieningen_contactpersoon_schema',
+                    'organization_source',
+                    'organization_register',
+                    'organization_schema',
+                    'contact_source',
+                    'contact_register',
+                    'contact_schema'
+                ];
+                
+                foreach ($configKeysToReset as $key) {
+                    $this->config->setValueString($this->_appName, $key, '');
+                }
+                
+                $resetItems[] = 'schema_register_configurations';
+            }
+            
+            $this->logger->info('Auto-configuration reset completed', [
+                'reset_items' => $resetItems
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'Auto-configuration reset successfully',
+                'reset_items' => $resetItems
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to reset auto-configuration: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to reset auto-configuration: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Manually trigger configuration import from JSON.
      *
      * This method allows system administrators to manually trigger the import
@@ -1768,6 +1950,12 @@ class SettingsService
                     'message' => 'Configuration is already up to date. Use force import if you want to reimport.',
                     'versionInfo' => $versionInfo
                 ];
+            }
+            
+            // If force import is requested, reset auto-configuration flag to ensure it runs again
+            if ($forceImport) {
+                $this->config->setValueString($this->_appName, 'auto_config_completed', 'false');
+                $this->logger->info('Force import requested: reset auto-configuration flag to allow re-configuration');
             }
             
             // Perform the import
@@ -1793,7 +1981,9 @@ class SettingsService
             
             return [
                 'success' => true,
-                'message' => 'Configuration imported successfully' . (!empty($autoConfigResult) ? ' and auto-configured.' : '.'),
+                'message' => 'Configuration imported successfully' . 
+                            (!empty($autoConfigResult) ? ' and auto-configured.' : '.') .
+                            ($forceImport ? ' (Force import: auto-configuration was re-run)' : ''),
                 'importResult' => $importResult,
                 'autoConfigResult' => $autoConfigResult,
                 'versionInfo' => $updatedVersionInfo

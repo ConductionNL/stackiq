@@ -569,7 +569,7 @@
       "voorzieningen": {
         "slug": "voorzieningen",
         "title": "Voorzieningen",
-        "version": "1.0.4",
+        "version": "1.0.6",
         "description": "Register voor voorzieningen uit de softwarecatalogus",
         "schemas": [
           "sector",
@@ -585,12 +585,13 @@
           "review",
           "koppeling",
           "beoordeeling",
-          "voorzieningModule"
+          "voorzieningModule",
+          "verklaring"
         ],
         "source": "internal",
         "tablePrefix": "",
         "folder": "500",
-        "updated": "2025-07-29T09:39:19+00:00",
+        "updated": "2025-07-29T12:00:00+00:00",
         "created": "2025-05-09T12:14:18+00:00",
         "owner": "1",
         "application": null,
@@ -2262,8 +2263,9 @@
               "Aanbod-beheerder",
               "Gebruik-beheerder",
               "Gebruik-raadpleger",
-              "Functioneel beheerder",
-              "VNG-raadpleger"
+              "Functioneel-beheerder",
+              "VNG-raadpleger",
+              "Organisatie-beheerder"
             ]
           },
           "e-mailadres": {
@@ -6901,6 +6903,69 @@
         "configuration": {
           "objectNameField": "naam",
           "objectDescriptionField": "beschrijvingKort"
+        }
+      },
+      "verklaring": {
+        "uri": null,
+        "slug": "verklaring",
+        "title": "Verklaring",
+        "description": "Een verklaring is een document of uitspraak die bevestigt of verklaart dat een product voldoet aan bepaalde eisen of standaarden",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": null,
+        "required": [
+          "naam",
+          "type"
+        ],
+        "properties": {
+          "naam": {
+            "type": "string",
+            "description": "Naam van de verklaring",
+            "title": "Naam",
+            "order": 1,
+            "facetable": true,
+            "required": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Type van de verklaring (bijv. certificaat, compliance, audit)",
+            "title": "Type",
+            "order": 2,
+            "facetable": true,
+            "required": true
+          },
+          "link": {
+            "type": "string",
+            "format": "url",
+            "description": "Link naar het document of meer informatie over de verklaring",
+            "title": "Link",
+            "order": 3,
+            "facetable": false
+          },
+          "toelichting": {
+            "type": "string",
+            "description": "Toelichting of uitleg over de verklaring",
+            "title": "Toelichting",
+            "order": 4,
+            "facetable": false
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "updated": "2025-07-29T12:00:00+00:00",
+        "created": "2025-07-29T12:00:00+00:00",
+        "maxDepth": 0,
+        "owner": "system",
+        "application": null,
+        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "groups": null,
+        "authorization": null,
+        "deleted": null,
+        "configuration": {
+          "objectNameField": "naam",
+          "objectDescriptionField": "type"
         }
       }
     },

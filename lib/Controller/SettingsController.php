@@ -466,6 +466,35 @@ class SettingsController extends Controller
     }//end getVersionInfo()
 
     /**
+     * Reset auto-configuration to allow it to run again.
+     *
+     * @return JSONResponse JSON response containing reset results.
+     *
+     * @NoCSRFRequired
+     */
+    public function resetAutoConfig(): JSONResponse
+    {
+        try {
+            $params = $this->request->getParams();
+            $resetConfiguration = isset($params['resetConfiguration']) && $params['resetConfiguration'] === true;
+            
+            $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
+            
+            if ($result['success']) {
+                return new JSONResponse($result);
+            } else {
+                return new JSONResponse($result, 400);
+            }
+        } catch (\Exception $e) {
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Reset failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Manually trigger configuration import.
      *
      * @return JSONResponse JSON response containing import results.
