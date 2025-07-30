@@ -4713,7 +4713,7 @@
         "configuration": null
       },
       "": {
-        "slug": null,
+        "slug": "amef-view",
         "title": "View",
         "description": "AMEF View",
         "version": "0.0.1",
