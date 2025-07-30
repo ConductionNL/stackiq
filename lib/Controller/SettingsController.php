@@ -676,5 +676,54 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Forces re-initialization bypassing version checks.
+     *
+     * @return JSONResponse JSON response containing re-initialization results.
+     *
+     * @NoCSRFRequired
+     */
+    public function forceReinit(): JSONResponse
+    {
+        try {
+            $this->logger->info('Force re-initialization requested via API');
+            
+            // Reset version tracking to force re-initialization on next request
+            $config = $this->serverContainer->get('OCP\IConfig');
+            $config->deleteAppValue('softwarecatalog', 'last_initialized_version');
+            $config->setAppValue('softwarecatalog', 'auto_config_completed', 'false');
+            
+            // Directly trigger initialization
+            $initResult = $this->settingsService->initialize();
+            
+            // Update version if successful
+            if (empty($initResult['errors']) && 
+                ($initResult['autoConfigured'] || $initResult['fullyConfigured'])) {
+                $appManager = $this->serverContainer->get('OCP\App\IAppManager');
+                $currentVersion = $appManager->getAppVersion('softwarecatalog');
+                $config->setAppValue('softwarecatalog', 'last_initialized_version', $currentVersion);
+            }
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Force re-initialization completed',
+                'result' => $initResult,
+                'timestamp' => date('c')
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Force re-initialization failed', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return new JSONResponse([
+                'success' => false,
+                'error' => 'Force re-initialization failed: ' . $e->getMessage(),
+                'timestamp' => date('c')
+            ], 500);
+        }
+    }
+
 
 }//end class
