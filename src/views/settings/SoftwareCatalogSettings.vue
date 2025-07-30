@@ -14,7 +14,7 @@
 						<strong>Application:</strong> {{ versionInfo.appName }} v{{ versionInfo.appVersion }}
 					</div>
 					<div class="version-item">
-						<strong>Configured Version:</strong> 
+						<strong>Configured Version:</strong>
 						<span v-if="versionInfo.configuredVersion">{{ versionInfo.configuredVersion }}</span>
 						<span v-else class="no-version">Not configured</span>
 					</div>
@@ -39,7 +39,7 @@
 							</template>
 							{{ versionInfo.needsUpdate ? 'Update Configuration' : 'Reimport Configuration' }}
 						</NcButton>
-						
+
 						<NcButton
 							v-if="!versionInfo.versionsMatch"
 							type="primary"
@@ -51,19 +51,61 @@
 							</template>
 							Force Import
 						</NcButton>
+
+						<!-- Reset Auto-Configuration Button -->
+						<NcButton
+							type="error"
+							:disabled="importing || resettingAutoConfig"
+							@click="resetAutoConfiguration(true)">
+							<template #icon>
+								<NcLoadingIcon v-if="resettingAutoConfig" :size="20" />
+								<RestartIcon v-else :size="20" />
+							</template>
+							Reset Auto-Config
+						</NcButton>
 					</div>
 
 					<!-- Import Results -->
 					<div v-if="importResult" class="import-result">
-						<NcNoteCard 
-							v-if="importResult.success" 
+						<NcNoteCard
+							v-if="importResult.success"
 							type="success">
 							{{ importResult.message }}
+							
+							<!-- Auto-Configuration Details -->
+							<div v-if="importResult.autoConfigResult && Object.keys(importResult.autoConfigResult).length > 0" class="auto-config-details">
+								<h4>Auto-Configuration Results:</h4>
+								<ul>
+									<li v-if="importResult.autoConfigResult.voorzieningen_organisatie_register">
+										✅ Voorzieningen Register: {{ importResult.autoConfigResult.voorzieningen_organisatie_register }}
+									</li>
+									<li v-if="importResult.autoConfigResult.voorzieningen_organisatie_schema">
+										✅ Organisatie Schema: {{ importResult.autoConfigResult.voorzieningen_organisatie_schema }}
+									</li>
+									<li v-if="importResult.autoConfigResult.voorzieningen_contactpersoon_schema">
+										✅ Contactpersoon Schema: {{ importResult.autoConfigResult.voorzieningen_contactpersoon_schema }}
+									</li>
+								</ul>
+							</div>
 						</NcNoteCard>
-						<NcNoteCard 
-							v-else 
+						<NcNoteCard
+							v-else
 							type="error">
 							{{ importResult.message }}
+						</NcNoteCard>
+					</div>
+
+					<!-- Reset Auto-Config Results -->
+					<div v-if="resetAutoConfigResult" class="reset-result">
+						<NcNoteCard
+							v-if="resetAutoConfigResult.success"
+							type="success">
+							{{ resetAutoConfigResult.message }}
+						</NcNoteCard>
+						<NcNoteCard
+							v-else
+							type="error">
+							{{ resetAutoConfigResult.message }}
 						</NcNoteCard>
 					</div>
 				</div>
@@ -1122,6 +1164,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Email from 'vue-material-design-icons/Email.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import RestartIcon from 'vue-material-design-icons/Restart.vue'
 
 /**
  * Software Catalog Settings component
@@ -1155,6 +1198,7 @@ export default defineComponent({
 		Email,
 		Sync,
 		CheckCircle,
+		RestartIcon,
 	},
 
 	/**
@@ -1257,6 +1301,8 @@ export default defineComponent({
 				needsUpdate: false,
 			},
 			importResult: null,
+			resettingAutoConfig: false,
+			resetAutoConfigResult: null,
 		}
 	},
 
@@ -2714,6 +2760,36 @@ export default defineComponent({
 			return ''
 		},
 
+		async resetAutoConfiguration(resetConfiguration = false) {
+			this.resettingAutoConfig = true
+			this.resetAutoConfigResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/reset-auto-config', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ resetConfiguration }),
+				})
+
+				const result = await response.json()
+				this.resetAutoConfigResult = result
+
+				if (result.success) {
+					// Reload settings and version info to reflect any changes
+					await Promise.all([
+						this.loadSettings(),
+						this.loadVersionInfo()
+					])
+				}
+			} catch (error) {
+				this.resetAutoConfigResult = { success: false, message: 'Failed to reset auto-configuration: ' + error.message }
+			} finally {
+				this.resettingAutoConfig = false
+			}
+		},
+
 	},
 })
 </script>
@@ -3437,5 +3513,32 @@ export default defineComponent({
 
 .import-result {
 	margin-top: 1rem;
+}
+
+.reset-result {
+	margin-top: 1rem;
+}
+
+.auto-config-details {
+	margin-top: 1rem;
+	padding: 1rem;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+}
+
+.auto-config-details h4 {
+	margin: 0 0 0.5rem 0;
+	color: var(--color-main-text);
+	font-weight: 600;
+}
+
+.auto-config-details ul {
+	margin: 0;
+	padding-left: 1.5rem;
+}
+
+.auto-config-details li {
+	margin: 0.25rem 0;
+	color: var(--color-success);
 }
 </style>
