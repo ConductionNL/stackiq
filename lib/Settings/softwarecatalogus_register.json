@@ -1905,7 +1905,6 @@
         },
         "deleted": null,
         "configuration": {
-          "objectNameField": "naam",
           "objectDescriptionField": ""
         }
       },
