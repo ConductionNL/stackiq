@@ -186,12 +186,13 @@ class Application extends App implements IBootstrap
         // Register ArchiMate import/export service
         $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateService::class, function ($container) {
             return new \OCA\SoftwareCatalog\Service\ArchiMateService(
-                $container->get('OCP\IAppConfig'),
+                $container->get('OCP\IConfig'),
                 $container->get('OCP\Files\IRootFolder'),
                 $container->get('OCP\IUserSession'),
                 $container->get('OCP\App\IAppManager'),
                 $container,
-                $container->get('Psr\Log\LoggerInterface')
+                $container->get('Psr\Log\LoggerInterface'),
+                $container->get(\OCA\SoftwareCatalog\Service\SettingsService::class)
             );
         });
 

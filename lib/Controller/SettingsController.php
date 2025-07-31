@@ -70,7 +70,6 @@ class SettingsController extends Controller
         private readonly SettingsService $settingsService,
         private readonly OrganizationSyncService $organizationSyncService,
         private readonly ArchiMateService $archiMateService,
-        private readonly ProgressTracker $progressTracker,
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
@@ -1041,54 +1040,49 @@ class SettingsController extends Controller
     public function importArchiMate(): JSONResponse
     {
         try {
-            // Check if a file was uploaded
+            // Get JSON data from request body
+            $rawInput = file_get_contents('php://input');
+            $data = json_decode($rawInput, true);
+            
+            // Check if a file was uploaded (traditional file upload)
             $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
-            if (!$uploadedFiles) {
+            
+            if ($uploadedFiles) {
+                // Handle file upload
+                $options = [
+                    'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
+                    'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
+                    'preserveIds' => $this->request->getParam('preserveIds', 'true') === 'true',
+                    'filePath' => $uploadedFiles['tmp_name'],
+                    'fileName' => $uploadedFiles['name'],
+                    'fileSize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name']),
+                    'mimeType' => $uploadedFiles['type']
+                ];
+            } elseif ($data && isset($data['file_path'])) {
+                // Handle file path from JSON payload
+                $options = [
+                    'updateExisting' => $data['updateExisting'] ?? true,
+                    'deleteOrphaned' => $data['deleteOrphaned'] ?? false,
+                    'preserveIds' => $data['preserveIds'] ?? true,
+                    'filePath' => $data['file_path'],
+                    'fileName' => $data['fileName'] ?? basename($data['file_path']),
+                    'fileSize' => $data['fileSize'] ?? (file_exists($data['file_path']) ? filesize($data['file_path']) : 0),
+                    'mimeType' => $data['mimeType'] ?? 'text/xml'
+                ];
+            } else {
                 return new JSONResponse([
                     'success' => false,
-                    'message' => 'No ArchiMate file uploaded',
-                    'error' => 'NO_FILE_UPLOADED'
+                    'message' => 'No ArchiMate file uploaded or file path provided',
+                    'error' => 'NO_FILE_UPLOADED_OR_PATH'
                 ], 400);
             }
-
-            // Start progress tracking
-            $operationId = $this->progressTracker->startOperation('import', [
-                'filename' => $uploadedFiles['name'],
-                'filesize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name'])
-            ]);
-
-            // Get import options from request
-            $options = [
-                'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
-                'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
-                'preserveIds' => $this->request->getParam('preserveIds', 'true') === 'true',
-                'progressTracker' => $this->progressTracker,
-                'filePath' => $uploadedFiles['tmp_name'],
-                'fileName' => $uploadedFiles['name'],
-                'fileSize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name']),
-                'mimeType' => $uploadedFiles['type']
-            ];
-
-            $this->progressTracker->setPhase('validating');
 
             // Call the ArchiMate service with file data instead of File object
             $result = $this->archiMateService->importArchiMateFileFromPath($options);
 
-            // Complete the operation
-            $this->progressTracker->completeOperation($result['statistics'] ?? []);
-
-            // Return result with operation ID for progress tracking
-            $result['operation_id'] = $operationId;
             return new JSONResponse($result);
 
         } catch (\Exception $e) {
-            // Log error in progress tracker if available
-            if (isset($operationId)) {
-                $this->progressTracker->addError('Import failed: ' . $e->getMessage(), [
-                    'trace' => $e->getTraceAsString()
-                ]);
-            }
-
             $this->logger->error('ArchiMate import failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -1097,8 +1091,7 @@ class SettingsController extends Controller
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Import failed: ' . $e->getMessage(),
-                'error' => $e->getMessage(),
-                'operation_id' => $operationId ?? null
+                'error' => $e->getMessage()
             ], 500);
         }
     }
