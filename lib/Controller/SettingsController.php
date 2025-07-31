@@ -290,18 +290,36 @@ class SettingsController extends Controller
     public function status(): JSONResponse
     {
         try {
+            $this->logger->debug('SettingsController: Getting configuration status');
+            
             $status = $this->settingsService->getConfigurationStatus();
             $isFullyConfigured = $this->settingsService->isFullyConfigured();
+            $versionInfo = $this->settingsService->getVersionInfo();
             
-            return new JSONResponse([
+            $responseData = [
                 'status' => $status,
-                'fullyConfigured' => $isFullyConfigured
+                'fullyConfigured' => $isFullyConfigured,
+                'versionInfo' => $versionInfo,
+                'timestamp' => time(),
+                'autoConfigCompleted' => $this->config->getValueString('softwarecatalog', 'auto_config_completed', 'false') === 'true'
+            ];
+            
+            $this->logger->info('SettingsController: Configuration status compiled', [
+                'fullyConfigured' => $isFullyConfigured,
+                'needsUpdate' => $versionInfo['needsUpdate'] ?? null,
+                'versionsMatch' => $versionInfo['versionsMatch'] ?? null
             ]);
+            
+            return new JSONResponse($responseData);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get configuration status', [
-                'exception' => $e->getMessage()
+            $this->logger->error('SettingsController: Failed to get configuration status', [
+                'exception_message' => $e->getMessage(),
+                'exception' => $e
             ]);
-            return new JSONResponse(['error' => $e->getMessage()], 500);
+            return new JSONResponse([
+                'error' => $e->getMessage(),
+                'timestamp' => time()
+            ], 500);
         }
     }
 
@@ -465,10 +483,26 @@ class SettingsController extends Controller
     public function getVersionInfo(): JSONResponse
     {
         try {
+            $this->logger->info('SettingsController: Getting version information');
             $data = $this->settingsService->getVersionInfo();
+            
+            $this->logger->info('SettingsController: Version info retrieved', [
+                'version_info' => $data
+            ]);
+            
+            // Add timestamp for cache busting
+            $data['timestamp'] = time();
+            
             return new JSONResponse($data);
         } catch (\Exception $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 500);
+            $this->logger->error('SettingsController: Failed to get version info', [
+                'exception_message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+            return new JSONResponse([
+                'error' => $e->getMessage(),
+                'timestamp' => time()
+            ], 500);
         }
     }//end getVersionInfo()
 
@@ -514,7 +548,19 @@ class SettingsController extends Controller
             $params = $this->request->getParams();
             $forceImport = isset($params['force']) && $params['force'] === true;
             
+            $this->logger->info('SettingsController: Starting manual import', [
+                'force' => $forceImport
+            ]);
+            
             $result = $this->settingsService->manualImport($forceImport);
+            
+            $this->logger->info('SettingsController: Manual import completed', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'No message'
+            ]);
+            
+            // Add timestamp for cache busting
+            $result['timestamp'] = time();
             
             if ($result['success']) {
                 return new JSONResponse($result);
@@ -522,13 +568,56 @@ class SettingsController extends Controller
                 return new JSONResponse($result, 400);
             }
         } catch (\Exception $e) {
+            $this->logger->error('SettingsController: Manual import failed', [
+                'exception_message' => $e->getMessage(),
+                'exception' => $e
+            ]);
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Import failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'timestamp' => time()
             ], 500);
         }
     }//end manualImport()
+
+    /**
+     * Force a complete configuration update regardless of version checks.
+     *
+     * @return JSONResponse JSON response containing force update results.
+     *
+     * @NoCSRFRequired
+     */
+    public function forceUpdate(): JSONResponse
+    {
+        try {
+            $this->logger->info('SettingsController: Starting force update');
+            
+            $result = $this->settingsService->forceUpdate();
+            
+            $this->logger->info('SettingsController: Force update completed', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'No message'
+            ]);
+            
+            // Add timestamp for cache busting
+            $result['timestamp'] = time();
+            
+            return new JSONResponse($result, $result['success'] ? 200 : 500);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsController: Force update failed', [
+                'exception_message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Force update failed: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+                'timestamp' => time()
+            ], 500);
+        }
+    }//end forceUpdate()
 
 
 

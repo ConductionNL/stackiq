@@ -36,6 +36,7 @@ return [
         // Version and import management routes
         ['name' => 'settings#getVersionInfo', 'url' => '/api/settings/version', 'verb' => 'GET'],
         ['name' => 'settings#manualImport', 'url' => '/api/settings/import', 'verb' => 'POST'],
+        ['name' => 'settings#forceUpdate', 'url' => '/api/settings/force-update', 'verb' => 'POST'],
         ['name' => 'settings#resetAutoConfig', 'url' => '/api/settings/reset-auto-config', 'verb' => 'POST'],
 
         // Legacy email routes (for backward compatibility)

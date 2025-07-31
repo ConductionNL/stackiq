@@ -1893,22 +1893,44 @@ class SettingsService
             // Get the current app version
             $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
             
+            $this->logger->info('SettingsService: Checking if settings should be loaded', [
+                'current_app_version' => $currentAppVersion
+            ]);
+            
             // Get the configuration service to check stored version
             $configurationService = $this->getConfigurationService();
             $storedVersion = $configurationService->getConfiguredAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
             
+            $this->logger->info('SettingsService: Version comparison details', [
+                'current_app_version' => $currentAppVersion,
+                'stored_config_version' => $storedVersion,
+                'stored_version_is_null' => $storedVersion === null
+            ]);
+            
             // If no stored version exists, we need to load settings
             if ($storedVersion === null) {
+                $this->logger->info('SettingsService: No stored version found, settings should be loaded');
                 return true;
             }
             
             // Compare versions using semantic versioning
             // Load settings if current version is newer than stored version
-            return version_compare($currentAppVersion, $storedVersion, '>');
+            $shouldLoad = version_compare($currentAppVersion, $storedVersion, '>');
+            
+            $this->logger->info('SettingsService: Version comparison result', [
+                'current_version' => $currentAppVersion,
+                'stored_version' => $storedVersion,
+                'should_load' => $shouldLoad,
+                'version_compare_result' => version_compare($currentAppVersion, $storedVersion)
+            ]);
+            
+            return $shouldLoad;
             
         } catch (\Exception $e) {
             // If we can't determine versions, err on the side of loading settings
-            $this->logger->warning('Failed to check if settings should be loaded: ' . $e->getMessage());
+            $this->logger->warning('Failed to check if settings should be loaded: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
             return true;
         }
     }
@@ -1928,24 +1950,109 @@ class SettingsService
             // Get the current app version
             $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
             
+            $this->logger->debug('SettingsService: Getting version information', [
+                'current_app_version' => $currentAppVersion
+            ]);
+            
             // Get the configuration service to check stored version
             $configurationService = $this->getConfigurationService();
-            $storedConfigVersion = $configurationService->getConfiguredAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+            $storedConfigVersion = null;
+            
+            try {
+                $storedConfigVersion = $configurationService->getConfiguredAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+            } catch (\Exception $e) {
+                $this->logger->warning('SettingsService: Could not retrieve stored configuration version', [
+                    'exception_message' => $e->getMessage()
+                ]);
+                // Continue with null stored version
+            }
             
             // Determine if versions match
             $versionsMatch = $storedConfigVersion !== null && 
                            version_compare($currentAppVersion, $storedConfigVersion, '=');
             
-            return [
+            $needsUpdate = $storedConfigVersion === null || 
+                          version_compare($currentAppVersion, $storedConfigVersion, '>');
+            
+            $versionInfo = [
                 'appName' => 'SoftwareCatalog',
                 'appVersion' => $currentAppVersion,
                 'configuredVersion' => $storedConfigVersion,
                 'versionsMatch' => $versionsMatch,
-                'needsUpdate' => $storedConfigVersion === null || 
-                               version_compare($currentAppVersion, $storedConfigVersion, '>')
+                'needsUpdate' => $needsUpdate,
+                'versionComparison' => $storedConfigVersion !== null ? version_compare($currentAppVersion, $storedConfigVersion) : null,
+                'isFullyConfigured' => $this->isFullyConfigured(),
+                'autoConfigCompleted' => $this->config->getValueString($this->_appName, 'auto_config_completed', 'false') === 'true'
             ];
+            
+            $this->logger->info('SettingsService: Version information compiled', $versionInfo);
+            
+            return $versionInfo;
         } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to get version information', [
+                'exception' => $e
+            ]);
             throw new \RuntimeException('Failed to get version information: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Forces a complete configuration update regardless of version checks
+     *
+     * This method forces a complete reconfiguration by resetting all relevant
+     * flags and configurations, then performs import and auto-configuration.
+     *
+     * @return array The force update results
+     */
+    public function forceUpdate(): array
+    {
+        try {
+            $this->logger->info('SettingsService: Starting force update');
+            
+            // Reset auto-configuration flag
+            $this->config->setValueString($this->_appName, 'auto_config_completed', 'false');
+            
+            // Perform forced import
+            $importResult = $this->manualImport(true);
+            
+            if (!$importResult['success']) {
+                return [
+                    'success' => false,
+                    'message' => 'Force update failed during import: ' . ($importResult['message'] ?? 'Unknown error'),
+                    'importResult' => $importResult
+                ];
+            }
+            
+            // Verify configuration after force update
+            $finalVersionInfo = $this->getVersionInfo();
+            $finalConfigStatus = $this->getConfigurationStatus();
+            
+            $success = $finalVersionInfo['versionsMatch'] || !$finalVersionInfo['needsUpdate'];
+            
+            $this->logger->info('SettingsService: Force update completed', [
+                'success' => $success,
+                'final_version_info' => $finalVersionInfo,
+                'final_config_status' => $finalConfigStatus
+            ]);
+            
+            return [
+                'success' => $success,
+                'message' => $success ? 'Force update completed successfully' : 'Force update completed but configuration may need attention',
+                'importResult' => $importResult,
+                'finalVersionInfo' => $finalVersionInfo,
+                'finalConfigStatus' => $finalConfigStatus
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Force update failed', [
+                'exception_message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Force update failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
         }
     }
 
@@ -2028,11 +2135,18 @@ class SettingsService
     public function manualImport(bool $forceImport = false): array
     {
         try {
+            $this->logger->info('SettingsService: Starting manual import', [
+                'force_import' => $forceImport
+            ]);
+            
             // Get version info first
             $versionInfo = $this->getVersionInfo();
             
+            $this->logger->info('SettingsService: Pre-import version info', $versionInfo);
+            
             // Check if import is needed (unless forced)
-            if (!$forceImport && $versionInfo['versionsMatch']) {
+            if (!$forceImport && $versionInfo['versionsMatch'] && $versionInfo['isFullyConfigured']) {
+                $this->logger->info('SettingsService: Import not needed - versions match and fully configured');
                 return [
                     'success' => false,
                     'message' => 'Configuration is already up to date. Use force import if you want to reimport.',
@@ -2040,48 +2154,78 @@ class SettingsService
                 ];
             }
             
-            // If force import is requested, reset auto-configuration flag to ensure it runs again
-            if ($forceImport) {
+            // If force import is requested or auto-config not completed, reset auto-configuration flag
+            if ($forceImport || !$versionInfo['autoConfigCompleted']) {
                 $this->config->setValueString($this->_appName, 'auto_config_completed', 'false');
-                $this->logger->info('Force import requested: reset auto-configuration flag to allow re-configuration');
+                $this->logger->info('SettingsService: Reset auto-configuration flag', [
+                    'reason' => $forceImport ? 'force_import' : 'auto_config_not_completed'
+                ]);
             }
             
             // Perform the import
+            $this->logger->info('SettingsService: Starting settings import');
             $importResult = $this->loadSettings($forceImport);
+            $this->logger->info('SettingsService: Settings import completed', [
+                'import_result' => $importResult
+            ]);
             
             // Auto-configure after successful import
             $autoConfigResult = null;
             try {
+                $this->logger->info('SettingsService: Starting auto-configuration after import');
                 $autoConfigResult = $this->autoConfigureAfterImport();
                 if (!empty($autoConfigResult)) {
+                    $this->logger->info('SettingsService: Updating settings with auto-configuration result');
                     $this->updateSettings($autoConfigResult);
-                    $this->logger->info('Auto-configuration completed after import', [
-                        'configuration' => $autoConfigResult
+                    $this->logger->info('SettingsService: Auto-configuration completed after import', [
+                        'configuration' => array_keys($autoConfigResult)
                     ]);
+                } else {
+                    $this->logger->info('SettingsService: Auto-configuration yielded no results');
                 }
             } catch (\Exception $e) {
-                $this->logger->warning('Auto-configuration failed after import: ' . $e->getMessage());
+                $this->logger->warning('SettingsService: Auto-configuration failed after import', [
+                    'exception_message' => $e->getMessage(),
+                    'exception' => $e
+                ]);
                 // Don't fail the entire import if auto-configuration fails
             }
             
-            // Get updated version info
+            // Wait a moment for any async operations to complete
+            usleep(100000); // 0.1 seconds
+            
+            // Get updated version info - this should now reflect the changes
+            $this->logger->info('SettingsService: Getting updated version info after import');
             $updatedVersionInfo = $this->getVersionInfo();
+            $this->logger->info('SettingsService: Post-import version info', $updatedVersionInfo);
+            
+            $message = 'Configuration imported successfully';
+            if (!empty($autoConfigResult)) {
+                $message .= ' and auto-configured';
+            }
+            if ($forceImport) {
+                $message .= ' (forced import)';
+            }
             
             return [
                 'success' => true,
-                'message' => 'Configuration imported successfully' . 
-                            (!empty($autoConfigResult) ? ' and auto-configured.' : '.') .
-                            ($forceImport ? ' (Force import: auto-configuration was re-run)' : ''),
+                'message' => $message,
                 'importResult' => $importResult,
                 'autoConfigResult' => $autoConfigResult,
-                'versionInfo' => $updatedVersionInfo
+                'versionInfo' => $updatedVersionInfo,
+                'configurationStatus' => $this->getConfigurationStatus()
             ];
             
         } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Manual import failed', [
+                'exception_message' => $e->getMessage(),
+                'exception' => $e
+            ]);
             return [
                 'success' => false,
                 'message' => 'Import failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'versionInfo' => $this->getVersionInfo()
             ];
         }
     }
