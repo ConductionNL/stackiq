@@ -22,12 +22,16 @@ use OCP\IAppConfig;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
+use OCA\SoftwareCatalog\Service\ArchiMateService;
+use OCA\SoftwareCatalog\Service\ProgressTracker;
 use Psr\Log\LoggerInterface;
+use OCP\AppFramework\Http\StreamResponse;
 
 /**
  * Controller for handling settings-related operations in the OpenCatalogi.
@@ -53,6 +57,8 @@ class SettingsController extends Controller
      * @param IAppManager             $appManager             The app manager
      * @param SettingsService         $settingsService        The settings service
      * @param OrganizationSyncService $organizationSyncService The organization sync service
+     * @param ArchiMateService        $archiMateService       The ArchiMate import/export service
+     * @param ProgressTracker         $progressTracker        The progress tracking service
      * @param LoggerInterface         $logger                 The logger instance
      */
     public function __construct(
@@ -63,6 +69,8 @@ class SettingsController extends Controller
         private readonly IAppManager $appManager,
         private readonly SettingsService $settingsService,
         private readonly OrganizationSyncService $organizationSyncService,
+        private readonly ArchiMateService $archiMateService,
+        private readonly ProgressTracker $progressTracker,
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
@@ -133,24 +141,11 @@ class SettingsController extends Controller
             $data['emailSettings'] = $this->settingsService->getEmailSettings();
             
             return new JSONResponse($data);
-        } catch (\RuntimeException $e) {
-            $this->logger->error('RuntimeException in settings index', [
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return new JSONResponse([
-                'error' => 'Settings service not available: ' . $e->getMessage(),
-                'type' => 'runtime_error'
-            ], 503);
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve settings', [
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'exception' => $e->getMessage()
             ]);
-            return new JSONResponse([
-                'error' => $e->getMessage(),
-                'type' => 'general_error'
-            ], 500);
+            return new JSONResponse(['error' => $e->getMessage()], 500);
         }
 
     }//end index()
@@ -536,194 +531,786 @@ class SettingsController extends Controller
         }
     }//end manualImport()
 
+
+
+
+
+
+
     /**
-     * Health check endpoint to verify app and dependencies status
-     *
-     * @return JSONResponse JSON response containing health status
+     * Get AMEF register configuration settings
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * 
+     * @return JSONResponse The current AMEF configuration settings
      */
-    public function healthCheck(): JSONResponse
+    public function getAmefSettings(): JSONResponse
     {
-        $health = [
-            'app' => 'SoftwareCatalog',
-            'status' => 'healthy',
-            'timestamp' => date('Y-m-d H:i:s'),
-            'checks' => []
-        ];
-        
         try {
-            // Check if SoftwareCatalog app is enabled
-            $health['checks']['app_enabled'] = [
-                'status' => $this->appManager->isEnabledForUser('softwarecatalog') ? 'pass' : 'fail',
-                'message' => 'SoftwareCatalog app enabled check'
+            $settings = [
+                'registerId' => $this->config->getValueString('softwarecatalog', 'amef_register_id', ''),
+                'elementsSchema' => $this->config->getValueString('softwarecatalog', 'amef_elements_schema', ''),
+                'organizationsSchema' => $this->config->getValueString('softwarecatalog', 'amef_organizations_schema', ''),
+                'relationshipsSchema' => $this->config->getValueString('softwarecatalog', 'amef_relationships_schema', ''),
+                'viewsSchema' => $this->config->getValueString('softwarecatalog', 'amef_views_schema', ''),
             ];
-            
-            // Check OpenRegister availability
-            try {
-                $isInstalled = $this->settingsService->isOpenRegisterInstalled();
-                $isEnabled = $this->settingsService->isOpenRegisterEnabled();
-                
-                $health['checks']['openregister_installed'] = [
-                    'status' => $isInstalled ? 'pass' : 'fail',
-                    'message' => 'OpenRegister installation check'
-                ];
-                
-                $health['checks']['openregister_enabled'] = [
-                    'status' => $isEnabled ? 'pass' : 'fail',
-                    'message' => 'OpenRegister enabled check'
-                ];
-                
-                // Try to get ObjectService
-                if ($isInstalled && $isEnabled) {
-                    try {
-                        $objectService = $this->settingsService->getObjectService();
-                        $health['checks']['openregister_service'] = [
-                            'status' => 'pass',
-                            'message' => 'OpenRegister ObjectService accessible'
-                        ];
-                        
-                        // Try to get registers
-                        $registers = $objectService->getRegisters();
-                        $health['checks']['openregister_registers'] = [
-                            'status' => 'pass',
-                            'message' => 'Found ' . count($registers) . ' registers',
-                            'data' => array_map(function($reg) {
-                                return [
-                                    'id' => $reg['id'] ?? 'unknown',
-                                    'title' => $reg['title'] ?? 'unknown',
-                                    'schemas' => count($reg['schemas'] ?? [])
-                                ];
-                            }, $registers)
-                        ];
-                    } catch (\Exception $e) {
-                        $health['checks']['openregister_service'] = [
-                            'status' => 'fail',
-                            'message' => 'OpenRegister service error: ' . $e->getMessage()
-                        ];
-                    }
+
+            // Convert empty strings to null for better UI handling
+            foreach ($settings as $key => $value) {
+                if (empty($value)) {
+                    $settings[$key] = null;
                 }
-            } catch (\Exception $e) {
-                $health['checks']['openregister_check'] = [
-                    'status' => 'fail',
-                    'message' => 'OpenRegister check failed: ' . $e->getMessage()
-                ];
             }
-            
-            // Check settings service
-            try {
-                $settings = $this->settingsService->getSettings();
-                $health['checks']['settings_service'] = [
-                    'status' => 'pass',
-                    'message' => 'Settings service accessible'
-                ];
-                
-                // Check configuration status
-                $configStatus = $this->settingsService->getConfigurationStatus();
-                $health['checks']['configuration_status'] = [
-                    'status' => $this->settingsService->isFullyConfigured() ? 'pass' : 'warn',
-                    'message' => 'Configuration check',
-                    'data' => $configStatus
-                ];
-            } catch (\Exception $e) {
-                $health['checks']['settings_service'] = [
-                    'status' => 'fail',
-                    'message' => 'Settings service error: ' . $e->getMessage()
-                ];
-                $health['status'] = 'unhealthy';
-            }
-            
-            // Check version info
-            try {
-                $versionInfo = $this->settingsService->getVersionInfo();
-                $health['checks']['version_info'] = [
-                    'status' => 'pass',
-                    'message' => 'Version information available',
-                    'data' => $versionInfo
-                ];
-            } catch (\Exception $e) {
-                $health['checks']['version_info'] = [
-                    'status' => 'fail',
-                    'message' => 'Version check failed: ' . $e->getMessage()
-                ];
-            }
-            
-            // Determine overall status
-            $failedChecks = array_filter($health['checks'], function($check) {
-                return $check['status'] === 'fail';
-            });
-            
-            if (count($failedChecks) > 0) {
-                $health['status'] = 'unhealthy';
-            }
-            
-            return new JSONResponse($health);
-            
-        } catch (\Exception $e) {
-            $this->logger->error('Health check failed', [
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
+
             return new JSONResponse([
-                'app' => 'SoftwareCatalog',
-                'status' => 'unhealthy',
-                'timestamp' => date('Y-m-d H:i:s'),
-                'error' => $e->getMessage(),
-                'checks' => []
+                'success' => true,
+                'settings' => $settings
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get AMEF settings', [
+                'error' => $e->getMessage()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get AMEF settings: ' . $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Forces re-initialization bypassing version checks.
+     * Save AMEF register configuration settings
      *
-     * @return JSONResponse JSON response containing re-initialization results.
-     *
+     * @NoAdminRequired
      * @NoCSRFRequired
+     * 
+     * @return JSONResponse Result of saving the AMEF configuration
      */
-    public function forceReinit(): JSONResponse
+    public function saveAmefSettings(): JSONResponse
     {
         try {
-            $this->logger->info('Force re-initialization requested via API');
+            $data = json_decode($this->request->getContent(), true);
             
-            // Reset version tracking to force re-initialization on next request
-            $config = $this->serverContainer->get('OCP\IConfig');
-            $config->deleteAppValue('softwarecatalog', 'last_initialized_version');
-            $config->setAppValue('softwarecatalog', 'auto_config_completed', 'false');
-            
-            // Directly trigger initialization
-            $initResult = $this->settingsService->initialize();
-            
-            // Update version if successful
-            if (empty($initResult['errors']) && 
-                ($initResult['autoConfigured'] || $initResult['fullyConfigured'])) {
-                $appManager = $this->serverContainer->get('OCP\App\IAppManager');
-                $currentVersion = $appManager->getAppVersion('softwarecatalog');
-                $config->setAppValue('softwarecatalog', 'last_initialized_version', $currentVersion);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Invalid JSON data',
+                    'error' => 'INVALID_JSON'
+                ], 400);
             }
-            
+
+            // Save each setting, using empty string for null values
+            $settingsMap = [
+                'registerId' => 'amef_register_id',
+                'elementsSchema' => 'amef_elements_schema',
+                'organizationsSchema' => 'amef_organizations_schema', 
+                'relationshipsSchema' => 'amef_relationships_schema',
+                'viewsSchema' => 'amef_views_schema'
+            ];
+
+            foreach ($settingsMap as $jsonKey => $configKey) {
+                $value = $data[$jsonKey] ?? null;
+                $this->config->setValueString('softwarecatalog', $configKey, (string)($value ?? ''));
+            }
+
+            $this->logger->info('AMEF settings saved successfully', [
+                'settings' => $data
+            ]);
+
             return new JSONResponse([
                 'success' => true,
-                'message' => 'Force re-initialization completed',
-                'result' => $initResult,
-                'timestamp' => date('c')
+                'message' => 'AMEF settings saved successfully'
             ]);
-            
+
         } catch (\Exception $e) {
-            $this->logger->error('Force re-initialization failed', [
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            $this->logger->error('Failed to save AMEF settings', [
+                'error' => $e->getMessage()
             ]);
-            
+
             return new JSONResponse([
                 'success' => false,
-                'error' => 'Force re-initialization failed: ' . $e->getMessage(),
-                'timestamp' => date('c')
+                'message' => 'Failed to save AMEF settings: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Auto-configure AMEF register settings
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Auto-configuration results
+     */
+    public function autoConfigureAmef(): JSONResponse
+    {
+        try {
+            $configured = [];
+            $errors = [];
+
+            // Get the actual registers and schemas from OpenRegister
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                throw new \RuntimeException('OpenRegister service not available');
+            }
+
+            $registers = $objectService->getRegisters();
+            if (empty($registers)) {
+                throw new \RuntimeException('No registers available');
+            }
+
+            // Look for the vng-gemma register (AMEF schemas)
+            $vngGemmaRegister = null;
+            $voorzieningenRegister = null;
+            
+            foreach ($registers as $register) {
+                $registerSlug = strtolower($register['slug'] ?? '');
+                $registerTitle = strtolower($register['title'] ?? '');
+                
+                if ($registerSlug === 'vng-gemma' || $registerTitle === 'vng gemma') {
+                    $vngGemmaRegister = $register;
+                } elseif ($registerSlug === 'voorzieningen' || $registerTitle === 'voorzieningen') {
+                    $voorzieningenRegister = $register;
+                }
+            }
+
+            // If vng-gemma register is not found, try to import it from softwarecatalogus_register.json
+            if (!$vngGemmaRegister) {
+                $this->logger->info('vng-gemma register not found, attempting to import from softwarecatalogus_register.json');
+                
+                try {
+                    $configurationService = $this->getConfigurationService();
+                    if ($configurationService) {
+                        $softwareCatalogPath = __DIR__ . '/../Settings/softwarecatalogus_register.json';
+                        if (file_exists($softwareCatalogPath)) {
+                            $softwareCatalogContent = file_get_contents($softwareCatalogPath);
+                            $softwareCatalogSettings = json_decode($softwareCatalogContent, true);
+                            
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+                                
+                                $importResult = $configurationService->importFromJson(
+                                    data: $softwareCatalogSettings,
+                                    owner: null,
+                                    appId: \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
+                                    version: $currentAppVersion,
+                                    force: true
+                                );
+                                
+                                $this->logger->info('Imported softwarecatalogus_register.json', ['result' => $importResult]);
+                                
+                                // Refresh registers after import
+                                $registers = $objectService->getRegisters();
+                                foreach ($registers as $register) {
+                                    $registerSlug = strtolower($register['slug'] ?? '');
+                                    if ($registerSlug === 'vng-gemma') {
+                                        $vngGemmaRegister = $register;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error('Failed to import softwarecatalogus_register.json', ['error' => $e->getMessage()]);
+                    $errors[] = 'Failed to import vng-gemma register: ' . $e->getMessage();
+                }
+            }
+
+            // Define AMEF schema mappings with priority order
+            $amefSchemaMappings = [
+                'elementsSchema' => [
+                    'primary' => ['element', 'archimate-element'],
+                    'fallback' => ['voorziening', 'product', 'component']
+                ],
+                'organizationsSchema' => [
+                    'primary' => ['organization', 'organisatie'],
+                    'fallback' => ['contactpersoon', 'stakeholder']
+                ],
+                'relationshipsSchema' => [
+                    'primary' => ['relation', 'relationship'],
+                    'fallback' => ['koppeling', 'connection']
+                ],
+                'viewsSchema' => [
+                    'primary' => ['view', 'diagram', 'extendview'],
+                    'fallback' => ['model', 'visualization']
+                ]
+            ];
+
+            // First try to find schemas in vng-gemma register (AMEF specific)
+            if ($vngGemmaRegister && !empty($vngGemmaRegister['schemas'])) {
+                $this->logger->info('Found vng-gemma register, configuring AMEF schemas', [
+                    'register_id' => $vngGemmaRegister['id'],
+                    'schemas' => array_column($vngGemmaRegister['schemas'], 'slug')
+                ]);
+
+                // Debug: Log all schema details
+                $this->logger->info('Full vng-gemma schema details', [
+                    'register_id' => $vngGemmaRegister['id'],
+                    'register_title' => $vngGemmaRegister['title'] ?? 'unknown',
+                    'register_slug' => $vngGemmaRegister['slug'] ?? 'unknown',
+                    'all_schemas' => $vngGemmaRegister['schemas']
+                ]);
+
+                foreach ($amefSchemaMappings as $settingKey => $patterns) {
+                    if (isset($configured[$settingKey])) {
+                        continue; // Already configured
+                    }
+
+                    // Try primary patterns first
+                    foreach ($patterns['primary'] as $pattern) {
+                        foreach ($vngGemmaRegister['schemas'] as $schema) {
+                            $schemaSlug = strtolower($schema['slug'] ?? '');
+                            $schemaTitle = strtolower($schema['title'] ?? '');
+                            
+                            if ($schemaSlug === $pattern || $schemaTitle === $pattern || 
+                                strpos($schemaSlug, $pattern) !== false || strpos($schemaTitle, $pattern) !== false) {
+                                $configured[$settingKey] = $schema['id'];
+                                $configKey = 'amef_' . strtolower(str_replace('Schema', '', $settingKey)) . '_schema';
+                                $this->config->setValueString('softwarecatalog', $configKey, (string)$schema['id']);
+                                
+                                $this->logger->info("Configured AMEF schema: {$settingKey} -> {$schema['id']} ({$schema['title']}) [slug: {$schema['slug']}]");
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Fallback to voorzieningen register schemas
+            if ($voorzieningenRegister && !empty($voorzieningenRegister['schemas'])) {
+                $this->logger->info('Using voorzieningen register as fallback for AMEF schemas', [
+                    'register_id' => $voorzieningenRegister['id'],
+                    'schemas' => array_column($voorzieningenRegister['schemas'], 'slug')
+                ]);
+
+                foreach ($amefSchemaMappings as $settingKey => $patterns) {
+                    if (isset($configured[$settingKey])) {
+                        continue; // Already configured from vng-gemma
+                    }
+
+                    // Try fallback patterns
+                    foreach ($patterns['fallback'] as $pattern) {
+                        foreach ($voorzieningenRegister['schemas'] as $schema) {
+                            $schemaSlug = strtolower($schema['slug'] ?? '');
+                            $schemaTitle = strtolower($schema['title'] ?? '');
+                            
+                            if ($schemaSlug === $pattern || $schemaTitle === $pattern || 
+                                strpos($schemaSlug, $pattern) !== false || strpos($schemaTitle, $pattern) !== false) {
+                                $configured[$settingKey] = $schema['id'];
+                                $configKey = 'amef_' . strtolower(str_replace('Schema', '', $settingKey)) . '_schema';
+                                $this->config->setValueString('softwarecatalog', $configKey, (string)$schema['id']);
+                                
+                                $this->logger->info("Configured AMEF fallback schema: {$settingKey} -> {$schema['id']} ({$schema['title']}) [slug: {$schema['slug']}]");
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Set default register ID for AMEF operations
+            if ($vngGemmaRegister) {
+                $this->config->setValueString('softwarecatalog', 'amef_register_id', (string)$vngGemmaRegister['id']);
+                $configured['registerId'] = $vngGemmaRegister['id'];
+                $this->logger->info("Set AMEF register to vng-gemma: {$vngGemmaRegister['id']}");
+            } elseif ($voorzieningenRegister) {
+                $this->config->setValueString('softwarecatalog', 'amef_register_id', (string)$voorzieningenRegister['id']);
+                $configured['registerId'] = $voorzieningenRegister['id'];
+                $this->logger->info("Set AMEF register to voorzieningen: {$voorzieningenRegister['id']}");
+            }
+
+            // Check what's missing
+            $missingSchemas = [];
+            foreach (array_keys($amefSchemaMappings) as $schemaType) {
+                if (!isset($configured[$schemaType])) {
+                    $missingSchemas[] = $schemaType;
+                }
+            }
+
+            if (!empty($missingSchemas)) {
+                $errors[] = 'Could not find schemas for: ' . implode(', ', $missingSchemas);
+                
+                if ($vngGemmaRegister && !empty($vngGemmaRegister['schemas'])) {
+                    $vngGemmaSchemas = array_map(function($schema) {
+                        return $schema['slug'] . ' (' . $schema['title'] . ')';
+                    }, $vngGemmaRegister['schemas']);
+                    $errors[] = 'Available schemas in vng-gemma: ' . implode(', ', $vngGemmaSchemas);
+                } else {
+                    $errors[] = 'Available schemas in vng-gemma: none (register not found or no schemas)';
+                }
+                
+                if ($voorzieningenRegister && !empty($voorzieningenRegister['schemas'])) {
+                    $voorzieningenSchemas = array_map(function($schema) {
+                        return $schema['slug'] . ' (' . $schema['title'] . ')';
+                    }, $voorzieningenRegister['schemas']);
+                    $errors[] = 'Available schemas in voorzieningen: ' . implode(', ', $voorzieningenSchemas);
+                } else {
+                    $errors[] = 'Available schemas in voorzieningen: none (register not found or no schemas)';
+                }
+                
+                $errors[] = 'Expected vng-gemma schemas: element, model, organization, property-definition, relation, view, extendview';
+                $errors[] = 'Try running manual import to ensure softwarecatalogus_register.json is properly imported into OpenRegister';
+            }
+
+            $this->logger->info('AMEF auto-configuration completed', [
+                'configured' => $configured,
+                'errors' => $errors,
+                'vng_gemma_register' => $vngGemmaRegister ? $vngGemmaRegister['id'] : null,
+                'voorzieningen_register' => $voorzieningenRegister ? $voorzieningenRegister['id'] : null
+            ]);
+
+            return new JSONResponse([
+                'success' => !empty($configured),
+                'message' => !empty($configured) ? 'AMEF configuration updated successfully' : 'No suitable schemas found',
+                'configured' => $configured,
+                'errors' => $errors,
+                'register_info' => [
+                    'vng_gemma_found' => $vngGemmaRegister !== null,
+                    'voorzieningen_found' => $voorzieningenRegister !== null
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('AMEF auto-configuration failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Auto-configuration failed: ' . $e->getMessage(),
+                'errors' => [$e->getMessage()]
+            ], 500);
+        }
+    }
+
+    /**
+     * Get current progress for an operation
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @param string $operationId The operation ID to get progress for
+     * 
+     * @return JSONResponse The current progress data
+     */
+    public function getProgress(string $operationId): JSONResponse
+    {
+        try {
+            $progress = $this->progressTracker->getProgress($operationId);
+            
+            if ($progress === null) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Operation not found',
+                    'error' => 'OPERATION_NOT_FOUND'
+                ], 404);
+            }
+
+            return new JSONResponse([
+                'success' => true,
+                'progress' => $progress
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get progress', [
+                'operation_id' => $operationId,
+                'error' => $e->getMessage()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get progress: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Stream progress updates using Server-Sent Events
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @param string $operationId The operation ID to stream progress for
+     * 
+     * @return Response SSE stream response
+     */
+    public function streamProgress(string $operationId): Response
+    {
+        // Set headers for Server-Sent Events
+        $response = new class($operationId, $this->progressTracker, $this->logger) extends Response {
+            public function __construct(
+                private string $operationId,
+                private ProgressTracker $progressTracker,
+                private LoggerInterface $logger
+            ) {
+                parent::__construct();
+                $this->addHeader('Content-Type', 'text/event-stream');
+                $this->addHeader('Cache-Control', 'no-cache');
+                $this->addHeader('Connection', 'keep-alive');
+                $this->addHeader('Access-Control-Allow-Origin', '*');
+                $this->addHeader('Access-Control-Allow-Headers', 'Cache-Control');
+            }
+
+            public function render(): string
+            {
+                // Enable output buffering and turn off compression
+                if (ob_get_level()) {
+                    ob_end_clean();
+                }
+                ob_implicit_flush(true);
+
+                // Stream progress updates
+                $lastProgress = null;
+                $maxAttempts = 300; // 5 minutes with 1-second intervals
+                $attempts = 0;
+
+                while ($attempts < $maxAttempts) {
+                    try {
+                        $progress = $this->progressTracker->getProgress($this->operationId);
+                        
+                        if ($progress === null) {
+                            // Operation not found, send error and close
+                            echo "event: error\n";
+                            echo "data: " . json_encode(['error' => 'Operation not found']) . "\n\n";
+                            break;
+                        }
+
+                        // Only send update if progress changed
+                        if ($progress !== $lastProgress) {
+                            echo "event: progress\n";
+                            echo "data: " . json_encode($progress) . "\n\n";
+                            $lastProgress = $progress;
+                            
+                            // If operation completed, send final event and close
+                            if ($progress['phase'] === 'completed') {
+                                echo "event: completed\n";
+                                echo "data: " . json_encode($progress) . "\n\n";
+                                break;
+                            }
+                        }
+
+                        // Send heartbeat every 10 seconds
+                        if ($attempts % 10 === 0) {
+                            echo "event: heartbeat\n";
+                            echo "data: " . json_encode(['timestamp' => time()]) . "\n\n";
+                        }
+
+                        flush();
+                        sleep(1);
+                        $attempts++;
+
+                    } catch (\Exception $e) {
+                        $this->logger->error('Progress streaming error', [
+                            'operation_id' => $this->operationId,
+                            'error' => $e->getMessage()
+                        ]);
+
+                        echo "event: error\n";
+                        echo "data: " . json_encode(['error' => $e->getMessage()]) . "\n\n";
+                        break;
+                    }
+                }
+
+                // Send final close event
+                echo "event: close\n";
+                echo "data: " . json_encode(['reason' => 'Stream ended']) . "\n\n";
+                flush();
+
+                return '';
+            }
+        };
+
+        return $response;
+    }
+
+    /**
+     * Import ArchiMate file
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Result of the import operation with progress tracking
+     */
+    public function importArchiMate(): JSONResponse
+    {
+        try {
+            // Check if a file was uploaded
+            $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
+            if (!$uploadedFiles) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'No ArchiMate file uploaded',
+                    'error' => 'NO_FILE_UPLOADED'
+                ], 400);
+            }
+
+            // Start progress tracking
+            $operationId = $this->progressTracker->startOperation('import', [
+                'filename' => $uploadedFiles['name'],
+                'filesize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name'])
+            ]);
+
+            // Create mock file object for the service
+            $tempPath = $uploadedFiles['tmp_name'];
+            $fileName = $uploadedFiles['name'];
+            $mimeType = $uploadedFiles['type'];
+            
+            // Create a mock file object
+            $mockFile = new class($tempPath, $fileName, $mimeType) implements \OCP\Files\File {
+                public function __construct(
+                    private string $path,
+                    private string $name,
+                    private string $mimeType
+                ) {}
+                
+                public function getName() { return $this->name; }
+                public function getSize($includeMounts = true) { return filesize($this->path); }
+                public function getMimeType() { return $this->mimeType; }
+                public function getContent() { return file_get_contents($this->path); }
+                
+                // Stub implementations for required interface methods
+                public function putContent($data) { return file_put_contents($this->path, $data); }
+                public function fopen($mode) { return fopen($this->path, $mode); }
+                public function hash($type, $raw = false) { return hash_file($type, $this->path, $raw); }
+                public function getId() { return 0; }
+                public function stat() { return stat($this->path); }
+                public function getMTime() { return filemtime($this->path); }
+                public function getEtag() { return md5_file($this->path); }
+                public function getPermissions() { return 0644; }
+                public function isReadable() { return is_readable($this->path); }
+                public function isUpdateable() { return is_writable($this->path); }
+                public function isDeletable() { return is_writable(dirname($this->path)); }
+                public function isShareable() { return true; }
+                public function getParent() { throw new \Exception('Not implemented'); }
+                public function getPath() { return $this->path; }
+                public function getInternalPath() { return $this->path; }
+                public function getStorage() { throw new \Exception('Not implemented'); }
+                public function getStorageId() { return 'local'; }
+                public function touch($mtime = null) { if ($mtime) touch($this->path, $mtime); }
+                public function getChecksum() { return ''; }
+                public function delete() { unlink($this->path); }
+                public function copy($targetPath) { throw new \Exception('Not implemented'); }
+                public function move($targetPath) { throw new \Exception('Not implemented'); }
+                public function lock($type) {}
+                public function changeLock($targetType) {}
+                public function unlock($type) {}
+                public function getOwner() { return null; }
+                public function getCreationTime(): int { return filectime($this->path); }
+                public function getUploadTime(): int { return $this->getMTime(); }
+                public function isEncrypted() { return false; }
+                public function getMountPoint() { throw new \Exception('Not implemented'); }
+                public function getFileInfo() { throw new \Exception('Not implemented'); }
+                public function getExtension(): string { return pathinfo($this->path, PATHINFO_EXTENSION); }
+                public function getMimePart() { return $this->mimeType; }
+                public function getType() { return \OCP\Files\FileInfo::TYPE_FILE; }
+                public function getDirectoryListing() { return []; }
+            };
+
+            // Get import options from request
+            $options = [
+                'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
+                'preserveIds' => $this->request->getParam('preserveIds', 'true') === 'true',
+                'organizationFilter' => $this->request->getParam('organizationFilter', null),
+                'progressTracker' => $this->progressTracker
+            ];
+
+            $this->progressTracker->setPhase('validating');
+
+            // Call the ArchiMate service
+            $result = $this->archiMateService->importArchiMateFile($mockFile, $options);
+
+            // Complete the operation
+            $this->progressTracker->completeOperation($result['statistics'] ?? []);
+
+            // Return result with operation ID for progress tracking
+            $result['operation_id'] = $operationId;
+            return new JSONResponse($result);
+
+        } catch (\Exception $e) {
+            // Log error in progress tracker if available
+            if (isset($operationId)) {
+                $this->progressTracker->addError('Import failed: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+
+            $this->logger->error('ArchiMate import failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+                'operation_id' => $operationId ?? null
+            ], 500);
+        }
+    }
+
+    /**
+     * Export to ArchiMate format
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Result of the export operation with progress tracking
+     */
+    public function exportArchiMate(): JSONResponse
+    {
+        try {
+            // Get JSON data from request parameters or body
+            $rawInput = file_get_contents('php://input');
+            $data = json_decode($rawInput, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // Fallback to request parameters if JSON decode fails
+                $data = [
+                    'format' => $this->request->getParam('format', 'xml'),
+                    'includeRelationships' => $this->request->getParam('includeRelationships', true),
+                    'includeViews' => $this->request->getParam('includeViews', false),
+                    'organizationSpecific' => $this->request->getParam('organizationSpecific', false),
+                    'organizationId' => $this->request->getParam('organizationId', null)
+                ];
+            }
+
+            // Start progress tracking
+            $operationId = $this->progressTracker->startOperation('export', [
+                'format' => $data['format'] ?? 'xml',
+                'organization_id' => $data['organizationId'] ?? null
+            ]);
+
+            // Get export criteria and options
+            $criteria = [
+                'organizationId' => $data['organizationId'] ?? null,
+                'includeRelationships' => $data['includeRelationships'] ?? true,
+                'includeViews' => $data['includeViews'] ?? false
+            ];
+
+            $options = [
+                'format' => $data['format'] ?? 'xml',
+                'organizationSpecific' => $data['organizationSpecific'] ?? false,
+                'progressTracker' => $this->progressTracker
+            ];
+
+            $this->progressTracker->setPhase('analyzing');
+
+            // Call export service
+            $result = $this->archiMateService->exportToArchiMate($criteria, $options);
+
+            // Complete the operation
+            $this->progressTracker->completeOperation($result['statistics'] ?? []);
+
+            // Return result with operation ID
+            $result['operation_id'] = $operationId;
+            return new JSONResponse($result);
+
+        } catch (\Exception $e) {
+            // Log error in progress tracker if available
+            if (isset($operationId)) {
+                $this->progressTracker->addError('Export failed: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+
+            $this->logger->error('ArchiMate export failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Export failed: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+                'operation_id' => $operationId ?? null
+            ], 500);
+        }
+    }
+
+    /**
+     * Download ArchiMate file
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @param string $fileName The filename to download
+     * 
+     * @return Response File download response
+     */
+    public function downloadArchiMate(string $fileName): Response
+    {
+        try {
+            // Security: validate filename to prevent path traversal
+            if (strpos($fileName, '..') !== false || strpos($fileName, '/') !== false) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Invalid filename',
+                    'error' => 'INVALID_FILENAME'
+                ], 400);
+            }
+
+            // Get user folder
+            $userSession = $this->container->get(\OCP\IUserSession::class);
+            $rootFolder = $this->container->get(\OCP\Files\IRootFolder::class);
+            $userFolder = $rootFolder->getUserFolder($userSession->getUser()->getUID());
+
+            // Check if file exists
+            if (!$userFolder->nodeExists($fileName)) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'File not found',
+                    'error' => 'FILE_NOT_FOUND'
+                ], 404);
+            }
+
+            $file = $userFolder->get($fileName);
+            
+            if (!($file instanceof \OCP\Files\File)) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Invalid file type',
+                    'error' => 'INVALID_FILE_TYPE'
+                ], 400);
+            }
+
+            // Determine content type based on file extension
+            $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $contentType = match($extension) {
+                'xml', 'archimate' => 'application/xml',
+                'json' => 'application/json',
+                default => 'application/octet-stream'
+            };
+
+            // Create download response
+            $response = new StreamResponse($file->fopen('r'));
+            $response->addHeader('Content-Type', $contentType);
+            $response->addHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+            $response->addHeader('Content-Length', (string)$file->getSize());
+
+            return $response;
+
+        } catch (\Exception $e) {
+            $this->logger->error('ArchiMate download failed', [
+                'fileName' => $fileName,
+                'error' => $e->getMessage()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Download failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
 
 }//end class
+
+

@@ -46,5 +46,19 @@ return [
         
         // Force re-initialization endpoint
         ['name' => 'settings#force_reinit', 'url' => '/api/settings/force-reinit', 'verb' => 'POST'],
+
+        // ArchiMate import/export routes
+        ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
+        ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
+        ['name' => 'settings#downloadArchiMate', 'url' => '/api/archimate/download/{fileName}', 'verb' => 'GET'],
+
+        // AMEF register configuration routes
+        ['name' => 'settings#getAmefSettings', 'url' => '/api/settings/amef', 'verb' => 'GET'],
+        ['name' => 'settings#saveAmefSettings', 'url' => '/api/settings/amef', 'verb' => 'POST'],
+        ['name' => 'settings#autoConfigureAmef', 'url' => '/api/settings/amef/auto-configure', 'verb' => 'POST'],
+
+        // Progress streaming routes
+        ['name' => 'settings#getProgress', 'url' => '/api/progress/{operationId}', 'verb' => 'GET'],
+        ['name' => 'settings#streamProgress', 'url' => '/api/progress/{operationId}/stream', 'verb' => 'GET'],
     ],
 ];
