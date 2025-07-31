@@ -189,6 +189,8 @@ class Application extends App implements IBootstrap
                 $container->get('OCP\IAppConfig'),
                 $container->get('OCP\Files\IRootFolder'),
                 $container->get('OCP\IUserSession'),
+                $container->get('OCP\App\IAppManager'),
+                $container,
                 $container->get('Psr\Log\LoggerInterface')
             );
         });

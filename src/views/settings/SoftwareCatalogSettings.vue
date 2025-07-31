@@ -71,7 +71,7 @@
 							v-if="importResult.success"
 							type="success">
 							{{ importResult.message }}
-							
+
 							<!-- Auto-Configuration Details -->
 							<div v-if="importResult.autoConfigResult && Object.keys(importResult.autoConfigResult).length > 0" class="auto-config-details">
 								<h4>Auto-Configuration Results:</h4>
@@ -899,7 +899,7 @@
 								<span v-else class="not-configured">Not configured</span>
 							</div>
 							<div class="config-item">
-								<strong>Elements:</strong> 
+								<strong>Elements:</strong>
 								<span v-if="amefSettings.elementsSchema">Schema {{ amefSettings.elementsSchema }}</span>
 								<span v-else class="not-configured">Not configured</span>
 							</div>
@@ -951,7 +951,7 @@
 									accept=".archimate,.xml"
 									style="display: none"
 									@change="handleFileSelection">
-								
+
 								<NcButton
 									type="secondary"
 									:disabled="importing || !settings.openRegisters"
@@ -969,7 +969,7 @@
 
 							<div v-if="selectedFile" class="import-options">
 								<h5>Import Options</h5>
-								
+
 								<div class="option-row">
 									<NcCheckboxRadioSwitch
 										:checked="importOptions.updateExisting"
@@ -980,12 +980,12 @@
 								</div>
 
 								<div class="option-row">
-									<label class="option-label">Organization Filter:</label>
-									<NcTextField
-										:value="importOptions.organizationFilter || ''"
-										placeholder="Filter by organization name (optional)"
-										label="Organization Filter"
-										@update:value="importOptions.organizationFilter = $event" />
+									<NcCheckboxRadioSwitch
+										:checked="importOptions.deleteOrphaned"
+										@update:checked="importOptions.deleteOrphaned = $event">
+										Delete Orphaned Objects
+									</NcCheckboxRadioSwitch>
+									<span class="option-description">Delete objects that are no longer present in the imported file (orphaned objects)</span>
 								</div>
 							</div>
 
@@ -993,64 +993,13 @@
 								<NcButton
 									type="primary"
 									:disabled="importing || !settings.openRegisters"
-																@click="importArchiMateFile">
-							<template #icon>
-								<NcLoadingIcon v-if="importing" :size="20" />
-								<CloudUpload v-else :size="20" />
-							</template>
-							{{ importing ? 'Importing...' : 'Import ArchiMate File' }}
-						</NcButton>
-
-						<!-- Progress Tracking -->
-						<div v-if="importProgress" class="import-progress">
-							<div class="progress-header">
-								<h5>{{ importProgress.operation_type === 'import' ? 'Import' : 'Export' }} Progress</h5>
-								<span class="progress-percentage">{{ importProgress.percentage }}%</span>
-							</div>
-							
-							<div class="progress-bar">
-								<div 
-									class="progress-fill" 
-									:style="{ width: importProgress.percentage + '%' }">
-								</div>
-							</div>
-							
-							<div class="progress-details">
-								<div class="progress-phase">
-									<strong>{{ importProgress.phase_description }}</strong>
-									<span v-if="importProgress.current_item_name" class="current-item">
-										({{ importProgress.current_item_name }})
-									</span>
-								</div>
-								
-								<div v-if="importProgress.total_items > 0" class="progress-items">
-									{{ importProgress.processed_items }} / {{ importProgress.total_items }} items
-								</div>
-								
-								<div v-if="importProgress.estimated_completion" class="progress-eta">
-									ETA: {{ formatETA(importProgress.estimated_completion) }}
-								</div>
-							</div>
-
-							<!-- Error/Warning Display -->
-							<div v-if="importProgress.errors.length > 0" class="progress-errors">
-								<h6>Errors:</h6>
-								<ul>
-									<li v-for="error in importProgress.errors.slice(-3)" :key="error.timestamp">
-										{{ error.message }}
-									</li>
-								</ul>
-							</div>
-
-							<div v-if="importProgress.warnings.length > 0" class="progress-warnings">
-								<h6>Warnings:</h6>
-								<ul>
-									<li v-for="warning in importProgress.warnings.slice(-3)" :key="warning.timestamp">
-										{{ warning.message }}
-									</li>
-								</ul>
-							</div>
-						</div>
+									@click="importArchiMateFile">
+									<template #icon>
+										<NcLoadingIcon v-if="importing" :size="20" />
+										<CloudUpload v-else :size="20" />
+									</template>
+									{{ importing ? 'Importing...' : 'Import ArchiMate File' }}
+								</NcButton>
 
 								<NcButton
 									type="tertiary"
@@ -1071,17 +1020,77 @@
 									</template>
 									<div class="result-content">
 										<strong>{{ importResult.message }}</strong>
-										<div v-if="importResult.success && importResult.statistics" class="import-statistics">
+										<div v-if="importResult.success" class="import-statistics">
 											<h5>Import Results:</h5>
-											<ul>
-												<li>Objects created: {{ importResult.statistics.objects_created || 0 }}</li>
-												<li>Objects updated: {{ importResult.statistics.objects_updated || 0 }}</li>
-												<li v-if="importResult.statistics.errors && importResult.statistics.errors.length > 0">
-													Errors: {{ importResult.statistics.errors.length }}
-												</li>
-											</ul>
-											<div v-if="importResult.statistics.processing_stats" class="processing-stats">
-												<p><strong>Processing Method:</strong> {{ importResult.statistics.processing_stats.method }}</p>
+
+											<!-- File Information -->
+											<div v-if="importResult.file_info" class="file-info">
+												<h6>File Information:</h6>
+												<ul>
+													<li><strong>File Name:</strong> {{ importResult.file_info.name }}</li>
+													<li><strong>File Size:</strong> {{ (importResult.file_info.size / 1024 / 1024).toFixed(2) }} MB</li>
+													<li><strong>File Type:</strong> {{ importResult.file_info.mime_type }}</li>
+												</ul>
+											</div>
+
+											<!-- Performance Metrics -->
+											<div v-if="importResult.performance_metrics" class="performance-metrics">
+												<h6>Performance Metrics:</h6>
+												<ul>
+													<li><strong>Processing Method:</strong> {{ importResult.performance_metrics.processing_method }}</li>
+													<li><strong>Batch Size:</strong> {{ importResult.performance_metrics.batch_size_used }}</li>
+													<li v-if="importResult.performance_metrics.items_per_second > 0">
+														<strong>Items/Second:</strong> {{ importResult.performance_metrics.items_per_second.toFixed(2) }}
+													</li>
+												</ul>
+											</div>
+
+											<!-- Processing Times -->
+											<div v-if="importResult.processing_times" class="processing-times">
+												<h6>Processing Times:</h6>
+												<ul>
+													<li><strong>Total Time:</strong> {{ importResult.processing_times.total_time_seconds.toFixed(2) }}s</li>
+													<li><strong>Validation:</strong> {{ importResult.processing_times.validation_time_seconds.toFixed(3) }}s</li>
+													<li><strong>Parsing:</strong> {{ importResult.processing_times.parse_time_seconds.toFixed(3) }}s</li>
+													<li><strong>Conversion:</strong> {{ importResult.processing_times.convert_time_seconds.toFixed(2) }}s</li>
+												</ul>
+											</div>
+
+											<!-- Summary Statistics -->
+											<div v-if="importResult.summary" class="summary-stats">
+												<h6>Summary:</h6>
+												<ul>
+													<li><strong>Objects Created:</strong> {{ importResult.summary.total_objects_created || 0 }}</li>
+													<li><strong>Objects Updated:</strong> {{ importResult.summary.total_objects_updated || 0 }}</li>
+													<li v-if="importResult.summary.total_objects_deleted > 0">
+														<strong>Objects Deleted:</strong> {{ importResult.summary.total_objects_deleted }}
+													</li>
+													<li v-if="importResult.summary.total_errors > 0">
+														<strong>Total Errors:</strong> {{ importResult.summary.total_errors }}
+													</li>
+												</ul>
+											</div>
+
+											<!-- Detailed Schema Statistics -->
+											<div v-if="importResult.statistics" class="schema-statistics">
+												<h6>Per Schema Breakdown:</h6>
+												<div class="schema-grid">
+													<div v-for="(stats, schema) in importResult.statistics" :key="schema" class="schema-card">
+														<h6>{{ schema.charAt(0).toUpperCase() + schema.slice(1) }}</h6>
+														<ul>
+															<li v-if="stats.found > 0">🔍 Found: {{ stats.found }}</li>
+															<li v-if="stats.created > 0">✅ Created: {{ stats.created }}</li>
+															<li v-if="stats.updated > 0">🔄 Updated: {{ stats.updated }}</li>
+															<li v-if="stats.skipped > 0">⏭️ Skipped: {{ stats.skipped }}</li>
+															<li v-if="stats.deleted > 0">🗑️ Deleted: {{ stats.deleted }}</li>
+															<li v-if="stats.errors && stats.errors.length > 0">❌ Errors: {{ stats.errors.length }}</li>
+															<li v-if="stats.processing_time > 0">⏱️ Time: {{ stats.processing_time.toFixed(3) }}s</li>
+															<li v-if="stats.created === 0 && stats.updated === 0 && stats.deleted === 0 && stats.skipped === 0 && (!stats.errors || stats.errors.length === 0)">
+																ℹ️ No changes
+															</li>
+														</ul>
+													</div>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -1098,50 +1107,58 @@
 						<div class="export-form">
 							<div class="export-options">
 								<h5>Export Options</h5>
-								
 								<div class="option-row">
 									<label class="option-label">Format:</label>
 									<NcSelect
-										:value="exportOptions.format"
-										:options="formatOptions"
-										input-label="Export Format"
-										@input="exportOptions.format = $event" />
+										v-model="exportOptions.format"
+										:options="[
+											{ label: 'XML', value: 'xml' },
+											{ label: 'JSON', value: 'json' }
+										]"
+										placeholder="Select format" />
 								</div>
-
 								<div class="option-row">
-									<label class="option-label">Organization Filter:</label>
+									<NcCheckboxRadioSwitch
+										:checked="exportOptions.organizationSpecific"
+										@update:checked="exportOptions.organizationSpecific = $event">
+										Organization Specific
+									</NcCheckboxRadioSwitch>
+								</div>
+								<div v-if="exportOptions.organizationSpecific" class="option-row">
+									<label class="option-label">Organization ID:</label>
 									<NcTextField
 										:value="exportOptions.organizationId || ''"
-										placeholder="Organization ID (optional)"
-										label="Organization ID"
+										placeholder="Enter organization ID"
 										@update:value="exportOptions.organizationId = $event" />
 								</div>
-
+								<div v-if="!exportOptions.organizationSpecific" class="option-row">
+									<label class="option-label">Organization Filter:</label>
+									<NcTextField
+										:value="exportOptions.organizationFilter || ''"
+										placeholder="Filter by organization name (optional)"
+										@update:value="exportOptions.organizationFilter = $event" />
+								</div>
+								<div class="option-row">
+									<label class="option-label">Schemas to Export:</label>
+									<NcSelect
+										v-model="exportOptions.selectedSchemas"
+										:options="availableSchemas"
+										multiple
+										placeholder="Select schemas to export" />
+								</div>
 								<div class="option-row">
 									<NcCheckboxRadioSwitch
 										:checked="exportOptions.includeRelationships"
 										@update:checked="exportOptions.includeRelationships = $event">
 										Include Relationships
 									</NcCheckboxRadioSwitch>
-									<span class="option-description">Include relationships between elements in the export</span>
 								</div>
-
 								<div class="option-row">
 									<NcCheckboxRadioSwitch
 										:checked="exportOptions.includeViews"
 										@update:checked="exportOptions.includeViews = $event">
 										Include Views
 									</NcCheckboxRadioSwitch>
-									<span class="option-description">Include ArchiMate views in the export</span>
-								</div>
-
-								<div class="option-row">
-									<NcCheckboxRadioSwitch
-										:checked="exportOptions.organizationSpecific"
-										@update:checked="exportOptions.organizationSpecific = $event">
-										Organization-Specific Export
-									</NcCheckboxRadioSwitch>
-									<span class="option-description">Add organization-specific metadata to the ArchiMate model</span>
 								</div>
 							</div>
 
@@ -1188,7 +1205,6 @@
 					<div class="test-section">
 						<h4>Testing ArchiMate Import/Export</h4>
 						<p>Upload an ArchiMate file, then export it back to compare and verify the round-trip process</p>
-						
 						<div class="test-actions">
 							<NcButton
 								type="secondary"
@@ -1203,7 +1219,7 @@
 						</div>
 
 						<div v-if="roundTripResult" class="test-result">
-							<NcNoteCard :type="roundTripResult.success ? 'success' : 'error'">               
+							<NcNoteCard :type="roundTripResult.success ? 'success' : 'error'">
 								<strong>{{ roundTripResult.message }}</strong>
 								<div v-if="roundTripResult.success && roundTripResult.comparison" class="comparison-details">
 									<p><strong>Comparison Results:</strong></p>
@@ -1291,20 +1307,20 @@
 								<h5>SMTP Configuration</h5>
 								<div class="setting-row">
 									<label class="setting-label">SMTP Host:</label>
-																	<NcTextField
-									:value="emailSettings.smtpHost || ''"
-									placeholder="smtp.gmail.com"
-									label="SMTP Host"
-									@update:value="updateEmailSetting('smtpHost', $event)" />
+									<NcTextField
+										:value="emailSettings.smtpHost || ''"
+										placeholder="smtp.gmail.com"
+										label="SMTP Host"
+										@update:value="updateEmailSetting('smtpHost', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">SMTP Port:</label>
-																	<NcTextField
-									:value="emailSettings.smtpPort || ''"
-									placeholder="587"
-									type="number"
-									label="SMTP Port"
-									@update:value="updateEmailSetting('smtpPort', parseInt($event))" />
+									<NcTextField
+										:value="emailSettings.smtpPort || ''"
+										placeholder="587"
+										type="number"
+										label="SMTP Port"
+										@update:value="updateEmailSetting('smtpPort', parseInt($event))" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Encryption:</label>
@@ -1317,19 +1333,19 @@
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Username:</label>
-																	<NcTextField
-									:value="emailSettings.smtpUsername || ''"
-									placeholder="your-email@gmail.com"
-									label="SMTP Username"
-									@update:value="updateEmailSetting('smtpUsername', $event)" />
+									<NcTextField
+										:value="emailSettings.smtpUsername || ''"
+										placeholder="your-email@gmail.com"
+										label="SMTP Username"
+										@update:value="updateEmailSetting('smtpUsername', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Password:</label>
-																	<NcPasswordField
-									:value="emailSettings.smtpPassword || ''"
-									placeholder="your-password"
-									label="SMTP Password"
-									@update:value="updateEmailSetting('smtpPassword', $event)" />
+									<NcPasswordField
+										:value="emailSettings.smtpPassword || ''"
+										placeholder="your-password"
+										label="SMTP Password"
+										@update:value="updateEmailSetting('smtpPassword', $event)" />
 								</div>
 							</div>
 
@@ -1338,11 +1354,11 @@
 								<h5>SendGrid Configuration</h5>
 								<div class="setting-row">
 									<label class="setting-label">API Key:</label>
-																	<NcPasswordField
-									:value="emailSettings.sendgridApiKey || ''"
-									placeholder="SG.xxxxx"
-									label="SendGrid API Key"
-									@update:value="updateEmailSetting('sendgridApiKey', $event)" />
+									<NcPasswordField
+										:value="emailSettings.sendgridApiKey || ''"
+										placeholder="SG.xxxxx"
+										label="SendGrid API Key"
+										@update:value="updateEmailSetting('sendgridApiKey', $event)" />
 								</div>
 							</div>
 
@@ -1351,19 +1367,19 @@
 								<h5>Mailgun Configuration</h5>
 								<div class="setting-row">
 									<label class="setting-label">API Key:</label>
-																	<NcPasswordField
-									:value="emailSettings.mailgunApiKey || ''"
-									placeholder="key-xxxxx"
-									label="Mailgun API Key"
-									@update:value="updateEmailSetting('mailgunApiKey', $event)" />
+									<NcPasswordField
+										:value="emailSettings.mailgunApiKey || ''"
+										placeholder="key-xxxxx"
+										label="Mailgun API Key"
+										@update:value="updateEmailSetting('mailgunApiKey', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Domain:</label>
-																	<NcTextField
-									:value="emailSettings.mailgunDomain || ''"
-									placeholder="mg.yourdomain.com"
-									label="Mailgun Domain"
-									@update:value="updateEmailSetting('mailgunDomain', $event)" />
+									<NcTextField
+										:value="emailSettings.mailgunDomain || ''"
+										placeholder="mg.yourdomain.com"
+										label="Mailgun Domain"
+										@update:value="updateEmailSetting('mailgunDomain', $event)" />
 								</div>
 							</div>
 
@@ -1372,11 +1388,11 @@
 								<h5>Postmark Configuration</h5>
 								<div class="setting-row">
 									<label class="setting-label">API Key:</label>
-																	<NcPasswordField
-									:value="emailSettings.postmarkApiKey || ''"
-									placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-									label="Postmark API Key"
-									@update:value="updateEmailSetting('postmarkApiKey', $event)" />
+									<NcPasswordField
+										:value="emailSettings.postmarkApiKey || ''"
+										placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+										label="Postmark API Key"
+										@update:value="updateEmailSetting('postmarkApiKey', $event)" />
 								</div>
 							</div>
 
@@ -1385,19 +1401,19 @@
 								<h5>Amazon SES Configuration</h5>
 								<div class="setting-row">
 									<label class="setting-label">Access Key:</label>
-																	<NcPasswordField
-									:value="emailSettings.sesAccessKey || ''"
-									placeholder="AKIAIOSFODNN7EXAMPLE"
-									label="SES Access Key"
-									@update:value="updateEmailSetting('sesAccessKey', $event)" />
+									<NcPasswordField
+										:value="emailSettings.sesAccessKey || ''"
+										placeholder="AKIAIOSFODNN7EXAMPLE"
+										label="SES Access Key"
+										@update:value="updateEmailSetting('sesAccessKey', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Secret Key:</label>
-																	<NcPasswordField
-									:value="emailSettings.sesSecretKey || ''"
-									placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-									label="SES Secret Key"
-									@update:value="updateEmailSetting('sesSecretKey', $event)" />
+									<NcPasswordField
+										:value="emailSettings.sesSecretKey || ''"
+										placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+										label="SES Secret Key"
+										@update:value="updateEmailSetting('sesSecretKey', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Region:</label>
@@ -1415,19 +1431,19 @@
 								<h5>Mailjet Configuration</h5>
 								<div class="setting-row">
 									<label class="setting-label">API Key:</label>
-																	<NcPasswordField
-									:value="emailSettings.mailjetApiKey || ''"
-									placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-									label="Mailjet API Key"
-									@update:value="updateEmailSetting('mailjetApiKey', $event)" />
+									<NcPasswordField
+										:value="emailSettings.mailjetApiKey || ''"
+										placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+										label="Mailjet API Key"
+										@update:value="updateEmailSetting('mailjetApiKey', $event)" />
 								</div>
 								<div class="setting-row">
 									<label class="setting-label">Secret Key:</label>
-																	<NcPasswordField
-									:value="emailSettings.mailjetSecretKey || ''"
-									placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-									label="Mailjet Secret Key"
-									@update:value="updateEmailSetting('mailjetSecretKey', $event)" />
+									<NcPasswordField
+										:value="emailSettings.mailjetSecretKey || ''"
+										placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+										label="Mailjet Secret Key"
+										@update:value="updateEmailSetting('mailjetSecretKey', $event)" />
 								</div>
 							</div>
 						</div>
@@ -1797,14 +1813,16 @@ export default defineComponent({
 			exportResult: null,
 			importOptions: {
 				updateExisting: true,
-				organizationFilter: '',
+				deleteOrphaned: false,
 			},
 			exportOptions: {
 				format: 'xml',
+				organizationSpecific: false,
 				organizationId: '',
+				organizationFilter: '',
+				selectedSchemas: [],
 				includeRelationships: true,
 				includeViews: false,
-				organizationSpecific: false,
 			},
 			roundTripResult: null,
 			// AMEF Register Configuration data
@@ -1817,10 +1835,7 @@ export default defineComponent({
 				relationshipsSchema: null,
 				viewsSchema: null,
 			},
-			// Progress tracking data
-			importProgress: null,
-			exportProgress: null,
-			progressEventSource: null,
+
 		}
 	},
 
@@ -1897,8 +1912,59 @@ export default defineComponent({
 			}
 
 			// Check if at least organisatie or contactpersoon schema is configured
-			return this.configuration.voorzieningen_organisatie?.schema 
+			return this.configuration.voorzieningen_organisatie?.schema
 				|| this.configuration.voorzieningen_contactpersoon?.schema
+		},
+
+		/**
+		 * Available AMEF schemas for export
+		 *
+		 * @return {Array<object>} Array of schema options
+		 */
+		availableSchemas() {
+			// Default AMEF schemas if no configuration is available
+			const defaultSchemas = [
+				{ label: 'Elements (Schema 66)', value: 66 },
+				{ label: 'Organizations (Schema 66)', value: 66 },
+				{ label: 'Relationships (Schema 71)', value: 71 },
+				{ label: 'Views (Schema 69)', value: 69 },
+				{ label: 'Property Definitions (Schema 70)', value: 70 },
+				{ label: 'Extended Views (Schema 72)', value: 72 }
+			]
+
+			// If we have AMEF settings, use those
+			if (this.amefSettings && Object.values(this.amefSettings).some(v => v !== null)) {
+				const configuredSchemas = []
+
+				if (this.amefSettings.elementsSchema) {
+					configuredSchemas.push({
+						label: `Elements (Schema ${this.amefSettings.elementsSchema})`,
+						value: this.amefSettings.elementsSchema
+					})
+				}
+				if (this.amefSettings.organizationsSchema) {
+					configuredSchemas.push({
+						label: `Organizations (Schema ${this.amefSettings.organizationsSchema})`,
+						value: this.amefSettings.organizationsSchema
+					})
+				}
+				if (this.amefSettings.relationshipsSchema) {
+					configuredSchemas.push({
+						label: `Relationships (Schema ${this.amefSettings.relationshipsSchema})`,
+						value: this.amefSettings.relationshipsSchema
+					})
+				}
+				if (this.amefSettings.viewsSchema) {
+					configuredSchemas.push({
+						label: `Views (Schema ${this.amefSettings.viewsSchema})`,
+						value: this.amefSettings.viewsSchema
+					})
+				}
+
+				return configuredSchemas.length > 0 ? configuredSchemas : defaultSchemas
+			}
+
+			return defaultSchemas
 		},
 
 		/**
@@ -2015,6 +2081,9 @@ export default defineComponent({
 			this.loadVersionInfo(),
 			this.loadAmefSettings()
 		])
+
+		// Initialize export options with default values
+		this.initializeExportOptions()
 	},
 
 	beforeDestroy() {
@@ -2032,11 +2101,9 @@ export default defineComponent({
 		async loadVersionInfo() {
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
-				
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
-				
 				const data = await response.json()
 
 				if (data.error) {
@@ -2099,11 +2166,9 @@ export default defineComponent({
 						this.loadVersionInfo(),
 						this.loadSettings()
 					])
-					
 					// If auto-configuration was successful, show additional success info
 					if (result.autoConfigResult && Object.keys(result.autoConfigResult).length > 0) {
-						console.log('Auto-configuration completed:', result.autoConfigResult)
-						
+						// console.log('Auto-configuration completed:', result.autoConfigResult)
 						// Show a more detailed success message
 						this.importResult = {
 							...result,
@@ -2253,18 +2318,16 @@ export default defineComponent({
 		async loadDebugInfo() {
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/debug')
-				
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
-				
 				const data = await response.json()
 
 				if (data.error) {
 					this.debugInfo = { error: data.error }
 				} else if (data.message === '') {
 					// Handle empty message response which indicates uncaught exception
-					this.debugInfo = { 
+					this.debugInfo = {
 						error: 'Empty response from debug API - likely uncaught exception in backend',
 						suggestion: 'Check server logs or try running manual import/initialization'
 					}
@@ -2272,7 +2335,7 @@ export default defineComponent({
 					this.debugInfo = data
 				}
 			} catch (error) {
-				this.debugInfo = { 
+				this.debugInfo = {
 					error: 'Failed to load debug information: ' + error.message,
 					suggestion: 'Check if the SoftwareCatalog app is properly installed and OpenRegister is available'
 				}
@@ -2700,15 +2763,15 @@ export default defineComponent({
 
 				// Only save voorzieningen schema configuration
 				if (this.configuration.voorzieningen_organisatie?.schema) {
-					configToSave['voorzieningen_organisatie_source'] = 'openregister'
-					configToSave['voorzieningen_organisatie_register'] = this.selectedRegister.value
-					configToSave['voorzieningen_organisatie_schema'] = this.configuration.voorzieningen_organisatie.schema.value
+					configToSave.voorzieningen_organisatie_source = 'openregister'
+					configToSave.voorzieningen_organisatie_register = this.selectedRegister.value
+					configToSave.voorzieningen_organisatie_schema = this.configuration.voorzieningen_organisatie.schema.value
 				}
 
 				if (this.configuration.voorzieningen_contactpersoon?.schema) {
-					configToSave['voorzieningen_contactpersoon_source'] = 'openregister'
-					configToSave['voorzieningen_contactpersoon_register'] = this.selectedRegister.value
-					configToSave['voorzieningen_contactpersoon_schema'] = this.configuration.voorzieningen_contactpersoon.schema.value
+					configToSave.voorzieningen_contactpersoon_source = 'openregister'
+					configToSave.voorzieningen_contactpersoon_register = this.selectedRegister.value
+					configToSave.voorzieningen_contactpersoon_schema = this.configuration.voorzieningen_contactpersoon.schema.value
 				}
 
 				// Send configuration to backend
@@ -2721,7 +2784,6 @@ export default defineComponent({
 				})
 
 				const result = await response.json()
-				
 				if (result.error) {
 					this.schemaSaveResult = {
 						success: false,
@@ -2732,7 +2794,6 @@ export default defineComponent({
 						success: true,
 						message: 'Schema values saved successfully! Organisatie and Contactpersoon schemas are now configured.'
 					}
-					
 					// Reload settings to reflect changes
 					await this.loadSettings()
 				}
@@ -3505,8 +3566,7 @@ export default defineComponent({
 				if (result.success) {
 					// Update local AMEF settings with the configured values
 					this.amefSettings = { ...this.amefSettings, ...result.configured }
-					
-					console.log('AMEF auto-configuration completed:', result)
+					// console.log('AMEF auto-configuration completed:', result)
 				}
 
 			} catch (error) {
@@ -3529,7 +3589,7 @@ export default defineComponent({
 		async saveAmefSettings() {
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/amef', {
-					method: 'POST', 
+					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 						'X-Requested-With': 'XMLHttpRequest',
@@ -3541,8 +3601,8 @@ export default defineComponent({
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
 
-				const result = await response.json()
-				console.log('AMEF settings saved:', result)
+				await response.json()
+				// console.log('AMEF settings saved:', result)
 
 			} catch (error) {
 				console.error('Failed to save AMEF settings:', error)
@@ -3573,7 +3633,7 @@ export default defineComponent({
 					this.amefSettings = { ...this.amefSettings, ...result.settings }
 				}
 
-				console.log('AMEF settings loaded:', result)
+				// console.log('AMEF settings loaded:', result)
 
 			} catch (error) {
 				console.error('Failed to load AMEF settings:', error)
@@ -3610,118 +3670,9 @@ export default defineComponent({
 				// Save the register selection
 				await this.saveAmefSettings()
 
-				console.log('AMEF register changed to:', this.amefSettings.registerId)
+				// console.log('AMEF register changed to:', this.amefSettings.registerId)
 			} catch (error) {
 				console.error('Failed to handle register change:', error)
-			}
-		},
-
-		// Progress tracking methods
-
-		/**
-		 * Start progress tracking for an operation
-		 *
-		 * @param {string} operationId Operation ID to track
-		 * @param {string} type Operation type (import/export)
-		 * @return {void}
-		 */
-		startProgressTracking(operationId, type = 'import') {
-			if (this.progressEventSource) {
-				this.progressEventSource.close()
-			}
-
-			// Initialize progress
-			if (type === 'import') {
-				this.importProgress = {
-					operation_id: operationId,
-					operation_type: type,
-					phase: 'initializing',
-					phase_description: 'Initializing',
-					percentage: 0,
-					processed_items: 0,
-					total_items: 0,
-					errors: [],
-					warnings: []
-				}
-			} else {
-				this.exportProgress = {
-					operation_id: operationId,
-					operation_type: type,
-					phase: 'initializing',
-					phase_description: 'Initializing',
-					percentage: 0,
-					processed_items: 0,
-					total_items: 0,
-					errors: [],
-					warnings: []
-				}
-			}
-
-			// Start Server-Sent Events stream
-			const url = `/index.php/apps/softwarecatalog/api/progress/${operationId}/stream`
-			this.progressEventSource = new EventSource(url)
-
-			this.progressEventSource.addEventListener('progress', (event) => {
-				try {
-					const progress = JSON.parse(event.data)
-					if (type === 'import') {
-						this.importProgress = progress
-					} else {
-						this.exportProgress = progress
-					}
-				} catch (error) {
-					console.error('Failed to parse progress data:', error)
-				}
-			})
-
-			this.progressEventSource.addEventListener('completed', (event) => {
-				try {
-					const progress = JSON.parse(event.data)
-					if (type === 'import') {
-						this.importProgress = progress
-						this.importing = false
-					} else {
-						this.exportProgress = progress
-						this.exporting = false
-					}
-					
-					// Close the stream
-					this.progressEventSource.close()
-					this.progressEventSource = null
-				} catch (error) {
-					console.error('Failed to parse completion data:', error)
-				}
-			})
-
-			this.progressEventSource.addEventListener('error', (event) => {
-				console.error('Progress streaming error:', event)
-				this.progressEventSource.close()
-				this.progressEventSource = null
-				
-				if (type === 'import') {
-					this.importing = false
-				} else {
-					this.exporting = false
-				}
-			})
-
-			this.progressEventSource.addEventListener('close', (event) => {
-				if (this.progressEventSource) {
-					this.progressEventSource.close()
-					this.progressEventSource = null
-				}
-			})
-		},
-
-		/**
-		 * Stop progress tracking
-		 *
-		 * @return {void}
-		 */
-		stopProgressTracking() {
-			if (this.progressEventSource) {
-				this.progressEventSource.close()
-				this.progressEventSource = null
 			}
 		},
 
@@ -3734,11 +3685,10 @@ export default defineComponent({
 		formatETA(timestamp) {
 			const now = Date.now() / 1000
 			const secondsRemaining = timestamp - now
-			
 			if (secondsRemaining <= 0) {
 				return 'Complete'
 			}
-			
+
 			if (secondsRemaining < 60) {
 				return `${Math.round(secondsRemaining)}s`
 			} else if (secondsRemaining < 3600) {
@@ -3746,6 +3696,14 @@ export default defineComponent({
 			} else {
 				return `${Math.round(secondsRemaining / 3600)}h`
 			}
+		},
+
+		/**
+		 * Initialize export options with default values
+		 */
+		initializeExportOptions() {
+			// Set default selected schemas to all available schemas
+			this.exportOptions.selectedSchemas = this.availableSchemas.map(schema => schema.value)
 		},
 
 		// ArchiMate-related methods
@@ -3763,17 +3721,13 @@ export default defineComponent({
 
 			this.importing = true
 			this.importResult = null
-			this.importProgress = null
 
 			try {
 				const formData = new FormData()
 				formData.append('archiMateFile', this.selectedFile)
 				formData.append('updateExisting', this.importOptions.updateExisting)
+				formData.append('deleteOrphaned', this.importOptions.deleteOrphaned)
 				formData.append('preserveIds', 'true')
-				
-				if (this.importOptions.organizationFilter) {
-					formData.append('organizationFilter', this.importOptions.organizationFilter)
-				}
 
 				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
 					method: 'POST',
@@ -3787,22 +3741,13 @@ export default defineComponent({
 
 				if (result.success) {
 					this.importResult = result
-					console.log('ArchiMate file imported successfully:', result)
-					
-					// Start progress tracking if operation ID provided
-					if (result.operation_id) {
-						this.startProgressTracking(result.operation_id, 'import')
-					} else {
-						// If no operation ID, stop importing state immediately
-						this.importing = false
-					}
 				} else {
-					console.error('Failed to import ArchiMate file:', result)
-					this.importing = false
+					// Handle import failure
 				}
 
 			} catch (error) {
 				console.error('Failed to import ArchiMate file:', error)
+			} finally {
 				this.importing = false
 			}
 		},
@@ -3815,7 +3760,6 @@ export default defineComponent({
 		async exportToArchiMate() {
 			this.exporting = true
 			this.exportResult = null
-			this.exportProgress = null
 
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
@@ -3831,22 +3775,13 @@ export default defineComponent({
 
 				if (result.success) {
 					this.exportResult = result
-					console.log('ArchiMate export completed:', result)
-					
-					// Start progress tracking if operation ID provided
-					if (result.operation_id) {
-						this.startProgressTracking(result.operation_id, 'export')
-					} else {
-						// If no operation ID, stop exporting state immediately
-						this.exporting = false
-					}
 				} else {
-					console.error('Failed to export to ArchiMate:', result)
-					this.exporting = false
+					// Handle export failure
 				}
 
 			} catch (error) {
 				console.error('Failed to export to ArchiMate:', error)
+			} finally {
 				this.exporting = false
 			}
 		},
@@ -3860,7 +3795,6 @@ export default defineComponent({
 		async downloadArchiMateFile(fileName) {
 			try {
 				const response = await fetch(`/index.php/apps/softwarecatalog/api/archimate/download/${fileName}`)
-				
 				if (response.ok) {
 					const blob = await response.blob()
 					const url = window.URL.createObjectURL(blob)
@@ -3891,11 +3825,9 @@ export default defineComponent({
 			try {
 				// First import the selected file
 				await this.importArchiMateFile()
-				
 				// Wait for import to complete
 				// Then export back to ArchiMate
 				await this.exportToArchiMate()
-				
 				this.roundTripResult = {
 					success: true,
 					message: 'Round-trip test completed',
@@ -3950,173 +3882,6 @@ export default defineComponent({
 			const sizes = ['Bytes', 'KB', 'MB', 'GB']
 			const i = Math.floor(Math.log(bytes) / Math.log(k))
 			return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-		},
-
-		/**
-		 * Import ArchiMate file
-		 *
-		 * @async
-		 * @return {Promise<void>}
-		 */
-		async importArchiMateFile() {
-			if (!this.selectedFile) return
-
-			this.importing = true
-			this.importResult = null
-
-			try {
-				const formData = new FormData()
-				formData.append('archiMateFile', this.selectedFile)
-				formData.append('updateExisting', this.importOptions.updateExisting)
-				if (this.importOptions.organizationFilter) {
-					formData.append('organizationFilter', this.importOptions.organizationFilter)
-				}
-
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
-					method: 'POST',
-					body: formData,
-				})
-
-				const result = await response.json()
-				this.importResult = result
-
-				if (result.success) {
-					console.log('ArchiMate file imported successfully:', result)
-				}
-
-			} catch (error) {
-				console.error('Failed to import ArchiMate file:', error)
-				this.importResult = {
-					success: false,
-					message: 'Import failed: ' + error.message,
-				}
-			} finally {
-				this.importing = false
-			}
-		},
-
-		/**
-		 * Export to ArchiMate format
-		 *
-		 * @async
-		 * @return {Promise<void>}
-		 */
-		async exportToArchiMate() {
-			this.exporting = true
-			this.exportResult = null
-
-			try {
-				const exportData = {
-					format: this.exportOptions.format.value || this.exportOptions.format,
-					organizationId: this.exportOptions.organizationId,
-					includeRelationships: this.exportOptions.includeRelationships,
-					includeViews: this.exportOptions.includeViews,
-					organizationSpecific: this.exportOptions.organizationSpecific,
-				}
-
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(exportData),
-				})
-
-				const result = await response.json()
-				this.exportResult = result
-
-				if (result.success) {
-					console.log('ArchiMate export completed:', result)
-				}
-
-			} catch (error) {
-				console.error('Failed to export to ArchiMate:', error)
-				this.exportResult = {
-					success: false,
-					message: 'Export failed: ' + error.message,
-				}
-			} finally {
-				this.exporting = false
-			}
-		},
-
-		/**
-		 * Download ArchiMate file
-		 *
-		 * @param {string} fileName Name of the file to download
-		 */
-		async downloadArchiMateFile(fileName) {
-			try {
-				const response = await fetch(`/index.php/apps/softwarecatalog/api/archimate/download/${fileName}`)
-
-				if (!response.ok) {
-					throw new Error('Failed to download file')
-				}
-
-				// Create blob and download
-				const blob = await response.blob()
-				const url = window.URL.createObjectURL(blob)
-				const a = document.createElement('a')
-				a.href = url
-				a.download = fileName
-				document.body.appendChild(a)
-				a.click()
-				window.URL.revokeObjectURL(url)
-				document.body.removeChild(a)
-
-			} catch (error) {
-				console.error('Failed to download ArchiMate file:', error)
-				// Show error notification
-				this.exportResult = {
-					...this.exportResult,
-					downloadError: 'Failed to download file: ' + error.message
-				}
-			}
-		},
-
-		/**
-		 * Test round-trip import/export process
-		 *
-		 * @async
-		 * @return {Promise<void>}
-		 */
-		async testRoundTrip() {
-			if (!this.importResult?.success) return
-
-			this.testingRoundTrip = true
-			this.roundTripResult = null
-
-			try {
-				// First, export the data that was just imported
-				await this.exportToArchiMate()
-
-				if (this.exportResult?.success) {
-					// Simulate comparison (in real implementation, this would compare the files)
-					this.roundTripResult = {
-						success: true,
-						message: 'Round-trip test completed successfully!',
-						comparison: {
-							elements_matched: this.importResult.statistics?.objects_created || 0,
-							organizations_matched: 1,
-							differences: 0
-						}
-					}
-				} else {
-					this.roundTripResult = {
-						success: false,
-						message: 'Round-trip test failed during export phase'
-					}
-				}
-
-			} catch (error) {
-				console.error('Round-trip test failed:', error)
-				this.roundTripResult = {
-					success: false,
-					message: 'Round-trip test failed: ' + error.message
-				}
-			} finally {
-				this.testingRoundTrip = false
-			}
 		},
 
 	},
@@ -5174,5 +4939,315 @@ export default defineComponent({
 .progress-errors li,
 .progress-warnings li {
 	margin-bottom: 0.125rem;
+}
+
+/* Performance Metrics Styling */
+.performance-summary {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.performance-summary h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.performance-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.performance-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem;
+	background: var(--color-background);
+	border-radius: calc(var(--border-radius) / 2);
+	border: 1px solid var(--color-border);
+}
+
+.performance-item .label {
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.performance-item .value {
+	font-weight: 600;
+	color: var(--color-primary);
+}
+
+/* Processing Times Styling */
+.processing-times {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.processing-times h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.timing-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+
+.timing-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem;
+	background: var(--color-background);
+	border-radius: calc(var(--border-radius) / 2);
+	border: 1px solid var(--color-border);
+}
+
+.timing-item .label {
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.timing-item .value {
+	font-weight: 600;
+	color: var(--color-success);
+}
+
+/* Performance Breakdown Styling */
+.performance-breakdown {
+	margin-top: 1rem;
+}
+
+.performance-breakdown h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.breakdown-bars {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.breakdown-bar {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.bar-label {
+	min-width: 80px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.bar-container {
+	flex: 1;
+	height: 20px;
+	background: var(--color-background);
+	border-radius: 10px;
+	overflow: hidden;
+	border: 1px solid var(--color-border);
+}
+
+.bar-fill {
+	height: 100%;
+	transition: width 0.3s ease;
+	border-radius: 10px;
+}
+
+.bar-fill.validation {
+	background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.bar-fill.parsing {
+	background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.bar-fill.conversion {
+	background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.bar-percent {
+	min-width: 50px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+	text-align: right;
+}
+
+/* File Information Styling */
+.file-info {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.file-info h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.file-info ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.file-info li {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Performance Metrics Styling */
+.performance-metrics {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.performance-metrics h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.performance-metrics ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.performance-metrics li {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Processing Times Styling */
+.processing-times {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.processing-times h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.processing-times ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.processing-times li {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Summary Statistics Styling */
+.summary-stats {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.summary-stats h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.summary-stats ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.summary-stats li {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Schema Statistics Styling */
+.schema-statistics {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.schema-statistics h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.schema-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.schema-card {
+	padding: 0.75rem;
+	background: var(--color-background);
+	border: 1px solid var(--color-border);
+	border-radius: calc(var(--border-radius) / 2);
+}
+
+.schema-card h6 {
+	display: block;
+	margin: 0 0 0.5rem 0;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--color-primary);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.schema-card ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.schema-card li {
+	margin-bottom: 0.25rem;
+	font-size: 0.75rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.schema-card li:last-child {
+	margin-bottom: 0;
 }
 </style>

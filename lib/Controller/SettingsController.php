@@ -592,7 +592,7 @@ class SettingsController extends Controller
     public function saveAmefSettings(): JSONResponse
     {
         try {
-            $data = json_decode($this->request->getContent(), true);
+            $data = json_decode(file_get_contents('php://input'), true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return new JSONResponse([
@@ -1057,74 +1057,22 @@ class SettingsController extends Controller
                 'filesize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name'])
             ]);
 
-            // Create mock file object for the service
-            $tempPath = $uploadedFiles['tmp_name'];
-            $fileName = $uploadedFiles['name'];
-            $mimeType = $uploadedFiles['type'];
-            
-            // Create a mock file object
-            $mockFile = new class($tempPath, $fileName, $mimeType) implements \OCP\Files\File {
-                public function __construct(
-                    private string $path,
-                    private string $name,
-                    private string $mimeType
-                ) {}
-                
-                public function getName() { return $this->name; }
-                public function getSize($includeMounts = true) { return filesize($this->path); }
-                public function getMimeType() { return $this->mimeType; }
-                public function getContent() { return file_get_contents($this->path); }
-                
-                // Stub implementations for required interface methods
-                public function putContent($data) { return file_put_contents($this->path, $data); }
-                public function fopen($mode) { return fopen($this->path, $mode); }
-                public function hash($type, $raw = false) { return hash_file($type, $this->path, $raw); }
-                public function getId() { return 0; }
-                public function stat() { return stat($this->path); }
-                public function getMTime() { return filemtime($this->path); }
-                public function getEtag() { return md5_file($this->path); }
-                public function getPermissions() { return 0644; }
-                public function isReadable() { return is_readable($this->path); }
-                public function isUpdateable() { return is_writable($this->path); }
-                public function isDeletable() { return is_writable(dirname($this->path)); }
-                public function isShareable() { return true; }
-                public function getParent() { throw new \Exception('Not implemented'); }
-                public function getPath() { return $this->path; }
-                public function getInternalPath() { return $this->path; }
-                public function getStorage() { throw new \Exception('Not implemented'); }
-                public function getStorageId() { return 'local'; }
-                public function touch($mtime = null) { if ($mtime) touch($this->path, $mtime); }
-                public function getChecksum() { return ''; }
-                public function delete() { unlink($this->path); }
-                public function copy($targetPath) { throw new \Exception('Not implemented'); }
-                public function move($targetPath) { throw new \Exception('Not implemented'); }
-                public function lock($type) {}
-                public function changeLock($targetType) {}
-                public function unlock($type) {}
-                public function getOwner() { return null; }
-                public function getCreationTime(): int { return filectime($this->path); }
-                public function getUploadTime(): int { return $this->getMTime(); }
-                public function isEncrypted() { return false; }
-                public function getMountPoint() { throw new \Exception('Not implemented'); }
-                public function getFileInfo() { throw new \Exception('Not implemented'); }
-                public function getExtension(): string { return pathinfo($this->path, PATHINFO_EXTENSION); }
-                public function getMimePart() { return $this->mimeType; }
-                public function getType() { return \OCP\Files\FileInfo::TYPE_FILE; }
-                public function getDirectoryListing() { return []; }
-            };
-
             // Get import options from request
             $options = [
                 'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
+                'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
                 'preserveIds' => $this->request->getParam('preserveIds', 'true') === 'true',
-                'organizationFilter' => $this->request->getParam('organizationFilter', null),
-                'progressTracker' => $this->progressTracker
+                'progressTracker' => $this->progressTracker,
+                'filePath' => $uploadedFiles['tmp_name'],
+                'fileName' => $uploadedFiles['name'],
+                'fileSize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name']),
+                'mimeType' => $uploadedFiles['type']
             ];
 
             $this->progressTracker->setPhase('validating');
 
-            // Call the ArchiMate service
-            $result = $this->archiMateService->importArchiMateFile($mockFile, $options);
+            // Call the ArchiMate service with file data instead of File object
+            $result = $this->archiMateService->importArchiMateFileFromPath($options);
 
             // Complete the operation
             $this->progressTracker->completeOperation($result['statistics'] ?? []);
@@ -1177,49 +1125,32 @@ class SettingsController extends Controller
                     'includeRelationships' => $this->request->getParam('includeRelationships', true),
                     'includeViews' => $this->request->getParam('includeViews', false),
                     'organizationSpecific' => $this->request->getParam('organizationSpecific', false),
-                    'organizationId' => $this->request->getParam('organizationId', null)
+                    'organizationId' => $this->request->getParam('organizationId', null),
+                    'organizationFilter' => $this->request->getParam('organizationFilter', null),
+                    'selectedSchemas' => $this->request->getParam('selectedSchemas', [])
                 ];
             }
 
-            // Start progress tracking
-            $operationId = $this->progressTracker->startOperation('export', [
-                'format' => $data['format'] ?? 'xml',
-                'organization_id' => $data['organizationId'] ?? null
-            ]);
-
             // Get export criteria and options
             $criteria = [
+                'organizationSpecific' => $data['organizationSpecific'] ?? false,
                 'organizationId' => $data['organizationId'] ?? null,
+                'organizationFilter' => $data['organizationFilter'] ?? null,
+                'selectedSchemas' => $data['selectedSchemas'] ?? [],
                 'includeRelationships' => $data['includeRelationships'] ?? true,
                 'includeViews' => $data['includeViews'] ?? false
             ];
 
             $options = [
-                'format' => $data['format'] ?? 'xml',
-                'organizationSpecific' => $data['organizationSpecific'] ?? false,
-                'progressTracker' => $this->progressTracker
+                'format' => $data['format'] ?? 'xml'
             ];
-
-            $this->progressTracker->setPhase('analyzing');
 
             // Call export service
             $result = $this->archiMateService->exportToArchiMate($criteria, $options);
 
-            // Complete the operation
-            $this->progressTracker->completeOperation($result['statistics'] ?? []);
-
-            // Return result with operation ID
-            $result['operation_id'] = $operationId;
             return new JSONResponse($result);
 
         } catch (\Exception $e) {
-            // Log error in progress tracker if available
-            if (isset($operationId)) {
-                $this->progressTracker->addError('Export failed: ' . $e->getMessage(), [
-                    'trace' => $e->getTraceAsString()
-                ]);
-            }
-
             $this->logger->error('ArchiMate export failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -1228,8 +1159,7 @@ class SettingsController extends Controller
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Export failed: ' . $e->getMessage(),
-                'error' => $e->getMessage(),
-                'operation_id' => $operationId ?? null
+                'error' => $e->getMessage()
             ], 500);
         }
     }
