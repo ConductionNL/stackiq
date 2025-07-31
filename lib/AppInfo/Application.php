@@ -183,6 +183,27 @@ class Application extends App implements IBootstrap
             );
         });
 
+        // Register ArchiMate import/export service
+        $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ArchiMateService(
+                $container->get('OCP\IConfig'),
+                $container->get('OCP\Files\IRootFolder'),
+                $container->get('OCP\IUserSession'),
+                $container->get('OCP\App\IAppManager'),
+                $container,
+                $container->get('Psr\Log\LoggerInterface'),
+                $container->get(\OCA\SoftwareCatalog\Service\SettingsService::class)
+            );
+        });
+
+        // Register progress tracking service
+        $context->registerService(\OCA\SoftwareCatalog\Service\ProgressTracker::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ProgressTracker(
+                $container->get('OCP\ISession'),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
+
         // Register background job for organization contact synchronization
         $context->registerService(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, function ($container) {
             return new \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob(

@@ -1,0 +1,61 @@
+graph TD
+    A[Parse File Array] --> B[Create Schema Arrays]
+    B --> C[Unset Parse File Array]
+    
+    C --> D[Elements Processing]
+    C --> E[Views Processing]
+    C --> F[Organizations Processing]
+    C --> G[Relationships Processing]
+    
+    D --> D1[Get Elements Database Array]
+    D1 --> D2[Loop Through Elements]
+    D2 --> D3[Fire Async Promises]
+    D3 --> D4{Need Update/Create?}
+    D4 -->|Yes| D5[Perform Operation]
+    D4 -->|No| D6[Skip Object]
+    D5 --> D7[Remove from Arrays]
+    D6 --> D7
+    D7 --> D8{More Elements?}
+    D8 -->|Yes| D2
+    D8 -->|No| D9[Delete Orphaned Items]
+    
+    E --> E1[Get Views Database Array]
+    E1 --> E2[Loop Through Views]
+    E2 --> E3[Fire Async Promises]
+    E3 --> E4{Need Update/Create?}
+    E4 -->|Yes| E5[Perform Operation]
+    E4 -->|No| E6[Skip Object]
+    E5 --> E7[Remove from Arrays]
+    E6 --> E7
+    E7 --> E8{More Views?}
+    E8 -->|Yes| E2
+    E8 -->|No| E9[Delete Orphaned Items]
+    
+    F --> F1[Get Organizations Database Array]
+    F1 --> F2[Loop Through Organizations]
+    F2 --> F3[Fire Async Promises]
+    F3 --> F4{Need Update/Create?}
+    F4 -->|Yes| F5[Perform Operation]
+    F4 -->|No| F6[Skip Object]
+    F5 --> F7[Remove from Arrays]
+    F6 --> F7
+    F7 --> F8{More Organizations?}
+    F8 -->|Yes| F2
+    F8 -->|No| F9[Delete Orphaned Items]
+    
+    G --> G1[Get Relationships Database Array]
+    G1 --> G2[Loop Through Relationships]
+    G2 --> G3[Fire Async Promises]
+    G3 --> G4{Need Update/Create?}
+    G4 -->|Yes| G5[Perform Operation]
+    G4 -->|No| G6[Skip Object]
+    G5 --> G7[Remove from Arrays]
+    G6 --> G7
+    G7 --> G8{More Relationships?}
+    G8 -->|Yes| G2
+    G8 -->|No| G9[Delete Orphaned Items]
+    
+    style D fill:#e1f5fe
+    style E fill:#f3e5f5
+    style F fill:#e8f5e8
+    style G fill:#fff3e0 

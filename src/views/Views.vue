@@ -7,6 +7,7 @@ import { navigationStore } from '../store/store.js'
 	<NcAppContent>
 		<template #default>
 			<Dashboard v-if="navigationStore.selected === 'dashboard'" />
+			<OrganisatieIndex v-if="navigationStore.selected === 'organisaties'" />
 		</template>
 	</NcAppContent>
 </template>
@@ -14,11 +15,13 @@ import { navigationStore } from '../store/store.js'
 <script>
 import { NcAppContent } from '@nextcloud/vue'
 import Dashboard from './dashboard/DashboardIndex.vue'
+import OrganisatieIndex from './organisaties/OrganisatieIndex.vue'
 
 export default {
 	name: 'Views',
 	components: {
 		Dashboard,
+		OrganisatieIndex,
 		NcAppContent,
 	},
 }

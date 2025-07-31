@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReactPHP Streaming Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007cba;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ReactPHP Streaming Architecture</h1>
+        
+        <div class="info">
+            <strong>Instructions:</strong> 
+            <ul>
+                <li>Right-click on the diagram and select "Save image as..." to save as PNG</li>
+                <li>Use browser developer tools to copy the SVG code</li>
+                <li>Or use the "Download SVG" button below (if available)</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <button onclick="downloadSVG()">Download SVG</button>
+            <button onclick="downloadPNG()">Download PNG</button>
+        </div>
+
+        <div class="mermaid">
+graph TD
+    A[Parse File Array] --> B[Create Schema Arrays]
+    B --> C[Unset Parse File Array]
+    
+    C --> D[Elements Processing]
+    C --> E[Views Processing]
+    C --> F[Organizations Processing]
+    C --> G[Relationships Processing]
+    
+    D --> D1[Get Elements Database Array]
+    D1 --> D2[Loop Through Elements]
+    D2 --> D3[Fire Async Promises]
+    D3 --> D4{Need Update/Create?}
+    D4 -->|Yes| D5[Perform Operation]
+    D4 -->|No| D6[Skip Object]
+    D5 --> D7[Remove from Arrays]
+    D6 --> D7
+    D7 --> D8{More Elements?}
+    D8 -->|Yes| D2
+    D8 -->|No| D9[Delete Orphaned Items]
+    
+    E --> E1[Get Views Database Array]
+    E1 --> E2[Loop Through Views]
+    E2 --> E3[Fire Async Promises]
+    E3 --> E4{Need Update/Create?}
+    E4 -->|Yes| E5[Perform Operation]
+    E4 -->|No| E6[Skip Object]
+    E5 --> E7[Remove from Arrays]
+    E6 --> E7
+    E7 --> E8{More Views?}
+    E8 -->|Yes| E2
+    E8 -->|No| E9[Delete Orphaned Items]
+    
+    F --> F1[Get Organizations Database Array]
+    F1 --> F2[Loop Through Organizations]
+    F2 --> F3[Fire Async Promises]
+    F3 --> F4{Need Update/Create?}
+    F4 -->|Yes| F5[Perform Operation]
+    F4 -->|No| F6[Skip Object]
+    F5 --> F7[Remove from Arrays]
+    F6 --> F7
+    F7 --> F8{More Organizations?}
+    F8 -->|Yes| F2
+    F8 -->|No| F9[Delete Orphaned Items]
+    
+    G --> G1[Get Relationships Database Array]
+    G1 --> G2[Loop Through Relationships]
+    G2 --> G3[Fire Async Promises]
+    G3 --> G4{Need Update/Create?}
+    G4 -->|Yes| G5[Perform Operation]
+    G4 -->|No| G6[Skip Object]
+    G5 --> G7[Remove from Arrays]
+    G6 --> G7
+    G7 --> G8{More Relationships?}
+    G8 -->|Yes| G2
+    G8 -->|No| G9[Delete Orphaned Items]
+    
+    style D fill:#e1f5fe
+    style E fill:#f3e5f5
+    style F fill:#e8f5e8
+    style G fill:#fff3e0
+        </div>
+
+        <div class="info">
+            <strong>Architecture Benefits:</strong>
+            <ul>
+                <li><strong>Memory Efficiency:</strong> Progressive memory release reduces peak usage</li>
+                <li><strong>Parallel Processing:</strong> Multiple schemas processed simultaneously</li>
+                <li><strong>Skipping Logic:</strong> Avoids unnecessary database operations</li>
+                <li><strong>Scalability:</strong> Handles large files without memory exhaustion</li>
+                <li><strong>Performance:</strong> Significantly faster than sequential processing</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+
+        function downloadSVG() {
+            const svgElement = document.querySelector('.mermaid svg');
+            if (svgElement) {
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                const svgUrl = URL.createObjectURL(svgBlob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = svgUrl;
+                downloadLink.download = 'reactphp_architecture.svg';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(svgUrl);
+            } else {
+                alert('SVG not ready yet. Please wait a moment and try again.');
+            }
+        }
+
+        function downloadPNG() {
+            const svgElement = document.querySelector('.mermaid svg');
+            if (svgElement) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(svgBlob);
+                
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    canvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = url;
+                        downloadLink.download = 'reactphp_architecture.png';
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        URL.revokeObjectURL(url);
+                    });
+                };
+                
+                img.src = url;
+            } else {
+                alert('SVG not ready yet. Please wait a moment and try again.');
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -71,7 +71,7 @@
 							v-if="importResult.success"
 							type="success">
 							{{ importResult.message }}
-							
+
 							<!-- Auto-Configuration Details -->
 							<div v-if="importResult.autoConfigResult && Object.keys(importResult.autoConfigResult).length > 0" class="auto-config-details">
 								<h4>Auto-Configuration Results:</h4>
@@ -395,7 +395,7 @@
 						<div class="group-list">
 							<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
 								<NcTextField
-									:value="group"
+									:value="group || ''"
 									:placeholder="'Group name'"
 									label="Group Name"
 									@update:value="updateGroupName(index, $event)" />
@@ -481,7 +481,7 @@
 							<div class="group-list">
 								<div v-for="(group, index) in organizationAdminGroups" :key="index" class="group-item">
 									<NcTextField
-										:value="group"
+										:value="group || ''"
 										:placeholder="'Group name'"
 										label="Group Name"
 										@update:value="updateOrganizationAdminGroupName(index, $event)" />
@@ -546,7 +546,7 @@
 							<div class="group-list">
 								<div v-for="(group, index) in superUserGroups" :key="index" class="group-item">
 									<NcTextField
-										:value="group"
+										:value="group || ''"
 										:placeholder="'Group name'"
 										label="Group Name"
 										@update:value="updateSuperUserGroupName(index, $event)" />
@@ -770,6 +770,479 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			name="AMEF Register Configuration"
+			description="Configure register and schema mappings for ArchiMate/AMEF object types">
+			<div v-if="!loading">
+				<!-- Auto-Configuration Section -->
+				<div class="amef-auto-config">
+					<h3>Auto-Configuration</h3>
+					<p>Automatically detect and configure appropriate registers and schemas for AMEF objects</p>
+
+					<div class="button-container">
+						<NcButton
+							type="primary"
+							:disabled="loading || autoConfiguringAmef"
+							@click="autoConfigureAmefSettings">
+							<template #icon>
+								<NcLoadingIcon v-if="autoConfiguringAmef" :size="20" />
+								<AutoFix v-else :size="20" />
+							</template>
+							Auto-Configure AMEF Registers
+						</NcButton>
+					</div>
+
+					<!-- Auto-configuration Results -->
+					<div v-if="amefConfigResults" class="config-results">
+						<NcNoteCard v-if="amefConfigResults.success" type="success">
+							<template #icon>
+								<Check :size="20" />
+							</template>
+							<strong>AMEF Configuration Updated:</strong>
+							<ul>
+								<li v-for="(schemaId, objectType) in amefConfigResults.configured" :key="objectType">
+									{{ objectType }}: Schema {{ schemaId }}
+								</li>
+							</ul>
+						</NcNoteCard>
+
+						<NcNoteCard v-if="amefConfigResults.errors && amefConfigResults.errors.length > 0" type="error">
+							<template #icon>
+								<Alert :size="20" />
+							</template>
+							<strong>Configuration Issues:</strong>
+							<ul>
+								<li v-for="error in amefConfigResults.errors" :key="error">{{ error }}</li>
+							</ul>
+						</NcNoteCard>
+					</div>
+				</div>
+
+				<!-- Manual Configuration Section -->
+				<div class="amef-manual-config">
+					<h3>Manual Schema Configuration</h3>
+					<p>Manually specify which schemas to use for different ArchiMate object types</p>
+
+					<!-- Register Selection -->
+					<div class="register-selection">
+						<label for="amef-register-select">AMEF Register</label>
+						<NcSelect
+							id="amef-register-select"
+							v-model="amefSettings.registerId"
+							:options="registerOptions"
+							input-label="Select register for AMEF objects"
+							:disabled="loading"
+							@change="onRegisterChange" />
+						<p class="field-description">Select the register that contains AMEF schemas (vng-gemma recommended)</p>
+					</div>
+
+					<div class="schema-mappings">
+						<!-- ArchiMate Elements Schema -->
+						<div class="schema-mapping">
+							<label for="amef-elements-schema">ArchiMate Elements</label>
+							<NcSelect
+								id="amef-elements-schema"
+								v-model="amefSettings.elementsSchema"
+								:options="schemaOptions"
+								input-label="Select schema for ArchiMate elements"
+								:disabled="loading"
+								@change="saveAmefSettings" />
+							<p class="field-description">Schema for business, application, and technology elements</p>
+						</div>
+
+						<!-- Organizations Schema -->
+						<div class="schema-mapping">
+							<label for="amef-organizations-schema">Organizations</label>
+							<NcSelect
+								id="amef-organizations-schema"
+								v-model="amefSettings.organizationsSchema"
+								:options="schemaOptions"
+								input-label="Select schema for organizations"
+								:disabled="loading"
+								@change="saveAmefSettings" />
+							<p class="field-description">Schema for organizational entities and stakeholders</p>
+						</div>
+
+						<!-- Relationships Schema -->
+						<div class="schema-mapping">
+							<label for="amef-relationships-schema">Relationships</label>
+							<NcSelect
+								id="amef-relationships-schema"
+								v-model="amefSettings.relationshipsSchema"
+								:options="schemaOptions"
+								input-label="Select schema for relationships"
+								:disabled="loading"
+								@change="saveAmefSettings" />
+							<p class="field-description">Schema for ArchiMate relationships and connections</p>
+						</div>
+
+						<!-- Views Schema -->
+						<div class="schema-mapping">
+							<label for="amef-views-schema">Views</label>
+							<NcSelect
+								id="amef-views-schema"
+								v-model="amefSettings.viewsSchema"
+								:options="schemaOptions"
+								input-label="Select schema for views"
+								:disabled="loading"
+								@change="saveAmefSettings" />
+							<p class="field-description">Schema for ArchiMate views and diagrams</p>
+						</div>
+					</div>
+
+					<!-- Current Configuration Display -->
+					<div v-if="amefSettings" class="current-config">
+						<h4>Current Configuration</h4>
+						<div class="config-summary">
+							<div class="config-item">
+								<strong>Register:</strong>
+								<span v-if="amefSettings.registerId">Register {{ amefSettings.registerId }}</span>
+								<span v-else class="not-configured">Not configured</span>
+							</div>
+							<div class="config-item">
+								<strong>Elements:</strong>
+								<span v-if="amefSettings.elementsSchema">Schema {{ amefSettings.elementsSchema }}</span>
+								<span v-else class="not-configured">Not configured</span>
+							</div>
+							<div class="config-item">
+								<strong>Organizations:</strong>
+								<span v-if="amefSettings.organizationsSchema">Schema {{ amefSettings.organizationsSchema }}</span>
+								<span v-else class="not-configured">Not configured</span>
+							</div>
+							<div class="config-item">
+								<strong>Relationships:</strong>
+								<span v-if="amefSettings.relationshipsSchema">Schema {{ amefSettings.relationshipsSchema }}</span>
+								<span v-else class="not-configured">Not configured</span>
+							</div>
+							<div class="config-item">
+								<strong>Views:</strong>
+								<span v-if="amefSettings.viewsSchema">Schema {{ amefSettings.viewsSchema }}</span>
+								<span v-else class="not-configured">Not configured</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Loading State -->
+			<NcLoadingIcon v-else
+				class="loading-icon"
+				:size="64"
+				appearance="dark" />
+		</NcSettingsSection>
+
+		<NcSettingsSection
+			name="ArchiMate Import/Export"
+			description="Import ArchiMate files to create OpenRegister objects and export existing data to ArchiMate format">
+			<div v-if="!loading">
+				<div class="archimate-section">
+					<h3>ArchiMate File Operations</h3>
+					<p>Import ArchiMate (.archimate, .xml) files to automatically create objects in OpenRegister, or export existing data to ArchiMate format</p>
+
+					<!-- Import Section -->
+					<div class="import-section">
+						<h4>Import ArchiMate File</h4>
+						<p>Upload an ArchiMate file to import architectural elements, organizations, relationships, and views</p>
+
+						<div class="import-form">
+							<div class="file-upload">
+								<input
+									ref="archiMateFileInput"
+									type="file"
+									accept=".archimate,.xml"
+									style="display: none"
+									@change="handleFileSelection">
+
+								<NcButton
+									type="secondary"
+									:disabled="importing || !settings.openRegisters"
+									@click="$refs.archiMateFileInput.click()">
+									<template #icon>
+										<Upload :size="20" />
+									</template>
+									Select ArchiMate File
+								</NcButton>
+
+								<span v-if="selectedFile" class="selected-file">
+									{{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
+								</span>
+							</div>
+
+							<div v-if="selectedFile" class="import-options">
+								<h5>Import Options</h5>
+
+								<div class="option-row">
+									<NcCheckboxRadioSwitch
+										:checked="importOptions.updateExisting"
+										@update:checked="importOptions.updateExisting = $event">
+										Update Existing Objects
+									</NcCheckboxRadioSwitch>
+									<span class="option-description">Update objects that already exist (based on ArchiMate ID)</span>
+								</div>
+
+								<div class="option-row">
+									<NcCheckboxRadioSwitch
+										:checked="importOptions.deleteOrphaned"
+										@update:checked="importOptions.deleteOrphaned = $event">
+										Delete Orphaned Objects
+									</NcCheckboxRadioSwitch>
+									<span class="option-description">Delete objects that are no longer present in the imported file (orphaned objects)</span>
+								</div>
+							</div>
+
+							<div v-if="selectedFile" class="import-actions">
+								<NcButton
+									type="primary"
+									:disabled="importing || !settings.openRegisters"
+									@click="importArchiMateFile">
+									<template #icon>
+										<NcLoadingIcon v-if="importing" :size="20" />
+										<CloudUpload v-else :size="20" />
+									</template>
+									{{ importing ? 'Importing...' : 'Import ArchiMate File' }}
+								</NcButton>
+
+								<NcButton
+									type="tertiary"
+									:disabled="importing"
+									@click="clearFileSelection">
+									<template #icon>
+										<Close :size="20" />
+									</template>
+									Clear
+								</NcButton>
+							</div>
+
+							<div v-if="importResult" class="import-result">
+								<NcNoteCard :type="importResult.success ? 'success' : 'error'">
+									<template #icon>
+										<CheckCircle v-if="importResult.success" :size="20" />
+										<Alert v-else :size="20" />
+									</template>
+									<div class="result-content">
+										<strong>{{ importResult.message }}</strong>
+										<div v-if="importResult.success" class="import-statistics">
+											<h5>Import Results:</h5>
+
+											<!-- File Information -->
+											<div v-if="importResult.file_info" class="file-info">
+												<h6>File Information:</h6>
+												<ul>
+													<li><strong>File Name:</strong> {{ importResult.file_info.name }}</li>
+													<li><strong>File Size:</strong> {{ (importResult.file_info.size / 1024 / 1024).toFixed(2) }} MB</li>
+													<li><strong>File Type:</strong> {{ importResult.file_info.mime_type }}</li>
+												</ul>
+											</div>
+
+											<!-- Performance Metrics -->
+											<div v-if="importResult.performance_metrics" class="performance-metrics">
+												<h6>Performance Metrics:</h6>
+												<ul>
+													<li><strong>Processing Method:</strong> {{ importResult.performance_metrics.processing_method }}</li>
+													<li><strong>Batch Size:</strong> {{ importResult.performance_metrics.batch_size_used }}</li>
+													<li v-if="importResult.performance_metrics.items_per_second > 0">
+														<strong>Items/Second:</strong> {{ importResult.performance_metrics.items_per_second.toFixed(2) }}
+													</li>
+												</ul>
+											</div>
+
+											<!-- Processing Times -->
+											<div v-if="importResult.processing_times" class="processing-times">
+												<h6>Processing Times:</h6>
+												<ul>
+													<li><strong>Total Time:</strong> {{ importResult.processing_times.total_time_seconds.toFixed(2) }}s</li>
+													<li><strong>Validation:</strong> {{ importResult.processing_times.validation_time_seconds.toFixed(3) }}s</li>
+													<li><strong>Parsing:</strong> {{ importResult.processing_times.parse_time_seconds.toFixed(3) }}s</li>
+													<li><strong>Conversion:</strong> {{ importResult.processing_times.convert_time_seconds.toFixed(2) }}s</li>
+												</ul>
+											</div>
+
+											<!-- Summary Statistics -->
+											<div v-if="importResult.summary" class="summary-stats">
+												<h6>Summary:</h6>
+												<ul>
+													<li><strong>Objects Created:</strong> {{ importResult.summary.total_objects_created || 0 }}</li>
+													<li><strong>Objects Updated:</strong> {{ importResult.summary.total_objects_updated || 0 }}</li>
+													<li v-if="importResult.summary.total_objects_deleted > 0">
+														<strong>Objects Deleted:</strong> {{ importResult.summary.total_objects_deleted }}
+													</li>
+													<li v-if="importResult.summary.total_errors > 0">
+														<strong>Total Errors:</strong> {{ importResult.summary.total_errors }}
+													</li>
+												</ul>
+											</div>
+
+											<!-- Detailed Schema Statistics -->
+											<div v-if="importResult.statistics" class="schema-statistics">
+												<h6>Per Schema Breakdown:</h6>
+												<div class="schema-grid">
+													<div v-for="(stats, schema) in importResult.statistics" :key="schema" class="schema-card">
+														<h6>{{ schema.charAt(0).toUpperCase() + schema.slice(1) }}</h6>
+														<ul>
+															<li v-if="stats.found > 0">🔍 Found: {{ stats.found }}</li>
+															<li v-if="stats.created > 0">✅ Created: {{ stats.created }}</li>
+															<li v-if="stats.updated > 0">🔄 Updated: {{ stats.updated }}</li>
+															<li v-if="stats.skipped > 0">⏭️ Skipped: {{ stats.skipped }}</li>
+															<li v-if="stats.deleted > 0">🗑️ Deleted: {{ stats.deleted }}</li>
+															<li v-if="stats.errors && stats.errors.length > 0">❌ Errors: {{ stats.errors.length }}</li>
+															<li v-if="stats.processing_time > 0">⏱️ Time: {{ stats.processing_time.toFixed(3) }}s</li>
+															<li v-if="stats.created === 0 && stats.updated === 0 && stats.deleted === 0 && stats.skipped === 0 && (!stats.errors || stats.errors.length === 0)">
+																ℹ️ No changes
+															</li>
+														</ul>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</NcNoteCard>
+							</div>
+						</div>
+					</div>
+
+					<!-- Export Section -->
+					<div class="export-section">
+						<h4>Export to ArchiMate</h4>
+						<p>Export OpenRegister objects to ArchiMate format for use in modeling tools</p>
+
+						<div class="export-form">
+							<div class="export-options">
+								<h5>Export Options</h5>
+								<div class="option-row">
+									<label class="option-label">Format:</label>
+									<NcSelect
+										v-model="exportOptions.format"
+										:options="[
+											{ label: 'XML', value: 'xml' },
+											{ label: 'JSON', value: 'json' }
+										]"
+										placeholder="Select format" />
+								</div>
+								<div class="option-row">
+									<NcCheckboxRadioSwitch
+										:checked="exportOptions.organizationSpecific"
+										@update:checked="exportOptions.organizationSpecific = $event">
+										Organization Specific
+									</NcCheckboxRadioSwitch>
+								</div>
+								<div v-if="exportOptions.organizationSpecific" class="option-row">
+									<label class="option-label">Organization ID:</label>
+									<NcTextField
+										:value="exportOptions.organizationId || ''"
+										placeholder="Enter organization ID"
+										@update:value="exportOptions.organizationId = $event" />
+								</div>
+								<div v-if="!exportOptions.organizationSpecific" class="option-row">
+									<label class="option-label">Organization Filter:</label>
+									<NcTextField
+										:value="exportOptions.organizationFilter || ''"
+										placeholder="Filter by organization name (optional)"
+										@update:value="exportOptions.organizationFilter = $event" />
+								</div>
+								<div class="option-row">
+									<label class="option-label">Schemas to Export:</label>
+									<NcSelect
+										v-model="exportOptions.selectedSchemas"
+										:options="availableSchemas"
+										multiple
+										placeholder="Select schemas to export" />
+								</div>
+								<div class="option-row">
+									<NcCheckboxRadioSwitch
+										:checked="exportOptions.includeRelationships"
+										@update:checked="exportOptions.includeRelationships = $event">
+										Include Relationships
+									</NcCheckboxRadioSwitch>
+								</div>
+								<div class="option-row">
+									<NcCheckboxRadioSwitch
+										:checked="exportOptions.includeViews"
+										@update:checked="exportOptions.includeViews = $event">
+										Include Views
+									</NcCheckboxRadioSwitch>
+								</div>
+							</div>
+
+							<div class="export-actions">
+								<NcButton
+									type="primary"
+									:disabled="exporting || !settings.openRegisters"
+									@click="exportToArchiMate">
+									<template #icon>
+										<NcLoadingIcon v-if="exporting" :size="20" />
+										<Download v-else :size="20" />
+									</template>
+									{{ exporting ? 'Exporting...' : 'Export to ArchiMate' }}
+								</NcButton>
+							</div>
+
+							<div v-if="exportResult" class="export-result">
+								<NcNoteCard :type="exportResult.success ? 'success' : 'error'">
+									<template #icon>
+										<CheckCircle v-if="exportResult.success" :size="20" />
+										<Alert v-else :size="20" />
+									</template>
+									<div class="result-content">
+										<strong>{{ exportResult.message }}</strong>
+										<div v-if="exportResult.success" class="export-details">
+											<p><strong>File:</strong> {{ exportResult.file_name }}</p>
+											<p><strong>Objects exported:</strong> {{ exportResult.statistics?.objects_exported || 0 }}</p>
+											<NcButton
+												type="secondary"
+												@click="downloadArchiMateFile(exportResult.file_name)">
+												<template #icon>
+													<Download :size="20" />
+												</template>
+												Download File
+											</NcButton>
+										</div>
+									</div>
+								</NcNoteCard>
+							</div>
+						</div>
+					</div>
+
+					<!-- Test Section -->
+					<div class="test-section">
+						<h4>Testing ArchiMate Import/Export</h4>
+						<p>Upload an ArchiMate file, then export it back to compare and verify the round-trip process</p>
+						<div class="test-actions">
+							<NcButton
+								type="secondary"
+								:disabled="!importResult?.success || exporting"
+								@click="testRoundTrip">
+								<template #icon>
+									<NcLoadingIcon v-if="testingRoundTrip" :size="20" />
+									<Sync v-else :size="20" />
+								</template>
+								{{ testingRoundTrip ? 'Testing...' : 'Test Round-Trip' }}
+							</NcButton>
+						</div>
+
+						<div v-if="roundTripResult" class="test-result">
+							<NcNoteCard :type="roundTripResult.success ? 'success' : 'error'">
+								<strong>{{ roundTripResult.message }}</strong>
+								<div v-if="roundTripResult.success && roundTripResult.comparison" class="comparison-details">
+									<p><strong>Comparison Results:</strong></p>
+									<ul>
+										<li>Elements matched: {{ roundTripResult.comparison.elements_matched }}</li>
+										<li>Organizations matched: {{ roundTripResult.comparison.organizations_matched }}</li>
+										<li>Differences found: {{ roundTripResult.comparison.differences }}</li>
+									</ul>
+								</div>
+							</NcNoteCard>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Loading State -->
+			<NcLoadingIcon v-else
+				class="loading-icon"
+				:size="64"
+				appearance="dark" />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			name="Email Configuration"
 			description="Configure email settings for notifications and templates">
 			<div v-if="!loading">
@@ -796,7 +1269,7 @@
 							<div class="setting-row">
 								<label class="setting-label">Sender Name:</label>
 								<NcTextField
-									:value="emailSettings.senderName"
+									:value="emailSettings.senderName || ''"
 									placeholder="Software Catalogus"
 									label="Sender Name"
 									@update:value="updateEmailSetting('senderName', $event)" />
@@ -806,7 +1279,7 @@
 							<div class="setting-row">
 								<label class="setting-label">Sender Email:</label>
 								<NcTextField
-									:value="emailSettings.senderEmail"
+									:value="emailSettings.senderEmail || ''"
 									placeholder="noreply@softwarecatalogus.nl"
 									type="email"
 									label="Sender Email"
@@ -835,7 +1308,7 @@
 								<div class="setting-row">
 									<label class="setting-label">SMTP Host:</label>
 									<NcTextField
-										:value="emailSettings.smtpHost"
+										:value="emailSettings.smtpHost || ''"
 										placeholder="smtp.gmail.com"
 										label="SMTP Host"
 										@update:value="updateEmailSetting('smtpHost', $event)" />
@@ -843,7 +1316,7 @@
 								<div class="setting-row">
 									<label class="setting-label">SMTP Port:</label>
 									<NcTextField
-										:value="emailSettings.smtpPort"
+										:value="emailSettings.smtpPort || ''"
 										placeholder="587"
 										type="number"
 										label="SMTP Port"
@@ -861,7 +1334,7 @@
 								<div class="setting-row">
 									<label class="setting-label">Username:</label>
 									<NcTextField
-										:value="emailSettings.smtpUsername"
+										:value="emailSettings.smtpUsername || ''"
 										placeholder="your-email@gmail.com"
 										label="SMTP Username"
 										@update:value="updateEmailSetting('smtpUsername', $event)" />
@@ -869,7 +1342,7 @@
 								<div class="setting-row">
 									<label class="setting-label">Password:</label>
 									<NcPasswordField
-										:value="emailSettings.smtpPassword"
+										:value="emailSettings.smtpPassword || ''"
 										placeholder="your-password"
 										label="SMTP Password"
 										@update:value="updateEmailSetting('smtpPassword', $event)" />
@@ -882,7 +1355,7 @@
 								<div class="setting-row">
 									<label class="setting-label">API Key:</label>
 									<NcPasswordField
-										:value="emailSettings.sendgridApiKey"
+										:value="emailSettings.sendgridApiKey || ''"
 										placeholder="SG.xxxxx"
 										label="SendGrid API Key"
 										@update:value="updateEmailSetting('sendgridApiKey', $event)" />
@@ -895,7 +1368,7 @@
 								<div class="setting-row">
 									<label class="setting-label">API Key:</label>
 									<NcPasswordField
-										:value="emailSettings.mailgunApiKey"
+										:value="emailSettings.mailgunApiKey || ''"
 										placeholder="key-xxxxx"
 										label="Mailgun API Key"
 										@update:value="updateEmailSetting('mailgunApiKey', $event)" />
@@ -903,7 +1376,7 @@
 								<div class="setting-row">
 									<label class="setting-label">Domain:</label>
 									<NcTextField
-										:value="emailSettings.mailgunDomain"
+										:value="emailSettings.mailgunDomain || ''"
 										placeholder="mg.yourdomain.com"
 										label="Mailgun Domain"
 										@update:value="updateEmailSetting('mailgunDomain', $event)" />
@@ -916,7 +1389,7 @@
 								<div class="setting-row">
 									<label class="setting-label">API Key:</label>
 									<NcPasswordField
-										:value="emailSettings.postmarkApiKey"
+										:value="emailSettings.postmarkApiKey || ''"
 										placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 										label="Postmark API Key"
 										@update:value="updateEmailSetting('postmarkApiKey', $event)" />
@@ -929,7 +1402,7 @@
 								<div class="setting-row">
 									<label class="setting-label">Access Key:</label>
 									<NcPasswordField
-										:value="emailSettings.sesAccessKey"
+										:value="emailSettings.sesAccessKey || ''"
 										placeholder="AKIAIOSFODNN7EXAMPLE"
 										label="SES Access Key"
 										@update:value="updateEmailSetting('sesAccessKey', $event)" />
@@ -937,7 +1410,7 @@
 								<div class="setting-row">
 									<label class="setting-label">Secret Key:</label>
 									<NcPasswordField
-										:value="emailSettings.sesSecretKey"
+										:value="emailSettings.sesSecretKey || ''"
 										placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 										label="SES Secret Key"
 										@update:value="updateEmailSetting('sesSecretKey', $event)" />
@@ -959,7 +1432,7 @@
 								<div class="setting-row">
 									<label class="setting-label">API Key:</label>
 									<NcPasswordField
-										:value="emailSettings.mailjetApiKey"
+										:value="emailSettings.mailjetApiKey || ''"
 										placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 										label="Mailjet API Key"
 										@update:value="updateEmailSetting('mailjetApiKey', $event)" />
@@ -967,7 +1440,7 @@
 								<div class="setting-row">
 									<label class="setting-label">Secret Key:</label>
 									<NcPasswordField
-										:value="emailSettings.mailjetSecretKey"
+										:value="emailSettings.mailjetSecretKey || ''"
 										placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 										label="Mailjet Secret Key"
 										@update:value="updateEmailSetting('mailjetSecretKey', $event)" />
@@ -981,7 +1454,7 @@
 							<div class="setting-row">
 								<label class="setting-label">Test Receiver Override:</label>
 								<NcTextField
-									:value="emailSettings.testReceiverOverride"
+									:value="emailSettings.testReceiverOverride || ''"
 									placeholder="test@example.com (optional)"
 									type="email"
 									label="Test Receiver Override"
@@ -1043,7 +1516,7 @@
 							<h4>Email Testing</h4>
 							<div class="test-email-row">
 								<NcTextField
-									:value="testEmailAddress"
+									:value="testEmailAddress || ''"
 									placeholder="test@example.com"
 									type="email"
 									label="Test Email Address"
@@ -1185,6 +1658,10 @@ import Email from 'vue-material-design-icons/Email.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import RestartIcon from 'vue-material-design-icons/Restart.vue'
+import Upload from 'vue-material-design-icons/Upload.vue'
+import Download from 'vue-material-design-icons/Download.vue'
+import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
+import Check from 'vue-material-design-icons/Check.vue'
 
 /**
  * Software Catalog Settings component
@@ -1219,6 +1696,10 @@ export default defineComponent({
 		Sync,
 		CheckCircle,
 		RestartIcon,
+		Upload,
+		Download,
+		CloudUpload,
+		Check,
 	},
 
 	/**
@@ -1325,6 +1806,36 @@ export default defineComponent({
 			importResult: null,
 			resettingAutoConfig: false,
 			resetAutoConfigResult: null,
+			// ArchiMate-related data
+			selectedFile: null,
+			exporting: false,
+			testingRoundTrip: false,
+			exportResult: null,
+			importOptions: {
+				updateExisting: true,
+				deleteOrphaned: false,
+			},
+			exportOptions: {
+				format: 'xml',
+				organizationSpecific: false,
+				organizationId: '',
+				organizationFilter: '',
+				selectedSchemas: [],
+				includeRelationships: true,
+				includeViews: false,
+			},
+			roundTripResult: null,
+			// AMEF Register Configuration data
+			autoConfiguringAmef: false,
+			amefConfigResults: null,
+			amefSettings: {
+				registerId: null,
+				elementsSchema: null,
+				organizationsSchema: null,
+				relationshipsSchema: null,
+				viewsSchema: null,
+			},
+
 		}
 	},
 
@@ -1401,8 +1912,59 @@ export default defineComponent({
 			}
 
 			// Check if at least organisatie or contactpersoon schema is configured
-			return this.configuration.voorzieningen_organisatie?.schema 
+			return this.configuration.voorzieningen_organisatie?.schema
 				|| this.configuration.voorzieningen_contactpersoon?.schema
+		},
+
+		/**
+		 * Available AMEF schemas for export
+		 *
+		 * @return {Array<object>} Array of schema options
+		 */
+		availableSchemas() {
+			// Default AMEF schemas if no configuration is available
+			const defaultSchemas = [
+				{ label: 'Elements (Schema 66)', value: 66 },
+				{ label: 'Organizations (Schema 66)', value: 66 },
+				{ label: 'Relationships (Schema 71)', value: 71 },
+				{ label: 'Views (Schema 69)', value: 69 },
+				{ label: 'Property Definitions (Schema 70)', value: 70 },
+				{ label: 'Extended Views (Schema 72)', value: 72 }
+			]
+
+			// If we have AMEF settings, use those
+			if (this.amefSettings && Object.values(this.amefSettings).some(v => v !== null)) {
+				const configuredSchemas = []
+
+				if (this.amefSettings.elementsSchema) {
+					configuredSchemas.push({
+						label: `Elements (Schema ${this.amefSettings.elementsSchema})`,
+						value: this.amefSettings.elementsSchema
+					})
+				}
+				if (this.amefSettings.organizationsSchema) {
+					configuredSchemas.push({
+						label: `Organizations (Schema ${this.amefSettings.organizationsSchema})`,
+						value: this.amefSettings.organizationsSchema
+					})
+				}
+				if (this.amefSettings.relationshipsSchema) {
+					configuredSchemas.push({
+						label: `Relationships (Schema ${this.amefSettings.relationshipsSchema})`,
+						value: this.amefSettings.relationshipsSchema
+					})
+				}
+				if (this.amefSettings.viewsSchema) {
+					configuredSchemas.push({
+						label: `Views (Schema ${this.amefSettings.viewsSchema})`,
+						value: this.amefSettings.viewsSchema
+					})
+				}
+
+				return configuredSchemas.length > 0 ? configuredSchemas : defaultSchemas
+			}
+
+			return defaultSchemas
 		},
 
 		/**
@@ -1434,6 +1996,18 @@ export default defineComponent({
 				{ value: 'tls', label: 'TLS' },
 				{ value: 'ssl', label: 'SSL' },
 				{ value: 'none', label: 'None' },
+			]
+		},
+
+		/**
+		 * Format options for ArchiMate export
+		 *
+		 * @return {Array<object>} Array of format options
+		 */
+		formatOptions() {
+			return [
+				{ value: 'xml', label: 'XML (.xml)' },
+				{ value: 'json', label: 'JSON (.json)' },
 			]
 		},
 
@@ -1504,8 +2078,17 @@ export default defineComponent({
 		await Promise.all([
 			this.loadSettings(),
 			this.loadSyncStatus(),
-			this.loadVersionInfo()
+			this.loadVersionInfo(),
+			this.loadAmefSettings()
 		])
+
+		// Initialize export options with default values
+		this.initializeExportOptions()
+	},
+
+	beforeDestroy() {
+		// Clean up progress tracking
+		this.stopProgressTracking()
 	},
 
 	methods: {
@@ -1518,11 +2101,9 @@ export default defineComponent({
 		async loadVersionInfo() {
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
-				
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
-				
 				const data = await response.json()
 
 				if (data.error) {
@@ -1585,11 +2166,9 @@ export default defineComponent({
 						this.loadVersionInfo(),
 						this.loadSettings()
 					])
-					
 					// If auto-configuration was successful, show additional success info
 					if (result.autoConfigResult && Object.keys(result.autoConfigResult).length > 0) {
-						console.log('Auto-configuration completed:', result.autoConfigResult)
-						
+						// console.log('Auto-configuration completed:', result.autoConfigResult)
 						// Show a more detailed success message
 						this.importResult = {
 							...result,
@@ -1739,18 +2318,16 @@ export default defineComponent({
 		async loadDebugInfo() {
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/debug')
-				
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
-				
 				const data = await response.json()
 
 				if (data.error) {
 					this.debugInfo = { error: data.error }
 				} else if (data.message === '') {
 					// Handle empty message response which indicates uncaught exception
-					this.debugInfo = { 
+					this.debugInfo = {
 						error: 'Empty response from debug API - likely uncaught exception in backend',
 						suggestion: 'Check server logs or try running manual import/initialization'
 					}
@@ -1758,7 +2335,7 @@ export default defineComponent({
 					this.debugInfo = data
 				}
 			} catch (error) {
-				this.debugInfo = { 
+				this.debugInfo = {
 					error: 'Failed to load debug information: ' + error.message,
 					suggestion: 'Check if the SoftwareCatalog app is properly installed and OpenRegister is available'
 				}
@@ -2186,15 +2763,15 @@ export default defineComponent({
 
 				// Only save voorzieningen schema configuration
 				if (this.configuration.voorzieningen_organisatie?.schema) {
-					configToSave['voorzieningen_organisatie_source'] = 'openregister'
-					configToSave['voorzieningen_organisatie_register'] = this.selectedRegister.value
-					configToSave['voorzieningen_organisatie_schema'] = this.configuration.voorzieningen_organisatie.schema.value
+					configToSave.voorzieningen_organisatie_source = 'openregister'
+					configToSave.voorzieningen_organisatie_register = this.selectedRegister.value
+					configToSave.voorzieningen_organisatie_schema = this.configuration.voorzieningen_organisatie.schema.value
 				}
 
 				if (this.configuration.voorzieningen_contactpersoon?.schema) {
-					configToSave['voorzieningen_contactpersoon_source'] = 'openregister'
-					configToSave['voorzieningen_contactpersoon_register'] = this.selectedRegister.value
-					configToSave['voorzieningen_contactpersoon_schema'] = this.configuration.voorzieningen_contactpersoon.schema.value
+					configToSave.voorzieningen_contactpersoon_source = 'openregister'
+					configToSave.voorzieningen_contactpersoon_register = this.selectedRegister.value
+					configToSave.voorzieningen_contactpersoon_schema = this.configuration.voorzieningen_contactpersoon.schema.value
 				}
 
 				// Send configuration to backend
@@ -2207,7 +2784,6 @@ export default defineComponent({
 				})
 
 				const result = await response.json()
-				
 				if (result.error) {
 					this.schemaSaveResult = {
 						success: false,
@@ -2218,7 +2794,6 @@ export default defineComponent({
 						success: true,
 						message: 'Schema values saved successfully! Organisatie and Contactpersoon schemas are now configured.'
 					}
-					
 					// Reload settings to reflect changes
 					await this.loadSettings()
 				}
@@ -2960,6 +3535,355 @@ export default defineComponent({
 			}
 		},
 
+		// AMEF Configuration methods
+
+		/**
+		 * Auto-configure AMEF register settings
+		 * Automatically detects and configures appropriate schemas for AMEF object types
+		 *
+		 * @return {Promise<void>}
+		 */
+		async autoConfigureAmefSettings() {
+			this.autoConfiguringAmef = true
+			this.amefConfigResults = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/amef/auto-configure', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const result = await response.json()
+				this.amefConfigResults = result
+
+				if (result.success) {
+					// Update local AMEF settings with the configured values
+					this.amefSettings = { ...this.amefSettings, ...result.configured }
+					// console.log('AMEF auto-configuration completed:', result)
+				}
+
+			} catch (error) {
+				console.error('Failed to auto-configure AMEF settings:', error)
+				this.amefConfigResults = {
+					success: false,
+					errors: ['Failed to auto-configure AMEF settings: ' + error.message]
+				}
+			} finally {
+				this.autoConfiguringAmef = false
+			}
+		},
+
+		/**
+		 * Save AMEF settings
+		 * Saves the manually configured AMEF schema mappings
+		 *
+		 * @return {Promise<void>}
+		 */
+		async saveAmefSettings() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/amef', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+					body: JSON.stringify(this.amefSettings)
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				await response.json()
+				// console.log('AMEF settings saved:', result)
+
+			} catch (error) {
+				console.error('Failed to save AMEF settings:', error)
+			}
+		},
+
+		/**
+		 * Load AMEF settings
+		 * Loads the current AMEF schema mappings from the server
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadAmefSettings() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/amef', {
+					method: 'GET',
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const result = await response.json()
+				if (result.success && result.settings) {
+					this.amefSettings = { ...this.amefSettings, ...result.settings }
+				}
+
+				// console.log('AMEF settings loaded:', result)
+
+			} catch (error) {
+				console.error('Failed to load AMEF settings:', error)
+			}
+		},
+
+		/**
+		 * Handle register change for AMEF configuration
+		 * Updates schema options when the register selection changes
+		 *
+		 * @return {Promise<void>}
+		 */
+		async onRegisterChange() {
+			try {
+				// Clear existing schema selections when register changes
+				this.amefSettings.elementsSchema = null
+				this.amefSettings.organizationsSchema = null
+				this.amefSettings.relationshipsSchema = null
+				this.amefSettings.viewsSchema = null
+
+				// Update schema options based on selected register
+				if (this.amefSettings.registerId) {
+					const register = this.settings.availableRegisters.find(
+						r => r.id.toString() === this.amefSettings.registerId
+					)
+					if (register && Array.isArray(register.schemas)) {
+						this.schemaOptions = register.schemas.map(schema => ({
+							label: schema.title,
+							value: schema.id.toString(),
+						}))
+					}
+				}
+
+				// Save the register selection
+				await this.saveAmefSettings()
+
+				// console.log('AMEF register changed to:', this.amefSettings.registerId)
+			} catch (error) {
+				console.error('Failed to handle register change:', error)
+			}
+		},
+
+		/**
+		 * Format estimated time of arrival
+		 *
+		 * @param {number} timestamp Unix timestamp
+		 * @return {string} Formatted ETA string
+		 */
+		formatETA(timestamp) {
+			const now = Date.now() / 1000
+			const secondsRemaining = timestamp - now
+			if (secondsRemaining <= 0) {
+				return 'Complete'
+			}
+
+			if (secondsRemaining < 60) {
+				return `${Math.round(secondsRemaining)}s`
+			} else if (secondsRemaining < 3600) {
+				return `${Math.round(secondsRemaining / 60)}m`
+			} else {
+				return `${Math.round(secondsRemaining / 3600)}h`
+			}
+		},
+
+		/**
+		 * Initialize export options with default values
+		 */
+		initializeExportOptions() {
+			// Set default selected schemas to all available schemas
+			this.exportOptions.selectedSchemas = this.availableSchemas.map(schema => schema.value)
+		},
+
+		// ArchiMate-related methods
+
+		/**
+		 * Import ArchiMate file
+		 *
+		 * @return {Promise<void>}
+		 */
+		async importArchiMateFile() {
+			if (!this.selectedFile) {
+				console.error('No file selected for import')
+				return
+			}
+
+			this.importing = true
+			this.importResult = null
+
+			try {
+				const formData = new FormData()
+				formData.append('archiMateFile', this.selectedFile)
+				formData.append('updateExisting', this.importOptions.updateExisting)
+				formData.append('deleteOrphaned', this.importOptions.deleteOrphaned)
+				formData.append('preserveIds', 'true')
+
+				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
+					method: 'POST',
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					body: formData
+				})
+
+				const result = await response.json()
+
+				if (result.success) {
+					this.importResult = result
+				} else {
+					// Handle import failure
+				}
+
+			} catch (error) {
+				console.error('Failed to import ArchiMate file:', error)
+			} finally {
+				this.importing = false
+			}
+		},
+
+		/**
+		 * Export to ArchiMate format
+		 *
+		 * @return {Promise<void>}
+		 */
+		async exportToArchiMate() {
+			this.exporting = true
+			this.exportResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					body: JSON.stringify(this.exportOptions)
+				})
+
+				const result = await response.json()
+
+				if (result.success) {
+					this.exportResult = result
+				} else {
+					// Handle export failure
+				}
+
+			} catch (error) {
+				console.error('Failed to export to ArchiMate:', error)
+			} finally {
+				this.exporting = false
+			}
+		},
+
+		/**
+		 * Download ArchiMate file
+		 *
+		 * @param {string} fileName File name to download
+		 * @return {Promise<void>}
+		 */
+		async downloadArchiMateFile(fileName) {
+			try {
+				const response = await fetch(`/index.php/apps/softwarecatalog/api/archimate/download/${fileName}`)
+				if (response.ok) {
+					const blob = await response.blob()
+					const url = window.URL.createObjectURL(blob)
+					const a = document.createElement('a')
+					a.href = url
+					a.download = fileName
+					document.body.appendChild(a)
+					a.click()
+					document.body.removeChild(a)
+					window.URL.revokeObjectURL(url)
+				} else {
+					console.error('Failed to download file:', response.statusText)
+				}
+			} catch (error) {
+				console.error('Failed to download ArchiMate file:', error)
+			}
+		},
+
+		/**
+		 * Test round-trip functionality
+		 *
+		 * @return {Promise<void>}
+		 */
+		async testRoundTrip() {
+			this.testingRoundTrip = true
+			this.roundTripResult = null
+
+			try {
+				// First import the selected file
+				await this.importArchiMateFile()
+				// Wait for import to complete
+				// Then export back to ArchiMate
+				await this.exportToArchiMate()
+				this.roundTripResult = {
+					success: true,
+					message: 'Round-trip test completed',
+					import_stats: this.importResult?.statistics || {},
+					export_stats: this.exportResult?.statistics || {}
+				}
+
+			} catch (error) {
+				console.error('Round-trip test failed:', error)
+				this.roundTripResult = {
+					success: false,
+					message: 'Round-trip test failed: ' + error.message
+				}
+			} finally {
+				this.testingRoundTrip = false
+			}
+		},
+
+		/**
+		 * Handle file selection for ArchiMate import
+		 *
+		 * @param {Event} event File input change event
+		 */
+		handleFileSelection(event) {
+			const files = event.target.files
+			if (files && files.length > 0) {
+				this.selectedFile = files[0]
+				this.importResult = null
+			}
+		},
+
+		/**
+		 * Clear selected file
+		 */
+		clearFileSelection() {
+			this.selectedFile = null
+			this.importResult = null
+			if (this.$refs.archiMateFileInput) {
+				this.$refs.archiMateFileInput.value = ''
+			}
+		},
+
+		/**
+		 * Format file size for display
+		 *
+		 * @param {number} bytes File size in bytes
+		 * @return {string} Formatted file size
+		 */
+		formatFileSize(bytes) {
+			if (bytes === 0) return '0 Bytes'
+			const k = 1024
+			const sizes = ['Bytes', 'KB', 'MB', 'GB']
+			const i = Math.floor(Math.log(bytes) / Math.log(k))
+			return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+		},
+
 	},
 })
 </script>
@@ -3597,6 +4521,106 @@ export default defineComponent({
 	font-weight: bold;
 }
 
+/* ArchiMate section styles */
+.archimate-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.import-section,
+.export-section,
+.test-section {
+	margin-bottom: 2rem;
+	padding: 1rem;
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius);
+	background-color: var(--color-main-background);
+}
+
+.import-form,
+.export-form {
+	margin-top: 1rem;
+}
+
+.file-upload {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.selected-file {
+	font-size: 0.9em;
+	color: var(--color-text-maxcontrast);
+}
+
+.import-options,
+.export-options {
+	margin: 1rem 0;
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.option-row {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.option-label {
+	min-width: 120px;
+	font-weight: bold;
+}
+
+.option-description {
+	font-size: 0.9em;
+	color: var(--color-text-maxcontrast);
+	margin-left: 0.5rem;
+}
+
+.import-actions,
+.export-actions,
+.test-actions {
+	display: flex;
+	gap: 1rem;
+	margin: 1rem 0;
+}
+
+.import-result,
+.export-result,
+.test-result {
+	margin-top: 1rem;
+}
+
+.result-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.import-statistics,
+.export-details,
+.comparison-details {
+	margin-top: 1rem;
+}
+
+.import-statistics ul,
+.comparison-details ul {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+}
+
+.processing-stats {
+	margin-top: 0.5rem;
+	font-style: italic;
+}
+
 .medium-load {
 	color: var(--color-warning);
 	font-weight: bold;
@@ -3714,5 +4738,516 @@ export default defineComponent({
 .auto-config-details li {
 	margin: 0.25rem 0;
 	color: var(--color-success);
+}
+
+/* AMEF Configuration styles */
+.amef-auto-config {
+	margin-bottom: 2rem;
+	padding: 1.5rem;
+	background: var(--color-background-hover);
+	border-radius: var(--border-radius-large);
+}
+
+.amef-auto-config h3 {
+	margin: 0 0 0.5rem 0;
+	color: var(--color-main-text);
+	font-weight: 600;
+}
+
+.amef-auto-config p {
+	margin: 0 0 1rem 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.amef-manual-config {
+	margin-bottom: 2rem;
+}
+
+.amef-manual-config h3 {
+	margin: 0 0 0.5rem 0;
+	color: var(--color-main-text);
+	font-weight: 600;
+}
+
+.amef-manual-config p {
+	margin: 0 0 1.5rem 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.schema-mappings {
+	display: grid;
+	gap: 1.5rem;
+	margin-bottom: 2rem;
+}
+
+.schema-mapping {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.schema-mapping label {
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.field-description {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--color-text-maxcontrast);
+	font-style: italic;
+}
+
+.current-config {
+	padding: 1.5rem;
+	background: var(--color-background-hover);
+	border-radius: var(--border-radius-large);
+	margin-top: 1.5rem;
+}
+
+.current-config h4 {
+	margin: 0 0 1rem 0;
+	color: var(--color-main-text);
+	font-weight: 600;
+}
+
+.config-summary {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.config-item {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.config-item strong {
+	min-width: 120px;
+	color: var(--color-main-text);
+}
+
+.not-configured {
+	color: var(--color-text-maxcontrast);
+	font-style: italic;
+}
+
+.config-results {
+	margin-top: 1rem;
+}
+
+/* Progress tracking styles */
+.import-progress {
+	background: var(--color-background-hover);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	padding: 1rem;
+	margin-top: 1rem;
+}
+
+.progress-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.75rem;
+}
+
+.progress-header h5 {
+	margin: 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.progress-percentage {
+	font-size: 1rem;
+	font-weight: bold;
+	color: var(--color-primary);
+}
+
+.progress-bar {
+	background: var(--color-background-dark);
+	border-radius: calc(var(--border-radius) / 2);
+	height: 8px;
+	margin-bottom: 0.75rem;
+	overflow: hidden;
+}
+
+.progress-fill {
+	background: linear-gradient(90deg, var(--color-success), var(--color-primary));
+	height: 100%;
+	transition: width 0.3s ease;
+	border-radius: calc(var(--border-radius) / 2);
+}
+
+.progress-details {
+	font-size: 0.75rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.progress-phase {
+	margin-bottom: 0.25rem;
+}
+
+.progress-phase strong {
+	color: var(--color-main-text);
+}
+
+.current-item {
+	font-style: italic;
+	margin-left: 0.5rem;
+}
+
+.progress-items,
+.progress-eta {
+	margin-bottom: 0.25rem;
+}
+
+.progress-errors,
+.progress-warnings {
+	margin-top: 0.75rem;
+	padding: 0.5rem;
+	border-radius: calc(var(--border-radius) / 2);
+}
+
+.progress-errors {
+	background: var(--color-error-bg, #ffeaea);
+	border: 1px solid var(--color-error-border, #e5484d);
+	color: var(--color-error-text, #721c24);
+}
+
+.progress-warnings {
+	background: var(--color-warning-bg, #fffbeb);
+	border: 1px solid var(--color-warning-border, #f59e0b);
+	color: var(--color-warning-text, #856404);
+}
+
+.progress-errors h6,
+.progress-warnings h6 {
+	margin: 0 0 0.25rem 0;
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.progress-errors ul,
+.progress-warnings ul {
+	margin: 0;
+	padding-left: 1rem;
+	font-size: 0.6875rem;
+}
+
+.progress-errors li,
+.progress-warnings li {
+	margin-bottom: 0.125rem;
+}
+
+/* Performance Metrics Styling */
+.performance-summary {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.performance-summary h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.performance-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.performance-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem;
+	background: var(--color-background);
+	border-radius: calc(var(--border-radius) / 2);
+	border: 1px solid var(--color-border);
+}
+
+.performance-item .label {
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.performance-item .value {
+	font-weight: 600;
+	color: var(--color-primary);
+}
+
+/* Processing Times Styling */
+.processing-times {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.processing-times h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.timing-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+
+.timing-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem;
+	background: var(--color-background);
+	border-radius: calc(var(--border-radius) / 2);
+	border: 1px solid var(--color-border);
+}
+
+.timing-item .label {
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.timing-item .value {
+	font-weight: 600;
+	color: var(--color-success);
+}
+
+/* Performance Breakdown Styling */
+.performance-breakdown {
+	margin-top: 1rem;
+}
+
+.performance-breakdown h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.breakdown-bars {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.breakdown-bar {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.bar-label {
+	min-width: 80px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.bar-container {
+	flex: 1;
+	height: 20px;
+	background: var(--color-background);
+	border-radius: 10px;
+	overflow: hidden;
+	border: 1px solid var(--color-border);
+}
+
+.bar-fill {
+	height: 100%;
+	transition: width 0.3s ease;
+	border-radius: 10px;
+}
+
+.bar-fill.validation {
+	background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.bar-fill.parsing {
+	background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.bar-fill.conversion {
+	background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.bar-percent {
+	min-width: 50px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+	text-align: right;
+}
+
+/* File Information Styling */
+.file-info {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.file-info h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.file-info ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.file-info li {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Performance Metrics Styling */
+.performance-metrics {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.performance-metrics h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.performance-metrics ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.performance-metrics li {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Processing Times Styling */
+.processing-times {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.processing-times h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.processing-times ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.processing-times li {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Summary Statistics Styling */
+.summary-stats {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.summary-stats h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.summary-stats ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.summary-stats li {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Schema Statistics Styling */
+.schema-statistics {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.schema-statistics h6 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.schema-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.schema-card {
+	padding: 0.75rem;
+	background: var(--color-background);
+	border: 1px solid var(--color-border);
+	border-radius: calc(var(--border-radius) / 2);
+}
+
+.schema-card h6 {
+	display: block;
+	margin: 0 0 0.5rem 0;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--color-primary);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.schema-card ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.schema-card li {
+	margin-bottom: 0.25rem;
+	font-size: 0.75rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.schema-card li:last-child {
+	margin-bottom: 0;
 }
 </style>
