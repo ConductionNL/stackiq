@@ -390,15 +390,18 @@ class SettingsService
                         $schemaTitle === 'organisatie' ||
                         $schemaSlug === 'organisatie') {
                         
-                                                 // Set voorzieningen_organisatie configuration
-                         $configuration['voorzieningen_organisatie_source'] = 'openregister';
-                         $configuration['voorzieningen_organisatie_register'] = (string) $voorzieningenRegister['id'];
-                         $configuration['voorzieningen_organisatie_schema'] = (string) $schema['id'];
-                         
-                         // Also set backward compatibility organization configuration
-                         $configuration['organization_source'] = 'openregister';
-                         $configuration['organization_register'] = (string) $voorzieningenRegister['id'];
-                         $configuration['organization_schema'] = (string) $schema['id'];
+                                                                         // Set voorzieningen_organisatie configuration
+                        $configuration['voorzieningen_organisatie_source'] = 'openregister';
+                        $configuration['voorzieningen_organisatie_register'] = (string) $voorzieningenRegister['id'];
+                        $configuration['voorzieningen_organisatie_schema'] = (string) $schema['id'];
+                        
+                        // Set sync-compatible configuration (OrganizationSyncService expects this key)
+                        $configuration['voorzieningen_register'] = (string) $voorzieningenRegister['id'];
+                        
+                        // Also set backward compatibility organization configuration
+                        $configuration['organization_source'] = 'openregister';
+                        $configuration['organization_register'] = (string) $voorzieningenRegister['id'];
+                        $configuration['organization_schema'] = (string) $schema['id'];
                         
                         $this->logger->info('Configured organisatie schema', [
                             'schema_id' => $schema['id'],
@@ -411,15 +414,18 @@ class SettingsService
                              $schemaTitle === 'contactpersoon' ||
                              $schemaSlug === 'contactpersoon') {
                         
-                                                 // Set voorzieningen_contactpersoon configuration
-                         $configuration['voorzieningen_contactpersoon_source'] = 'openregister';
-                         $configuration['voorzieningen_contactpersoon_register'] = (string) $voorzieningenRegister['id'];
-                         $configuration['voorzieningen_contactpersoon_schema'] = (string) $schema['id'];
-                         
-                         // Also set backward compatibility contact configuration
-                         $configuration['contact_source'] = 'openregister';
-                         $configuration['contact_register'] = (string) $voorzieningenRegister['id'];
-                         $configuration['contact_schema'] = (string) $schema['id'];
+                                                                         // Set voorzieningen_contactpersoon configuration
+                        $configuration['voorzieningen_contactpersoon_source'] = 'openregister';
+                        $configuration['voorzieningen_contactpersoon_register'] = (string) $voorzieningenRegister['id'];
+                        $configuration['voorzieningen_contactpersoon_schema'] = (string) $schema['id'];
+                        
+                        // Set sync-compatible configuration (OrganizationSyncService expects this key)
+                        $configuration['voorzieningen_register'] = (string) $voorzieningenRegister['id'];
+                        
+                        // Also set backward compatibility contact configuration
+                        $configuration['contact_source'] = 'openregister';
+                        $configuration['contact_register'] = (string) $voorzieningenRegister['id'];
+                        $configuration['contact_schema'] = (string) $schema['id'];
                         
                         $this->logger->info('Configured contactpersoon schema', [
                             'schema_id' => $schema['id'],
