@@ -449,7 +449,7 @@ class SoftwareCatalogueService
                 $objectService = $this->_getObjectService();
                 
                 if ($objectService) {
-                    $contactSchemaId = $this->_container->get('OCP\\IConfig')->getAppValue('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+                    $contactSchemaId = $this->_container->get('OCP\\IAppConfig')->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
                     $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
                     $organisation = $organisationMapper->findByUuid($organizationUuid);
                     
@@ -1628,7 +1628,7 @@ class SoftwareCatalogueService
         // This is useful for updates or when contact persons were created separately
         $objectService = $this->_getObjectService();
         if ($objectService) {
-            $contactSchemaId = $this->_container->get('OCP\\IConfig')->getAppValue('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+            $contactSchemaId = $this->_container->get('OCP\\IAppConfig')->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
             
             try {
                 // Try multiple approaches to find contact persons
@@ -2711,7 +2711,7 @@ class SoftwareCatalogueService
         }
         
         // Get the contact person schema ID from configuration
-        $contactSchemaId = $this->_container->get('OCP\\IConfig')->getAppValue('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+        $contactSchemaId = $this->_container->get('OCP\\IAppConfig')->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
         
         try {
             // Find all contact persons that have this organization as their organisatie
@@ -2950,7 +2950,7 @@ class SoftwareCatalogueService
                 ]);
 
                 // Get the contact person schema ID from configuration
-                $contactSchemaId = $this->_container->get('OCP\\IConfig')->getAppValue('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+                $contactSchemaId = $this->_container->get('OCP\\IAppConfig')->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
 
                 // Find the contact person object
                 try {

@@ -23,7 +23,7 @@ use OCP\IUser;
 use OCP\Security\ISecureRandom;
 use OCP\IGroupManager;
 use OCP\IGroup;
-use OCP\IConfig;
+use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
@@ -47,7 +47,7 @@ class ContactPersonHandler
      * @param IUserManager           $_userManager    User manager interface
      * @param ISecureRandom          $_secureRandom   Secure random generator
      * @param IGroupManager          $_groupManager   Group manager interface
-     * @param IConfig                $_config         Config interface
+     * @param IAppConfig             $_config         Config interface
      * @param ContainerInterface     $_container      Container interface
      * @param IAppManager            $_appManager     App manager interface
      * @param LoggerInterface        $_logger         Logger interface
@@ -57,7 +57,7 @@ class ContactPersonHandler
         private readonly IUserManager $_userManager,
         private readonly ISecureRandom $_secureRandom,
         private readonly IGroupManager $_groupManager,
-        private readonly IConfig $_config,
+        private readonly IAppConfig $_config,
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
         private readonly LoggerInterface $_logger,

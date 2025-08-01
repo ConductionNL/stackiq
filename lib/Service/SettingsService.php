@@ -214,6 +214,9 @@ class SettingsService
             $defaults["{$type}_schema"] = '';
             $defaults["{$type}_register"] = '';
         }
+        
+        // Add sync service compatibility keys
+        $defaults['voorzieningen_register'] = '';
 
         // Get the current values from the configuration
         try {
@@ -1580,6 +1583,7 @@ class SettingsService
                 'voorzieningen_contactpersoon_source',
                 'voorzieningen_contactpersoon_register',
                 'voorzieningen_contactpersoon_schema',
+                'voorzieningen_register', // Sync service expects this key
                 'organization_source',
                 'organization_register',
                 'organization_schema',
@@ -1589,7 +1593,8 @@ class SettingsService
             ];
             
             foreach ($configKeys as $key) {
-                $debugInfo['configuration'][$key] = $this->config->getValueString($this->_appName, $key, '');
+                $value = $this->config->getValueString($this->_appName, $key, '');
+                $debugInfo['configuration'][$key] = empty($value) ? '' : $value;
             }
             
             // Get group configurations

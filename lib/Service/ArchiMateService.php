@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
-use OCP\IConfig;
+use OCP\IAppConfig;
 use OCP\Files\IRootFolder;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -54,7 +54,7 @@ class ArchiMateService
      * ArchiMateService constructor
      */
     public function __construct(
-        private readonly IConfig $config,
+        private readonly IAppConfig $config,
         private readonly IRootFolder $rootFolder,
         private readonly IUserSession $userSession,
         private readonly IAppManager $appManager,
@@ -1552,7 +1552,7 @@ class ArchiMateService
      */
     private function getAmefRegisterId(): ?int
     {
-        $registerId = $this->config->getAppValue('softwarecatalog', 'amef_register_id', '');
+        $registerId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
         return $registerId ? (int) $registerId : null;
     }
 
@@ -1563,16 +1563,16 @@ class ArchiMateService
     {
         switch ($archiMateType) {
             case 'element':
-                $schemaId = $this->config->getAppValue('softwarecatalog', 'amef_elements_schema', '');
+                $schemaId = $this->config->getValueString('softwarecatalog', 'amef_elements_schema', '');
                 break;
             case 'organization':
-                $schemaId = $this->config->getAppValue('softwarecatalog', 'amef_organizations_schema', '');
+                $schemaId = $this->config->getValueString('softwarecatalog', 'amef_organizations_schema', '');
                 break;
             case 'relationship':
-                $schemaId = $this->config->getAppValue('softwarecatalog', 'amef_relationships_schema', '');
+                $schemaId = $this->config->getValueString('softwarecatalog', 'amef_relationships_schema', '');
                 break;
             case 'view':
-                $schemaId = $this->config->getAppValue('softwarecatalog', 'amef_views_schema', '');
+                $schemaId = $this->config->getValueString('softwarecatalog', 'amef_views_schema', '');
                 break;
             default:
                 throw new \RuntimeException("Unknown ArchiMate type: {$archiMateType}");
@@ -1584,22 +1584,22 @@ class ArchiMateService
     // Schema ID getters
     private function getArchiMateElementSchemaId(): ?int
     {
-        return (int) $this->config->getAppValue('softwarecatalog', 'archimate_element_schema_id', '0') ?: null;
+        return (int) $this->config->getValueString('softwarecatalog', 'archimate_element_schema_id', '0') ?: null;
     }
 
     private function getOrganizationSchemaId(): ?int
     {
-        return (int) $this->config->getAppValue('softwarecatalog', 'voorzieningen_organisatie_schema', '0') ?: null;
+        return (int) $this->config->getValueString('softwarecatalog', 'voorzieningen_organisatie_schema', '0') ?: null;
     }
 
     private function getRelationshipSchemaId(): ?int
     {
-        return (int) $this->config->getAppValue('softwarecatalog', 'archimate_relationship_schema_id', '0') ?: null;
+        return (int) $this->config->getValueString('softwarecatalog', 'archimate_relationship_schema_id', '0') ?: null;
     }
 
     private function getViewSchemaId(): ?int
     {
-        return (int) $this->config->getAppValue('softwarecatalog', 'archimate_view_schema_id', '0') ?: null;
+        return (int) $this->config->getValueString('softwarecatalog', 'archimate_view_schema_id', '0') ?: null;
     }
 
     // Placeholder methods for export functionality

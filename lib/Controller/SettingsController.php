@@ -846,6 +846,15 @@ class SettingsController extends Controller
                             if ($schemaSlug === $pattern || $schemaTitle === $pattern || 
                                 strpos($schemaSlug, $pattern) !== false || strpos($schemaTitle, $pattern) !== false) {
                                 $configured[$settingKey] = $schema['id'];
+                                
+                                // Save to the correct keys that the main settings endpoint expects
+                                if ($settingKey === 'organizationsSchema') {
+                                    $this->config->setValueString('softwarecatalog', 'amef_organization_source', 'openregister');
+                                    $this->config->setValueString('softwarecatalog', 'amef_organization_register', (string)$vngGemmaRegister['id']);
+                                    $this->config->setValueString('softwarecatalog', 'amef_organization_schema', (string)$schema['id']);
+                                }
+                                
+                                // Also save to the AMEF-specific endpoint keys for backward compatibility
                                 $configKey = 'amef_' . strtolower(str_replace('Schema', '', $settingKey)) . '_schema';
                                 $this->config->setValueString('softwarecatalog', $configKey, (string)$schema['id']);
                                 
@@ -861,6 +870,7 @@ class SettingsController extends Controller
 
             // Set register ID for AMEF operations - prefer vng-gemma (STRICT)
             if ($vngGemmaRegister) {
+                // Save to both the AMEF-specific key and main settings key using consistent API
                 $this->config->setValueString('softwarecatalog', 'amef_register_id', (string)$vngGemmaRegister['id']);
                 $configured['registerId'] = $vngGemmaRegister['id'];
                 $this->logger->info("Set AMEF register to vng-gemma: {$vngGemmaRegister['id']} (PREFERRED)");

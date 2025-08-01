@@ -22,7 +22,7 @@ use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use Psr\Log\LoggerInterface;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
-use OCP\IConfig;
+use OCP\IAppConfig;
 
 /**
  * Service for handling organization-specific operations
@@ -46,14 +46,14 @@ class OrganisatieService
      * @param LoggerInterface       $logger              Logger interface
      * @param ContainerInterface    $container           Container interface
      * @param IAppManager          $appManager          App manager
-     * @param IConfig              $config              Configuration service
+     * @param IAppConfig           $config              Configuration service
      */
     public function __construct(
         private readonly OrganizationHandler $organizationHandler,
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly IConfig $config
+        private readonly IAppConfig $config
     ) {
     }
 
