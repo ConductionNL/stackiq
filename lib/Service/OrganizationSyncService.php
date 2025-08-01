@@ -21,7 +21,7 @@ namespace OCA\SoftwareCatalog\Service;
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
-use OCP\IConfig;
+use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -63,9 +63,9 @@ class OrganizationSyncService
     /**
      * Configuration service instance
      *
-     * @var IConfig The Nextcloud configuration service
+     * @var IAppConfig The Nextcloud app configuration service
      */
-    private IConfig $config;
+    private IAppConfig $config;
 
     /**
      * Logger instance
@@ -80,14 +80,14 @@ class OrganizationSyncService
      * @param OrganisatieService      $organisatieService      The organization service
      * @param ContactpersoonService   $contactpersoonService   The contact person service
      * @param SymfonyEmailService     $emailService            The email service
-     * @param IConfig                 $config                  The configuration service
+     * @param IAppConfig              $config                  The configuration service
      * @param LoggerInterface         $logger                  The logger instance
      */
     public function __construct(
         OrganisatieService $organisatieService,
         ContactpersoonService $contactpersoonService,
         SymfonyEmailService $emailService,
-        IConfig $config,
+        IAppConfig $config,
         LoggerInterface $logger
     ) {
         $this->organisatieService = $organisatieService;
@@ -129,9 +129,9 @@ class OrganizationSyncService
 
         try {
             // Check configuration
-            $register = $this->config->getAppValue('softwarecatalog', 'voorzieningen_register', '');
-            $organizationSchema = $this->config->getAppValue('softwarecatalog', 'voorzieningen_organisatie_schema', '');
-            $contactSchema = $this->config->getAppValue('softwarecatalog', 'voorzieningen_contactpersoon_schema', '');
+            $register = $this->config->getValueString('softwarecatalog', 'voorzieningen_register', '');
+            $organizationSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_organisatie_schema', '');
+            $contactSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '');
 
             if (empty($register) || empty($organizationSchema)) {
                 $error = 'Missing configuration: register or organization schema not configured';
@@ -660,9 +660,9 @@ class OrganizationSyncService
     {
         try {
             // Check configuration
-            $register = $this->config->getAppValue('softwarecatalog', 'voorzieningen_register', '');
-            $organizationSchema = $this->config->getAppValue('softwarecatalog', 'voorzieningen_organisatie_schema', '');
-            $contactSchema = $this->config->getAppValue('softwarecatalog', 'voorzieningen_contactpersoon_schema', '');
+            $register = $this->config->getValueString('softwarecatalog', 'voorzieningen_register', '');
+            $organizationSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_organisatie_schema', '');
+            $contactSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '');
 
             if (empty($register) || empty($organizationSchema)) {
                 return [
@@ -722,7 +722,7 @@ class OrganizationSyncService
                 
                 // Configuration
                 'contactSchemaConfigured' => !empty($contactSchema),
-                'lastSyncTime' => $this->config->getAppValue('softwarecatalog', 'last_sync_time', 'Never'),
+                'lastSyncTime' => $this->config->getValueString('softwarecatalog', 'last_sync_time', 'Never'),
                 
                 // Email configuration status
                 'emailStatus' => $this->getEmailConfigurationStatus(),
@@ -788,7 +788,7 @@ class OrganizationSyncService
      */
     public function recordSyncTime(): void
     {
-        $this->config->setAppValue('softwarecatalog', 'last_sync_time', date('Y-m-d H:i:s'));
+        $this->config->setValueString('softwarecatalog', 'last_sync_time', date('Y-m-d H:i:s'));
     }
 
     /**

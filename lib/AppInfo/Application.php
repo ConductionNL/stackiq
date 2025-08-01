@@ -31,7 +31,6 @@ use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCP\IUserManager;
 use OCP\IGroupManager;
 use OCP\IAppConfig;
-use OCP\IConfig;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
 use OCP\Security\ISecureRandom;
@@ -91,7 +90,7 @@ class Application extends App implements IBootstrap
                 $c->get(IUserManager::class),
                 $c->get(\OCP\Security\ISecureRandom::class),
                 $c->get(IGroupManager::class),
-                $c->get(IConfig::class),
+                $c->get(IAppConfig::class),
                 $c,
                 $c->get(IAppManager::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
@@ -136,7 +135,7 @@ class Application extends App implements IBootstrap
                 $container->get('Psr\Log\LoggerInterface'),
                 $container,
                 $container->get('OCP\App\IAppManager'),
-                $container->get('OCP\IConfig')
+                $container->get(IAppConfig::class)
             );
         });
 
@@ -148,14 +147,14 @@ class Application extends App implements IBootstrap
                 $container->get('Psr\Log\LoggerInterface'),
                 $container,
                 $container->get('OCP\App\IAppManager'),
-                $container->get('OCP\IConfig')
+                $container->get(IAppConfig::class)
             );
         });
 
         // Register email service
         $context->registerService(SymfonyEmailService::class, function ($container) {
             return new SymfonyEmailService(
-                $container->get('OCP\IConfig'),
+                $container->get(IAppConfig::class),
                 $container->get('Psr\Log\LoggerInterface'),
                 $container->get(SettingsService::class)
             );
@@ -164,7 +163,7 @@ class Application extends App implements IBootstrap
         // Register settings service
         $context->registerService(SettingsService::class, function ($container) {
             return new SettingsService(
-                $container->get('OCP\IAppConfig'),
+                $container->get(IAppConfig::class),
                 $container->get('OCP\IRequest'),
                 $container,
                 $container->get('OCP\App\IAppManager'),
@@ -178,7 +177,7 @@ class Application extends App implements IBootstrap
                 $container->get(\OCA\SoftwareCatalog\Service\OrganisatieService::class),
                 $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
                 $container->get(SymfonyEmailService::class),
-                $container->get('OCP\IConfig'),
+                $container->get(IAppConfig::class),
                 $container->get('Psr\Log\LoggerInterface')
             );
         });
@@ -186,7 +185,7 @@ class Application extends App implements IBootstrap
         // Register ArchiMate import/export service
         $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateService::class, function ($container) {
             return new \OCA\SoftwareCatalog\Service\ArchiMateService(
-                $container->get('OCP\IConfig'),
+                $container->get(IAppConfig::class),
                 $container->get('OCP\Files\IRootFolder'),
                 $container->get('OCP\IUserSession'),
                 $container->get('OCP\App\IAppManager'),
@@ -226,10 +225,10 @@ class Application extends App implements IBootstrap
         $logger = $container->get(LoggerInterface::class);
         
         try {
-            $config = $container->get(IConfig::class);
+            $config = $container->get(IAppConfig::class);
             $appManager = $container->get(IAppManager::class);
             $currentAppVersion = $appManager->getAppVersion(self::APP_ID);
-            $lastInitializedVersion = $config->getAppValue(self::APP_ID, 'last_initialized_version', '');
+            $lastInitializedVersion = $config->getValueString(self::APP_ID, 'last_initialized_version', '');
 
             $logger->info('SoftwareCatalog boot: Version check', [
                 'currentVersion' => $currentAppVersion,
@@ -246,8 +245,8 @@ class Application extends App implements IBootstrap
                 $initReason = empty($lastInitializedVersion) ? 'never_initialized' : 'version_changed';
             } else {
                 // Even if version matches, check if we have valid configuration
-                $hasValidConfig = $config->getAppValue(self::APP_ID, 'voorzieningen_organisatie_schema', '') !== '' ||
-                                  $config->getAppValue(self::APP_ID, 'organization_schema', '') !== '';
+                $hasValidConfig = $config->getValueString(self::APP_ID, 'voorzieningen_organisatie_schema', '') !== '' ||
+                                  $config->getValueString(self::APP_ID, 'organization_schema', '') !== '';
                 
                 if (!$hasValidConfig) {
                     $needsInitialization = true;
@@ -278,7 +277,7 @@ class Application extends App implements IBootstrap
                     // Only update version if initialization was actually successful
                     if (empty($initResult['errors']) && 
                         ($initResult['autoConfigured'] || $initResult['fullyConfigured'])) {
-                        $config->setAppValue(self::APP_ID, 'last_initialized_version', $currentAppVersion);
+                        $config->setValueString(self::APP_ID, 'last_initialized_version', $currentAppVersion);
                         $logger->info('SoftwareCatalog boot: Version updated to ' . $currentAppVersion . ' (successful init)');
                     } else {
                         $logger->warning('SoftwareCatalog boot: Initialization incomplete, not updating version', [
@@ -328,11 +327,11 @@ class Application extends App implements IBootstrap
 
         // Check if initial sync has been done
         try {
-            $config = $container->get(IConfig::class);
-            $initialSyncDone = $config->getAppValue(self::APP_ID, 'initial_sync_done', 'false');
+            $config = $container->get(IAppConfig::class);
+            $initialSyncDone = $config->getValueString(self::APP_ID, 'initial_sync_done', 'false');
             if ($initialSyncDone === 'false') {
                 // Mark as done to prevent repeated attempts
-                $config->setAppValue(self::APP_ID, 'initial_sync_done', 'true');
+                $config->setValueString(self::APP_ID, 'initial_sync_done', 'true');
                 $logger->info('SoftwareCatalog boot: Initial sync flag set');
             }
         } catch (\Exception $e) {

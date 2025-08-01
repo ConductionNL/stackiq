@@ -24,7 +24,7 @@ use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
 use Psr\Log\LoggerInterface;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
-use OCP\IConfig;
+use OCP\IAppConfig;
 
 /**
  * Service for handling contact person-specific operations
@@ -50,7 +50,7 @@ class ContactpersoonService
      * @param LoggerInterface      $logger               Logger interface
      * @param ContainerInterface   $container            Container interface
      * @param IAppManager         $appManager           App manager
-     * @param IConfig             $config               Configuration service
+     * @param IAppConfig          $config               Configuration service
      */
     public function __construct(
         private readonly ContactPersonHandler $contactPersonHandler,
@@ -59,7 +59,7 @@ class ContactpersoonService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly IConfig $config
+        private readonly IAppConfig $config
     ) {
     }
 
@@ -401,8 +401,8 @@ class ContactpersoonService
                 return [];
             }
 
-            $contactSchema = $this->config->getAppValue('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
-            $register = $this->config->getAppValue('softwarecatalog', 'voorzieningen_register', '6');
+                    $contactSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+        $register = $this->config->getValueString('softwarecatalog', 'voorzieningen_register', '6');
             
             return $objectService->findAll(
                 ['organisation' => $organizationUuid],

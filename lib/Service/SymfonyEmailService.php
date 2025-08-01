@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use Psr\Log\LoggerInterface;
-use OCP\IConfig;
+use OCP\IAppConfig;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mailer\Transport;
@@ -230,12 +230,12 @@ class SymfonyEmailService
     /**
      * Constructor for SymfonyEmailService
      *
-     * @param IConfig         $config          The Nextcloud configuration service
+     * @param IAppConfig      $config          The Nextcloud configuration service
      * @param LoggerInterface $logger          The logger instance
      * @param SettingsService $settingsService The settings service for email configuration
      */
     public function __construct(
-        private readonly IConfig $config,
+        private readonly IAppConfig $config,
         private readonly LoggerInterface $logger,
         SettingsService $settingsService,
     ) {
