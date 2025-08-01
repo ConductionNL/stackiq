@@ -809,24 +809,12 @@ class SettingsController extends Controller
                 }
             }
 
-            // Define AMEF schema mappings with priority order
+            // Define AMEF schema mappings - STRICT English only (no Dutch fallbacks)
             $amefSchemaMappings = [
-                'elementsSchema' => [
-                    'primary' => ['element', 'archimate-element'],
-                    'fallback' => ['voorziening', 'product', 'component']
-                ],
-                'organizationsSchema' => [
-                    'primary' => ['organization', 'organisatie'],
-                    'fallback' => ['contactpersoon', 'stakeholder']
-                ],
-                'relationshipsSchema' => [
-                    'primary' => ['relation', 'relationship'],
-                    'fallback' => ['koppeling', 'connection']
-                ],
-                'viewsSchema' => [
-                    'primary' => ['view', 'diagram', 'extendview'],
-                    'fallback' => ['model', 'visualization']
-                ]
+                'elementsSchema' => ['element', 'archimate-element'],
+                'organizationsSchema' => ['organization'],  // STRICT: English only for AMEF
+                'relationshipsSchema' => ['relation', 'relationship'],
+                'viewsSchema' => ['view', 'diagram', 'extendview']
             ];
 
             // First try to find schemas in vng-gemma register (AMEF specific)
@@ -849,8 +837,8 @@ class SettingsController extends Controller
                         continue; // Already configured
                     }
 
-                    // Try primary patterns first
-                    foreach ($patterns['primary'] as $pattern) {
+                    // Try to find exact English schema matches (STRICT)
+                    foreach ($patterns as $pattern) {
                         foreach ($vngGemmaRegister['schemas'] as $schema) {
                             $schemaSlug = strtolower($schema['slug'] ?? '');
                             $schemaTitle = strtolower($schema['title'] ?? '');
@@ -869,47 +857,20 @@ class SettingsController extends Controller
                 }
             }
 
-            // Fallback to voorzieningen register schemas
-            if ($voorzieningenRegister && !empty($voorzieningenRegister['schemas'])) {
-                $this->logger->info('Using voorzieningen register as fallback for AMEF schemas', [
-                    'register_id' => $voorzieningenRegister['id'],
-                    'schemas' => array_column($voorzieningenRegister['schemas'], 'slug')
-                ]);
+            // REMOVED: No fallback to voorzieningen register for AMEF (STRICT English schemas only)
 
-                foreach ($amefSchemaMappings as $settingKey => $patterns) {
-                    if (isset($configured[$settingKey])) {
-                        continue; // Already configured from vng-gemma
-                    }
-
-                    // Try fallback patterns
-                    foreach ($patterns['fallback'] as $pattern) {
-                        foreach ($voorzieningenRegister['schemas'] as $schema) {
-                            $schemaSlug = strtolower($schema['slug'] ?? '');
-                            $schemaTitle = strtolower($schema['title'] ?? '');
-                            
-                            if ($schemaSlug === $pattern || $schemaTitle === $pattern || 
-                                strpos($schemaSlug, $pattern) !== false || strpos($schemaTitle, $pattern) !== false) {
-                                $configured[$settingKey] = $schema['id'];
-                                $configKey = 'amef_' . strtolower(str_replace('Schema', '', $settingKey)) . '_schema';
-                                $this->config->setValueString('softwarecatalog', $configKey, (string)$schema['id']);
-                                
-                                $this->logger->info("Configured AMEF fallback schema: {$settingKey} -> {$schema['id']} ({$schema['title']}) [slug: {$schema['slug']}]");
-                                break 2;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Set default register ID for AMEF operations
+            // Set register ID for AMEF operations - prefer vng-gemma (STRICT)
             if ($vngGemmaRegister) {
                 $this->config->setValueString('softwarecatalog', 'amef_register_id', (string)$vngGemmaRegister['id']);
                 $configured['registerId'] = $vngGemmaRegister['id'];
-                $this->logger->info("Set AMEF register to vng-gemma: {$vngGemmaRegister['id']}");
+                $this->logger->info("Set AMEF register to vng-gemma: {$vngGemmaRegister['id']} (PREFERRED)");
             } elseif ($voorzieningenRegister) {
                 $this->config->setValueString('softwarecatalog', 'amef_register_id', (string)$voorzieningenRegister['id']);
                 $configured['registerId'] = $voorzieningenRegister['id'];
-                $this->logger->info("Set AMEF register to voorzieningen: {$voorzieningenRegister['id']}");
+                $this->logger->warning("FALLBACK: Set AMEF register to voorzieningen: {$voorzieningenRegister['id']} - vng-gemma register not found!");
+                $errors[] = 'WARNING: Using voorzieningen register for AMEF instead of preferred vng-gemma register';
+            } else {
+                $errors[] = 'CRITICAL: No suitable register found for AMEF operations (neither vng-gemma nor voorzieningen)';
             }
 
             // Check what's missing
@@ -941,7 +902,8 @@ class SettingsController extends Controller
                     $errors[] = 'Available schemas in voorzieningen: none (register not found or no schemas)';
                 }
                 
-                $errors[] = 'Expected vng-gemma schemas: element, model, organization, property-definition, relation, view, extendview';
+                $errors[] = 'AMEF requires STRICT English schemas from vng-gemma register: element, organization, relation, view';
+                $errors[] = 'No fallbacks to Dutch schemas are allowed for AMEF - ensure vng-gemma register has proper English schemas';
                 $errors[] = 'Try running manual import to ensure softwarecatalogus_register.json is properly imported into OpenRegister';
             }
 
