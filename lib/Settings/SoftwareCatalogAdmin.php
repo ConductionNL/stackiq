@@ -20,7 +20,7 @@ class SoftwareCatalogAdmin implements ISettings {
      */
     public function getForm() {
         $parameters = [
-            'mySetting' => $this->config->getSystemValue('software_catalog_setting', true),
+            'mySetting' => $this->config->getValueString('softwarecatalog', 'software_catalog_setting', 'true') === 'true',
         ];
 
         return new TemplateResponse('softwarecatalog', 'settings/admin', $parameters, 'admin');
