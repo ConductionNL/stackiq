@@ -147,7 +147,8 @@ class Application extends App implements IBootstrap
                 $container->get('Psr\Log\LoggerInterface'),
                 $container,
                 $container->get('OCP\App\IAppManager'),
-                $container->get(IAppConfig::class)
+                $container->get(IAppConfig::class),
+                $container->get(SettingsService::class)
             );
         });
 
@@ -178,7 +179,8 @@ class Application extends App implements IBootstrap
                 $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
                 $container->get(SymfonyEmailService::class),
                 $container->get(IAppConfig::class),
-                $container->get('Psr\Log\LoggerInterface')
+                $container->get('Psr\Log\LoggerInterface'),
+                $container->get(SettingsService::class)
             );
         });
 

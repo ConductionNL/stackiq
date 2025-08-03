@@ -68,6 +68,13 @@ class OrganizationSyncService
     private IAppConfig $config;
 
     /**
+     * Settings service instance
+     *
+     * @var SettingsService The settings service for configuration
+     */
+    private SettingsService $settingsService;
+
+    /**
      * Logger instance
      *
      * @var LoggerInterface The logger for sync operations
@@ -88,13 +95,15 @@ class OrganizationSyncService
         ContactpersoonService $contactpersoonService,
         SymfonyEmailService $emailService,
         IAppConfig $config,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        SettingsService $settingsService
     ) {
         $this->organisatieService = $organisatieService;
         $this->contactpersoonService = $contactpersoonService;
         $this->emailService = $emailService;
         $this->config = $config;
         $this->logger = $logger;
+        $this->settingsService = $settingsService;
     }
 
     /**
@@ -129,9 +138,10 @@ class OrganizationSyncService
 
         try {
             // Check configuration
-            $register = $this->config->getValueString('softwarecatalog', 'voorzieningen_register', '');
-            $organizationSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_organisatie_schema', '');
-            $contactSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '');
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $register = $voorzieningenConfig['register'] ?? '';
+            $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+            $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
 
             if (empty($register) || empty($organizationSchema)) {
                 $error = 'Missing configuration: register or organization schema not configured';
@@ -660,9 +670,10 @@ class OrganizationSyncService
     {
         try {
             // Check configuration
-            $register = $this->config->getValueString('softwarecatalog', 'voorzieningen_register', '');
-            $organizationSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_organisatie_schema', '');
-            $contactSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '');
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $register = $voorzieningenConfig['register'] ?? '';
+            $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+            $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
 
             if (empty($register) || empty($organizationSchema)) {
                 return [

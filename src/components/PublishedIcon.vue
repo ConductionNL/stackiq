@@ -11,18 +11,18 @@ export default {
 	props: {
 		isPublished: {
 			type: Boolean,
-			default: false
+			default: false,
 		},
 		tooltip: {
 			type: String,
-			default: ''
-		}
+			default: '',
+		},
 	},
 	computed: {
 		defaultTooltip() {
 			return this.isPublished ? 'Published' : 'Not Published'
-		}
-	}
+		},
+	},
 }
 </script>
 
@@ -51,4 +51,4 @@ export default {
 .published-icon:hover {
 	cursor: help;
 }
-</style> 
+</style>

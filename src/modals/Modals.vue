@@ -29,5 +29,10 @@ export default {
 		MigrationObject,
 		MergeObject,
 	},
+	setup() {
+		return {
+			navigationStore,
+		}
+	},
 }
 </script>

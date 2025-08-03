@@ -10,27 +10,30 @@ export const useCatalogStore = defineStore('catalog', {
 		catalogs: [],
 		currentCatalog: null,
 		loading: false,
-		error: null
+		error: null,
 	}),
 
 	getters: {
 		/**
 		 * Get the current catalog
-		 * @returns {Object|null} The current catalog or null
+		 * @param {object} state - The store state
+		 * @return {object | null} The current catalog or null
 		 */
 		getCurrentCatalog: (state) => state.currentCatalog,
 
 		/**
 		 * Check if loading
-		 * @returns {boolean} True if loading
+		 * @param {object} state - The store state
+		 * @return {boolean} True if loading
 		 */
 		isLoading: (state) => state.loading,
 
 		/**
 		 * Get error message
-		 * @returns {string|null} Error message or null
+		 * @param {object} state - The store state
+		 * @return {string|null} Error message or null
 		 */
-		getError: (state) => state.error
+		getError: (state) => state.error,
 	},
 
 	actions: {
@@ -52,7 +55,7 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Set current catalog
-		 * @param {Object|null} catalog - Catalog object
+		 * @param {object | null} catalog - Catalog object
 		 */
 		setCurrentCatalog(catalog) {
 			this.currentCatalog = catalog
@@ -73,6 +76,6 @@ export const useCatalogStore = defineStore('catalog', {
 			this.currentCatalog = null
 			this.loading = false
 			this.error = null
-		}
-	}
-}) 
+		},
+	},
+})

@@ -127,18 +127,8 @@ class SettingsController extends Controller
     public function index(): JSONResponse
     {
         try {
-            $data = $this->settingsService->getSettings();
-            
-            // Add user group configurations
-            $data['userGroups'] = [
-                'generic' => $this->settingsService->getGenericUserGroups(),
-                'organizationAdmin' => $this->settingsService->getOrganizationAdminGroups(),
-                'superUser' => $this->settingsService->getSuperUserGroups()
-            ];
-            
-            // Add email settings
-            $data['emailSettings'] = $this->settingsService->getEmailSettings();
-            
+            // Delegate all business logic to service
+            $data = $this->settingsService->getAllSettings();
             return new JSONResponse($data);
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve settings', [
@@ -387,34 +377,13 @@ class SettingsController extends Controller
      */
     public function sendTestEmail(): JSONResponse
     {
-        $this->logger->info('SoftwareCatalog: Test email endpoint called');
-        
         try {
             $data = $this->request->getParams();
             $email = $data['email'] ?? '';
             $emailSettings = $data['emailSettings'] ?? [];
             
-            $this->logger->info('SoftwareCatalog: Test email request data', [
-                'email' => $email,
-                'has_email_settings' => !empty($emailSettings),
-                'transport_type' => $emailSettings['transportType'] ?? 'not specified'
-            ]);
-            
-            if (empty($email)) {
-                $this->logger->warning('SoftwareCatalog: Test email request missing email address');
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'Email address is required'
-                ], 400);
-            }
-            
-            $this->logger->info('SoftwareCatalog: Delegating to SettingsService.sendTestEmail');
+            // Delegate all business logic (including validation) to service
             $result = $this->settingsService->sendTestEmail($email, $emailSettings);
-            
-            $this->logger->info('SoftwareCatalog: Test email result from service', [
-                'success' => $result['success'],
-                'message' => $result['message'] ?? 'no message'
-            ]);
             
             return new JSONResponse([
                 'success' => $result['success'],
@@ -622,6 +591,50 @@ class SettingsController extends Controller
 
 
 
+
+
+
+    /**
+     * Consolidated auto-configuration that handles everything
+     *
+     * This method delegates all business logic to the SettingsService
+     * and simply handles the HTTP request/response.
+     *
+     * @return JSONResponse JSON response containing consolidated results
+     *
+     * @NoCSRFRequired
+     */
+    public function consolidatedAutoConfigure(): JSONResponse
+    {
+        try {
+            // Get force parameter from request
+            $force = $this->request->getParam('force', false);
+            
+            // Delegate all business logic to the service
+            $results = $this->settingsService->performConsolidatedAutoConfiguration($force);
+            
+            // Determine HTTP status based on results
+            if (!$results['success']) {
+                $httpStatus = !empty($results['errors']) ? 207 : 500; // Multi-status or Server Error
+            } else {
+                $httpStatus = 200; // Success
+            }
+            
+            return new JSONResponse($results, $httpStatus);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsController: Consolidated auto-configuration failed', [
+                'exception_message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Auto-configuration failed: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+                'timestamp' => time()
+            ], 500);
+        }
+    }//end consolidatedAutoConfigure()
 
 
 
@@ -1290,6 +1303,622 @@ class SettingsController extends Controller
                 'success' => false,
                 'message' => 'Download failed: ' . $e->getMessage(),
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================================================
+    // EMAIL MANAGEMENT METHODS
+    // ========================================================================
+
+    /**
+     * Test email connection (separate from sending test email)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Test connection result
+     */
+    public function testEmailConnection(): JSONResponse
+    {
+        $this->logger->info('SoftwareCatalog: Email connection test endpoint called');
+        
+        try {
+            $data = $this->request->getParams();
+            $emailSettings = $data['emailSettings'] ?? $data ?? [];
+            
+            $this->logger->info('SoftwareCatalog: Email connection test request data', [
+                'has_email_settings' => !empty($emailSettings),
+                'transport_type' => $emailSettings['transportType'] ?? 'not specified'
+            ]);
+            
+            // Call the settings service to test the connection (without sending email)
+            $result = $this->settingsService->testEmailConnection($emailSettings);
+            
+            $this->logger->info('SoftwareCatalog: Email connection test result from service', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'no message'
+            ]);
+            
+            return new JSONResponse([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'details' => $result['details'] ?? null
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SoftwareCatalog: Failed to test email connection', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to test email connection: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get email settings
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Current email settings
+     */
+    public function getEmailSettings(): JSONResponse
+    {
+        try {
+            $emailSettings = $this->settingsService->getEmailSettings();
+            
+            return new JSONResponse([
+                'success' => true,
+                'emailSettings' => $emailSettings
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get email settings', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get email settings: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update email settings
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateEmailSettings(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $emailSettings = $data['emailSettings'] ?? $data;
+            
+            $result = $this->settingsService->updateEmailSettings($emailSettings);
+            
+            return new JSONResponse([
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'Email settings updated successfully',
+                'emailSettings' => $result['emailSettings'] ?? null
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update email settings', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update email settings: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================================================
+    // EMAIL TEMPLATE METHODS
+    // ========================================================================
+
+    /**
+     * Get all email templates
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse List of available templates
+     */
+    public function getEmailTemplates(): JSONResponse
+    {
+        try {
+            // Delegate all business logic to service
+            $templates = $this->settingsService->getAllEmailTemplates();
+            
+            return new JSONResponse([
+                'success' => true,
+                'templates' => $templates
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get email templates', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get email templates: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get specific email template
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @param string $templateName Template name
+     * @return JSONResponse Template content
+     */
+    public function getEmailTemplate(string $templateName): JSONResponse
+    {
+        try {
+            $template = $this->settingsService->getEmailTemplate($templateName);
+            
+            return new JSONResponse([
+                'success' => true,
+                'template' => $template,
+                'templateName' => $templateName
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error("Failed to get email template {$templateName}", [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => "Failed to get email template {$templateName}: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update email template
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @param string $templateName Template name
+     * @return JSONResponse Update result
+     */
+    public function updateEmailTemplate(string $templateName): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $templateContent = $data['template'] ?? $data['content'] ?? '';
+            
+            if (empty($templateContent)) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Template content is required'
+                ], 400);
+            }
+            
+            $success = $this->settingsService->updateEmailTemplate($templateName, $templateContent);
+            
+            return new JSONResponse([
+                'success' => $success,
+                'message' => $success ? "Template {$templateName} updated successfully" : "Failed to update template {$templateName}"
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error("Failed to update email template {$templateName}", [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => "Failed to update email template {$templateName}: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get default email template
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @param string $templateName Template name
+     * @return JSONResponse Default template content
+     */
+    public function getEmailTemplateDefault(string $templateName): JSONResponse
+    {
+        try {
+            $defaultTemplate = $this->settingsService->getDefaultEmailTemplate($templateName);
+            
+            return new JSONResponse([
+                'success' => true,
+                'template' => $defaultTemplate,
+                'templateName' => $templateName
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error("Failed to get default email template {$templateName}", [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => "Failed to get default email template {$templateName}: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get email template variables
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @param string $templateName Template name
+     * @return JSONResponse Available variables for template
+     */
+    public function getEmailTemplateVariables(string $templateName): JSONResponse
+    {
+        try {
+            $variables = $this->settingsService->getEmailTemplateVariables($templateName);
+            
+            return new JSONResponse([
+                'success' => true,
+                'variables' => $variables,
+                'templateName' => $templateName
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error("Failed to get email template variables for {$templateName}", [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => "Failed to get email template variables for {$templateName}: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================================================
+    // USER GROUPS MANAGEMENT METHODS
+    // ========================================================================
+
+    /**
+     * Get generic user groups
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Generic user groups
+     */
+    public function getGenericUserGroups(): JSONResponse
+    {
+        try {
+            $groups = $this->settingsService->getGenericUserGroups();
+            
+            return new JSONResponse([
+                'success' => true,
+                'groups' => $groups
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get generic user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get generic user groups: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Set generic user groups
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function setGenericUserGroups(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $groups = $data['groups'] ?? [];
+            
+            // Delegate all business logic (including validation) to service
+            $result = $this->settingsService->updateGenericUserGroups($groups);
+            
+            return new JSONResponse([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'groups' => $result['groups'] ?? null
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to set generic user groups', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to set generic user groups: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get organization admin groups
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Organization admin groups
+     */
+    public function getOrganizationAdminGroups(): JSONResponse
+    {
+        try {
+            $groups = $this->settingsService->getOrganizationAdminGroups();
+            
+            return new JSONResponse([
+                'success' => true,
+                'groups' => $groups
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get organization admin groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get organization admin groups: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Set organization admin groups
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function setOrganizationAdminGroups(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $groups = $data['groups'] ?? [];
+            
+            // Delegate all business logic (including validation) to service
+            $result = $this->settingsService->updateOrganizationAdminGroups($groups);
+            
+            return new JSONResponse([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'groups' => $result['groups'] ?? null
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to set organization admin groups', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to set organization admin groups: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get super user groups
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Super user groups
+     */
+    public function getSuperUserGroups(): JSONResponse
+    {
+        try {
+            $groups = $this->settingsService->getSuperUserGroups();
+            
+            return new JSONResponse([
+                'success' => true,
+                'groups' => $groups
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get super user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get super user groups: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Set super user groups
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function setSuperUserGroups(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $groups = $data['groups'] ?? [];
+            
+            // Delegate all business logic (including validation) to service
+            $result = $this->settingsService->updateSuperUserGroups($groups);
+            
+            return new JSONResponse([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'groups' => $result['groups'] ?? null
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to set super user groups', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to set super user groups: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all user groups
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse All user groups
+     */
+    public function getAllGroups(): JSONResponse
+    {
+        try {
+            $allGroups = $this->settingsService->getAllGroups();
+            
+            return new JSONResponse([
+                'success' => true,
+                'groups' => $allGroups
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get all groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get all groups: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================================================
+    // ARCHIMATE STATUS MANAGEMENT METHODS
+    // ========================================================================
+
+    /**
+     * Clear ArchiMate import status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Clear result
+     */
+    public function clearArchiMateImportStatus(): JSONResponse
+    {
+        try {
+            $this->settingsService->clearArchiMateImportStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'ArchiMate import status cleared successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to clear ArchiMate import status', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to clear ArchiMate import status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear ArchiMate export status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Clear result
+     */
+    public function clearArchiMateExportStatus(): JSONResponse
+    {
+        try {
+            $this->settingsService->clearArchiMateExportStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'ArchiMate export status cleared successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to clear ArchiMate export status', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to clear ArchiMate export status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================================================
+    // ARCHIMATE TESTING METHODS
+    // ========================================================================
+
+
+
+    /**
+     * Test ArchiMate round-trip functionality
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Round-trip test result
+     */
+    public function testArchiMateRoundTrip(): JSONResponse
+    {
+        try {
+            $this->logger->info('SoftwareCatalog: ArchiMate round-trip test started');
+            
+            // Call the ArchiMate service to perform round-trip test
+            $result = $this->archiMateService->testRoundTrip();
+            
+            $this->logger->info('SoftwareCatalog: ArchiMate round-trip test completed', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'no message'
+            ]);
+            
+            return new JSONResponse([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'details' => $result['details'] ?? null,
+                'statistics' => $result['statistics'] ?? null
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SoftwareCatalog: ArchiMate round-trip test failed', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Round-trip test failed: ' . $e->getMessage()
             ], 500);
         }
     }

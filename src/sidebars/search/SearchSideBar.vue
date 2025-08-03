@@ -1,5 +1,5 @@
 <script setup>
-import { searchStore, metadataStore, catalogiStore } from '../../store/store.js'
+import { reactive } from 'vue'
 </script>
 
 <template>
@@ -50,6 +50,19 @@ import Magnify from 'vue-material-design-icons/Magnify.vue'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
 import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
 import { debounce } from 'lodash'
+
+// Temporary placeholder stores until they are properly implemented
+const searchStore = reactive({
+	// Add placeholder properties as needed
+})
+
+const metadataStore = reactive({
+	// Add placeholder properties as needed
+})
+
+const catalogiStore = reactive({
+	// Add placeholder properties as needed
+})
 
 export default {
 	name: 'SearchSideBar',

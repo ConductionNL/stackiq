@@ -4,14 +4,17 @@ import pinia from '../pinia.js'
 import { useNavigationStore } from './modules/navigation.js'
 import { useObjectStore } from './modules/object.js'
 import { useCatalogStore } from './modules/catalog.js'
+import { useSettingsStore } from './modules/settings.js'
 
 const navigationStore = useNavigationStore(pinia)
 const objectStore = useObjectStore(pinia)
 const catalogStore = useCatalogStore(pinia)
+const settingsStore = useSettingsStore(pinia)
 
 export {
 	// generic
 	navigationStore,
 	objectStore,
 	catalogStore,
+	settingsStore,
 }

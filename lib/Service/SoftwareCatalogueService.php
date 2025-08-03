@@ -449,7 +449,14 @@ class SoftwareCatalogueService
                 $objectService = $this->_getObjectService();
                 
                 if ($objectService) {
-                    $contactSchemaId = $this->_container->get('OCP\\IAppConfig')->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+                    $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                    $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+                    $contactSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
+                    
+                    if (!$contactSchemaId) {
+                        $this->_logger->warning('SoftwareCatalogueService: Missing contactpersoon schema configuration');
+                        return;
+                    }
                     $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
                     $organisation = $organisationMapper->findByUuid($organizationUuid);
                     
@@ -666,10 +673,21 @@ class SoftwareCatalogueService
             
             // Get settings service to get schema IDs
             $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-            $registerId = $settingsService->getVoorzieningenRegisterId() ?? '6';
+            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+            $registerId = $voorzieningenConfig['register'] ?? null;
             
             // Find contactpersonen related to this organization
-            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon') ?? '34';
+            $contactpersoonSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
+            
+            // Skip if no proper configuration is available
+            if (!$registerId || !$contactpersoonSchemaId) {
+                $this->_logger->warning('SoftwareCatalogueService: Missing Voorzieningen configuration for contactpersonen', [
+                    'organizationId' => $organizationId,
+                    'registerId' => $registerId,
+                    'contactpersoonSchemaId' => $contactpersoonSchemaId
+                ]);
+                return $organizationData;
+            }
             
             $this->_logger->info('Schema IDs for contactpersonen search', [
                 'organizationId' => $organizationId,
@@ -1628,7 +1646,14 @@ class SoftwareCatalogueService
         // This is useful for updates or when contact persons were created separately
         $objectService = $this->_getObjectService();
         if ($objectService) {
-            $contactSchemaId = $this->_container->get('OCP\\IAppConfig')->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+            $contactSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
+            
+            if (!$contactSchemaId) {
+                $this->_logger->warning('SoftwareCatalogueService: Missing contactpersoon schema configuration for username extraction');
+                return $usernames;
+            }
             
             try {
                 // Try multiple approaches to find contact persons
@@ -2711,13 +2736,25 @@ class SoftwareCatalogueService
         }
         
         // Get the contact person schema ID from configuration
-        $contactSchemaId = $this->_container->get('OCP\\IAppConfig')->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+        $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+        $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+        $contactSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
+        $registerId = $voorzieningenConfig['register'] ?? null;
+        
+        if (!$contactSchemaId || !$registerId) {
+            $this->_logger->warning('SoftwareCatalogueService: Missing Voorzieningen configuration for contact person sync', [
+                'organizationUuid' => $organizationUuid,
+                'contactSchemaId' => $contactSchemaId,
+                'registerId' => $registerId
+            ]);
+            return;
+        }
         
         try {
             // Find all contact persons that have this organization as their organisatie
             $contactPersons = $objectService->findAll([
                 'filters' => [
-                    'register' => '6',
+                    'register' => (string) $registerId,
                     'schema' => $contactSchemaId,
                     'organisatie' => $organizationUuid
                 ]
@@ -2950,7 +2987,16 @@ class SoftwareCatalogueService
                 ]);
 
                 // Get the contact person schema ID from configuration
-                $contactSchemaId = $this->_container->get('OCP\\IAppConfig')->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
+                $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+                $contactSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
+                
+                if (!$contactSchemaId) {
+                    $this->_logger->warning('SoftwareCatalogueService: Missing contactpersoon schema configuration for object update', [
+                        'contactUuid' => $contactUuid
+                    ]);
+                    continue;
+                }
 
                 // Find the contact person object
                 try {

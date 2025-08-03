@@ -1,5 +1,6 @@
 <script setup>
-import { navigationStore, directoryStore, metadataStore } from '../../store/store.js'
+import { navigationStore } from '../../store/store.js'
+import { reactive } from 'vue'
 </script>
 
 <template>
@@ -119,6 +120,28 @@ import DatabaseSyncOutline from 'vue-material-design-icons/DatabaseSyncOutline.v
 import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
 import InformationSlabSymbol from 'vue-material-design-icons/InformationSlabSymbol.vue'
+
+// Temporary placeholder stores until they are properly implemented
+const directoryStore = reactive({
+	listingItem: {
+		id: null,
+		title: '',
+		organisation: { title: '' },
+		summery: '',
+		status: '',
+		lastSync: '',
+		directory: '',
+		search: '',
+		description: '',
+		available: false,
+		default: false,
+		metadata: [],
+	},
+})
+
+const metadataStore = reactive({
+	// Add placeholder properties as needed
+})
 
 export default {
 	name: 'DirectorySideBar',

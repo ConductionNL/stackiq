@@ -215,8 +215,8 @@ class SettingsService
             $defaults["{$type}_register"] = '';
         }
         
-        // Add sync service compatibility keys
-        $defaults['voorzieningen_register'] = '';
+        // Note: Old individual config keys are no longer used
+        // They are maintained only for backward compatibility during migration
 
         // Get the current values from the configuration
         try {
@@ -271,53 +271,18 @@ class SettingsService
      *
      * @throws \RuntimeException If auto-configuration fails
      */
-    public function autoConfigure(): array
+    /**
+     * Auto-configure settings based on available registers and schemas
+     * This method now uses the consolidated auto-configuration logic
+     *
+     * @param bool $force Whether to force reload regardless of version
+     * @return array The auto-configuration results
+     *
+     * @throws \RuntimeException If auto-configuration fails
+     */
+    public function autoConfigure(bool $force = false): array
     {
-        try {
-            $objectService = $this->getObjectService();
-            $registers = $objectService->getRegisters();
-
-            if (empty($registers)) {
-                return [];
-            }
-
-            $configuration = [];
-            foreach ($this->getSettings()['objectTypes'] as $type) {
-                // Try to find a register with a matching name
-                $matchingRegister = null;
-                foreach ($registers as $register) {
-                    if (stripos($register['title'], $type) !== false) {
-                        $matchingRegister = $register;
-                        break;
-                    }
-                }
-
-                if ($matchingRegister !== null) {
-                    $configuration["{$type}_register"] = (string) $matchingRegister['id'];
-
-                    // Try to find a matching schema
-                    if (!empty($matchingRegister['schemas'])) {
-                        foreach ($matchingRegister['schemas'] as $schema) {
-                            if (stripos($schema['title'], $type) !== false) {
-                                $configuration["{$type}_schema"] = (string) $schema['id'];
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            $this->logger->info(
-                'Auto-configuration completed',
-                [
-                    'configuration' => $configuration
-                ]
-            );
-
-            return $configuration;
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to auto-configure: ' . $e->getMessage());
-        }
+        return $this->performConsolidatedAutoConfiguration($force);
     }
 
     /**
@@ -1123,6 +1088,128 @@ class SettingsService
     }
 
     /**
+     * Creates and configures required user groups for the software catalog
+     *
+     * This is the public method that creates user groups and returns status information.
+     *
+     * @return array Results of user group creation and configuration
+     */
+    public function createAndConfigureUserGroups(): array
+    {
+        try {
+            $this->logger->info('SettingsService: Starting user group creation and configuration');
+            
+            $result = [
+                'success' => true,
+                'message' => 'User groups configured successfully',
+                'created' => [],
+                'existing' => [],
+                'total' => 0
+            ];
+            
+            // Get the group manager
+            $groupManager = \OC::$server->getGroupManager();
+            
+            // Define the required groups (matching role-based system)
+            $requiredGroups = [
+                // Role-based user groups (exact match with ContactPersoon roles)
+                'aanbod-beheerder' => 'Manages software offerings and catalog content',
+                'gebruik-beheerder' => 'Manages software usage and procurement',
+                'gebruik-raadpleger' => 'Views software usage and procurement data',
+                'functioneel-beheerder' => 'Manages functional aspects of the system',
+                'vng-raadpleger' => 'Views VNG-related information',
+                'organisatie-beheerder' => 'Manages organization data and settings',
+                
+                // Plural form for organization contacts
+                'organisaties-beheerder' => 'Organization administrators (plural)',
+                
+                // Special groups
+                'ambtenaar' => 'Civil servants from Gemeente organizations',
+                'software-catalog-users' => 'General software catalog users',
+                
+                // Super user groups
+                'software-catalog-admins' => 'Software catalog system administrators'
+            ];
+            
+            foreach ($requiredGroups as $groupId => $description) {
+                $this->logger->debug("SettingsService: Processing group: {$groupId}");
+                
+                // Check if group already exists
+                if ($groupManager->groupExists($groupId)) {
+                    $result['existing'][] = $groupId;
+                    $this->logger->debug("SettingsService: Group {$groupId} already exists");
+                    continue;
+                }
+                
+                // Create the group
+                $group = $groupManager->createGroup($groupId);
+                if ($group !== false) {
+                    $result['created'][] = $groupId;
+                    $this->logger->info("SettingsService: Created user group: {$groupId}");
+                } else {
+                    $this->logger->warning("SettingsService: Failed to create user group: {$groupId}");
+                    $result['success'] = false;
+                }
+            }
+            
+            $result['total'] = count($requiredGroups);
+            
+            // Update the configuration with the correct role-based groups
+            $this->setGenericUserGroups([
+                'aanbod-beheerder',
+                'gebruik-beheerder', 
+                'gebruik-raadpleger',
+                'functioneel-beheerder',
+                'vng-raadpleger',
+                'organisatie-beheerder',
+                'ambtenaar',
+                'software-catalog-users'
+            ]);
+            
+            $this->setOrganizationAdminGroups([
+                'organisaties-beheerder',
+                'organisatie-beheerder'
+            ]);
+            
+            $this->setSuperUserGroups([
+                'admin', // Keep existing admin group
+                'software-catalog-admins'
+            ]);
+            
+            $createdCount = count($result['created']);
+            $existingCount = count($result['existing']);
+            
+            if ($createdCount > 0) {
+                $result['message'] = "Created {$createdCount} new groups, {$existingCount} already existed";
+            } else {
+                $result['message'] = "All {$existingCount} required groups already exist";
+            }
+            
+            $this->logger->info('SettingsService: User group creation and configuration completed', [
+                'created_groups' => $result['created'],
+                'existing_groups' => $result['existing'],
+                'total_required' => $result['total'],
+                'success' => $result['success']
+            ]);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to create and configure user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to create user groups: ' . $e->getMessage(),
+                'created' => [],
+                'existing' => [],
+                'total' => 0,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Creates required user groups for the software catalog
      *
      * This method creates the default user groups needed for proper operation:
@@ -1454,7 +1541,7 @@ class SettingsService
      *
      * @return string Default template content
      */
-    private function getDefaultEmailTemplate(string $templateName): string
+    public function getDefaultEmailTemplate(string $templateName): string
     {
         $templates = [
             'organization_registration' => '
@@ -1574,9 +1661,6 @@ class SettingsService
                 'amef_organization_source',
                 'amef_organization_register', 
                 'amef_organization_schema',
-                'voorzieningen_gebruiker_source',
-                'voorzieningen_gebruiker_register',
-                'voorzieningen_gebruiker_schema',
                 'voorzieningen_organisatie_source',
                 'voorzieningen_organisatie_register',
                 'voorzieningen_organisatie_schema',
@@ -1647,6 +1731,15 @@ class SettingsService
      */
     public function sendTestEmail(string $email, array $emailSettings = []): array
     {
+        // Validate email address first (business logic moved from controller)
+        if (empty($email)) {
+            $this->logger->warning('SoftwareCatalog: Test email request missing email address');
+            return [
+                'success' => false,
+                'message' => 'Email address is required'
+            ];
+        }
+        
         $this->logger->info('SoftwareCatalog: Starting sendTestEmail process', [
             'recipient' => $email,
             'has_email_settings' => !empty($emailSettings)
@@ -1753,6 +1846,179 @@ class SettingsService
                 'success' => false,
                 'message' => 'Failed to send test email: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Test email connection without sending an actual email
+     *
+     * @param array $emailSettings The email settings to test
+     * 
+     * @return array Result of the connection test
+     */
+    public function testEmailConnection(array $emailSettings = []): array
+    {
+        $this->logger->info('SoftwareCatalog: Starting email connection test', [
+            'has_email_settings' => !empty($emailSettings)
+        ]);
+        
+        try {
+            // Ensure vendor autoloader is loaded
+            include_once __DIR__ . '/../../vendor/autoload.php';
+            $this->logger->debug('SoftwareCatalog: Vendor autoloader loaded');
+            
+            // Use provided settings or fall back to stored settings
+            if (empty($emailSettings)) {
+                $emailSettings = $this->getEmailSettings();
+                $this->logger->info('SoftwareCatalog: Loaded email settings from storage');
+            } else {
+                $this->logger->info('SoftwareCatalog: Using provided email settings');
+            }
+            
+            // Log the email configuration (without sensitive data)
+            $this->logger->info('SoftwareCatalog: Email configuration for connection test', [
+                'enabled' => $emailSettings['enabled'] ?? false,
+                'transport_type' => $emailSettings['transportType'] ?? 'unknown',
+                'sender_email' => $emailSettings['senderEmail'] ?? 'not set',
+                'sender_name' => $emailSettings['senderName'] ?? 'not set',
+                'has_credentials' => $this->hasValidCredentials($emailSettings)
+            ]);
+            
+            // Check if email is enabled
+            if (!($emailSettings['enabled'] ?? false)) {
+                $this->logger->warning('SoftwareCatalog: Email notifications are disabled');
+                return [
+                    'success' => false,
+                    'message' => 'Email notifications are disabled'
+                ];
+            }
+            
+            // Validate basic settings
+            $transportType = $emailSettings['transportType'] ?? 'smtp';
+            $senderEmail = $emailSettings['senderEmail'] ?? '';
+            
+            if (empty($senderEmail)) {
+                return [
+                    'success' => false,
+                    'message' => 'Sender email address is required'
+                ];
+            }
+            
+            // Create transport based on configuration (this tests the connection)
+            $this->logger->info('SoftwareCatalog: Creating email transport for connection test');
+            $transport = $this->createEmailTransport($emailSettings);
+            $this->logger->info('SoftwareCatalog: Email transport created successfully');
+            
+            // Test the connection by creating a mailer instance
+            $mailer = new Mailer($transport);
+            $this->logger->info('SoftwareCatalog: Mailer instance created for connection test');
+            
+            // For some transports, we can test the connection more directly
+            $connectionDetails = $this->getConnectionDetails($emailSettings);
+            
+            $this->logger->info('SoftwareCatalog: Email connection test completed successfully', [
+                'transport' => $transportType,
+                'sender' => $senderEmail
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => "Email connection test successful for {$transportType}",
+                'details' => $connectionDetails
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SoftwareCatalog: Email connection test failed', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Email connection test failed: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Check if email settings have valid credentials for the transport type
+     *
+     * @param array $emailSettings Email settings
+     * @return bool True if credentials are present
+     */
+    private function hasValidCredentials(array $emailSettings): bool
+    {
+        $transportType = $emailSettings['transportType'] ?? 'smtp';
+        
+        switch ($transportType) {
+            case 'smtp':
+                return !empty($emailSettings['smtpHost']) && !empty($emailSettings['smtpPort']);
+            case 'mailjet':
+                return !empty($emailSettings['mailjetApiKey']) && !empty($emailSettings['mailjetSecretKey']);
+            case 'sendgrid':
+                return !empty($emailSettings['sendgridApiKey']);
+            case 'mailgun':
+                return !empty($emailSettings['mailgunApiKey']) && !empty($emailSettings['mailgunDomain']);
+            case 'postmark':
+                return !empty($emailSettings['postmarkApiKey']);
+            case 'ses':
+                return !empty($emailSettings['sesAccessKey']) && !empty($emailSettings['sesSecretKey']);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Get connection details for the email transport
+     *
+     * @param array $emailSettings Email settings
+     * @return array Connection details
+     */
+    private function getConnectionDetails(array $emailSettings): array
+    {
+        $transportType = $emailSettings['transportType'] ?? 'smtp';
+        
+        switch ($transportType) {
+            case 'smtp':
+                return [
+                    'type' => 'SMTP',
+                    'host' => $emailSettings['smtpHost'] ?? '',
+                    'port' => $emailSettings['smtpPort'] ?? '',
+                    'encryption' => $emailSettings['smtpEncryption'] ?? 'none',
+                    'username' => !empty($emailSettings['smtpUsername']) ? '***' : 'none'
+                ];
+            case 'mailjet':
+                return [
+                    'type' => 'Mailjet API',
+                    'has_api_key' => !empty($emailSettings['mailjetApiKey']),
+                    'has_secret_key' => !empty($emailSettings['mailjetSecretKey'])
+                ];
+            case 'sendgrid':
+                return [
+                    'type' => 'SendGrid API',
+                    'has_api_key' => !empty($emailSettings['sendgridApiKey'])
+                ];
+            case 'mailgun':
+                return [
+                    'type' => 'Mailgun API',
+                    'has_api_key' => !empty($emailSettings['mailgunApiKey']),
+                    'domain' => $emailSettings['mailgunDomain'] ?? ''
+                ];
+            case 'postmark':
+                return [
+                    'type' => 'Postmark API',
+                    'has_api_key' => !empty($emailSettings['postmarkApiKey'])
+                ];
+            case 'ses':
+                return [
+                    'type' => 'Amazon SES',
+                    'has_access_key' => !empty($emailSettings['sesAccessKey']),
+                    'has_secret_key' => !empty($emailSettings['sesSecretKey']),
+                    'region' => $emailSettings['sesRegion'] ?? 'us-east-1'
+                ];
+            default:
+                return ['type' => $transportType];
         }
     }
     
@@ -1985,6 +2251,10 @@ class SettingsService
             $needsUpdate = $storedConfigVersion === null || 
                           version_compare($currentAppVersion, $storedConfigVersion, '>');
             
+            // Check OpenRegister status
+            $openRegisterInstalled = $this->isOpenRegisterInstalled();
+            $openRegisterEnabled = $openRegisterInstalled && $this->isOpenRegisterEnabled();
+            
             $versionInfo = [
                 'appName' => 'SoftwareCatalog',
                 'appVersion' => $currentAppVersion,
@@ -1993,7 +2263,9 @@ class SettingsService
                 'needsUpdate' => $needsUpdate,
                 'versionComparison' => $storedConfigVersion !== null ? version_compare($currentAppVersion, $storedConfigVersion) : null,
                 'isFullyConfigured' => $this->isFullyConfigured(),
-                'autoConfigCompleted' => $this->config->getValueString($this->_appName, 'auto_config_completed', 'false') === 'true'
+                'autoConfigCompleted' => $this->config->getValueString($this->_appName, 'auto_config_completed', 'false') === 'true',
+                'openRegisterInstalled' => $openRegisterInstalled,
+                'openRegisterEnabled' => $openRegisterEnabled
             ];
             
             $this->logger->info('SettingsService: Version information compiled', $versionInfo);
@@ -2241,5 +2513,851 @@ class SettingsService
         }
     }
 
+    /**
+     * Perform consolidated auto-configuration with clean separation of concerns
+     *
+     * This method orchestrates the complete auto-configuration process:
+     * 1. Configuration file loading
+     * 2. Voorzieningen register configuration  
+     * 3. AMEF register configuration
+     * 4. User groups configuration
+     *
+     * @param bool $force Whether to force configuration loading
+     * @return array Consolidated configuration results
+     */
+    public function performConsolidatedAutoConfiguration(bool $force = false): array
+    {
+        $this->logger->info('SettingsService: Starting consolidated auto-configuration', [
+            'force' => $force
+        ]);
+        
+        $results = [
+            'success' => true,
+            'message' => 'Auto-configuration completed successfully',
+            'steps' => [],
+            'errors' => [],
+            'timestamp' => time(),
+            'force' => $force
+        ];
+        
+        // Step 1: Load configuration files
+        $this->logger->info('SettingsService: Step 1 - Loading configuration');
+        $configResult = $this->loadConfiguration($force);
+        $results['steps']['configurationLoad'] = $configResult;
+        $this->addStepResult($results, $configResult, 'Configuration loading');
+        
+        // Step 2: Configure Voorzieningen (Dutch register system)
+        $this->logger->info('SettingsService: Step 2 - Configuring Voorzieningen');
+        $voorzieningenResult = $this->configureVoorzieningen();
+        $results['steps']['voorzieningenConfiguration'] = $voorzieningenResult;
+        $this->addStepResult($results, $voorzieningenResult, 'Voorzieningen configuration');
+        
+        // Step 3: Configure AMEF (ArchiMate/English register system)
+        $this->logger->info('SettingsService: Step 3 - Configuring AMEF');
+        $amefResult = $this->configureAmef();
+        $results['steps']['amefConfiguration'] = $amefResult;
+        $this->addStepResult($results, $amefResult, 'AMEF configuration');
+        
+        // Step 4: Configure User Groups
+        $this->logger->info('SettingsService: Step 4 - Configuring User Groups');
+        $groupsResult = $this->configureGroups();
+        $results['steps']['groupsConfiguration'] = $groupsResult;
+        $this->addStepResult($results, $groupsResult, 'User groups configuration');
+        
+        // Determine overall success
+        $results['success'] = empty($results['errors']);
+        if (!$results['success']) {
+            $results['message'] = 'Auto-configuration completed with some issues';
+        }
+        
+        $this->logger->info('SettingsService: Consolidated auto-configuration completed', [
+            'success' => $results['success'],
+            'errors_count' => count($results['errors'])
+        ]);
+        
+        return $results;
+    }
+
+    /**
+     * Load configuration files
+     *
+     * @param bool $force Whether to force reload regardless of version
+     * @return array Configuration loading result
+     */
+    private function loadConfiguration(bool $force): array
+    {
+        try {
+            $importResult = $this->manualImport($force);
+            
+            return [
+                'success' => $importResult['success'],
+                'message' => $importResult['message'] ?? 'Configuration loaded',
+                'details' => $importResult
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Configuration loading failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Configure Voorzieningen register and schemas
+     *
+     * @return array Voorzieningen configuration result
+     */
+    private function configureVoorzieningen(): array
+    {
+        try {
+            // The voorzieningen configuration is already handled by autoConfigureAfterImport
+            // in the manualImport() call, so we just verify it was successful
+            $voorzieningenRegister = $this->config->getValueString($this->_appName, 'voorzieningen_register', '');
+            $organisatieSchema = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+            $contactSchema = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', '');
+            
+            $configured = [];
+            if (!empty($voorzieningenRegister)) {
+                $configured['register'] = $voorzieningenRegister;
+            }
+            if (!empty($organisatieSchema)) {
+                $configured['organisatieSchema'] = $organisatieSchema;
+            }
+            if (!empty($contactSchema)) {
+                $configured['contactSchema'] = $contactSchema;
+            }
+            
+            $success = !empty($voorzieningenRegister) && !empty($organisatieSchema);
+            
+            return [
+                'success' => $success,
+                'message' => $success ? 'Voorzieningen configured successfully' : 'Voorzieningen configuration incomplete',
+                'configured' => $configured
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Voorzieningen configuration failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Configure AMEF register and schemas
+     *
+     * @return array AMEF configuration result
+     */
+    private function configureAmef(): array
+    {
+        try {
+            // Get available registers
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                return [
+                    'success' => false,
+                    'message' => 'OpenRegister service not available'
+                ];
+            }
+
+            $registers = $objectService->getRegisters();
+            if (empty($registers)) {
+                return [
+                    'success' => false,
+                    'message' => 'No registers available'
+                ];
+            }
+
+            // Find vng-gemma register (strict requirement for AMEF)
+            $vngGemmaRegister = null;
+            foreach ($registers as $register) {
+                $slug = strtolower($register['slug'] ?? '');
+                if ($slug === 'vng-gemma') {
+                    $vngGemmaRegister = $register;
+                    break;
+                }
+            }
+
+            if (!$vngGemmaRegister) {
+                return [
+                    'success' => false,
+                    'message' => 'VNG-GEMMA register not found - required for AMEF configuration'
+                ];
+            }
+
+            // Configure AMEF schemas (English only, strict)
+            $amefSchemaMappings = [
+                'organizationsSchema' => ['organization']  // Only English for AMEF
+            ];
+
+            $configured = [];
+            $errors = [];
+
+            foreach ($amefSchemaMappings as $settingKey => $schemaNames) {
+                $schemaFound = false;
+                
+                foreach ($vngGemmaRegister['schemas'] as $schema) {
+                    $schemaSlug = strtolower($schema['slug'] ?? '');
+                    
+                    if (in_array($schemaSlug, $schemaNames)) {
+                        // Save to the correct keys
+                        if ($settingKey === 'organizationsSchema') {
+                            $this->config->setValueString($this->_appName, 'amef_organization_source', 'openregister');
+                            $this->config->setValueString($this->_appName, 'amef_organization_register', (string)$vngGemmaRegister['id']);
+                            $this->config->setValueString($this->_appName, 'amef_organization_schema', (string)$schema['id']);
+                        }
+                        
+                        // Also save to the AMEF-specific endpoint keys
+                        $configKey = 'amef_' . strtolower(str_replace('Schema', '', $settingKey)) . '_schema';
+                        $this->config->setValueString($this->_appName, $configKey, (string)$schema['id']);
+                        
+                        $configured[$settingKey] = $schema['id'];
+                        $schemaFound = true;
+                        break;
+                    }
+                }
+                
+                if (!$schemaFound) {
+                    $errors[] = "No suitable schema found for {$settingKey} in VNG-GEMMA register";
+                }
+            }
+
+            // Set register ID for AMEF operations
+            $this->config->setValueString($this->_appName, 'amef_register_id', (string)$vngGemmaRegister['id']);
+            $configured['registerId'] = $vngGemmaRegister['id'];
+
+            return [
+                'success' => empty($errors),
+                'message' => empty($errors) ? 'AMEF configuration completed successfully' : 'AMEF configuration completed with errors',
+                'configured' => $configured,
+                'errors' => $errors
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'AMEF configuration failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Configure required user groups
+     *
+     * @return array User groups configuration result
+     */
+    private function configureGroups(): array
+    {
+        try {
+            // Call the method to create required user groups
+            $result = $this->createAndConfigureUserGroups();
+            
+            return [
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'created' => $result['created'] ?? [],
+                'existing' => $result['existing'] ?? [],
+                'total' => $result['total'] ?? 0
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'User groups configuration failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Add step result to overall results and handle errors
+     *
+     * @param array &$results The results array (passed by reference)
+     * @param array $stepResult The result of a configuration step
+     * @param string $stepName The name of the step for error reporting
+     * @return void
+     */
+    private function addStepResult(array &$results, array $stepResult, string $stepName): void
+    {
+        if (!$stepResult['success']) {
+            $results['errors'][] = $stepName . ' failed: ' . ($stepResult['message'] ?? 'Unknown error');
+            $this->logger->warning("SettingsService: {$stepName} failed", [
+                'error' => $stepResult['message'] ?? 'Unknown error'
+            ]);
+        } else {
+            $this->logger->info("SettingsService: {$stepName} successful");
+        }
+    }
+
+    /**
+     * Get consolidated configuration as JSON objects
+     *
+     * @return array The consolidated configuration
+     */
+    public function getConsolidatedConfiguration(): array
+    {
+        // Get email config and include templates
+        $emailConfig = $this->getEmailConfig();
+        $emailConfig['templates'] = [
+            'organization_registration' => $this->getEmailTemplate('organization_registration'),
+            'organization_activation' => $this->getEmailTemplate('organization_activation'),
+            'user_creation' => $this->getEmailTemplate('user_creation'),
+            'user_password' => $this->getEmailTemplate('user_password'),
+        ];
+        
+        return [
+            'voorzieningen' => $this->getVoorzieningenConfig(),
+            'amef' => $this->getAmefConfig(),
+            'email' => $emailConfig,
+            'archimate' => $this->getArchiMateStatus(),
+            'userGroups' => [
+                'generic' => $this->getGenericUserGroups(),
+                'organizationAdmin' => $this->getOrganizationAdminGroups(),
+                'superUser' => $this->getSuperUserGroups()
+            ]
+        ];
+    }
+
+    /**
+     * Get Voorzieningen configuration as JSON object
+     *
+     * @return array The voorzieningen configuration
+     */
+    public function getVoorzieningenConfig(): array
+    {
+        $config = $this->config->getValueString($this->_appName, 'voorzieningen_config', '{}');
+        $decoded = json_decode($config, true);
+        
+        if (!is_array($decoded)) {
+            // Fallback to individual config values for backward compatibility
+            $decoded = [
+                'register' => $this->config->getValueString($this->_appName, 'voorzieningen_register', ''),
+                'organisatie_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', ''),
+                'contactpersoon_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', ''),
+            ];
+        }
+        
+        return $decoded;
+    }
+
+    /**
+     * Set Voorzieningen configuration as JSON object
+     *
+     * @param array $config The voorzieningen configuration
+     * @return void
+     */
+    public function setVoorzieningenConfig(array $config): void
+    {
+        $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
+        $this->config->setValueString($this->_appName, 'voorzieningen_config', $jsonConfig);
+    }
+
+    /**
+     * Get AMEF configuration as JSON object
+     *
+     * @return array The AMEF configuration
+     */
+    public function getAmefConfig(): array
+    {
+        $config = $this->config->getValueString($this->_appName, 'amef_config', '{}');
+        $decoded = json_decode($config, true);
+        
+        if (!is_array($decoded)) {
+            // Fallback to individual config values for backward compatibility
+            $decoded = [
+                'register_id' => $this->config->getValueString($this->_appName, 'amef_register_id', ''),
+                'organizations_schema' => $this->config->getValueString($this->_appName, 'amef_organizations_schema', ''),
+                'elements_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
+                'relationships_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
+                'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', '')
+            ];
+        }
+        
+        return $decoded;
+    }
+
+    /**
+     * Set AMEF configuration as JSON object
+     *
+     * @param array $config The AMEF configuration
+     * @return void
+     */
+    public function setAmefConfig(array $config): void
+    {
+        $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
+        $this->config->setValueString($this->_appName, 'amef_config', $jsonConfig);
+    }
+
+    /**
+     * Get Email configuration as JSON object
+     *
+     * @return array The email configuration
+     */
+    public function getEmailConfig(): array
+    {
+        $config = $this->config->getValueString($this->_appName, 'email_config', '{}');
+        $decoded = json_decode($config, true);
+        
+        if (!is_array($decoded)) {
+            // Fallback to individual config values for backward compatibility
+            $decoded = [
+                'enabled' => $this->config->getValueString($this->_appName, 'email_enabled', 'false') === 'true',
+                'transport_type' => $this->config->getValueString($this->_appName, 'email_transport_type', 'smtp'),
+                'smtp_host' => $this->config->getValueString($this->_appName, 'email_smtp_host', ''),
+                'smtp_port' => $this->config->getValueString($this->_appName, 'email_smtp_port', '587'),
+                'smtp_username' => $this->config->getValueString($this->_appName, 'email_smtp_username', ''),
+                'smtp_password' => $this->config->getValueString($this->_appName, 'email_smtp_password', ''),
+                'smtp_encryption' => $this->config->getValueString($this->_appName, 'email_smtp_encryption', 'tls'),
+                'sender_email' => $this->config->getValueString($this->_appName, 'sender_email', ''),
+                'sender_name' => $this->config->getValueString($this->_appName, 'sender_name', ''),
+                'mailjet_api_key' => $this->config->getValueString($this->_appName, 'email_mailjet_api_key', ''),
+                'mailjet_secret_key' => $this->config->getValueString($this->_appName, 'email_mailjet_secret_key', '')
+            ];
+        }
+        
+        return $decoded;
+    }
+
+    /**
+     * Set Email configuration as JSON object
+     *
+     * @param array $config The email configuration
+     * @return void
+     */
+    public function setEmailConfig(array $config): void
+    {
+        $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
+        $this->config->setValueString($this->_appName, 'email_config', $jsonConfig);
+    }
+
+    /**
+     * Get ArchiMate import/export status
+     *
+     * @return array The ArchiMate status
+     */
+    public function getArchiMateStatus(): array
+    {
+        $importStatus = $this->config->getValueString($this->_appName, 'archimate_import_status', '{}');
+        $exportStatus = $this->config->getValueString($this->_appName, 'archimate_export_status', '{}');
+        
+        $importDecoded = json_decode($importStatus, true);
+        $exportDecoded = json_decode($exportStatus, true);
+        
+        return [
+            'import' => is_array($importDecoded) ? $importDecoded : [],
+            'export' => is_array($exportDecoded) ? $exportDecoded : []
+        ];
+    }
+
+    /**
+     * Set ArchiMate import status
+     *
+     * @param array $status The import status
+     * @return void
+     */
+    public function setArchiMateImportStatus(array $status): void
+    {
+        $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
+        $this->config->setValueString($this->_appName, 'archimate_import_status', $jsonStatus);
+    }
+
+    /**
+     * Set ArchiMate export status
+     *
+     * @param array $status The export status
+     * @return void
+     */
+    public function setArchiMateExportStatus(array $status): void
+    {
+        $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
+        $this->config->setValueString($this->_appName, 'archimate_export_status', $jsonStatus);
+    }
+
+    /**
+     * Clear ArchiMate import status
+     *
+     * @return void
+     */
+    public function clearArchiMateImportStatus(): void
+    {
+        $this->config->deleteKey($this->_appName, 'archimate_import_status');
+    }
+
+    /**
+     * Clear ArchiMate export status
+     *
+     * @return void
+     */
+    public function clearArchiMateExportStatus(): void
+    {
+        $this->config->deleteKey($this->_appName, 'archimate_export_status');
+    }
+
+    /**
+     * Compact existing individual configuration values to JSON format
+     * This method reorganizes all the scattered config values into organized JSON objects
+     *
+     * @return array Compaction results
+     */
+    public function compactToJsonConfiguration(): array
+    {
+        $results = [
+            'success' => true,
+            'migrated' => [],
+            'errors' => []
+        ];
+
+        try {
+            // 1. Migrate Voorzieningen configuration
+            $voorzieningenConfig = [
+                'register' => $this->config->getValueString($this->_appName, 'voorzieningen_register', ''),
+                'organisatie_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', ''),
+                'contactpersoon_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', ''),
+                'organisatie_source' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_source', 'openregister'),
+                'contactpersoon_source' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_source', 'openregister'),
+                'organisatie_register' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_register', ''),
+                'contactpersoon_register' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_register', ''),
+            ];
+
+            $this->setVoorzieningenConfig($voorzieningenConfig);
+            $results['migrated']['voorzieningen'] = $voorzieningenConfig;
+
+            // 2. Migrate AMEF configuration
+            $amefConfig = [
+                'register_id' => $this->config->getValueString($this->_appName, 'amef_register_id', ''),
+                'organizations_schema' => $this->config->getValueString($this->_appName, 'amef_organizations_schema', ''),
+                'elements_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
+                'relationships_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
+                'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', ''),
+                'organization_source' => $this->config->getValueString($this->_appName, 'amef_organization_source', 'openregister'),
+                'organization_register' => $this->config->getValueString($this->_appName, 'amef_organization_register', ''),
+                'organization_schema' => $this->config->getValueString($this->_appName, 'amef_organization_schema', ''),
+                'elementss_schema' => $this->config->getValueString($this->_appName, 'amef_elementss_schema', ''),
+                'organizationss_schema' => $this->config->getValueString($this->_appName, 'amef_organizationss_schema', ''),
+                'relationshipss_schema' => $this->config->getValueString($this->_appName, 'amef_relationshipss_schema', ''),
+                'archimate_element_schema_id' => $this->config->getValueString($this->_appName, 'archimate_element_schema_id', ''),
+                'archimate_relationship_schema_id' => $this->config->getValueString($this->_appName, 'archimate_relationship_schema_id', ''),
+                'archimate_view_schema_id' => $this->config->getValueString($this->_appName, 'archimate_view_schema_id', '')
+            ];
+
+            $this->setAmefConfig($amefConfig);
+            $results['migrated']['amef'] = $amefConfig;
+
+            // 3. Migrate Email configuration
+            $emailConfig = [
+                'enabled' => $this->config->getValueString($this->_appName, 'email_enabled', 'false') === 'true',
+                'transport_type' => $this->config->getValueString($this->_appName, 'email_transport_type', 'smtp'),
+                'smtp_host' => $this->config->getValueString($this->_appName, 'email_smtp_host', ''),
+                'smtp_port' => $this->config->getValueString($this->_appName, 'email_smtp_port', '587'),
+                'smtp_username' => $this->config->getValueString($this->_appName, 'email_smtp_username', ''),
+                'smtp_password' => $this->config->getValueString($this->_appName, 'email_smtp_password', ''),
+                'smtp_encryption' => $this->config->getValueString($this->_appName, 'email_smtp_encryption', 'tls'),
+                'sender_email' => $this->config->getValueString($this->_appName, 'sender_email', ''),
+                'sender_name' => $this->config->getValueString($this->_appName, 'sender_name', ''),
+                'mailjet_api_key' => $this->config->getValueString($this->_appName, 'email_mailjet_api_key', ''),
+                'mailjet_secret_key' => $this->config->getValueString($this->_appName, 'email_mailjet_secret_key', ''),
+                'sendgrid_api_key' => $this->config->getValueString($this->_appName, 'email_sendgrid_api_key', ''),
+                'mailgun_api_key' => $this->config->getValueString($this->_appName, 'email_mailgun_api_key', ''),
+                'mailgun_domain' => $this->config->getValueString($this->_appName, 'email_mailgun_domain', ''),
+                'postmark_api_key' => $this->config->getValueString($this->_appName, 'email_postmark_api_key', ''),
+                'ses_access_key' => $this->config->getValueString($this->_appName, 'email_ses_access_key', ''),
+                'ses_secret_key' => $this->config->getValueString($this->_appName, 'email_ses_secret_key', ''),
+                'ses_region' => $this->config->getValueString($this->_appName, 'email_ses_region', 'us-east-1'),
+                'org_registration_enabled' => $this->config->getValueString($this->_appName, 'email_org_registration_enabled', 'true') === 'true',
+                'org_activation_enabled' => $this->config->getValueString($this->_appName, 'email_org_activation_enabled', 'true') === 'true',
+                'user_creation_enabled' => $this->config->getValueString($this->_appName, 'email_user_creation_enabled', 'true') === 'true',
+                'user_password_enabled' => $this->config->getValueString($this->_appName, 'email_user_password_enabled', 'true') === 'true',
+                'test_receiver_override' => $this->config->getValueString($this->_appName, 'test_receiver_override', '')
+            ];
+
+            $this->setEmailConfig($emailConfig);
+            $results['migrated']['email'] = $emailConfig;
+
+            $this->logger->info('Configuration compaction to JSON format completed successfully', [
+                'compacted_sections' => array_keys($results['migrated'])
+            ]);
+
+        } catch (\Exception $e) {
+            $results['success'] = false;
+            $results['errors'][] = 'Compaction failed: ' . $e->getMessage();
+            $this->logger->error('Configuration compaction to JSON format failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Clean up old individual configuration values after compaction
+     * This method removes the old scattered config values after successful compaction
+     *
+     * @return array Cleanup results
+     */
+    public function cleanupOldConfiguration(): array
+    {
+        $results = [
+            'success' => true,
+            'cleaned' => [],
+            'errors' => []
+        ];
+
+        try {
+            // List of old configuration keys to remove
+            $oldKeys = [
+                // Voorzieningen keys
+                'voorzieningen_register',
+                'voorzieningen_organisatie_schema',
+                'voorzieningen_contactpersoon_schema',
+                'voorzieningen_gebruiker_schema', // Deprecated - no longer used
+                'voorzieningen_contactgegevens_schema', // Deprecated - no longer used
+                'voorzieningen_organisatie_source',
+                'voorzieningen_contactpersoon_source',
+                'voorzieningen_gebruiker_source', // Deprecated - no longer used
+                'voorzieningen_contactgegevens_source', // Deprecated - no longer used
+                'voorzieningen_organisatie_register',
+                'voorzieningen_contactpersoon_register',
+                'voorzieningen_gebruiker_register', // Deprecated - no longer used
+                'voorzieningen_contactgegevens_register', // Deprecated - no longer used
+                
+                // AMEF keys
+                'amef_register_id',
+                'amef_organizations_schema',
+                'amef_elements_schema',
+                'amef_relationships_schema',
+                'amef_views_schema',
+                'amef_organization_source',
+                'amef_organization_register',
+                'amef_organization_schema',
+                'amef_elementss_schema',
+                'amef_organizationss_schema',
+                'amef_relationshipss_schema',
+                'archimate_element_schema_id',
+                'archimate_relationship_schema_id',
+                'archimate_view_schema_id',
+                
+                // Email keys
+                'email_enabled',
+                'email_transport_type',
+                'email_smtp_host',
+                'email_smtp_port',
+                'email_smtp_username',
+                'email_smtp_password',
+                'email_smtp_encryption',
+                'sender_email',
+                'sender_name',
+                'email_mailjet_api_key',
+                'email_mailjet_secret_key',
+                'email_sendgrid_api_key',
+                'email_mailgun_api_key',
+                'email_mailgun_domain',
+                'email_postmark_api_key',
+                'email_ses_access_key',
+                'email_ses_secret_key',
+                'email_ses_region',
+                'email_org_registration_enabled',
+                'email_org_activation_enabled',
+                'email_user_creation_enabled',
+                'email_user_password_enabled',
+                'test_receiver_override'
+            ];
+
+            foreach ($oldKeys as $key) {
+                try {
+                    $this->config->deleteKey($this->_appName, $key);
+                    $results['cleaned'][] = $key;
+                } catch (\Exception $e) {
+                    $results['errors'][] = "Failed to delete key '{$key}': " . $e->getMessage();
+                }
+            }
+
+            $this->logger->info('Old configuration cleanup completed', [
+                'cleaned_keys' => count($results['cleaned']),
+                'errors' => count($results['errors'])
+            ]);
+
+        } catch (\Exception $e) {
+            $results['success'] = false;
+            $results['errors'][] = 'Cleanup failed: ' . $e->getMessage();
+            $this->logger->error('Old configuration cleanup failed', [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $results;
+    }
+
+    // ========================================================================
+    // CONTROLLER BUSINESS LOGIC METHODS
+    // ========================================================================
+
+    /**
+     * Get all settings including user groups and email settings
+     * This aggregates all settings data for the main settings endpoint
+     *
+     * @return array Complete settings data
+     */
+    public function getAllSettings(): array
+    {
+        try {
+            $data = $this->getSettings();
+            
+            // Use the proper consolidated configuration structure that frontend expects
+            $data['consolidatedConfig'] = $this->getConsolidatedConfiguration();
+            
+            // Also add individual settings at root level for backward compatibility
+            $data['userGroups'] = $data['consolidatedConfig']['userGroups'];
+            $data['emailSettings'] = $data['consolidatedConfig']['email'];
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to get all settings', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get all email templates with error handling
+     * This handles template iteration and individual failures
+     *
+     * @return array All email templates
+     */
+    public function getAllEmailTemplates(): array
+    {
+        $templateTypes = ['organization_registration', 'organization_activation', 'user_creation', 'user_password'];
+        $templates = [];
+        
+        foreach ($templateTypes as $templateName) {
+            try {
+                $templates[$templateName] = $this->getEmailTemplate($templateName);
+            } catch (\Exception $e) {
+                $this->logger->warning("Failed to get template {$templateName}", ['error' => $e->getMessage()]);
+                $templates[$templateName] = null;
+            }
+        }
+        
+        return $templates;
+    }
+
+    /**
+     * Update generic user groups with validation
+     *
+     * @param array $groups Groups to set
+     * @return array Update result with validation
+     */
+    public function updateGenericUserGroups(array $groups): array
+    {
+        try {
+            $validation = $this->validateGroups($groups);
+            
+            if (!empty($validation['invalid'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid group names provided',
+                    'validation' => $validation
+                ];
+            }
+            
+            $this->setGenericUserGroups($validation['valid']);
+            
+            return [
+                'success' => true,
+                'message' => 'Generic user groups updated successfully',
+                'groups' => $validation['valid']
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to update generic user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update generic user groups: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update organization admin groups with validation
+     *
+     * @param array $groups Groups to set
+     * @return array Update result with validation
+     */
+    public function updateOrganizationAdminGroups(array $groups): array
+    {
+        try {
+            $validation = $this->validateGroups($groups);
+            
+            if (!empty($validation['invalid'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid group names provided',
+                    'validation' => $validation
+                ];
+            }
+            
+            $this->setOrganizationAdminGroups($validation['valid']);
+            
+            return [
+                'success' => true,
+                'message' => 'Organization admin groups updated successfully',
+                'groups' => $validation['valid']
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to update organization admin groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update organization admin groups: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update super user groups with validation
+     *
+     * @param array $groups Groups to set
+     * @return array Update result with validation
+     */
+    public function updateSuperUserGroups(array $groups): array
+    {
+        try {
+            $validation = $this->validateGroups($groups);
+            
+            if (!empty($validation['invalid'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid group names provided',
+                    'validation' => $validation
+                ];
+            }
+            
+            $this->setSuperUserGroups($validation['valid']);
+            
+            return [
+                'success' => true,
+                'message' => 'Super user groups updated successfully',
+                'groups' => $validation['valid']
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to update super user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update super user groups: ' . $e->getMessage()
+            ];
+        }
+    }
 
 } 
