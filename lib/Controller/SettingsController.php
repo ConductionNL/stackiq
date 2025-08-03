@@ -139,6 +139,9 @@ class SettingsController extends Controller
             // Add email settings
             $data['emailSettings'] = $this->settingsService->getEmailSettings();
             
+            // Add JSON-based consolidated configuration
+            $data['consolidatedConfig'] = $this->settingsService->getConsolidatedConfiguration();
+            
             return new JSONResponse($data);
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve settings', [
@@ -220,6 +223,26 @@ class SettingsController extends Controller
             // Update email settings
             if (isset($data['emailSettings'])) {
                 $result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+            }
+            
+            // Update JSON-based consolidated configuration
+            if (isset($data['consolidatedConfig'])) {
+                $consolidatedConfig = $data['consolidatedConfig'];
+                
+                if (isset($consolidatedConfig['voorzieningen'])) {
+                    $this->settingsService->setVoorzieningenConfig($consolidatedConfig['voorzieningen']);
+                    $result['consolidatedConfig']['voorzieningen'] = $consolidatedConfig['voorzieningen'];
+                }
+                
+                if (isset($consolidatedConfig['amef'])) {
+                    $this->settingsService->setAmefConfig($consolidatedConfig['amef']);
+                    $result['consolidatedConfig']['amef'] = $consolidatedConfig['amef'];
+                }
+                
+                if (isset($consolidatedConfig['email'])) {
+                    $this->settingsService->setEmailConfig($consolidatedConfig['email']);
+                    $result['consolidatedConfig']['email'] = $consolidatedConfig['email'];
+                }
             }
             
             return new JSONResponse([
@@ -333,28 +356,81 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      */
+    /**
+     * Auto-configure settings based on available registers and schemas
+     *
+     * @return JSONResponse JSON response containing auto-configuration results
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
     public function autoConfigure(): JSONResponse
     {
         try {
-            $configuration = $this->settingsService->autoConfigure();
-            if (!empty($configuration)) {
-                $result = $this->settingsService->updateSettings($configuration);
-                return new JSONResponse([
-                    'success' => true,
-                    'configuration' => $result
-                ]);
-            } else {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'No matching registers or schemas found for auto-configuration'
-                ]);
+            // Get force parameter from request
+            $force = $this->request->getParam('force', false);
+            
+            // Check if we need to compact to JSON configuration first
+            $compactionNeeded = $this->checkCompactionNeeded();
+            if ($compactionNeeded) {
+                $compactionResults = $this->settingsService->compactToJsonConfiguration();
+                if (!$compactionResults['success']) {
+                    return new JSONResponse([
+                        'success' => false,
+                        'message' => 'Configuration compaction failed',
+                        'compaction_errors' => $compactionResults['errors']
+                    ], 500);
+                }
             }
+            
+            // Delegate all business logic to the service
+            $results = $this->settingsService->autoConfigure($force);
+            
+            // Determine HTTP status based on results
+            if (!$results['success']) {
+                $httpStatus = !empty($results['errors']) ? 207 : 500; // Multi-status or Server Error
+            } else {
+                $httpStatus = 200; // Success
+            }
+            
+            return new JSONResponse($results, $httpStatus);
+            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to auto-configure settings', [
-                'exception' => $e->getMessage()
+            $this->logger->error('SettingsController: Auto-configuration failed', [
+                'exception_message' => $e->getMessage(),
+                'exception' => $e
             ]);
-            return new JSONResponse(['error' => $e->getMessage()], 500);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Auto-configuration failed: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+                'timestamp' => time()
+            ], 500);
         }
+    }
+
+    /**
+     * Check if compaction to JSON configuration is needed
+     *
+     * @return bool True if compaction is needed
+     */
+    private function checkCompactionNeeded(): bool
+    {
+        // Check if any of the old individual config values exist
+        $oldKeys = [
+            'voorzieningen_register',
+            'amef_register_id',
+            'email_enabled'
+        ];
+        
+        foreach ($oldKeys as $key) {
+            $value = $this->config->getValueString('softwarecatalog', $key, '');
+            if (!empty($value)) {
+                return true; // Compaction needed if any old key has a value
+            }
+        }
+        
+        return false; // No compaction needed
     }
 
     /**
@@ -618,6 +694,10 @@ class SettingsController extends Controller
             ], 500);
         }
     }//end forceUpdate()
+
+
+
+
 
 
 
@@ -1289,6 +1369,165 @@ class SettingsController extends Controller
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Download failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get ArchiMate import/export status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse The current ArchiMate status
+     */
+    public function getArchiMateStatus(): JSONResponse
+    {
+        try {
+            $status = $this->settingsService->getArchiMateStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'status' => $status
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get ArchiMate status', [
+                'error' => $e->getMessage()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get ArchiMate status: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear ArchiMate import status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Result of clearing import status
+     */
+    public function clearArchiMateImportStatus(): JSONResponse
+    {
+        try {
+            $this->settingsService->clearArchiMateImportStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Import status cleared successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to clear ArchiMate import status', [
+                'error' => $e->getMessage()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to clear import status: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear ArchiMate export status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Result of clearing export status
+     */
+    public function clearArchiMateExportStatus(): JSONResponse
+    {
+        try {
+            $this->settingsService->clearArchiMateExportStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Export status cleared successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to clear ArchiMate export status', [
+                'error' => $e->getMessage()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to clear export status: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+    /**
+     * Compact configuration to JSON format
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Compaction results
+     */
+    public function compactConfiguration(): JSONResponse
+    {
+        try {
+            $results = $this->settingsService->compactToJsonConfiguration();
+            
+            return new JSONResponse([
+                'success' => $results['success'],
+                'message' => $results['success'] ? 'Configuration compacted successfully' : 'Compaction failed',
+                'results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to compact configuration', [
+                'error' => $e->getMessage()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to compact configuration: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clean up old configuration values
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Cleanup results
+     */
+    public function cleanupConfiguration(): JSONResponse
+    {
+        try {
+            $results = $this->settingsService->cleanupOldConfiguration();
+            
+            return new JSONResponse([
+                'success' => $results['success'],
+                'message' => $results['success'] ? 'Old configuration cleaned up successfully' : 'Cleanup failed',
+                'results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to cleanup old configuration', [
+                'error' => $e->getMessage()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to cleanup old configuration: ' . $e->getMessage(),
                 'error' => $e->getMessage()
             ], 500);
         }

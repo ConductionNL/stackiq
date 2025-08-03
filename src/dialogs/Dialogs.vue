@@ -35,5 +35,10 @@ export default {
 		MassUnlockObjects,
 		MassValidateObjects,
 	},
+	setup() {
+		return {
+			navigationStore,
+		}
+	},
 }
 </script>

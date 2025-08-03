@@ -59,7 +59,8 @@ class ContactpersoonService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly IAppConfig $config
+        private readonly IAppConfig $config,
+        private readonly SettingsService $settingsService
     ) {
     }
 
@@ -401,8 +402,18 @@ class ContactpersoonService
                 return [];
             }
 
-                    $contactSchema = $this->config->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', '34');
-        $register = $this->config->getValueString('softwarecatalog', 'voorzieningen_register', '6');
+        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+        $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? null;
+        $register = $voorzieningenConfig['register'] ?? null;
+        
+        // Skip if no proper configuration is available
+        if (!$contactSchema || !$register) {
+            $this->logger->warning('ContactpersoonService: Missing Voorzieningen configuration', [
+                'contactSchema' => $contactSchema,
+                'register' => $register
+            ]);
+            return [];
+        }
             
             return $objectService->findAll(
                 ['organisation' => $organizationUuid],

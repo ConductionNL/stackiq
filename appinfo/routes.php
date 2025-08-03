@@ -36,7 +36,7 @@ return [
         // Version and import management routes
         ['name' => 'settings#getVersionInfo', 'url' => '/api/settings/version', 'verb' => 'GET'],
         ['name' => 'settings#manualImport', 'url' => '/api/settings/import', 'verb' => 'POST'],
-        ['name' => 'settings#forceUpdate', 'url' => '/api/settings/force-update', 'verb' => 'POST'],
+        		        ['name' => 'settings#forceUpdate', 'url' => '/api/settings/force-update', 'verb' => 'POST'],
         ['name' => 'settings#resetAutoConfig', 'url' => '/api/settings/reset-auto-config', 'verb' => 'POST'],
 
         // Legacy email routes (for backward compatibility)
@@ -52,6 +52,13 @@ return [
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
         ['name' => 'settings#downloadArchiMate', 'url' => '/api/archimate/download/{fileName}', 'verb' => 'GET'],
+        
+        // ArchiMate status management routes
+        ['name' => 'settings#getArchiMateStatus', 'url' => '/api/archimate/status', 'verb' => 'GET'],
+        ['name' => 'settings#clearArchiMateImportStatus', 'url' => '/api/archimate/status/import/clear', 'verb' => 'POST'],
+        ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
+
+
 
         // AMEF register configuration routes
         ['name' => 'settings#getAmefSettings', 'url' => '/api/settings/amef', 'verb' => 'GET'],

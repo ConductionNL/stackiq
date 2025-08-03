@@ -26,64 +26,58 @@
 					</div>
 				</div>
 
-				<!-- Manual Import Section -->
-				<div class="manual-import">
-					<div class="import-actions">
+				<!-- Consolidated Auto-Configuration Section -->
+				<div class="consolidated-config">
+					<div class="config-actions">
 						<NcButton
-							type="secondary"
-							:disabled="importing"
-							@click="manualImport(false)">
+							:type="versionInfo.needsUpdate ? 'primary' : 'secondary'"
+							:disabled="autoConfiguring"
+							@click="consolidatedAutoConfigure()">
 							<template #icon>
-								<NcLoadingIcon v-if="importing" :size="20" />
-								<Refresh v-else :size="20" />
+								<NcLoadingIcon v-if="autoConfiguring" :size="20" />
+								<Cog v-else :size="20" />
 							</template>
-							{{ versionInfo.needsUpdate ? 'Update Configuration' : 'Reimport Configuration' }}
-						</NcButton>
-
-						<NcButton
-							v-if="!versionInfo.versionsMatch"
-							type="primary"
-							:disabled="importing"
-							@click="manualImport(true)">
-							<template #icon>
-								<NcLoadingIcon v-if="importing" :size="20" />
-								<Refresh v-else :size="20" />
-							</template>
-							Force Import
-						</NcButton>
-
-						<!-- Reset Auto-Configuration Button -->
-						<NcButton
-							type="error"
-							:disabled="importing || resettingAutoConfig"
-							@click="resetAutoConfiguration(true)">
-							<template #icon>
-								<NcLoadingIcon v-if="resettingAutoConfig" :size="20" />
-								<RestartIcon v-else :size="20" />
-							</template>
-							Reset Auto-Config
+							{{ versionInfo.needsUpdate ? 'Auto Configure' : 'Reload Configuration' }}
 						</NcButton>
 					</div>
 
-					<!-- Import Results -->
-					<div v-if="importResult" class="import-result">
+					<!-- Configuration Results -->
+					<div v-if="consolidatedResult" class="config-result">
 						<NcNoteCard
-							v-if="importResult.success"
+							v-if="consolidatedResult.success"
 							type="success">
-							{{ importResult.message }}
+							{{ consolidatedResult.message }}
 
-							<!-- Auto-Configuration Details -->
-							<div v-if="importResult.autoConfigResult && Object.keys(importResult.autoConfigResult).length > 0" class="auto-config-details">
-								<h4>Auto-Configuration Results:</h4>
+							<!-- Configuration Steps Details -->
+							<div v-if="consolidatedResult.steps" class="config-steps">
+								<h4>Configuration Steps:</h4>
 								<ul>
-									<li v-if="importResult.autoConfigResult.voorzieningen_organisatie_register">
-										✅ Voorzieningen Register: {{ importResult.autoConfigResult.voorzieningen_organisatie_register }}
+									<li v-if="consolidatedResult.steps.configurationLoad?.success">
+										✅ Configuration Loading: {{ consolidatedResult.steps.configurationLoad.message }}
 									</li>
-									<li v-if="importResult.autoConfigResult.voorzieningen_organisatie_schema">
-										✅ Organisatie Schema: {{ importResult.autoConfigResult.voorzieningen_organisatie_schema }}
+									<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.success">
+										🇳🇱 Voorzieningen: {{ consolidatedResult.steps.voorzieningenConfiguration.message }}
 									</li>
-									<li v-if="importResult.autoConfigResult.voorzieningen_contactpersoon_schema">
-										✅ Contactpersoon Schema: {{ importResult.autoConfigResult.voorzieningen_contactpersoon_schema }}
+									<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.register">
+										📋 Voorzieningen Register: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.register }}
+									</li>
+									<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.organisatieSchema">
+										📊 Organisatie Schema: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.organisatieSchema }}
+									</li>
+									<li v-if="consolidatedResult.steps.amefConfiguration?.success">
+										🏗️ AMEF: {{ consolidatedResult.steps.amefConfiguration.message }}
+									</li>
+									<li v-if="consolidatedResult.steps.amefConfiguration?.configured?.registerId">
+										📋 AMEF Register: {{ consolidatedResult.steps.amefConfiguration.configured.registerId }}
+									</li>
+									<li v-if="consolidatedResult.steps.groupsConfiguration?.success">
+										👥 User Groups: {{ consolidatedResult.steps.groupsConfiguration.message }}
+									</li>
+									<li v-if="consolidatedResult.steps.groupsConfiguration?.created?.length > 0">
+										➕ Created Groups: {{ consolidatedResult.steps.groupsConfiguration.created.join(', ') }}
+									</li>
+									<li v-if="consolidatedResult.steps.groupsConfiguration?.existing?.length > 0">
+										✓ Existing Groups: {{ consolidatedResult.steps.groupsConfiguration.existing.length }} groups already exist
 									</li>
 								</ul>
 							</div>
@@ -91,7 +85,17 @@
 						<NcNoteCard
 							v-else
 							type="error">
-							{{ importResult.message }}
+							{{ consolidatedResult.message }}
+
+							<!-- Show errors if any -->
+							<div v-if="consolidatedResult.errors && consolidatedResult.errors.length > 0" class="config-errors">
+								<h4>Errors:</h4>
+								<ul>
+									<li v-for="error in consolidatedResult.errors" :key="error">
+										{{ error }}
+									</li>
+								</ul>
+							</div>
 						</NcNoteCard>
 					</div>
 
@@ -127,252 +131,230 @@
 					OpenRegister is not installed or not available. Please install it to use the Software Catalog with full functionality.
 				</NcNoteCard>
 
-				<!-- Initialization and Auto-Configure Section -->
-				<div v-if="settings.openRegisters" class="initialization-section">
-					<h3>Initialization</h3>
-					<p>Initialize and auto-configure the Software Catalog settings</p>
+				<!-- Note: Initialization moved to single consolidated button above -->
 
+				<!-- Register Selection Section -->
+				<NcSettingsSection
+					v-if="settings.openRegisters"
+					name="Register Selection"
+					description="Select the registers to use for your Software Catalog data">
+					<div v-if="!loading" class="register-selection-content">
+						<div class="register-selection-grid">
+							<div class="register-selection-item">
+								<h4>Voorzieningen Register</h4>
+								<p>Register for organizations, contacts, and users</p>
+								<NcSelect
+									v-model="voorzieningenRegister"
+									:options="registerOptions"
+									input-label="Select Voorzieningen Register"
+									:disabled="loading"
+									@change="handleVoorzieningenRegisterChange" />
+							</div>
+
+							<div class="register-selection-item">
+								<h4>AMEF Register</h4>
+								<p>Register for ArchiMate elements, relationships, and views</p>
+								<NcSelect
+									v-model="amefRegister"
+									:options="registerOptions"
+									input-label="Select AMEF Register"
+									:disabled="loading"
+									@change="handleAmefRegisterChange" />
+							</div>
+						</div>
+					</div>
+
+					<!-- Loading State -->
+					<NcLoadingIcon v-else
+						class="loading-icon"
+						:size="64"
+						appearance="dark" />
+				</NcSettingsSection>
+
+				<!-- Voorzieningen Schema Configuration -->
+				<NcSettingsSection
+					v-if="settings.openRegisters && voorzieningenRegister && voorzieningenSchemas.length > 0"
+					name="Voorzieningen Schema Configuration"
+					description="Configure schemas for the Voorzieningen register">
+					<div v-if="!loading" class="schema-configuration-content">
+						<div class="schema-configuration-grid">
+							<div class="object-type-section">
+								<div class="object-type-header">
+									<h5>Organisatie Schema</h5>
+									<span class="object-type-description">Schema for organizations</span>
+								</div>
+								<NcSelect
+									v-model="configuration.voorzieningen_organisatie.schema"
+									:options="voorzieningenSchemaOptions"
+									input-label="Organisatie Schema"
+									:disabled="loading"
+									@change="validateConfiguration" />
+							</div>
+
+							<div class="object-type-section">
+								<div class="object-type-header">
+									<h5>Contactpersoon Schema</h5>
+									<span class="object-type-description">Schema for contact persons</span>
+								</div>
+								<NcSelect
+									v-model="configuration.voorzieningen_contactpersoon.schema"
+									:options="voorzieningenSchemaOptions"
+									input-label="Contactpersoon Schema"
+									:disabled="loading"
+									@change="validateConfiguration" />
+							</div>
+
+							<div class="object-type-section">
+								<div class="object-type-header">
+									<h5>Gebruiker Schema</h5>
+									<span class="object-type-description">Schema for users</span>
+								</div>
+								<NcSelect
+									v-model="configuration.voorzieningen_gebruiker.schema"
+									:options="voorzieningenSchemaOptions"
+									input-label="Gebruiker Schema"
+									:disabled="loading"
+									@change="validateConfiguration" />
+							</div>
+
+							<div class="object-type-section">
+								<div class="object-type-header">
+									<h5>Contactgegevens Schema</h5>
+									<span class="object-type-description">Schema for contact details</span>
+								</div>
+								<NcSelect
+									v-model="configuration.voorzieningen_contactgegevens.schema"
+									:options="voorzieningenSchemaOptions"
+									input-label="Contactgegevens Schema"
+									:disabled="loading"
+									@change="validateConfiguration" />
+							</div>
+						</div>
+					</div>
+
+					<!-- Loading State -->
+					<NcLoadingIcon v-else
+						class="loading-icon"
+						:size="64"
+						appearance="dark" />
+				</NcSettingsSection>
+
+				<!-- Voorzieningen Empty State -->
+				<NcSettingsSection
+					v-if="settings.openRegisters && voorzieningenRegister && voorzieningenSchemas.length === 0"
+					name="Voorzieningen Schema Configuration"
+					description="Configure schemas for the Voorzieningen register">
+					<NcNoteCard type="warning">
+						The selected Voorzieningen register has no schemas. Please create schemas in this register.
+					</NcNoteCard>
+				</NcSettingsSection>
+
+				<!-- AMEF Schema Configuration -->
+				<NcSettingsSection
+					v-if="settings.openRegisters && amefRegister && amefSchemas.length > 0"
+					name="AMEF Schema Configuration"
+					description="Configure schemas for the AMEF register">
+					<div v-if="!loading" class="schema-configuration-content">
+						<div class="schema-configuration-grid">
+							<div class="object-type-section">
+								<div class="object-type-header">
+									<h5>Organizations Schema</h5>
+									<span class="object-type-description">Schema for organizations in AMEF</span>
+								</div>
+								<NcSelect
+									v-model="configuration.amef_organization.schema"
+									:options="amefSchemaOptions"
+									input-label="Organizations Schema"
+									:disabled="loading"
+									@change="validateConfiguration" />
+							</div>
+
+							<div class="object-type-section">
+								<div class="object-type-header">
+									<h5>Elements Schema</h5>
+									<span class="object-type-description">Schema for ArchiMate elements</span>
+								</div>
+								<NcSelect
+									v-model="configuration.amef_elements.schema"
+									:options="amefSchemaOptions"
+									input-label="Elements Schema"
+									:disabled="loading"
+									@change="validateConfiguration" />
+							</div>
+
+							<div class="object-type-section">
+								<div class="object-type-header">
+									<h5>Relationships Schema</h5>
+									<span class="object-type-description">Schema for ArchiMate relationships</span>
+								</div>
+								<NcSelect
+									v-model="configuration.amef_relationships.schema"
+									:options="amefSchemaOptions"
+									input-label="Relationships Schema"
+									:disabled="loading"
+									@change="validateConfiguration" />
+							</div>
+
+							<div class="object-type-section">
+								<div class="object-type-header">
+									<h5>Views Schema</h5>
+									<span class="object-type-description">Schema for ArchiMate views</span>
+								</div>
+								<NcSelect
+									v-model="configuration.amef_views.schema"
+									:options="amefSchemaOptions"
+									input-label="Views Schema"
+									:disabled="loading"
+									@change="validateConfiguration" />
+							</div>
+						</div>
+					</div>
+
+					<!-- Loading State -->
+					<NcLoadingIcon v-else
+						class="loading-icon"
+						:size="64"
+						appearance="dark" />
+				</NcSettingsSection>
+
+				<!-- AMEF Empty State -->
+				<NcSettingsSection
+					v-if="settings.openRegisters && amefRegister && amefSchemas.length === 0"
+					name="AMEF Schema Configuration"
+					description="Configure schemas for the AMEF register">
+					<NcNoteCard type="warning">
+						The selected AMEF register has no schemas. Please create schemas in this register.
+					</NcNoteCard>
+				</NcSettingsSection>
+
+				<!-- Configuration Actions -->
+				<NcSettingsSection
+					v-if="settings.openRegisters && (voorzieningenRegister || amefRegister)"
+					name="Configuration Actions"
+					description="Save your register and schema configuration">
 					<div class="button-container">
 						<NcButton
-							type="secondary"
-							:disabled="loading || initializing"
-							@click="initializeSettings">
+							type="primary"
+							:disabled="loading || saving || !canSave"
+							@click="saveConfiguration">
 							<template #icon>
-								<NcLoadingIcon v-if="initializing" :size="20" />
-								<Cog v-else :size="20" />
+								<NcLoadingIcon v-if="saving" :size="20" />
+								<Save v-else :size="20" />
 							</template>
-							Initialize & Auto-Configure
+							Save Configuration
 						</NcButton>
 
 						<NcButton
 							type="secondary"
-							:disabled="loading || autoConfiguring"
-							@click="autoConfigureSettings">
+							:disabled="loading"
+							@click="loadSettings">
 							<template #icon>
-								<NcLoadingIcon v-if="autoConfiguring" :size="20" />
-								<AutoFix v-else :size="20" />
+								<Refresh :size="20" />
 							</template>
-							Auto-Configure Only
+							Refresh
 						</NcButton>
 					</div>
-
-					<!-- Initialization Results -->
-					<div v-if="initializationResults" class="initialization-results">
-						<NcNoteCard v-if="initializationResults.errors && initializationResults.errors.length > 0" type="error">
-							<template #icon>
-								<Alert :size="20" />
-							</template>
-							<strong>Initialization Issues:</strong>
-							<ul>
-								<li v-for="error in initializationResults.errors" :key="error">{{ error }}</li>
-							</ul>
-						</NcNoteCard>
-
-						<NcNoteCard v-if="initializationResults.autoConfigured" type="success">
-							Auto-configuration completed successfully!
-						</NcNoteCard>
-
-						<NcNoteCard v-if="initializationResults.fullyConfigured" type="success">
-							All object types are now configured.
-						</NcNoteCard>
-					</div>
-				</div>
-
-				<!-- Register Selection -->
-				<div v-if="settings.openRegisters" class="register-selection">
-					<h3>Register Selection</h3>
-					<p>Select the register to store your Software Catalog data</p>
-
-					<NcSelect
-						v-model="selectedRegister"
-						:options="registerOptions"
-						input-label="Select Register"
-						:disabled="loading"
-						@change="handleRegisterChange" />
-				</div>
-
-				<!-- Warning if selected register has no schemas -->
-				<NcNoteCard v-if="selectedRegister && !hasSchemas" type="warning">
-					The selected register has no schemas. Please create schemas in this register or select a different register.
-				</NcNoteCard>
-
-				<!-- Object Type Schema Configuration -->
-				<div v-if="selectedRegister && hasSchemas" class="schema-configuration">
-					<h3>Schema Configuration</h3>
-					<p>Configure schemas for each register type</p>
-
-					<!-- AMEF Register Configuration -->
-					<div v-if="isRegisterType('amef')" class="register-type-section">
-						<h4>AMEF Register Configuration</h4>
-						<p>Configure schemas for AMEF architectural elements</p>
-
-						<div class="object-type-section">
-							<div class="object-type-header">
-								<h5>Organization Schema</h5>
-								<span class="object-type-description">Schema for organizations in the AMEF register</span>
-							</div>
-
-							<NcSelect
-								v-model="configuration.amef_organization.schema"
-								:options="availableSchemaOptions"
-								input-label="Organization Schema"
-								:disabled="loading"
-								@change="validateConfiguration" />
-						</div>
-					</div>
-
-					<!-- Voorzieningen Register Configuration -->
-					<div v-if="isRegisterType('voorzieningen')" class="register-type-section">
-						<h4>Voorzieningen Register Configuration</h4>
-						<p>Configure schemas for software catalog services</p>
-
-						<div class="object-type-section">
-							<div class="object-type-header">
-								<h5>Organisatie Schema</h5>
-								<span class="object-type-description">Schema for organizations in the Voorzieningen register</span>
-							</div>
-
-							<NcSelect
-								v-model="configuration.voorzieningen_organisatie.schema"
-								:options="availableSchemaOptions"
-								input-label="Organisatie Schema"
-								:disabled="loading"
-								@change="validateConfiguration" />
-						</div>
-
-						<div class="object-type-section">
-							<div class="object-type-header">
-								<h5>Contactpersoon Schema</h5>
-								<span class="object-type-description">Schema for contact persons in the Voorzieningen register</span>
-							</div>
-
-							<NcSelect
-								v-model="configuration.voorzieningen_contactpersoon.schema"
-								:options="availableSchemaOptions"
-								input-label="Contactpersoon Schema"
-								:disabled="loading"
-								@change="validateConfiguration" />
-						</div>
-					</div>
-
-					<!-- Generic Object Types (for backward compatibility) -->
-					<div v-if="!isSpecificRegister()" class="register-type-section">
-						<h4>Generic Configuration</h4>
-						<div v-for="objectType in settings.objectTypes" :key="objectType" class="object-type-section">
-							<div class="object-type-header">
-								<h5>{{ formatTitle(objectType) }}</h5>
-								<span class="object-type-description">{{ getObjectTypeDescription(objectType) }}</span>
-							</div>
-
-							<NcSelect
-								v-model="configuration[objectType].schema"
-								:options="availableSchemaOptions"
-								input-label="Schema"
-								:disabled="loading"
-								@change="validateConfiguration" />
-						</div>
-					</div>
-
-					<!-- Current Configuration Debug -->
-					<div class="configuration-debug">
-						<h4>Current Configuration Values
-							<NcButton
-								type="tertiary"
-								size="small"
-								:disabled="loading"
-								@click="loadDebugInfo">
-								<template #icon>
-									<Refresh :size="16" />
-								</template>
-								Refresh
-							</NcButton>
-						</h4>
-						<div class="debug-info">
-							<pre v-if="debugInfo">{{ JSON.stringify(debugInfo, null, 2) }}</pre>
-							<div v-else>Loading debug information...</div>
-						</div>
-					</div>
-
-					<!-- Configuration Status -->
-					<div class="configuration-status">
-						<h4>Configuration Status</h4>
-						<div v-if="isRegisterType('amef')" class="status-group">
-							<h5>AMEF Register</h5>
-							<div class="status-item">
-								<span class="status-label">Organization:</span>
-								<span v-if="configuration.amef_organization?.schema" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
-							</div>
-						</div>
-
-						<div v-if="isRegisterType('voorzieningen')" class="status-group">
-							<h5>Voorzieningen Register</h5>
-							<div class="status-item">
-								<span class="status-label">Organisatie:</span>
-								<span v-if="configuration.voorzieningen_organisatie?.schema" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
-							</div>
-							<div class="status-item">
-								<span class="status-label">Contactpersoon:</span>
-								<span v-if="configuration.voorzieningen_contactpersoon?.schema" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
-							</div>
-						</div>
-
-						<div v-if="!isSpecificRegister()" class="status-group">
-							<h5>Generic Configuration</h5>
-							<div v-for="objectType in settings.objectTypes" :key="objectType" class="status-item">
-								<span class="status-label">{{ formatTitle(objectType) }}:</span>
-								<span v-if="configuration[objectType]?.schema" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Save Buttons -->
-				<div class="button-container">
-					<NcButton
-						type="primary"
-						:disabled="loading || saving || !canSave"
-						@click="saveConfiguration">
-						<template #icon>
-							<NcLoadingIcon v-if="saving" :size="20" />
-							<Save v-else :size="20" />
-						</template>
-						Save Configuration
-					</NcButton>
-
-					<!-- Quick Save Schema Values Button -->
-					<NcButton
-						v-if="isRegisterType('voorzieningen')"
-						type="primary"
-						:disabled="loading || savingSchemas || !hasSchemaValuesToSave"
-						@click="saveSchemaValues">
-						<template #icon>
-							<NcLoadingIcon v-if="savingSchemas" :size="20" />
-							<Save v-else :size="20" />
-						</template>
-						Save Schema Values
-					</NcButton>
-
-					<NcButton
-						type="secondary"
-						:disabled="loading"
-						@click="loadSettings">
-						<template #icon>
-							<Refresh :size="20" />
-						</template>
-						Refresh
-					</NcButton>
-				</div>
-
-				<!-- Schema Save Results -->
-				<div v-if="schemaSaveResult" class="schema-save-result">
-					<NcNoteCard :type="schemaSaveResult.success ? 'success' : 'error'">
-						{{ schemaSaveResult.message }}
-					</NcNoteCard>
-				</div>
+				</NcSettingsSection>
 			</div>
 
 			<!-- Loading State -->
@@ -439,7 +421,9 @@
 								</template>
 								<strong>Validation Errors:</strong>
 								<ul>
-									<li v-for="error in groupValidation.errors" :key="error">{{ error }}</li>
+									<li v-for="error in groupValidation.errors" :key="error">
+										{{ error }}
+									</li>
 								</ul>
 							</NcNoteCard>
 						</div>
@@ -465,7 +449,9 @@
 							<div class="default-groups-info">
 								<h5>Recommended Groups:</h5>
 								<ul>
-									<li v-for="group in genericUserGroups" :key="group"><code>{{ group }}</code> - {{ getGroupDescription(group) }}</li>
+									<li v-for="group in genericUserGroups" :key="group">
+										<code>{{ group }}</code> - {{ getGroupDescription(group) }}
+									</li>
 								</ul>
 							</div>
 						</div>
@@ -739,7 +725,9 @@
 									<div v-if="syncResult.results.errors && syncResult.results.errors.length > 0" class="sync-errors">
 										<h5>Errors encountered:</h5>
 										<ul>
-											<li v-for="error in syncResult.results.errors" :key="error">{{ error }}</li>
+											<li v-for="error in syncResult.results.errors" :key="error">
+												{{ error }}
+											</li>
 										</ul>
 									</div>
 								</div>
@@ -770,167 +758,6 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			name="AMEF Register Configuration"
-			description="Configure register and schema mappings for ArchiMate/AMEF object types">
-			<div v-if="!loading">
-				<!-- Auto-Configuration Section -->
-				<div class="amef-auto-config">
-					<h3>Auto-Configuration</h3>
-					<p>Automatically detect and configure appropriate registers and schemas for AMEF objects</p>
-
-					<div class="button-container">
-						<NcButton
-							type="primary"
-							:disabled="loading || autoConfiguringAmef"
-							@click="autoConfigureAmefSettings">
-							<template #icon>
-								<NcLoadingIcon v-if="autoConfiguringAmef" :size="20" />
-								<AutoFix v-else :size="20" />
-							</template>
-							Auto-Configure AMEF Registers
-						</NcButton>
-					</div>
-
-					<!-- Auto-configuration Results -->
-					<div v-if="amefConfigResults" class="config-results">
-						<NcNoteCard v-if="amefConfigResults.success" type="success">
-							<template #icon>
-								<Check :size="20" />
-							</template>
-							<strong>AMEF Configuration Updated:</strong>
-							<ul>
-								<li v-for="(schemaId, objectType) in amefConfigResults.configured" :key="objectType">
-									{{ objectType }}: Schema {{ schemaId }}
-								</li>
-							</ul>
-						</NcNoteCard>
-
-						<NcNoteCard v-if="amefConfigResults.errors && amefConfigResults.errors.length > 0" type="error">
-							<template #icon>
-								<Alert :size="20" />
-							</template>
-							<strong>Configuration Issues:</strong>
-							<ul>
-								<li v-for="error in amefConfigResults.errors" :key="error">{{ error }}</li>
-							</ul>
-						</NcNoteCard>
-					</div>
-				</div>
-
-				<!-- Manual Configuration Section -->
-				<div class="amef-manual-config">
-					<h3>Manual Schema Configuration</h3>
-					<p>Manually specify which schemas to use for different ArchiMate object types</p>
-
-					<!-- Register Selection -->
-					<div class="register-selection">
-						<label for="amef-register-select">AMEF Register</label>
-						<NcSelect
-							id="amef-register-select"
-							v-model="amefSettings.registerId"
-							:options="registerOptions"
-							input-label="Select register for AMEF objects"
-							:disabled="loading"
-							@change="onRegisterChange" />
-						<p class="field-description">Select the register that contains AMEF schemas (vng-gemma recommended)</p>
-					</div>
-
-					<div class="schema-mappings">
-						<!-- ArchiMate Elements Schema -->
-						<div class="schema-mapping">
-							<label for="amef-elements-schema">ArchiMate Elements</label>
-							<NcSelect
-								id="amef-elements-schema"
-								v-model="amefSettings.elementsSchema"
-								:options="schemaOptions"
-								input-label="Select schema for ArchiMate elements"
-								:disabled="loading"
-								@change="saveAmefSettings" />
-							<p class="field-description">Schema for business, application, and technology elements</p>
-						</div>
-
-						<!-- Organizations Schema -->
-						<div class="schema-mapping">
-							<label for="amef-organizations-schema">Organizations</label>
-							<NcSelect
-								id="amef-organizations-schema"
-								v-model="amefSettings.organizationsSchema"
-								:options="schemaOptions"
-								input-label="Select schema for organizations"
-								:disabled="loading"
-								@change="saveAmefSettings" />
-							<p class="field-description">Schema for organizational entities and stakeholders</p>
-						</div>
-
-						<!-- Relationships Schema -->
-						<div class="schema-mapping">
-							<label for="amef-relationships-schema">Relationships</label>
-							<NcSelect
-								id="amef-relationships-schema"
-								v-model="amefSettings.relationshipsSchema"
-								:options="schemaOptions"
-								input-label="Select schema for relationships"
-								:disabled="loading"
-								@change="saveAmefSettings" />
-							<p class="field-description">Schema for ArchiMate relationships and connections</p>
-						</div>
-
-						<!-- Views Schema -->
-						<div class="schema-mapping">
-							<label for="amef-views-schema">Views</label>
-							<NcSelect
-								id="amef-views-schema"
-								v-model="amefSettings.viewsSchema"
-								:options="schemaOptions"
-								input-label="Select schema for views"
-								:disabled="loading"
-								@change="saveAmefSettings" />
-							<p class="field-description">Schema for ArchiMate views and diagrams</p>
-						</div>
-					</div>
-
-					<!-- Current Configuration Display -->
-					<div v-if="amefSettings" class="current-config">
-						<h4>Current Configuration</h4>
-						<div class="config-summary">
-							<div class="config-item">
-								<strong>Register:</strong>
-								<span v-if="amefSettings.registerId">Register {{ amefSettings.registerId }}</span>
-								<span v-else class="not-configured">Not configured</span>
-							</div>
-							<div class="config-item">
-								<strong>Elements:</strong>
-								<span v-if="amefSettings.elementsSchema">Schema {{ amefSettings.elementsSchema }}</span>
-								<span v-else class="not-configured">Not configured</span>
-							</div>
-							<div class="config-item">
-								<strong>Organizations:</strong>
-								<span v-if="amefSettings.organizationsSchema">Schema {{ amefSettings.organizationsSchema }}</span>
-								<span v-else class="not-configured">Not configured</span>
-							</div>
-							<div class="config-item">
-								<strong>Relationships:</strong>
-								<span v-if="amefSettings.relationshipsSchema">Schema {{ amefSettings.relationshipsSchema }}</span>
-								<span v-else class="not-configured">Not configured</span>
-							</div>
-							<div class="config-item">
-								<strong>Views:</strong>
-								<span v-if="amefSettings.viewsSchema">Schema {{ amefSettings.viewsSchema }}</span>
-								<span v-else class="not-configured">Not configured</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Loading State -->
-			<NcLoadingIcon v-else
-				class="loading-icon"
-				:size="64"
-				appearance="dark" />
-		</NcSettingsSection>
-
-		<NcSettingsSection
 			name="ArchiMate Import/Export"
 			description="Import ArchiMate files to create OpenRegister objects and export existing data to ArchiMate format">
 			<div v-if="!loading">
@@ -943,6 +770,52 @@
 						<h4>Import ArchiMate File</h4>
 						<p>Upload an ArchiMate file to import architectural elements, organizations, relationships, and views</p>
 
+						<!-- Import Status Display -->
+						<div v-if="archimateStatus.import && archimateStatus.import.status" class="import-status">
+							<NcNoteCard :type="getStatusType(archimateStatus.import.status)">
+								<template #icon>
+									<NcLoadingIcon v-if="archimateStatus.import.status === 'running'" :size="20" />
+									<CheckCircle v-else-if="archimateStatus.import.status === 'completed'" :size="20" />
+									<Alert v-else-if="archimateStatus.import.status === 'failed'" :size="20" />
+								</template>
+								<div class="status-content">
+									<strong>{{ archimateStatus.import.current_step }}</strong>
+									<div v-if="archimateStatus.import.status === 'running'" class="progress-bar">
+										<div class="progress-fill" :style="{ width: archimateStatus.import.progress + '%' }" />
+										<span class="progress-text">{{ archimateStatus.import.progress }}%</span>
+									</div>
+									<div v-if="archimateStatus.import.statistics" class="status-statistics">
+										<p v-if="archimateStatus.import.statistics.elements_processed > 0">
+											Elements: {{ archimateStatus.import.statistics.elements_processed }}
+										</p>
+										<p v-if="archimateStatus.import.statistics.relationships_processed > 0">
+											Relationships: {{ archimateStatus.import.statistics.relationships_processed }}
+										</p>
+										<p v-if="archimateStatus.import.statistics.organizations_processed > 0">
+											Organizations: {{ archimateStatus.import.statistics.organizations_processed }}
+										</p>
+										<p v-if="archimateStatus.import.statistics.objects_created > 0">
+											Created: {{ archimateStatus.import.statistics.objects_created }}
+										</p>
+										<p v-if="archimateStatus.import.statistics.objects_updated > 0">
+											Updated: {{ archimateStatus.import.statistics.objects_updated }}
+										</p>
+									</div>
+									<div v-if="archimateStatus.import.status === 'completed'" class="status-actions">
+										<NcButton type="secondary" @click="clearImportStatus">
+											Clear Status
+										</NcButton>
+									</div>
+									<div v-if="archimateStatus.import.status === 'failed'" class="status-error">
+										<p><strong>Error:</strong> {{ archimateStatus.import.error }}</p>
+										<NcButton type="secondary" @click="clearImportStatus">
+											Clear Status
+										</NcButton>
+									</div>
+								</div>
+							</NcNoteCard>
+						</div>
+
 						<div class="import-form">
 							<div class="file-upload">
 								<input
@@ -954,7 +827,7 @@
 
 								<NcButton
 									type="secondary"
-									:disabled="importing || !settings.openRegisters"
+									:disabled="importing || !settings.openRegisters || isImportRunning"
 									@click="$refs.archiMateFileInput.click()">
 									<template #icon>
 										<Upload :size="20" />
@@ -992,18 +865,18 @@
 							<div v-if="selectedFile" class="import-actions">
 								<NcButton
 									type="primary"
-									:disabled="importing || !settings.openRegisters"
+									:disabled="importing || !settings.openRegisters || isImportRunning"
 									@click="importArchiMateFile">
 									<template #icon>
 										<NcLoadingIcon v-if="importing" :size="20" />
 										<CloudUpload v-else :size="20" />
 									</template>
-									{{ importing ? 'Importing...' : 'Import ArchiMate File' }}
+									{{ importing ? 'Starting Import...' : 'Import ArchiMate File' }}
 								</NcButton>
 
 								<NcButton
 									type="tertiary"
-									:disabled="importing"
+									:disabled="importing || isImportRunning"
 									@click="clearFileSelection">
 									<template #icon>
 										<Close :size="20" />
@@ -1078,13 +951,27 @@
 													<div v-for="(stats, schema) in importResult.statistics" :key="schema" class="schema-card">
 														<h6>{{ schema.charAt(0).toUpperCase() + schema.slice(1) }}</h6>
 														<ul>
-															<li v-if="stats.found > 0">🔍 Found: {{ stats.found }}</li>
-															<li v-if="stats.created > 0">✅ Created: {{ stats.created }}</li>
-															<li v-if="stats.updated > 0">🔄 Updated: {{ stats.updated }}</li>
-															<li v-if="stats.skipped > 0">⏭️ Skipped: {{ stats.skipped }}</li>
-															<li v-if="stats.deleted > 0">🗑️ Deleted: {{ stats.deleted }}</li>
-															<li v-if="stats.errors && stats.errors.length > 0">❌ Errors: {{ stats.errors.length }}</li>
-															<li v-if="stats.processing_time > 0">⏱️ Time: {{ stats.processing_time.toFixed(3) }}s</li>
+															<li v-if="stats.found > 0">
+																🔍 Found: {{ stats.found }}
+															</li>
+															<li v-if="stats.created > 0">
+																✅ Created: {{ stats.created }}
+															</li>
+															<li v-if="stats.updated > 0">
+																🔄 Updated: {{ stats.updated }}
+															</li>
+															<li v-if="stats.skipped > 0">
+																⏭️ Skipped: {{ stats.skipped }}
+															</li>
+															<li v-if="stats.deleted > 0">
+																🗑️ Deleted: {{ stats.deleted }}
+															</li>
+															<li v-if="stats.errors && stats.errors.length > 0">
+																❌ Errors: {{ stats.errors.length }}
+															</li>
+															<li v-if="stats.processing_time > 0">
+																⏱️ Time: {{ stats.processing_time.toFixed(3) }}s
+															</li>
 															<li v-if="stats.created === 0 && stats.updated === 0 && stats.deleted === 0 && stats.skipped === 0 && (!stats.errors || stats.errors.length === 0)">
 																ℹ️ No changes
 															</li>
@@ -1104,6 +991,46 @@
 						<h4>Export to ArchiMate</h4>
 						<p>Export OpenRegister objects to ArchiMate format for use in modeling tools</p>
 
+						<!-- Export Status Display -->
+						<div v-if="archimateStatus.export && archimateStatus.export.status" class="export-status">
+							<NcNoteCard :type="getStatusType(archimateStatus.export.status)">
+								<template #icon>
+									<NcLoadingIcon v-if="archimateStatus.export.status === 'running'" :size="20" />
+									<CheckCircle v-else-if="archimateStatus.export.status === 'completed'" :size="20" />
+									<Alert v-else-if="archimateStatus.export.status === 'failed'" :size="20" />
+								</template>
+								<div class="status-content">
+									<strong>{{ archimateStatus.export.current_step }}</strong>
+									<div v-if="archimateStatus.export.status === 'running'" class="progress-bar">
+										<div class="progress-fill" :style="{ width: archimateStatus.export.progress + '%' }" />
+										<span class="progress-text">{{ archimateStatus.export.progress }}%</span>
+									</div>
+									<div v-if="archimateStatus.export.statistics" class="status-statistics">
+										<p v-if="archimateStatus.export.statistics.objects_found > 0">
+											Objects Found: {{ archimateStatus.export.statistics.objects_found }}
+										</p>
+										<p v-if="archimateStatus.export.statistics.objects_exported > 0">
+											Objects Exported: {{ archimateStatus.export.statistics.objects_exported }}
+										</p>
+										<p v-if="archimateStatus.export.statistics.xml_size_bytes > 0">
+											XML Size: {{ (archimateStatus.export.statistics.xml_size_bytes / 1024).toFixed(2) }} KB
+										</p>
+									</div>
+									<div v-if="archimateStatus.export.status === 'completed'" class="status-actions">
+										<NcButton type="secondary" @click="clearExportStatus">
+											Clear Status
+										</NcButton>
+									</div>
+									<div v-if="archimateStatus.export.status === 'failed'" class="status-error">
+										<p><strong>Error:</strong> {{ archimateStatus.export.error }}</p>
+										<NcButton type="secondary" @click="clearExportStatus">
+											Clear Status
+										</NcButton>
+									</div>
+								</div>
+							</NcNoteCard>
+						</div>
+
 						<div class="export-form">
 							<div class="export-options">
 								<h5>Export Options</h5>
@@ -1115,6 +1042,7 @@
 											{ label: 'XML', value: 'xml' },
 											{ label: 'JSON', value: 'json' }
 										]"
+										input-label="Export Format"
 										placeholder="Select format" />
 								</div>
 								<div class="option-row">
@@ -1143,6 +1071,7 @@
 									<NcSelect
 										v-model="exportOptions.selectedSchemas"
 										:options="availableSchemas"
+										input-label="Schemas to Export"
 										multiple
 										placeholder="Select schemas to export" />
 								</div>
@@ -1165,13 +1094,13 @@
 							<div class="export-actions">
 								<NcButton
 									type="primary"
-									:disabled="exporting || !settings.openRegisters"
+									:disabled="exporting || !settings.openRegisters || isExportRunning"
 									@click="exportToArchiMate">
 									<template #icon>
 										<NcLoadingIcon v-if="exporting" :size="20" />
 										<Download v-else :size="20" />
 									</template>
-									{{ exporting ? 'Exporting...' : 'Export to ArchiMate' }}
+									{{ exporting ? 'Starting Export...' : 'Export to ArchiMate' }}
 								</NcButton>
 							</div>
 
@@ -1650,27 +1579,21 @@ import {
 import Save from 'vue-material-design-icons/ContentSave.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
-import AutoFix from 'vue-material-design-icons/AutoFix.vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Email from 'vue-material-design-icons/Email.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import RestartIcon from 'vue-material-design-icons/Restart.vue'
 import Upload from 'vue-material-design-icons/Upload.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
-import Check from 'vue-material-design-icons/Check.vue'
 
 /**
  * Software Catalog Settings component
  *
- * @category Component
- * @package  OCA\SoftwareCatalog\Components
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license  AGPL-3.0-or-later
  * @version  1.0.0
  */
 export default defineComponent({
@@ -1688,18 +1611,15 @@ export default defineComponent({
 		Save,
 		Refresh,
 		Cog,
-		AutoFix,
 		Alert,
 		Close,
 		Plus,
 		Email,
 		Sync,
 		CheckCircle,
-		RestartIcon,
 		Upload,
 		Download,
 		CloudUpload,
-		Check,
 	},
 
 	/**
@@ -1724,7 +1644,11 @@ export default defineComponent({
 				availableRegisters: [],
 				configuration: {},
 			},
-			selectedRegister: null,
+			selectedRegister: null, // Keeping for backward compatibility
+			voorzieningenRegister: null,
+			amefRegister: null,
+			voorzieningenSchemas: [],
+			amefSchemas: [],
 			configuration: {},
 			schemaOptions: [],
 			debugInfo: null,
@@ -1804,6 +1728,7 @@ export default defineComponent({
 				needsUpdate: false,
 			},
 			importResult: null,
+			consolidatedResult: null,
 			resettingAutoConfig: false,
 			resetAutoConfigResult: null,
 			// ArchiMate-related data
@@ -1825,17 +1750,26 @@ export default defineComponent({
 				includeViews: false,
 			},
 			roundTripResult: null,
-			// AMEF Register Configuration data
+			// AMEF Register Configuration data (now handled through unified configuration)
 			autoConfiguringAmef: false,
 			amefConfigResults: null,
-			amefSettings: {
-				registerId: null,
-				elementsSchema: null,
-				organizationsSchema: null,
-				relationshipsSchema: null,
-				viewsSchema: null,
+			archimateStatus: {
+				import: {
+					status: null,
+					current_step: null,
+					progress: null,
+					statistics: null,
+				},
+				export: {
+					status: null,
+					current_step: null,
+					progress: null,
+					statistics: null,
+				},
 			},
-
+			isImportRunning: false,
+			isExportRunning: false,
+			statusPollingInterval: null,
 		}
 	},
 
@@ -1846,25 +1780,50 @@ export default defineComponent({
 		 * @return {Array<object>} Array of register options with label and value
 		 */
 		registerOptions() {
-			return this.settings.availableRegisters.map(register => ({
+			// Filter out duplicates by ID to prevent Vue key errors
+			const uniqueRegisters = this.settings.availableRegisters.filter((register, index, arr) =>
+				arr.findIndex(r => r.id === register.id) === index,
+			)
+			const options = uniqueRegisters.map(register => ({
 				label: register.title,
 				value: register.id.toString(),
 			}))
+
+			// Additional check for duplicate values in the final options
+			const uniqueOptions = options.filter((option, index, arr) =>
+				arr.findIndex(o => o.value === option.value) === index,
+			)
+
+			return uniqueOptions
 		},
 
 		/**
-		 * Determines if the selected register has schemas
+		 * Determines if any selected register has schemas
 		 *
-		 * @return {boolean} True if the selected register has schemas
+		 * @return {boolean} True if any selected register has schemas
 		 */
 		hasSchemas() {
-			if (!this.selectedRegister) return false
+			// Check if Voorzieningen register has schemas
+			if (this.voorzieningenRegister) {
+				const voorzieningenRegisterData = this.settings.availableRegisters.find(
+					r => r.id.toString() === this.voorzieningenRegister.value,
+				)
+				if (voorzieningenRegisterData && Array.isArray(voorzieningenRegisterData.schemas) && voorzieningenRegisterData.schemas.length > 0) {
+					return true
+				}
+			}
 
-			const register = this.settings.availableRegisters.find(
-				r => r.id.toString() === this.selectedRegister.value,
-			)
+			// Check if AMEF register has schemas
+			if (this.amefRegister) {
+				const amefRegisterData = this.settings.availableRegisters.find(
+					r => r.id.toString() === this.amefRegister.value,
+				)
+				if (amefRegisterData && Array.isArray(amefRegisterData.schemas) && amefRegisterData.schemas.length > 0) {
+					return true
+				}
+			}
 
-			return register && Array.isArray(register.schemas) && register.schemas.length > 0
+			return false
 		},
 
 		/**
@@ -1877,28 +1836,76 @@ export default defineComponent({
 		},
 
 		/**
+		 * Returns schema options for Voorzieningen register
+		 *
+		 * @return {Array<object>} Array of schema options for Voorzieningen register
+		 */
+		voorzieningenSchemaOptions() {
+			// Filter out duplicates by ID to prevent Vue key errors
+			const uniqueSchemas = this.voorzieningenSchemas.filter((schema, index, arr) =>
+				arr.findIndex(s => s.id === schema.id) === index,
+			)
+			const options = uniqueSchemas.map(schema => ({
+				label: schema.title,
+				value: schema.id.toString(),
+			}))
+
+			// Additional check for duplicate values in the final options
+			return options.filter((option, index, arr) =>
+				arr.findIndex(o => o.value === option.value) === index,
+			)
+		},
+
+		/**
+		 * Returns schema options for AMEF register
+		 *
+		 * @return {Array<object>} Array of schema options for AMEF register
+		 */
+		amefSchemaOptions() {
+			// Filter out duplicates by ID to prevent Vue key errors
+			const uniqueSchemas = this.amefSchemas.filter((schema, index, arr) =>
+				arr.findIndex(s => s.id === schema.id) === index,
+			)
+			const options = uniqueSchemas.map(schema => ({
+				label: schema.title,
+				value: schema.id.toString(),
+			}))
+
+			// Additional check for duplicate values in the final options
+			return options.filter((option, index, arr) =>
+				arr.findIndex(o => o.value === option.value) === index,
+			)
+		},
+
+		/**
 		 * Determines if configuration can be saved
 		 *
 		 * @return {boolean} True if configuration is valid and can be saved
 		 */
 		canSave() {
-			if (!this.selectedRegister || !this.hasSchemas) return false
+			// Check if at least one register is selected
+			if (!this.voorzieningenRegister && !this.amefRegister) return false
 
-			// Check if at least one schema is configured based on register type
-			if (this.isRegisterType('amef')) {
-				return this.configuration.amef_organization?.schema
+			// Check if at least one schema is configured for selected registers
+			let hasValidConfiguration = false
+
+			// Check AMEF configuration if AMEF register is selected
+			if (this.amefRegister) {
+				if (this.configuration.amef_organization?.schema) {
+					hasValidConfiguration = true
+				}
 			}
 
-			if (this.isRegisterType('voorzieningen')) {
-				return this.configuration.voorzieningen_gebruiker?.schema
+			// Check Voorzieningen configuration if Voorzieningen register is selected
+			if (this.voorzieningenRegister) {
+				if (this.configuration.voorzieningen_gebruiker?.schema
 					|| this.configuration.voorzieningen_organisatie?.schema
-					|| this.configuration.voorzieningen_contactpersoon?.schema
+					|| this.configuration.voorzieningen_contactpersoon?.schema) {
+					hasValidConfiguration = true
+				}
 			}
 
-			// Check if at least one object type is configured (backward compatibility)
-			return this.settings.objectTypes.some(type =>
-				this.configuration[type] && this.configuration[type].schema
-			)
+			return hasValidConfiguration
 		},
 
 		/**
@@ -1907,7 +1914,7 @@ export default defineComponent({
 		 * @return {boolean} True if schema values can be saved
 		 */
 		hasSchemaValuesToSave() {
-			if (!this.selectedRegister || !this.hasSchemas || !this.isRegisterType('voorzieningen')) {
+			if (!this.voorzieningenRegister) {
 				return false
 			}
 
@@ -1917,54 +1924,88 @@ export default defineComponent({
 		},
 
 		/**
-		 * Available AMEF schemas for export
+		 * Available AMEF schemas for export - dynamically built from configuration
 		 *
 		 * @return {Array<object>} Array of schema options
 		 */
 		availableSchemas() {
-			// Default AMEF schemas if no configuration is available
-			const defaultSchemas = [
-				{ label: 'Elements (Schema 66)', value: 66 },
-				{ label: 'Organizations (Schema 66)', value: 66 },
-				{ label: 'Relationships (Schema 71)', value: 71 },
-				{ label: 'Views (Schema 69)', value: 69 },
-				{ label: 'Property Definitions (Schema 70)', value: 70 },
-				{ label: 'Extended Views (Schema 72)', value: 72 }
-			]
+			// Try to get schemas from AMEF register configuration
+			const configuredSchemas = []
 
-			// If we have AMEF settings, use those
-			if (this.amefSettings && Object.values(this.amefSettings).some(v => v !== null)) {
-				const configuredSchemas = []
+			// Check consolidated configuration first
+			if (this.settings.consolidatedConfig?.amef) {
+				const amefConfig = this.settings.consolidatedConfig.amef
 
-				if (this.amefSettings.elementsSchema) {
+				if (amefConfig.elements_schema) {
 					configuredSchemas.push({
-						label: `Elements (Schema ${this.amefSettings.elementsSchema})`,
-						value: this.amefSettings.elementsSchema
+						label: `Elements (Schema ${amefConfig.elements_schema})`,
+						value: parseInt(amefConfig.elements_schema),
 					})
 				}
-				if (this.amefSettings.organizationsSchema) {
+				if (amefConfig.organizations_schema) {
 					configuredSchemas.push({
-						label: `Organizations (Schema ${this.amefSettings.organizationsSchema})`,
-						value: this.amefSettings.organizationsSchema
+						label: `Organizations (Schema ${amefConfig.organizations_schema})`,
+						value: parseInt(amefConfig.organizations_schema),
 					})
 				}
-				if (this.amefSettings.relationshipsSchema) {
+				if (amefConfig.relationships_schema) {
 					configuredSchemas.push({
-						label: `Relationships (Schema ${this.amefSettings.relationshipsSchema})`,
-						value: this.amefSettings.relationshipsSchema
+						label: `Relationships (Schema ${amefConfig.relationships_schema})`,
+						value: parseInt(amefConfig.relationships_schema),
 					})
 				}
-				if (this.amefSettings.viewsSchema) {
+				if (amefConfig.views_schema) {
 					configuredSchemas.push({
-						label: `Views (Schema ${this.amefSettings.viewsSchema})`,
-						value: this.amefSettings.viewsSchema
+						label: `Views (Schema ${amefConfig.views_schema})`,
+						value: parseInt(amefConfig.views_schema),
 					})
 				}
-
-				return configuredSchemas.length > 0 ? configuredSchemas : defaultSchemas
 			}
 
-			return defaultSchemas
+			// Fallback to legacy configuration format
+			if (configuredSchemas.length === 0 && this.configuration) {
+				if (this.configuration.amef_elements?.schema) {
+					configuredSchemas.push({
+						label: `Elements (Schema ${this.configuration.amef_elements.schema.value})`,
+						value: this.configuration.amef_elements.schema.value,
+					})
+				}
+				if (this.configuration.amef_organization?.schema) {
+					configuredSchemas.push({
+						label: `Organizations (Schema ${this.configuration.amef_organization.schema.value})`,
+						value: this.configuration.amef_organization.schema.value,
+					})
+				}
+				if (this.configuration.amef_relationships?.schema) {
+					configuredSchemas.push({
+						label: `Relationships (Schema ${this.configuration.amef_relationships.schema.value})`,
+						value: this.configuration.amef_relationships.schema.value,
+					})
+				}
+				if (this.configuration.amef_views?.schema) {
+					configuredSchemas.push({
+						label: `Views (Schema ${this.configuration.amef_views.schema.value})`,
+						value: this.configuration.amef_views.schema.value,
+					})
+				}
+			}
+
+			// If still no schemas found, try to get from selected AMEF register schemas
+			if (configuredSchemas.length === 0 && this.amefRegister) {
+				const amefRegisterData = this.settings.availableRegisters.find(
+					r => r.id.toString() === this.amefRegister.value,
+				)
+				if (amefRegisterData?.schemas) {
+					return amefRegisterData.schemas.map(schema => ({
+						label: `${schema.title} (Schema ${schema.id})`,
+						value: schema.id,
+					}))
+				}
+			}
+
+			// Final fallback: return empty array if no configuration available
+			// This prevents hardcoded IDs and forces proper configuration
+			return configuredSchemas
 		},
 
 		/**
@@ -2064,11 +2105,8 @@ export default defineComponent({
 		 * @param {object} newRegister - The newly selected register
 		 * @param {object} oldRegister - The previously selected register
 		 */
-		selectedRegister(newRegister, oldRegister) {
-			if (newRegister && newRegister !== oldRegister) {
-				this.handleRegisterChange()
-			}
-		},
+		// Removed selectedRegister watcher - now using separate voorzieningenRegister and amefRegister
+		// The register changes are handled by handleVoorzieningenRegisterChange and handleAmefRegisterChange methods
 	},
 
 	/**
@@ -2079,7 +2117,7 @@ export default defineComponent({
 			this.loadSettings(),
 			this.loadSyncStatus(),
 			this.loadVersionInfo(),
-			this.loadAmefSettings()
+			this.fetchArchiMateStatus(),
 		])
 
 		// Initialize export options with default values
@@ -2089,9 +2127,169 @@ export default defineComponent({
 	beforeDestroy() {
 		// Clean up progress tracking
 		this.stopProgressTracking()
+		// Clean up status polling
+		this.stopStatusPolling()
 	},
 
 	methods: {
+		/**
+		 * Handles Voorzieningen register selection change
+		 *
+		 * @param {object} register Selected register option
+		 */
+		handleVoorzieningenRegisterChange(register) {
+			if (register) {
+				const selectedRegister = this.settings.availableRegisters.find(
+					r => r.id.toString() === register.value,
+				)
+				this.voorzieningenSchemas = selectedRegister?.schemas || []
+			} else {
+				this.voorzieningenSchemas = []
+			}
+		},
+
+		/**
+		 * Handles AMEF register selection change
+		 *
+		 * @param {object} register Selected register option
+		 */
+		handleAmefRegisterChange(register) {
+			if (register) {
+				const selectedRegister = this.settings.availableRegisters.find(
+					r => r.id.toString() === register.value,
+				)
+				this.amefSchemas = selectedRegister?.schemas || []
+			} else {
+				this.amefSchemas = []
+			}
+		},
+
+		/**
+		 * Populates register selections from existing configuration (new JSON format only)
+		 */
+		populateRegisterSelections() {
+			// Try to determine which registers are being used based on configuration
+			const config = this.settings.configuration || {}
+
+			// Check for Voorzieningen register usage (new JSON format)
+			if (config.voorzieningen && typeof config.voorzieningen === 'string') {
+				try {
+					const voorzieningenConfig = JSON.parse(config.voorzieningen)
+					const voorzieningenRegisterId = voorzieningenConfig.register?.toString()
+
+					if (voorzieningenRegisterId) {
+						const voorzieningenRegister = this.settings.availableRegisters.find(
+							r => r.id.toString() === voorzieningenRegisterId,
+						)
+						if (voorzieningenRegister) {
+							this.voorzieningenRegister = {
+								label: voorzieningenRegister.title,
+								value: voorzieningenRegister.id.toString(),
+							}
+							this.voorzieningenSchemas = voorzieningenRegister.schemas || []
+						}
+					}
+				} catch (e) {
+					// Invalid JSON format, skip
+				}
+			}
+
+			// Check for AMEF register usage (new JSON format)
+			if (config.amef && typeof config.amef === 'string') {
+				try {
+					const amefConfig = JSON.parse(config.amef)
+					const amefRegisterId = amefConfig.register?.toString()
+
+					if (amefRegisterId) {
+						const amefRegister = this.settings.availableRegisters.find(
+							r => r.id.toString() === amefRegisterId,
+						)
+						if (amefRegister) {
+							this.amefRegister = {
+								label: amefRegister.title,
+								value: amefRegister.id.toString(),
+							}
+							this.amefSchemas = amefRegister.schemas || []
+						}
+					}
+				} catch (e) {
+					// Invalid JSON format, skip
+				}
+			}
+
+			// If no specific registers found, try to auto-detect based on schema configuration
+			if (!this.voorzieningenRegister && !this.amefRegister) {
+				this.autoDetectRegistersFromSchemas()
+			}
+		},
+
+		/**
+		 * Auto-detects register usage from schema configuration (new JSON format only)
+		 */
+		autoDetectRegistersFromSchemas() {
+			const config = this.settings.configuration || {}
+
+			// Check for Voorzieningen-specific schemas in JSON format
+			if (config.voorzieningen && typeof config.voorzieningen === 'string') {
+				try {
+					const voorzieningenConfig = JSON.parse(config.voorzieningen)
+					const organisatieSchema = voorzieningenConfig.organisatie_schema
+					const contactpersoonSchema = voorzieningenConfig.contactpersoon_schema
+
+					if (organisatieSchema || contactpersoonSchema) {
+						// Find a register that contains these schemas
+						for (const register of this.settings.availableRegisters) {
+							const schemas = register.schemas || []
+							const hasVoorzieningenSchemas = schemas.some(schema =>
+								schema.id.toString() === organisatieSchema?.toString()
+								|| schema.id.toString() === contactpersoonSchema?.toString(),
+							)
+							if (hasVoorzieningenSchemas) {
+								this.voorzieningenRegister = {
+									label: register.title,
+									value: register.id.toString(),
+								}
+								this.voorzieningenSchemas = register.schemas || []
+								break
+							}
+						}
+					}
+				} catch (e) {
+					// Invalid JSON format, skip
+				}
+			}
+
+			// Check for AMEF-specific schemas in JSON format
+			if (config.amef && typeof config.amef === 'string') {
+				try {
+					const amefConfig = JSON.parse(config.amef)
+					const elementsSchema = amefConfig.elements_schema
+					const organizationSchema = amefConfig.organization_schema
+
+					if (elementsSchema || organizationSchema) {
+						// Find a register that contains these schemas
+						for (const register of this.settings.availableRegisters) {
+							const schemas = register.schemas || []
+							const hasAmefSchemas = schemas.some(schema =>
+								schema.id.toString() === elementsSchema?.toString()
+								|| schema.id.toString() === organizationSchema?.toString(),
+							)
+							if (hasAmefSchemas) {
+								this.amefRegister = {
+									label: register.title,
+									value: register.id.toString(),
+								}
+								this.amefSchemas = register.schemas || []
+								break
+							}
+						}
+					}
+				} catch (e) {
+					// Invalid JSON format, skip
+				}
+			}
+		},
+
 		/**
 		 * Loads version information from the backend
 		 *
@@ -2116,7 +2314,7 @@ export default defineComponent({
 						appVersion: 'Unknown',
 						configuredVersion: null,
 						versionsMatch: false,
-						needsUpdate: true
+						needsUpdate: true,
 					}
 				} else {
 					this.versionInfo = data
@@ -2131,7 +2329,7 @@ export default defineComponent({
 					appVersion: 'Unknown',
 					configuredVersion: null,
 					versionsMatch: false,
-					needsUpdate: true
+					needsUpdate: true,
 				}
 				this.loadingVersionInfo = false
 			}
@@ -2164,7 +2362,7 @@ export default defineComponent({
 				if (result.success) {
 					await Promise.all([
 						this.loadVersionInfo(),
-						this.loadSettings()
+						this.loadSettings(),
 					])
 					// If auto-configuration was successful, show additional success info
 					if (result.autoConfigResult && Object.keys(result.autoConfigResult).length > 0) {
@@ -2172,7 +2370,7 @@ export default defineComponent({
 						// Show a more detailed success message
 						this.importResult = {
 							...result,
-							message: result.message + ' Auto-configured voorzieningen register with organisatie and contactpersoon schemas.'
+							message: result.message + ' Auto-configured voorzieningen register with organisatie and contactpersoon schemas.',
 						}
 					}
 				}
@@ -2184,6 +2382,59 @@ export default defineComponent({
 				}
 			} finally {
 				this.importing = false
+			}
+		},
+
+		/**
+		 * Consolidated auto-configuration that handles everything
+		 *
+		 * This method calls the new consolidated endpoint that handles:
+		 * - Configuration file loading
+		 * - Voorzieningen register setup
+		 * - AMEF register setup
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async consolidatedAutoConfigure() {
+			this.autoConfiguring = true
+			this.consolidatedResult = null
+			this.importResult = null // Clear old import results
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/consolidated-auto-configure', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				})
+
+				const result = await response.json()
+				this.consolidatedResult = result
+
+				// If successful, update version info and reload settings
+				if (result.success || result.steps) {
+					await Promise.all([
+						this.loadVersionInfo(),
+						this.loadSettings(),
+					])
+
+					// Show success message even if there were some warnings
+					if (result.success) {
+						// Auto-configuration completed successfully
+					} else if (result.steps) {
+						// Auto-configuration completed with some issues
+					}
+				}
+			} catch (error) {
+				console.error('Failed to perform consolidated auto-configuration:', error)
+				this.consolidatedResult = {
+					success: false,
+					message: 'Auto-configuration failed: ' + error.message,
+					errors: [error.message],
+				}
+			} finally {
+				this.autoConfiguring = false
 			}
 		},
 
@@ -2280,7 +2531,7 @@ export default defineComponent({
 				}
 
 				this.initializeConfiguration()
-				this.autoSelectRegister()
+				this.populateRegisterSelections()
 
 				// Load debug information
 				await this.loadDebugInfo()
@@ -2329,7 +2580,7 @@ export default defineComponent({
 					// Handle empty message response which indicates uncaught exception
 					this.debugInfo = {
 						error: 'Empty response from debug API - likely uncaught exception in backend',
-						suggestion: 'Check server logs or try running manual import/initialization'
+						suggestion: 'Check server logs or try running manual import/initialization',
 					}
 				} else {
 					this.debugInfo = data
@@ -2337,7 +2588,7 @@ export default defineComponent({
 			} catch (error) {
 				this.debugInfo = {
 					error: 'Failed to load debug information: ' + error.message,
-					suggestion: 'Check if the SoftwareCatalog app is properly installed and OpenRegister is available'
+					suggestion: 'Check if the SoftwareCatalog app is properly installed and OpenRegister is available',
 				}
 			}
 		},
@@ -2349,7 +2600,16 @@ export default defineComponent({
 			// Initialize register-specific configuration
 			this.configuration = {
 				// AMEF register configuration
+				amef_elements: {
+					schema: null,
+				},
 				amef_organization: {
+					schema: null,
+				},
+				amef_relationships: {
+					schema: null,
+				},
+				amef_views: {
 					schema: null,
 				},
 				// Voorzieningen register configuration
@@ -2376,10 +2636,13 @@ export default defineComponent({
 
 			// Handle existing configuration for register-specific schemas
 			const configKeys = [
+				'amef_elements',
 				'amef_organization',
+				'amef_relationships',
+				'amef_views',
 				'voorzieningen_gebruiker',
 				'voorzieningen_organisatie',
-				'voorzieningen_contactpersoon'
+				'voorzieningen_contactpersoon',
 			]
 
 			configKeys.forEach(configKey => {
@@ -2496,7 +2759,7 @@ export default defineComponent({
 			if (this.isRegisterType('amef')) {
 				// For AMEF register, look for organization schema
 				const orgSchema = register.schemas.find(
-					schema => schema.title.toLowerCase().includes('organization')
+					schema => schema.title.toLowerCase().includes('organization'),
 				)
 				if (orgSchema) {
 					this.configuration = {
@@ -2513,7 +2776,7 @@ export default defineComponent({
 			} else if (this.isRegisterType('voorzieningen')) {
 				// For Voorzieningen register, look for gebruiker and organisatie schemas
 				const gebruikerSchema = register.schemas.find(
-					schema => schema.title.toLowerCase().includes('gebruiker')
+					schema => schema.title.toLowerCase().includes('gebruiker'),
 				)
 				if (gebruikerSchema) {
 					this.configuration = {
@@ -2529,7 +2792,7 @@ export default defineComponent({
 				}
 
 				const organisatieSchema = register.schemas.find(
-					schema => schema.title.toLowerCase().includes('organisatie')
+					schema => schema.title.toLowerCase().includes('organisatie'),
 				)
 				if (organisatieSchema) {
 					this.configuration = {
@@ -2545,7 +2808,7 @@ export default defineComponent({
 				}
 
 				const contactpersoonSchema = register.schemas.find(
-					schema => schema.title.toLowerCase().includes('contactpersoon')
+					schema => schema.title.toLowerCase().includes('contactpersoon'),
 				)
 				if (contactpersoonSchema) {
 					this.configuration = {
@@ -2639,7 +2902,7 @@ export default defineComponent({
 					'voorzieningen_gebruiker',
 					'voorzieningen_organisatie',
 					'voorzieningen_contactpersoon',
-					...this.settings.objectTypes
+					...this.settings.objectTypes,
 				]
 
 				allConfigKeys.forEach(configKey => {
@@ -2687,10 +2950,13 @@ export default defineComponent({
 
 				// Save register-specific configuration
 				const registerSpecificKeys = [
+					'amef_elements',
 					'amef_organization',
+					'amef_relationships',
+					'amef_views',
 					'voorzieningen_gebruiker',
 					'voorzieningen_organisatie',
-					'voorzieningen_contactpersoon'
+					'voorzieningen_contactpersoon',
 				]
 
 				registerSpecificKeys.forEach(configKey => {
@@ -2787,12 +3053,12 @@ export default defineComponent({
 				if (result.error) {
 					this.schemaSaveResult = {
 						success: false,
-						message: 'Failed to save schema values: ' + result.error
+						message: 'Failed to save schema values: ' + result.error,
 					}
 				} else {
 					this.schemaSaveResult = {
 						success: true,
-						message: 'Schema values saved successfully! Organisatie and Contactpersoon schemas are now configured.'
+						message: 'Schema values saved successfully! Organisatie and Contactpersoon schemas are now configured.',
 					}
 					// Reload settings to reflect changes
 					await this.loadSettings()
@@ -2800,7 +3066,7 @@ export default defineComponent({
 			} catch (error) {
 				this.schemaSaveResult = {
 					success: false,
-					message: 'Failed to save schema values: ' + error.message
+					message: 'Failed to save schema values: ' + error.message,
 				}
 			} finally {
 				this.savingSchemas = false
@@ -2931,8 +3197,8 @@ export default defineComponent({
 					},
 					body: JSON.stringify({
 						userGroups: {
-							generic: this.genericUserGroups
-						}
+							generic: this.genericUserGroups,
+						},
 					}),
 				})
 
@@ -2976,8 +3242,8 @@ export default defineComponent({
 					},
 					body: JSON.stringify({
 						userGroups: {
-							organizationAdmin: this.organizationAdminGroups
-						}
+							organizationAdmin: this.organizationAdminGroups,
+						},
 					}),
 				})
 
@@ -3021,8 +3287,8 @@ export default defineComponent({
 					},
 					body: JSON.stringify({
 						userGroups: {
-							superUser: this.superUserGroups
-						}
+							superUser: this.superUserGroups,
+						},
 					}),
 				})
 
@@ -3090,18 +3356,18 @@ export default defineComponent({
 				if (result.success === false || result.error) {
 					this.emailTestResult = {
 						success: false,
-						message: result.message || result.error || 'Failed to send test email'
+						message: result.message || result.error || 'Failed to send test email',
 					}
 				} else if (result.success === true) {
 					this.emailTestResult = {
 						success: true,
-						message: result.message || 'Test email sent successfully!'
+						message: result.message || 'Test email sent successfully!',
 					}
 				} else {
 					// Fallback for legacy responses
 					this.emailTestResult = {
 						success: true,
-						message: 'Test email sent successfully!'
+						message: 'Test email sent successfully!',
 					}
 				}
 			} catch (error) {
@@ -3122,7 +3388,7 @@ export default defineComponent({
 						'Content-Type': 'application/json',
 					},
 					body: JSON.stringify({
-						emailSettings: this.emailSettings
+						emailSettings: this.emailSettings,
 					}),
 				})
 
@@ -3238,7 +3504,7 @@ export default defineComponent({
 				// Error handling for template reset
 				this.templateSaveResult = {
 					success: false,
-					message: 'Failed to reset template: ' + error.message
+					message: 'Failed to reset template: ' + error.message,
 				}
 			}
 		},
@@ -3257,12 +3523,12 @@ export default defineComponent({
 
 				this.templateSaveResult = {
 					success: true,
-					message: 'Template saved successfully!'
+					message: 'Template saved successfully!',
 				}
 			} catch (error) {
 				this.templateSaveResult = {
 					success: false,
-					message: 'Failed to save template: ' + error.message
+					message: 'Failed to save template: ' + error.message,
 				}
 			} finally {
 				this.savingTemplate = false
@@ -3295,7 +3561,7 @@ export default defineComponent({
 				if (data.error) {
 					this.syncStatus = {
 						configured: false,
-						message: data.error
+						message: data.error,
 					}
 				} else {
 					this.syncStatus = data
@@ -3303,7 +3569,7 @@ export default defineComponent({
 			} catch (error) {
 				this.syncStatus = {
 					configured: false,
-					message: 'Failed to load sync status: ' + error.message
+					message: 'Failed to load sync status: ' + error.message,
 				}
 			} finally {
 				this.loadingSyncStatus = false
@@ -3335,20 +3601,20 @@ export default defineComponent({
 					this.syncResult = {
 						success: true,
 						message: data.message || 'Synchronization completed successfully!',
-						results: data
+						results: data,
 					}
 					// Refresh sync status after successful sync
 					await this.loadSyncStatus()
 				} else {
 					this.syncResult = {
 						success: false,
-						message: data.message || 'Synchronization failed'
+						message: data.message || 'Synchronization failed',
 					}
 				}
 			} catch (error) {
 				this.syncResult = {
 					success: false,
-					message: 'Failed to perform synchronization: ' + error.message
+					message: 'Failed to perform synchronization: ' + error.message,
 				}
 			} finally {
 				this.performingSync = false
@@ -3525,154 +3791,13 @@ export default defineComponent({
 					// Reload settings and version info to reflect any changes
 					await Promise.all([
 						this.loadSettings(),
-						this.loadVersionInfo()
+						this.loadVersionInfo(),
 					])
 				}
 			} catch (error) {
 				this.resetAutoConfigResult = { success: false, message: 'Failed to reset auto-configuration: ' + error.message }
 			} finally {
 				this.resettingAutoConfig = false
-			}
-		},
-
-		// AMEF Configuration methods
-
-		/**
-		 * Auto-configure AMEF register settings
-		 * Automatically detects and configures appropriate schemas for AMEF object types
-		 *
-		 * @return {Promise<void>}
-		 */
-		async autoConfigureAmefSettings() {
-			this.autoConfiguringAmef = true
-			this.amefConfigResults = null
-
-			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/amef/auto-configure', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
-					},
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
-
-				const result = await response.json()
-				this.amefConfigResults = result
-
-				if (result.success) {
-					// Update local AMEF settings with the configured values
-					this.amefSettings = { ...this.amefSettings, ...result.configured }
-					// console.log('AMEF auto-configuration completed:', result)
-				}
-
-			} catch (error) {
-				console.error('Failed to auto-configure AMEF settings:', error)
-				this.amefConfigResults = {
-					success: false,
-					errors: ['Failed to auto-configure AMEF settings: ' + error.message]
-				}
-			} finally {
-				this.autoConfiguringAmef = false
-			}
-		},
-
-		/**
-		 * Save AMEF settings
-		 * Saves the manually configured AMEF schema mappings
-		 *
-		 * @return {Promise<void>}
-		 */
-		async saveAmefSettings() {
-			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/amef', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
-					},
-					body: JSON.stringify(this.amefSettings)
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
-
-				await response.json()
-				// console.log('AMEF settings saved:', result)
-
-			} catch (error) {
-				console.error('Failed to save AMEF settings:', error)
-			}
-		},
-
-		/**
-		 * Load AMEF settings
-		 * Loads the current AMEF schema mappings from the server
-		 *
-		 * @return {Promise<void>}
-		 */
-		async loadAmefSettings() {
-			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/amef', {
-					method: 'GET',
-					headers: {
-						'X-Requested-With': 'XMLHttpRequest',
-					},
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
-
-				const result = await response.json()
-				if (result.success && result.settings) {
-					this.amefSettings = { ...this.amefSettings, ...result.settings }
-				}
-
-				// console.log('AMEF settings loaded:', result)
-
-			} catch (error) {
-				console.error('Failed to load AMEF settings:', error)
-			}
-		},
-
-		/**
-		 * Handle register change for AMEF configuration
-		 * Updates schema options when the register selection changes
-		 *
-		 * @return {Promise<void>}
-		 */
-		async onRegisterChange() {
-			try {
-				// Clear existing schema selections when register changes
-				this.amefSettings.elementsSchema = null
-				this.amefSettings.organizationsSchema = null
-				this.amefSettings.relationshipsSchema = null
-				this.amefSettings.viewsSchema = null
-
-				// Update schema options based on selected register
-				if (this.amefSettings.registerId) {
-					const register = this.settings.availableRegisters.find(
-						r => r.id.toString() === this.amefSettings.registerId
-					)
-					if (register && Array.isArray(register.schemas)) {
-						this.schemaOptions = register.schemas.map(schema => ({
-							label: schema.title,
-							value: schema.id.toString(),
-						}))
-					}
-				}
-
-				// Save the register selection
-				await this.saveAmefSettings()
-
-				// console.log('AMEF register changed to:', this.amefSettings.registerId)
-			} catch (error) {
-				console.error('Failed to handle register change:', error)
 			}
 		},
 
@@ -3732,15 +3857,17 @@ export default defineComponent({
 				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
 					method: 'POST',
 					headers: {
-						'X-Requested-With': 'XMLHttpRequest'
+						'X-Requested-With': 'XMLHttpRequest',
 					},
-					body: formData
+					body: formData,
 				})
 
 				const result = await response.json()
 
 				if (result.success) {
 					this.importResult = result
+					// Start polling for status updates
+					this.startStatusPolling()
 				} else {
 					// Handle import failure
 				}
@@ -3766,15 +3893,17 @@ export default defineComponent({
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest'
+						'X-Requested-With': 'XMLHttpRequest',
 					},
-					body: JSON.stringify(this.exportOptions)
+					body: JSON.stringify(this.exportOptions),
 				})
 
 				const result = await response.json()
 
 				if (result.success) {
 					this.exportResult = result
+					// Start polling for status updates
+					this.startStatusPolling()
 				} else {
 					// Handle export failure
 				}
@@ -3832,14 +3961,14 @@ export default defineComponent({
 					success: true,
 					message: 'Round-trip test completed',
 					import_stats: this.importResult?.statistics || {},
-					export_stats: this.exportResult?.statistics || {}
+					export_stats: this.exportResult?.statistics || {},
 				}
 
 			} catch (error) {
 				console.error('Round-trip test failed:', error)
 				this.roundTripResult = {
 					success: false,
-					message: 'Round-trip test failed: ' + error.message
+					message: 'Round-trip test failed: ' + error.message,
 				}
 			} finally {
 				this.testingRoundTrip = false
@@ -3884,6 +4013,147 @@ export default defineComponent({
 			return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 		},
 
+		clearImportStatus() {
+			this.archimateStatus.import = {
+				status: null,
+				current_step: null,
+				progress: null,
+				statistics: null,
+			}
+			this.isImportRunning = false
+		},
+
+		clearExportStatus() {
+			this.archimateStatus.export = {
+				status: null,
+				current_step: null,
+				progress: null,
+				statistics: null,
+			}
+			this.isExportRunning = false
+		},
+
+		async fetchArchiMateStatus() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
+				const data = await response.json()
+
+				if (data.success && data.status) {
+					this.archimateStatus = data.status
+
+					// Update running states
+					this.isImportRunning = data.status.import?.status === 'running'
+					this.isExportRunning = data.status.export?.status === 'running'
+
+					// Stop polling if no operations are running
+					if (!this.isImportRunning && !this.isExportRunning) {
+						this.stopStatusPolling()
+					}
+				}
+			} catch (error) {
+				console.error('Failed to fetch ArchiMate status:', error)
+			}
+		},
+
+		startStatusPolling() {
+			if (this.statusPollingInterval) {
+				clearInterval(this.statusPollingInterval)
+			}
+			this.statusPollingInterval = setInterval(() => {
+				this.fetchArchiMateStatus()
+			}, 1000) // Poll every second
+		},
+
+		stopStatusPolling() {
+			if (this.statusPollingInterval) {
+				clearInterval(this.statusPollingInterval)
+				this.statusPollingInterval = null
+			}
+		},
+
+		getStatusType(status) {
+			switch (status) {
+			case 'running':
+				return 'warning'
+			case 'completed':
+				return 'success'
+			case 'failed':
+				return 'error'
+			default:
+				return 'info'
+			}
+		},
+
+		getStatusIcon(status) {
+			switch (status) {
+			case 'running':
+				return '⏳'
+			case 'completed':
+				return '✅'
+			case 'failed':
+				return '❌'
+			default:
+				return 'ℹ️'
+			}
+		},
+
+		getStatusText(status) {
+			switch (status) {
+			case 'running':
+				return 'Import in progress'
+			case 'completed':
+				return 'Import completed'
+			case 'failed':
+				return 'Import failed'
+			default:
+				return 'No status available'
+			}
+		},
+
+		getStatusStatistics(status) {
+			switch (status) {
+			case 'running':
+				return `Elements: ${this.archimateStatus.import.statistics?.elements_processed || 0}, Relationships: ${this.archimateStatus.import.statistics?.relationships_processed || 0}, Organizations: ${this.archimateStatus.import.statistics?.organizations_processed || 0}, Created: ${this.archimateStatus.import.statistics?.objects_created || 0}, Updated: ${this.archimateStatus.import.statistics?.objects_updated || 0}`
+			case 'completed':
+				return `Elements: ${this.archimateStatus.import.statistics?.elements_processed || 0}, Relationships: ${this.archimateStatus.import.statistics?.relationships_processed || 0}, Organizations: ${this.archimateStatus.import.statistics?.organizations_processed || 0}, Created: ${this.archimateStatus.import.statistics?.objects_created || 0}, Updated: ${this.archimateStatus.import.statistics?.objects_updated || 0}`
+			case 'failed':
+				return `Error: ${this.archimateStatus.import.error}`
+			default:
+				return 'No statistics available'
+			}
+		},
+
+		getStatusActions(status) {
+			switch (status) {
+			case 'running':
+				return [
+					{
+						label: 'Cancel Import',
+						icon: '⛔',
+						action: this.clearImportStatus,
+					},
+				]
+			case 'completed':
+				return [
+					{
+						label: 'Clear Status',
+						icon: '🗑️',
+						action: this.clearImportStatus,
+					},
+				]
+			case 'failed':
+				return [
+					{
+						label: 'Clear Status',
+						icon: '🗑️',
+						action: this.clearImportStatus,
+					},
+				]
+			default:
+				return []
+			}
+		},
+
 	},
 })
 </script>
@@ -3904,6 +4174,59 @@ export default defineComponent({
 .register-selection {
 	margin-bottom: 2rem;
 	max-width: 400px;
+}
+
+.register-selection-content {
+	margin-top: 1rem;
+}
+
+.schema-configuration-content {
+	margin-top: 1rem;
+}
+
+.register-selection-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 2rem;
+	margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+	.register-selection-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.register-selection-item {
+	padding: 1.5rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background-color: var(--color-background-hover);
+}
+
+.register-selection-item h5 {
+	margin: 0 0 0.5rem 0;
+	color: var(--color-main-text);
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.register-selection-item > p {
+	margin: 0 0 1rem 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9rem;
+}
+
+.schema-configuration-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+	.schema-configuration-grid {
+		grid-template-columns: 1fr;
+	}
 }
 
 .schema-configuration {
@@ -5249,5 +5572,71 @@ export default defineComponent({
 
 .schema-card li:last-child {
 	margin-bottom: 0;
+}
+
+/* ArchiMate Status Styling */
+.import-status,
+.export-status {
+	margin-bottom: 1rem;
+}
+
+.status-content {
+	padding: 0.5rem 0;
+}
+
+.progress-bar {
+	width: 100%;
+	height: 8px;
+	background-color: var(--color-background-dark);
+	border-radius: 4px;
+	margin: 0.5rem 0;
+	position: relative;
+	overflow: hidden;
+}
+
+.progress-fill {
+	height: 100%;
+	background-color: var(--color-primary);
+	transition: width 0.3s ease;
+}
+
+.progress-text {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.status-statistics {
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+}
+
+.status-statistics p {
+	margin: 0.25rem 0;
+	font-size: 0.875rem;
+}
+
+.status-actions {
+	margin-top: 0.5rem;
+}
+
+.status-error {
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	background: var(--color-error-background);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-error);
+}
+
+.status-error p {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--color-error);
 }
 </style>

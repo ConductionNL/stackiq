@@ -1,27 +1,27 @@
 /**
  * Get the current theme from Nextcloud
- * 
- * @returns {string} The current theme name
+ *
+ * @return {string} The current theme name
  */
 export function getTheme() {
 	// Try to get theme from Nextcloud's OCA.Theming
 	if (typeof OCA !== 'undefined' && OCA.Theming && OCA.Theming.name) {
 		return OCA.Theming.name
 	}
-	
+
 	// Fallback to checking for dark theme class
 	if (document.documentElement.classList.contains('theme--dark')) {
 		return 'dark'
 	}
-	
+
 	// Default theme
 	return 'light'
 }
 
 /**
  * Check if the current theme is dark
- * 
- * @returns {boolean} True if dark theme is active
+ *
+ * @return {boolean} True if dark theme is active
  */
 export function isDarkTheme() {
 	return getTheme() === 'dark'
@@ -29,13 +29,13 @@ export function isDarkTheme() {
 
 /**
  * Get theme-specific CSS variables
- * 
- * @returns {Object} Theme CSS variables
+ *
+ * @return {object} Theme CSS variables
  */
 export function getThemeVariables() {
 	const root = document.documentElement
 	const computedStyle = getComputedStyle(root)
-	
+
 	return {
 		'--color-primary': computedStyle.getPropertyValue('--color-primary'),
 		'--color-primary-text': computedStyle.getPropertyValue('--color-primary-text'),
@@ -79,4 +79,4 @@ export function getThemeVariables() {
 		'--color-primary-element-light-focus-disabled-text': computedStyle.getPropertyValue('--color-primary-element-light-focus-disabled-text'),
 		'--color-primary-element-light-focus-disabled-shadow': computedStyle.getPropertyValue('--color-primary-element-light-focus-disabled-shadow'),
 	}
-} 
+}

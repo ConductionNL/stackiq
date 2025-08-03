@@ -72,6 +72,30 @@ class ArchiMateService
         $startTime = microtime(true);
         $startMemory = memory_get_usage(true);
         
+        // Initialize import status
+        $importStatus = [
+            'status' => 'running',
+            'start_time' => date('Y-m-d H:i:s'),
+            'progress' => 0,
+            'current_step' => 'Initializing',
+            'file_info' => [
+                'name' => $options['fileName'] ?? 'unknown',
+                'size' => 0
+            ],
+            'statistics' => [
+                'elements_processed' => 0,
+                'relationships_processed' => 0,
+                'organizations_processed' => 0,
+                'views_processed' => 0,
+                'objects_created' => 0,
+                'objects_updated' => 0,
+                'objects_skipped' => 0,
+                'errors' => []
+            ]
+        ];
+        
+        $this->settingsService->setArchiMateImportStatus($importStatus);
+        
         $this->logger->info('=== ARCHIMATE IMPORT START ===', [
             'file_path' => $options['filePath'] ?? 'unknown',
             'file_name' => $options['fileName'] ?? 'unknown',
@@ -90,6 +114,10 @@ class ArchiMateService
         try {
             // Step 1: Validate file
             $validationStart = microtime(true);
+            $importStatus['current_step'] = 'Validating file';
+            $importStatus['progress'] = 5;
+            $this->settingsService->setArchiMateImportStatus($importStatus);
+            
             $this->validateArchiMateFileFromPath(
                 $options['filePath'],
                 $options['fileName'],
@@ -104,8 +132,21 @@ class ArchiMateService
 
             // Step 2: Parse XML with streaming
             $parseStart = microtime(true);
+            $importStatus['current_step'] = 'Parsing XML file';
+            $importStatus['progress'] = 15;
+            $this->settingsService->setArchiMateImportStatus($importStatus);
+            
             $archiMateData = $this->parseArchiMateXmlStreaming($options['filePath']);
             $parseTime = microtime(true) - $parseStart;
+
+            // Update file info
+            $importStatus['file_info']['size'] = filesize($options['filePath']);
+            $importStatus['statistics']['elements_processed'] = count($archiMateData['elements'] ?? []);
+            $importStatus['statistics']['relationships_processed'] = count($archiMateData['relationships'] ?? []);
+            $importStatus['statistics']['organizations_processed'] = count($archiMateData['organizations'] ?? []);
+            $importStatus['statistics']['views_processed'] = count($archiMateData['views'] ?? []);
+            $importStatus['progress'] = 25;
+            $this->settingsService->setArchiMateImportStatus($importStatus);
 
             $this->logger->info('XML parsing completed', [
                 'parse_time_seconds' => round($parseTime, 3),
@@ -118,12 +159,28 @@ class ArchiMateService
 
             // Step 3: Convert to OpenRegister objects with ReactPHP parallel processing
             $convertStart = microtime(true);
+            $importStatus['current_step'] = 'Converting to OpenRegister objects';
+            $importStatus['progress'] = 35;
+            $this->settingsService->setArchiMateImportStatus($importStatus);
+            
             $convertResults = $this->convertToOpenRegisterObjectsParallel($archiMateData, $options);
             $convertTime = microtime(true) - $convertStart;
 
             $totalTime = microtime(true) - $startTime;
             $endMemory = memory_get_usage(true);
             $peakMemory = memory_get_peak_usage(true);
+
+            // Update final statistics
+            $importStatus['statistics']['objects_created'] = $convertResults['objects_created'];
+            $importStatus['statistics']['objects_updated'] = $convertResults['objects_updated'];
+            $importStatus['statistics']['objects_skipped'] = $convertResults['objects_skipped'];
+            $importStatus['statistics']['errors'] = $convertResults['errors'];
+            $importStatus['progress'] = 100;
+            $importStatus['status'] = 'completed';
+            $importStatus['current_step'] = 'Import completed';
+            $importStatus['end_time'] = date('Y-m-d H:i:s');
+            $importStatus['total_time_seconds'] = round($totalTime, 3);
+            $this->settingsService->setArchiMateImportStatus($importStatus);
 
             $results = [
                 'success' => true,
@@ -168,35 +225,32 @@ class ArchiMateService
                 'total_time_seconds' => round($totalTime, 3),
                 'objects_created' => $convertResults['objects_created'],
                 'objects_updated' => $convertResults['objects_updated'],
-                'objects_deleted' => $convertResults['objects_deleted'],
                 'objects_skipped' => $convertResults['objects_skipped'],
-                'total_errors' => count($convertResults['errors']),
-                'peak_memory_mb' => round($peakMemory / 1024 / 1024, 2),
-                'items_per_second' => $results['performance_metrics']['items_per_second']
+                'errors_count' => count($convertResults['errors'])
             ]);
 
             return $results;
 
         } catch (\Exception $e) {
             $totalTime = microtime(true) - $startTime;
-            $peakMemory = memory_get_peak_usage(true);
-
+            
+            // Update status with error
+            $importStatus['status'] = 'failed';
+            $importStatus['current_step'] = 'Import failed';
+            $importStatus['end_time'] = date('Y-m-d H:i:s');
+            $importStatus['error'] = $e->getMessage();
+            $importStatus['total_time_seconds'] = round($totalTime, 3);
+            $this->settingsService->setArchiMateImportStatus($importStatus);
+            
             $this->logger->error('=== ARCHIMATE IMPORT FAILED ===', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'total_time_seconds' => round($totalTime, 3),
-                'peak_memory_mb' => round($peakMemory / 1024 / 1024, 2)
+                'total_time_seconds' => round($totalTime, 3)
             ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
-                'processing_times' => [
-                    'total_time_seconds' => round($totalTime, 3)
-                ],
-                'memory_usage' => [
-                    'peak_mb' => round($peakMemory / 1024 / 1024, 2)
-                ]
+                'error' => $e->getMessage()
             ];
         }
     }
@@ -208,22 +262,64 @@ class ArchiMateService
     {
         $startTime = microtime(true);
         
+        // Initialize export status
+        $exportStatus = [
+            'status' => 'running',
+            'start_time' => date('Y-m-d H:i:s'),
+            'progress' => 0,
+            'current_step' => 'Initializing export',
+            'criteria' => $criteria,
+            'statistics' => [
+                'objects_found' => 0,
+                'objects_exported' => 0,
+                'xml_size_bytes' => 0,
+                'errors' => []
+            ]
+        ];
+        
+        $this->settingsService->setArchiMateExportStatus($exportStatus);
+        
         $this->logger->info('=== ARCHIMATE EXPORT START ===', [
             'criteria' => $criteria,
             'options' => $options
         ]);
 
         try {
-            // Get objects for export
+            // Step 1: Get objects for export
+            $exportStatus['current_step'] = 'Retrieving objects from database';
+            $exportStatus['progress'] = 25;
+            $this->settingsService->setArchiMateExportStatus($exportStatus);
+            
             $objects = $this->getObjectsForExport($criteria);
+            $exportStatus['statistics']['objects_found'] = count($objects);
+            $exportStatus['progress'] = 50;
+            $this->settingsService->setArchiMateExportStatus($exportStatus);
 
-            // Convert to ArchiMate format
+            // Step 2: Convert to ArchiMate format
+            $exportStatus['current_step'] = 'Converting to ArchiMate format';
+            $exportStatus['progress'] = 75;
+            $this->settingsService->setArchiMateExportStatus($exportStatus);
+            
             $archiMateData = $this->convertFromOpenRegisterObjects($objects, $options);
 
-            // Generate XML file
+            // Step 3: Generate XML file
+            $exportStatus['current_step'] = 'Generating XML file';
+            $exportStatus['progress'] = 90;
+            $this->settingsService->setArchiMateExportStatus($exportStatus);
+            
             $xmlContent = $this->generateArchiMateXml($archiMateData);
             
             $totalTime = microtime(true) - $startTime;
+            
+            // Update final status
+            $exportStatus['statistics']['objects_exported'] = count($objects);
+            $exportStatus['statistics']['xml_size_bytes'] = strlen($xmlContent);
+            $exportStatus['progress'] = 100;
+            $exportStatus['status'] = 'completed';
+            $exportStatus['current_step'] = 'Export completed';
+            $exportStatus['end_time'] = date('Y-m-d H:i:s');
+            $exportStatus['total_time_seconds'] = round($totalTime, 3);
+            $this->settingsService->setArchiMateExportStatus($exportStatus);
             
             $this->logger->info('=== ARCHIMATE EXPORT COMPLETED ===', [
                 'total_time_seconds' => round($totalTime, 3),
@@ -243,6 +339,14 @@ class ArchiMateService
 
         } catch (\Exception $e) {
             $totalTime = microtime(true) - $startTime;
+            
+            // Update status with error
+            $exportStatus['status'] = 'failed';
+            $exportStatus['current_step'] = 'Export failed';
+            $exportStatus['end_time'] = date('Y-m-d H:i:s');
+            $exportStatus['error'] = $e->getMessage();
+            $exportStatus['total_time_seconds'] = round($totalTime, 3);
+            $this->settingsService->setArchiMateExportStatus($exportStatus);
             
             $this->logger->error('=== ARCHIMATE EXPORT FAILED ===', [
                 'error' => $e->getMessage(),
@@ -1552,8 +1656,8 @@ class ArchiMateService
      */
     private function getAmefRegisterId(): ?int
     {
-        $registerId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
-        return $registerId ? (int) $registerId : null;
+        $amefConfig = $this->settingsService->getAmefConfig();
+        return isset($amefConfig['register_id']) ? (int) $amefConfig['register_id'] : null;
     }
 
     /**
@@ -1561,18 +1665,20 @@ class ArchiMateService
      */
     private function getAmefSchemaIdForType(string $archiMateType): ?int
     {
+        $amefConfig = $this->settingsService->getAmefConfig();
+        
         switch ($archiMateType) {
             case 'element':
-                $schemaId = $this->config->getValueString('softwarecatalog', 'amef_elements_schema', '');
+                $schemaId = $amefConfig['elements_schema'] ?? '';
                 break;
             case 'organization':
-                $schemaId = $this->config->getValueString('softwarecatalog', 'amef_organizations_schema', '');
+                $schemaId = $amefConfig['organizations_schema'] ?? '';
                 break;
             case 'relationship':
-                $schemaId = $this->config->getValueString('softwarecatalog', 'amef_relationships_schema', '');
+                $schemaId = $amefConfig['relationships_schema'] ?? '';
                 break;
             case 'view':
-                $schemaId = $this->config->getValueString('softwarecatalog', 'amef_views_schema', '');
+                $schemaId = $amefConfig['views_schema'] ?? '';
                 break;
             default:
                 throw new \RuntimeException("Unknown ArchiMate type: {$archiMateType}");
@@ -1589,7 +1695,8 @@ class ArchiMateService
 
     private function getOrganizationSchemaId(): ?int
     {
-        return (int) $this->config->getValueString('softwarecatalog', 'voorzieningen_organisatie_schema', '0') ?: null;
+        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+        return isset($voorzieningenConfig['organisatie_schema']) ? (int) $voorzieningenConfig['organisatie_schema'] : null;
     }
 
     private function getRelationshipSchemaId(): ?int

@@ -684,7 +684,7 @@ export const useObjectStore = defineStore('object', {
 		 * @param {string|null} id - Object ID (optional)
 		 * @param {string|null} action - Additional action (e.g., 'logs', 'uses') (optional)
 		 * @param {object} params - Query parameters
-		 * @param {object|null} publicationData - Publication data if used should be provided as object with schema and register keys (optional)
+		 * @param {object|null} organisatieData - Organisation data if used should be provided as object with schema and register keys (optional)
 		 * @return {string} The constructed URL
 		 * @private
 		 */
