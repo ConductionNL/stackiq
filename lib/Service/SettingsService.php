@@ -1541,7 +1541,7 @@ class SettingsService
      *
      * @return string Default template content
      */
-    private function getDefaultEmailTemplate(string $templateName): string
+    public function getDefaultEmailTemplate(string $templateName): string
     {
         $templates = [
             'organization_registration' => '
@@ -1661,9 +1661,6 @@ class SettingsService
                 'amef_organization_source',
                 'amef_organization_register', 
                 'amef_organization_schema',
-                'voorzieningen_gebruiker_source',
-                'voorzieningen_gebruiker_register',
-                'voorzieningen_gebruiker_schema',
                 'voorzieningen_organisatie_source',
                 'voorzieningen_organisatie_register',
                 'voorzieningen_organisatie_schema',
@@ -1734,6 +1731,15 @@ class SettingsService
      */
     public function sendTestEmail(string $email, array $emailSettings = []): array
     {
+        // Validate email address first (business logic moved from controller)
+        if (empty($email)) {
+            $this->logger->warning('SoftwareCatalog: Test email request missing email address');
+            return [
+                'success' => false,
+                'message' => 'Email address is required'
+            ];
+        }
+        
         $this->logger->info('SoftwareCatalog: Starting sendTestEmail process', [
             'recipient' => $email,
             'has_email_settings' => !empty($emailSettings)
@@ -1840,6 +1846,179 @@ class SettingsService
                 'success' => false,
                 'message' => 'Failed to send test email: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Test email connection without sending an actual email
+     *
+     * @param array $emailSettings The email settings to test
+     * 
+     * @return array Result of the connection test
+     */
+    public function testEmailConnection(array $emailSettings = []): array
+    {
+        $this->logger->info('SoftwareCatalog: Starting email connection test', [
+            'has_email_settings' => !empty($emailSettings)
+        ]);
+        
+        try {
+            // Ensure vendor autoloader is loaded
+            include_once __DIR__ . '/../../vendor/autoload.php';
+            $this->logger->debug('SoftwareCatalog: Vendor autoloader loaded');
+            
+            // Use provided settings or fall back to stored settings
+            if (empty($emailSettings)) {
+                $emailSettings = $this->getEmailSettings();
+                $this->logger->info('SoftwareCatalog: Loaded email settings from storage');
+            } else {
+                $this->logger->info('SoftwareCatalog: Using provided email settings');
+            }
+            
+            // Log the email configuration (without sensitive data)
+            $this->logger->info('SoftwareCatalog: Email configuration for connection test', [
+                'enabled' => $emailSettings['enabled'] ?? false,
+                'transport_type' => $emailSettings['transportType'] ?? 'unknown',
+                'sender_email' => $emailSettings['senderEmail'] ?? 'not set',
+                'sender_name' => $emailSettings['senderName'] ?? 'not set',
+                'has_credentials' => $this->hasValidCredentials($emailSettings)
+            ]);
+            
+            // Check if email is enabled
+            if (!($emailSettings['enabled'] ?? false)) {
+                $this->logger->warning('SoftwareCatalog: Email notifications are disabled');
+                return [
+                    'success' => false,
+                    'message' => 'Email notifications are disabled'
+                ];
+            }
+            
+            // Validate basic settings
+            $transportType = $emailSettings['transportType'] ?? 'smtp';
+            $senderEmail = $emailSettings['senderEmail'] ?? '';
+            
+            if (empty($senderEmail)) {
+                return [
+                    'success' => false,
+                    'message' => 'Sender email address is required'
+                ];
+            }
+            
+            // Create transport based on configuration (this tests the connection)
+            $this->logger->info('SoftwareCatalog: Creating email transport for connection test');
+            $transport = $this->createEmailTransport($emailSettings);
+            $this->logger->info('SoftwareCatalog: Email transport created successfully');
+            
+            // Test the connection by creating a mailer instance
+            $mailer = new Mailer($transport);
+            $this->logger->info('SoftwareCatalog: Mailer instance created for connection test');
+            
+            // For some transports, we can test the connection more directly
+            $connectionDetails = $this->getConnectionDetails($emailSettings);
+            
+            $this->logger->info('SoftwareCatalog: Email connection test completed successfully', [
+                'transport' => $transportType,
+                'sender' => $senderEmail
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => "Email connection test successful for {$transportType}",
+                'details' => $connectionDetails
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SoftwareCatalog: Email connection test failed', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Email connection test failed: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Check if email settings have valid credentials for the transport type
+     *
+     * @param array $emailSettings Email settings
+     * @return bool True if credentials are present
+     */
+    private function hasValidCredentials(array $emailSettings): bool
+    {
+        $transportType = $emailSettings['transportType'] ?? 'smtp';
+        
+        switch ($transportType) {
+            case 'smtp':
+                return !empty($emailSettings['smtpHost']) && !empty($emailSettings['smtpPort']);
+            case 'mailjet':
+                return !empty($emailSettings['mailjetApiKey']) && !empty($emailSettings['mailjetSecretKey']);
+            case 'sendgrid':
+                return !empty($emailSettings['sendgridApiKey']);
+            case 'mailgun':
+                return !empty($emailSettings['mailgunApiKey']) && !empty($emailSettings['mailgunDomain']);
+            case 'postmark':
+                return !empty($emailSettings['postmarkApiKey']);
+            case 'ses':
+                return !empty($emailSettings['sesAccessKey']) && !empty($emailSettings['sesSecretKey']);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Get connection details for the email transport
+     *
+     * @param array $emailSettings Email settings
+     * @return array Connection details
+     */
+    private function getConnectionDetails(array $emailSettings): array
+    {
+        $transportType = $emailSettings['transportType'] ?? 'smtp';
+        
+        switch ($transportType) {
+            case 'smtp':
+                return [
+                    'type' => 'SMTP',
+                    'host' => $emailSettings['smtpHost'] ?? '',
+                    'port' => $emailSettings['smtpPort'] ?? '',
+                    'encryption' => $emailSettings['smtpEncryption'] ?? 'none',
+                    'username' => !empty($emailSettings['smtpUsername']) ? '***' : 'none'
+                ];
+            case 'mailjet':
+                return [
+                    'type' => 'Mailjet API',
+                    'has_api_key' => !empty($emailSettings['mailjetApiKey']),
+                    'has_secret_key' => !empty($emailSettings['mailjetSecretKey'])
+                ];
+            case 'sendgrid':
+                return [
+                    'type' => 'SendGrid API',
+                    'has_api_key' => !empty($emailSettings['sendgridApiKey'])
+                ];
+            case 'mailgun':
+                return [
+                    'type' => 'Mailgun API',
+                    'has_api_key' => !empty($emailSettings['mailgunApiKey']),
+                    'domain' => $emailSettings['mailgunDomain'] ?? ''
+                ];
+            case 'postmark':
+                return [
+                    'type' => 'Postmark API',
+                    'has_api_key' => !empty($emailSettings['postmarkApiKey'])
+                ];
+            case 'ses':
+                return [
+                    'type' => 'Amazon SES',
+                    'has_access_key' => !empty($emailSettings['sesAccessKey']),
+                    'has_secret_key' => !empty($emailSettings['sesSecretKey']),
+                    'region' => $emailSettings['sesRegion'] ?? 'us-east-1'
+                ];
+            default:
+                return ['type' => $transportType];
         }
     }
     
@@ -2072,6 +2251,10 @@ class SettingsService
             $needsUpdate = $storedConfigVersion === null || 
                           version_compare($currentAppVersion, $storedConfigVersion, '>');
             
+            // Check OpenRegister status
+            $openRegisterInstalled = $this->isOpenRegisterInstalled();
+            $openRegisterEnabled = $openRegisterInstalled && $this->isOpenRegisterEnabled();
+            
             $versionInfo = [
                 'appName' => 'SoftwareCatalog',
                 'appVersion' => $currentAppVersion,
@@ -2080,7 +2263,9 @@ class SettingsService
                 'needsUpdate' => $needsUpdate,
                 'versionComparison' => $storedConfigVersion !== null ? version_compare($currentAppVersion, $storedConfigVersion) : null,
                 'isFullyConfigured' => $this->isFullyConfigured(),
-                'autoConfigCompleted' => $this->config->getValueString($this->_appName, 'auto_config_completed', 'false') === 'true'
+                'autoConfigCompleted' => $this->config->getValueString($this->_appName, 'auto_config_completed', 'false') === 'true',
+                'openRegisterInstalled' => $openRegisterInstalled,
+                'openRegisterEnabled' => $openRegisterEnabled
             ];
             
             $this->logger->info('SettingsService: Version information compiled', $versionInfo);
@@ -2611,11 +2796,25 @@ class SettingsService
      */
     public function getConsolidatedConfiguration(): array
     {
+        // Get email config and include templates
+        $emailConfig = $this->getEmailConfig();
+        $emailConfig['templates'] = [
+            'organization_registration' => $this->getEmailTemplate('organization_registration'),
+            'organization_activation' => $this->getEmailTemplate('organization_activation'),
+            'user_creation' => $this->getEmailTemplate('user_creation'),
+            'user_password' => $this->getEmailTemplate('user_password'),
+        ];
+        
         return [
             'voorzieningen' => $this->getVoorzieningenConfig(),
             'amef' => $this->getAmefConfig(),
-            'email' => $this->getEmailConfig(),
-            'archimate' => $this->getArchiMateStatus()
+            'email' => $emailConfig,
+            'archimate' => $this->getArchiMateStatus(),
+            'userGroups' => [
+                'generic' => $this->getGenericUserGroups(),
+                'organizationAdmin' => $this->getOrganizationAdminGroups(),
+                'superUser' => $this->getSuperUserGroups()
+            ]
         ];
     }
 
@@ -2635,8 +2834,6 @@ class SettingsService
                 'register' => $this->config->getValueString($this->_appName, 'voorzieningen_register', ''),
                 'organisatie_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', ''),
                 'contactpersoon_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', ''),
-                'gebruiker_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_gebruiker_schema', ''),
-                'contactgegevens_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_schema', '')
             ];
         }
         
@@ -2816,16 +3013,10 @@ class SettingsService
                 'register' => $this->config->getValueString($this->_appName, 'voorzieningen_register', ''),
                 'organisatie_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', ''),
                 'contactpersoon_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', ''),
-                'gebruiker_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_gebruiker_schema', ''),
-                'contactgegevens_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_schema', ''),
                 'organisatie_source' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_source', 'openregister'),
                 'contactpersoon_source' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_source', 'openregister'),
-                'gebruiker_source' => $this->config->getValueString($this->_appName, 'voorzieningen_gebruiker_source', 'openregister'),
-                'contactgegevens_source' => $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_source', 'openregister'),
                 'organisatie_register' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_register', ''),
                 'contactpersoon_register' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_register', ''),
-                'gebruiker_register' => $this->config->getValueString($this->_appName, 'voorzieningen_gebruiker_register', ''),
-                'contactgegevens_register' => $this->config->getValueString($this->_appName, 'voorzieningen_contactgegevens_register', '')
             ];
 
             $this->setVoorzieningenConfig($voorzieningenConfig);
@@ -2919,16 +3110,16 @@ class SettingsService
                 'voorzieningen_register',
                 'voorzieningen_organisatie_schema',
                 'voorzieningen_contactpersoon_schema',
-                'voorzieningen_gebruiker_schema',
-                'voorzieningen_contactgegevens_schema',
+                'voorzieningen_gebruiker_schema', // Deprecated - no longer used
+                'voorzieningen_contactgegevens_schema', // Deprecated - no longer used
                 'voorzieningen_organisatie_source',
                 'voorzieningen_contactpersoon_source',
-                'voorzieningen_gebruiker_source',
-                'voorzieningen_contactgegevens_source',
+                'voorzieningen_gebruiker_source', // Deprecated - no longer used
+                'voorzieningen_contactgegevens_source', // Deprecated - no longer used
                 'voorzieningen_organisatie_register',
                 'voorzieningen_contactpersoon_register',
-                'voorzieningen_gebruiker_register',
-                'voorzieningen_contactgegevens_register',
+                'voorzieningen_gebruiker_register', // Deprecated - no longer used
+                'voorzieningen_contactgegevens_register', // Deprecated - no longer used
                 
                 // AMEF keys
                 'amef_register_id',
@@ -2995,6 +3186,178 @@ class SettingsService
         }
 
         return $results;
+    }
+
+    // ========================================================================
+    // CONTROLLER BUSINESS LOGIC METHODS
+    // ========================================================================
+
+    /**
+     * Get all settings including user groups and email settings
+     * This aggregates all settings data for the main settings endpoint
+     *
+     * @return array Complete settings data
+     */
+    public function getAllSettings(): array
+    {
+        try {
+            $data = $this->getSettings();
+            
+            // Use the proper consolidated configuration structure that frontend expects
+            $data['consolidatedConfig'] = $this->getConsolidatedConfiguration();
+            
+            // Also add individual settings at root level for backward compatibility
+            $data['userGroups'] = $data['consolidatedConfig']['userGroups'];
+            $data['emailSettings'] = $data['consolidatedConfig']['email'];
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to get all settings', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get all email templates with error handling
+     * This handles template iteration and individual failures
+     *
+     * @return array All email templates
+     */
+    public function getAllEmailTemplates(): array
+    {
+        $templateTypes = ['organization_registration', 'organization_activation', 'user_creation', 'user_password'];
+        $templates = [];
+        
+        foreach ($templateTypes as $templateName) {
+            try {
+                $templates[$templateName] = $this->getEmailTemplate($templateName);
+            } catch (\Exception $e) {
+                $this->logger->warning("Failed to get template {$templateName}", ['error' => $e->getMessage()]);
+                $templates[$templateName] = null;
+            }
+        }
+        
+        return $templates;
+    }
+
+    /**
+     * Update generic user groups with validation
+     *
+     * @param array $groups Groups to set
+     * @return array Update result with validation
+     */
+    public function updateGenericUserGroups(array $groups): array
+    {
+        try {
+            $validation = $this->validateGroups($groups);
+            
+            if (!empty($validation['invalid'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid group names provided',
+                    'validation' => $validation
+                ];
+            }
+            
+            $this->setGenericUserGroups($validation['valid']);
+            
+            return [
+                'success' => true,
+                'message' => 'Generic user groups updated successfully',
+                'groups' => $validation['valid']
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to update generic user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update generic user groups: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update organization admin groups with validation
+     *
+     * @param array $groups Groups to set
+     * @return array Update result with validation
+     */
+    public function updateOrganizationAdminGroups(array $groups): array
+    {
+        try {
+            $validation = $this->validateGroups($groups);
+            
+            if (!empty($validation['invalid'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid group names provided',
+                    'validation' => $validation
+                ];
+            }
+            
+            $this->setOrganizationAdminGroups($validation['valid']);
+            
+            return [
+                'success' => true,
+                'message' => 'Organization admin groups updated successfully',
+                'groups' => $validation['valid']
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to update organization admin groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update organization admin groups: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update super user groups with validation
+     *
+     * @param array $groups Groups to set
+     * @return array Update result with validation
+     */
+    public function updateSuperUserGroups(array $groups): array
+    {
+        try {
+            $validation = $this->validateGroups($groups);
+            
+            if (!empty($validation['invalid'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid group names provided',
+                    'validation' => $validation
+                ];
+            }
+            
+            $this->setSuperUserGroups($validation['valid']);
+            
+            return [
+                'success' => true,
+                'message' => 'Super user groups updated successfully',
+                'groups' => $validation['valid']
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to update super user groups', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update super user groups: ' . $e->getMessage()
+            ];
+        }
     }
 
 } 

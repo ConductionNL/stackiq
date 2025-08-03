@@ -455,7 +455,7 @@ class SoftwareCatalogueService
                     
                     if (!$contactSchemaId) {
                         $this->_logger->warning('SoftwareCatalogueService: Missing contactpersoon schema configuration');
-                        return $organizationData;
+                        return;
                     }
                     $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
                     $organisation = $organisationMapper->findByUuid($organizationUuid);
