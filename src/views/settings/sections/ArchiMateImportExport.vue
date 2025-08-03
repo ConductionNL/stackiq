@@ -25,7 +25,7 @@
 		:refreshing="store.statusPollingInterval !== null"
 		refresh-button-text="Refresh Status"
 		:has-info-content="true"
-		@refresh="store.fetchArchiMateStatus">
+		@refresh="store.refreshArchiMateStatus">
 		<BTabs>
 			<BTab title="Import" active>
 				<!-- Import Section -->
@@ -82,11 +82,12 @@
 							type="file"
 							accept=".archimate,.xml"
 							style="display: none"
+							:disabled="importing || isImportRunning"
 							@change="handleFileSelect">
 
 						<NcButton
 							type="secondary"
-							:disabled="importing"
+							:disabled="importing || isImportRunning"
 							@click="$refs.fileInput.click()">
 							<template #icon>
 								<Upload :size="20" />
@@ -101,13 +102,13 @@
 						<NcButton
 							v-if="selectedFile"
 							type="primary"
-							:disabled="importing || !selectedFile"
+							:disabled="importing || isImportRunning || !selectedFile"
 							@click="importArchiMateFile">
 							<template #icon>
-								<NcLoadingIcon v-if="importing" :size="20" />
+								<NcLoadingIcon v-if="importing || isImportRunning" :size="20" />
 								<CloudUpload v-else :size="20" />
 							</template>
-							{{ importing ? 'Starting Import...' : 'Import ArchiMate File' }}
+							{{ importing || isImportRunning ? 'Import in Progress...' : 'Import ArchiMate File' }}
 						</NcButton>
 
 						<!-- Force Clear Button for Running Import -->
@@ -265,7 +266,7 @@
 								{ label: 'XML', value: 'xml' },
 								{ label: 'JSON', value: 'json' }
 							]"
-							label="Export Format"
+							input-label="Export Format"
 							placeholder="Select export format" />
 					</div>
 
@@ -468,6 +469,7 @@ export default {
 		loading() { return this.store.loading },
 		archimateStatus() { return this.store.archimateStatus || {} },
 		selectedFile() { return this.store.selectedFile },
+		isImportRunning() { return this.store.isImportRunning },
 	},
 
 	methods: {

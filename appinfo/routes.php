@@ -63,10 +63,10 @@ return [
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
         ['name' => 'settings#downloadArchiMate', 'url' => '/api/archimate/download/{fileName}', 'verb' => 'GET'],
         
-        // ArchiMate status management routes
-        ['name' => 'settings#getArchiMateStatus', 'url' => '/api/archimate/status', 'verb' => 'GET'],
+        // ArchiMate status management routes (status reading is via main settings endpoint)
         ['name' => 'settings#clearArchiMateImportStatus', 'url' => '/api/archimate/status/import/clear', 'verb' => 'POST'],
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
+        
         ['name' => 'settings#test_archimate_round_trip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
 
 

@@ -1816,8 +1816,72 @@ class SettingsController extends Controller
     }
 
     // ========================================================================
+    // ARCHIMATE STATUS MANAGEMENT METHODS
+    // ========================================================================
+
+    /**
+     * Clear ArchiMate import status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Clear result
+     */
+    public function clearArchiMateImportStatus(): JSONResponse
+    {
+        try {
+            $this->settingsService->clearArchiMateImportStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'ArchiMate import status cleared successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to clear ArchiMate import status', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to clear ArchiMate import status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear ArchiMate export status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Clear result
+     */
+    public function clearArchiMateExportStatus(): JSONResponse
+    {
+        try {
+            $this->settingsService->clearArchiMateExportStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'ArchiMate export status cleared successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to clear ArchiMate export status', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to clear ArchiMate export status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================================================
     // ARCHIMATE TESTING METHODS
     // ========================================================================
+
+
 
     /**
      * Test ArchiMate round-trip functionality

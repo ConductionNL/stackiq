@@ -486,10 +486,12 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Import ArchiMate file with proper error handling
-		 * @return {Promise<void>}
+		 * Import ArchiMate file with proper error handling (async approach)
+		 * @return {void}
 		 */
-		async importArchiMateFile() {
+		importArchiMateFile() {
+			console.log('importArchiMateFile() called')
+
 			if (!this.selectedFile) {
 				showError('No file selected for import')
 				return
@@ -498,111 +500,182 @@ export const useSettingsStore = defineStore('settings', {
 			this.importing = true
 			this.importError = null
 
+			// Immediately set import as running and start polling
+			// This is the proper async approach - don't wait for server response
+			console.log('Setting import status to running and starting polling immediately')
+			this.isImportRunning = true
+			this.archimateStatus.import = {
+				status: 'running',
+				current_step: 'Starting import...',
+				progress: 0,
+				statistics: null,
+			}
+
+			// Start polling immediately - this is key for async operations
+			console.log('Starting status polling immediately (async approach)')
+			this.startStatusPolling()
+			showSuccess('ArchiMate import started - monitoring progress...')
+
+			// Now trigger the actual import in the background (fire and forget)
 			try {
+				console.log('Preparing FormData for import...')
 				const formData = new FormData()
 				formData.append('archiMateFile', this.selectedFile)
 				formData.append('updateExisting', this.importOptions.updateExisting)
 				formData.append('deleteOrphaned', this.importOptions.deleteOrphaned)
 				formData.append('preserveIds', 'true')
 
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
+				console.log('FormData prepared, file size:', this.selectedFile.size, 'bytes')
+				console.log('Triggering background import request...')
+
+				// Fire the request but don't wait for completion
+				fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
 					method: 'POST',
 					headers: {
 						'X-Requested-With': 'XMLHttpRequest',
 					},
 					body: formData,
+				}).then(response => {
+					console.log('Background import request completed:', response.status, response.statusText)
+					
+					// Only handle immediate failures (500 errors)
+					if (response.status === 500) {
+						console.log('Import failed immediately with 500 error')
+						this.stopStatusPolling()
+						this.isImportRunning = false
+						this.archimateStatus.import = {
+							status: 'failed',
+							current_step: 'Import failed',
+							progress: 0,
+							statistics: null,
+							error: 'Server error (500)',
+						}
+						showError('Import failed: Server error. Please try with a smaller file or check server logs.')
+					}
+					// For all other responses (200, 503, etc.), let polling handle the status
+				}).catch(error => {
+					console.error('Background import request failed:', error)
+					// Only stop polling if it's a network error, not a timeout
+					if (error.name !== 'AbortError') {
+						this.stopStatusPolling()
+						this.isImportRunning = false
+						this.archimateStatus.import = {
+							status: 'failed',
+							current_step: 'Import failed',
+							progress: 0,
+							statistics: null,
+							error: error.message,
+						}
+						showError('Import failed: ' + error.message)
+					}
 				})
 
-				// Handle different HTTP status codes
-				if (response.status === 500) {
-					// Out of memory error - import failed, stop polling
-					this.importError = 'Import failed due to insufficient memory. The file may be too large.'
-					this.stopStatusPolling()
-					this.isImportRunning = false
-					showError('Import failed: Out of memory. Please try with a smaller file.')
-					return
-				} else if (response.status === 503) {
-					// Gateway timeout - import is taking longer than 2 minutes, continue polling
-					showSuccess('Import is taking longer than expected but is still running. Please wait...')
-					this.startStatusPolling()
-					return
-				} else if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
-
-				const result = await response.json()
-
-				if (result.success) {
-					// Start polling for status updates immediately
-					this.startStatusPolling()
-					showSuccess('ArchiMate import started successfully')
-				} else {
-					showError('Failed to start ArchiMate import: ' + (result.message || 'Unknown error'))
-				}
-
 			} catch (error) {
-				console.error('Failed to import ArchiMate file:', error)
+				console.error('Failed to start import:', error)
+				this.stopStatusPolling()
+				this.isImportRunning = false
 				this.importError = error.message
-				showError('Failed to import ArchiMate file: ' + error.message)
+				showError('Failed to start ArchiMate import: ' + error.message)
 			} finally {
+				console.log('Import setup complete - setting importing = false')
 				this.importing = false
 			}
 		},
 
 		/**
-		 * Start status polling
+		 * Start status polling with more frequent initial polls
 		 */
 		startStatusPolling() {
+			console.log('startStatusPolling() called')
+
 			if (this.statusPollingInterval) {
+				console.log('Clearing existing polling interval')
 				clearInterval(this.statusPollingInterval)
 			}
-			// Fetch status immediately, then start polling every 5 seconds
-			this.fetchArchiMateStatus()
+
+			// Wait a brief moment for server to start the operation, then fetch status
+			console.log('Setting up initial status check in 500ms...')
+			setTimeout(() => {
+				console.log('Running initial status check')
+				this.refreshArchiMateStatus()
+			}, 500) // Wait 500ms before first poll
+
+			// Start with more frequent polling (every 2 seconds) for the first minute
+			let pollCount = 0
+			console.log('Setting up status polling interval (2 seconds initially)')
 			this.statusPollingInterval = setInterval(() => {
-				this.fetchArchiMateStatus()
-			}, 5000) // Poll every 5 seconds
+				console.log(`Status poll #${pollCount + 1}`)
+				this.refreshArchiMateStatus()
+				pollCount++
+
+				// After 30 polls (1 minute at 2-second intervals), switch to 5-second intervals
+				if (pollCount >= 30) {
+					console.log('Switching to 5-second polling intervals')
+					clearInterval(this.statusPollingInterval)
+					this.statusPollingInterval = setInterval(() => {
+						console.log('Status poll (5-second interval)')
+						this.refreshArchiMateStatus()
+					}, 5000) // Poll every 5 seconds after first minute
+				}
+			}, 2000) // Poll every 2 seconds initially
 		},
 
 		/**
 		 * Stop status polling
 		 */
 		stopStatusPolling() {
+			console.log('stopStatusPolling() called')
 			if (this.statusPollingInterval) {
+				console.log('Clearing status polling interval')
 				clearInterval(this.statusPollingInterval)
 				this.statusPollingInterval = null
+			} else {
+				console.log('No polling interval to clear')
 			}
 		},
 
 		/**
-		 * Fetch ArchiMate status from API
+		 * Refresh ArchiMate status from main settings endpoint
 		 * Used for real-time polling during import/export operations
 		 *
 		 * @return {Promise<void>}
 		 */
-		async fetchArchiMateStatus() {
+		async refreshArchiMateStatus() {
+			console.log('refreshArchiMateStatus() called')
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				console.log('Settings API response status:', response.status)
 
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
 
 				const data = await response.json()
+				console.log('Settings API data:', data)
 
-				if (data.success && data.status) {
-					this.archimateStatus = data.status
+				if (!data.error && data.consolidatedConfig?.archimate) {
+					console.log('Updating ArchiMate status:', data.consolidatedConfig.archimate)
+					this.archimateStatus = data.consolidatedConfig.archimate
 
 					// Update running states
-					this.isImportRunning = data.status.import?.status === 'running'
-					this.isExportRunning = data.status.export?.status === 'running'
+					const wasImportRunning = this.isImportRunning
+					const wasExportRunning = this.isExportRunning
+
+					this.isImportRunning = data.consolidatedConfig.archimate.import?.status === 'running'
+					this.isExportRunning = data.consolidatedConfig.archimate.export?.status === 'running'
+
+					console.log(`Import: ${wasImportRunning} -> ${this.isImportRunning}, Export: ${wasExportRunning} -> ${this.isExportRunning}`)
 
 					// Stop polling if no operations are running
 					if (!this.isImportRunning && !this.isExportRunning) {
+						console.log('No operations running, stopping polling')
 						this.stopStatusPolling()
 					}
+				} else {
+					console.log('No ArchiMate data in response or API error:', data.error)
 				}
 			} catch (error) {
-				console.error('Failed to fetch ArchiMate status:', error)
+				console.error('Failed to refresh ArchiMate status:', error)
 			}
 		},
 
@@ -623,7 +696,7 @@ export const useSettingsStore = defineStore('settings', {
 					// Stop polling
 					this.stopStatusPolling()
 
-					// Clear frontend state
+					// Clear frontend state immediately
 					this.archimateStatus.import = {
 						status: null,
 						current_step: null,
@@ -632,6 +705,9 @@ export const useSettingsStore = defineStore('settings', {
 					}
 					this.isImportRunning = false
 					this.importError = null
+
+					// Refresh settings to get updated ArchiMate status
+					await this.refreshArchiMateStatus()
 
 					showSuccess('ArchiMate import status cleared successfully')
 				} else {
@@ -660,7 +736,7 @@ export const useSettingsStore = defineStore('settings', {
 					// Stop polling
 					this.stopStatusPolling()
 
-					// Clear frontend state
+					// Clear frontend state immediately
 					this.archimateStatus.export = {
 						status: null,
 						current_step: null,
@@ -669,6 +745,9 @@ export const useSettingsStore = defineStore('settings', {
 					}
 					this.isExportRunning = false
 					this.exportError = null
+
+					// Refresh settings to get updated ArchiMate status
+					await this.refreshArchiMateStatus()
 
 					showSuccess('ArchiMate export status cleared successfully')
 				} else {
@@ -958,17 +1037,34 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Export to ArchiMate
+		 * Export to ArchiMate (async approach)
 		 *
 		 * @param {string} format Export format
-		 * @return {Promise<void>}
+		 * @return {void}
 		 */
-		async exportToArchiMate(format = 'xml') {
+		exportToArchiMate(format = 'xml') {
 			this.exporting = true
 			this.exportError = null
 
+			// Immediately set export as running and start polling (async approach)
+			console.log('Setting export status to running and starting polling immediately')
+			this.isExportRunning = true
+			this.archimateStatus.export = {
+				status: 'running',
+				current_step: 'Starting export...',
+				progress: 0,
+				statistics: null,
+			}
+
+			// Start polling immediately
+			console.log('Starting status polling immediately for export')
+			this.startStatusPolling()
+			showSuccess('ArchiMate export started - monitoring progress...')
+
+			// Fire export request in background
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
+				console.log('Triggering background export request...')
+				fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -978,26 +1074,48 @@ export const useSettingsStore = defineStore('settings', {
 						format,
 						options: this.exportOptions,
 					}),
+				}).then(response => {
+					console.log('Background export request completed:', response.status, response.statusText)
+					
+					// Only handle immediate failures (500 errors)
+					if (response.status === 500) {
+						console.log('Export failed immediately with 500 error')
+						this.stopStatusPolling()
+						this.isExportRunning = false
+						this.archimateStatus.export = {
+							status: 'failed',
+							current_step: 'Export failed',
+							progress: 0,
+							statistics: null,
+							error: 'Server error (500)',
+						}
+						showError('Export failed: Server error. Please check server logs.')
+					}
+					// For all other responses, let polling handle the status
+				}).catch(error => {
+					console.error('Background export request failed:', error)
+					if (error.name !== 'AbortError') {
+						this.stopStatusPolling()
+						this.isExportRunning = false
+						this.archimateStatus.export = {
+							status: 'failed',
+							current_step: 'Export failed',
+							progress: 0,
+							statistics: null,
+							error: error.message,
+						}
+						showError('Export failed: ' + error.message)
+					}
 				})
 
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
-
-				const result = await response.json()
-
-				if (result.success) {
-					// Start polling for status updates
-					this.startStatusPolling()
-					showSuccess('ArchiMate export started successfully')
-				} else {
-					showError('Failed to start ArchiMate export: ' + (result.message || 'Unknown error'))
-				}
 			} catch (error) {
-				console.error('Failed to export ArchiMate:', error)
+				console.error('Failed to start export:', error)
+				this.stopStatusPolling()
+				this.isExportRunning = false
 				this.exportError = error.message
-				showError('Failed to export ArchiMate: ' + error.message)
+				showError('Failed to start ArchiMate export: ' + error.message)
 			} finally {
+				console.log('Export setup complete - setting exporting = false')
 				this.exporting = false
 			}
 		},
