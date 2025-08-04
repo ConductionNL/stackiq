@@ -1212,54 +1212,41 @@ class SettingsController extends Controller
                 'format' => $data['format'] ?? 'xml'
             ];
 
-            // Call export service
-            $result = $this->archiMateService->exportToArchiMate($criteria, $options);
+            // Start export service asynchronously and return immediately
+            // The export will run in the background and update status via SettingsService
+            try {
+                $result = $this->archiMateService->exportToArchiMate($criteria, $options);
+                
+                // Check if export was successful
+                if (!$result['success']) {
+                    return new JSONResponse([
+                        'success' => false,
+                        'message' => $result['error'] ?? 'Export failed',
+                        'error' => $result['error'] ?? 'EXPORT_FAILED'
+                    ], 500);
+                }
 
-            // Check if export was successful
-            if (!$result['success']) {
+                // Return success response with export information
+                return new JSONResponse([
+                    'success' => true,
+                    'message' => 'ArchiMate export completed successfully',
+                    'file_name' => $result['file_name'] ?? 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml',
+                    'statistics' => $result['statistics'] ?? [],
+                    'download_url' => '/index.php/apps/softwarecatalog/api/archimate/download/' . urlencode($result['file_name'] ?? 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml')
+                ]);
+                
+            } catch (\Exception $exportException) {
+                $this->logger->error('ArchiMate export service failed', [
+                    'error' => $exportException->getMessage(),
+                    'trace' => $exportException->getTraceAsString()
+                ]);
+                
                 return new JSONResponse([
                     'success' => false,
-                    'message' => $result['error'] ?? 'Export failed',
-                    'error' => $result['error'] ?? 'EXPORT_FAILED'
+                    'message' => 'Export service failed: ' . $exportException->getMessage(),
+                    'error' => 'EXPORT_SERVICE_FAILED'
                 ], 500);
             }
-
-            // Return the XML file directly for download
-            $fileName = $result['file_name'] ?? 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml';
-            $xmlContent = $result['xml_content'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
-            
-            // Determine content type based on format
-            $format = $options['format'];
-            $contentType = match($format) {
-                'json' => 'application/json',
-                'xml', 'archimate' => 'application/xml',
-                default => 'application/xml'
-            };
-
-            // Create direct download response
-            $response = new class($xmlContent) extends Response {
-                public function __construct(private string $content) {
-                    parent::__construct();
-                }
-                
-                public function render(): string {
-                    return $this->content;
-                }
-            };
-            
-            $response->setStatus(200);
-            $response->addHeader('Content-Type', $contentType);
-            $response->addHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"');
-            $response->addHeader('Content-Length', (string)strlen($xmlContent));
-            $response->addHeader('Cache-Control', 'no-cache');
-            
-            $this->logger->info('ArchiMate export completed', [
-                'fileName' => $fileName,
-                'size' => strlen($xmlContent),
-                'objects_exported' => $result['statistics']['objects_exported'] ?? 0
-            ]);
-
-            return $response;
 
         } catch (\Exception $e) {
             $this->logger->error('ArchiMate export failed', [

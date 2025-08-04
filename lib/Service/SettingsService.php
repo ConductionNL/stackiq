@@ -3032,12 +3032,10 @@ class SettingsService
                 'organization_source' => $this->config->getValueString($this->_appName, 'amef_organization_source', 'openregister'),
                 'organization_register' => $this->config->getValueString($this->_appName, 'amef_organization_register', ''),
                 'organization_schema' => $this->config->getValueString($this->_appName, 'amef_organization_schema', ''),
+                // Note: These duplicated entries with typos are kept for backward compatibility but should be cleaned up
                 'elementss_schema' => $this->config->getValueString($this->_appName, 'amef_elementss_schema', ''),
                 'organizationss_schema' => $this->config->getValueString($this->_appName, 'amef_organizationss_schema', ''),
-                'relationshipss_schema' => $this->config->getValueString($this->_appName, 'amef_relationshipss_schema', ''),
-                'archimate_element_schema_id' => $this->config->getValueString($this->_appName, 'archimate_element_schema_id', ''),
-                'archimate_relationship_schema_id' => $this->config->getValueString($this->_appName, 'archimate_relationship_schema_id', ''),
-                'archimate_view_schema_id' => $this->config->getValueString($this->_appName, 'archimate_view_schema_id', '')
+                'relationshipss_schema' => $this->config->getValueString($this->_appName, 'amef_relationshipss_schema', '')
             ];
 
             $this->setAmefConfig($amefConfig);
@@ -3133,9 +3131,6 @@ class SettingsService
                 'amef_elementss_schema',
                 'amef_organizationss_schema',
                 'amef_relationshipss_schema',
-                'archimate_element_schema_id',
-                'archimate_relationship_schema_id',
-                'archimate_view_schema_id',
                 
                 // Email keys
                 'email_enabled',

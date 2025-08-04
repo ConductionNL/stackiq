@@ -1037,7 +1037,7 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Export to ArchiMate (async approach)
+		 * Export to ArchiMate (direct download approach)
 		 *
 		 * @param {string} format Export format
 		 * @return {void}

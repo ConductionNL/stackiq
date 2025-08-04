@@ -229,6 +229,10 @@ class ArchiMateService
                 'errors_count' => count($convertResults['errors'])
             ]);
 
+            // Clear import status after successful completion
+            $this->settingsService->clearArchiMateImportStatus();
+            $this->logger->info('ArchiMate import status cleared after successful completion');
+
             return $results;
 
         } catch (\Exception $e) {
@@ -327,10 +331,40 @@ class ArchiMateService
                 'xml_size_bytes' => strlen($xmlContent)
             ]);
 
+            // Save the exported file to user's folder for download
+            $fileName = 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml';
+            try {
+                $userFolder = $this->rootFolder->getUserFolder($this->userSession->getUser()->getUID());
+                
+                // Create or overwrite the file
+                if ($userFolder->nodeExists($fileName)) {
+                    $file = $userFolder->get($fileName);
+                    $file->putContent($xmlContent);
+                } else {
+                    $userFolder->newFile($fileName, $xmlContent);
+                }
+                
+                $this->logger->info('ArchiMate export file saved', [
+                    'file_name' => $fileName,
+                    'file_size' => strlen($xmlContent)
+                ]);
+                
+            } catch (\Exception $fileException) {
+                $this->logger->error('Failed to save ArchiMate export file', [
+                    'file_name' => $fileName,
+                    'error' => $fileException->getMessage()
+                ]);
+                // Continue anyway, return the content directly
+            }
+
+            // Clear export status after successful completion
+            $this->settingsService->clearArchiMateExportStatus();
+            $this->logger->info('ArchiMate export status cleared after successful completion');
+
             return [
                 'success' => true,
                 'xml_content' => $xmlContent,
-                'file_name' => 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml',
+                'file_name' => $fileName,
                 'statistics' => [
                     'objects_exported' => count($objects),
                     'xml_size_bytes' => strlen($xmlContent)
@@ -1709,25 +1743,472 @@ class ArchiMateService
         return (int) $this->config->getValueString('softwarecatalog', 'archimate_view_schema_id', '0') ?: null;
     }
 
-    // Placeholder methods for export functionality
+    /**
+     * Get objects from database for export based on criteria
+     *
+     * @param array $criteria Export criteria including filters and options
+     * @return array Array of objects to export
+     */
     private function getObjectsForExport(array $criteria): array
     {
         $this->logger->info('Getting objects for export', ['criteria' => $criteria]);
-        return []; // Placeholder
+        
+        try {
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                $this->logger->error('ObjectService not available for export');
+                return [];
+            }
+
+            // Get AMEF configuration
+            $amefConfig = $this->settingsService->getAmefConfig();
+            $registerId = $this->getAmefRegisterId();
+            
+            if (!$registerId) {
+                $this->logger->error('AMEF register ID not configured for export');
+                return [];
+            }
+
+            $allObjects = [];
+            
+            // Always export all schemas as per requirements
+            $schemaTypes = [
+                'elements' => $this->getAmefSchemaIdForType('element'),
+                'organizations' => $this->getAmefSchemaIdForType('organization'), 
+                'relationships' => $this->getAmefSchemaIdForType('relationship'),
+                'views' => $this->getAmefSchemaIdForType('view')
+            ];
+
+            foreach ($schemaTypes as $type => $schemaId) {
+                if (!$schemaId) {
+                    $this->logger->warning("Schema ID not configured for {$type}, skipping");
+                    continue;
+                }
+
+                $this->logger->info("Exporting {$type} objects", [
+                    'schema_id' => $schemaId,
+                    'register_id' => $registerId
+                ]);
+
+                // Build search query to get all objects from this register/schema
+                $query = [
+                    'register' => $registerId,
+                    'schema' => $schemaId
+                ];
+
+                $this->logger->info("Searching for objects with query", [
+                    'query' => $query,
+                    'rbac' => false,
+                    'multi' => false
+                ]);
+                
+                // Search objects with rbac=false and multi=false as specified
+                $objects = $objectService->searchObjects($query, false, false);
+                
+                if (is_array($objects)) {
+                    $allObjects[$type] = $objects;
+                    $this->logger->info("Found {$type} objects for export", [
+                        'count' => count($objects)
+                    ]);
+                } else {
+                    $this->logger->warning("Unexpected result type for {$type} search", [
+                        'result_type' => gettype($objects)
+                    ]);
+                    $allObjects[$type] = [];
+                }
+            }
+
+            $totalObjects = array_sum(array_map('count', $allObjects));
+            $this->logger->info('Export object retrieval completed', [
+                'total_objects' => $totalObjects,
+                'by_type' => array_map('count', $allObjects)
+            ]);
+
+            return $allObjects;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Error getting objects for export', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [];
+        }
     }
 
+    /**
+     * Convert OpenRegister objects to ArchiMate format
+     *
+     * @param array $objects Objects from database grouped by type
+     * @param array $options Export options
+     * @return array ArchiMate data structure matching import format
+     */
     private function convertFromOpenRegisterObjects(array $objects, array $options): array
     {
         $this->logger->info('Converting OpenRegister objects to ArchiMate format', [
-            'objects_count' => count($objects)
+            'objects_count' => array_sum(array_map('count', $objects)),
+            'object_types' => array_keys($objects)
         ]);
-        return []; // Placeholder
+
+        $archiMateData = [
+            'elements' => [],
+            'relationships' => [],
+            'organizations' => [],
+            'views' => []
+        ];
+
+        try {
+            // Convert elements
+            if (!empty($objects['elements'])) {
+                foreach ($objects['elements'] as $object) {
+                    $element = $this->convertObjectToArchiMateElement($object);
+                    if ($element) {
+                        $archiMateData['elements'][$element['id']] = $element;
+                    }
+                }
+            }
+
+            // Convert organizations
+            if (!empty($objects['organizations'])) {
+                foreach ($objects['organizations'] as $object) {
+                    $organization = $this->convertObjectToArchiMateOrganization($object);
+                    if ($organization) {
+                        $archiMateData['organizations'][$organization['id']] = $organization;
+                    }
+                }
+            }
+
+            // Convert relationships
+            if (!empty($objects['relationships'])) {
+                foreach ($objects['relationships'] as $object) {
+                    $relationship = $this->convertObjectToArchiMateRelationship($object);
+                    if ($relationship) {
+                        $archiMateData['relationships'][$relationship['id']] = $relationship;
+                    }
+                }
+            }
+
+            // Convert views
+            if (!empty($objects['views'])) {
+                foreach ($objects['views'] as $object) {
+                    $view = $this->convertObjectToArchiMateView($object);
+                    if ($view) {
+                        $archiMateData['views'][$view['id']] = $view;
+                    }
+                }
+            }
+
+            $this->logger->info('Conversion to ArchiMate format completed', [
+                'elements_count' => count($archiMateData['elements']),
+                'organizations_count' => count($archiMateData['organizations']),
+                'relationships_count' => count($archiMateData['relationships']),
+                'views_count' => count($archiMateData['views'])
+            ]);
+
+            return $archiMateData;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Error converting objects to ArchiMate format', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $archiMateData;
+        }
     }
 
+    /**
+     * Convert OpenRegister object to ArchiMate element format
+     */
+    private function convertObjectToArchiMateElement(array $object): ?array
+    {
+        try {
+            // Handle both API response format and ObjectEntity format
+            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
+            if (!$archiMateId) {
+                $this->logger->warning('Object missing ArchiMate ID', [
+                    'object_id' => $object['id'] ?? 'unknown',
+                    'available_keys' => array_keys($object)
+                ]);
+                return null;
+            }
+
+            $element = [
+                'id' => $archiMateId,
+                'name' => $object['name'] ?? '',
+                'type' => $object['archimate_type'] ?? 'Element',
+                'properties' => []
+            ];
+
+            // Extract properties from the object
+            if (isset($object['properties']) && is_array($object['properties'])) {
+                $element['properties'] = $object['properties'];
+            }
+
+            $this->logger->debug('Converted element', [
+                'archimate_id' => $archiMateId,
+                'name' => $element['name'],
+                'type' => $element['type']
+            ]);
+
+            return $element;
+        } catch (\Exception $e) {
+            $this->logger->error('Error converting object to ArchiMate element', [
+                'object_id' => $object['id'] ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Convert OpenRegister object to ArchiMate organization format
+     */
+    private function convertObjectToArchiMateOrganization(array $object): ?array
+    {
+        try {
+            // Handle both API response format and ObjectEntity format
+            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
+            if (!$archiMateId) {
+                $this->logger->warning('Organization object missing ArchiMate ID', [
+                    'object_id' => $object['id'] ?? 'unknown',
+                    'available_keys' => array_keys($object)
+                ]);
+                return null;
+            }
+
+            $organization = [
+                'id' => $archiMateId,
+                'name' => $object['name'] ?? '',
+                'type' => $object['archimate_type'] ?? 'BusinessActor',
+                'properties' => []
+            ];
+
+            // Extract properties from the object
+            if (isset($object['properties']) && is_array($object['properties'])) {
+                $organization['properties'] = $object['properties'];
+            }
+
+            return $organization;
+        } catch (\Exception $e) {
+            $this->logger->error('Error converting object to ArchiMate organization', [
+                'object_id' => $object['id'] ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Convert OpenRegister object to ArchiMate relationship format
+     */
+    private function convertObjectToArchiMateRelationship(array $object): ?array
+    {
+        try {
+            // Handle both API response format and ObjectEntity format
+            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
+            if (!$archiMateId) {
+                $this->logger->warning('Relationship object missing ArchiMate ID', [
+                    'object_id' => $object['id'] ?? 'unknown',
+                    'available_keys' => array_keys($object)
+                ]);
+                return null;
+            }
+
+            $relationship = [
+                'id' => $archiMateId,
+                'name' => $object['name'] ?? '',
+                'type' => $object['archimate_type'] ?? 'Relationship',
+                'source' => $object['source_id'] ?? '',
+                'target' => $object['target_id'] ?? '',
+                'properties' => []
+            ];
+
+            // Extract properties from the object
+            if (isset($object['properties']) && is_array($object['properties'])) {
+                $relationship['properties'] = $object['properties'];
+            }
+
+            return $relationship;
+        } catch (\Exception $e) {
+            $this->logger->error('Error converting object to ArchiMate relationship', [
+                'object_id' => $object['id'] ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Convert OpenRegister object to ArchiMate view format
+     */
+    private function convertObjectToArchiMateView(array $object): ?array
+    {
+        try {
+            // Handle both API response format and ObjectEntity format
+            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
+            if (!$archiMateId) {
+                $this->logger->warning('View object missing ArchiMate ID', [
+                    'object_id' => $object['id'] ?? 'unknown',
+                    'available_keys' => array_keys($object)
+                ]);
+                return null;
+            }
+
+            $view = [
+                'id' => $archiMateId,
+                'name' => $object['name'] ?? '',
+                'type' => $object['archimate_type'] ?? 'View',
+                'properties' => []
+            ];
+
+            // Extract properties from the object
+            if (isset($object['properties']) && is_array($object['properties'])) {
+                $view['properties'] = $object['properties'];
+            }
+
+            return $view;
+        } catch (\Exception $e) {
+            $this->logger->error('Error converting object to ArchiMate view', [
+                'object_id' => $object['id'] ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Generate ArchiMate XML from data structure
+     *
+     * @param array $archiMateData ArchiMate data structure
+     * @return string XML content matching the import format exactly
+     */
     private function generateArchiMateXml(array $archiMateData): string
     {
-        $this->logger->info('Generating ArchiMate XML');
-        return '<?xml version="1.0" encoding="UTF-8"?><model></model>'; // Placeholder
+        $this->logger->info('Generating ArchiMate XML', [
+            'elements_count' => count($archiMateData['elements'] ?? []),
+            'organizations_count' => count($archiMateData['organizations'] ?? []),
+            'relationships_count' => count($archiMateData['relationships'] ?? []),
+            'views_count' => count($archiMateData['views'] ?? [])
+        ]);
+
+        try {
+            // Start XML document
+            $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+            $xml .= '<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' . "\n";
+            
+            // Add elements section
+            if (!empty($archiMateData['elements'])) {
+                $xml .= '  <elements>' . "\n";
+                foreach ($archiMateData['elements'] as $element) {
+                    $xml .= $this->generateElementXml($element);
+                }
+                $xml .= '  </elements>' . "\n";
+            }
+
+            // Add relationships section
+            if (!empty($archiMateData['relationships'])) {
+                $xml .= '  <relationships>' . "\n";
+                foreach ($archiMateData['relationships'] as $relationship) {
+                    $xml .= $this->generateRelationshipXml($relationship);
+                }
+                $xml .= '  </relationships>' . "\n";
+            }
+
+            // Add views section
+            if (!empty($archiMateData['views'])) {
+                $xml .= '  <views>' . "\n";
+                foreach ($archiMateData['views'] as $view) {
+                    $xml .= $this->generateViewXml($view);
+                }
+                $xml .= '  </views>' . "\n";
+            }
+
+            $xml .= '</model>';
+
+            $this->logger->info('ArchiMate XML generation completed', [
+                'xml_length' => strlen($xml)
+            ]);
+
+            return $xml;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Error generating ArchiMate XML', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return minimal valid XML on error
+            return '<?xml version="1.0" encoding="UTF-8"?><model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"></model>';
+        }
+    }
+
+    /**
+     * Generate XML for an ArchiMate element
+     */
+    private function generateElementXml(array $element): string
+    {
+        $xml = '    <element identifier="' . htmlspecialchars($element['id']) . '" xsi:type="' . htmlspecialchars($element['type']) . '">' . "\n";
+        
+        if (!empty($element['name'])) {
+            $xml .= '      <name xml:lang="en">' . htmlspecialchars($element['name']) . '</name>' . "\n";
+        }
+
+        if (!empty($element['properties'])) {
+            $xml .= '      <properties>' . "\n";
+            foreach ($element['properties'] as $key => $value) {
+                $xml .= '        <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
+                $xml .= '          <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
+                $xml .= '        </property>' . "\n";
+            }
+            $xml .= '      </properties>' . "\n";
+        }
+
+        $xml .= '    </element>' . "\n";
+        return $xml;
+    }
+
+    /**
+     * Generate XML for an ArchiMate relationship
+     */
+    private function generateRelationshipXml(array $relationship): string
+    {
+        $xml = '    <element identifier="' . htmlspecialchars($relationship['id']) . '" xsi:type="' . htmlspecialchars($relationship['type']) . '"';
+        
+        if (!empty($relationship['source'])) {
+            $xml .= ' source="' . htmlspecialchars($relationship['source']) . '"';
+        }
+        
+        if (!empty($relationship['target'])) {
+            $xml .= ' target="' . htmlspecialchars($relationship['target']) . '"';
+        }
+        
+        $xml .= ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>' . "\n";
+        
+        return $xml;
+    }
+
+    /**
+     * Generate XML for an ArchiMate view
+     */
+    private function generateViewXml(array $view): string
+    {
+        $xml = '    <element identifier="' . htmlspecialchars($view['id']) . '" xsi:type="' . htmlspecialchars($view['type']) . '">' . "\n";
+        
+        if (!empty($view['name'])) {
+            $xml .= '      <name xml:lang="en">' . htmlspecialchars($view['name']) . '</name>' . "\n";
+        }
+
+        if (!empty($view['properties'])) {
+            $xml .= '      <properties>' . "\n";
+            foreach ($view['properties'] as $key => $value) {
+                $xml .= '        <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
+                $xml .= '          <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
+                $xml .= '        </property>' . "\n";
+            }
+            $xml .= '      </properties>' . "\n";
+        }
+
+        $xml .= '    </element>' . "\n";
+        return $xml;
     }
 
     /**
@@ -1783,19 +2264,25 @@ class ArchiMateService
                 'export_time' => $testResults['statistics']['export_time']
             ]);
             
-            // Step 2: Create a temporary file and import the exported data
+            // Step 2: Import the exported data back
             $this->logger->info('ArchiMate: Round-trip test - Step 2: Import');
             $importStartTime = microtime(true);
             
-            // For the test, we'll create a sample ArchiMate XML to import
-            $testXmlContent = $this->createTestArchiMateXml();
+            // Use the exported XML content for import
+            $exportedXmlContent = $exportResult['xml_content'] ?? '';
+            if (empty($exportedXmlContent)) {
+                $testResults['message'] = 'Export did not return XML content';
+                $testResults['details']['export_error'] = $exportResult;
+                return $testResults;
+            }
+            
             $tempFilePath = tempnam(sys_get_temp_dir(), 'archimate_roundtrip_test_') . '.xml';
-            file_put_contents($tempFilePath, $testXmlContent);
+            file_put_contents($tempFilePath, $exportedXmlContent);
             
             $importResult = $this->importArchiMateFileFromPath([
                 'filePath' => $tempFilePath,
                 'fileName' => 'roundtrip_test.xml',
-                'fileSize' => strlen($testXmlContent),
+                'fileSize' => strlen($exportedXmlContent),
                 'mimeType' => 'text/xml',
                 'updateExisting' => false,
                 'deleteOrphaned' => false,
@@ -1825,8 +2312,8 @@ class ArchiMateService
             
             $totalTime = microtime(true) - $startTime;
             $testResults['statistics']['total_time'] = $totalTime;
-            $testResults['statistics']['elements_exported'] = $exportResult['statistics']['total_elements'] ?? 0;
-            $testResults['statistics']['elements_imported'] = $importResult['statistics']['total_objects'] ?? 0;
+            $testResults['statistics']['elements_exported'] = $exportResult['statistics']['objects_exported'] ?? 0;
+            $testResults['statistics']['elements_imported'] = $importResult['summary']['total_objects_created'] ?? 0;
             $testResults['statistics']['data_integrity_check'] = true; // Simplified for now
             
             // Test completed successfully
@@ -1836,13 +2323,13 @@ class ArchiMateService
                 'export_result' => [
                     'success' => $exportResult['success'],
                     'message' => $exportResult['message'] ?? 'Export completed',
-                    'file_size' => $exportResult['file_size'] ?? 0,
-                    'elements_count' => $exportResult['statistics']['total_elements'] ?? 0
+                    'file_size' => strlen($exportedXmlContent),
+                    'elements_count' => $exportResult['statistics']['objects_exported'] ?? 0
                 ],
                 'import_result' => [
                     'success' => $importResult['success'],
                     'message' => $importResult['message'] ?? 'Import completed',
-                    'objects_created' => $importResult['statistics']['total_objects'] ?? 0,
+                    'objects_created' => $importResult['summary']['total_objects_created'] ?? 0,
                     'validation_passed' => true
                 ],
                 'performance' => [
