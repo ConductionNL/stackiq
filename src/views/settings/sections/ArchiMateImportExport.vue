@@ -510,10 +510,15 @@ export default {
 		},
 
 		/**
-		 * Export to ArchiMate
+		 * Export to ArchiMate - now triggers direct download
 		 */
 		async exportToArchiMate() {
-			await this.store.exportToArchiMate(this.exportFormat)
+			this.exporting = true
+			try {
+				await this.store.exportToArchiMate(this.exportFormat)
+			} finally {
+				this.exporting = false
+			}
 		},
 
 		/**
