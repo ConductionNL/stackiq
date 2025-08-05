@@ -1171,14 +1171,14 @@ class SettingsController extends Controller
     }
 
     /**
-     * Export to ArchiMate format
+     * Export to ArchiMate format - returns file directly for download
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      * 
-     * @return JSONResponse Result of the export operation with progress tracking
+     * @return Response File download response or JSON error response
      */
-    public function exportArchiMate(): JSONResponse
+    public function exportArchiMate(): Response
     {
         try {
             // Get JSON data from request parameters or body
@@ -1215,7 +1215,51 @@ class SettingsController extends Controller
             // Call export service
             $result = $this->archiMateService->exportToArchiMate($criteria, $options);
 
-            return new JSONResponse($result);
+            // Check if export was successful
+            if (!$result['success']) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Export failed',
+                    'error' => $result['error'] ?? 'EXPORT_FAILED'
+                ], 500);
+            }
+
+            // Return the XML file directly for download
+            $fileName = $result['file_name'] ?? 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml';
+            $xmlContent = $result['xml_content'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
+            
+            // Determine content type based on format
+            $format = $options['format'];
+            $contentType = match($format) {
+                'json' => 'application/json',
+                'xml', 'archimate' => 'application/xml',
+                default => 'application/xml'
+            };
+
+            // Create direct download response
+            $response = new class($xmlContent) extends Response {
+                public function __construct(private string $content) {
+                    parent::__construct();
+                }
+                
+                public function render(): string {
+                    return $this->content;
+                }
+            };
+            
+            $response->setStatus(200);
+            $response->addHeader('Content-Type', $contentType);
+            $response->addHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+            $response->addHeader('Content-Length', (string)strlen($xmlContent));
+            $response->addHeader('Cache-Control', 'no-cache');
+            
+            $this->logger->info('ArchiMate export completed', [
+                'fileName' => $fileName,
+                'size' => strlen($xmlContent),
+                'objects_exported' => $result['statistics']['objects_exported'] ?? 0
+            ]);
+
+            return $response;
 
         } catch (\Exception $e) {
             $this->logger->error('ArchiMate export failed', [

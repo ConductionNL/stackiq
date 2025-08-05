@@ -1037,85 +1037,100 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Export to ArchiMate (async approach)
+		 * Export to ArchiMate (direct download approach)
 		 *
 		 * @param {string} format Export format
 		 * @return {void}
 		 */
-		exportToArchiMate(format = 'xml') {
+		async exportToArchiMate(format = 'xml') {
 			this.exporting = true
 			this.exportError = null
 
-			// Immediately set export as running and start polling (async approach)
-			console.log('Setting export status to running and starting polling immediately')
-			this.isExportRunning = true
-			this.archimateStatus.export = {
-				status: 'running',
-				current_step: 'Starting export...',
-				progress: 0,
-				statistics: null,
-			}
-
-			// Start polling immediately
-			console.log('Starting status polling immediately for export')
-			this.startStatusPolling()
-			showSuccess('ArchiMate export started - monitoring progress...')
-
-			// Fire export request in background
 			try {
-				console.log('Triggering background export request...')
-				fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
+				console.log('Starting ArchiMate export, format:', format)
+
+				// Create form data for the request
+				const requestData = {
+					format,
+					includeRelationships: this.exportOptions.includeRelationships ?? true,
+					includeViews: this.exportOptions.includeViews ?? true,
+					organizationSpecific: false,
+					selectedSchemas: [],
+				}
+
+				console.log('Export request data:', requestData)
+
+				// Create a temporary link to trigger download
+				const link = document.createElement('a')
+				link.style.display = 'none'
+				document.body.appendChild(link)
+
+				// Fetch the export (which will return a file directly)
+				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 						'X-Requested-With': 'XMLHttpRequest',
 					},
-					body: JSON.stringify({
-						format,
-						options: this.exportOptions,
-					}),
-				}).then(response => {
-					console.log('Background export request completed:', response.status, response.statusText)
-					
-					// Only handle immediate failures (500 errors)
-					if (response.status === 500) {
-						console.log('Export failed immediately with 500 error')
-						this.stopStatusPolling()
-						this.isExportRunning = false
-						this.archimateStatus.export = {
-							status: 'failed',
-							current_step: 'Export failed',
-							progress: 0,
-							statistics: null,
-							error: 'Server error (500)',
-						}
-						showError('Export failed: Server error. Please check server logs.')
-					}
-					// For all other responses, let polling handle the status
-				}).catch(error => {
-					console.error('Background export request failed:', error)
-					if (error.name !== 'AbortError') {
-						this.stopStatusPolling()
-						this.isExportRunning = false
-						this.archimateStatus.export = {
-							status: 'failed',
-							current_step: 'Export failed',
-							progress: 0,
-							statistics: null,
-							error: error.message,
-						}
-						showError('Export failed: ' + error.message)
-					}
+					body: JSON.stringify(requestData),
 				})
 
+				console.log('Export response status:', response.status, response.statusText)
+
+				if (response.status === 500) {
+					// Handle server error
+					const errorData = await response.json()
+					throw new Error(errorData.message || 'Server error occurred')
+				}
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				// Check if response is JSON (error) or file content
+				const contentType = response.headers.get('content-type')
+				console.log('Response content type:', contentType)
+
+				if (contentType && contentType.includes('application/json')) {
+					// Handle JSON error response
+					const errorData = await response.json()
+					throw new Error(errorData.message || errorData.error || 'Export failed')
+				}
+
+				// Handle successful file download
+				const blob = await response.blob()
+				const url = window.URL.createObjectURL(blob)
+
+				// Get filename from Content-Disposition header or create default
+				const contentDisposition = response.headers.get('content-disposition')
+				let fileName = `archimate_export_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xml`
+
+				if (contentDisposition) {
+					const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+					if (fileNameMatch) {
+						fileName = fileNameMatch[1].replace(/['"]/g, '')
+					}
+				}
+
+				console.log('Downloading file:', fileName)
+
+				// Trigger download
+				link.href = url
+				link.download = fileName
+				link.click()
+
+				// Cleanup
+				document.body.removeChild(link)
+				window.URL.revokeObjectURL(url)
+
+				showSuccess(`Export completed! Downloaded ${fileName}`)
+
 			} catch (error) {
-				console.error('Failed to start export:', error)
-				this.stopStatusPolling()
-				this.isExportRunning = false
+				console.error('Export failed:', error)
 				this.exportError = error.message
-				showError('Failed to start ArchiMate export: ' + error.message)
+				showError('Failed to export ArchiMate: ' + error.message)
 			} finally {
-				console.log('Export setup complete - setting exporting = false')
+				console.log('Export completed - setting exporting = false')
 				this.exporting = false
 			}
 		},
