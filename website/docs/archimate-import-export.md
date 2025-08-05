@@ -270,6 +270,24 @@ POST /api/settings/amef
 POST /api/settings/amef/auto-configure
 ```
 
+### Consolidated Configuration
+The consolidated configuration endpoint (`GET /api/settings`) now includes AMEF object counts in the `archimate` section:
+
+```json
+{
+  "archimate": {
+    "import": {...},
+    "export": {...},
+    "totalElementObjects": 150,
+    "totalOrganizationObjects": 25,
+    "totalViewObjects": 10,
+    "totalRelationshipsObjects": 300
+  }
+}
+```
+
+These counts provide real-time information about the number of objects in each AMEF schema type, helping you monitor the current state of your architectural data.
+
 ## Best Practices
 
 ### Import Best Practices

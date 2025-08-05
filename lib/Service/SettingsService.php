@@ -77,7 +77,7 @@ class SettingsService
         private readonly IRequest $request,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly LoggerInterface $logger,
+        private readonly LoggerInterface $logger
     ) {
         $this->_appName = 'softwarecatalog';
     }
@@ -2853,27 +2853,49 @@ class SettingsService
     }
 
     /**
-     * Get AMEF configuration as JSON object
+     * Gets AMEF configuration using ArchiMateService to avoid code duplication
+     *
+     * This method delegates to ArchiMateService's getAmefConfig method
+     * to ensure consistency and avoid code duplication.
      *
      * @return array The AMEF configuration
      */
     public function getAmefConfig(): array
     {
-        $config = $this->config->getValueString($this->_appName, 'amef_config', '{}');
-        $decoded = json_decode($config, true);
-        
-        if (!is_array($decoded)) {
-            // Fallback to individual config values for backward compatibility
-            $decoded = [
-                'register_id' => $this->config->getValueString($this->_appName, 'amef_register_id', ''),
-                'organizations_schema' => $this->config->getValueString($this->_appName, 'amef_organizations_schema', ''),
-                'elements_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
-                'relationships_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
-                'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', '')
-            ];
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            // Use reflection to access the private getAmefConfig method
+            $reflection = new \ReflectionClass($archiMateService);
+            $method = $reflection->getMethod('getAmefConfig');
+            $method->setAccessible(true);
+            
+            return $method->invoke($archiMateService);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to get AMEF config from ArchiMateService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback to direct config access if ArchiMateService is not available
+            $config = $this->config->getValueString($this->_appName, 'amef_config', '{}');
+            $decoded = json_decode($config, true);
+            
+            if (!is_array($decoded)) {
+                // Fallback to individual config values for backward compatibility
+                $decoded = [
+                    'register_id' => $this->config->getValueString($this->_appName, 'amef_register_id', ''),
+                    'organizations_schema' => $this->config->getValueString($this->_appName, 'amef_organizations_schema', ''),
+                    'elements_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
+                    'relationships_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
+                    'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', '')
+                ];
+            }
+            
+            return $decoded;
         }
-        
-        return $decoded;
     }
 
     /**
@@ -2931,66 +2953,208 @@ class SettingsService
     }
 
     /**
-     * Get ArchiMate import/export status
+     * Get ArchiMate import/export status and AMEF object counts
      *
-     * @return array The ArchiMate status
+     * This method delegates to ArchiMateService to avoid code duplication
+     * and ensure consistency in ArchiMate status management.
+     *
+     * @return array The ArchiMate status with object counts
      */
     public function getArchiMateStatus(): array
     {
-        $importStatus = $this->config->getValueString($this->_appName, 'archimate_import_status', '{}');
-        $exportStatus = $this->config->getValueString($this->_appName, 'archimate_export_status', '{}');
-        
-        $importDecoded = json_decode($importStatus, true);
-        $exportDecoded = json_decode($exportStatus, true);
-        
-        return [
-            'import' => is_array($importDecoded) ? $importDecoded : [],
-            'export' => is_array($exportDecoded) ? $exportDecoded : []
-        ];
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            return $archiMateService->getArchiMateStatus();
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to get ArchiMate status from ArchiMateService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback to direct config access if ArchiMateService is not available
+            $importStatus = $this->config->getValueString($this->_appName, 'archimate_import_status', '{}');
+            $exportStatus = $this->config->getValueString($this->_appName, 'archimate_export_status', '{}');
+            
+            $importDecoded = json_decode($importStatus, true);
+            $exportDecoded = json_decode($exportStatus, true);
+            
+            // Get AMEF object counts
+            $amefObjectCounts = $this->getAmefObjectCounts();
+            
+            return [
+                'import' => is_array($importDecoded) ? $importDecoded : [],
+                'export' => is_array($exportDecoded) ? $exportDecoded : [],
+                'totalElementObjects' => $amefObjectCounts['totalElementObjects'],
+                'totalOrganizationObjects' => $amefObjectCounts['totalOrganizationObjects'],
+                'totalViewObjects' => $amefObjectCounts['totalViewObjects'],
+                'totalRelationshipsObjects' => $amefObjectCounts['totalRelationshipsObjects']
+            ];
+        }
+    }
+
+    /**
+     * Gets AMEF object counts for consolidated configuration
+     *
+     * This method retrieves counts of all AMEF object types using the ArchiMateService
+     * and returns them in a format suitable for the consolidated configuration.
+     *
+     * @return array AMEF object counts
+     */
+    private function getAmefObjectCounts(): array
+    {
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            // Get object counts using ArchiMateService methods
+            $elementObjects = $archiMateService->getElementObjects();
+            $organizationObjects = $archiMateService->getOrganizationObjects();
+            $viewObjects = $archiMateService->getViewObjects();
+            $relationshipObjects = $archiMateService->getRelationshipObjects();
+
+            $this->logger->debug('SettingsService: Retrieved AMEF object counts', [
+                'elementObjects' => count($elementObjects),
+                'organizationObjects' => count($organizationObjects),
+                'viewObjects' => count($viewObjects),
+                'relationshipObjects' => count($relationshipObjects)
+            ]);
+
+            return [
+                'totalElementObjects' => count($elementObjects),
+                'totalOrganizationObjects' => count($organizationObjects),
+                'totalViewObjects' => count($viewObjects),
+                'totalRelationshipsObjects' => count($relationshipObjects)
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to get AMEF object counts', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Return zero counts on error to prevent API failures
+            return [
+                'totalElementObjects' => 0,
+                'totalOrganizationObjects' => 0,
+                'totalViewObjects' => 0,
+                'totalRelationshipsObjects' => 0
+            ];
+        }
     }
 
     /**
      * Set ArchiMate import status
+     *
+     * This method delegates to ArchiMateService to avoid code duplication
+     * and ensure consistency in ArchiMate status management.
      *
      * @param array $status The import status
      * @return void
      */
     public function setArchiMateImportStatus(array $status): void
     {
-        $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
-        $this->config->setValueString($this->_appName, 'archimate_import_status', $jsonStatus);
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            $archiMateService->setArchiMateImportStatus($status);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to set ArchiMate import status via ArchiMateService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback to direct config access if ArchiMateService is not available
+            $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
+            $this->config->setValueString($this->_appName, 'archimate_import_status', $jsonStatus);
+        }
     }
 
     /**
      * Set ArchiMate export status
+     *
+     * This method delegates to ArchiMateService to avoid code duplication
+     * and ensure consistency in ArchiMate status management.
      *
      * @param array $status The export status
      * @return void
      */
     public function setArchiMateExportStatus(array $status): void
     {
-        $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
-        $this->config->setValueString($this->_appName, 'archimate_export_status', $jsonStatus);
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            $archiMateService->setArchiMateExportStatus($status);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to set ArchiMate export status via ArchiMateService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback to direct config access if ArchiMateService is not available
+            $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
+            $this->config->setValueString($this->_appName, 'archimate_export_status', $jsonStatus);
+        }
     }
 
     /**
      * Clear ArchiMate import status
      *
+     * This method delegates to ArchiMateService to avoid code duplication
+     * and ensure consistency in ArchiMate status management.
+     *
      * @return void
      */
     public function clearArchiMateImportStatus(): void
     {
-        $this->config->deleteKey($this->_appName, 'archimate_import_status');
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            $archiMateService->clearArchiMateImportStatus();
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to clear ArchiMate import status via ArchiMateService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback to direct config access if ArchiMateService is not available
+            $this->config->deleteKey($this->_appName, 'archimate_import_status');
+        }
     }
 
     /**
      * Clear ArchiMate export status
      *
+     * This method delegates to ArchiMateService to avoid code duplication
+     * and ensure consistency in ArchiMate status management.
+     *
      * @return void
      */
     public function clearArchiMateExportStatus(): void
     {
-        $this->config->deleteKey($this->_appName, 'archimate_export_status');
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            $archiMateService->clearArchiMateExportStatus();
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to clear ArchiMate export status via ArchiMateService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback to direct config access if ArchiMateService is not available
+            $this->config->deleteKey($this->_appName, 'archimate_export_status');
+        }
     }
 
     /**
