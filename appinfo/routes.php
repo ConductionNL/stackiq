@@ -80,10 +80,7 @@ return [
         ['name' => 'settings#set_super_user_groups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'POST'],
         ['name' => 'settings#get_all_groups', 'url' => '/api/settings/user-groups/all', 'verb' => 'GET'],
 
-        // AMEF register configuration routes
-        ['name' => 'settings#getAmefSettings', 'url' => '/api/settings/amef', 'verb' => 'GET'],
-        ['name' => 'settings#saveAmefSettings', 'url' => '/api/settings/amef', 'verb' => 'POST'],
-        ['name' => 'settings#autoConfigureAmef', 'url' => '/api/settings/amef/auto-configure', 'verb' => 'POST'],
+
 
         // Progress streaming routes
         ['name' => 'settings#getProgress', 'url' => '/api/progress/{operationId}', 'verb' => 'GET'],

@@ -2688,7 +2688,9 @@ class SettingsService
 
             // Configure AMEF schemas (English only, strict)
             $amefSchemaMappings = [
-                'organizationsSchema' => ['organization']  // Only English for AMEF
+                'organizationsSchema' => ['organization'],  // Only English for AMEF
+                'modelsSchema' => ['model'],
+                'propertiesSchema' => ['property', 'property-definition']
             ];
 
             $configured = [];
@@ -2890,7 +2892,9 @@ class SettingsService
                     'organizations_schema' => $this->config->getValueString($this->_appName, 'amef_organizations_schema', ''),
                     'elements_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
                     'relationships_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
-                    'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', '')
+                    'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', ''),
+                    'models_schema' => $this->config->getValueString($this->_appName, 'amef_models_schema', ''),
+                    'properties_schema' => $this->config->getValueString($this->_appName, 'amef_properties_schema', '')
                 ];
             }
             
@@ -3014,19 +3018,25 @@ class SettingsService
             $organizationObjects = $archiMateService->getOrganizationObjects();
             $viewObjects = $archiMateService->getViewObjects();
             $relationshipObjects = $archiMateService->getRelationshipObjects();
+            $modelObjects = $archiMateService->getModelObjects();
+            $propertyObjects = $archiMateService->getPropertyObjects();
 
             $this->logger->debug('SettingsService: Retrieved AMEF object counts', [
                 'elementObjects' => count($elementObjects),
                 'organizationObjects' => count($organizationObjects),
                 'viewObjects' => count($viewObjects),
-                'relationshipObjects' => count($relationshipObjects)
+                'relationshipObjects' => count($relationshipObjects),
+                'modelObjects' => count($modelObjects),
+                'propertyObjects' => count($propertyObjects)
             ]);
 
             return [
                 'totalElementObjects' => count($elementObjects),
                 'totalOrganizationObjects' => count($organizationObjects),
                 'totalViewObjects' => count($viewObjects),
-                'totalRelationshipsObjects' => count($relationshipObjects)
+                'totalRelationshipsObjects' => count($relationshipObjects),
+                'totalModelObjects' => count($modelObjects),
+                'totalPropertyObjects' => count($propertyObjects)
             ];
 
         } catch (\Exception $e) {
@@ -3040,7 +3050,9 @@ class SettingsService
                 'totalElementObjects' => 0,
                 'totalOrganizationObjects' => 0,
                 'totalViewObjects' => 0,
-                'totalRelationshipsObjects' => 0
+                'totalRelationshipsObjects' => 0,
+                'totalModelObjects' => 0,
+                'totalPropertyObjects' => 0
             ];
         }
     }
@@ -3193,6 +3205,8 @@ class SettingsService
                 'elements_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
                 'relationships_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
                 'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', ''),
+                'models_schema' => $this->config->getValueString($this->_appName, 'amef_models_schema', ''),
+                'properties_schema' => $this->config->getValueString($this->_appName, 'amef_properties_schema', ''),
                 'organization_source' => $this->config->getValueString($this->_appName, 'amef_organization_source', 'openregister'),
                 'organization_register' => $this->config->getValueString($this->_appName, 'amef_organization_register', ''),
                 'organization_schema' => $this->config->getValueString($this->_appName, 'amef_organization_schema', ''),

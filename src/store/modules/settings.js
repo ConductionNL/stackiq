@@ -47,6 +47,8 @@ export const useSettingsStore = defineStore('settings', {
 			amef_organization: { schema: null },
 			amef_relationships: { schema: null },
 			amef_views: { schema: null },
+			amef_models: { schema: null },
+			amef_properties: { schema: null },
 			// Voorzieningen register configuration
 			voorzieningen_organisatie: { schema: null },
 			voorzieningen_contactpersoon: { schema: null },
@@ -290,19 +292,21 @@ export const useSettingsStore = defineStore('settings', {
 		 * Initialize configuration object
 		 */
 		initializeConfiguration() {
-			// Initialize register-specific configuration
-			this.configuration = {
-				// AMEF register configuration
-				amef_elements: { schema: null },
-				amef_organization: { schema: null },
-				amef_relationships: { schema: null },
-				amef_views: { schema: null },
-				// Voorzieningen register configuration
-				voorzieningen_organisatie: { schema: null },
-				voorzieningen_contactpersoon: { schema: null },
-				voorzieningen_gebruiker: { schema: null },
-				voorzieningen_contactgegevens: { schema: null },
-			}
+					// Initialize register-specific configuration
+		this.configuration = {
+			// AMEF register configuration
+			amef_elements: { schema: null },
+			amef_organization: { schema: null },
+			amef_relationships: { schema: null },
+			amef_views: { schema: null },
+			amef_models: { schema: null },
+			amef_properties: { schema: null },
+			// Voorzieningen register configuration
+			voorzieningen_organisatie: { schema: null },
+			voorzieningen_contactpersoon: { schema: null },
+			voorzieningen_gebruiker: { schema: null },
+			voorzieningen_contactgegevens: { schema: null },
+		}
 
 			// Map consolidated config to our configuration structure
 			const consolidatedConfig = this.settings.consolidatedConfig || {}
@@ -358,6 +362,18 @@ export const useSettingsStore = defineStore('settings', {
 					this.configuration.amef_views.schema = {
 						label: findSchemaLabel(amefConfig.views_schema, this.amefSchemas),
 						value: amefConfig.views_schema,
+					}
+				}
+				if (amefConfig.models_schema) {
+					this.configuration.amef_models.schema = {
+						label: findSchemaLabel(amefConfig.models_schema, this.amefSchemas),
+						value: amefConfig.models_schema,
+					}
+				}
+				if (amefConfig.properties_schema) {
+					this.configuration.amef_properties.schema = {
+						label: findSchemaLabel(amefConfig.properties_schema, this.amefSchemas),
+						value: amefConfig.properties_schema,
 					}
 				}
 			}
@@ -480,6 +496,18 @@ export const useSettingsStore = defineStore('settings', {
 					this.configuration.amef_views.schema = {
 						label: findSchemaLabel(amefConfig.views_schema, this.amefSchemas),
 						value: amefConfig.views_schema,
+					}
+				}
+				if (amefConfig.models_schema) {
+					this.configuration.amef_models.schema = {
+						label: findSchemaLabel(amefConfig.models_schema, this.amefSchemas),
+						value: amefConfig.models_schema,
+					}
+				}
+				if (amefConfig.properties_schema) {
+					this.configuration.amef_properties.schema = {
+						label: findSchemaLabel(amefConfig.properties_schema, this.amefSchemas),
+						value: amefConfig.properties_schema,
 					}
 				}
 			}
@@ -820,6 +848,8 @@ export const useSettingsStore = defineStore('settings', {
 					'amef_organization',
 					'amef_relationships',
 					'amef_views',
+					'amef_models',
+					'amef_properties',
 					'voorzieningen_organisatie',
 					'voorzieningen_contactpersoon',
 				]

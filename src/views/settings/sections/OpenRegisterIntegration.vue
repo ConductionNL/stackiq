@@ -195,6 +195,32 @@
 											:disabled="loading"
 											@change="validateConfiguration" />
 									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Models Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate models</span>
+										</div>
+										<NcSelect
+											v-model="configuration.amef_models.schema"
+											:options="amefSchemaOptions"
+											input-label="Models Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Properties Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate property definitions</span>
+										</div>
+										<NcSelect
+											v-model="configuration.amef_properties.schema"
+											:options="amefSchemaOptions"
+											input-label="Properties Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
 								</div>
 							</div>
 
