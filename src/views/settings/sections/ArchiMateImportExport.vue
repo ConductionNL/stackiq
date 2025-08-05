@@ -52,13 +52,55 @@
 										<li>Elements: {{ archimateStatus.import.statistics.elements_processed }}</li>
 										<li>Views: {{ archimateStatus.import.statistics.views_processed }}</li>
 										<li>Relationships: {{ archimateStatus.import.statistics.relationships_processed }}</li>
-										<li>Organizations: {{ archimateStatus.import.statistics.organizations_processed }}</li>
+										<li>Properties: {{ archimateStatus.import.statistics.properties_found }}</li>
 									</ul>
 									<h5>Object Statistics:</h5>
 									<ul>
 										<li>Created: {{ archimateStatus.import.statistics.objects_created }}</li>
 										<li>Updated: {{ archimateStatus.import.statistics.objects_updated }}</li>
 									</ul>
+									<div v-if="archimateStatus.import.model_info && archimateStatus.import.model_info.identifier" class="model-info">
+										<h5>Model Information:</h5>
+										<ul>
+											<li><strong>Identifier:</strong> {{ archimateStatus.import.model_info.identifier }}</li>
+											<li v-if="archimateStatus.import.model_info.name"><strong>Name:</strong> {{ archimateStatus.import.model_info.name }}</li>
+											<li v-if="archimateStatus.import.model_info.action"><strong>Action:</strong> {{ archimateStatus.import.model_info.action }}</li>
+										</ul>
+									</div>
+									
+									<!-- Schema Progress Table -->
+									<div v-if="archimateStatus.import.schema_progress" class="schema-progress-table">
+										<h5>Schema Progress:</h5>
+										<table class="progress-table">
+											<thead>
+												<tr>
+													<th>Schema</th>
+													<th>Found</th>
+													<th>Created</th>
+													<th>Updated</th>
+													<th>Skipped</th>
+													<th>Processed</th>
+													<th>Progress</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr v-for="(progress, schema) in archimateStatus.import.schema_progress" :key="schema">
+													<td><strong>{{ schema.charAt(0).toUpperCase() + schema.slice(1) }}</strong></td>
+													<td>{{ progress.found }}</td>
+													<td class="created">{{ progress.created }}</td>
+													<td class="updated">{{ progress.updated }}</td>
+													<td class="skipped">{{ progress.skipped }}</td>
+													<td>{{ progress.created + progress.updated + progress.skipped }}</td>
+													<td>
+														<div class="progress-bar-small">
+															<div class="progress-fill-small" :style="{ width: progress.progress + '%' }" />
+															<span class="progress-text-small">{{ progress.progress }}%</span>
+														</div>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
 								</div>
 							</div>
 						</NcNoteCard>
@@ -682,6 +724,111 @@ export default {
 .summary-stats li {
 	margin-bottom: 0.25rem;
 	font-size: 0.875rem;
+}
+
+.model-info {
+	margin-top: 1rem;
+	padding: 0.75rem;
+	background: var(--color-primary-light);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-primary);
+}
+
+.model-info h5 {
+	margin: 0 0 0.5rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-primary-text);
+}
+
+.model-info ul {
+	margin: 0;
+	padding-left: 1rem;
+}
+
+.model-info li {
+	margin-bottom: 0.25rem;
+	font-size: 0.875rem;
+	color: var(--color-primary-text);
+}
+
+.schema-progress-table {
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.schema-progress-table h5 {
+	margin: 0 0 1rem 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.progress-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.8rem;
+}
+
+.progress-table th,
+.progress-table td {
+	padding: 0.5rem;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.progress-table th {
+	font-weight: 600;
+	color: var(--color-main-text);
+	background: var(--color-background-hover);
+}
+
+.progress-table td {
+	color: var(--color-text-maxcontrast);
+}
+
+.progress-table .created {
+	color: var(--color-success);
+	font-weight: 600;
+}
+
+.progress-table .updated {
+	color: var(--color-warning);
+	font-weight: 600;
+}
+
+.progress-table .skipped {
+	color: var(--color-text-maxcontrast);
+	font-weight: 600;
+}
+
+.progress-bar-small {
+	position: relative;
+	width: 60px;
+	height: 16px;
+	background: var(--color-background-hover);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.progress-fill-small {
+	height: 100%;
+	background: var(--color-primary);
+	transition: width 0.3s ease;
+}
+
+.progress-text-small {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--color-primary-text);
+	text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 .schema-statistics {

@@ -628,24 +628,12 @@ export const useSettingsStore = defineStore('settings', {
 				this.refreshArchiMateStatus()
 			}, 500) // Wait 500ms before first poll
 
-			// Start with more frequent polling (every 2 seconds) for the first minute
-			let pollCount = 0
-			console.log('Setting up status polling interval (2 seconds initially)')
+			// Poll every 5 seconds
+			console.log('Setting up status polling interval (5 seconds)')
 			this.statusPollingInterval = setInterval(() => {
-				console.log(`Status poll #${pollCount + 1}`)
+				console.log('Status poll (5-second interval)')
 				this.refreshArchiMateStatus()
-				pollCount++
-
-				// After 30 polls (1 minute at 2-second intervals), switch to 5-second intervals
-				if (pollCount >= 30) {
-					console.log('Switching to 5-second polling intervals')
-					clearInterval(this.statusPollingInterval)
-					this.statusPollingInterval = setInterval(() => {
-						console.log('Status poll (5-second interval)')
-						this.refreshArchiMateStatus()
-					}, 5000) // Poll every 5 seconds after first minute
-				}
-			}, 2000) // Poll every 2 seconds initially
+			}, 5000) // Poll every 5 seconds
 		},
 
 		/**

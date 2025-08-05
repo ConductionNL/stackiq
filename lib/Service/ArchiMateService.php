@@ -111,15 +111,26 @@ class ArchiMateService
                 'name' => $options['fileName'] ?? 'unknown',
                 'size' => 0
             ],
+            'model_info' => [
+                'identifier' => '',
+                'name' => '',
+                'action' => '' // 'created' or 'updated'
+            ],
             'statistics' => [
                 'elements_processed' => 0,
                 'relationships_processed' => 0,
-                'organizations_processed' => 0,
                 'views_processed' => 0,
+                'properties_found' => 0,
                 'objects_created' => 0,
                 'objects_updated' => 0,
                 'objects_skipped' => 0,
                 'errors' => []
+            ],
+            'schema_progress' => [
+                'elements' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0],
+                'relationships' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0],
+                'views' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0],
+                'organizations' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0]
             ]
         ];
         
@@ -168,21 +179,34 @@ class ArchiMateService
             $archiMateData = $this->parseArchiMateXmlStreaming($options['filePath']);
             $parseTime = microtime(true) - $parseStart;
 
-            // Update file info
+            // Update file info and statistics
             $importStatus['file_info']['size'] = filesize($options['filePath']);
             $importStatus['statistics']['elements_processed'] = count($archiMateData['elements'] ?? []);
             $importStatus['statistics']['relationships_processed'] = count($archiMateData['relationships'] ?? []);
-            $importStatus['statistics']['organizations_processed'] = count($archiMateData['organizations'] ?? []);
             $importStatus['statistics']['views_processed'] = count($archiMateData['views'] ?? []);
+            
+            // Count properties from model metadata
+            $propertiesCount = 0;
+            if (isset($archiMateData['model_metadata']['properties'])) {
+                $propertiesCount = count($archiMateData['model_metadata']['properties']);
+            }
+            $importStatus['statistics']['properties_found'] = $propertiesCount;
+            
+            // Initialize schema progress with found counts
+            $importStatus['schema_progress']['elements']['found'] = count($archiMateData['elements'] ?? []);
+            $importStatus['schema_progress']['relationships']['found'] = count($archiMateData['relationships'] ?? []);
+            $importStatus['schema_progress']['views']['found'] = count($archiMateData['views'] ?? []);
+            $importStatus['schema_progress']['organizations']['found'] = count($archiMateData['organizations'] ?? []);
+            
             $importStatus['progress'] = 25;
             $this->setArchiMateImportStatus($importStatus);
 
             $this->logger->info('XML parsing completed', [
                 'parse_time_seconds' => round($parseTime, 3),
-                    'elements_count' => count($archiMateData['elements'] ?? []),
-                    'relationships_count' => count($archiMateData['relationships'] ?? []),
-                    'organizations_count' => count($archiMateData['organizations'] ?? []),  
+                'elements_count' => count($archiMateData['elements'] ?? []),
+                'relationships_count' => count($archiMateData['relationships'] ?? []),
                 'views_count' => count($archiMateData['views'] ?? []),
+                'properties_count' => $propertiesCount,
                 'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
             ]);
 
@@ -193,13 +217,26 @@ class ArchiMateService
             $this->setArchiMateImportStatus($importStatus);
             
             $modelIdentifier = $archiMateData['model_metadata']['identifier'] ?? '';
+            $modelName = $archiMateData['model_metadata']['name'] ?? '';
+            
+            // Update model info in import status
+            $importStatus['model_info']['identifier'] = $modelIdentifier;
+            $importStatus['model_info']['name'] = $modelName;
+            
             if (!empty($modelIdentifier)) {
                 $this->logger->info('ArchiMateService: Processing model metadata', [
-                    'model_identifier' => $modelIdentifier
+                    'model_identifier' => $modelIdentifier,
+                    'model_name' => $modelName
                 ]);
                 
                 $modelResult = $this->createOrUpdateModelObject($archiMateData['model_metadata']);
-                if (!$modelResult['success']) {
+                if ($modelResult['success']) {
+                    $importStatus['model_info']['action'] = $modelResult['action'] ?? 'unknown';
+                    $this->logger->info('ArchiMateService: Model object processed successfully', [
+                        'action' => $modelResult['action'],
+                        'object_id' => $modelResult['object_id'] ?? 'new'
+                    ]);
+                } else {
                     $this->logger->warning('ArchiMateService: Failed to process model object', [
                         'error' => $modelResult['error']
                     ]);
@@ -211,6 +248,9 @@ class ArchiMateService
                 $this->logger->warning('ArchiMateService: No model identifier found in imported data');
             }
             
+            // Update import status with model info
+            $this->setArchiMateImportStatus($importStatus);
+            
             $modelTime = microtime(true) - $modelStart;
 
             // Step 4: Convert to OpenRegister objects with ReactPHP parallel processing
@@ -219,7 +259,27 @@ class ArchiMateService
             $importStatus['progress'] = 35;
             $this->setArchiMateImportStatus($importStatus);
             
-            $convertResults = $this->convertToOpenRegisterObjectsParallel($archiMateData, $options);
+            // Create a callback for status updates during processing
+            $statusUpdateCallback = function($schemaType, $progress, $stats) use (&$importStatus) {
+                if (isset($importStatus['schema_progress'][$schemaType])) {
+                    $importStatus['schema_progress'][$schemaType]['progress'] = $progress;
+                    $importStatus['schema_progress'][$schemaType]['created'] = $stats['created'] ?? 0;
+                    $importStatus['schema_progress'][$schemaType]['updated'] = $stats['updated'] ?? 0;
+                    $importStatus['schema_progress'][$schemaType]['skipped'] = $stats['skipped'] ?? 0;
+                    
+                    // Update overall progress based on schema progress
+                    $totalProgress = 0;
+                    $schemaCount = count($importStatus['schema_progress']);
+                    foreach ($importStatus['schema_progress'] as $schema => $data) {
+                        $totalProgress += $data['progress'];
+                    }
+                    $importStatus['progress'] = 35 + (($totalProgress / $schemaCount) * 60); // 35% to 95%
+                    
+                    $this->setArchiMateImportStatus($importStatus);
+                }
+            };
+            
+            $convertResults = $this->convertToOpenRegisterObjectsParallel($archiMateData, $options, $statusUpdateCallback);
             $convertTime = microtime(true) - $convertStart;
 
             $totalTime = microtime(true) - $startTime;
@@ -827,7 +887,7 @@ class ArchiMateService
     /**
      * Convert to OpenRegister objects using ReactPHP parallel processing with memory optimization
      */
-    private function convertToOpenRegisterObjectsParallel(array $archiMateData, array $options): array
+    private function convertToOpenRegisterObjectsParallel(array $archiMateData, array $options, callable $statusCallback = null): array
     {
         $startTime = microtime(true);
         
@@ -920,6 +980,11 @@ class ArchiMateService
             $results['objects_skipped'] += $schemaResult['skipped'] ?? 0;
             $results['errors'] = array_merge($results['errors'], $schemaResult['errors']);
             $results['schema_statistics'][$schemaType] = $schemaResult;
+            
+            // Update status with schema completion
+            if ($statusCallback) {
+                $statusCallback($schemaType, 100, $schemaResult);
+            }
             
             $this->logger->info("Parallel processing completed for {$schemaType}", [
                 'processing_time_seconds' => round($schemaTime, 3),
@@ -1829,8 +1894,24 @@ class ArchiMateService
                     'schema_id' => $schemaId,
                     'register_id' => $registerId
                 ]);
+            case 'model':
+                return array_merge($baseData, [
+                    'archimate_type' => 'model',
+                    'schema_id' => $schemaId,
+                    'register_id' => $registerId
+                ]);
+            case 'property':
+                return array_merge($baseData, [
+                    'archimate_type' => 'property',
+                    'schema_id' => $schemaId,
+                    'register_id' => $registerId
+                ]);
             default:
-                return $baseData;
+                return array_merge($baseData, [
+                    'archimate_type' => $type,
+                    'schema_id' => $schemaId,
+                    'register_id' => $registerId
+                ]);
         }
     }
 
