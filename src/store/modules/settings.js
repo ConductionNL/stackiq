@@ -49,6 +49,7 @@ export const useSettingsStore = defineStore('settings', {
 			amef_views: { schema: null },
 			amef_models: { schema: null },
 			amef_properties: { schema: null },
+			amef_property_definitions: { schema: null },
 			// Voorzieningen register configuration
 			voorzieningen_organisatie: { schema: null },
 			voorzieningen_contactpersoon: { schema: null },
@@ -64,6 +65,7 @@ export const useSettingsStore = defineStore('settings', {
 		isImportRunning: false,
 		isExportRunning: false,
 		statusPollingInterval: null,
+		isStatusPolling: false, // Prevent concurrent status polls
 
 		// Import/Export options
 		importOptions: {
@@ -510,6 +512,12 @@ export const useSettingsStore = defineStore('settings', {
 						value: amefConfig.properties_schema,
 					}
 				}
+				if (amefConfig.property_definitions_schema) {
+					this.configuration.amef_property_definitions.schema = {
+						label: findSchemaLabel(amefConfig.property_definitions_schema, this.amefSchemas),
+						value: amefConfig.property_definitions_schema,
+					}
+				}
 			}
 		},
 
@@ -648,16 +656,27 @@ export const useSettingsStore = defineStore('settings', {
 			} else {
 				console.log('No polling interval to clear')
 			}
+			// Reset polling lock
+			this.isStatusPolling = false
 		},
 
 		/**
 		 * Refresh ArchiMate status from main settings endpoint
 		 * Used for real-time polling during import/export operations
+		 * Prevents concurrent calls to avoid stacking requests
 		 *
 		 * @return {Promise<void>}
 		 */
 		async refreshArchiMateStatus() {
+			// Prevent concurrent status polls
+			if (this.isStatusPolling) {
+				console.log('Status poll already in progress, skipping this call')
+				return
+			}
+
+			this.isStatusPolling = true
 			console.log('refreshArchiMateStatus() called')
+
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
 				console.log('Settings API response status:', response.status)
@@ -692,6 +711,9 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				console.error('Failed to refresh ArchiMate status:', error)
+			} finally {
+				// Always release the polling lock
+				this.isStatusPolling = false
 			}
 		},
 
@@ -838,6 +860,7 @@ export const useSettingsStore = defineStore('settings', {
 					'amef_views',
 					'amef_models',
 					'amef_properties',
+					'amef_property_definitions',
 					'voorzieningen_organisatie',
 					'voorzieningen_contactpersoon',
 				]
@@ -1197,6 +1220,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		cleanup() {
 			this.stopStatusPolling()
+			this.isStatusPolling = false
 		},
 
 		/**
@@ -1204,6 +1228,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		reset() {
 			this.stopStatusPolling()
+			this.isStatusPolling = false
 			this.loading = false
 			this.saving = false
 			this.importing = false

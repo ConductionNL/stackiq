@@ -221,6 +221,19 @@
 											:disabled="loading"
 											@change="validateConfiguration" />
 									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Property Definitions Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate property definition objects</span>
+										</div>
+										<NcSelect
+											v-model="configuration.amef_property_definitions.schema"
+											:options="amefSchemaOptions"
+											input-label="Property Definitions Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
 								</div>
 							</div>
 

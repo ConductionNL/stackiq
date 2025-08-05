@@ -37,7 +37,7 @@
 					<div v-if="archimateStatus.import && archimateStatus.import.status === 'running'" class="status-display">
 						<NcNoteCard type="info">
 							<template #icon>
-								<NcLoadingIcon :size="20" />
+								<!-- Removed loading spinner since progress bar provides visual feedback -->
 							</template>
 							<div class="status-content">
 								<p><strong>Import in Progress</strong></p>
@@ -46,19 +46,7 @@
 									<div class="progress-fill" :style="{ width: archimateStatus.import.progress + '%' }" />
 									<span class="progress-text">{{ archimateStatus.import.progress }}%</span>
 								</div>
-								<div v-if="archimateStatus.import.statistics" class="import-stats">
-									<h5>Processing Statistics:</h5>
-									<ul>
-										<li>Elements: {{ archimateStatus.import.statistics.elements_processed }}</li>
-										<li>Views: {{ archimateStatus.import.statistics.views_processed }}</li>
-										<li>Relationships: {{ archimateStatus.import.statistics.relationships_processed }}</li>
-										<li>Properties: {{ archimateStatus.import.statistics.properties_found }}</li>
-									</ul>
-									<h5>Object Statistics:</h5>
-									<ul>
-										<li>Created: {{ archimateStatus.import.statistics.objects_created }}</li>
-										<li>Updated: {{ archimateStatus.import.statistics.objects_updated }}</li>
-									</ul>
+								<!-- Removed redundant Processing Statistics and Object Statistics sections since the Schema Progress table provides detailed information -->
 									<div v-if="archimateStatus.import.model_info && archimateStatus.import.model_info.identifier" class="model-info">
 										<h5>Model Information:</h5>
 										<ul>
@@ -92,7 +80,11 @@
 													<td class="skipped">{{ progress.skipped }}</td>
 													<td>{{ progress.created + progress.updated + progress.skipped }}</td>
 													<td>
-														<div class="progress-bar-small">
+														<div v-if="schema === 'property_definitions'" class="progress-bar-small">
+															<div class="progress-fill-small" :style="{ width: progress.progress + '%' }" />
+															<span class="progress-text-small">{{ progress.progress }}%</span>
+														</div>
+														<div v-else class="progress-bar-small">
 															<div class="progress-fill-small" :style="{ width: progress.progress + '%' }" />
 															<span class="progress-text-small">{{ progress.progress }}%</span>
 														</div>
@@ -267,7 +259,7 @@
 					<div v-if="archimateStatus.export && archimateStatus.export.status === 'running'" class="status-display">
 						<NcNoteCard type="info">
 							<template #icon>
-								<NcLoadingIcon :size="20" />
+								<!-- Removed loading spinner since progress bar provides visual feedback -->
 							</template>
 							<div class="status-content">
 								<p><strong>Export in Progress</strong></p>

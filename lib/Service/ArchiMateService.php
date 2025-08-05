@@ -130,7 +130,8 @@ class ArchiMateService
                 'elements' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0],
                 'relationships' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0],
                 'views' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0],
-                'organizations' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0]
+                'organizations' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0],
+                'property_definitions' => ['found' => 0, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'progress' => 0]
             ]
         ];
         
@@ -185,18 +186,21 @@ class ArchiMateService
             $importStatus['statistics']['relationships_processed'] = count($archiMateData['relationships'] ?? []);
             $importStatus['statistics']['views_processed'] = count($archiMateData['views'] ?? []);
             
-            // Count properties from model metadata
-            $propertiesCount = 0;
+            // Count property definitions (separate objects) and model properties (metadata)
+            $propertyDefinitionsCount = count($archiMateData['property_definitions'] ?? []);
+            $modelPropertiesCount = 0;
             if (isset($archiMateData['model_metadata']['properties'])) {
-                $propertiesCount = count($archiMateData['model_metadata']['properties']);
+                $modelPropertiesCount = count($archiMateData['model_metadata']['properties']);
             }
-            $importStatus['statistics']['properties_found'] = $propertiesCount;
+            $importStatus['statistics']['property_definitions_found'] = $propertyDefinitionsCount;
+            $importStatus['statistics']['model_properties_found'] = $modelPropertiesCount;
             
             // Initialize schema progress with found counts
             $importStatus['schema_progress']['elements']['found'] = count($archiMateData['elements'] ?? []);
             $importStatus['schema_progress']['relationships']['found'] = count($archiMateData['relationships'] ?? []);
             $importStatus['schema_progress']['views']['found'] = count($archiMateData['views'] ?? []);
             $importStatus['schema_progress']['organizations']['found'] = count($archiMateData['organizations'] ?? []);
+            $importStatus['schema_progress']['property_definitions']['found'] = $propertyDefinitionsCount;
             
             $importStatus['progress'] = 25;
             $this->setArchiMateImportStatus($importStatus);
@@ -206,7 +210,8 @@ class ArchiMateService
                 'elements_count' => count($archiMateData['elements'] ?? []),
                 'relationships_count' => count($archiMateData['relationships'] ?? []),
                 'views_count' => count($archiMateData['views'] ?? []),
-                'properties_count' => $propertiesCount,
+                'property_definitions_count' => $propertyDefinitionsCount,
+                'model_properties_count' => $modelPropertiesCount,
                 'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
             ]);
 
@@ -729,6 +734,7 @@ class ArchiMateService
             'relationships' => [],
             'organizations' => [],
             'views' => [],
+            'property_definitions' => [],
             'model_metadata' => []
         ];
 
@@ -870,6 +876,43 @@ class ArchiMateService
             ]);
         }
 
+        // Extract property definitions
+        if (isset($data['propertyDefinitions'])) {
+            $this->logger->info('Processing property definitions for normalization', [
+                'property_definitions_structure' => gettype($data['propertyDefinitions']),
+                'property_definitions_keys' => is_array($data['propertyDefinitions']) ? array_keys($data['propertyDefinitions']) : 'not_array',
+                'property_definitions_count' => is_array($data['propertyDefinitions']) ? count($data['propertyDefinitions']) : 'not_array'
+            ]);
+            
+            if (isset($data['propertyDefinitions']['propertyDefinition'])) {
+                $propertyDefinitionArray = $data['propertyDefinitions']['propertyDefinition'];
+                $this->logger->info('Found property definition array structure', [
+                    'property_definition_array_count' => count($propertyDefinitionArray)
+                ]);
+                
+                foreach ($propertyDefinitionArray as $index => $propertyDefinition) {
+                    if (isset($propertyDefinition['_attributes']['identifier'])) {
+                        $normalized['property_definitions'][$propertyDefinition['_attributes']['identifier']] = $this->normalizePropertyDefinition($propertyDefinition);
+                    } else {
+                        $this->logger->warning("Property definition {$index} missing identifier");
+                    }
+                }
+            } else {
+                $this->logger->info('Processing property definitions as direct array structure');
+                foreach ($data['propertyDefinitions'] as $index => $propertyDefinition) {
+                    if (isset($propertyDefinition['_attributes']['identifier'])) {
+                        $normalized['property_definitions'][$propertyDefinition['_attributes']['identifier']] = $this->normalizePropertyDefinition($propertyDefinition);
+                    } else {
+                        $this->logger->warning("Property definition {$index} missing identifier");
+                    }
+                }
+            }
+        } else {
+            $this->logger->warning('No property definitions found in parsed data', [
+                'data_keys' => array_keys($data)
+            ]);
+        }
+
         // Extract organizations from elements
         $normalized['organizations'] = $this->extractOrganizations($normalized['elements']);
 
@@ -878,6 +921,7 @@ class ArchiMateService
             'relationships_count' => count($normalized['relationships']),
             'organizations_count' => count($normalized['organizations']),
             'views_count' => count($normalized['views']),
+            'property_definitions_count' => count($normalized['property_definitions']),
             'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
         ]);
 
@@ -896,6 +940,7 @@ class ArchiMateService
             'relationships_count' => count($archiMateData['relationships'] ?? []),
             'organizations_count' => count($archiMateData['organizations'] ?? []),
             'views_count' => count($archiMateData['views'] ?? []),
+            'property_definitions_count' => count($archiMateData['property_definitions'] ?? []),
             'batch_size' => $options['batch_size'],
             'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
         ]);
@@ -954,6 +999,16 @@ class ArchiMateService
             ]);
         }
 
+        // Property definitions processing - will unset property_definitions array as it processes
+        if (!empty($archiMateData['property_definitions'])) {
+            $promises['property_definitions'] = $this->processPropertyDefinitionsParallelWithCleanup($archiMateData['property_definitions'], $options);
+            // Unset the original property_definitions array to free memory
+            unset($archiMateData['property_definitions']);
+            $this->logger->info('Property definitions array unset from memory', [
+                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+            ]);
+        }
+
         // Wait for all promises to complete
         $results = [
             'objects_created' => 0,
@@ -965,7 +1020,8 @@ class ArchiMateService
                             'elements' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
             'organizations' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
             'relationships' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
-            'views' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []]
+            'views' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+            'property_definitions' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []]
             ]
         ];
 
@@ -1054,6 +1110,17 @@ class ArchiMateService
             'name' => $view['name']['_value'] ?? '',
             'type' => $view['_attributes']['xsi:type'] ?? '',
             'properties' => $this->extractProperties($view['properties'] ?? [])
+        ];
+    }
+
+    private function normalizePropertyDefinition(array $propertyDefinition): array
+    {
+        return [
+            'id' => $propertyDefinition['_attributes']['identifier'] ?? '',
+            'name' => $propertyDefinition['name']['_value'] ?? '',
+            'type' => $propertyDefinition['_attributes']['xsi:type'] ?? '',
+            'documentation' => $propertyDefinition['documentation']['_value'] ?? '',
+            'properties' => $this->extractProperties($propertyDefinition['properties'] ?? [])
         ];
     }
 
@@ -1300,6 +1367,65 @@ class ArchiMateService
 
                 // Final cleanup of views array
                 unset($views);
+                gc_collect_cycles();
+
+                $deferred->resolve([
+                    'created' => $totalCreated,
+                    'updated' => $totalUpdated,
+                    'skipped' => $totalSkipped,
+                    'errors' => $totalErrors
+                ]);
+            },
+            function ($error) use ($deferred) {
+                $deferred->reject($error);
+            }
+        );
+
+        return $deferred->promise();
+    }
+
+    private function processPropertyDefinitionsParallelWithCleanup(array $propertyDefinitions, array $options): Promise
+    {
+        $deferred = new Deferred();
+        
+        $this->logger->info('Starting parallel processing of property definitions with memory cleanup', [
+            'count' => count($propertyDefinitions),
+            'batch_size' => $options['batch_size'],
+            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+        ]);
+
+        // Process in batches with progressive memory release
+        $chunks = array_chunk($propertyDefinitions, $options['batch_size'], true);
+        $promises = [];
+
+        foreach ($chunks as $chunkIndex => $chunk) {
+            $promises[] = $this->processChunkParallelWithCleanup($chunk, $options, 'property_definition');
+            
+            // Force garbage collection every 5 chunks
+            if ($chunkIndex % 5 === 0) {
+                gc_collect_cycles();
+                $this->logger->info("Garbage collection after chunk {$chunkIndex}", [
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+                ]);
+            }
+        }
+
+        all($promises)->then(
+            function ($results) use ($deferred, $propertyDefinitions) {
+                $totalCreated = 0;
+                $totalUpdated = 0;
+                $totalSkipped = 0;
+                $totalErrors = [];
+
+                foreach ($results as $result) {
+                    $totalCreated += $result['created'];
+                    $totalUpdated += $result['updated'];
+                    $totalSkipped += $result['skipped'] ?? 0;
+                    $totalErrors = array_merge($totalErrors, $result['errors']);
+                }
+
+                // Final cleanup of property definitions array
+                unset($propertyDefinitions);
                 gc_collect_cycles();
 
                 $deferred->resolve([
@@ -1700,7 +1826,8 @@ class ArchiMateService
             'element' => [],
             'organization' => [],
             'relationship' => [],
-            'view' => []
+            'view' => [],
+            'property_definition' => []
         ];
 
         try {
@@ -1739,6 +1866,13 @@ class ArchiMateService
                 }
             }
 
+            foreach ($propertyDefinitionObjects as $object) {
+                $objectArray = $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
+                if (isset($objectArray['archimate_id'])) {
+                    $this->cachedObjects['property_definition'][$objectArray['archimate_id']] = $objectArray;
+                }
+            }
+
             $totalCached = array_sum(array_map('count', $this->cachedObjects));
             $this->logger->info('Existing objects preload completed using proven methods', [
                 'total_cached_objects' => $totalCached,
@@ -1746,7 +1880,8 @@ class ArchiMateService
                     'elements' => count($this->cachedObjects['element']),
                     'organizations' => count($this->cachedObjects['organization']),
                     'views' => count($this->cachedObjects['view']),
-                    'relationships' => count($this->cachedObjects['relationship'])
+                    'relationships' => count($this->cachedObjects['relationship']),
+                    'property_definitions' => count($this->cachedObjects['property_definition'])
                 ],
                 'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
             ]);
@@ -1906,6 +2041,12 @@ class ArchiMateService
                     'schema_id' => $schemaId,
                     'register_id' => $registerId
                 ]);
+            case 'property_definition':
+                return array_merge($baseData, [
+                    'archimate_type' => 'property_definition',
+                    'schema_id' => $schemaId,
+                    'register_id' => $registerId
+                ]);
             default:
                 return array_merge($baseData, [
                     'archimate_type' => $type,
@@ -1949,6 +2090,9 @@ class ArchiMateService
                 break;
             case 'property':
                 $schemaId = $amefConfig['properties_schema'] ?? '';
+                break;
+            case 'property_definition':
+                $schemaId = $amefConfig['property_definitions_schema'] ?? '';
                 break;
             default:
                 throw new \RuntimeException("Unknown ArchiMate type: {$archiMateType}");
@@ -3186,6 +3330,59 @@ class ArchiMateService
             return $objects;
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve property objects', [
+                'error' => $e->getMessage(),
+                'register_id' => $this->getAmefRegisterId(),
+                'schema_id' => $schemaId
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Get property definition objects from the AMEF register
+     *
+     * @param array $query Optional query criteria
+     * @return array Array of property definition objects
+     */
+    public function getPropertyDefinitionObjects(array $query = []): array
+    {
+        $schemaId = $this->getAmefSchemaIdForType('property_definition');
+        if (!$schemaId) {
+            $this->logger->error('ArchiMateService: AMEF register or property definition schema not configured', [
+                'register_id' => $this->getAmefRegisterId(),
+                'schema_id' => $schemaId
+            ]);
+            return [];
+        }
+
+        $objectService = $this->getObjectService();
+        if (!$objectService) {
+            $this->logger->error('ArchiMateService: ObjectService not available');
+            return [];
+        }
+
+        try {
+            $baseQuery = [
+                'register_id' => $this->getAmefRegisterId(),
+                'schema_id' => $schemaId,
+                'limit' => 10000, // High limit to get all objects
+                'offset' => 0
+            ];
+            
+            // Merge with provided query
+            $finalQuery = array_merge($baseQuery, $query);
+            
+            $objects = $objectService->searchObjects($finalQuery);
+
+            $this->logger->info('Retrieved property definition objects from database', [
+                'count' => count($objects),
+                'register_id' => $this->getAmefRegisterId(),
+                'schema_id' => $schemaId
+            ]);
+
+            return $objects;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve property definition objects', [
                 'error' => $e->getMessage(),
                 'register_id' => $this->getAmefRegisterId(),
                 'schema_id' => $schemaId
