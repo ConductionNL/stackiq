@@ -162,7 +162,7 @@ class SettingsService
             'amef' => [
                 'name' => 'AMEF',
                 'description' => 'AMEF register for architectural elements',
-                'objectTypes' => ['organization'] // AMEF uses organization schema
+                'objectTypes' => ['organization', 'element', 'relationship', 'view', 'model', 'property'] // Complete AMEF object types
             ],
             'voorzieningen' => [
                 'name' => 'Voorzieningen', 
@@ -171,7 +171,7 @@ class SettingsService
             ]
         ];
         
-        // For backward compatibility, keep the original object types structure
+        // Deprecated: For backward compatibility only - use registerTypes instead
         $data['objectTypes'] = [
             'organization',
             'contact',
@@ -185,7 +185,20 @@ class SettingsService
             $openRegisters = $this->getObjectService();
             if ($openRegisters !== null) {
                 $data['openRegisters'] = true;
-                $data['availableRegisters'] = $openRegisters->getRegisters();
+                $rawRegisters = $openRegisters->getRegisters();
+                
+                // Filter schemas to remove properties field for cleaner response
+                $data['availableRegisters'] = array_map(function($register) {
+                    if (isset($register['schemas']) && is_array($register['schemas'])) {
+                        $register['schemas'] = array_map(function($schema) {
+                            // Keep only essential schema fields, remove properties
+                            return array_filter($schema, function($key) {
+                                return !in_array($key, ['properties']);
+                            }, ARRAY_FILTER_USE_KEY);
+                        }, $register['schemas']);
+                    }
+                    return $register;
+                }, $rawRegisters);
             }
         } catch (\RuntimeException $e) {
             // Service not available, continue with default values
@@ -2807,9 +2820,13 @@ class SettingsService
             'user_password' => $this->getEmailTemplate('user_password'),
         ];
         
+        // Get Voorzieningen and AMEF configs (without object counts for performance)
+        $voorzieningenConfig = $this->getVoorzieningenConfig();
+        $amefConfig = $this->getAmefConfig();
+        
         return [
-            'voorzieningen' => $this->getVoorzieningenConfig(),
-            'amef' => $this->getAmefConfig(),
+            'voorzieningen' => $voorzieningenConfig,
+            'amef' => $amefConfig,
             'email' => $emailConfig,
             'archimate' => $this->getArchiMateStatus(),
             'userGroups' => [
@@ -3000,6 +3017,83 @@ class SettingsService
     }
 
     /**
+     * Get Voorzieningen object counts for statistics
+     *
+     * @return array Object counts for Voorzieningen schemas
+     */
+    private function getVoorzieningenObjectCounts(): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
+                return [
+                    'totalOrganisatieObjects' => 0,
+                    'totalContactpersoonObjects' => 0
+                ];
+            }
+            
+            $voorzieningenConfig = $this->getVoorzieningenConfig();
+            $registerId = $voorzieningenConfig['register'] ?? null;
+            $organisatieSchemaId = $voorzieningenConfig['organisatie_schema'] ?? null;
+            $contactpersoonSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
+            
+            $organisatieCount = 0;
+            $contactpersoonCount = 0;
+            
+            if ($registerId && $organisatieSchemaId) {
+                try {
+                    $organisatieQuery = [
+                        '@self' => [
+                            'register' => (int) $registerId,
+                            'schema' => (int) $organisatieSchemaId
+                        ]
+                    ];
+                    $organisatieObjects = $objectService->searchObjects($organisatieQuery);
+                    $organisatieCount = count($organisatieObjects);
+                } catch (\Exception $e) {
+                    $this->logger->warning('Failed to get organisatie count', ['error' => $e->getMessage()]);
+                }
+            }
+            
+            if ($registerId && $contactpersoonSchemaId) {
+                try {
+                    $contactpersoonQuery = [
+                        '@self' => [
+                            'register' => (int) $registerId,
+                            'schema' => (int) $contactpersoonSchemaId
+                        ]
+                    ];
+                    $contactpersoonObjects = $objectService->searchObjects($contactpersoonQuery);
+                    $contactpersoonCount = count($contactpersoonObjects);
+                } catch (\Exception $e) {
+                    $this->logger->warning('Failed to get contactpersoon count', ['error' => $e->getMessage()]);
+                }
+            }
+            
+            $this->logger->debug('SettingsService: Retrieved Voorzieningen object counts', [
+                'organisatieCount' => $organisatieCount,
+                'contactpersoonCount' => $contactpersoonCount
+            ]);
+            
+            return [
+                'totalOrganisatieObjects' => $organisatieCount,
+                'totalContactpersoonObjects' => $contactpersoonCount
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to get Voorzieningen object counts', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'totalOrganisatieObjects' => 0,
+                'totalContactpersoonObjects' => 0
+            ];
+        }
+    }
+
+    /**
      * Gets AMEF object counts for consolidated configuration
      *
      * This method retrieves counts of all AMEF object types using the ArchiMateService
@@ -3121,15 +3215,15 @@ class SettingsService
      * This method delegates to ArchiMateService to avoid code duplication
      * and ensure consistency in ArchiMate status management.
      *
-     * @return void
+     * @return array Clear operation result
      */
-    public function clearArchiMateImportStatus(): void
+    public function clearArchiMateImportStatus(): array
     {
         try {
             // Get ArchiMateService from container to avoid circular dependency
             $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
             
-            $archiMateService->clearArchiMateImportStatus();
+            return $archiMateService->clearArchiMateImportStatus();
             
         } catch (\Exception $e) {
             $this->logger->error('SettingsService: Failed to clear ArchiMate import status via ArchiMateService', [
@@ -3139,6 +3233,87 @@ class SettingsService
             
             // Fallback to direct config access if ArchiMateService is not available
             $this->config->deleteKey($this->_appName, 'archimate_import_status');
+            
+            return [
+                'cleared' => true,
+                'process_killed' => false,
+                'process_id' => null,
+                'was_running' => false,
+                'messages' => ['Import status cleared via fallback method']
+            ];
+        }
+    }
+
+    /**
+     * Force kill running ArchiMate import process and clear status
+     *
+     * This method delegates to ArchiMateService to handle process termination
+     * and status cleanup.
+     *
+     * @return array Kill operation result
+     * @deprecated Use cancelArchiMateImport() instead
+     */
+    public function killArchiMateImport(): array
+    {
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            return $archiMateService->clearArchiMateImportStatus(true); // killProcess = true
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to kill ArchiMate import process via ArchiMateService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback to just clearing config if ArchiMateService is not available
+            $this->config->deleteKey($this->_appName, 'archimate_import_status');
+            
+            return [
+                'cleared' => true,
+                'process_killed' => false,
+                'process_id' => null,
+                'was_running' => false,
+                'messages' => ['Import status cleared via fallback method - could not kill process']
+            ];
+        }
+    }
+
+    /**
+     * Cancel a running ArchiMate import
+     *
+     * This method combines force clearing and process killing for a complete
+     * import cancellation. It delegates to ArchiMateService for the actual work.
+     *
+     * @return array Cancellation result with detailed status
+     */
+    public function cancelArchiMateImport(): array
+    {
+        try {
+            // Get ArchiMateService from container to avoid circular dependency
+            $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+            
+            return $archiMateService->cancelArchiMateImport();
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to cancel ArchiMate import via ArchiMateService', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Fallback to just clearing config if ArchiMateService is not available
+            $this->config->deleteKey($this->_appName, 'archimate_import_status');
+            
+            return [
+                'cancelled' => true,
+                'was_running' => false,
+                'process_id' => null,
+                'process_killed' => false,
+                'status_cleared' => true,
+                'cancellation_time' => date('Y-m-d H:i:s'),
+                'messages' => ['Import status cleared via fallback method - ArchiMateService not available']
+            ];
         }
     }
 
@@ -3379,9 +3554,10 @@ class SettingsService
             // Use the proper consolidated configuration structure that frontend expects
             $data['consolidatedConfig'] = $this->getConsolidatedConfiguration();
             
-            // Also add individual settings at root level for backward compatibility
-            $data['userGroups'] = $data['consolidatedConfig']['userGroups'];
-            $data['emailSettings'] = $data['consolidatedConfig']['email'];
+            // Remove deprecated properties from root level
+            unset($data['configuration']); // Moved to consolidatedConfig
+            unset($data['userGroups']); // Now in consolidatedConfig
+            unset($data['emailSettings']); // Now in consolidatedConfig
             
             return $data;
             
@@ -3392,6 +3568,99 @@ class SettingsService
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get object counts statistics for all configured registers
+     *
+     * @return array Statistics for all registers with object counts
+     */
+    public function getObjectCountsStatistics(): array
+    {
+        try {
+            $statistics = [
+                'voorzieningen' => [],
+                'amef' => [],
+                'timestamp' => time()
+            ];
+            
+            // Get Voorzieningen statistics
+            try {
+                $voorzieningenConfig = $this->getVoorzieningenConfig();
+                $voorzieningenCounts = $this->getVoorzieningenObjectCounts();
+                
+                $statistics['voorzieningen'] = [
+                    'config' => $voorzieningenConfig,
+                    'object_counts' => $voorzieningenCounts,
+                    'configured' => !empty($voorzieningenConfig['register']) && !empty($voorzieningenConfig['organisatie_schema'])
+                ];
+            } catch (\Exception $e) {
+                $this->logger->error('Failed to get Voorzieningen statistics', ['error' => $e->getMessage()]);
+                $statistics['voorzieningen'] = [
+                    'config' => [],
+                    'object_counts' => ['totalOrganisatieObjects' => 0, 'totalContactpersoonObjects' => 0],
+                    'configured' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+            
+            // Get AMEF statistics
+            try {
+                $amefConfig = $this->getAmefConfig();
+                $amefCounts = $this->getAmefObjectCounts();
+                
+                $statistics['amef'] = [
+                    'config' => $amefConfig,
+                    'object_counts' => $amefCounts,
+                    'configured' => !empty($amefConfig['register_id']) && !empty($amefConfig['elements_schema'])
+                ];
+            } catch (\Exception $e) {
+                $this->logger->error('Failed to get AMEF statistics', ['error' => $e->getMessage()]);
+                $statistics['amef'] = [
+                    'config' => [],
+                    'object_counts' => [
+                        'totalElementObjects' => 0,
+                        'totalOrganizationObjects' => 0,
+                        'totalViewObjects' => 0,
+                        'totalRelationshipsObjects' => 0,
+                        'totalModelObjects' => 0,
+                        'totalPropertyObjects' => 0
+                    ],
+                    'configured' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+            
+            return $statistics;
+            
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsService: Failed to get object counts statistics', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'voorzieningen' => [
+                    'config' => [],
+                    'object_counts' => ['totalOrganisatieObjects' => 0, 'totalContactpersoonObjects' => 0],
+                    'configured' => false,
+                    'error' => $e->getMessage()
+                ],
+                'amef' => [
+                    'config' => [],
+                    'object_counts' => [
+                        'totalElementObjects' => 0,
+                        'totalOrganizationObjects' => 0,
+                        'totalViewObjects' => 0,
+                        'totalRelationshipsObjects' => 0,
+                        'totalModelObjects' => 0,
+                        'totalPropertyObjects' => 0
+                    ],
+                    'configured' => false,
+                    'error' => $e->getMessage()
+                ],
+                'timestamp' => time(),
+                'error' => $e->getMessage()
             ];
         }
     }

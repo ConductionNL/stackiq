@@ -348,6 +348,33 @@ class SettingsController extends Controller
     }
 
     /**
+     * Get object counts statistics for all configured registers
+     *
+     * @return JSONResponse JSON response containing object counts statistics
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function stats(): JSONResponse
+    {
+        try {
+            $statistics = $this->settingsService->getObjectCountsStatistics();
+            return new JSONResponse([
+                'success' => true,
+                'statistics' => $statistics
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object counts statistics', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get debug information for settings
      *
      * @return JSONResponse JSON response containing debug information
@@ -807,6 +834,7 @@ class SettingsController extends Controller
                     'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
                     'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
                     'preserveIds' => $this->request->getParam('preserveIds', 'true') === 'true',
+                    'processingMode' => $this->request->getParam('processingMode', 'speed'),
                     'filePath' => $uploadedFiles['tmp_name'],
                     'fileName' => $uploadedFiles['name'],
                     'fileSize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name']),
@@ -818,6 +846,7 @@ class SettingsController extends Controller
                     'updateExisting' => $data['updateExisting'] ?? true,
                     'deleteOrphaned' => $data['deleteOrphaned'] ?? false,
                     'preserveIds' => $data['preserveIds'] ?? true,
+                    'processingMode' => $data['processingMode'] ?? 'speed',
                     'filePath' => $data['file_path'],
                     'fileName' => $data['fileName'] ?? basename($data['file_path']),
                     'fileSize' => $data['fileSize'] ?? (file_exists($data['file_path']) ? filesize($data['file_path']) : 0),
@@ -1554,11 +1583,12 @@ class SettingsController extends Controller
     public function clearArchiMateImportStatus(): JSONResponse
     {
         try {
-            $this->settingsService->clearArchiMateImportStatus();
+            $result = $this->settingsService->clearArchiMateImportStatus();
             
             return new JSONResponse([
                 'success' => true,
-                'message' => 'ArchiMate import status cleared successfully'
+                'message' => 'ArchiMate import status cleared successfully',
+                'details' => $result
             ]);
             
         } catch (\Exception $e) {
@@ -1568,6 +1598,72 @@ class SettingsController extends Controller
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Failed to clear ArchiMate import status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Force kill running ArchiMate import process and clear status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Kill result
+     * @deprecated Use cancelArchiMateImport() instead
+     */
+    public function killArchiMateImport(): JSONResponse
+    {
+        try {
+            $result = $this->settingsService->killArchiMateImport();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'ArchiMate import termination completed',
+                'details' => $result
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to kill ArchiMate import process', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to kill ArchiMate import process: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel a running ArchiMate import
+     * This combines force clearing and process killing for complete cancellation
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Cancellation result
+     */
+    public function cancelArchiMateImport(): JSONResponse
+    {
+        try {
+            $result = $this->settingsService->cancelArchiMateImport();
+            
+            $message = $result['cancelled'] 
+                ? 'ArchiMate import cancelled successfully'
+                : 'ArchiMate import cancellation failed';
+            
+            return new JSONResponse([
+                'success' => $result['cancelled'],
+                'message' => $message,
+                'details' => $result
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to cancel ArchiMate import', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to cancel ArchiMate import: ' . $e->getMessage()
             ], 500);
         }
     }

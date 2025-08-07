@@ -110,6 +110,22 @@ export const useSettingsStore = defineStore('settings', {
 			mailjetSecretKey: '',
 		},
 
+		// Statistics
+		statistics: {
+			voorzieningen: {
+				config: {},
+				object_counts: {},
+				configured: false
+			},
+			amef: {
+				config: {},
+				object_counts: {},
+				configured: false
+			},
+			timestamp: null
+		},
+		loadingStats: false,
+
 		// Error handling
 		error: null,
 		importError: null,
@@ -173,6 +189,75 @@ export const useSettingsStore = defineStore('settings', {
 		consolidatedConfig: (state) => {
 			return state.settings.consolidatedConfig || {}
 		},
+
+		/**
+		 * Get formatted statistics for display
+		 * @param {object} state - The store state
+		 * @return {Array} Array of formatted statistics rows
+		 */
+		formattedStatistics: (state) => {
+			const stats = []
+			
+			// Voorzieningen statistics
+			if (state.statistics.voorzieningen.configured) {
+				const voorzieningenCounts = state.statistics.voorzieningen.object_counts
+				stats.push({
+					register: 'Voorzieningen',
+					type: 'Organisatie',
+					count: voorzieningenCounts.totalOrganisatieObjects || 0,
+					configured: true
+				})
+				stats.push({
+					register: 'Voorzieningen',
+					type: 'Contactpersoon',
+					count: voorzieningenCounts.totalContactpersoonObjects || 0,
+					configured: true
+				})
+			}
+			
+			// AMEF statistics
+			if (state.statistics.amef.configured) {
+				const amefCounts = state.statistics.amef.object_counts
+				stats.push({
+					register: 'AMEF',
+					type: 'Elements',
+					count: amefCounts.totalElementObjects || 0,
+					configured: true
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Organizations',
+					count: amefCounts.totalOrganizationObjects || 0,
+					configured: true
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Relationships',
+					count: amefCounts.totalRelationshipsObjects || 0,
+					configured: true
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Views',
+					count: amefCounts.totalViewObjects || 0,
+					configured: true
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Models',
+					count: amefCounts.totalModelObjects || 0,
+					configured: true
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Properties',
+					count: amefCounts.totalPropertyObjects || 0,
+					configured: true
+				})
+			}
+			
+			return stats
+		},
 	},
 
 	actions: {
@@ -200,11 +285,43 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
+		 * Load statistics from the stats endpoint
+		 * @return {Promise<void>}
+		 */
+		async loadStatistics() {
+			this.loadingStats = true
+			
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/stats')
+				
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				
+				const data = await response.json()
+				
+				if (data.success && data.statistics) {
+					this.statistics = data.statistics
+				} else {
+					console.error('Statistics API error:', data.error)
+					this.setError(data.error || 'Failed to load statistics')
+				}
+				
+			} catch (error) {
+				console.error('Failed to load statistics:', error)
+				this.setError('Failed to load statistics: ' + error.message)
+			} finally {
+				this.loadingStats = false
+			}
+		},
+
+		/**
 		 * Load all settings data (version info, settings, ArchiMate status)
 		 * This is the main initialization function that should be called from components
 		 * @return {Promise<void>}
 		 */
 		async loadSettings() {
+			console.log('loadSettings: Setting loading to true')
 			this.loading = true
 			this.loadingVersionInfo = true
 			this.clearError()
@@ -525,8 +642,8 @@ export const useSettingsStore = defineStore('settings', {
 		 * Import ArchiMate file with proper error handling (async approach)
 		 * @return {void}
 		 */
-		importArchiMateFile() {
-			console.log('importArchiMateFile() called')
+		importArchiMateFile(processingMode = 'speed') {
+			console.log('importArchiMateFile() called with processing mode:', processingMode)
 
 			if (!this.selectedFile) {
 				showError('No file selected for import')
@@ -560,8 +677,10 @@ export const useSettingsStore = defineStore('settings', {
 				formData.append('updateExisting', this.importOptions.updateExisting)
 				formData.append('deleteOrphaned', this.importOptions.deleteOrphaned)
 				formData.append('preserveIds', 'true')
+				formData.append('processingMode', processingMode)
 
 				console.log('FormData prepared, file size:', this.selectedFile.size, 'bytes')
+				console.log('Processing mode:', processingMode)
 				console.log('Triggering background import request...')
 
 				// Fire the request but don't wait for completion
@@ -702,6 +821,7 @@ export const useSettingsStore = defineStore('settings', {
 					console.log(`Import: ${wasImportRunning} -> ${this.isImportRunning}, Export: ${wasExportRunning} -> ${this.isExportRunning}`)
 
 					// Stop polling if no operations are running
+					// Note: We keep displaying completed status until user manually clears it
 					if (!this.isImportRunning && !this.isExportRunning) {
 						console.log('No operations running, stopping polling')
 						this.stopStatusPolling()
@@ -1255,6 +1375,20 @@ export const useSettingsStore = defineStore('settings', {
 			this.genericUserGroups = []
 			this.organizationAdminGroups = []
 			this.superUserGroups = []
+			this.statistics = {
+				voorzieningen: {
+					config: {},
+					object_counts: {},
+					configured: false
+				},
+				amef: {
+					config: {},
+					object_counts: {},
+					configured: false
+				},
+				timestamp: null
+			}
+			this.loadingStats = false
 			this.error = null
 			this.importError = null
 			this.exportError = null

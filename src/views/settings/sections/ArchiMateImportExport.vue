@@ -34,68 +34,122 @@
 					<p>Upload an ArchiMate file (.archimate or .xml) to automatically create organizations and elements in OpenRegister</p>
 
 					<!-- Import Status Display -->
-					<div v-if="archimateStatus.import && archimateStatus.import.status === 'running'" class="status-display">
-						<NcNoteCard type="info">
-							<template #icon>
-								<!-- Removed loading spinner since progress bar provides visual feedback -->
-							</template>
-							<div class="status-content">
-								<p><strong>Import in Progress</strong></p>
-								<p>Current step: <strong>{{ archimateStatus.import.current_step }}</strong></p>
-								<div class="progress-bar">
-									<div class="progress-fill" :style="{ width: archimateStatus.import.progress + '%' }" />
-									<span class="progress-text">{{ archimateStatus.import.progress }}%</span>
-								</div>
-								<!-- Removed redundant Processing Statistics and Object Statistics sections since the Schema Progress table provides detailed information -->
-									<div v-if="archimateStatus.import.model_info && archimateStatus.import.model_info.identifier" class="model-info">
-										<h5>Model Information:</h5>
-										<ul>
-											<li><strong>Identifier:</strong> {{ archimateStatus.import.model_info.identifier }}</li>
-											<li v-if="archimateStatus.import.model_info.name"><strong>Name:</strong> {{ archimateStatus.import.model_info.name }}</li>
-											<li v-if="archimateStatus.import.model_info.action"><strong>Action:</strong> {{ archimateStatus.import.model_info.action }}</li>
-										</ul>
+					<div v-if="archimateStatus.import && (archimateStatus.import.status === 'running' || archimateStatus.import.status === 'completed')" class="status-display">
+						<div class="import-progress-container">
+							<div class="import-header">
+								<div class="import-header-content">
+									<div class="import-title-section">
+										<h4>{{ archimateStatus.import.status === 'completed' ? 'Import Completed' : 'Import in Progress' }}</h4>
+										<NcButton 
+											v-if="archimateStatus.import.status === 'running'"
+											type="error" 
+											:disabled="cancelling"
+											@click="cancelImport">
+											<template #icon>
+												<StopIcon :size="16" />
+											</template>
+											{{ cancelling ? 'Cancelling...' : 'Cancel Import' }}
+										</NcButton>
+										<NcButton 
+											v-else-if="archimateStatus.import.status === 'completed'"
+											type="secondary" 
+											@click="clearCompletedImportStatus">
+											<template #icon>
+												<CheckCircle :size="16" />
+											</template>
+											Clear Results
+										</NcButton>
 									</div>
-									
-									<!-- Schema Progress Table -->
-									<div v-if="archimateStatus.import.schema_progress" class="schema-progress-table">
-										<h5>Schema Progress:</h5>
-										<table class="progress-table">
-											<thead>
-												<tr>
-													<th>Schema</th>
-													<th>Found</th>
-													<th>Created</th>
-													<th>Updated</th>
-													<th>Skipped</th>
-													<th>Processed</th>
-													<th>Progress</th>
-												</tr>
-											</thead>
-											<tbody>
-												<tr v-for="(progress, schema) in archimateStatus.import.schema_progress" :key="schema">
-													<td><strong>{{ schema.charAt(0).toUpperCase() + schema.slice(1) }}</strong></td>
-													<td>{{ progress.found }}</td>
-													<td class="created">{{ progress.created }}</td>
-													<td class="updated">{{ progress.updated }}</td>
-													<td class="skipped">{{ progress.skipped }}</td>
-													<td>{{ progress.created + progress.updated + progress.skipped }}</td>
-													<td>
-														<div v-if="schema === 'property_definitions'" class="progress-bar-small">
-															<div class="progress-fill-small" :style="{ width: progress.progress + '%' }" />
-															<span class="progress-text-small">{{ progress.progress }}%</span>
-														</div>
-														<div v-else class="progress-bar-small">
-															<div class="progress-fill-small" :style="{ width: progress.progress + '%' }" />
-															<span class="progress-text-small">{{ progress.progress }}%</span>
-														</div>
-													</td>
-												</tr>
-											</tbody>
-										</table>
+									<p>Current step: <strong>{{ archimateStatus.import.current_step }}</strong></p>
+									<div class="progress-bar">
+										<div class="progress-fill" :style="{ width: archimateStatus.import.progress + '%' }" />
+										<span class="progress-text">{{ archimateStatus.import.progress }}%</span>
 									</div>
 								</div>
 							</div>
-						</NcNoteCard>
+
+							<div v-if="archimateStatus.import.model_info && archimateStatus.import.model_info.identifier" class="model-info-simple">
+								<h5>Model Information</h5>
+								<div class="model-details">
+									<span><strong>Identifier:</strong> {{ archimateStatus.import.model_info.identifier }}</span>
+									<span v-if="archimateStatus.import.model_info.name"><strong>Name:</strong> {{ archimateStatus.import.model_info.name }}</span>
+									<span v-if="archimateStatus.import.model_info.action"><strong>Action:</strong> {{ archimateStatus.import.model_info.action }}</span>
+								</div>
+							</div>
+							
+							<!-- Clean Schema Progress Table -->
+							<div v-if="archimateStatus.import.schema_progress" class="schema-progress-clean">
+								<h5>Schema Progress</h5>
+								<table class="progress-table-clean">
+									<thead>
+										<tr>
+											<th>Schema</th>
+											<th>Found</th>
+											<th>Created</th>
+											<th>Updated</th>
+											<th>Skipped</th>
+											<th>Processed</th>
+											<th>Progress</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr v-for="(progress, schema) in archimateStatus.import.schema_progress" :key="schema">
+											<td class="schema-name">{{ schema.charAt(0).toUpperCase() + schema.slice(1) }}</td>
+											<td>{{ progress.found }}</td>
+											<td class="created">{{ progress.created }}</td>
+											<td class="updated">{{ progress.updated }}</td>
+											<td class="skipped">{{ progress.skipped }}</td>
+											<td>{{ progress.created + progress.updated + progress.skipped }}</td>
+											<td class="progress-cell">
+												<div class="progress-bar-inline">
+													<div class="progress-fill-inline" :style="{ width: calculateProgress(progress) + '%' }" />
+													<span class="progress-text-inline">{{ calculateProgress(progress) }}%</span>
+												</div>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							
+							<!-- Final Results Display (when completed) -->
+							<div v-if="archimateStatus.import.status === 'completed' && archimateStatus.import.final_results" class="final-results-display">
+								<h5>Import Results</h5>
+								
+								<!-- Summary Statistics -->
+								<div class="results-summary">
+									<div class="summary-grid">
+										<div class="summary-item created">
+											<span class="summary-number">{{ archimateStatus.import.final_results.summary.total_objects_created }}</span>
+											<span class="summary-label">Created</span>
+										</div>
+										<div class="summary-item updated">
+											<span class="summary-number">{{ archimateStatus.import.final_results.summary.total_objects_updated }}</span>
+											<span class="summary-label">Updated</span>
+										</div>
+										<div class="summary-item skipped">
+											<span class="summary-number">{{ archimateStatus.import.final_results.summary.total_objects_skipped }}</span>
+											<span class="summary-label">Skipped</span>
+										</div>
+										<div class="summary-item errors" v-if="archimateStatus.import.final_results.summary.total_errors > 0">
+											<span class="summary-number">{{ archimateStatus.import.final_results.summary.total_errors }}</span>
+											<span class="summary-label">Errors</span>
+										</div>
+									</div>
+								</div>
+								
+								<!-- Performance Info -->
+								<div class="performance-info">
+									<div class="performance-row">
+										<span><strong>Processing Time:</strong> {{ archimateStatus.import.final_results.processing_times.total_time_seconds }}s</span>
+										<span><strong>Processing Speed:</strong> {{ archimateStatus.import.final_results.performance_metrics.items_per_second.toFixed(2) }} items/sec</span>
+									</div>
+									<div class="performance-row">
+										<span><strong>File:</strong> {{ archimateStatus.import.final_results.file_info.name }}</span>
+										<span><strong>Size:</strong> {{ (archimateStatus.import.final_results.file_info.size / 1024 / 1024).toFixed(2) }} MB</span>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 
 					<!-- Import Error Display -->
@@ -110,7 +164,7 @@
 					</div>
 
 					<!-- File Upload Section -->
-					<div class="file-upload-section">
+					<div v-if="!isImportRunning" class="file-upload-section">
 						<input
 							ref="fileInput"
 							type="file"
@@ -131,6 +185,59 @@
 
 						<div v-if="selectedFile" class="selected-file">
 							<p><strong>Selected file:</strong> {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})</p>
+						</div>
+
+						<!-- Performance Mode Selection -->
+						<div v-if="selectedFile" class="performance-mode-section">
+							<h5>Processing Mode</h5>
+							<p class="mode-description">Choose how to process your import:</p>
+							
+							<div class="mode-options">
+								<div class="mode-option">
+									<input
+										id="mode-speed"
+										type="radio"
+										v-model="processingMode"
+										value="speed"
+										:disabled="importing || isImportRunning">
+									<label for="mode-speed" class="mode-label">
+										<div class="mode-header">
+											<strong>🚀 High Performance</strong>
+											<span class="mode-badge speed">Recommended</span>
+										</div>
+										<div class="mode-details">
+											<p>Optimized for speed with parallel processing</p>
+											<ul>
+												<li>Faster import times</li>
+												<li>Uses more memory (up to 2GB)</li>
+												<li>Best for large files</li>
+											</ul>
+										</div>
+									</label>
+								</div>
+
+								<div class="mode-option">
+									<input
+										id="mode-memory"
+										type="radio"
+										v-model="processingMode"
+										value="memory"
+										:disabled="importing || isImportRunning">
+									<label for="mode-memory" class="mode-label">
+										<div class="mode-header">
+											<strong>💾 Memory Efficient</strong>
+										</div>
+										<div class="mode-details">
+											<p>Optimized for memory usage with streaming</p>
+											<ul>
+												<li>Lower memory usage</li>
+												<li>Slower import times</li>
+												<li>Best for limited memory</li>
+											</ul>
+										</div>
+									</label>
+								</div>
+							</div>
 						</div>
 
 						<NcButton
@@ -256,13 +363,13 @@
 					<p>Export existing OpenRegister data to ArchiMate format for use in architecture tools</p>
 
 					<!-- Export Status Display -->
-					<div v-if="archimateStatus.export && archimateStatus.export.status === 'running'" class="status-display">
+					<div v-if="archimateStatus.export && (archimateStatus.export.status === 'running' || archimateStatus.export.status === 'completed')" class="status-display">
 						<NcNoteCard type="info">
 							<template #icon>
 								<!-- Removed loading spinner since progress bar provides visual feedback -->
 							</template>
 							<div class="status-content">
-								<p><strong>Export in Progress</strong></p>
+								<p><strong>{{ archimateStatus.export.status === 'completed' ? 'Export Completed' : 'Export in Progress' }}</strong></p>
 								<p>Current step: <strong>{{ archimateStatus.export.current_step }}</strong></p>
 								<div class="progress-bar">
 									<div class="progress-fill" :style="{ width: archimateStatus.export.progress + '%' }" />
@@ -275,6 +382,33 @@
 										<li>Objects Exported: {{ archimateStatus.export.statistics.objects_exported }}</li>
 										<li>XML Size: {{ (archimateStatus.export.statistics.xml_size_bytes / 1024).toFixed(2) }} KB</li>
 									</ul>
+								</div>
+								
+								<!-- Final Export Results (when completed) -->
+								<div v-if="archimateStatus.export.status === 'completed' && archimateStatus.export.final_results" class="final-results-display">
+									<h5>Export Results</h5>
+									<div class="results-summary">
+										<div class="summary-grid">
+											<div class="summary-item created">
+												<span class="summary-number">{{ archimateStatus.export.final_results.summary.objects_exported }}</span>
+												<span class="summary-label">Exported</span>
+											</div>
+											<div class="summary-item updated">
+												<span class="summary-number">{{ archimateStatus.export.final_results.summary.xml_size_mb }}</span>
+												<span class="summary-label">MB</span>
+											</div>
+										</div>
+									</div>
+									<div class="performance-info">
+										<div class="performance-row">
+											<span><strong>Processing Time:</strong> {{ archimateStatus.export.final_results.performance_metrics.total_time_seconds }}s</span>
+											<span><strong>Speed:</strong> {{ archimateStatus.export.final_results.performance_metrics.objects_per_second }} objects/sec</span>
+										</div>
+										<div class="performance-row">
+											<span><strong>File:</strong> {{ archimateStatus.export.final_results.file_info.name }}</span>
+											<span><strong>Size:</strong> {{ (archimateStatus.export.final_results.file_info.size_bytes / 1024).toFixed(2) }} KB</span>
+										</div>
+									</div>
 								</div>
 							</div>
 						</NcNoteCard>
@@ -315,7 +449,7 @@
 						{{ exporting ? 'Starting Export...' : 'Export to ArchiMate' }}
 					</NcButton>
 
-					<!-- Force Clear Button for Running Export -->
+					<!-- Clear Button for Export -->
 					<NcButton
 						v-if="archimateStatus.export && archimateStatus.export.status === 'running'"
 						type="error"
@@ -324,6 +458,15 @@
 							<Alert :size="20" />
 						</template>
 						Force Clear (if stuck)
+					</NcButton>
+					<NcButton
+						v-else-if="archimateStatus.export && archimateStatus.export.status === 'completed'"
+						type="secondary"
+						@click="clearExportStatus">
+						<template #icon>
+							<CheckCircle :size="20" />
+						</template>
+						Clear Results
 					</NcButton>
 
 					<!-- Export Results -->
@@ -458,6 +601,7 @@ import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
+import StopIcon from 'vue-material-design-icons/Stop.vue'
 
 // Bootstrap Vue components for tabs
 import { BTabs, BTab } from 'bootstrap-vue'
@@ -477,6 +621,7 @@ export default {
 		CheckCircle,
 		Alert,
 		Sync,
+		StopIcon,
 		BTabs,
 		BTab,
 	},
@@ -492,10 +637,12 @@ export default {
 			importing: false,
 			exporting: false,
 			testingRoundTrip: false,
+			cancelling: false,
 			importResult: null,
 			exportResult: null,
 			roundTripResult: null,
 			exportFormat: 'archimate',
+			processingMode: 'speed', // Default to high performance
 		}
 	},
 
@@ -540,7 +687,52 @@ export default {
 		 * Import ArchiMate file using the settings store
 		 */
 		async importArchiMateFile() {
-			await this.store.importArchiMateFile()
+			await this.store.importArchiMateFile(this.processingMode)
+		},
+
+		/**
+		 * Cancel running ArchiMate import
+		 */
+		async cancelImport() {
+			if (this.cancelling) {
+				return // Prevent multiple cancel requests
+			}
+
+			this.cancelling = true
+			
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import/cancel', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'OCS-APIREQUEST': 'true',
+						'requesttoken': OC.requestToken
+					}
+				})
+
+				const result = await response.json()
+				
+				if (result.success) {
+					// Show success notification
+					OC.Notification.showTemporary(
+						`Import cancelled successfully${result.details.process_killed ? ' (process terminated)' : ''}`,
+						{ type: 'success' }
+					)
+					
+					// Refresh the status to reflect cancellation
+					await this.store.refreshArchiMateStatus()
+				} else {
+					throw new Error(result.message || 'Failed to cancel import')
+				}
+			} catch (error) {
+				console.error('Error cancelling import:', error)
+				OC.Notification.showTemporary(
+					'Failed to cancel import: ' + error.message,
+					{ type: 'error' }
+				)
+			} finally {
+				this.cancelling = false
+			}
 		},
 
 		/**
@@ -559,6 +751,13 @@ export default {
 		 * Clear import status
 		 */
 		async clearImportStatus() {
+			await this.store.clearImportStatus()
+		},
+
+		/**
+		 * Clear completed import status (user manually dismisses results)
+		 */
+		async clearCompletedImportStatus() {
 			await this.store.clearImportStatus()
 		},
 
@@ -589,6 +788,23 @@ export default {
 				this.testingRoundTrip = false
 			}
 		},
+
+		/**
+		 * Calculate progress percentage based on processed vs found objects
+		 *
+		 * @param {Object} progress Progress object with found, created, updated, skipped counts
+		 * @return {number} Progress percentage (0-100)
+		 */
+		calculateProgress(progress) {
+			const found = progress.found || 0
+			const processed = (progress.created || 0) + (progress.updated || 0) + (progress.skipped || 0)
+			
+			if (found === 0) {
+				return 0
+			}
+			
+			return Math.round((processed / found) * 100)
+		},
 	},
 }
 </script>
@@ -612,6 +828,100 @@ export default {
 	background: var(--color-background-dark);
 	border-radius: var(--border-radius);
 	border: 1px solid var(--color-border);
+}
+
+.performance-mode-section {
+	margin: 1rem 0;
+	padding: 1rem;
+	background: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.performance-mode-section h5 {
+	margin: 0 0 0.5rem 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.mode-description {
+	margin: 0 0 1rem 0;
+	font-size: 0.85rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.mode-options {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.mode-option {
+	position: relative;
+}
+
+.mode-option input[type="radio"] {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.mode-label {
+	display: block;
+	padding: 1rem;
+	background: var(--color-main-background);
+	border: 2px solid var(--color-border);
+	border-radius: var(--border-radius);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.mode-option input[type="radio"]:checked + .mode-label {
+	border-color: var(--color-primary);
+	background: var(--color-primary-light);
+}
+
+.mode-option input[type="radio"]:disabled + .mode-label {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.mode-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.5rem;
+}
+
+.mode-badge {
+	padding: 0.25rem 0.5rem;
+	border-radius: 12px;
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.mode-badge.speed {
+	background: var(--color-success);
+	color: var(--color-success-text);
+}
+
+.mode-details p {
+	margin: 0 0 0.5rem 0;
+	font-size: 0.85rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.mode-details ul {
+	margin: 0;
+	padding-left: 1rem;
+	font-size: 0.8rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.mode-details li {
+	margin-bottom: 0.25rem;
 }
 
 .export-config {
@@ -884,5 +1194,238 @@ export default {
 	margin: 0;
 	padding-left: 1rem;
 	font-size: 0.875rem;
+}
+
+/* Clean import progress styles */
+.import-progress-container {
+	padding: 1rem;
+	background: var(--color-background-hover);
+	border-radius: var(--border-radius-large);
+	border: 1px solid var(--color-border);
+	margin: 1rem 0;
+}
+
+.import-header {
+	margin-bottom: 1rem;
+}
+
+.import-header-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.import-title-section {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.5rem;
+}
+
+.import-header h4 {
+	margin: 0;
+	color: var(--color-primary);
+	font-size: 1.1rem;
+}
+
+.import-header p {
+	margin: 0 0 1rem 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.model-info-simple {
+	margin: 1rem 0;
+	padding: 0.75rem;
+	background: var(--color-primary-light);
+	border-radius: var(--border-radius);
+	border-left: 4px solid var(--color-primary);
+}
+
+.model-info-simple h5 {
+	margin: 0 0 0.5rem 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--color-primary-text);
+}
+
+.model-details {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.model-details span {
+	font-size: 0.85rem;
+	color: var(--color-primary-text);
+}
+
+.schema-progress-clean {
+	margin-top: 1rem;
+}
+
+.schema-progress-clean h5 {
+	margin: 0 0 0.75rem 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.progress-table-clean {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.85rem;
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-table-clean th {
+	padding: 0.75rem 0.5rem;
+	text-align: left;
+	font-weight: 600;
+	color: var(--color-main-text);
+	background: var(--color-background-dark);
+	border-bottom: 2px solid var(--color-border);
+}
+
+.progress-table-clean td {
+	padding: 0.5rem;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border-dark);
+	color: var(--color-text-maxcontrast);
+}
+
+.progress-table-clean .schema-name {
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.progress-table-clean .created {
+	color: var(--color-success);
+	font-weight: 600;
+}
+
+.progress-table-clean .updated {
+	color: var(--color-warning);
+	font-weight: 600;
+}
+
+.progress-table-clean .skipped {
+	color: var(--color-text-lighter);
+	font-weight: 600;
+}
+
+.progress-cell {
+	width: 80px;
+}
+
+.progress-bar-inline {
+	position: relative;
+	width: 60px;
+	height: 18px;
+	background: var(--color-background-dark);
+	border-radius: 9px;
+	overflow: hidden;
+}
+
+.progress-fill-inline {
+	height: 100%;
+	background: var(--color-primary);
+	transition: width 0.3s ease;
+}
+
+.progress-text-inline {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--color-primary-text);
+	text-shadow: 0 0 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Final Results Display Styles */
+.final-results-display {
+	margin-top: 1.5rem;
+	padding: 1rem;
+	background: var(--color-success-light);
+	border-radius: var(--border-radius);
+	border-left: 4px solid var(--color-success);
+}
+
+.final-results-display h5 {
+	margin: 0 0 1rem 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--color-success-text);
+}
+
+.results-summary {
+	margin-bottom: 1rem;
+}
+
+.summary-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 1rem;
+}
+
+.summary-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 0.75rem;
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	border: 2px solid transparent;
+}
+
+.summary-item.created {
+	border-color: var(--color-success);
+}
+
+.summary-item.updated {
+	border-color: var(--color-warning);
+}
+
+.summary-item.skipped {
+	border-color: var(--color-text-lighter);
+}
+
+.summary-item.errors {
+	border-color: var(--color-error);
+}
+
+.summary-number {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--color-main-text);
+}
+
+.summary-label {
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+	text-transform: uppercase;
+	margin-top: 0.25rem;
+}
+
+.performance-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.performance-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.85rem;
+}
+
+.performance-row span {
+	color: var(--color-success-text);
 }
 </style>

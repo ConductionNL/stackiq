@@ -8,6 +8,9 @@
 		<!-- Version Information Section -->
 		<VersionInformation />
 
+		<!-- Statistics Overview Section -->
+		<StatisticsOverview />
+
 		<!-- OpenRegister Integration Section -->
 		<OpenRegisterIntegration />
 
@@ -31,6 +34,7 @@ import { NcSettingsSection } from '@nextcloud/vue'
 import { settingsStore } from '../../store/store.js'
 import OpenRegisterIntegration from './sections/OpenRegisterIntegration.vue'
 import VersionInformation from './sections/VersionInformation.vue'
+import StatisticsOverview from './sections/StatisticsOverview.vue'
 import UserGroupsConfiguration from './sections/UserGroupsConfiguration.vue'
 import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
 import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
@@ -49,6 +53,7 @@ export default defineComponent({
 		NcSettingsSection,
 		OpenRegisterIntegration,
 		VersionInformation,
+		StatisticsOverview,
 		UserGroupsConfiguration,
 		OrganizationSynchronization,
 		ArchiMateImportExport,

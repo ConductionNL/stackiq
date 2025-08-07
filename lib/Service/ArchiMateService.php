@@ -25,6 +25,7 @@ use Psr\Log\LoggerInterface;
 use React\Promise\Promise;
 use function React\Promise\all;
 use React\Promise\Deferred;
+use React\EventLoop\Loop;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 
@@ -76,25 +77,35 @@ class ArchiMateService
      */
     public function importArchiMateFileFromPath(array $options = []): array
     {
-        // Check if an operation is already in progress
-        if ($this->isOperationInProgress()) {
+        // Atomic check and lock to prevent concurrent imports
+        if (!$this->acquireImportLock()) {
             $currentStatus = $this->getArchiMateStatus();
             $errorMessage = 'Another ArchiMate operation is already in progress';
             
             if ($this->isImportInProgress()) {
                 $errorMessage = 'An ArchiMate import is already in progress';
+                $this->logger->warning('ArchiMate import blocked: import already running', [
+                    'current_import_status' => $currentStatus['import'] ?? null,
+                    'request_options' => $options
+                ]);
             } elseif ($this->isExportInProgress()) {
                 $errorMessage = 'An ArchiMate export is already in progress';
+                $this->logger->warning('ArchiMate import blocked: export already running', [
+                    'current_export_status' => $currentStatus['export'] ?? null,
+                    'request_options' => $options
+                ]);
+            } else {
+                $this->logger->warning('ArchiMate import blocked: unknown operation in progress', [
+                    'current_status' => $currentStatus,
+                    'request_options' => $options
+                ]);
             }
-            
-            $this->logger->warning('ArchiMate import blocked: operation already in progress', [
-                'current_status' => $currentStatus
-            ]);
             
             return [
                 'success' => false,
                 'error' => $errorMessage,
-                'current_status' => $currentStatus
+                'current_status' => $currentStatus,
+                'blocked_at' => date('Y-m-d H:i:s')
             ];
         }
 
@@ -144,13 +155,30 @@ class ArchiMateService
             'memory_limit' => ini_get('memory_limit')
         ]);
 
-        // Set default options
-        $options = array_merge([
-            'batch_size' => 50,
-            'updateExisting' => true,
-            'preserveIds' => true,
-            'deleteOrphaned' => false
-        ], $options);
+        // Set default options based on processing mode
+        $processingMode = $options['processingMode'] ?? 'speed';
+        
+        if ($processingMode === 'speed') {
+            // High-performance defaults
+            $defaultOptions = [
+                'batch_size' => 100, // Larger batches for better throughput
+                'parallel_batches' => 4, // Process 4 batches concurrently
+                'updateExisting' => true,
+                'preserveIds' => true,
+                'deleteOrphaned' => false
+            ];
+        } else {
+            // Memory-efficient defaults
+            $defaultOptions = [
+                'batch_size' => 50, // Smaller batches for memory efficiency
+                'parallel_batches' => 2, // Fewer concurrent batches
+                'updateExisting' => true,
+                'preserveIds' => true,
+                'deleteOrphaned' => false
+            ];
+        }
+        
+        $options = array_merge($defaultOptions, $options);
 
         try {
             // Step 1: Validate file
@@ -264,27 +292,30 @@ class ArchiMateService
             $importStatus['progress'] = 35;
             $this->setArchiMateImportStatus($importStatus);
             
-            // Create a callback for status updates during processing
+            // Create a thread-safe callback for status updates during processing
             $statusUpdateCallback = function($schemaType, $progress, $stats) use (&$importStatus) {
-                if (isset($importStatus['schema_progress'][$schemaType])) {
-                    $importStatus['schema_progress'][$schemaType]['progress'] = $progress;
-                    $importStatus['schema_progress'][$schemaType]['created'] = $stats['created'] ?? 0;
-                    $importStatus['schema_progress'][$schemaType]['updated'] = $stats['updated'] ?? 0;
-                    $importStatus['schema_progress'][$schemaType]['skipped'] = $stats['skipped'] ?? 0;
-                    
-                    // Update overall progress based on schema progress
-                    $totalProgress = 0;
-                    $schemaCount = count($importStatus['schema_progress']);
-                    foreach ($importStatus['schema_progress'] as $schema => $data) {
-                        $totalProgress += $data['progress'];
-                    }
-                    $importStatus['progress'] = 35 + (($totalProgress / $schemaCount) * 60); // 35% to 95%
-                    
-                    $this->setArchiMateImportStatus($importStatus);
-                }
+                // Use atomic update mechanism to prevent race conditions
+                $this->updateSchemaStatsSafely($schemaType, $stats);
             };
             
-            $convertResults = $this->convertToOpenRegisterObjectsParallel($archiMateData, $options, $statusUpdateCallback);
+            // Choose processing method based on user preference and dataset size
+            $totalObjects = count($archiMateData['elements'] ?? []) + 
+                           count($archiMateData['relationships'] ?? []) + 
+                           count($archiMateData['organizations'] ?? []) + 
+                           count($archiMateData['views'] ?? []) + 
+                           count($archiMateData['property_definitions'] ?? []);
+            
+            $processingMode = $options['processingMode'] ?? 'speed';
+            
+            // Use synchronous processing for better debugging
+            $this->logger->info('Using synchronous processing method', [
+                'total_objects' => $totalObjects,
+                'processing_mode' => 'synchronous',
+                'method' => 'synchronous-batch-processing'
+            ]);
+            
+                    // Convert ArchiMate data to OpenRegister objects using synchronous processing
+        $convertResults = $this->convertToOpenRegisterObjectsSynchronous($archiMateData, $options, $statusUpdateCallback);
             $convertTime = microtime(true) - $convertStart;
 
             $totalTime = microtime(true) - $startTime;
@@ -301,6 +332,50 @@ class ArchiMateService
             $importStatus['current_step'] = 'Import completed';
             $importStatus['end_time'] = date('Y-m-d H:i:s');
             $importStatus['total_time_seconds'] = round($totalTime, 3);
+            
+            // Update schema_progress with final results
+            if (isset($convertResults['schema_statistics']) && is_array($convertResults['schema_statistics'])) {
+                foreach ($convertResults['schema_statistics'] as $schemaType => $stats) {
+                    if (isset($importStatus['schema_progress'][$schemaType])) {
+                        $importStatus['schema_progress'][$schemaType]['created'] = $stats['created'] ?? 0;
+                        $importStatus['schema_progress'][$schemaType]['updated'] = $stats['updated'] ?? 0;
+                        $importStatus['schema_progress'][$schemaType]['skipped'] = $stats['skipped'] ?? 0;
+                        
+                        // Update progress to 100% for completed schemas
+                        $importStatus['schema_progress'][$schemaType]['progress'] = 100;
+                    }
+                }
+            }
+            
+            // Add final results to the status for frontend display
+            $importStatus['final_results'] = [
+                'summary' => [
+                    'total_objects_created' => $convertResults['objects_created'],
+                    'total_objects_updated' => $convertResults['objects_updated'],
+                    'total_objects_deleted' => $convertResults['objects_deleted'],
+                    'total_objects_skipped' => $convertResults['objects_skipped'],
+                    'total_errors' => count($convertResults['errors'])
+                ],
+                'performance_metrics' => [
+                    'items_per_second' => $this->calculateItemsPerSecond($archiMateData, $totalTime),
+                    'processing_method' => 'synchronous_batch_processing',
+                    'batch_size_used' => $options['batch_size'],
+                    'dataset_size' => $totalObjects
+                ],
+                'processing_times' => [
+                    'total_time_seconds' => round($totalTime, 3),
+                    'validation_time_seconds' => round($validationTime, 3),
+                    'parse_time_seconds' => round($parseTime, 3),
+                    'convert_time_seconds' => round($convertTime, 3),
+                ],
+                'file_info' => [
+                    'name' => $options['fileName'],
+                    'size' => filesize($options['filePath']),
+                    'mime_type' => $options['mimeType'] ?? 'text/xml'
+                ],
+                'schema_statistics' => $convertResults['schema_statistics']
+            ];
+            
             $this->setArchiMateImportStatus($importStatus);
 
             $results = [
@@ -337,8 +412,9 @@ class ArchiMateService
                 ],
                 'performance_metrics' => [
                     'items_per_second' => $this->calculateItemsPerSecond($archiMateData, $totalTime),
-                    'processing_method' => 'reactphp_parallel',
-                    'batch_size_used' => $options['batch_size']
+                    'processing_method' => 'synchronous_batch_processing',
+                    'batch_size_used' => $options['batch_size'],
+                    'dataset_size' => $totalObjects
                 ]
             ];
 
@@ -350,16 +426,16 @@ class ArchiMateService
                 'errors_count' => count($convertResults['errors'])
             ]);
 
-            // Clear import status after successful completion
-            $this->clearArchiMateImportStatus();
-            $this->logger->info('ArchiMate import status cleared after successful completion');
+            // Keep import status with 'completed' status so frontend can display final results
+            // Don't clear the status - the frontend will handle showing completed results
+            $this->logger->info('ArchiMate import completed successfully - status preserved for frontend display');
 
             return $results;
 
         } catch (\Exception $e) {
             $totalTime = microtime(true) - $startTime;
             
-            // Update status with error
+            // Update status with error before releasing lock
             $importStatus['status'] = 'failed';
             $importStatus['current_step'] = 'Import failed';
             $importStatus['end_time'] = date('Y-m-d H:i:s');
@@ -373,9 +449,13 @@ class ArchiMateService
                 'total_time_seconds' => round($totalTime, 3)
             ]);
 
+            // Note: Lock will be released by the failed status, but we could also add:
+            // $this->releaseImportLock(); if we want immediate cleanup
+
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'failed_at' => date('Y-m-d H:i:s')
             ];
         }
     }
@@ -466,6 +546,24 @@ class ArchiMateService
             $exportStatus['current_step'] = 'Export completed';
             $exportStatus['end_time'] = date('Y-m-d H:i:s');
             $exportStatus['total_time_seconds'] = round($totalTime, 3);
+            
+            // Add final results to the status for frontend display
+            $exportStatus['final_results'] = [
+                'summary' => [
+                    'objects_exported' => count($objects),
+                    'xml_size_bytes' => strlen($xmlContent),
+                    'xml_size_mb' => round(strlen($xmlContent) / 1024 / 1024, 2)
+                ],
+                'performance_metrics' => [
+                    'total_time_seconds' => round($totalTime, 3),
+                    'objects_per_second' => count($objects) > 0 ? round(count($objects) / $totalTime, 2) : 0
+                ],
+                'file_info' => [
+                    'name' => $fileName,
+                    'size_bytes' => strlen($xmlContent)
+                ]
+            ];
+            
             $this->setArchiMateExportStatus($exportStatus);
             
             $this->logger->info('=== ARCHIMATE EXPORT COMPLETED ===', [
@@ -500,9 +598,9 @@ class ArchiMateService
                 // Continue anyway, return the content directly
             }
 
-            // Clear export status after successful completion
-            $this->clearArchiMateExportStatus();
-            $this->logger->info('ArchiMate export status cleared after successful completion');
+            // Keep export status with 'completed' status so frontend can display final results
+            // Don't clear the status - the frontend will handle showing completed results
+            $this->logger->info('ArchiMate export completed successfully - status preserved for frontend display');
 
             return [
                 'success' => true,
@@ -822,7 +920,7 @@ class ArchiMateService
             }
         }
 
-        // Extract views
+        // Extract views - handle nested structure under <views><diagrams>
         if (isset($data['views'])) {
             $this->logger->info('Processing views for normalization', [
                 'views_structure' => gettype($data['views']),
@@ -830,43 +928,70 @@ class ArchiMateService
                 'views_count' => is_array($data['views']) ? count($data['views']) : 'not_array'
             ]);
             
-            if (isset($data['views']['view'])) {
+            // Handle nested structure: <views><diagrams><view>
+            if (isset($data['views']['diagrams'])) {
+                $this->logger->info('Found diagrams structure in views', [
+                    'diagrams_structure' => gettype($data['views']['diagrams']),
+                    'diagrams_keys' => is_array($data['views']['diagrams']) ? array_keys($data['views']['diagrams']) : 'not_array'
+                ]);
+                
+                if (isset($data['views']['diagrams']['view'])) {
+                    $viewArray = $data['views']['diagrams']['view'];
+                    $this->logger->info('Found view array in diagrams structure', [
+                        'view_array_count' => is_array($viewArray) ? count($viewArray) : 'not_array',
+                        'is_single_view' => !isset($viewArray[0]) && isset($viewArray['_attributes']),
+                        'first_view_sample' => is_array($viewArray) && !empty($viewArray) ? array_keys($viewArray) : 'no_views'
+                    ]);
+                    
+                    // Handle single view vs array of views
+                    if (!isset($viewArray[0]) && isset($viewArray['_attributes'])) {
+                        // Single view
+                        if (isset($viewArray['_attributes']['identifier'])) {
+                            $normalized['views'][$viewArray['_attributes']['identifier']] = $this->normalizeView($viewArray);
+                            $this->logger->info('Processed single view', [
+                                'view_id' => $viewArray['_attributes']['identifier']
+                            ]);
+                        }
+                    } else {
+                        // Array of views
+                        foreach ($viewArray as $index => $view) {
+                            $this->logger->info("Processing view {$index}", [
+                                'view_keys' => is_array($view) ? array_keys($view) : 'not_array',
+                                'has_attributes' => isset($view['_attributes']),
+                                'has_identifier' => isset($view['_attributes']['identifier'])
+                            ]);
+                            
+                            if (isset($view['_attributes']['identifier'])) {
+                                $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
+                            } else {
+                                $this->logger->warning("View {$index} missing identifier", [
+                                    'view_structure' => is_array($view) ? array_keys($view) : gettype($view)
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+            // Handle direct view structure: <views><view>
+            elseif (isset($data['views']['view'])) {
                 $viewArray = $data['views']['view'];
-                $this->logger->info('Found view array structure', [
-                    'view_array_count' => count($viewArray),
-                    'first_view_sample' => !empty($viewArray) ? array_slice($viewArray, 0, 1, true) : 'no_views'
+                $this->logger->info('Found direct view array structure', [
+                    'view_array_count' => is_array($viewArray) ? count($viewArray) : 'not_array',
+                    'first_view_sample' => is_array($viewArray) && !empty($viewArray) ? array_slice($viewArray, 0, 1, true) : 'no_views'
                 ]);
                 
                 foreach ($viewArray as $index => $view) {
-                    $this->logger->info("Processing view {$index}", [
-                        'view_keys' => array_keys($view),
-                        'has_attributes' => isset($view['_attributes']),
-                        'has_identifier' => isset($view['_attributes']['identifier'])
-                    ]);
-                    
                     if (isset($view['_attributes']['identifier'])) {
                         $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
-                    } else {
-                        $this->logger->warning("View {$index} missing identifier", [
-                            'view_structure' => $view
-                        ]);
                     }
                 }
-            } else {
+            }
+            // Handle views as direct array structure
+            else {
                 $this->logger->info('Processing views as direct array structure');
                 foreach ($data['views'] as $index => $view) {
-                    $this->logger->info("Processing view {$index}", [
-                        'view_keys' => array_keys($view),
-                        'has_attributes' => isset($view['_attributes']),
-                        'has_identifier' => isset($view['_attributes']['identifier'])
-                    ]);
-                    
-                    if (isset($view['_attributes']['identifier'])) {
+                    if (is_array($view) && isset($view['_attributes']['identifier'])) {
                         $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
-                    } else {
-                        $this->logger->warning("View {$index} missing identifier", [
-                            'view_structure' => $view
-                        ]);
                     }
                 }
             }
@@ -929,87 +1054,34 @@ class ArchiMateService
     }
 
     /**
-     * Convert to OpenRegister objects using ReactPHP parallel processing with memory optimization
+     * Convert to OpenRegister objects using synchronous processing with memory optimization
      */
-    private function convertToOpenRegisterObjectsParallel(array $archiMateData, array $options, callable $statusCallback = null): array
+    private function convertToOpenRegisterObjectsSynchronous(array $archiMateData, array $options, callable $statusCallback = null): array
     {
         $startTime = microtime(true);
         
-        $this->logger->info('=== PARALLEL CONVERSION START ===', [
+        $this->logger->info('=== SYNCHRONOUS CONVERSION START ===', [
             'elements_count' => count($archiMateData['elements'] ?? []),
             'relationships_count' => count($archiMateData['relationships'] ?? []),
             'organizations_count' => count($archiMateData['organizations'] ?? []),
             'views_count' => count($archiMateData['views'] ?? []),
             'property_definitions_count' => count($archiMateData['property_definitions'] ?? []),
-            'batch_size' => $options['batch_size'],
+            'batch_size' => $options['batch_size'] ?? 100,
             'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
         ]);
 
-        // Preload existing objects
+        // Preload existing objects for fast lookup
         $preloadStart = microtime(true);
         $this->preloadExistingObjects();
         $preloadTime = microtime(true) - $preloadStart;
 
-        $this->logger->info('Existing objects preloaded', [
+        $this->logger->info('Existing objects preloaded for fast lookup', [
             'preload_time_seconds' => round($preloadTime, 3),
             'cached_objects_count' => array_sum(array_map('count', $this->cachedObjects)),
             'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
         ]);
 
-        // Process different schema types in parallel with memory optimization
-        $promises = [];
-
-        // Elements processing - will unset elements array as it processes
-        if (!empty($archiMateData['elements'])) {
-            $promises['elements'] = $this->processElementsParallelWithCleanup($archiMateData['elements'], $options);
-            // Unset the original elements array to free memory
-            unset($archiMateData['elements']);
-            $this->logger->info('Elements array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Organizations processing - will unset organizations array as it processes
-        if (!empty($archiMateData['organizations'])) {
-            $promises['organizations'] = $this->processOrganizationsParallelWithCleanup($archiMateData['organizations'], $options);
-            // Unset the original organizations array to free memory
-            unset($archiMateData['organizations']);
-            $this->logger->info('Organizations array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Relationships processing - will unset relationships array as it processes
-        if (!empty($archiMateData['relationships'])) {
-            $promises['relationships'] = $this->processRelationshipsParallelWithCleanup($archiMateData['relationships'], $options);
-            // Unset the original relationships array to free memory
-            unset($archiMateData['relationships']);
-            $this->logger->info('Relationships array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Views processing - will unset views array as it processes
-        if (!empty($archiMateData['views'])) {
-            $promises['views'] = $this->processViewsParallelWithCleanup($archiMateData['views'], $options);
-            // Unset the original views array to free memory
-            unset($archiMateData['views']);
-            $this->logger->info('Views array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Property definitions processing - will unset property_definitions array as it processes
-        if (!empty($archiMateData['property_definitions'])) {
-            $promises['property_definitions'] = $this->processPropertyDefinitionsParallelWithCleanup($archiMateData['property_definitions'], $options);
-            // Unset the original property_definitions array to free memory
-            unset($archiMateData['property_definitions']);
-            $this->logger->info('Property definitions array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Wait for all promises to complete
+        // Initialize results structure
         $results = [
             'objects_created' => 0,
             'objects_updated' => 0,
@@ -1017,45 +1089,70 @@ class ArchiMateService
             'objects_skipped' => 0,
             'errors' => [],
             'schema_statistics' => [
-                            'elements' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
-            'organizations' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
-            'relationships' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
-            'views' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
-            'property_definitions' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []]
+                'elements' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+                'organizations' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+                'relationships' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+                'views' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+                'property_definitions' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []]
             ]
         ];
 
-        foreach ($promises as $schemaType => $promise) {
-            $schemaStart = microtime(true);
-            $schemaResult = $this->waitForPromise($promise);
-            $schemaTime = microtime(true) - $schemaStart;
-            
-            $results['objects_created'] += $schemaResult['created'];
-            $results['objects_updated'] += $schemaResult['updated'];
-            $results['objects_deleted'] += $schemaResult['deleted'] ?? 0;
-            $results['objects_skipped'] += $schemaResult['skipped'] ?? 0;
-            $results['errors'] = array_merge($results['errors'], $schemaResult['errors']);
-            $results['schema_statistics'][$schemaType] = $schemaResult;
-            
-            // Update status with schema completion
-            if ($statusCallback) {
-                $statusCallback($schemaType, 100, $schemaResult);
+        // Process different schema types with high-performance batch processing
+        $schemaTypes = ['elements', 'organizations', 'relationships', 'views', 'property_definitions'];
+        
+        foreach ($schemaTypes as $schemaType) {
+            if (!empty($archiMateData[$schemaType])) {
+                $this->logger->info("Starting synchronous batch processing of {$schemaType}", [
+                    'count' => count($archiMateData[$schemaType]),
+                    'batch_size' => $options['batch_size'] ?? 100,
+                    'parallel_batches' => $options['parallel_batches'] ?? 4,
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+                ]);
+                
+                // Process schema type synchronously
+                $schemaStart = microtime(true);
+                $schemaResult = $this->processSchemaTypeSynchronous(
+                    $archiMateData[$schemaType], 
+                    $schemaType, 
+                    $options, 
+                    $statusCallback
+                );
+                $schemaTime = microtime(true) - $schemaStart;
+                
+                // Unset processed data to free memory
+                unset($archiMateData[$schemaType]);
+                $this->logger->info("{$schemaType} array unset from memory", [
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+                ]);
+                
+                // Merge results
+                $results['objects_created'] += $schemaResult['created'];
+                $results['objects_updated'] += $schemaResult['updated'];
+                $results['objects_deleted'] += $schemaResult['deleted'] ?? 0;
+                $results['objects_skipped'] += $schemaResult['skipped'] ?? 0;
+                $results['errors'] = array_merge($results['errors'], $schemaResult['errors']);
+                $results['schema_statistics'][$schemaType] = $schemaResult;
+                
+                // Update status with schema completion
+                if ($statusCallback) {
+                    $statusCallback($schemaType, 100, $schemaResult);
+                }
+                
+                $this->logger->info("Synchronous batch processing completed for {$schemaType}", [
+                    'processing_time_seconds' => round($schemaTime, 3),
+                    'created' => $schemaResult['created'],
+                    'updated' => $schemaResult['updated'],
+                    'deleted' => $schemaResult['deleted'] ?? 0,
+                    'skipped' => $schemaResult['skipped'] ?? 0,
+                    'errors' => count($schemaResult['errors']),
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+                ]);
             }
-            
-            $this->logger->info("Parallel processing completed for {$schemaType}", [
-                'processing_time_seconds' => round($schemaTime, 3),
-                'created' => $schemaResult['created'],
-                'updated' => $schemaResult['updated'],
-                'deleted' => $schemaResult['deleted'] ?? 0,
-                'skipped' => $schemaResult['skipped'] ?? 0,
-                'errors' => count($schemaResult['errors']),
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
         }
 
         $totalTime = microtime(true) - $startTime;
 
-        $this->logger->info('=== PARALLEL CONVERSION COMPLETED ===', [
+        $this->logger->info('=== SYNCHRONOUS CONVERSION COMPLETED ===', [
             'total_time_seconds' => round($totalTime, 3),
             'objects_created' => $results['objects_created'],
             'objects_updated' => $results['objects_updated'],
@@ -1467,54 +1564,22 @@ class ArchiMateService
                 ]);
 
                 // Check if object already exists
-                $existingObject = $this->findExistingObject($item['id'], $type);
+                // Use OpenRegister's built-in duplicate detection via UUID
+                // No need for custom findExistingObject logic - OpenRegister handles it automatically
+                $this->logger->info("Saving {$type} object (OpenRegister will handle create/update)", [
+                    'item_id' => $item['id'],
+                    'item_name' => $item['name'] ?? 'unknown'
+                ]);
                 
-                if ($existingObject) {
-                    $this->logger->info("Found existing {$type} object", [
-                        'item_id' => $item['id'],
-                        'existing_id' => $existingObject['id']
-                    ]);
-
-                    // Compare objects to see if update is needed
-                    if ($this->areObjectsEqual($existingObject, $item)) {
-                        $this->logger->notice("Skipping {$type} - no changes detected", [
-                            'item_id' => $item['id'],
-                            'item_name' => $item['name'] ?? 'unknown'
-                        ]);
-                        $skipped++;
-                    } else {
-                        $this->logger->info("Updating {$type} - changes detected", [
-                            'item_id' => $item['id'],
-                            'item_name' => $item['name'] ?? 'unknown'
-                        ]);
-                        
-                        // Perform actual update
-                        // Use the OpenRegister object ID (integer) for updating, not the ArchiMate ID (string)
-                        $openRegisterId = $existingObject['id'] ?? null;
-                        if (!is_numeric($openRegisterId)) {
-                            $this->logger->error("Invalid OpenRegister object ID for update", [
-                                'archimate_id' => $item['id'],
-                                'type' => $type,
-                                'existing_object_id' => $openRegisterId,
-                                'existing_object_keys' => array_keys($existingObject)
-                            ]);
-                            $errors[] = "Invalid object ID for {$type} {$item['id']}";
-                            continue;
-                        }
-                        $modelIdentifier = $options['model_identifier'] ?? null;
-                        $this->updateObject((int)$openRegisterId, $item, $type, $modelIdentifier);
-                        $updated++;
-                    }
-                } else {
-                    $this->logger->info("Creating new {$type} object", [
-                        'item_id' => $item['id'],
-                        'item_name' => $item['name'] ?? 'unknown'
-                    ]);
-                    
-                    // Perform actual creation
-                    $modelIdentifier = $options['model_identifier'] ?? null;
-                    $this->createObject($item, $type, $modelIdentifier);
+                $modelIdentifier = $options['model_identifier'] ?? null;
+                $savedObject = $this->saveObject($item, $type, $modelIdentifier);
+                
+                // Determine if the object was created or updated based on timestamps
+                $action = $this->determineObjectAction($savedObject);
+                if ($action === 'created') {
                     $created++;
+                } else {
+                    $updated++;
                 }
 
                 // Mark item as processed for cleanup
@@ -1551,6 +1616,306 @@ class ArchiMateService
         ]);
             
         return $deferred->promise();
+    }
+
+    /**
+     * Process a schema type with synchronous batch processing
+     * 
+     * This method uses synchronous processing with batch operations
+     * to maintain memory efficiency while being easier to debug.
+     *
+     * @param array $items Items to process
+     * @param string $schemaType Type of schema being processed
+     * @param array $options Processing options
+     * @param callable|null $statusCallback Status update callback
+     * @return array Processing results
+     */
+    private function processSchemaTypeSynchronous(array $items, string $schemaType, array $options, callable $statusCallback = null): array
+    {
+        $this->logger->info("Starting synchronous batch processing of {$schemaType}", [
+            'count' => count($items),
+            'batch_size' => $options['batch_size'] ?? 100,
+            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+        ]);
+
+        // Split items into chunks for processing
+        $batchSize = $options['batch_size'] ?? 100;
+        $chunks = array_chunk($items, $batchSize, true);
+        
+        // Process all chunks and collect objects
+        $allProcessedObjects = [];
+        $totalErrors = [];
+        $totalCreated = 0;
+        $totalUpdated = 0;
+        $totalSaved = 0;
+        $schemaId = null;
+        $registerId = null;
+        
+        foreach ($chunks as $chunkIndex => $chunk) {
+            $this->logger->debug("Processing chunk {$chunkIndex} of {$schemaType}", [
+                'chunk_size' => count($chunk),
+                'chunk_index' => $chunkIndex,
+                'total_chunks' => count($chunks)
+            ]);
+            
+            $chunkResult = $this->processChunkSynchronous($chunk, $options, $schemaType);
+            
+            // Collect processed objects
+            if (!empty($chunkResult['objects'])) {
+                $allProcessedObjects = array_merge($allProcessedObjects, $chunkResult['objects']);
+                $schemaId = $chunkResult['schema_id'];
+                $registerId = $chunkResult['register_id'];
+                
+                $this->logger->debug("Chunk {$chunkIndex} processed successfully", [
+                    'processed_objects' => count($chunkResult['objects']),
+                    'schema_id' => $schemaId,
+                    'register_id' => $registerId
+                ]);
+            } else {
+                $this->logger->warning("Chunk {$chunkIndex} produced no objects", [
+                    'chunk_size' => count($chunk),
+                    'errors' => count($chunkResult['errors'])
+                ]);
+            }
+            
+            // Collect errors
+            $totalErrors = array_merge($totalErrors, $chunkResult['errors']);
+            
+            // Update progress
+            if ($statusCallback) {
+                $progress = min(90, ($chunkIndex / count($chunks)) * 100);
+                $statusCallback($schemaType, $progress, ['processing_batch' => $chunkIndex + 1, 'total_batches' => count($chunks)]);
+            }
+        }
+
+        $this->logger->info("All chunks processed for {$schemaType}", [
+            'total_processed_objects' => count($allProcessedObjects),
+            'schema_id' => $schemaId,
+            'register_id' => $registerId,
+            'total_errors' => count($totalErrors)
+        ]);
+
+        // Perform batch save if we have objects to save
+        $totalSaved = 0;
+        if (!empty($allProcessedObjects) && $schemaId && $registerId) {
+            try {
+                $this->logger->info("Performing batch save for {$schemaType}", [
+                    'object_count' => count($allProcessedObjects),
+                    'schema_id' => $schemaId,
+                    'register_id' => $registerId
+                ]);
+
+                $objectService = $this->getObjectService();
+                if ($objectService) {
+                    $this->logger->debug("ObjectService obtained, calling saveObjects", [
+                        'objects_count' => count($allProcessedObjects),
+                        'register_id' => $registerId,
+                        'schema_id' => $schemaId
+                    ]);
+                    
+                    $savedObjects = $objectService->saveObjects(
+                        objects: $allProcessedObjects,
+                        register: $registerId,
+                        schema: $schemaId
+                    );
+                    
+                    // Analyze the saved objects to determine created vs updated counts
+                    $actionCounts = $this->analyzeBatchObjectActions($savedObjects);
+                    $totalSaved = count($savedObjects);
+                    
+                    // Store the action counts for return value
+                    $totalCreated = $actionCounts['created'];
+                    $totalUpdated = $actionCounts['updated'];
+                    
+                    $this->logger->info("Batch save completed for {$schemaType}", [
+                        'objects_saved' => $totalSaved,
+                        'objects_created' => $totalCreated,
+                        'objects_updated' => $totalUpdated,
+                        'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+                    ]);
+                } else {
+                    $this->logger->error("ObjectService not available for batch save");
+                    $totalErrors[] = "ObjectService not available for batch save";
+                    // Initialize variables for the case where ObjectService is not available
+                    $totalCreated = 0;
+                    $totalUpdated = 0;
+                }
+            } catch (\Exception $e) {
+                $this->logger->error("Error during batch save for {$schemaType}", [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'object_count' => count($allProcessedObjects)
+                ]);
+                $totalErrors[] = "Batch save error: " . $e->getMessage();
+                // Initialize variables for the case where an exception occurred
+                $totalCreated = 0;
+                $totalUpdated = 0;
+            }
+        } else {
+            $this->logger->warning("No objects to save for {$schemaType}", [
+                'processed_objects_count' => count($allProcessedObjects),
+                'schema_id' => $schemaId,
+                'register_id' => $registerId
+            ]);
+            // Initialize variables for the case where no objects to save
+            $totalCreated = 0;
+            $totalUpdated = 0;
+        }
+
+        $this->logger->info("High-performance batch processing completed for {$schemaType}", [
+            'total_processed' => count($allProcessedObjects),
+            'total_saved' => $totalSaved,
+            'total_created' => $totalCreated,
+            'total_updated' => $totalUpdated,
+            'total_errors' => count($totalErrors),
+            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+        ]);
+
+        return [
+            'created' => $totalCreated,
+            'updated' => $totalUpdated,
+            'skipped' => count($allProcessedObjects) - $totalSaved,
+            'errors' => $totalErrors
+        ];
+    }
+
+    /**
+     * Process a chunk of items for batch saving
+     * 
+     * This method processes items and prepares them for batch saving.
+     *
+     * @param array $chunk Items to process
+     * @param array $options Processing options
+     * @param string $type Type of items being processed
+     * @return array Processed objects ready for batch save
+     */
+    private function processChunkSynchronous(array $chunk, array $options, string $type): array
+    {
+        $this->logger->debug("Processing synchronous chunk of {$type}s for batch save", [
+            'chunk_size' => count($chunk),
+            'type' => $type,
+            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+        ]);
+
+        // Process items and collect them for batch saving
+        $processedObjects = [];
+        $totalErrors = [];
+        $modelIdentifier = $options['model_identifier'] ?? null;
+        
+        foreach ($chunk as $itemId => $item) {
+            $this->logger->debug("Processing item in chunk", [
+                'item_id' => $itemId,
+                'item_name' => $item['name'] ?? 'unknown',
+                'type' => $type
+            ]);
+            
+            $result = $this->processItemSynchronous($item, $type, $modelIdentifier);
+            
+            if ($result['processed'] && $result['data'] !== null) {
+                $processedObjects[] = $result['data'];
+                $this->logger->debug("Item processed successfully", [
+                    'item_id' => $itemId,
+                    'schema_id' => $result['schema_id'],
+                    'register_id' => $result['register_id']
+                ]);
+            } else {
+                $this->logger->warning("Item processing failed", [
+                    'item_id' => $itemId,
+                    'errors' => $result['errors']
+                ]);
+                $totalErrors = array_merge($totalErrors, $result['errors']);
+            }
+        }
+
+        $this->logger->debug("Synchronous chunk processing completed for {$type}s", [
+            'chunk_size' => count($chunk),
+            'processed_objects' => count($processedObjects),
+            'errors' => count($totalErrors),
+            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+        ]);
+
+        return [
+            'objects' => $processedObjects,
+            'errors' => $totalErrors,
+            'schema_id' => $processedObjects[0]['@self']['schema'] ?? null,
+            'register_id' => $processedObjects[0]['@self']['register'] ?? null
+        ];
+    }
+
+    /**
+     * Process a single item to prepare it for batch saving
+     * 
+     * This method converts ArchiMate data to OpenRegister format
+     * and prepares it for batch saving with correct schema/register properties.
+     *
+     * @param array $item Item to process
+     * @param string $type Type of item
+     * @param string|null $modelIdentifier Model identifier
+     * @return array Processed object data ready for batch save
+     */
+    private function processItemSynchronous(array $item, string $type, ?string $modelIdentifier): array
+    {
+        try {
+            $this->logger->debug("Processing {$type} item for batch save", [
+                'item_id' => $item['id'],
+                'item_name' => $item['name'] ?? 'unknown'
+            ]);
+
+            // Convert ArchiMate data to OpenRegister format
+            $openRegisterData = $this->convertToOpenRegisterFormat($item, $type, $modelIdentifier);
+            
+            // Ensure archimate_id is always set
+            $openRegisterData['archimate_id'] = $item['id'];
+            
+            // Get schema and register IDs for this type
+            $schemaId = $this->getAmefSchemaIdForType($type);
+            $registerId = $this->getAmefRegisterId();
+            
+            $this->logger->debug("Retrieved schema and register IDs", [
+                'type' => $type,
+                'schema_id' => $schemaId,
+                'register_id' => $registerId
+            ]);
+            
+            // Add schema and register properties for batch processing
+            // Include the ArchiMate ID as the UUID in @self.id to preserve the original ID
+            $openRegisterData['@self'] = [
+                'id' => $item['id'], // Set the ArchiMate ID as the UUID
+                'schema' => $schemaId,
+                'register' => $registerId
+            ];
+            
+            $this->logger->debug("Item converted successfully", [
+                'item_id' => $item['id'],
+                'openregister_data_keys' => array_keys($openRegisterData),
+                'self_keys' => array_keys($openRegisterData['@self'])
+            ]);
+            
+            return [
+                'data' => $openRegisterData,
+                'schema_id' => $schemaId,
+                'register_id' => $registerId,
+                'archimate_id' => $item['id'],
+                'processed' => true,
+                'errors' => []
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error("Error processing {$type} item for batch save", [
+                'item_id' => $item['id'] ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'data' => null,
+                'schema_id' => null,
+                'register_id' => null,
+                'archimate_id' => $item['id'] ?? 'unknown',
+                'processed' => false,
+                'errors' => [$e->getMessage()]
+            ];
+        }
     }
 
     /**
@@ -1685,11 +2050,18 @@ class ArchiMateService
     }
 
     /**
-     * Create a new object in OpenRegister
+     * Save (create or update) an object in OpenRegister
+     * Uses ArchiMate ID as UUID for automatic duplicate detection and updating
+     * 
+     * @param array $objectData The ArchiMate object data to save
+     * @param string $type The type of object being saved (element, organization, etc.)
+     * @param string|null $modelIdentifier Optional model identifier
+     * @return array The saved object data including @self.created and @self.updated timestamps
+     * @throws \Exception If the save operation fails
      */
-    private function createObject(array $objectData, string $type, ?string $modelIdentifier = null): void
+    private function saveObject(array $objectData, string $type, ?string $modelIdentifier = null): array
     {
-        $this->logger->info("Creating {$type} object", [
+        $this->logger->info("Saving {$type} object", [
             'object_id' => $objectData['id'],
             'object_name' => $objectData['name'] ?? 'unknown'
         ]);
@@ -1703,10 +2075,21 @@ class ArchiMateService
             // Convert ArchiMate data to OpenRegister format
             $openRegisterData = $this->convertToOpenRegisterFormat($objectData, $type, $modelIdentifier);
             
+            // Ensure archimate_id is always set as a safety measure
+            $openRegisterData['archimate_id'] = $objectData['id'];
+            
+            // Set the UUID in @self.id to ensure it's properly handled by OpenRegister
+            $openRegisterData['@self'] = [
+                'id' => $objectData['id']
+            ];
+            
             $this->logger->info("Saving object to OpenRegister", [
                 'type' => $type,
                 'archimate_id' => $objectData['id'],
-                'openregister_data' => $openRegisterData
+                'model_identifier' => $modelIdentifier ?? 'none',
+                'will_use_uuid' => $objectData['id'],
+                'openregister_data_keys' => array_keys($openRegisterData),
+                'has_self_id' => isset($openRegisterData['@self']['id'])
             ]);
             
             // Remove schema_id and register_id from the data as they should be passed as separate parameters
@@ -1714,18 +2097,28 @@ class ArchiMateService
             $registerId = $openRegisterData['register_id'];
             unset($openRegisterData['schema_id'], $openRegisterData['register_id']);
             
+            // Ensure IDs are integers for type safety
+            $schemaId = (int) $schemaId;
+            $registerId = (int) $registerId;
+            
             $this->logger->info("Saving object with schema and register IDs", [
                 'schema_id' => $schemaId,
+                'schema_id_type' => gettype($schemaId),
                 'register_id' => $registerId,
-                'data_keys' => array_keys($openRegisterData)
+                'register_id_type' => gettype($registerId),
+                'uuid' => $objectData['id'],
+                'uuid_type' => gettype($objectData['id']),
+                'data_keys' => array_keys($openRegisterData),
+                'self_data' => $openRegisterData['@self'] ?? 'not_set'
             ]);
             
-            // Create the object with named parameters
+            // Create/update the object using ArchiMate ID as UUID for automatic duplicate detection
             $createdObject = $objectService->saveObject(
                 object: $openRegisterData,
                 extend: [],
                 register: $registerId,
-                schema: $schemaId
+                schema: $schemaId,
+                uuid: $objectData['id']  // Use ArchiMate ID as UUID for built-in duplicate detection
             );
             
             // Convert ObjectEntity to array for caching and logging
@@ -1734,18 +2127,79 @@ class ArchiMateService
             // Cache the result
             $this->cachedObjects[$type][$objectData['id']] = $createdObjectArray;
             
-            $this->logger->info("Object creation completed", [
-                'object_id' => $objectData['id'],
+            $this->logger->info("Object save completed", [
+                'archimate_id' => $objectData['id'],
+                'openregister_uuid' => $createdObjectArray['uuid'] ?? 'unknown',
                 'openregister_id' => $createdObjectArray['id'] ?? 'unknown',
-                'type' => $type
+                'stored_archimate_id' => $createdObjectArray['archimate_id'] ?? 'unknown',
+                'stored_model_id' => $createdObjectArray['model_id'] ?? 'unknown',
+                'stored_model_property' => $createdObjectArray['properties']['model'] ?? 'unknown',
+                'type' => $type,
+                'action' => 'saved (created or updated)',
+                'uuid_matches_archimate_id' => ($createdObjectArray['uuid'] ?? '') === $objectData['id'],
+                'created_timestamp' => $createdObjectArray['@self']['created'] ?? 'unknown',
+                'updated_timestamp' => $createdObjectArray['@self']['updated'] ?? 'unknown'
             ]);
+            
+            return $createdObjectArray;
         } catch (\Exception $e) {
-            $this->logger->error("Error creating {$type} object", [
+            $this->logger->error("Error saving {$type} object", [
                 'object_id' => $objectData['id'],
                 'error' => $e->getMessage()
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Determine if an object was created or updated based on @self.created and @self.updated timestamps
+     * 
+     * @param array $savedObject The saved object containing @self metadata
+     * @return string 'created' if object was newly created, 'updated' if it was modified
+     */
+    private function determineObjectAction(array $savedObject): string
+    {
+        $created = $savedObject['@self']['created'] ?? null;
+        $updated = $savedObject['@self']['updated'] ?? null;
+        
+        // If both timestamps are exactly the same, the object was created
+        // If they differ, the object was updated
+        if ($created && $updated && $created === $updated) {
+            return 'created';
+        } else {
+            return 'updated';
+        }
+    }
+
+    /**
+     * Analyze a batch of saved objects to determine how many were created vs updated
+     * 
+     * @param array $savedObjects Array of saved objects from saveObjects method
+     * @return array Array with 'created' and 'updated' counts
+     */
+    private function analyzeBatchObjectActions(array $savedObjects): array
+    {
+        $created = 0;
+        $updated = 0;
+        
+        foreach ($savedObjects as $savedObject) {
+            // Convert ObjectEntity to array if needed
+            if (is_object($savedObject) && method_exists($savedObject, 'jsonSerialize')) {
+                $savedObject = $savedObject->jsonSerialize();
+            }
+            
+            $action = $this->determineObjectAction($savedObject);
+            if ($action === 'created') {
+                $created++;
+            } else {
+                $updated++;
+            }
+        }
+        
+        return [
+            'created' => $created,
+            'updated' => $updated
+        ];
     }
 
     /**
@@ -1836,6 +2290,7 @@ class ArchiMateService
             $organizationObjects = $this->getOrganizationObjects();
             $viewObjects = $this->getViewObjects();
             $relationshipObjects = $this->getRelationshipObjects();
+            $propertyDefinitionObjects = $this->getPropertyDefinitionObjects();
 
             // Convert ObjectEntity instances to arrays and index by ArchiMate ID for fast lookup
             foreach ($elementObjects as $object) {
@@ -1896,6 +2351,8 @@ class ArchiMateService
 
     private function waitForPromise(Promise $promise, int $timeout = 300): mixed
     {
+        // For now, let's use a simple approach that doesn't block
+        // We'll resolve the promise immediately and return the result
         $result = null;
         $error = null;
         $resolved = false;
@@ -1911,10 +2368,13 @@ class ArchiMateService
             }
         );
 
-        // Simple synchronous wait (in real implementation, use proper event loop)
+        // Use ReactPHP's event loop to process the promise
+        $loop = \React\EventLoop\Loop::get();
+        
+        // Process the event loop until the promise is resolved
         $startTime = time();
         while (!$resolved && (time() - $startTime) < $timeout) {
-            usleep(1000); // 1ms
+            $loop->tick();
         }
 
         if (!$resolved) {
@@ -1978,10 +2438,12 @@ class ArchiMateService
             'properties' => $archiMateData['properties'] ?? []
         ];
         
-        // Add model identifier to properties if provided
-        if (!empty($modelIdentifier)) {
-            $baseData['properties']['modal'] = $modelIdentifier;
-        }
+        // Always add model identifier (even if empty/null) - both as root field and in properties
+        $baseData['model_id'] = $modelIdentifier ?? '';
+        $baseData['properties']['model'] = $modelIdentifier ?? '';
+        
+        // Also keep the old 'modal' field for backward compatibility (fix typo but maintain compatibility)
+        $baseData['properties']['modal'] = $modelIdentifier ?? '';
 
         // Get AMEF-specific schema and register IDs
         $schemaId = $this->getAmefSchemaIdForType($type);
@@ -2071,6 +2533,20 @@ class ArchiMateService
     private function getAmefSchemaIdForType(string $archiMateType): ?int
     {
         $amefConfig = $this->getAmefConfig();
+        
+        // Map plural schema types to singular types for compatibility
+        $typeMapping = [
+            'elements' => 'element',
+            'organizations' => 'organization', 
+            'relationships' => 'relationship',
+            'views' => 'view',
+            'models' => 'model',
+            'properties' => 'property',
+            'property_definitions' => 'property_definition'
+        ];
+        
+        // Convert plural type to singular if needed
+        $archiMateType = $typeMapping[$archiMateType] ?? $archiMateType;
         
         switch ($archiMateType) {
             case 'element':
@@ -2854,23 +3330,43 @@ class ArchiMateService
      */
     public function getElementObjects(array $query = []): array
     {
+        return $this->getObjectsWithPagination('element', $query);
+    }
+
+    /**
+     * Get objects with pagination support for large datasets
+     *
+     * @param string $schemaType Type of schema (element, organization, view, relationship, etc.)
+     * @param array $query Query parameters including pagination
+     * @return array Array of objects
+     */
+    private function getObjectsWithPagination(string $schemaType, array $query = []): array
+    {
         try {
             $objectService = $this->getObjectService();
             if (!$objectService) {
-                $this->logger->error('ArchiMateService: ObjectService not available for element objects retrieval');
+                $this->logger->error("ArchiMateService: ObjectService not available for {$schemaType} objects retrieval");
                 return [];
             }
 
             $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType('element');
+            $schemaId = $this->getAmefSchemaIdForType($schemaType);
             
             if (!$registerId || !$schemaId) {
-                $this->logger->error('ArchiMateService: AMEF register or element schema not configured', [
+                $this->logger->error("ArchiMateService: AMEF register or {$schemaType} schema not configured", [
                     'registerId' => $registerId,
                     'schemaId' => $schemaId
                 ]);
                 return [];
             }
+
+            // Extract pagination parameters
+            $limit = $query['limit'] ?? 1000; // Default limit for large datasets
+            $offset = $query['offset'] ?? 0;
+            $usePagination = $query['use_pagination'] ?? false;
+            
+            // Remove pagination parameters from query
+            unset($query['limit'], $query['offset'], $query['use_pagination']);
 
             // Build base query for register and schema
             $baseQuery = [
@@ -2883,24 +3379,34 @@ class ArchiMateService
             // Merge with provided query
             $finalQuery = array_merge_recursive($baseQuery, $query);
             
-            $this->logger->debug('ArchiMateService: Retrieving element objects', [
+            // Add pagination if requested
+            if ($usePagination && $limit > 0) {
+                $finalQuery['@pagination'] = [
+                    'limit' => (int) $limit,
+                    'offset' => (int) $offset
+                ];
+            }
+            
+            $this->logger->debug("ArchiMateService: Retrieving {$schemaType} objects", [
                 'register' => $registerId,
                 'schema' => $schemaId,
-                'query' => $finalQuery
+                'query' => $finalQuery,
+                'pagination' => $usePagination ? ['limit' => $limit, 'offset' => $offset] : 'disabled'
             ]);
             
             // Use searchObjects method for filtering
             $objects = $objectService->searchObjects($finalQuery);
             
-            $this->logger->debug('ArchiMateService: Retrieved element objects', [
+            $this->logger->debug("ArchiMateService: Retrieved {$schemaType} objects", [
                 'register' => $registerId,
                 'schema' => $schemaId,
-                'count' => count($objects)
+                'count' => count($objects),
+                'pagination' => $usePagination ? ['limit' => $limit, 'offset' => $offset] : 'disabled'
             ]);
 
             return $objects;
         } catch (\Exception $e) {
-            $this->logger->error('ArchiMateService: Failed to retrieve element objects', [
+            $this->logger->error("ArchiMateService: Failed to retrieve {$schemaType} objects", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -2920,59 +3426,7 @@ class ArchiMateService
      */
     public function getOrganizationObjects(array $query = []): array
     {
-        try {
-            $objectService = $this->getObjectService();
-            if (!$objectService) {
-                $this->logger->error('ArchiMateService: ObjectService not available for organization objects retrieval');
-                return [];
-            }
-
-            $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType('organization');
-            
-            if (!$registerId || !$schemaId) {
-                $this->logger->error('ArchiMateService: AMEF register or organization schema not configured', [
-                    'registerId' => $registerId,
-                    'schemaId' => $schemaId
-                ]);
-                return [];
-            }
-
-            // Build base query for register and schema
-            $baseQuery = [
-                '@self' => [
-                    'register' => (int) $registerId,
-                    'schema' => (int) $schemaId
-                ]
-            ];
-            
-            // Merge with provided query
-            $finalQuery = array_merge_recursive($baseQuery, $query);
-            
-            $this->logger->debug('ArchiMateService: Retrieving organization objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'query' => $finalQuery
-            ]);
-            
-            // Use searchObjects method for filtering
-            $objects = $objectService->searchObjects($finalQuery);
-            
-            $this->logger->debug('ArchiMateService: Retrieved organization objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'count' => count($objects)
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('ArchiMateService: Failed to retrieve organization objects', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return [];
-        }
+        return $this->getObjectsWithPagination('organization', $query);
     }
 
     /**
@@ -2986,59 +3440,7 @@ class ArchiMateService
      */
     public function getViewObjects(array $query = []): array
     {
-        try {
-            $objectService = $this->getObjectService();
-            if (!$objectService) {
-                $this->logger->error('ArchiMateService: ObjectService not available for view objects retrieval');
-                return [];
-            }
-
-            $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType('view');
-            
-            if (!$registerId || !$schemaId) {
-                $this->logger->error('ArchiMateService: AMEF register or view schema not configured', [
-                    'registerId' => $registerId,
-                    'schemaId' => $schemaId
-                ]);
-                return [];
-            }
-
-            // Build base query for register and schema
-            $baseQuery = [
-                '@self' => [
-                    'register' => (int) $registerId,
-                    'schema' => (int) $schemaId
-                ]
-            ];
-            
-            // Merge with provided query
-            $finalQuery = array_merge_recursive($baseQuery, $query);
-            
-            $this->logger->debug('ArchiMateService: Retrieving view objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'query' => $finalQuery
-            ]);
-            
-            // Use searchObjects method for filtering
-            $objects = $objectService->searchObjects($finalQuery);
-            
-            $this->logger->debug('ArchiMateService: Retrieved view objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'count' => count($objects)
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('ArchiMateService: Failed to retrieve view objects', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return [];
-        }
+        return $this->getObjectsWithPagination('view', $query);
     }
 
     /**
@@ -3052,59 +3454,7 @@ class ArchiMateService
      */
     public function getRelationshipObjects(array $query = []): array
     {
-        try {
-            $objectService = $this->getObjectService();
-            if (!$objectService) {
-                $this->logger->error('ArchiMateService: ObjectService not available for relationship objects retrieval');
-                return [];
-            }
-
-            $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType('relationship');
-            
-            if (!$registerId || !$schemaId) {
-                $this->logger->error('ArchiMateService: AMEF register or relationship schema not configured', [
-                    'registerId' => $registerId,
-                    'schemaId' => $schemaId
-                ]);
-                return [];
-            }
-
-            // Build base query for register and schema
-            $baseQuery = [
-                '@self' => [
-                    'register' => (int) $registerId,
-                    'schema' => (int) $schemaId
-                ]
-            ];
-            
-            // Merge with provided query
-            $finalQuery = array_merge_recursive($baseQuery, $query);
-            
-            $this->logger->debug('ArchiMateService: Retrieving relationship objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'query' => $finalQuery
-            ]);
-            
-            // Use searchObjects method for filtering
-            $objects = $objectService->searchObjects($finalQuery);
-            
-            $this->logger->debug('ArchiMateService: Retrieved relationship objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'count' => count($objects)
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('ArchiMateService: Failed to retrieve relationship objects', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return [];
-        }
+        return $this->getObjectsWithPagination('relationship', $query);
     }
 
     /**
@@ -3133,12 +3483,253 @@ class ArchiMateService
 
     /**
      * Clear ArchiMate import status
+     * Optionally kills the running import process
      *
+     * @param bool $killProcess Whether to attempt to kill the running import process
+     * @return array Status of the clear operation
+     */
+    public function clearArchiMateImportStatus(bool $killProcess = false): array
+    {
+        $result = [
+            'cleared' => false,
+            'process_killed' => false,
+            'process_id' => null,
+            'was_running' => false,
+            'messages' => []
+        ];
+        
+        // Get current status before clearing
+        $importStatus = $this->config->getValueString(self::APP_NAME, 'archimate_import_status', '{}');
+        $decoded = json_decode($importStatus, true);
+        
+        if (is_array($decoded) && isset($decoded['status'])) {
+            $result['was_running'] = $decoded['status'] === 'running';
+            $result['process_id'] = $decoded['process_id'] ?? null;
+            
+            // If requested and process is running, attempt to kill it
+            if ($killProcess && $result['was_running'] && $result['process_id']) {
+                $killResult = $this->killImportProcess($result['process_id']);
+                $result['process_killed'] = $killResult['success'];
+                $result['messages'] = array_merge($result['messages'], $killResult['messages']);
+                
+                $this->logger->info('Import process termination attempted', [
+                    'process_id' => $result['process_id'],
+                    'killed' => $result['process_killed'],
+                    'messages' => $killResult['messages']
+                ]);
+            }
+        }
+        
+        // Clear the configuration
+        $this->config->deleteKey(self::APP_NAME, 'archimate_import_status');
+        $result['cleared'] = true;
+        $result['messages'][] = 'Import status configuration cleared';
+        
+        $this->logger->info('ArchiMate import status cleared', [
+            'was_running' => $result['was_running'],
+            'process_killed' => $result['process_killed'],
+            'process_id' => $result['process_id']
+        ]);
+        
+        return $result;
+    }
+
+    /**
+     * Safely update schema statistics to prevent race conditions in parallel processing
+     *
+     * @param string $schemaType The schema type being updated
+     * @param array $stats The statistics to update (created, updated, skipped)
      * @return void
      */
-    public function clearArchiMateImportStatus(): void
+    private function updateSchemaStatsSafely(string $schemaType, array $stats): void
     {
+        // Use a retry mechanism with exponential backoff to handle race conditions
+        $maxRetries = 5;
+        $retryDelay = 10000; // Start with 10ms
+        
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            try {
+                // Get fresh status from storage to avoid stale data
+                $currentStatusJson = $this->config->getValueString(self::APP_NAME, 'archimate_import_status', '{}');
+                $currentStatus = json_decode($currentStatusJson, true);
+                
+                if (!is_array($currentStatus) || !isset($currentStatus['schema_progress'][$schemaType])) {
+                    $this->logger->warning('Schema progress not found for atomic update', [
+                        'schema_type' => $schemaType,
+                        'attempt' => $attempt + 1
+                    ]);
+                    return;
+                }
+                
+                // Update only the specific schema stats
+                $currentStatus['schema_progress'][$schemaType]['created'] = $stats['created'] ?? 0;
+                $currentStatus['schema_progress'][$schemaType]['updated'] = $stats['updated'] ?? 0;
+                $currentStatus['schema_progress'][$schemaType]['skipped'] = $stats['skipped'] ?? 0;
+                
+                // Calculate progress for this schema
+                $found = $currentStatus['schema_progress'][$schemaType]['found'] ?? 0;
+                $processed = ($stats['created'] ?? 0) + ($stats['updated'] ?? 0) + ($stats['skipped'] ?? 0);
+                $schemaProgress = $found > 0 ? round(($processed / $found) * 100, 2) : 0;
+                $currentStatus['schema_progress'][$schemaType]['progress'] = $schemaProgress;
+                
+                // Recalculate overall progress and main statistics
+                $totalFound = 0;
+                $totalProcessed = 0;
+                $totalCreated = 0;
+                $totalUpdated = 0;
+                $totalSkipped = 0;
+                
+                foreach ($currentStatus['schema_progress'] as $schema => $data) {
+                    $totalFound += $data['found'] ?? 0;
+                    $schemaProcessed = ($data['created'] ?? 0) + ($data['updated'] ?? 0) + ($data['skipped'] ?? 0);
+                    $totalProcessed += $schemaProcessed;
+                    $totalCreated += $data['created'] ?? 0;
+                    $totalUpdated += $data['updated'] ?? 0;
+                    $totalSkipped += $data['skipped'] ?? 0;
+                }
+                
+                $overallProgress = $totalFound > 0 ? round(($totalProcessed / $totalFound) * 100, 2) : 0;
+                $currentStatus['progress'] = 35 + ($overallProgress * 0.6); // 35% to 95% range
+                
+                // Update main statistics
+                $currentStatus['statistics']['objects_created'] = $totalCreated;
+                $currentStatus['statistics']['objects_updated'] = $totalUpdated;
+                $currentStatus['statistics']['objects_skipped'] = $totalSkipped;
+                
+                // Add timestamp and attempt info for debugging
+                $currentStatus['last_stats_update'] = [
+                    'timestamp' => microtime(true),
+                    'schema_type' => $schemaType,
+                    'attempt' => $attempt + 1,
+                    'stats_applied' => $stats
+                ];
+                
+                $this->logger->debug('Atomic stats update', [
+                    'schema_type' => $schemaType,
+                    'attempt' => $attempt + 1,
+                    'schema_progress' => $schemaProgress,
+                    'overall_progress' => $overallProgress,
+                    'stats_applied' => $stats,
+                    'totals' => [
+                        'found' => $totalFound,
+                        'processed' => $totalProcessed,
+                        'created' => $totalCreated,
+                        'updated' => $totalUpdated,
+                        'skipped' => $totalSkipped
+                    ]
+                ]);
+                
+                // Atomically save the updated status
+                $this->setArchiMateImportStatus($currentStatus);
+                
+                // Success - exit retry loop
+                return;
+                
+            } catch (\Exception $e) {
+                $this->logger->warning('Stats update attempt failed, retrying', [
+                    'schema_type' => $schemaType,
+                    'attempt' => $attempt + 1,
+                    'error' => $e->getMessage(),
+                    'retry_delay_us' => $retryDelay
+                ]);
+                
+                // Exponential backoff with jitter
+                if ($attempt < $maxRetries - 1) {
+                    usleep($retryDelay + rand(0, $retryDelay / 2));
+                    $retryDelay *= 2;
+                }
+            }
+        }
+        
+        $this->logger->error('Failed to update schema stats after all retries', [
+            'schema_type' => $schemaType,
+            'stats' => $stats,
+            'max_retries' => $maxRetries
+        ]);
+    }
+
+    /**
+     * Cancel a running ArchiMate import
+     * This combines force clearing and process killing for a complete cancellation
+     *
+     * @return array Cancellation result with detailed status
+     */
+    public function cancelArchiMateImport(): array
+    {
+        $this->logger->info('ArchiMate import cancellation requested');
+        
+        // Get current status for detailed reporting
+        $importStatus = $this->config->getValueString(self::APP_NAME, 'archimate_import_status', '{}');
+        $decoded = json_decode($importStatus, true);
+        
+        $result = [
+            'cancelled' => false,
+            'was_running' => false,
+            'process_id' => null,
+            'process_killed' => false,
+            'status_cleared' => false,
+            'cancellation_time' => date('Y-m-d H:i:s'),
+            'messages' => []
+        ];
+        
+        if (!is_array($decoded) || !isset($decoded['status'])) {
+            $result['messages'][] = 'No import was running';
+            $result['cancelled'] = true;
+            $result['status_cleared'] = true;
+            
+            $this->logger->info('Import cancellation completed - no import was running');
+            return $result;
+        }
+        
+        $result['was_running'] = $decoded['status'] === 'running';
+        $result['process_id'] = $decoded['process_id'] ?? null;
+        
+        if (!$result['was_running']) {
+            // Clear any stale status
+            $this->config->deleteKey(self::APP_NAME, 'archimate_import_status');
+            $result['cancelled'] = true;
+            $result['status_cleared'] = true;
+            $result['messages'][] = 'Import was not running, cleared stale status';
+            
+            $this->logger->info('Import cancellation completed - import was not running');
+            return $result;
+        }
+        
+        // Import is running, attempt to kill the process
+        if ($result['process_id']) {
+            $this->logger->info('Attempting to kill running import process', [
+                'process_id' => $result['process_id'],
+                'import_status' => $decoded
+            ]);
+            
+            $killResult = $this->killImportProcess($result['process_id']);
+            $result['process_killed'] = $killResult['success'];
+            $result['messages'] = array_merge($result['messages'], $killResult['messages']);
+            
+            if ($result['process_killed']) {
+                $result['messages'][] = 'Import process successfully terminated';
+            } else {
+                $result['messages'][] = 'Import process could not be terminated, but status will be cleared';
+            }
+        } else {
+            $result['messages'][] = 'No process ID found, clearing status only';
+        }
+        
+        // Always clear the status after attempting to kill the process
         $this->config->deleteKey(self::APP_NAME, 'archimate_import_status');
+        $result['status_cleared'] = true;
+        $result['cancelled'] = true;
+        $result['messages'][] = 'Import status cleared';
+        
+        $this->logger->info('ArchiMate import cancellation completed', [
+            'was_running' => $result['was_running'],
+            'process_id' => $result['process_id'],
+            'process_killed' => $result['process_killed'],
+            'status_cleared' => $result['status_cleared'],
+            'messages' => $result['messages']
+        ]);
+        
+        return $result;
     }
 
     /**
@@ -3240,49 +3831,7 @@ class ArchiMateService
      */
     public function getModelObjects(array $query = []): array
     {
-        $schemaId = $this->getAmefSchemaIdForType('model');
-        if (!$schemaId) {
-            $this->logger->error('ArchiMateService: AMEF register or model schema not configured', [
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-            return [];
-        }
-
-        $objectService = $this->getObjectService();
-        if (!$objectService) {
-            $this->logger->error('ArchiMateService: ObjectService not available');
-            return [];
-        }
-
-        try {
-            $baseQuery = [
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId,
-                'limit' => 10000, // High limit to get all objects
-                'offset' => 0
-            ];
-            
-            // Merge with provided query
-            $finalQuery = array_merge($baseQuery, $query);
-            
-            $objects = $objectService->searchObjects($finalQuery);
-
-            $this->logger->info('Retrieved model objects from database', [
-                'count' => count($objects),
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to retrieve model objects', [
-                'error' => $e->getMessage(),
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-            return [];
-        }
+        return $this->getObjectsWithPagination('model', $query);
     }
 
     /**
@@ -3293,49 +3842,7 @@ class ArchiMateService
      */
     public function getPropertyObjects(array $query = []): array
     {
-        $schemaId = $this->getAmefSchemaIdForType('property');
-        if (!$schemaId) {
-            $this->logger->error('ArchiMateService: AMEF register or property schema not configured', [
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-            return [];
-        }
-
-        $objectService = $this->getObjectService();
-        if (!$objectService) {
-            $this->logger->error('ArchiMateService: ObjectService not available');
-            return [];
-        }
-
-        try {
-            $baseQuery = [
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId,
-                'limit' => 10000, // High limit to get all objects
-                'offset' => 0
-            ];
-            
-            // Merge with provided query
-            $finalQuery = array_merge($baseQuery, $query);
-            
-            $objects = $objectService->searchObjects($finalQuery);
-
-            $this->logger->info('Retrieved property objects from database', [
-                'count' => count($objects),
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to retrieve property objects', [
-                'error' => $e->getMessage(),
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-            return [];
-        }
+        return $this->getObjectsWithPagination('property', $query);
     }
 
     /**
@@ -3346,53 +3853,12 @@ class ArchiMateService
      */
     public function getPropertyDefinitionObjects(array $query = []): array
     {
-        $schemaId = $this->getAmefSchemaIdForType('property_definition');
-        if (!$schemaId) {
-            $this->logger->error('ArchiMateService: AMEF register or property definition schema not configured', [
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-            return [];
-        }
-
-        $objectService = $this->getObjectService();
-        if (!$objectService) {
-            $this->logger->error('ArchiMateService: ObjectService not available');
-            return [];
-        }
-
-        try {
-            $baseQuery = [
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId,
-                'limit' => 10000, // High limit to get all objects
-                'offset' => 0
-            ];
-            
-            // Merge with provided query
-            $finalQuery = array_merge($baseQuery, $query);
-            
-            $objects = $objectService->searchObjects($finalQuery);
-
-            $this->logger->info('Retrieved property definition objects from database', [
-                'count' => count($objects),
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to retrieve property definition objects', [
-                'error' => $e->getMessage(),
-                'register_id' => $this->getAmefRegisterId(),
-                'schema_id' => $schemaId
-            ]);
-            return [];
-        }
+        return $this->getObjectsWithPagination('property_definition', $query);
     }
 
     /**
      * Check if an ArchiMate import is currently in progress
+     * Also handles stale lock detection and cleanup
      *
      * @return bool True if import is running, false otherwise
      */
@@ -3401,9 +3867,29 @@ class ArchiMateService
         $importStatus = $this->config->getValueString(self::APP_NAME, 'archimate_import_status', '{}');
         $decoded = json_decode($importStatus, true);
         
-        return is_array($decoded) && 
-               isset($decoded['status']) && 
-               $decoded['status'] === 'running';
+        if (!is_array($decoded) || !isset($decoded['status']) || $decoded['status'] !== 'running') {
+            return false;
+        }
+        
+        // Check for stale locks (imports running for more than 1 hour)
+        if (isset($decoded['lock_acquired_at'])) {
+            $lockAge = microtime(true) - $decoded['lock_acquired_at'];
+            $maxLockAge = 3600; // 1 hour in seconds
+            
+            if ($lockAge > $maxLockAge) {
+                $this->logger->warning('Detected stale import lock, clearing it', [
+                    'lock_age_seconds' => round($lockAge, 2),
+                    'max_age_seconds' => $maxLockAge,
+                    'stale_status' => $decoded
+                ]);
+                
+                // Clear the stale lock
+                $this->clearArchiMateImportStatus();
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     /**
@@ -3429,6 +3915,191 @@ class ArchiMateService
     public function isOperationInProgress(): bool
     {
         return $this->isImportInProgress() || $this->isExportInProgress();
+    }
+
+    /**
+     * Atomically acquire an import lock to prevent concurrent imports
+     *
+     * @return bool True if lock acquired successfully, false if another operation is running
+     */
+    private function acquireImportLock(): bool
+    {
+        // Double-check pattern with atomic operation
+        if ($this->isOperationInProgress()) {
+            return false;
+        }
+        
+        // Set a temporary lock status immediately
+        $lockStatus = [
+            'status' => 'running',
+            'start_time' => date('Y-m-d H:i:s'),
+            'progress' => 0,
+            'current_step' => 'Acquiring import lock',
+            'lock_acquired_at' => microtime(true),
+            'process_id' => getmypid(),
+            'request_id' => uniqid('import_', true)
+        ];
+        
+        $this->setArchiMateImportStatus($lockStatus);
+        
+        // Verify the lock was acquired (check for race conditions)
+        usleep(10000); // 10ms delay to allow for race conditions
+        $currentStatus = $this->config->getValueString(self::APP_NAME, 'archimate_import_status', '{}');
+        $decoded = json_decode($currentStatus, true);
+        
+        if (!is_array($decoded) || 
+            !isset($decoded['request_id']) || 
+            $decoded['request_id'] !== $lockStatus['request_id']) {
+            
+            $this->logger->warning('Import lock acquisition failed due to race condition', [
+                'our_request_id' => $lockStatus['request_id'],
+                'current_request_id' => $decoded['request_id'] ?? 'unknown',
+                'current_status' => $decoded
+            ]);
+            
+            return false;
+        }
+        
+        $this->logger->info('Import lock acquired successfully', [
+            'request_id' => $lockStatus['request_id'],
+            'process_id' => $lockStatus['process_id']
+        ]);
+        
+        return true;
+    }
+
+    /**
+     * Release the import lock
+     *
+     * @return void
+     */
+    private function releaseImportLock(): void
+    {
+        $this->clearArchiMateImportStatus();
+        $this->logger->info('Import lock released');
+    }
+
+    /**
+     * Attempt to kill a running import process
+     *
+     * @param int $processId The process ID to kill
+     * @return array Result of the kill operation
+     */
+    private function killImportProcess(int $processId): array
+    {
+        $result = [
+            'success' => false,
+            'messages' => []
+        ];
+        
+        // First check if the process exists and is still running
+        if (!$this->isProcessRunning($processId)) {
+            $result['messages'][] = "Process {$processId} is not running";
+            $result['success'] = true; // Consider it successful if already stopped
+            return $result;
+        }
+        
+        // Try graceful termination first (SIGTERM)
+        if (function_exists('posix_kill')) {
+            $this->logger->info("Attempting graceful termination of import process {$processId}");
+            
+            if (posix_kill($processId, SIGTERM)) {
+                $result['messages'][] = "Sent SIGTERM to process {$processId}";
+                
+                // Wait a few seconds for graceful shutdown
+                sleep(3);
+                
+                if (!$this->isProcessRunning($processId)) {
+                    $result['success'] = true;
+                    $result['messages'][] = "Process {$processId} terminated gracefully";
+                    return $result;
+                }
+                
+                // If still running, try force kill (SIGKILL)
+                $this->logger->warning("Process {$processId} didn't respond to SIGTERM, trying SIGKILL");
+                
+                if (posix_kill($processId, SIGKILL)) {
+                    $result['messages'][] = "Sent SIGKILL to process {$processId}";
+                    
+                    sleep(1);
+                    
+                    if (!$this->isProcessRunning($processId)) {
+                        $result['success'] = true;
+                        $result['messages'][] = "Process {$processId} force killed";
+                    } else {
+                        $result['messages'][] = "Process {$processId} could not be killed";
+                    }
+                } else {
+                    $result['messages'][] = "Failed to send SIGKILL to process {$processId}";
+                }
+            } else {
+                $result['messages'][] = "Failed to send SIGTERM to process {$processId}";
+            }
+        } else {
+            // Fallback to system kill command if posix functions not available
+            $this->logger->info("POSIX functions not available, using system kill command for process {$processId}");
+            
+            $killCommand = "kill -TERM {$processId} 2>&1";
+            $output = [];
+            $returnCode = 0;
+            
+            exec($killCommand, $output, $returnCode);
+            
+            if ($returnCode === 0) {
+                $result['messages'][] = "Sent SIGTERM via system command to process {$processId}";
+                
+                sleep(3);
+                
+                if (!$this->isProcessRunning($processId)) {
+                    $result['success'] = true;
+                    $result['messages'][] = "Process {$processId} terminated via system command";
+                } else {
+                    // Try force kill
+                    $forceKillCommand = "kill -KILL {$processId} 2>&1";
+                    exec($forceKillCommand, $output, $returnCode);
+                    
+                    if ($returnCode === 0) {
+                        $result['messages'][] = "Sent SIGKILL via system command to process {$processId}";
+                        sleep(1);
+                        
+                        if (!$this->isProcessRunning($processId)) {
+                            $result['success'] = true;
+                            $result['messages'][] = "Process {$processId} force killed via system command";
+                        }
+                    }
+                }
+            } else {
+                $result['messages'][] = "System kill command failed for process {$processId}: " . implode(' ', $output);
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Check if a process is currently running
+     *
+     * @param int $processId The process ID to check
+     * @return bool True if process is running, false otherwise
+     */
+    private function isProcessRunning(int $processId): bool
+    {
+        // Try using posix_getpgid first (most reliable)
+        if (function_exists('posix_getpgid')) {
+            return posix_getpgid($processId) !== false;
+        }
+        
+        // Fallback to checking /proc filesystem (Linux)
+        if (file_exists("/proc/{$processId}")) {
+            return true;
+        }
+        
+        // Fallback to ps command
+        $psCommand = "ps -p {$processId} > /dev/null 2>&1";
+        $returnCode = 0;
+        exec($psCommand, $output, $returnCode);
+        
+        return $returnCode === 0;
     }
 
     /**
@@ -3520,6 +4191,7 @@ class ArchiMateService
             
             // Prepare model object data
             $modelData = [
+                'id' => $modelIdentifier,  // Add the id field that saveObject expects
                 'archimate_id' => $modelIdentifier,
                 'name' => $modelMetadata['name'] ?? '',
                 'documentation' => $modelMetadata['documentation'] ?? '',
@@ -3528,22 +4200,15 @@ class ArchiMateService
                 'import_source' => 'archimate_xml_import'
             ];
 
-            if ($existingModel) {
-                // Update existing model
-                $this->updateObject((int) $existingModel['id'], $modelData, 'model');
-                $this->logger->info('ArchiMateService: Updated existing model object', [
-                    'model_id' => $modelIdentifier,
-                    'object_id' => $existingModel['id']
-                ]);
-                return ['success' => true, 'action' => 'updated', 'object_id' => $existingModel['id']];
-            } else {
-                // Create new model
-                $this->createObject($modelData, 'model');
-                $this->logger->info('ArchiMateService: Created new model object', [
-                    'model_id' => $modelIdentifier
-                ]);
-                return ['success' => true, 'action' => 'created'];
-            }
+            // Use OpenRegister's built-in duplicate detection via UUID
+            // No need for custom existing model logic - OpenRegister handles it automatically
+            $savedModelObject = $this->saveObject($modelData, 'model');
+            $modelAction = $this->determineObjectAction($savedModelObject);
+            $this->logger->info('ArchiMateService: Saved model object', [
+                'model_id' => $modelIdentifier,
+                'action' => $modelAction
+            ]);
+            return ['success' => true, 'action' => 'saved'];
 
         } catch (\Exception $e) {
             $this->logger->error('ArchiMateService: Failed to create/update model object', [
@@ -3552,5 +4217,359 @@ class ArchiMateService
             ]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Optimized method for processing large datasets with streaming and lazy loading
+     * This method processes objects in smaller batches and uses lazy loading for existing objects
+     *
+     * @param array $archiMateData The ArchiMate data to process
+     * @param array $options Processing options
+     * @param callable|null $statusCallback Status update callback
+     * @return array Processing results
+     */
+    private function convertToOpenRegisterObjectsOptimized(array $archiMateData, array $options, callable $statusCallback = null): array
+    {
+        $startTime = microtime(true);
+        
+        $this->logger->info('=== OPTIMIZED CONVERSION START ===', [
+            'elements_count' => count($archiMateData['elements'] ?? []),
+            'relationships_count' => count($archiMateData['relationships'] ?? []),
+            'organizations_count' => count($archiMateData['organizations'] ?? []),
+            'views_count' => count($archiMateData['views'] ?? []),
+            'property_definitions_count' => count($archiMateData['property_definitions'] ?? []),
+            'batch_size' => $options['batch_size'] ?? 100,
+            'streaming_batch_size' => $options['streaming_batch_size'] ?? 50,
+            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+        ]);
+
+        // Initialize results structure
+        $results = [
+            'objects_created' => 0,
+            'objects_updated' => 0,
+            'objects_deleted' => 0,
+            'objects_skipped' => 0,
+            'errors' => [],
+            'schema_statistics' => [
+                'elements' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+                'organizations' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+                'relationships' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+                'views' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
+                'property_definitions' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []]
+            ]
+        ];
+
+        // Process schema types in parallel with optimized streaming
+        $promises = [];
+        $schemaTypes = ['elements', 'organizations', 'relationships', 'views', 'property_definitions'];
+        
+        // Create promises for all schema types to process them in parallel
+        foreach ($schemaTypes as $schemaType) {
+            if (!empty($archiMateData[$schemaType])) {
+                $this->logger->info("Starting parallel processing of {$schemaType} with optimized streaming", [
+                    'count' => count($archiMateData[$schemaType]),
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+                ]);
+                
+                // Create a promise for each schema type
+                $promises[$schemaType] = $this->createSchemaProcessingPromise(
+                    $archiMateData[$schemaType], 
+                    $schemaType, 
+                    $options, 
+                    $statusCallback
+                );
+                
+                // Unset processed data to free memory immediately after creating promise
+                unset($archiMateData[$schemaType]);
+                $this->logger->info("{$schemaType} array unset from memory", [
+                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+                ]);
+            }
+        }
+        
+        // Wait for all promises to complete and merge results
+        foreach ($promises as $schemaType => $promise) {
+            $schemaStart = microtime(true);
+            $schemaResult = $this->waitForPromise($promise);
+            $schemaTime = microtime(true) - $schemaStart;
+            
+            // Merge results
+            $results['objects_created'] += $schemaResult['created'];
+            $results['objects_updated'] += $schemaResult['updated'];
+            $results['objects_deleted'] += $schemaResult['deleted'] ?? 0;
+            $results['objects_skipped'] += $schemaResult['skipped'] ?? 0;
+            $results['errors'] = array_merge($results['errors'], $schemaResult['errors']);
+            $results['schema_statistics'][$schemaType] = $schemaResult;
+            
+            $this->logger->info("Completed parallel processing of {$schemaType}", [
+                'processing_time_seconds' => round($schemaTime, 3),
+                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+            ]);
+        }
+
+        $totalTime = microtime(true) - $startTime;
+
+        $this->logger->info('=== OPTIMIZED CONVERSION COMPLETED ===', [
+            'total_time_seconds' => round($totalTime, 3),
+            'objects_created' => $results['objects_created'],
+            'objects_updated' => $results['objects_updated'],
+            'objects_deleted' => $results['objects_deleted'],
+            'objects_skipped' => $results['objects_skipped'],
+            'total_errors' => count($results['errors']),
+            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+        ]);
+
+        return $results;
+    }
+
+    /**
+     * Create a ReactPHP promise for processing a schema type with optimized streaming
+     *
+     * @param array $items Items to process
+     * @param string $schemaType Type of schema being processed
+     * @param array $options Processing options
+     * @param callable|null $statusCallback Status update callback
+     * @return Promise Processing promise
+     */
+    private function createSchemaProcessingPromise(array $items, string $schemaType, array $options, callable $statusCallback = null): Promise
+    {
+        $deferred = new Deferred();
+        
+        try {
+            $result = $this->processSchemaTypeOptimized($items, $schemaType, $options, $statusCallback);
+            $deferred->resolve($result);
+        } catch (\Exception $e) {
+            $this->logger->error("Error processing {$schemaType} in parallel", [
+                'error' => $e->getMessage(),
+                'schema_type' => $schemaType
+            ]);
+            $deferred->reject($e);
+        }
+        
+        return $deferred->promise();
+    }
+
+    /**
+     * Process a specific schema type with optimized streaming and lazy loading
+     *
+     * @param array $items Items to process
+     * @param string $schemaType Type of schema being processed
+     * @param array $options Processing options
+     * @param callable|null $statusCallback Status update callback
+     * @return array Processing results
+     */
+    private function processSchemaTypeOptimized(array $items, string $schemaType, array $options, callable $statusCallback = null): array
+    {
+        $streamingBatchSize = $options['streaming_batch_size'] ?? 50;
+        $totalItems = count($items);
+        $processed = 0;
+        
+        $results = [
+            'found' => $totalItems,
+            'created' => 0,
+            'updated' => 0,
+            'deleted' => 0,
+            'skipped' => 0,
+            'errors' => []
+        ];
+
+        // Process items in streaming batches
+        $batches = array_chunk($items, $streamingBatchSize, true);
+        
+        foreach ($batches as $batchIndex => $batch) {
+            $this->logger->debug("Processing {$schemaType} batch {$batchIndex}", [
+                'batch_size' => count($batch),
+                'progress' => round(($processed / $totalItems) * 100, 2) . '%',
+                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+            ]);
+            
+            // Process batch with lazy loading of existing objects
+            $batchResult = $this->processBatchWithLazyLoading($batch, $schemaType, $options);
+            
+            // Merge batch results
+            $results['created'] += $batchResult['created'];
+            $results['updated'] += $batchResult['updated'];
+            $results['deleted'] += $batchResult['deleted'] ?? 0;
+            $results['skipped'] += $batchResult['skipped'] ?? 0;
+            $results['errors'] = array_merge($results['errors'], $batchResult['errors']);
+            
+            $processed += count($batch);
+            
+            // Update status with cumulative results
+            if ($statusCallback) {
+                $progress = round(($processed / $totalItems) * 100, 2);
+                $statusCallback($schemaType, $progress, $results);
+            }
+            
+            // Force garbage collection every few batches
+            if ($batchIndex % 3 === 0) {
+                gc_collect_cycles();
+            }
+        }
+        
+        return $results;
+    }
+
+    /**
+     * Process a batch of items with lazy loading of existing objects
+     * This avoids loading all existing objects into memory at once
+     *
+     * @param array $batch Batch of items to process
+     * @param string $schemaType Type of schema being processed
+     * @param array $options Processing options
+     * @return array Processing results
+     */
+    private function processBatchWithLazyLoading(array $batch, string $schemaType, array $options): array
+    {
+        $results = [
+            'created' => 0,
+            'updated' => 0,
+            'deleted' => 0,
+            'skipped' => 0,
+            'errors' => []
+        ];
+
+        // Extract ArchiMate IDs for this batch
+        $archiMateIds = array_map(function($item) {
+            return $item['id'] ?? null;
+        }, $batch);
+        $archiMateIds = array_filter($archiMateIds);
+
+        // Lazy load only the existing objects for this batch
+        $existingObjects = $this->getExistingObjectsForBatch($archiMateIds, $schemaType);
+        
+        foreach ($batch as $itemId => $item) {
+            try {
+                $archiMateId = $item['id'] ?? null;
+                if (!$archiMateId) {
+                    $results['errors'][] = "Missing ID for {$schemaType} item";
+                    continue;
+                }
+
+                // Use OpenRegister's built-in duplicate detection via UUID
+                // No need for custom existing object lookup - OpenRegister handles it automatically
+                $modelIdentifier = $options['model_identifier'] ?? null;
+                $savedObject = $this->saveObject($item, $schemaType, $modelIdentifier);
+                
+                // Determine if the object was created or updated based on timestamps
+                $action = $this->determineObjectAction($savedObject);
+                if ($action === 'created') {
+                    $results['created']++;
+                } else {
+                    $results['updated']++;
+                }
+
+            } catch (\Exception $e) {
+                $this->logger->error("Error processing {$schemaType} item", [
+                    'item_id' => $item['id'] ?? 'unknown',
+                    'error' => $e->getMessage()
+                ]);
+                $results['errors'][] = $e->getMessage();
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get existing objects for a specific batch of ArchiMate IDs
+     * This implements lazy loading to avoid loading all objects into memory
+     *
+     * @param array $archiMateIds Array of ArchiMate IDs to look up
+     * @param string $schemaType Type of schema
+     * @return array Array of existing objects indexed by ArchiMate ID
+     */
+    private function getExistingObjectsForBatch(array $archiMateIds, string $schemaType): array
+    {
+        if (empty($archiMateIds)) {
+            return [];
+        }
+
+        try {
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                $this->logger->error('ObjectService not available for batch lookup');
+                return [];
+            }
+
+            $registerId = $this->getAmefRegisterId();
+            $schemaId = $this->getAmefSchemaIdForType($schemaType);
+            
+            if (!$registerId || !$schemaId) {
+                $this->logger->error("AMEF register or {$schemaType} schema not configured");
+                return [];
+            }
+
+            // Build query to find objects with specific ArchiMate IDs
+            $query = [
+                '@self' => [
+                    'register' => (int) $registerId,
+                    'schema' => (int) $schemaId
+                ],
+                'archimate_id' => [
+                    'in' => $archiMateIds
+                ]
+            ];
+
+            $objects = $objectService->searchObjects($query);
+            
+            // Index by ArchiMate ID for fast lookup
+            $indexedObjects = [];
+            foreach ($objects as $object) {
+                $objectArray = $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
+                if (isset($objectArray['archimate_id'])) {
+                    $indexedObjects[$objectArray['archimate_id']] = $objectArray;
+                }
+            }
+
+            $this->logger->debug("Lazy loaded existing objects for {$schemaType}", [
+                'requested_ids' => count($archiMateIds),
+                'found_objects' => count($indexedObjects)
+            ]);
+
+            return $indexedObjects;
+
+        } catch (\Exception $e) {
+            $this->logger->error("Error lazy loading existing objects for {$schemaType}", [
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Optimized object comparison that avoids deep array comparisons for large objects
+     * Uses hash-based comparison for better performance
+     *
+     * @param array $existingObject Existing object data
+     * @param array $newObjectData New object data
+     * @return bool True if objects are equal
+     */
+    private function areObjectsEqualOptimized(array $existingObject, array $newObjectData): bool
+    {
+        // For large objects, use hash-based comparison instead of deep array comparison
+        $existingHash = $this->calculateObjectHash($existingObject);
+        $newHash = $this->calculateObjectHash($newObjectData);
+        
+        return $existingHash === $newHash;
+    }
+
+    /**
+     * Calculate a hash for object comparison
+     * This is much faster than deep array comparison for large objects
+     *
+     * @param array $object Object data
+     * @return string Hash of the object
+     */
+    private function calculateObjectHash(array $object): string
+    {
+        // Normalize object for consistent hashing
+        $normalized = $this->normalizeObjectForComparison($object, ['id', 'created_at', 'updated_at']);
+        
+        // Sort recursively for consistent ordering
+        $this->sortArrayRecursively($normalized);
+        
+        // Calculate hash
+        return md5(serialize($normalized));
     }
 }

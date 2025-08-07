@@ -334,7 +334,12 @@ export default {
 
 	computed: {
 		// Store-connected computed properties
-		loading() { return this.store.loading },
+		loading() { 
+			// Add debugging to help identify loading state issues
+			const isLoading = this.store.loading
+			console.log('OpenRegisterIntegration loading state:', isLoading, 'store.loading:', this.store.loading)
+			return isLoading 
+		},
 		versionInfo() { return this.store.versionInfo },
 		configuration() { return this.store.configuration },
 		registerOptions() { return this.store.registerOptions },

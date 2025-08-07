@@ -28,6 +28,7 @@ return [
         ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
         ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
         ['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
+        ['name' => 'settings#stats', 'url' => '/api/settings/stats', 'verb' => 'GET'],
         
         // Organization synchronization routes
         ['name' => 'settings#getSyncStatus', 'url' => '/api/settings/sync-status', 'verb' => 'GET'],
@@ -65,6 +66,8 @@ return [
         
         // ArchiMate status management routes (status reading is via main settings endpoint)
         ['name' => 'settings#clearArchiMateImportStatus', 'url' => '/api/archimate/status/import/clear', 'verb' => 'POST'],
+        ['name' => 'settings#cancelArchiMateImport', 'url' => '/api/archimate/import/cancel', 'verb' => 'POST'],
+        ['name' => 'settings#killArchiMateImport', 'url' => '/api/archimate/import/kill', 'verb' => 'POST'], // deprecated
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
         
         ['name' => 'settings#test_archimate_round_trip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
