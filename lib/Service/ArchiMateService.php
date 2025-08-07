@@ -852,6 +852,17 @@ class ArchiMateService
         if (isset($data['properties'])) {
             $normalized['model_metadata']['properties'] = $this->extractProperties($data['properties']);
         }
+        
+        // Extract folders and store them as model metadata properties
+        if (isset($data['folder'])) {
+            $folders = $this->extractFolders($data['folder']);
+            if (!empty($folders)) {
+                if (!isset($normalized['model_metadata']['properties'])) {
+                    $normalized['model_metadata']['properties'] = [];
+                }
+                $normalized['model_metadata']['properties']['folders'] = json_encode($folders);
+            }
+        }
 
         // Extract elements
         if (isset($data['elements'])) {
@@ -1038,8 +1049,32 @@ class ArchiMateService
             ]);
         }
 
-        // Extract organizations from elements
-        $normalized['organizations'] = $this->extractOrganizations($normalized['elements']);
+        // Extract organizations from dedicated organizations section
+        if (isset($data['organizations'])) {
+            $this->logger->info('Processing organizations section', [
+                'organizations_structure' => array_keys($data['organizations'])
+            ]);
+            
+            if (isset($data['organizations']['item'])) {
+                $organizationArray = $data['organizations']['item'];
+                $this->logger->info('Found organization items', [
+                    'organization_count' => count($organizationArray)
+                ]);
+                
+                foreach ($organizationArray as $index => $orgItem) {
+                    if (isset($orgItem['_attributes']['identifier'])) {
+                        $normalized['organizations'][$orgItem['_attributes']['identifier']] = $this->normalizeOrganizationItem($orgItem);
+                    } else {
+                        $this->logger->warning("Organization item {$index} missing identifier", [
+                            'item_structure' => $orgItem
+                        ]);
+                    }
+                }
+            }
+        } else {
+            // Fallback: Extract organizations from elements (BusinessActor, BusinessRole types)
+            $normalized['organizations'] = $this->extractOrganizations($normalized['elements']);
+        }
 
         $this->logger->info('=== NORMALIZATION COMPLETED ===', [
             'elements_count' => count($normalized['elements']),
@@ -1172,18 +1207,24 @@ class ArchiMateService
             'id' => $element['_attributes']['identifier'] ?? '',
             'name' => $element['name']['_value'] ?? '',
             'type' => $element['_attributes']['xsi:type'] ?? '',
+            'documentation' => $element['documentation']['_value'] ?? '',
             'properties' => $this->extractProperties($element['properties'] ?? [])
         ];
     }
 
     private function normalizeRelationship(array $relationship): array
     {
+        // Handle source and target - they can be attributes or child elements
+        $source = $relationship['_attributes']['source'] ?? $relationship['source']['_attributes']['ref'] ?? '';
+        $target = $relationship['_attributes']['target'] ?? $relationship['target']['_attributes']['ref'] ?? '';
+        
         $normalized = [
             'id' => $relationship['_attributes']['identifier'] ?? '',
             'name' => $relationship['name']['_value'] ?? '',
             'type' => $relationship['_attributes']['xsi:type'] ?? '',
-            'source' => $relationship['source']['_attributes']['ref'] ?? '',
-            'target' => $relationship['target']['_attributes']['ref'] ?? '',
+            'documentation' => $relationship['documentation']['_value'] ?? '',
+            'source' => $source,
+            'target' => $target,
             'properties' => $this->extractProperties($relationship['properties'] ?? [])
         ];
         
@@ -1202,12 +1243,23 @@ class ArchiMateService
 
     private function normalizeView(array $view): array
     {
-        return [
+        $normalized = [
             'id' => $view['_attributes']['identifier'] ?? '',
             'name' => $view['name']['_value'] ?? '',
             'type' => $view['_attributes']['xsi:type'] ?? '',
+            'documentation' => $view['documentation']['_value'] ?? '',
             'properties' => $this->extractProperties($view['properties'] ?? [])
         ];
+        
+        // Capture any additional view-specific data like nodes, connections, etc.
+        // This preserves the view structure for round-trip compatibility
+        foreach ($view as $key => $value) {
+            if (!in_array($key, ['_attributes', 'name', 'documentation', 'properties']) && !empty($value)) {
+                $normalized[$key] = $value;
+            }
+        }
+        
+        return $normalized;
     }
 
     private function normalizePropertyDefinition(array $propertyDefinition): array
@@ -1226,10 +1278,74 @@ class ArchiMateService
         $properties = [];
         if (isset($propertiesData['property'])) {
             foreach ($propertiesData['property'] as $property) {
-                $properties[$property['_attributes']['identifier'] ?? ''] = $property['value']['_value'] ?? '';
+                $key = $property['_attributes']['propertyDefinitionRef'] ?? '';
+                $value = $property['value']['_value'] ?? '';
+                $properties[$key] = $value;
             }
         }
         return $properties;
+    }
+    
+    /**
+     * Extract folders from ArchiMate data for storage as model properties
+     */
+    private function extractFolders(array $foldersData): array
+    {
+        $folders = [];
+        
+        // Handle both single folder and array of folders
+        if (isset($foldersData['_attributes'])) {
+            // Single folder
+            $folders[] = $this->normalizeFolder($foldersData);
+        } else {
+            // Array of folders
+            foreach ($foldersData as $folder) {
+                if (isset($folder['_attributes'])) {
+                    $folders[] = $this->normalizeFolder($folder);
+                }
+            }
+        }
+        
+        return $folders;
+    }
+    
+    /**
+     * Normalize a single folder for storage
+     */
+    private function normalizeFolder(array $folder): array
+    {
+        $normalized = [
+            'id' => $folder['_attributes']['identifier'] ?? $folder['_attributes']['id'] ?? '',
+            'name' => $folder['_attributes']['name'] ?? $folder['name']['_value'] ?? '',
+            'type' => $folder['_attributes']['type'] ?? '',
+            'documentation' => $folder['documentation']['_value'] ?? '',
+            'properties' => $this->extractProperties($folder['properties'] ?? [])
+        ];
+        
+        // Capture any additional attributes
+        if (isset($folder['_attributes']) && is_array($folder['_attributes'])) {
+            foreach ($folder['_attributes'] as $key => $value) {
+                if (!in_array($key, ['identifier', 'id', 'name', 'type']) && !empty($value)) {
+                    $normalized[$key] = $value;
+                }
+            }
+        }
+        
+        return $normalized;
+    }
+
+    /**
+     * Normalize an organization item from the organizations section
+     */
+    private function normalizeOrganizationItem(array $orgItem): array
+    {
+        return [
+            'id' => $orgItem['_attributes']['identifier'] ?? '',
+            'name' => $orgItem['label']['_value'] ?? '',
+            'type' => 'Organization',
+            'documentation' => $orgItem['documentation']['_value'] ?? '',
+            'properties' => $this->extractProperties($orgItem['properties'] ?? [])
+        ];
     }
 
     private function extractOrganizations(array $elements): array
@@ -2435,7 +2551,9 @@ class ArchiMateService
         $baseData = [
             'archimate_id' => $archiMateData['id'],
             'name' => $archiMateData['name'] ?? '',
-            'properties' => $archiMateData['properties'] ?? []
+            'documentation' => $archiMateData['documentation'] ?? '',
+            'properties' => $archiMateData['properties'] ?? [],
+            'original_archimate_type' => $archiMateData['type'] ?? ''  // Store the original ArchiMate type
         ];
         
         // Always add model identifier (even if empty/null) - both as root field and in properties
@@ -2619,7 +2737,7 @@ class ArchiMateService
             $viewObjects = $this->getViewObjects();
             $relationshipObjects = $this->getRelationshipObjects();
             $modelObjects = $this->getModelObjects();
-            $propertyObjects = $this->getPropertyObjects();
+            $propertyDefinitionObjects = $this->getPropertyDefinitionObjects();
 
             // Convert ObjectEntity instances to arrays for compatibility with conversion methods
             $elementObjectsArray = array_map(function($object) {
@@ -2642,9 +2760,9 @@ class ArchiMateService
                 return $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
             }, $modelObjects);
 
-            $propertyObjectsArray = array_map(function($object) {
+            $propertyDefinitionObjectsArray = array_map(function($object) {
                 return $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-            }, $propertyObjects);
+            }, $propertyDefinitionObjects);
 
             $allObjects = [
                 'elements' => $elementObjectsArray,
@@ -2652,7 +2770,7 @@ class ArchiMateService
                 'views' => $viewObjectsArray,
                 'relationships' => $relationshipObjectsArray,
                 'models' => $modelObjectsArray,
-                'properties' => $propertyObjectsArray
+                'properties' => $propertyDefinitionObjectsArray
             ];
 
             $totalObjects = array_sum(array_map('count', $allObjects));
@@ -2665,7 +2783,7 @@ class ArchiMateService
                     'views' => count($viewObjectsArray),
                     'relationships' => count($relationshipObjectsArray),
                     'models' => count($modelObjectsArray),
-                    'properties' => count($propertyObjectsArray)
+                    'property_definitions' => count($propertyDefinitionObjectsArray)
                 ]
             ]);
 
@@ -2698,7 +2816,9 @@ class ArchiMateService
             'elements' => [],
             'relationships' => [],
             'organizations' => [],
-            'views' => []
+            'views' => [],
+            'property_definitions' => [],
+            'model_metadata' => []
         ];
 
         try {
@@ -2757,11 +2877,44 @@ class ArchiMateService
                 }
             }
 
+            // Convert property definitions
+            if (!empty($objects['properties'])) {
+                $this->logger->info('Converting property definitions to ArchiMate format', [
+                    'properties_count' => count($objects['properties'])
+                ]);
+                foreach ($objects['properties'] as $object) {
+                    $propertyDef = $this->convertObjectToArchiMatePropertyDefinition($object);
+                    if ($propertyDef) {
+                        $archiMateData['property_definitions'][$propertyDef['id']] = $propertyDef;
+                    }
+                }
+            }
+
+            // Process model objects to extract folders from model metadata
+            if (!empty($objects['models'])) {
+                $this->logger->info('Processing model objects for metadata extraction', [
+                    'models_count' => count($objects['models'])
+                ]);
+                
+                foreach ($objects['models'] as $modelObject) {
+                    if (isset($modelObject['properties']['folders'])) {
+                        $archiMateData['model_metadata']['folders'] = $modelObject['properties']['folders'];
+                        $this->logger->info('Extracted folders from model object', [
+                            'model_id' => $modelObject['id'] ?? 'unknown',
+                            'folders_length' => strlen($modelObject['properties']['folders'])
+                        ]);
+                        break; // Only need one model object with folders
+                    }
+                }
+            }
+
             $this->logger->info('Conversion to ArchiMate format completed', [
                 'elements_count' => count($archiMateData['elements']),
                 'organizations_count' => count($archiMateData['organizations']),
                 'relationships_count' => count($archiMateData['relationships']),
-                'views_count' => count($archiMateData['views'])
+                'views_count' => count($archiMateData['views']),
+                'property_definitions_count' => count($archiMateData['property_definitions']),
+                'has_model_folders' => isset($archiMateData['model_metadata']['folders'])
             ]);
 
             return $archiMateData;
@@ -2794,8 +2947,9 @@ class ArchiMateService
             $element = [
                 'id' => $archiMateId,
                 'name' => $object['name'] ?? '',
-                'type' => $object['archimate_type'] ?? 'Element',
-                'properties' => []
+                'type' => $object['original_archimate_type'] ?? $object['archimate_type'] ?? $object['type'] ?? 'Element',
+                'properties' => [],
+                'documentation' => $object['documentation'] ?? ''
             ];
 
             // Extract properties from the object
@@ -2806,7 +2960,12 @@ class ArchiMateService
             $this->logger->debug('Converted element', [
                 'archimate_id' => $archiMateId,
                 'name' => $element['name'],
-                'type' => $element['type']
+                'type' => $element['type'],
+                'archimate_type_from_object' => $object['archimate_type'] ?? 'MISSING',
+                'type_from_object' => $object['type'] ?? 'MISSING',
+                'original_archimate_type' => $object['original_archimate_type'] ?? 'MISSING',
+                'documentation' => $element['documentation'],
+                'properties_count' => count($element['properties'])
             ]);
 
             return $element;
@@ -2876,7 +3035,8 @@ class ArchiMateService
             $relationship = [
                 'id' => $archiMateId,
                 'name' => $object['name'] ?? '',
-                'type' => $object['archimate_type'] ?? 'Relationship',
+                'type' => $object['original_archimate_type'] ?? $object['archimate_type'] ?? 'Relationship',
+                'documentation' => $object['documentation'] ?? '',
                 'source' => $object['source_id'] ?? '',
                 'target' => $object['target_id'] ?? '',
                 'properties' => []
@@ -2916,7 +3076,8 @@ class ArchiMateService
             $view = [
                 'id' => $archiMateId,
                 'name' => $object['name'] ?? '',
-                'type' => $object['archimate_type'] ?? 'View',
+                'type' => $object['original_archimate_type'] ?? $object['archimate_type'] ?? 'View',
+                'documentation' => $object['documentation'] ?? '',
                 'properties' => []
             ];
 
@@ -2924,10 +3085,56 @@ class ArchiMateService
             if (isset($object['properties']) && is_array($object['properties'])) {
                 $view['properties'] = $object['properties'];
             }
+            
+            // Preserve any additional view-specific data that was captured during import
+            foreach ($object as $key => $value) {
+                if (!in_array($key, ['id', 'archimate_id', 'uuid', 'name', 'archimate_type', 'documentation', 'properties', 'schema_id', 'register_id']) && !empty($value)) {
+                    $view[$key] = $value;
+                }
+            }
 
             return $view;
         } catch (\Exception $e) {
             $this->logger->error('Error converting object to ArchiMate view', [
+                'object_id' => $object['id'] ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Convert OpenRegister object to ArchiMate property definition format
+     */
+    private function convertObjectToArchiMatePropertyDefinition(array $object): ?array
+    {
+        try {
+            // Handle both API response format and ObjectEntity format
+            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
+            if (!$archiMateId) {
+                $this->logger->warning('Property definition object missing ArchiMate ID', [
+                    'object_id' => $object['id'] ?? 'unknown',
+                    'available_keys' => array_keys($object)
+                ]);
+                return null;
+            }
+
+            $propertyDef = [
+                'id' => $archiMateId,
+                'name' => $object['name'] ?? '',
+                'type' => $object['type'] ?? 'string',
+                'documentation' => $object['documentation'] ?? '',
+                'properties' => []
+            ];
+
+            // Extract properties from the object
+            if (isset($object['properties']) && is_array($object['properties'])) {
+                $propertyDef['properties'] = $object['properties'];
+            }
+
+            return $propertyDef;
+        } catch (\Exception $e) {
+            $this->logger->error('Error converting object to ArchiMate property definition', [
                 'object_id' => $object['id'] ?? 'unknown',
                 'error' => $e->getMessage()
             ]);
@@ -2947,7 +3154,8 @@ class ArchiMateService
             'elements_count' => count($archiMateData['elements'] ?? []),
             'organizations_count' => count($archiMateData['organizations'] ?? []),
             'relationships_count' => count($archiMateData['relationships'] ?? []),
-            'views_count' => count($archiMateData['views'] ?? [])
+            'views_count' => count($archiMateData['views'] ?? []),
+            'property_definitions_count' => count($archiMateData['property_definitions'] ?? [])
         ]);
 
         try {
@@ -2984,6 +3192,11 @@ class ArchiMateService
             $xml .= '    </property>' . "\n";
             $xml .= '  </properties>' . "\n";
             
+            // Add folders section if they exist in model metadata
+            if (isset($archiMateData['model_metadata']['folders'])) {
+                $xml .= $this->generateFoldersXml($archiMateData['model_metadata']['folders']);
+            }
+            
             // Add elements section
             if (!empty($archiMateData['elements'])) {
                 $xml .= '  <elements>' . "\n";
@@ -3002,12 +3215,32 @@ class ArchiMateService
                 $xml .= '  </relationships>' . "\n";
             }
 
-            // Add views section
+            // Add organizations section
+            if (!empty($archiMateData['organizations'])) {
+                $xml .= '  <organizations>' . "\n";
+                foreach ($archiMateData['organizations'] as $organization) {
+                    $xml .= $this->generateOrganizationXml($organization);
+                }
+                $xml .= '  </organizations>' . "\n";
+            }
+
+            // Add propertyDefinitions section
+            if (!empty($archiMateData['property_definitions'])) {
+                $xml .= '  <propertyDefinitions>' . "\n";
+                foreach ($archiMateData['property_definitions'] as $propertyDef) {
+                    $xml .= $this->generatePropertyDefinitionXml($propertyDef);
+                }
+                $xml .= '  </propertyDefinitions>' . "\n";
+            }
+
+            // Add views section with diagrams wrapper
             if (!empty($archiMateData['views'])) {
                 $xml .= '  <views>' . "\n";
+                $xml .= '    <diagrams>' . "\n";
                 foreach ($archiMateData['views'] as $view) {
                     $xml .= $this->generateViewXml($view);
                 }
+                $xml .= '    </diagrams>' . "\n";
                 $xml .= '  </views>' . "\n";
             }
 
@@ -3038,6 +3271,7 @@ class ArchiMateService
         $id = $element['id'] ?? '';
         $type = $element['type'] ?? '';
         $name = $element['name'] ?? '';
+        $documentation = $element['documentation'] ?? '';
         
         $xml = '    <element identifier="' . htmlspecialchars($id) . '" xsi:type="' . htmlspecialchars($type) . '">' . "\n";
         
@@ -3045,11 +3279,24 @@ class ArchiMateService
             $xml .= '      <name xml:lang="en">' . htmlspecialchars($name) . '</name>' . "\n";
         }
 
+        // Add documentation if present
+        if (!empty($documentation)) {
+            $xml .= '      <documentation xml:lang="en">' . htmlspecialchars($documentation) . '</documentation>' . "\n";
+        }
+
         if (!empty($element['properties'])) {
             $xml .= '      <properties>' . "\n";
             foreach ($element['properties'] as $key => $value) {
                 $key = $key ?? '';
                 $value = $value ?? '';
+                
+                // Only include properties with valid propertyDefinitionRef values
+                // Skip internal properties like 'model', 'modal', etc.
+                // Skip empty keys, whitespace-only keys, or internal properties
+                if (empty($key) || trim($key) === '' || in_array($key, ['model', 'modal', 'schema_id', 'register_id', 'archimate_id', 'archimate_type', 'original_archimate_type', 'model_id'])) {
+                    continue;
+                }
+                
                 $xml .= '        <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
                 $xml .= '          <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
                 $xml .= '        </property>' . "\n";
@@ -3068,6 +3315,8 @@ class ArchiMateService
     {
         $id = $relationship['id'] ?? '';
         $type = $relationship['type'] ?? '';
+        $name = $relationship['name'] ?? '';
+        $documentation = $relationship['documentation'] ?? '';
         $source = $relationship['source'] ?? '';
         $target = $relationship['target'] ?? '';
         
@@ -3085,26 +3334,57 @@ class ArchiMateService
         // Add any additional attributes that were captured during import
         foreach ($relationship as $key => $value) {
             // Skip the basic attributes we already handled
-            if (!in_array($key, ['id', 'name', 'type', 'source', 'target', 'properties']) && !empty($value)) {
+            if (!in_array($key, ['id', 'name', 'type', 'documentation', 'source', 'target', 'properties']) && !empty($value)) {
                 $xml .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars($value) . '"';
+            }
+        }
+        
+        // Close the opening tag and add content elements
+        $hasContent = !empty($name) || !empty($documentation) || !empty($relationship['properties']);
+        
+        if ($hasContent) {
+            $xml .= '>' . "\n";
+            
+            // Add name if present
+            if (!empty($name)) {
+                $xml .= '      <name xml:lang="en">' . htmlspecialchars($name) . '</name>' . "\n";
+            }
+            
+            // Add documentation if present
+            if (!empty($documentation)) {
+                $xml .= '      <documentation xml:lang="en">' . htmlspecialchars($documentation) . '</documentation>' . "\n";
             }
         }
         
         // Check if we have properties to include
         if (!empty($relationship['properties'])) {
-            $xml .= '>' . "\n";
+            if (!$hasContent) {
+                $xml .= '>' . "\n";
+            }
             $xml .= '      <properties>' . "\n";
             foreach ($relationship['properties'] as $key => $value) {
                 $key = $key ?? '';
                 $value = $value ?? '';
+                
+                // Only include properties with valid propertyDefinitionRef values
+                // Skip internal properties like 'model', 'modal', etc.
+                // Skip empty keys, whitespace-only keys, or internal properties
+                if (empty($key) || trim($key) === '' || in_array($key, ['model', 'modal', 'schema_id', 'register_id', 'archimate_id', 'archimate_type', 'original_archimate_type', 'model_id'])) {
+                    continue;
+                }
+                
                 $xml .= '        <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
                 $xml .= '          <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
                 $xml .= '        </property>' . "\n";
             }
             $xml .= '      </properties>' . "\n";
             $xml .= '    </relationship>' . "\n";
+        } else if ($hasContent) {
+            // We have name/documentation but no properties
+            $xml .= '    </relationship>' . "\n";
         } else {
-            $xml .= ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>' . "\n";
+            // No content at all, self-closing tag
+            $xml .= '/>' . "\n";
         }
         
         return $xml;
@@ -3118,26 +3398,201 @@ class ArchiMateService
         $id = $view['id'] ?? '';
         $type = $view['type'] ?? '';
         $name = $view['name'] ?? '';
+        $documentation = $view['documentation'] ?? '';
         
-        $xml = '    <element identifier="' . htmlspecialchars($id) . '" xsi:type="' . htmlspecialchars($type) . '">' . "\n";
+        // Use proper view tag with correct indentation for diagrams section
+        $xml = '      <view identifier="' . htmlspecialchars($id) . '" xsi:type="' . htmlspecialchars($type) . '">' . "\n";
         
         if (!empty($name)) {
-            $xml .= '      <name xml:lang="en">' . htmlspecialchars($name) . '</name>' . "\n";
+            $xml .= '        <name xml:lang="en">' . htmlspecialchars($name) . '</name>' . "\n";
+        }
+        
+        // Add documentation if present
+        if (!empty($documentation)) {
+            $xml .= '        <documentation xml:lang="en">' . htmlspecialchars($documentation) . '</documentation>' . "\n";
         }
 
         if (!empty($view['properties'])) {
-            $xml .= '      <properties>' . "\n";
+            $xml .= '        <properties>' . "\n";
             foreach ($view['properties'] as $key => $value) {
                 $key = $key ?? '';
                 $value = $value ?? '';
-                $xml .= '        <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
-                $xml .= '          <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
-                $xml .= '        </property>' . "\n";
+                
+                // Only include properties with valid propertyDefinitionRef values
+                // Skip internal properties like 'model', 'modal', etc.
+                // Skip empty keys, whitespace-only keys, or internal properties
+                if (empty($key) || trim($key) === '' || in_array($key, ['model', 'modal', 'schema_id', 'register_id', 'archimate_id', 'archimate_type', 'original_archimate_type', 'model_id'])) {
+                    continue;
+                }
+                
+                $xml .= '          <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
+                $xml .= '            <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
+                $xml .= '          </property>' . "\n";
+            }
+            $xml .= '        </properties>' . "\n";
+        }
+        
+        // Add any additional view-specific elements that were preserved during import
+        foreach ($view as $key => $value) {
+            if (!in_array($key, ['id', 'type', 'name', 'documentation', 'properties']) && !empty($value) && is_array($value)) {
+                // This could include nodes, connections, etc.
+                $xml .= '        <!-- Additional view data: ' . htmlspecialchars($key) . ' -->' . "\n";
+                // Note: Full reconstruction of complex view elements would require more detailed parsing
+            }
+        }
+
+        $xml .= '      </view>' . "\n";
+        return $xml;
+    }
+
+    /**
+     * Generate XML for an ArchiMate organization
+     */
+    private function generateOrganizationXml(array $organization): string
+    {
+        $id = $organization['id'] ?? '';
+        $name = $organization['name'] ?? '';
+        $documentation = $organization['documentation'] ?? '';
+        
+        $xml = '    <item identifier="' . htmlspecialchars($id) . '">' . "\n";
+        
+        if (!empty($name)) {
+            $xml .= '      <label xml:lang="en">' . htmlspecialchars($name) . '</label>' . "\n";
+        }
+        
+        // Add documentation if present
+        if (!empty($documentation)) {
+            $xml .= '      <documentation xml:lang="en">' . htmlspecialchars($documentation) . '</documentation>' . "\n";
+        }
+        
+        // Add properties if present
+        if (!empty($organization['properties'])) {
+            $xml .= '      <properties>' . "\n";
+            foreach ($organization['properties'] as $key => $value) {
+                if (!empty($key) && !empty($value)) {
+                    // Skip internal properties
+                    if (!in_array($key, ['model', 'modal', 'schema_id', 'register_id', 'archimate_id', 'archimate_type'])) {
+                        $xml .= '        <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
+                        $xml .= '          <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
+                        $xml .= '        </property>' . "\n";
+                    }
+                }
             }
             $xml .= '      </properties>' . "\n";
         }
+        
+        $xml .= '    </item>' . "\n";
+        return $xml;
+    }
 
-        $xml .= '    </element>' . "\n";
+    /**
+     * Generate XML for an ArchiMate property definition
+     */
+    private function generatePropertyDefinitionXml(array $propertyDef): string
+    {
+        $id = $propertyDef['id'] ?? '';
+        $name = $propertyDef['name'] ?? '';
+        $type = $propertyDef['type'] ?? 'string';
+        $documentation = $propertyDef['documentation'] ?? '';
+        
+        $xml = '    <propertyDefinition identifier="' . htmlspecialchars($id) . '" type="' . htmlspecialchars($type) . '">' . "\n";
+        
+        if (!empty($name)) {
+            $xml .= '      <name>' . htmlspecialchars($name) . '</name>' . "\n";
+        }
+        
+        // Add documentation if present
+        if (!empty($documentation)) {
+            $xml .= '      <documentation xml:lang="en">' . htmlspecialchars($documentation) . '</documentation>' . "\n";
+        }
+        
+        $xml .= '    </propertyDefinition>' . "\n";
+        return $xml;
+    }
+
+    /**
+     * Generate XML for folders stored in model properties
+     */
+    private function generateFoldersXml(string $foldersJson): string
+    {
+        try {
+            $folders = json_decode($foldersJson, true);
+            if (!is_array($folders) || empty($folders)) {
+                return '';
+            }
+            
+            $xml = '';
+            foreach ($folders as $folder) {
+                $xml .= $this->generateFolderXml($folder);
+            }
+            
+            return $xml;
+        } catch (\Exception $e) {
+            $this->logger->error('Error generating folders XML', [
+                'error' => $e->getMessage(),
+                'folders_json' => $foldersJson
+            ]);
+            return '';
+        }
+    }
+    
+    /**
+     * Generate XML for a single folder
+     */
+    private function generateFolderXml(array $folder): string
+    {
+        $id = $folder['id'] ?? '';
+        $name = $folder['name'] ?? '';
+        $type = $folder['type'] ?? '';
+        $documentation = $folder['documentation'] ?? '';
+        
+        $xml = '  <folder identifier="' . htmlspecialchars($id) . '"';
+        
+        if (!empty($name)) {
+            $xml .= ' name="' . htmlspecialchars($name) . '"';
+        }
+        
+        if (!empty($type)) {
+            $xml .= ' type="' . htmlspecialchars($type) . '"';
+        }
+        
+        // Add any additional attributes that were captured during import
+        foreach ($folder as $key => $value) {
+            if (!in_array($key, ['id', 'name', 'type', 'documentation', 'properties']) && !empty($value)) {
+                $xml .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars($value) . '"';
+            }
+        }
+        
+        // Check if we have content to include
+        $hasContent = !empty($documentation) || !empty($folder['properties']);
+        
+        if ($hasContent) {
+            $xml .= '>' . "\n";
+            
+            // Add documentation if present
+            if (!empty($documentation)) {
+                $xml .= '    <documentation xml:lang="en">' . htmlspecialchars($documentation) . '</documentation>' . "\n";
+            }
+            
+            // Add properties if present
+            if (!empty($folder['properties'])) {
+                $xml .= '    <properties>' . "\n";
+                foreach ($folder['properties'] as $key => $value) {
+                    if (!empty($key) && !empty($value)) {
+                        $xml .= '      <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
+                        $xml .= '        <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
+                        $xml .= '      </property>' . "\n";
+                    }
+                }
+                $xml .= '    </properties>' . "\n";
+            }
+            
+            $xml .= '  </folder>' . "\n";
+        } else {
+            // Self-closing tag
+            $xml .= '/>' . "\n";
+        }
+        
         return $xml;
     }
 
