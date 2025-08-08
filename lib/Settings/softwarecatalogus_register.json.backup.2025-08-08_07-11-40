@@ -2277,6 +2277,9 @@
                     "voorzieningAanbod": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             }
@@ -2293,6 +2296,9 @@
                     "voorzieningGebruik": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "organisatie": {
                                 "type": "object",
                                 "properties": {
@@ -2385,6 +2391,9 @@
                     "contactpersoonAanbieder": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             },
@@ -2403,6 +2412,9 @@
                     "contactpersoonGebruiker": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             },
@@ -2658,98 +2670,106 @@
                 "version": "0.0.1",
                 "summary": "",
                 "icon": null,
-                "required": [],
+                "required": [
+                    "id"
+                ],
                 "properties": {
-                    "type": {
+                    "id": {
                         "description": "",
                         "type": "string",
                         "order": 1,
+                        "title": "Id"
+                    },
+                    "type": {
+                        "description": "",
+                        "type": "string",
+                        "order": 2,
                         "title": "Type"
                     },
                     "aantalGebruik": {
                         "description": "",
                         "type": "number",
-                        "order": 2,
+                        "order": 3,
                         "title": "AantalGebruik"
                     },
                     "status": {
                         "description": "",
                         "type": "string",
-                        "order": 3,
+                        "order": 4,
                         "title": "Status"
                     },
                     "datumStatus": {
                         "description": "",
                         "type": "string",
-                        "order": 4,
+                        "order": 5,
                         "title": "DatumStatus"
                     },
                     "beschrijvingKort": {
                         "description": "",
                         "type": "string",
-                        "order": 5,
+                        "order": 6,
                         "title": "BeschrijvingKort"
                     },
                     "beschrijvingLang": {
                         "description": "",
                         "type": "string",
-                        "order": 6,
+                        "order": 7,
                         "title": "BeschrijvingLang"
                     },
                     "gegevensuitwisselingRichting": {
                         "description": "",
                         "type": "string",
-                        "order": 7,
+                        "order": 8,
                         "title": "GegevensuitwisselingRichting"
                     },
                     "vanModule": {
                         "description": "",
                         "type": "string",
-                        "order": 8,
+                        "order": 9,
                         "title": "VanModule"
                     },
                     "naarModule": {
                         "description": "",
                         "type": "string",
-                        "order": 9,
+                        "order": 10,
                         "title": "NaarModule"
                     },
                     "buitengemeentelijkVoorziening": {
                         "description": "",
                         "type": "string",
-                        "order": 10,
+                        "order": 11,
                         "title": "BuitengemeentelijkVoorziening"
                     },
                     "implementeertStandaardversie": {
                         "description": "",
                         "type": "string",
-                        "order": 11,
+                        "order": 12,
                         "title": "ImplementeertStandaardversie"
                     },
                     "gerealiseerdMetIntermediairModule": {
                         "description": "",
                         "type": "string",
-                        "order": 12,
+                        "order": 13,
                         "title": "GerealiseerdMetIntermediairModule"
                     },
                     "gegevensuitwisselingVanBedrijfsobjecten": {
                         "description": "",
                         "type": "string",
-                        "order": 13,
+                        "order": 14,
                         "title": "GegevensuitwisselingVanBedrijfsobjecten"
                     },
                     "organisatieRegistreertPlaatsvervangend": {
                         "description": "",
                         "type": "string",
-                        "order": 14,
+                        "order": 15,
                         "title": "OrganisatieRegistreertPlaatsvervangend"
                     }
                 },
                 "archive": [],
                 "source": "",
                 "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
+                "updated": "2025-08-08T07:10:01+00:00",
+                "created": "2025-08-08T07:10:01+00:00",
                 "maxDepth": 0,
                 "owner": "system",
                 "application": null,
@@ -4904,80 +4924,88 @@
                 "version": "0.0.1",
                 "summary": "",
                 "icon": null,
-                "required": [],
+                "required": [
+                    "id"
+                ],
                 "properties": {
-                    "gebruikVanKoppeling": {
+                    "id": {
                         "description": "",
                         "type": "string",
                         "order": 1,
+                        "title": "Id"
+                    },
+                    "gebruikVanKoppeling": {
+                        "description": "",
+                        "type": "string",
+                        "order": 2,
                         "title": "GebruikVanKoppeling"
                     },
                     "status": {
                         "description": "",
                         "type": "string",
-                        "order": 2,
+                        "order": 3,
                         "title": "Status"
                     },
                     "datumStatus": {
                         "description": "",
                         "type": "string",
-                        "order": 3,
+                        "order": 4,
                         "title": "DatumStatus"
                     },
                     "beschrijvingKort": {
                         "description": "",
                         "type": "string",
-                        "order": 4,
+                        "order": 5,
                         "title": "BeschrijvingKort"
                     },
                     "beschrijvingLang": {
                         "description": "",
                         "type": "string",
-                        "order": 5,
+                        "order": 6,
                         "title": "BeschrijvingLang"
                     },
                     "interneAantekening": {
                         "description": "",
                         "type": "string",
-                        "order": 6,
+                        "order": 7,
                         "title": "InterneAantekening"
                     },
                     "BIVclassificatie": {
                         "description": "",
                         "type": "string",
-                        "order": 7,
+                        "order": 8,
                         "title": "BIVclassificatie"
                     },
                     "IBPrisicoanalyse": {
                         "description": "",
                         "type": "string",
-                        "order": 8,
+                        "order": 9,
                         "title": "IBPrisicoanalyse"
                     },
                     "isBedrijfskritisch": {
                         "description": "",
                         "type": "string",
-                        "order": 9,
+                        "order": 10,
                         "title": "IsBedrijfskritisch"
                     },
                     "isPrivacygevoelig": {
                         "description": "",
                         "type": "string",
-                        "order": 10,
+                        "order": 11,
                         "title": "IsPrivacygevoelig"
                     },
                     "organisatieRegistreertGebruik": {
                         "description": "",
                         "type": "string",
-                        "order": 11,
+                        "order": 12,
                         "title": "OrganisatieRegistreertGebruik"
                     }
                 },
                 "archive": [],
                 "source": "",
                 "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
+                "updated": "2025-08-08T07:10:01+00:00",
+                "created": "2025-08-08T07:10:01+00:00",
                 "maxDepth": 0,
                 "owner": "system",
                 "application": null,
@@ -4995,38 +5023,46 @@
                 "version": "0.0.1",
                 "summary": "",
                 "icon": null,
-                "required": [],
+                "required": [
+                    "id"
+                ],
                 "properties": {
-                    "ondersteuntStandaardversie": {
+                    "id": {
                         "description": "",
                         "type": "string",
                         "order": 1,
+                        "title": "Id"
+                    },
+                    "ondersteuntStandaardversie": {
+                        "description": "",
+                        "type": "string",
+                        "order": 2,
                         "title": "OndersteuntStandaardversie"
                     },
                     "TestrapportLink": {
                         "description": "",
                         "type": "string",
-                        "order": 2,
+                        "order": 3,
                         "title": "TestrapportLink"
                     },
                     "ondersteuningIndicatie": {
                         "description": "",
                         "type": "boolean",
-                        "order": 3,
+                        "order": 4,
                         "title": "OndersteuningIndicatie"
                     },
                     "moduleIsCompliant": {
                         "description": "",
                         "type": "string",
-                        "order": 4,
+                        "order": 5,
                         "title": "ModuleIsCompliant"
                     }
                 },
                 "archive": [],
                 "source": "",
                 "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
+                "updated": "2025-08-08T07:10:01+00:00",
+                "created": "2025-08-08T07:10:01+00:00",
                 "maxDepth": 0,
                 "owner": "system",
                 "application": null,
@@ -5044,62 +5080,70 @@
                 "version": "0.0.1",
                 "summary": "",
                 "icon": null,
-                "required": [],
+                "required": [
+                    "id"
+                ],
                 "properties": {
-                    "gebruikVanModule": {
+                    "id": {
                         "description": "",
                         "type": "string",
                         "order": 1,
+                        "title": "Id"
+                    },
+                    "gebruikVanModule": {
+                        "description": "",
+                        "type": "string",
+                        "order": 2,
                         "title": "GebruikVanModule"
                     },
                     "gebruikVanModuleversies": {
                         "description": "",
                         "type": "string",
-                        "order": 2,
+                        "order": 3,
                         "title": "GebruikVanModuleversies"
                     },
                     "gebruiktVoorReferentiecomponenten": {
                         "description": "",
                         "type": "string",
-                        "order": 3,
+                        "order": 4,
                         "title": "GebruiktVoorReferentiecomponenten"
                     },
                     "gebruiktVoorTechnologiecomponenten": {
                         "description": "",
                         "type": "string",
-                        "order": 4,
+                        "order": 5,
                         "title": "GebruiktVoorTechnologiecomponenten"
                     },
                     "gemeente_naam": {
                         "description": "",
                         "type": "string",
-                        "order": 5,
+                        "order": 6,
                         "title": "Gemeente naam"
                     },
                     "samenwerking": {
                         "description": "",
                         "type": "string",
-                        "order": 6,
+                        "order": 7,
                         "title": "Samenwerking"
                     },
                     "organisatieRegistreertGebruik": {
                         "description": "",
                         "type": "string",
-                        "order": 7,
+                        "order": 8,
                         "title": "OrganisatieRegistreertGebruik"
                     },
                     "organisatieDeelnemerGebruik": {
                         "description": "",
                         "type": "string",
-                        "order": 8,
+                        "order": 9,
                         "title": "OrganisatieDeelnemerGebruik"
                     }
                 },
                 "archive": [],
                 "source": "",
                 "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
+                "updated": "2025-08-08T07:10:01+00:00",
+                "created": "2025-08-08T07:10:01+00:00",
                 "maxDepth": 0,
                 "owner": "system",
                 "application": null,
@@ -5117,110 +5161,118 @@
                 "version": "0.0.1",
                 "summary": "",
                 "icon": null,
-                "required": [],
+                "required": [
+                    "id"
+                ],
                 "properties": {
-                    "module": {
+                    "id": {
                         "description": "",
                         "type": "string",
                         "order": 1,
+                        "title": "Id"
+                    },
+                    "module": {
+                        "description": "",
+                        "type": "string",
+                        "order": 2,
                         "title": "Module"
                     },
                     "versie": {
                         "description": "",
                         "type": "number",
-                        "order": 2,
+                        "order": 3,
                         "title": "Versie"
                     },
                     "beschrijvingKort": {
                         "description": "",
                         "type": "string",
-                        "order": 3,
+                        "order": 4,
                         "title": "BeschrijvingKort"
                     },
                     "beschrijvingLang": {
                         "description": "",
                         "type": "string",
-                        "order": 4,
+                        "order": 5,
                         "title": "BeschrijvingLang"
                     },
                     "mutatiedatum_pakketversie": {
                         "description": "",
                         "type": "string",
-                        "order": 5,
+                        "order": 6,
                         "title": "Mutatiedatum pakketversie"
                     },
                     "pakketversie_status": {
                         "description": "",
                         "type": "string",
-                        "order": 6,
+                        "order": 7,
                         "title": "Pakketversie status"
                     },
                     "datumOntwikkeling_org": {
                         "description": "",
                         "type": "string",
-                        "order": 7,
+                        "order": 8,
                         "title": "DatumOntwikkeling org"
                     },
                     "datumTest_org": {
                         "description": "",
                         "type": "string",
-                        "order": 8,
+                        "order": 9,
                         "title": "DatumTest org"
                     },
                     "datumDistributie_org": {
                         "description": "",
                         "type": "string",
-                        "order": 9,
+                        "order": 10,
                         "title": "DatumDistributie org"
                     },
                     "datumEindeOndersteuning_org": {
                         "description": "",
                         "type": "string",
-                        "order": 10,
+                        "order": 11,
                         "title": "DatumEindeOndersteuning org"
                     },
                     "datumOntwikkeling": {
                         "description": "",
                         "type": "string",
-                        "order": 11,
+                        "order": 12,
                         "title": "DatumOntwikkeling"
                     },
                     "datumTest": {
                         "description": "",
                         "type": "string",
-                        "order": 12,
+                        "order": 13,
                         "title": "DatumTest"
                     },
                     "datumDistributie": {
                         "description": "",
                         "type": "string",
-                        "order": 13,
+                        "order": 14,
                         "title": "DatumDistributie"
                     },
                     "datumEindeOndersteuning": {
                         "description": "",
                         "type": "string",
-                        "order": 14,
+                        "order": 15,
                         "title": "DatumEindeOndersteuning"
                     },
                     "compliancy_indicated": {
                         "description": "",
                         "type": "boolean",
-                        "order": 15,
+                        "order": 16,
                         "title": "Compliancy indicated"
                     },
                     "testrapport_url": {
                         "description": "",
                         "type": "string",
-                        "order": 16,
+                        "order": 17,
                         "title": "Testrapport url"
                     }
                 },
                 "archive": [],
                 "source": "",
                 "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
+                "updated": "2025-08-08T07:10:01+00:00",
+                "created": "2025-08-08T07:10:01+00:00",
                 "maxDepth": 0,
                 "owner": "system",
                 "application": null,

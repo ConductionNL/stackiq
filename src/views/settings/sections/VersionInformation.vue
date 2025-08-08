@@ -17,7 +17,7 @@
  -->
 
 <template>
-	<CollapsibleSection
+	<AlwaysVisibleSection
 		name="Version Information"
 		description="Current application and configuration versions"
 		:loading="loadingVersionInfo"
@@ -50,97 +50,95 @@
 				</div>
 			</div>
 
-			<!-- Consolidated Auto-Configuration Section -->
-			<div class="consolidated-config">
-				<div class="config-actions">
-					<NcButton
-						:type="versionInfo.needsUpdate ? 'primary' : 'secondary'"
-						:disabled="autoConfiguring"
-						@click="consolidatedAutoConfigure()">
-						<template #icon>
-							<NcLoadingIcon v-if="autoConfiguring" :size="20" />
-							<Cog v-else :size="20" />
-						</template>
-						{{ versionInfo.needsUpdate ? 'Auto Configure' : 'Reload Configuration' }}
-					</NcButton>
-				</div>
+			<!-- Configuration Actions -->
+			<div class="config-actions">
+				<NcButton
+					:type="versionInfo.needsUpdate ? 'primary' : 'secondary'"
+					:disabled="autoConfiguring"
+					@click="consolidatedAutoConfigure()">
+					<template #icon>
+						<NcLoadingIcon v-if="autoConfiguring" :size="20" />
+						<Cog v-else :size="20" />
+					</template>
+					{{ versionInfo.needsUpdate ? 'Auto Configure' : 'Reload Configuration' }}
+				</NcButton>
+			</div>
 
-				<!-- Configuration Results -->
-				<div v-if="consolidatedResult" class="config-result">
-					<NcNoteCard
-						v-if="consolidatedResult.success"
-						type="success">
-						{{ consolidatedResult.message }}
+			<!-- Configuration Results -->
+			<div v-if="consolidatedResult" class="config-result">
+				<NcNoteCard
+					v-if="consolidatedResult.success"
+					type="success">
+					{{ consolidatedResult.message }}
 
-						<!-- Configuration Steps Details -->
-						<div v-if="consolidatedResult.steps" class="config-steps">
-							<h4>Configuration Steps:</h4>
-							<ul>
-								<li v-if="consolidatedResult.steps.configurationLoad?.success">
-									✅ Configuration Loading: {{ consolidatedResult.steps.configurationLoad.message }}
-								</li>
-								<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.success">
-									🇳🇱 Voorzieningen: {{ consolidatedResult.steps.voorzieningenConfiguration.message }}
-								</li>
-								<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.register">
-									📋 Voorzieningen Register: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.register }}
-								</li>
-								<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.organisatieSchema">
-									📊 Organisatie Schema: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.organisatieSchema }}
-								</li>
-								<li v-if="consolidatedResult.steps.amefConfiguration?.success">
-									🏗️ AMEF: {{ consolidatedResult.steps.amefConfiguration.message }}
-								</li>
-								<li v-if="consolidatedResult.steps.amefConfiguration?.configured?.registerId">
-									📋 AMEF Register: {{ consolidatedResult.steps.amefConfiguration.configured.registerId }}
-								</li>
-								<li v-if="consolidatedResult.steps.groupsConfiguration?.success">
-									👥 User Groups: {{ consolidatedResult.steps.groupsConfiguration.message }}
-								</li>
-								<li v-if="consolidatedResult.steps.groupsConfiguration?.created?.length > 0">
-									➕ Created Groups: {{ consolidatedResult.steps.groupsConfiguration.created.join(', ') }}
-								</li>
-								<li v-if="consolidatedResult.steps.groupsConfiguration?.existing?.length > 0">
-									✓ Existing Groups: {{ consolidatedResult.steps.groupsConfiguration.existing.length }} groups already exist
-								</li>
-							</ul>
-						</div>
-					</NcNoteCard>
-					<NcNoteCard
-						v-else
-						type="error">
-						{{ consolidatedResult.message }}
+					<!-- Configuration Steps Details -->
+					<div v-if="consolidatedResult.steps" class="config-steps">
+						<h4>Configuration Steps:</h4>
+						<ul>
+							<li v-if="consolidatedResult.steps.configurationLoad?.success">
+								✅ Configuration Loading: {{ consolidatedResult.steps.configurationLoad.message }}
+							</li>
+							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.success">
+								🇳🇱 Voorzieningen: {{ consolidatedResult.steps.voorzieningenConfiguration.message }}
+							</li>
+							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.register">
+								📋 Voorzieningen Register: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.register }}
+							</li>
+							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.organisatieSchema">
+								📊 Organisatie Schema: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.organisatieSchema }}
+							</li>
+							<li v-if="consolidatedResult.steps.amefConfiguration?.success">
+								🏗️ AMEF: {{ consolidatedResult.steps.amefConfiguration.message }}
+							</li>
+							<li v-if="consolidatedResult.steps.amefConfiguration?.configured?.registerId">
+								📋 AMEF Register: {{ consolidatedResult.steps.amefConfiguration.configured.registerId }}
+							</li>
+							<li v-if="consolidatedResult.steps.groupsConfiguration?.success">
+								👥 User Groups: {{ consolidatedResult.steps.groupsConfiguration.message }}
+							</li>
+							<li v-if="consolidatedResult.steps.groupsConfiguration?.created?.length > 0">
+								➕ Created Groups: {{ consolidatedResult.steps.groupsConfiguration.created.join(', ') }}
+							</li>
+							<li v-if="consolidatedResult.steps.groupsConfiguration?.existing?.length > 0">
+								✓ Existing Groups: {{ consolidatedResult.steps.groupsConfiguration.existing.length }} groups already exist
+							</li>
+						</ul>
+					</div>
+				</NcNoteCard>
+				<NcNoteCard
+					v-else
+					type="error">
+					{{ consolidatedResult.message }}
 
-						<!-- Show errors if any -->
-						<div v-if="consolidatedResult.errors && consolidatedResult.errors.length > 0" class="config-errors">
-							<h4>Errors:</h4>
-							<ul>
-								<li v-for="error in consolidatedResult.errors" :key="error">
-									{{ error }}
-								</li>
-							</ul>
-						</div>
-					</NcNoteCard>
-				</div>
+					<!-- Show errors if any -->
+					<div v-if="consolidatedResult.errors && consolidatedResult.errors.length > 0" class="config-errors">
+						<h4>Errors:</h4>
+						<ul>
+							<li v-for="error in consolidatedResult.errors" :key="error">
+								{{ error }}
+							</li>
+						</ul>
+					</div>
+				</NcNoteCard>
+			</div>
 
-				<!-- Reset Auto-Config Results -->
-				<div v-if="resetAutoConfigResult" class="reset-result">
-					<NcNoteCard
-						v-if="resetAutoConfigResult.success"
-						type="success">
-						{{ resetAutoConfigResult.message }}
-					</NcNoteCard>
-					<NcNoteCard
-						v-else
-						type="error">
-						{{ resetAutoConfigResult.message }}
-					</NcNoteCard>
-				</div>
+			<!-- Reset Auto-Config Results -->
+			<div v-if="resetAutoConfigResult" class="reset-result">
+				<NcNoteCard
+					v-if="resetAutoConfigResult.success"
+					type="success">
+					{{ resetAutoConfigResult.message }}
+				</NcNoteCard>
+				<NcNoteCard
+					v-else
+					type="error">
+					{{ resetAutoConfigResult.message }}
+				</NcNoteCard>
 			</div>
 		</div>
 
 		<!-- Info Content Slot -->
-		<template #info-content>
+		<template #info>
 			<div class="version-info-help">
 				<h3>About Version Information</h3>
 				<p>This section displays version information for the Software Catalog application and its configuration status.</p>
@@ -176,7 +174,7 @@
 				<p>Use this when setting up the application for the first time or after major updates.</p>
 			</div>
 		</template>
-	</CollapsibleSection>
+	</AlwaysVisibleSection>
 </template>
 
 <script>
@@ -195,21 +193,19 @@
 import { settingsStore } from '../../../store/store.js'
 
 // Components
-import CollapsibleSection from '../../../components/CollapsibleSection.vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
+import { NcButton, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
 
-// Icons
+// Material Design Icons
 import Cog from 'vue-material-design-icons/Cog.vue'
 
 export default {
 	name: 'VersionInformation',
 
 	components: {
-		CollapsibleSection,
+		AlwaysVisibleSection,
 		NcButton,
 		NcNoteCard,
 		NcLoadingIcon,

@@ -21,11 +21,7 @@
                     "koppeling",
                     "beoordeeling",
                     "voorzieningModule",
-                    "verklaring",
-                    "koppelingGebruik",
-                    "compliancy",
-                    "moduleGebruik",
-                    "moduleversie"
+                    "verklaring"
                 ],
                 "source": "internal",
                 "tablePrefix": "",
@@ -2277,6 +2273,9 @@
                     "voorzieningAanbod": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             }
@@ -2293,6 +2292,9 @@
                     "voorzieningGebruik": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "organisatie": {
                                 "type": "object",
                                 "properties": {
@@ -2385,6 +2387,9 @@
                     "contactpersoonAanbieder": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             },
@@ -2403,6 +2408,9 @@
                     "contactpersoonGebruiker": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             },
@@ -2654,102 +2662,128 @@
                 "uri": null,
                 "slug": "koppeling",
                 "title": "Koppeling",
-                "description": "Schema voor koppelingen tussen modules en systemen",
-                "version": "0.0.1",
+                "description": "",
+                "version": "0.0.5",
                 "summary": "",
                 "icon": null,
-                "required": [],
+                "required": [
+                    "van"
+                ],
                 "properties": {
-                    "type": {
-                        "description": "",
+                    "van": {
+                        "description": "VoorzieningGebruikId",
                         "type": "string",
-                        "order": 1,
-                        "title": "Type"
+                        "required": true,
+                        "minLength": null,
+                        "maxLength": null,
+                        "minimum": null,
+                        "maximum": null,
+                        "multipleOf": null,
+                        "minItems": null,
+                        "maxItems": null,
+                        "inversedBy": "",
+                        "$ref": "",
+                        "objectConfiguration": {
+                            "handling": "nested-object",
+                            "schema": ""
+                        },
+                        "fileConfiguration": {
+                            "handling": "ignore",
+                            "allowedMimeTypes": [],
+                            "location": "",
+                            "maxSize": 0
+                        },
+                        "oneOf": [],
+                        "title": "Van",
+                        "order": 3
                     },
-                    "aantalGebruik": {
-                        "description": "",
-                        "type": "number",
-                        "order": 2,
-                        "title": "AantalGebruik"
-                    },
-                    "status": {
-                        "description": "",
+                    "naar": {
+                        "description": "VoorzieningGebruikId of LandelijkeVoorzieningid",
                         "type": "string",
-                        "order": 3,
-                        "title": "Status"
+                        "minLength": null,
+                        "maxLength": null,
+                        "minimum": null,
+                        "maximum": null,
+                        "multipleOf": null,
+                        "minItems": null,
+                        "maxItems": null,
+                        "inversedBy": "",
+                        "$ref": "",
+                        "objectConfiguration": {
+                            "handling": "nested-object",
+                            "schema": ""
+                        },
+                        "fileConfiguration": {
+                            "handling": "ignore",
+                            "allowedMimeTypes": [],
+                            "location": "",
+                            "maxSize": 0
+                        },
+                        "oneOf": [],
+                        "title": "Naar",
+                        "order": 1
                     },
-                    "datumStatus": {
-                        "description": "",
+                    "standaard": {
+                        "description": "De toepgepaste standaard binnen deze koppelen",
                         "type": "string",
-                        "order": 4,
-                        "title": "DatumStatus"
+                        "visible": true,
+                        "minLength": null,
+                        "maxLength": null,
+                        "minimum": null,
+                        "maximum": null,
+                        "multipleOf": null,
+                        "minItems": null,
+                        "maxItems": null,
+                        "inversedBy": "",
+                        "$ref": "",
+                        "objectConfiguration": {
+                            "handling": "nested-object",
+                            "schema": ""
+                        },
+                        "fileConfiguration": {
+                            "handling": "ignore",
+                            "allowedMimeTypes": [],
+                            "location": "",
+                            "maxSize": 0
+                        },
+                        "oneOf": [],
+                        "title": "Standaard",
+                        "order": 2
                     },
-                    "beschrijvingKort": {
-                        "description": "",
+                    "versie": {
+                        "description": "Een optionele versie van de toegepaste standaard",
                         "type": "string",
-                        "order": 5,
-                        "title": "BeschrijvingKort"
-                    },
-                    "beschrijvingLang": {
-                        "description": "",
-                        "type": "string",
-                        "order": 6,
-                        "title": "BeschrijvingLang"
-                    },
-                    "gegevensuitwisselingRichting": {
-                        "description": "",
-                        "type": "string",
-                        "order": 7,
-                        "title": "GegevensuitwisselingRichting"
-                    },
-                    "vanModule": {
-                        "description": "",
-                        "type": "string",
-                        "order": 8,
-                        "title": "VanModule"
-                    },
-                    "naarModule": {
-                        "description": "",
-                        "type": "string",
-                        "order": 9,
-                        "title": "NaarModule"
-                    },
-                    "buitengemeentelijkVoorziening": {
-                        "description": "",
-                        "type": "string",
-                        "order": 10,
-                        "title": "BuitengemeentelijkVoorziening"
-                    },
-                    "implementeertStandaardversie": {
-                        "description": "",
-                        "type": "string",
-                        "order": 11,
-                        "title": "ImplementeertStandaardversie"
-                    },
-                    "gerealiseerdMetIntermediairModule": {
-                        "description": "",
-                        "type": "string",
-                        "order": 12,
-                        "title": "GerealiseerdMetIntermediairModule"
-                    },
-                    "gegevensuitwisselingVanBedrijfsobjecten": {
-                        "description": "",
-                        "type": "string",
-                        "order": 13,
-                        "title": "GegevensuitwisselingVanBedrijfsobjecten"
-                    },
-                    "organisatieRegistreertPlaatsvervangend": {
-                        "description": "",
-                        "type": "string",
-                        "order": 14,
-                        "title": "OrganisatieRegistreertPlaatsvervangend"
+                        "visible": true,
+                        "minLength": null,
+                        "maxLength": null,
+                        "minimum": null,
+                        "maximum": null,
+                        "multipleOf": null,
+                        "minItems": null,
+                        "maxItems": null,
+                        "inversedBy": "",
+                        "$ref": "",
+                        "objectConfiguration": {
+                            "handling": "nested-object",
+                            "schema": ""
+                        },
+                        "fileConfiguration": {
+                            "handling": "ignore",
+                            "allowedMimeTypes": [],
+                            "location": "",
+                            "maxSize": 0
+                        },
+                        "oneOf": [],
+                        "title": "Versie",
+                        "order": 4
                     }
                 },
                 "archive": [],
                 "source": "",
                 "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
+                "immutable": false,
+                "updated": "2025-05-12T20:09:48+00:00",
+                "created": "2025-05-12T13:10:53+00:00",
                 "maxDepth": 0,
                 "owner": "system",
                 "application": null,
@@ -4895,340 +4929,6 @@
                     "objectNameField": "naam",
                     "objectDescriptionField": "type"
                 }
-            },
-            "koppelingGebruik": {
-                "uri": null,
-                "slug": "koppelingGebruik",
-                "title": "Koppeling Gebruik",
-                "description": "Schema voor het gebruik van koppelingen",
-                "version": "0.0.1",
-                "summary": "",
-                "icon": null,
-                "required": [],
-                "properties": {
-                    "gebruikVanKoppeling": {
-                        "description": "",
-                        "type": "string",
-                        "order": 1,
-                        "title": "GebruikVanKoppeling"
-                    },
-                    "status": {
-                        "description": "",
-                        "type": "string",
-                        "order": 2,
-                        "title": "Status"
-                    },
-                    "datumStatus": {
-                        "description": "",
-                        "type": "string",
-                        "order": 3,
-                        "title": "DatumStatus"
-                    },
-                    "beschrijvingKort": {
-                        "description": "",
-                        "type": "string",
-                        "order": 4,
-                        "title": "BeschrijvingKort"
-                    },
-                    "beschrijvingLang": {
-                        "description": "",
-                        "type": "string",
-                        "order": 5,
-                        "title": "BeschrijvingLang"
-                    },
-                    "interneAantekening": {
-                        "description": "",
-                        "type": "string",
-                        "order": 6,
-                        "title": "InterneAantekening"
-                    },
-                    "BIVclassificatie": {
-                        "description": "",
-                        "type": "string",
-                        "order": 7,
-                        "title": "BIVclassificatie"
-                    },
-                    "IBPrisicoanalyse": {
-                        "description": "",
-                        "type": "string",
-                        "order": 8,
-                        "title": "IBPrisicoanalyse"
-                    },
-                    "isBedrijfskritisch": {
-                        "description": "",
-                        "type": "string",
-                        "order": 9,
-                        "title": "IsBedrijfskritisch"
-                    },
-                    "isPrivacygevoelig": {
-                        "description": "",
-                        "type": "string",
-                        "order": 10,
-                        "title": "IsPrivacygevoelig"
-                    },
-                    "organisatieRegistreertGebruik": {
-                        "description": "",
-                        "type": "string",
-                        "order": 11,
-                        "title": "OrganisatieRegistreertGebruik"
-                    }
-                },
-                "archive": [],
-                "source": "",
-                "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
-                "maxDepth": 0,
-                "owner": "system",
-                "application": null,
-                "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-                "groups": null,
-                "authorization": null,
-                "deleted": null,
-                "configuration": null
-            },
-            "compliancy": {
-                "uri": null,
-                "slug": "compliancy",
-                "title": "Compliancy",
-                "description": "Schema voor compliancy en standaard ondersteuning",
-                "version": "0.0.1",
-                "summary": "",
-                "icon": null,
-                "required": [],
-                "properties": {
-                    "ondersteuntStandaardversie": {
-                        "description": "",
-                        "type": "string",
-                        "order": 1,
-                        "title": "OndersteuntStandaardversie"
-                    },
-                    "TestrapportLink": {
-                        "description": "",
-                        "type": "string",
-                        "order": 2,
-                        "title": "TestrapportLink"
-                    },
-                    "ondersteuningIndicatie": {
-                        "description": "",
-                        "type": "boolean",
-                        "order": 3,
-                        "title": "OndersteuningIndicatie"
-                    },
-                    "moduleIsCompliant": {
-                        "description": "",
-                        "type": "string",
-                        "order": 4,
-                        "title": "ModuleIsCompliant"
-                    }
-                },
-                "archive": [],
-                "source": "",
-                "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
-                "maxDepth": 0,
-                "owner": "system",
-                "application": null,
-                "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-                "groups": null,
-                "authorization": null,
-                "deleted": null,
-                "configuration": null
-            },
-            "moduleGebruik": {
-                "uri": null,
-                "slug": "moduleGebruik",
-                "title": "Module Gebruik",
-                "description": "Schema voor het gebruik van modules",
-                "version": "0.0.1",
-                "summary": "",
-                "icon": null,
-                "required": [],
-                "properties": {
-                    "gebruikVanModule": {
-                        "description": "",
-                        "type": "string",
-                        "order": 1,
-                        "title": "GebruikVanModule"
-                    },
-                    "gebruikVanModuleversies": {
-                        "description": "",
-                        "type": "string",
-                        "order": 2,
-                        "title": "GebruikVanModuleversies"
-                    },
-                    "gebruiktVoorReferentiecomponenten": {
-                        "description": "",
-                        "type": "string",
-                        "order": 3,
-                        "title": "GebruiktVoorReferentiecomponenten"
-                    },
-                    "gebruiktVoorTechnologiecomponenten": {
-                        "description": "",
-                        "type": "string",
-                        "order": 4,
-                        "title": "GebruiktVoorTechnologiecomponenten"
-                    },
-                    "gemeente_naam": {
-                        "description": "",
-                        "type": "string",
-                        "order": 5,
-                        "title": "Gemeente naam"
-                    },
-                    "samenwerking": {
-                        "description": "",
-                        "type": "string",
-                        "order": 6,
-                        "title": "Samenwerking"
-                    },
-                    "organisatieRegistreertGebruik": {
-                        "description": "",
-                        "type": "string",
-                        "order": 7,
-                        "title": "OrganisatieRegistreertGebruik"
-                    },
-                    "organisatieDeelnemerGebruik": {
-                        "description": "",
-                        "type": "string",
-                        "order": 8,
-                        "title": "OrganisatieDeelnemerGebruik"
-                    }
-                },
-                "archive": [],
-                "source": "",
-                "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
-                "maxDepth": 0,
-                "owner": "system",
-                "application": null,
-                "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-                "groups": null,
-                "authorization": null,
-                "deleted": null,
-                "configuration": null
-            },
-            "moduleversie": {
-                "uri": null,
-                "slug": "moduleversie",
-                "title": "Module Versie",
-                "description": "Schema voor module versies",
-                "version": "0.0.1",
-                "summary": "",
-                "icon": null,
-                "required": [],
-                "properties": {
-                    "module": {
-                        "description": "",
-                        "type": "string",
-                        "order": 1,
-                        "title": "Module"
-                    },
-                    "versie": {
-                        "description": "",
-                        "type": "number",
-                        "order": 2,
-                        "title": "Versie"
-                    },
-                    "beschrijvingKort": {
-                        "description": "",
-                        "type": "string",
-                        "order": 3,
-                        "title": "BeschrijvingKort"
-                    },
-                    "beschrijvingLang": {
-                        "description": "",
-                        "type": "string",
-                        "order": 4,
-                        "title": "BeschrijvingLang"
-                    },
-                    "mutatiedatum_pakketversie": {
-                        "description": "",
-                        "type": "string",
-                        "order": 5,
-                        "title": "Mutatiedatum pakketversie"
-                    },
-                    "pakketversie_status": {
-                        "description": "",
-                        "type": "string",
-                        "order": 6,
-                        "title": "Pakketversie status"
-                    },
-                    "datumOntwikkeling_org": {
-                        "description": "",
-                        "type": "string",
-                        "order": 7,
-                        "title": "DatumOntwikkeling org"
-                    },
-                    "datumTest_org": {
-                        "description": "",
-                        "type": "string",
-                        "order": 8,
-                        "title": "DatumTest org"
-                    },
-                    "datumDistributie_org": {
-                        "description": "",
-                        "type": "string",
-                        "order": 9,
-                        "title": "DatumDistributie org"
-                    },
-                    "datumEindeOndersteuning_org": {
-                        "description": "",
-                        "type": "string",
-                        "order": 10,
-                        "title": "DatumEindeOndersteuning org"
-                    },
-                    "datumOntwikkeling": {
-                        "description": "",
-                        "type": "string",
-                        "order": 11,
-                        "title": "DatumOntwikkeling"
-                    },
-                    "datumTest": {
-                        "description": "",
-                        "type": "string",
-                        "order": 12,
-                        "title": "DatumTest"
-                    },
-                    "datumDistributie": {
-                        "description": "",
-                        "type": "string",
-                        "order": 13,
-                        "title": "DatumDistributie"
-                    },
-                    "datumEindeOndersteuning": {
-                        "description": "",
-                        "type": "string",
-                        "order": 14,
-                        "title": "DatumEindeOndersteuning"
-                    },
-                    "compliancy_indicated": {
-                        "description": "",
-                        "type": "boolean",
-                        "order": 15,
-                        "title": "Compliancy indicated"
-                    },
-                    "testrapport_url": {
-                        "description": "",
-                        "type": "string",
-                        "order": 16,
-                        "title": "Testrapport url"
-                    }
-                },
-                "archive": [],
-                "source": "",
-                "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
-                "maxDepth": 0,
-                "owner": "system",
-                "application": null,
-                "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-                "groups": null,
-                "authorization": null,
-                "deleted": null,
-                "configuration": null
             }
         },
         "objects": []

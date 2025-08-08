@@ -1743,6 +1743,65 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Get ArchiMate settings and status (without object counts for performance)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse ArchiMate settings and status
+     */
+    public function getArchiMateSettings(): JSONResponse
+    {
+        try {
+            $archimateStatus = $this->settingsService->getArchiMateStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'archimate' => $archimateStatus,
+                'timestamp' => time()
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get ArchiMate settings', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get ArchiMate settings: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get object counts for all registers (separate endpoint for performance)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Object counts for all registers
+     */
+    public function getObjectCounts(): JSONResponse
+    {
+        try {
+            $objectCounts = $this->settingsService->getObjectCounts();
+            
+            return new JSONResponse([
+                'success' => true,
+                'objectCounts' => $objectCounts
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object counts', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get object counts: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 }//end class
 

@@ -1061,14 +1061,24 @@ class ArchiMateService
                     'organization_count' => count($organizationArray)
                 ]);
                 
+                $organizationsFound = 0;
                 foreach ($organizationArray as $index => $orgItem) {
                     if (isset($orgItem['_attributes']['identifier'])) {
                         $normalized['organizations'][$orgItem['_attributes']['identifier']] = $this->normalizeOrganizationItem($orgItem);
+                        $organizationsFound++;
                     } else {
-                        $this->logger->warning("Organization item {$index} missing identifier", [
-                            'item_structure' => $orgItem
+                        $this->logger->debug("Organization item {$index} is organizational folder/group, not entity", [
+                            'has_label' => isset($orgItem['label']),
+                            'has_nested_items' => isset($orgItem['item']),
+                            'label' => $orgItem['label']['_value'] ?? 'No label'
                         ]);
                     }
+                }
+                
+                // If no actual organization entities found in organizations section, use fallback
+                if ($organizationsFound === 0) {
+                    $this->logger->info('No organization entities found in organizations section, using fallback extraction');
+                    $normalized['organizations'] = $this->extractOrganizations($normalized['elements']);
                 }
             }
         } else {

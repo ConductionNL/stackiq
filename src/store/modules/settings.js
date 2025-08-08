@@ -327,7 +327,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.clearError()
 
 			try {
-				// Load version info and settings in parallel
+				// Load version info and basic settings in parallel
 				const [versionResponse, settingsResponse] = await Promise.all([
 					fetch('/index.php/apps/softwarecatalog/api/settings/version'),
 					fetch('/index.php/apps/softwarecatalog/api/settings'),
@@ -369,18 +369,6 @@ export const useSettingsStore = defineStore('settings', {
 							this.emailSettings = { ...this.emailSettings, ...consolidatedConfig.email }
 						}
 
-						// Load ArchiMate status
-						if (consolidatedConfig.archimate) {
-							this.archimateStatus = consolidatedConfig.archimate
-							this.isImportRunning = consolidatedConfig.archimate.import?.status === 'running'
-							this.isExportRunning = consolidatedConfig.archimate.export?.status === 'running'
-
-							// Start polling if any operation is running
-							if (this.isImportRunning || this.isExportRunning) {
-								this.startStatusPolling()
-							}
-						}
-
 						// Initialize configuration first, then populate register selections
 						this.initializeConfiguration()
 						this.populateRegisterSelections()
@@ -391,6 +379,12 @@ export const useSettingsStore = defineStore('settings', {
 				} else {
 					throw new Error(`Settings API failed: ${settingsResponse.status} ${settingsResponse.statusText}`)
 				}
+
+				// Load ArchiMate status and object counts separately for better performance
+				await Promise.all([
+					this.loadArchiMateStatus(),
+					this.loadObjectCounts()
+				])
 
 			} catch (error) {
 				console.error('Failed to load settings:', error)
@@ -408,24 +402,92 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
+		 * Load ArchiMate status from separate endpoint
+		 * @return {Promise<void>}
+		 */
+		async loadArchiMateStatus() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/archimate')
+				
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				
+				const data = await response.json()
+				
+				if (data.success && data.archimate) {
+					console.log('Loading ArchiMate status:', data.archimate)
+					this.archimateStatus = data.archimate
+					this.isImportRunning = data.archimate.import?.status === 'running'
+					this.isExportRunning = data.archimate.export?.status === 'running'
+
+					// Start polling if any operation is running
+					if (this.isImportRunning || this.isExportRunning) {
+						this.startStatusPolling()
+					}
+				} else {
+					console.log('No ArchiMate data in response or API error:', data.error)
+				}
+			} catch (error) {
+				console.error('Failed to load ArchiMate status:', error)
+				// Don't set error here as it's not critical for basic functionality
+			}
+		},
+
+		/**
+		 * Load object counts from separate endpoint
+		 * @return {Promise<void>}
+		 */
+		async loadObjectCounts() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/objects')
+				
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				
+				const data = await response.json()
+				
+				if (data.success && data.objectCounts) {
+					console.log('Loading object counts:', data.objectCounts)
+					
+					// Update statistics with object counts
+					if (data.objectCounts.voorzieningen) {
+						this.statistics.voorzieningen.object_counts = data.objectCounts.voorzieningen
+					}
+					if (data.objectCounts.amef) {
+						this.statistics.amef.object_counts = data.objectCounts.amef
+					}
+					this.statistics.timestamp = data.objectCounts.timestamp
+				} else {
+					console.log('No object counts in response or API error:', data.error)
+				}
+			} catch (error) {
+				console.error('Failed to load object counts:', error)
+				// Don't set error here as it's not critical for basic functionality
+			}
+		},
+
+		/**
 		 * Initialize configuration object
 		 */
 		initializeConfiguration() {
-					// Initialize register-specific configuration
-		this.configuration = {
-			// AMEF register configuration
-			amef_elements: { schema: null },
-			amef_organization: { schema: null },
-			amef_relationships: { schema: null },
-			amef_views: { schema: null },
-			amef_models: { schema: null },
-			amef_properties: { schema: null },
-			// Voorzieningen register configuration
-			voorzieningen_organisatie: { schema: null },
-			voorzieningen_contactpersoon: { schema: null },
-			voorzieningen_gebruiker: { schema: null },
-			voorzieningen_contactgegevens: { schema: null },
-		}
+			// Initialize register-specific configuration
+			this.configuration = {
+				// AMEF register configuration
+				amef_elements: { schema: null },
+				amef_organization: { schema: null },
+				amef_relationships: { schema: null },
+				amef_views: { schema: null },
+				amef_models: { schema: null },
+				amef_properties: { schema: null },
+				amef_property_definitions: { schema: null },
+				// Voorzieningen register configuration
+				voorzieningen_organisatie: { schema: null },
+				voorzieningen_contactpersoon: { schema: null },
+				voorzieningen_gebruiker: { schema: null },
+				voorzieningen_contactgegevens: { schema: null },
+			}
 
 			// Map consolidated config to our configuration structure
 			const consolidatedConfig = this.settings.consolidatedConfig || {}
@@ -451,6 +513,18 @@ export const useSettingsStore = defineStore('settings', {
 					this.configuration.voorzieningen_contactpersoon.schema = {
 						label: findSchemaLabel(voorzieningenConfig.contactpersoon_schema, this.voorzieningenSchemas),
 						value: voorzieningenConfig.contactpersoon_schema,
+					}
+				}
+				if (voorzieningenConfig.gebruiker_schema) {
+					this.configuration.voorzieningen_gebruiker.schema = {
+						label: findSchemaLabel(voorzieningenConfig.gebruiker_schema, this.voorzieningenSchemas),
+						value: voorzieningenConfig.gebruiker_schema,
+					}
+				}
+				if (voorzieningenConfig.contactgegevens_schema) {
+					this.configuration.voorzieningen_contactgegevens.schema = {
+						label: findSchemaLabel(voorzieningenConfig.contactgegevens_schema, this.voorzieningenSchemas),
+						value: voorzieningenConfig.contactgegevens_schema,
 					}
 				}
 			}
@@ -493,6 +567,12 @@ export const useSettingsStore = defineStore('settings', {
 					this.configuration.amef_properties.schema = {
 						label: findSchemaLabel(amefConfig.properties_schema, this.amefSchemas),
 						value: amefConfig.properties_schema,
+					}
+				}
+				if (amefConfig.property_definitions_schema) {
+					this.configuration.amef_property_definitions.schema = {
+						label: findSchemaLabel(amefConfig.property_definitions_schema, this.amefSchemas),
+						value: amefConfig.property_definitions_schema,
 					}
 				}
 			}
@@ -780,7 +860,7 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Refresh ArchiMate status from main settings endpoint
+		 * Refresh ArchiMate status from dedicated ArchiMate endpoint
 		 * Used for real-time polling during import/export operations
 		 * Prevents concurrent calls to avoid stacking requests
 		 *
@@ -797,26 +877,26 @@ export const useSettingsStore = defineStore('settings', {
 			console.log('refreshArchiMateStatus() called')
 
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
-				console.log('Settings API response status:', response.status)
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/archimate')
+				console.log('ArchiMate API response status:', response.status)
 
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
 
 				const data = await response.json()
-				console.log('Settings API data:', data)
+				console.log('ArchiMate API data:', data)
 
-				if (!data.error && data.consolidatedConfig?.archimate) {
-					console.log('Updating ArchiMate status:', data.consolidatedConfig.archimate)
-					this.archimateStatus = data.consolidatedConfig.archimate
+				if (data.success && data.archimate) {
+					console.log('Updating ArchiMate status:', data.archimate)
+					this.archimateStatus = data.archimate
 
 					// Update running states
 					const wasImportRunning = this.isImportRunning
 					const wasExportRunning = this.isExportRunning
 
-					this.isImportRunning = data.consolidatedConfig.archimate.import?.status === 'running'
-					this.isExportRunning = data.consolidatedConfig.archimate.export?.status === 'running'
+					this.isImportRunning = data.archimate.import?.status === 'running'
+					this.isExportRunning = data.archimate.export?.status === 'running'
 
 					console.log(`Import: ${wasImportRunning} -> ${this.isImportRunning}, Export: ${wasExportRunning} -> ${this.isExportRunning}`)
 
@@ -1364,7 +1444,21 @@ export const useSettingsStore = defineStore('settings', {
 			this.amefRegister = null
 			this.voorzieningenSchemas = []
 			this.amefSchemas = []
-			this.configuration = {}
+			this.configuration = {
+				// AMEF register configuration
+				amef_elements: { schema: null },
+				amef_organization: { schema: null },
+				amef_relationships: { schema: null },
+				amef_views: { schema: null },
+				amef_models: { schema: null },
+				amef_properties: { schema: null },
+				amef_property_definitions: { schema: null },
+				// Voorzieningen register configuration
+				voorzieningen_organisatie: { schema: null },
+				voorzieningen_contactpersoon: { schema: null },
+				voorzieningen_gebruiker: { schema: null },
+				voorzieningen_contactgegevens: { schema: null },
+			}
 			this.archimateStatus = {
 				import: {},
 				export: {},

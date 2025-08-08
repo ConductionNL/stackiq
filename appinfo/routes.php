@@ -30,6 +30,10 @@ return [
         ['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
         ['name' => 'settings#stats', 'url' => '/api/settings/stats', 'verb' => 'GET'],
         
+        // Separate endpoints for performance optimization
+        ['name' => 'settings#getArchiMateSettings', 'url' => '/api/settings/archimate', 'verb' => 'GET'],
+        ['name' => 'settings#getObjectCounts', 'url' => '/api/settings/objects', 'verb' => 'GET'],
+        
         // Organization synchronization routes
         ['name' => 'settings#getSyncStatus', 'url' => '/api/settings/sync-status', 'verb' => 'GET'],
         ['name' => 'settings#performSync', 'url' => '/api/settings/sync', 'verb' => 'POST'],

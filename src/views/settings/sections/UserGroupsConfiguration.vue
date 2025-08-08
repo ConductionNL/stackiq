@@ -17,23 +17,43 @@
  -->
 
 <template>
-	<CollapsibleSection
+	<AlwaysVisibleSection
 		name="User Groups Configuration"
-		description="Configure which user groups are available for assignment to users"
+		description="Configure user groups for different access levels and permissions"
 		:loading="loading"
 		:show-save-button="true"
-		:show-refresh-button="true"
-		:saving="savingGroups || savingOrganizationAdminGroups || savingSuperUserGroups"
-		:can-save="hasChanges"
-		save-button-text="Save All Groups"
-		refresh-button-text="Reload Groups"
+		:can-save="canSave"
+		:saving="saving"
+		save-button-text="Save User Groups"
 		:has-info-content="true"
-		@save="saveAllGroups"
-		@refresh="loadAllGroups">
-		<BTabs>
-			<BTab title="Generic Groups" active>
-				<!-- Generic User Groups -->
-				<div class="generic-groups-section">
+		@save="saveUserGroups">
+		<div class="user-groups-tabs">
+			<!-- Tab Navigation -->
+			<div class="tab-navigation">
+				<button 
+					class="tab-button" 
+					:class="{ active: activeTab === 'generic-groups' }"
+					@click="activeTab = 'generic-groups'">
+					Generic Groups
+				</button>
+				<button 
+					class="tab-button" 
+					:class="{ active: activeTab === 'organization-admin-groups' }"
+					@click="activeTab = 'organization-admin-groups'">
+					Organization Admin Groups
+				</button>
+				<button 
+					class="tab-button" 
+					:class="{ active: activeTab === 'super-user-groups' }"
+					@click="activeTab = 'super-user-groups'">
+					Super User Groups
+				</button>
+			</div>
+
+			<!-- Tab Content -->
+			<div class="tab-content">
+				<!-- Generic Groups Tab -->
+				<div v-show="activeTab === 'generic-groups'" class="tab-panel">
 					<h3>Generic User Groups</h3>
 					<p>Define the list of generic user groups that can be assigned to users based on their roles</p>
 
@@ -111,11 +131,9 @@
 						</div>
 					</div>
 				</div>
-			</BTab>
 
-			<BTab title="Organization Admin Groups">
-				<!-- Organization Admin Groups -->
-				<div class="organization-admin-groups-section">
+				<!-- Organization Admin Groups Tab -->
+				<div v-show="activeTab === 'organization-admin-groups'" class="tab-panel">
 					<h3>Organization Admin Groups</h3>
 					<p>Define groups that organization administrators (first contacts) are automatically assigned to</p>
 
@@ -167,11 +185,9 @@
 						</div>
 					</div>
 				</div>
-			</BTab>
 
-			<BTab title="Super User Groups">
-				<!-- Super User Groups -->
-				<div class="super-user-groups-section">
+				<!-- Super User Groups Tab -->
+				<div v-show="activeTab === 'super-user-groups'" class="tab-panel">
 					<h3>Super User Groups</h3>
 					<p>Define groups that super users (system administrators) are automatically assigned to</p>
 
@@ -223,8 +239,8 @@
 						</div>
 					</div>
 				</div>
-			</BTab>
-		</BTabs>
+			</div>
+		</div>
 
 		<!-- Info Content Slot -->
 		<template #info-content>
@@ -265,7 +281,7 @@
 				</ul>
 			</div>
 		</template>
-	</CollapsibleSection>
+	</AlwaysVisibleSection>
 </template>
 
 <script>
@@ -285,34 +301,29 @@ import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Components
-import CollapsibleSection from '../../../components/CollapsibleSection.vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcTextField from '@nextcloud/vue/dist/Components/NcTextField.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
+import { NcButton, NcTextField, NcNoteCard } from '@nextcloud/vue'
 
 // Icons
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 
-// Bootstrap Vue components for tabs
-import { BTabs, BTab } from 'bootstrap-vue'
+// Nextcloud Vue components
 
 export default {
 	name: 'UserGroupsConfiguration',
 
 	components: {
-		CollapsibleSection,
+		AlwaysVisibleSection,
 		NcButton,
 		NcTextField,
 		NcNoteCard,
 		Plus,
 		Close,
 		Alert,
-		BTabs,
-		BTab,
 	},
 
 	/**
@@ -341,6 +352,7 @@ export default {
 			groupsSaveResult: null,
 			organizationAdminGroupsSaveResult: null,
 			superUserGroupsSaveResult: null,
+			activeTab: 'generic-groups', // Default active tab
 		}
 	},
 
@@ -616,5 +628,52 @@ export default {
 	display: flex;
 	justify-content: center;
 	margin: 40px 0;
+}
+
+/* New styles for tab implementation */
+.user-groups-tabs {
+	margin-bottom: 20px;
+}
+
+.tab-navigation {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 10px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.tab-button {
+	padding: 10px 15px;
+	border: none;
+	border-bottom: 2px solid transparent;
+	background-color: var(--color-background-hover);
+	color: var(--color-main-text);
+	font-weight: 600;
+	cursor: pointer;
+	transition: border-bottom-color 0.3s ease;
+}
+
+.tab-button:hover {
+	color: var(--color-main-text);
+}
+
+.tab-button.active {
+	border-bottom-color: var(--color-primary);
+	color: var(--color-primary);
+}
+
+.tab-content {
+	padding: 20px;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.tab-panel {
+	display: none; /* Hidden by default */
+}
+
+.tab-panel.active {
+	display: block; /* Show when active */
 }
 </style>

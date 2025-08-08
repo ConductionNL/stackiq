@@ -17,15 +17,15 @@
  -->
 
 <template>
-	<CollapsibleSection
+	<AlwaysVisibleSection
 		name="Organization Synchronization"
-		description="Monitor and manage organization and contact person synchronization"
+		description="Synchronize organization data between OpenRegister and external systems"
 		:loading="loading"
 		:show-refresh-button="true"
-		:refreshing="loadingSyncStatus"
-		refresh-button-text="Refresh Status"
+		:refreshing="syncing"
+		refresh-button-text="Sync Now"
 		:has-info-content="true"
-		@refresh="loadSyncStatus">
+		@refresh="performSync">
 		<div>
 			<div class="sync-section">
 				<h3>Synchronization Status</h3>
@@ -42,7 +42,7 @@
 								v-model="selectedTimeWindow"
 								:options="timeWindowOptions"
 								input-label="Time Window"
-								:disabled="loading || loadingSyncStatus"
+								:disabled="loading || syncing"
 								@change="handleTimeWindowChange" />
 						</div>
 
@@ -50,10 +50,10 @@
 						<div class="sync-actions">
 							<NcButton
 								type="secondary"
-								:disabled="loading || loadingSyncStatus"
+								:disabled="loading || syncing"
 								@click="loadSyncStatus">
 								<template #icon>
-									<NcLoadingIcon v-if="loadingSyncStatus" :size="20" />
+									<NcLoadingIcon v-if="syncing" :size="20" />
 									<Refresh v-else :size="20" />
 								</template>
 								Refresh Status
@@ -222,7 +222,7 @@
 				</ul>
 			</div>
 		</template>
-	</CollapsibleSection>
+	</AlwaysVisibleSection>
 </template>
 
 <script>
@@ -242,13 +242,10 @@ import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Components
-import CollapsibleSection from '../../../components/CollapsibleSection.vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
+import { NcButton, NcSelect, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
 
 // Icons
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -260,7 +257,7 @@ export default {
 	name: 'OrganizationSynchronization',
 
 	components: {
-		CollapsibleSection,
+		AlwaysVisibleSection,
 		NcButton,
 		NcSelect,
 		NcNoteCard,

@@ -17,15 +17,11 @@
  -->
 
 <template>
-	<CollapsibleSection
+	<AlwaysVisibleSection
 		name="ArchiMate Import/Export"
-		description="Import ArchiMate files to create OpenRegister objects and export existing data to ArchiMate format"
+		description="Import and export ArchiMate models for integration with architectural tools"
 		:loading="loading"
-		:show-refresh-button="true"
-		:refreshing="store.statusPollingInterval !== null"
-		refresh-button-text="Refresh Status"
-		:has-info-content="true"
-		@refresh="store.refreshArchiMateStatus">
+		:has-info-content="true">
 		<BTabs>
 			<BTab title="Import" active>
 				<!-- Import Section -->
@@ -40,9 +36,9 @@
 								<div class="import-header-content">
 									<div class="import-title-section">
 										<h4>{{ archimateStatus.import.status === 'completed' ? 'Import Completed' : 'Import in Progress' }}</h4>
-										<NcButton 
+										<NcButton
 											v-if="archimateStatus.import.status === 'running'"
-											type="error" 
+											type="error"
 											:disabled="cancelling"
 											@click="cancelImport">
 											<template #icon>
@@ -50,9 +46,9 @@
 											</template>
 											{{ cancelling ? 'Cancelling...' : 'Cancel Import' }}
 										</NcButton>
-										<NcButton 
+										<NcButton
 											v-else-if="archimateStatus.import.status === 'completed'"
-											type="secondary" 
+											type="secondary"
 											@click="clearCompletedImportStatus">
 											<template #icon>
 												<CheckCircle :size="16" />
@@ -567,7 +563,7 @@
 				</ul>
 			</div>
 		</template>
-	</CollapsibleSection>
+	</AlwaysVisibleSection>
 </template>
 
 <script>
@@ -586,7 +582,7 @@
 import { settingsStore } from '../../../store/store.js'
 
 // Components
-import CollapsibleSection from '../../../components/CollapsibleSection.vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
@@ -610,7 +606,7 @@ export default {
 	name: 'ArchiMateImportExport',
 
 	components: {
-		CollapsibleSection,
+		AlwaysVisibleSection,
 		NcButton,
 		NcSelect,
 		NcNoteCard,

@@ -17,13 +17,13 @@
  -->
 
 <template>
-	<CollapsibleSection
+	<AlwaysVisibleSection
 		name="Email Configuration"
-		description="Configure email settings for notifications and templates"
+		description="Configure email settings for notifications and user management"
 		:loading="loading"
 		:show-save-button="true"
+		:can-save="canSave"
 		:saving="saving"
-		:can-save="true"
 		save-button-text="Save Email Settings"
 		:has-info-content="true"
 		@save="saveEmailSettings">
@@ -362,7 +362,7 @@
 				</ul>
 			</div>
 		</template>
-	</CollapsibleSection>
+	</AlwaysVisibleSection>
 </template>
 
 <script>
@@ -382,7 +382,7 @@ import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Components
-import CollapsibleSection from '../../../components/CollapsibleSection.vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
@@ -405,7 +405,7 @@ export default {
 	name: 'EmailConfiguration',
 
 	components: {
-		CollapsibleSection,
+		AlwaysVisibleSection,
 		NcButton,
 		NcTextField,
 		NcPasswordField,
@@ -498,6 +498,10 @@ export default {
 			get() { return this.store.emailSettings },
 			set(value) { this.store.emailSettings = value },
 		},
+		canSave() {
+			// Always allow saving for email settings
+			return true;
+		}
 	},
 
 	async created() {
