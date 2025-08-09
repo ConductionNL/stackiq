@@ -18,15 +18,16 @@
 
 <template>
 	<NcSettingsSection :name="name" :description="description" :doc-url="docUrl">
-		<div class="always-visible-section">
-			<!-- Section Header with Controls -->
-			<div class="section-header">
-				<div class="section-controls">
-					<!-- Save Button -->
+		<!-- Title with right-aligned controls -->
+		<template #title>
+			<div class="section-title-with-buttons">
+				<span>{{ name }}</span>
+				<div class="title-buttons">
 					<NcButton
-						v-if="showSaveButton && !loading"
+						v-if="showSaveButton"
 						type="primary"
-						:disabled="saving || !canSave"
+						:disabled="loading || saving || !canSave"
+						class="title-save-button"
 						@click="handleSave">
 						<template #icon>
 							<NcLoadingIcon v-if="saving" :size="20" />
@@ -35,11 +36,11 @@
 						{{ saveButtonText }}
 					</NcButton>
 
-					<!-- Refresh Button -->
 					<NcButton
-						v-if="showRefreshButton && !loading"
+						v-if="showRefreshButton"
 						type="secondary"
-						:disabled="refreshing"
+						:disabled="loading || refreshing"
+						class="title-refresh-button"
 						@click="handleRefresh">
 						<template #icon>
 							<NcLoadingIcon v-if="refreshing" :size="20" />
@@ -48,7 +49,6 @@
 						{{ refreshButtonText }}
 					</NcButton>
 
-					<!-- Info Button -->
 					<NcButton
 						v-if="hasInfoContent"
 						type="tertiary-no-background"
@@ -60,7 +60,9 @@
 					</NcButton>
 				</div>
 			</div>
+		</template>
 
+		<div class="always-visible-section">
 			<!-- Always Visible Content -->
 			<div class="section-content">
 				<div v-if="!loading">
@@ -71,8 +73,9 @@
 				<NcLoadingIcon
 					v-else
 					class="loading-icon"
-					:size="64"
+					:size="32"
 					appearance="dark" />
+				<p v-if="loading" class="loading-text">{{ loadingText }}</p>
 			</div>
 		</div>
 
@@ -213,6 +216,14 @@ export default defineComponent({
 			type: Boolean,
 			default: false,
 		},
+
+		/**
+		 * Optional loading text shown below the spinner
+		 */
+		loadingText: {
+			type: String,
+			default: 'Loading...'
+		},
 	},
 
 	data() {
@@ -240,70 +251,55 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.always-visible-section {
-	width: 100%;
-}
-
-.section-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-start;
-	margin-bottom: 1rem;
-	padding-bottom: 1rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.section-info {
-	flex: 1;
-}
-
-.section-title {
-	margin: 0 0 0.5rem 0;
-	font-size: 1.25rem;
-	font-weight: 600;
-	color: var(--color-text-maxcontrast);
-}
-
-.section-description {
-	margin: 0;
-	color: var(--color-text-maxcontrast);
-	font-size: 0.875rem;
-	line-height: 1.4;
-}
-
-.section-controls {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
-	flex-shrink: 0;
-}
-
-.section-content {
-	margin-top: 1rem;
-}
-
-.loading-icon {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 2rem;
-}
-
-.info-content {
-	max-width: 600px;
-	line-height: 1.6;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-	.section-header {
-		flex-direction: column;
-		gap: 1rem;
-	}
-
-	.section-controls {
+	.section-title-with-buttons {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		width: 100%;
-		justify-content: flex-end;
 	}
-}
+
+	.title-buttons {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+	}
+
+	.title-save-button {
+		margin-left: auto;
+	}
+
+	.title-refresh-button {
+		margin-left: 8px;
+	}
+
+	.always-visible-section {
+		width: 100%;
+	}
+
+	.section-content {
+		margin-top: 1rem;
+	}
+
+	.loading-icon {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 2rem;
+	}
+
+	.loading-text {
+		text-align: center;
+		margin-top: -8px;
+		color: var(--color-text-lighter);
+	}
+
+	.info-content {
+		max-width: 600px;
+		line-height: 1.6;
+	}
+
+	/* Responsive */
+	@media (max-width: 768px) {
+		.title-buttons { width: 100%; justify-content: flex-end; }
+	}
 </style>

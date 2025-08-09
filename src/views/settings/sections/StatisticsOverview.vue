@@ -3,18 +3,25 @@
 		name="Object Statistics"
 		description="Overview of objects stored in configured registers">
 		
-		<div class="statistics-section">
-			<!-- Refresh Button -->
-			<div class="statistics-header">
+		<!-- Refresh Button in Title Section -->
+		<template #title>
+			<div class="section-title-with-button">
+				<span>Object Statistics</span>
 				<NcButton
 					:disabled="loadingStats"
-					@click="refreshStatistics">
+					@click="refreshStatistics"
+					class="title-refresh-button">
 					<template #icon>
 						<RefreshIcon :size="16" />
 					</template>
-					{{ loadingStats ? 'Loading...' : 'Refresh Statistics' }}
+					{{ loadingStats ? 'Loading...' : 'Refresh' }}
 				</NcButton>
-				
+			</div>
+		</template>
+		
+		<div class="statistics-section">
+			<!-- Last Updated Info -->
+			<div class="statistics-header">
 				<span v-if="statistics.timestamp" class="last-updated">
 					Last updated: {{ formatTimestamp(statistics.timestamp) }}
 				</span>
@@ -176,10 +183,20 @@ export default defineComponent({
 	margin-top: 16px;
 }
 
+.section-title-with-button {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.title-refresh-button {
+	margin-left: auto;
+}
+
 .statistics-header {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: flex-end;
 	margin-bottom: 16px;
 }
 

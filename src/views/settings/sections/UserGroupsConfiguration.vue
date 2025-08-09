@@ -21,39 +21,25 @@
 		name="User Groups Configuration"
 		description="Configure user groups for different access levels and permissions"
 		:loading="loading"
+		loading-text="Loading user groups..."
 		:show-save-button="true"
-		:can-save="canSave"
-		:saving="saving"
+		:show-refresh-button="true"
+		:can-save="hasChanges"
+		:saving="savingGroups"
 		save-button-text="Save User Groups"
 		:has-info-content="true"
-		@save="saveUserGroups">
-		<div class="user-groups-tabs">
-			<!-- Tab Navigation -->
-			<div class="tab-navigation">
-				<button 
-					class="tab-button" 
-					:class="{ active: activeTab === 'generic-groups' }"
-					@click="activeTab = 'generic-groups'">
-					Generic Groups
-				</button>
-				<button 
-					class="tab-button" 
-					:class="{ active: activeTab === 'organization-admin-groups' }"
-					@click="activeTab = 'organization-admin-groups'">
-					Organization Admin Groups
-				</button>
-				<button 
-					class="tab-button" 
-					:class="{ active: activeTab === 'super-user-groups' }"
-					@click="activeTab = 'super-user-groups'">
-					Super User Groups
-				</button>
-			</div>
-
-			<!-- Tab Content -->
-			<div class="tab-content">
-				<!-- Generic Groups Tab -->
-				<div v-show="activeTab === 'generic-groups'" class="tab-panel">
+		@save="saveAllGroups"
+		@refresh="loadAllGroups">
+		<StandardTabs
+			:tabs="[
+				{ key: 'generic-groups', title: 'Generic Groups' },
+				{ key: 'organization-admin-groups', title: 'Organization Admin Groups' },
+				{ key: 'super-user-groups', title: 'Super User Groups' }
+			]"
+			:active-tab="activeTab"
+			@update:active-tab="activeTab = $event">
+			<!-- Generic Groups Tab -->
+			<div v-show="activeTab === 'generic-groups'" class="tab-panel">
 					<h3>Generic User Groups</h3>
 					<p>Define the list of generic user groups that can be assigned to users based on their roles</p>
 
@@ -62,7 +48,7 @@
 						<div class="group-list">
 							<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
 								<NcTextField
-									:value="group || ''"
+									:value="(group || '').toString()"
 									:placeholder="'Group name'"
 									label="Group Name"
 									@update:value="updateGroupName(index, $event)" />
@@ -240,7 +226,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</StandardTabs>
 
 		<!-- Info Content Slot -->
 		<template #info-content>
@@ -302,6 +288,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import StandardTabs from '../../../components/StandardTabs.vue'
 
 // Nextcloud Vue components
 import { NcButton, NcTextField, NcNoteCard } from '@nextcloud/vue'
@@ -318,6 +305,7 @@ export default {
 
 	components: {
 		AlwaysVisibleSection,
+		StandardTabs,
 		NcButton,
 		NcTextField,
 		NcNoteCard,
@@ -360,15 +348,15 @@ export default {
 		// Store-connected computed properties
 		loading() { return this.store.loading },
 		genericUserGroups: {
-			get() { return this.store.genericUserGroups },
+			get() { return this.store.genericUserGroups || [] },
 			set(value) { this.store.genericUserGroups = value },
 		},
 		organizationAdminGroups: {
-			get() { return this.store.organizationAdminGroups },
+			get() { return this.store.organizationAdminGroups || [] },
 			set(value) { this.store.organizationAdminGroups = value },
 		},
 		superUserGroups: {
-			get() { return this.store.superUserGroups },
+			get() { return this.store.superUserGroups || [] },
 			set(value) { this.store.superUserGroups = value },
 		},
 
@@ -382,6 +370,11 @@ export default {
 				   || this.organizationAdminGroups.length > 0
 				   || this.superUserGroups.length > 0
 		},
+	},
+
+	mounted() {
+		// ensure we fetch latest user groups when opening the section
+		this.loadAllGroups().catch(() => {})
 	},
 
 	methods: {
@@ -514,7 +507,7 @@ export default {
 		 */
 		async loadAllGroups() {
 			try {
-				await this.store.loadSettings()
+				await this.store.loadUserGroupsOnly()
 				showSuccess('User groups reloaded successfully')
 			} catch (error) {
 				console.error('Failed to reload groups:', error)

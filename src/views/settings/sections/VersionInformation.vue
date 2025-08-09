@@ -24,6 +24,7 @@
 		:show-refresh-button="true"
 		:refreshing="autoConfiguring"
 		refresh-button-text="Auto Configure"
+		loading-text="Loading version information..."
 		:has-info-content="true"
 		@refresh="consolidatedAutoConfigure">
 		<div class="version-info">
@@ -48,20 +49,6 @@
 					<span v-else-if="versionInfo.openRegisterInstalled" class="status-warning">⚠ Installed but not enabled</span>
 					<span v-else class="status-error">✗ Not installed</span>
 				</div>
-			</div>
-
-			<!-- Configuration Actions -->
-			<div class="config-actions">
-				<NcButton
-					:type="versionInfo.needsUpdate ? 'primary' : 'secondary'"
-					:disabled="autoConfiguring"
-					@click="consolidatedAutoConfigure()">
-					<template #icon>
-						<NcLoadingIcon v-if="autoConfiguring" :size="20" />
-						<Cog v-else :size="20" />
-					</template>
-					{{ versionInfo.needsUpdate ? 'Auto Configure' : 'Reload Configuration' }}
-				</NcButton>
 			</div>
 
 			<!-- Configuration Results -->
@@ -196,20 +183,14 @@ import { settingsStore } from '../../../store/store.js'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import { NcButton, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
-
-// Material Design Icons
-import Cog from 'vue-material-design-icons/Cog.vue'
+import { NcNoteCard } from '@nextcloud/vue'
 
 export default {
 	name: 'VersionInformation',
 
 	components: {
 		AlwaysVisibleSection,
-		NcButton,
 		NcNoteCard,
-		NcLoadingIcon,
-		Cog,
 	},
 
 	/**

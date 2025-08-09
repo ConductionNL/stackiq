@@ -1802,6 +1802,321 @@ class SettingsController extends Controller
         }
     }
 
+    // ========================================================================
+    // FOCUSED ENDPOINT CONTROLLER METHODS FOR PERFORMANCE OPTIMIZATION
+    // ========================================================================
+
+    /**
+     * Get ArchiMate configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse ArchiMate configuration
+     */
+    public function getArchiMateConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getArchiMateConfig();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get ArchiMate config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get ArchiMate config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update ArchiMate configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateArchiMateConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateArchiMateConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update ArchiMate config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update ArchiMate config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get email configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Email configuration
+     */
+    public function getEmailConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getEmailConfigFocused();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get email config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get email config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update email configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateEmailConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateEmailConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update email config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update email config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get AMEF configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse AMEF configuration
+     */
+    public function getAmefConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getAmefConfigFocused();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get AMEF config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get AMEF config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update AMEF configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateAmefConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateAmefConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update AMEF config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update AMEF config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get Voorzieningen configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Voorzieningen configuration
+     */
+    public function getVoorzieningenConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getVoorzieningenConfigFocused();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get Voorzieningen config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get Voorzieningen config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update Voorzieningen configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateVoorzieningenConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateVoorzieningenConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update Voorzieningen config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update Voorzieningen config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get object counts only (lightweight)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Object counts
+     */
+    public function getObjectsCounts(): JSONResponse
+    {
+        try {
+            $counts = $this->settingsService->getObjectsCounts();
+            
+            return new JSONResponse($counts);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object counts', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get object counts: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get object statistics (full statistics with configuration)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Object statistics
+     */
+    public function getObjectsStatistics(): JSONResponse
+    {
+        try {
+            $statistics = $this->settingsService->getObjectsStatistics();
+            
+            return new JSONResponse($statistics);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object statistics', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get object statistics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user groups configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse User groups configuration
+     */
+    public function getUserGroupsConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getUserGroupsConfig();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get user groups config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get user groups config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update user groups configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateUserGroupsConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateUserGroupsConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update user groups config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update user groups config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 }//end class
 

@@ -3028,57 +3028,81 @@ class SettingsService
             if ($objectService === null) {
                 return [
                     'totalOrganisatieObjects' => 0,
-                    'totalContactpersoonObjects' => 0
+                    'totalContactpersoonObjects' => 0,
+                    'totalVoorzieningObjects' => 0,
+                    'totalVoorzieningAanbodObjects' => 0,
+                    'totalVoorzieningVersieObjects' => 0,
+                    'totalKwetsbaarheidObjects' => 0,
+                    'totalContractObjects' => 0,
+                    'totalStandaardObjects' => 0,
+                    'totalReviewObjects' => 0,
+                    'totalKoppelingObjects' => 0,
+                    'totalBeoordeelingObjects' => 0,
+                    'totalVoorzieningModuleObjects' => 0,
+                    'totalVerklaringObjects' => 0,
+                    'totalKoppelingGebruikObjects' => 0,
+                    'totalCompliancyObjects' => 0,
+                    'totalModuleGebruikObjects' => 0,
+                    'totalModuleVersieObjects' => 0,
+                    'totalSectorObjects' => 0
                 ];
             }
             
             $voorzieningenConfig = $this->getVoorzieningenConfig();
             $registerId = $voorzieningenConfig['register'] ?? null;
-            $organisatieSchemaId = $voorzieningenConfig['organisatie_schema'] ?? null;
-            $contactpersoonSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
             
-            $organisatieCount = 0;
-            $contactpersoonCount = 0;
-            
-            if ($registerId && $organisatieSchemaId) {
-                try {
-                    $organisatieQuery = [
-                        '@self' => [
-                            'register' => (int) $registerId,
-                            'schema' => (int) $organisatieSchemaId
-                        ]
-                    ];
-                    $organisatieObjects = $objectService->searchObjects($organisatieQuery);
-                    $organisatieCount = count($organisatieObjects);
-                } catch (\Exception $e) {
-                    $this->logger->warning('Failed to get organisatie count', ['error' => $e->getMessage()]);
-                }
-            }
-            
-            if ($registerId && $contactpersoonSchemaId) {
-                try {
-                    $contactpersoonQuery = [
-                        '@self' => [
-                            'register' => (int) $registerId,
-                            'schema' => (int) $contactpersoonSchemaId
-                        ]
-                    ];
-                    $contactpersoonObjects = $objectService->searchObjects($contactpersoonQuery);
-                    $contactpersoonCount = count($contactpersoonObjects);
-                } catch (\Exception $e) {
-                    $this->logger->warning('Failed to get contactpersoon count', ['error' => $e->getMessage()]);
-                }
-            }
-            
-            $this->logger->debug('SettingsService: Retrieved Voorzieningen object counts', [
-                'organisatieCount' => $organisatieCount,
-                'contactpersoonCount' => $contactpersoonCount
-            ]);
-            
-            return [
-                'totalOrganisatieObjects' => $organisatieCount,
-                'totalContactpersoonObjects' => $contactpersoonCount
+            // Define all schema mappings
+            $schemaMappings = [
+                'organisatie_schema' => 'totalOrganisatieObjects',
+                'contactpersoon_schema' => 'totalContactpersoonObjects',
+                'voorziening_schema' => 'totalVoorzieningObjects',
+                'voorziening_aanbod_schema' => 'totalVoorzieningAanbodObjects',
+                'voorziening_versie_schema' => 'totalVoorzieningVersieObjects',
+                'kwetsbaarheid_schema' => 'totalKwetsbaarheidObjects',
+                'contract_schema' => 'totalContractObjects',
+                'standaard_schema' => 'totalStandaardObjects',
+                'review_schema' => 'totalReviewObjects',
+                'koppeling_schema' => 'totalKoppelingObjects',
+                'beoordeeling_schema' => 'totalBeoordeelingObjects',
+                'voorziening_module_schema' => 'totalVoorzieningModuleObjects',
+                'verklaring_schema' => 'totalVerklaringObjects',
+                'koppeling_gebruik_schema' => 'totalKoppelingGebruikObjects',
+                'compliancy_schema' => 'totalCompliancyObjects',
+                'module_gebruik_schema' => 'totalModuleGebruikObjects',
+                'module_versie_schema' => 'totalModuleVersieObjects',
+                'sector_schema' => 'totalSectorObjects'
             ];
+            
+            $counts = [];
+            
+            // Initialize all counts to 0
+            foreach ($schemaMappings as $key => $countKey) {
+                $counts[$countKey] = 0;
+            }
+            
+            // Count objects for each configured schema
+            foreach ($schemaMappings as $configKey => $countKey) {
+                $schemaId = $voorzieningenConfig[$configKey] ?? null;
+                
+                if ($registerId && $schemaId) {
+                    try {
+                        $query = [
+                            '@self' => [
+                                'register' => (int) $registerId,
+                                'schema' => (int) $schemaId
+                            ]
+                        ];
+                        $objects = $objectService->searchObjects($query);
+                        $counts[$countKey] = count($objects);
+                    } catch (\Exception $e) {
+                        $this->logger->warning("Failed to get {$configKey} count", ['error' => $e->getMessage()]);
+                    }
+                }
+            }
+            
+            $this->logger->debug('SettingsService: Retrieved Voorzieningen object counts', $counts);
+            
+            return $counts;
             
         } catch (\Exception $e) {
             $this->logger->error('SettingsService: Failed to get Voorzieningen object counts', [
@@ -3088,7 +3112,23 @@ class SettingsService
             
             return [
                 'totalOrganisatieObjects' => 0,
-                'totalContactpersoonObjects' => 0
+                'totalContactpersoonObjects' => 0,
+                'totalVoorzieningObjects' => 0,
+                'totalVoorzieningAanbodObjects' => 0,
+                'totalVoorzieningVersieObjects' => 0,
+                'totalKwetsbaarheidObjects' => 0,
+                'totalContractObjects' => 0,
+                'totalStandaardObjects' => 0,
+                'totalReviewObjects' => 0,
+                'totalKoppelingObjects' => 0,
+                'totalBeoordeelingObjects' => 0,
+                'totalVoorzieningModuleObjects' => 0,
+                'totalVerklaringObjects' => 0,
+                'totalKoppelingGebruikObjects' => 0,
+                'totalCompliancyObjects' => 0,
+                'totalModuleGebruikObjects' => 0,
+                'totalModuleVersieObjects' => 0,
+                'totalSectorObjects' => 0
             ];
         }
     }
@@ -3549,17 +3589,19 @@ class SettingsService
     public function getAllSettings(): array
     {
         try {
-            $data = $this->getSettings();
-            
-            // Use the proper consolidated configuration structure that frontend expects
-            $data['consolidatedConfig'] = $this->getConsolidatedConfiguration();
-            
-            // Remove deprecated properties from root level
-            unset($data['configuration']); // Moved to consolidatedConfig
-            unset($data['userGroups']); // Now in consolidatedConfig
-            unset($data['emailSettings']); // Now in consolidatedConfig
-            
-            return $data;
+            // Provide only lightweight settings data. Section-specific data is
+            // available via focused endpoints for performance.
+            $base = $this->getSettings();
+
+            $versionInfo = $this->getVersionInfo();
+
+            $result = [
+                'availableRegisters' => $base['availableRegisters'] ?? [],
+                'versionInfo' => $versionInfo,
+                'timestamp' => time(),
+            ];
+
+            return $result;
             
         } catch (\Exception $e) {
             $this->logger->error('SettingsService: Failed to get all settings', [
@@ -3798,6 +3840,378 @@ class SettingsService
             return [
                 'success' => false,
                 'message' => 'Failed to update super user groups: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    // ========================================================================
+    // FOCUSED ENDPOINT METHODS FOR PERFORMANCE OPTIMIZATION
+    // ========================================================================
+
+    /**
+     * Get ArchiMate configuration only
+     *
+     * @return array ArchiMate configuration
+     */
+    public function getArchiMateConfig(): array
+    {
+        try {
+            $config = $this->getAmefConfig();
+            $status = $this->getArchiMateStatus();
+            
+            return [
+                'success' => true,
+                'config' => $config,
+                'status' => $status,
+                'timestamp' => time()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get ArchiMate config', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get ArchiMate config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update ArchiMate configuration
+     *
+     * @param array $config ArchiMate configuration data
+     *
+     * @return array Result of the update operation
+     */
+    public function updateArchiMateConfig(array $config): array
+    {
+        try {
+            $this->setAmefConfig($config);
+            
+            return [
+                'success' => true,
+                'message' => 'ArchiMate configuration updated successfully',
+                'config' => $this->getAmefConfig()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update ArchiMate config', [
+                'exception' => $e->getMessage(),
+                'config' => $config
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update ArchiMate config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get email configuration only
+     *
+     * @return array Email configuration
+     */
+    public function getEmailConfigFocused(): array
+    {
+        try {
+            $emailSettings = $this->getEmailSettings();
+            $emailTemplates = $this->getAllEmailTemplates();
+            
+            return [
+                'success' => true,
+                'emailSettings' => $emailSettings,
+                'emailTemplates' => $emailTemplates,
+                'timestamp' => time()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get email config', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get email config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update email configuration
+     *
+     * @param array $config Email configuration data
+     *
+     * @return array Result of the update operation
+     */
+    public function updateEmailConfig(array $config): array
+    {
+        try {
+            if (isset($config['emailSettings'])) {
+                $result = $this->updateEmailSettings($config['emailSettings']);
+                if (!$result['success']) {
+                    return $result;
+                }
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Email configuration updated successfully',
+                'config' => $this->getEmailConfig()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update email config', [
+                'exception' => $e->getMessage(),
+                'config' => $config
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update email config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get AMEF configuration only
+     *
+     * @return array AMEF configuration
+     */
+    public function getAmefConfigFocused(): array
+    {
+        try {
+            $config = $this->getAmefConfig();
+            
+            return [
+                'success' => true,
+                'config' => $config,
+                'timestamp' => time()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get AMEF config', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get AMEF config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update AMEF configuration
+     *
+     * @param array $config AMEF configuration data
+     *
+     * @return array Result of the update operation
+     */
+    public function updateAmefConfig(array $config): array
+    {
+        try {
+            $this->setAmefConfig($config);
+            
+            return [
+                'success' => true,
+                'message' => 'AMEF configuration updated successfully',
+                'config' => $this->getAmefConfig()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update AMEF config', [
+                'exception' => $e->getMessage(),
+                'config' => $config
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update AMEF config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get Voorzieningen configuration only
+     *
+     * @return array Voorzieningen configuration
+     */
+    public function getVoorzieningenConfigFocused(): array
+    {
+        try {
+            $config = $this->getVoorzieningenConfig();
+            
+            return [
+                'success' => true,
+                'config' => $config,
+                'timestamp' => time()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get Voorzieningen config', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get Voorzieningen config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update Voorzieningen configuration
+     *
+     * @param array $config Voorzieningen configuration data
+     *
+     * @return array Result of the update operation
+     */
+    public function updateVoorzieningenConfig(array $config): array
+    {
+        try {
+            $this->setVoorzieningenConfig($config);
+            
+            return [
+                'success' => true,
+                'message' => 'Voorzieningen configuration updated successfully',
+                'config' => $this->getVoorzieningenConfig()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update Voorzieningen config', [
+                'exception' => $e->getMessage(),
+                'config' => $config
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update Voorzieningen config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get object counts only (lightweight)
+     *
+     * @return array Object counts for all registers
+     */
+    public function getObjectsCounts(): array
+    {
+        try {
+            $counts = [
+                'voorzieningen' => $this->getVoorzieningenObjectCounts(),
+                'amef' => $this->getAmefObjectCounts(),
+                'timestamp' => time()
+            ];
+            
+            return [
+                'success' => true,
+                'counts' => $counts
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object counts', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get object counts: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get object statistics (full statistics with configuration)
+     *
+     * @return array Full object statistics
+     */
+    public function getObjectsStatistics(): array
+    {
+        try {
+            $statistics = $this->getObjectCountsStatistics();
+            
+            return [
+                'success' => true,
+                'statistics' => $statistics
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object statistics', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get object statistics: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get user groups configuration only
+     *
+     * @return array User groups configuration
+     */
+    public function getUserGroupsConfig(): array
+    {
+        try {
+            $config = [
+                'generic' => $this->getGenericUserGroups(),
+                'organizationAdmin' => $this->getOrganizationAdminGroups(),
+                'superUser' => $this->getSuperUserGroups(),
+                'allGroups' => $this->getAllGroups()
+            ];
+            
+            return [
+                'success' => true,
+                'config' => $config,
+                'timestamp' => time()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get user groups config', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get user groups config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Update user groups configuration
+     *
+     * @param array $config User groups configuration data
+     *
+     * @return array Result of the update operation
+     */
+    public function updateUserGroupsConfig(array $config): array
+    {
+        try {
+            $results = [];
+            
+            if (isset($config['generic'])) {
+                $results['generic'] = $this->updateGenericUserGroups($config['generic']);
+            }
+            
+            if (isset($config['organizationAdmin'])) {
+                $results['organizationAdmin'] = $this->updateOrganizationAdminGroups($config['organizationAdmin']);
+            }
+            
+            if (isset($config['superUser'])) {
+                $results['superUser'] = $this->updateSuperUserGroups($config['superUser']);
+            }
+            
+            // Check if any updates failed
+            $failed = array_filter($results, function($result) {
+                return !$result['success'];
+            });
+            
+            if (!empty($failed)) {
+                return [
+                    'success' => false,
+                    'message' => 'Some user group updates failed',
+                    'results' => $results
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'User groups configuration updated successfully',
+                'config' => $this->getUserGroupsConfig()
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update user groups config', [
+                'exception' => $e->getMessage(),
+                'config' => $config
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update user groups config: ' . $e->getMessage()
             ];
         }
     }

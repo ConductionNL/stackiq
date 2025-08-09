@@ -20,6 +20,35 @@
 	<NcSettingsSection
 		name="OpenRegister Integration"
 		description="Configure which schemas to use for organizations, contacts, and users">
+		<!-- Buttons in Title Section -->
+		<template #title>
+			<div class="section-title-with-buttons">
+				<span>OpenRegister Integration</span>
+				<div class="title-buttons">
+					<NcButton
+						class="title-save-button"
+						type="primary"
+						:disabled="loading || saving || !canSave"
+						@click="saveConfiguration">
+						<template #icon>
+							<NcLoadingIcon v-if="saving" :size="32" />
+							<Save v-else :size="20" />
+						</template>
+						Save Configuration
+					</NcButton>
+					<NcButton
+						class="title-refresh-button"
+						type="secondary"
+						:disabled="loading"
+						@click="refreshSettings">
+						<template #icon>
+							<Refresh :size="20" />
+						</template>
+						Refresh
+					</NcButton>
+				</div>
+			</div>
+		</template>
 		<div v-if="!loading">
 			<!-- Warning if OpenRegister is not installed -->
 			<NcNoteCard v-if="!versionInfo.openRegisterEnabled" type="warning">
@@ -28,9 +57,16 @@
 
 			<!-- Tabs for OpenRegister Configuration -->
 			<div v-if="versionInfo.openRegisterEnabled" class="openregister-tabs">
-				<BTabs content-class="mt-3" justified>
+				<StandardTabs
+					:tabs="[
+						{ key: 'general', title: 'General Configuration' },
+						{ key: 'voorzieningen', title: 'Voorzieningen' },
+						{ key: 'amef', title: 'AMEF' },
+					]"
+					:active-tab="activeTab"
+					@update:active-tab="activeTab = $event">
 					<!-- General Configuration Tab -->
-					<BTab title="General Configuration" active>
+					<div v-show="activeTab === 'general'" class="tab-panel">
 						<div class="tab-content">
 							<h4>Register Selection</h4>
 							<p>Select the registers to use for your Software Catalog data</p>
@@ -57,76 +93,40 @@
 										@change="handleAmefRegisterChange" />
 								</div>
 							</div>
-
-							<!-- Configuration Actions -->
-							<div v-if="voorzieningenRegister || amefRegister" class="button-container">
-								<NcButton
-									type="primary"
-									:disabled="loading || saving || !canSave"
-									@click="saveConfiguration">
-									<template #icon>
-										<NcLoadingIcon v-if="saving" :size="20" />
-										<Save v-else :size="20" />
-									</template>
-									Save Configuration
-								</NcButton>
-
-								<NcButton
-									type="secondary"
-									:disabled="loading"
-									@click="refreshSettings">
-									<template #icon>
-										<Refresh :size="20" />
-									</template>
-									Refresh
-								</NcButton>
-							</div>
 						</div>
-					</BTab>
+					</div>
 
 					<!-- Voorzieningen Tab -->
-					<BTab title="Voorzieningen">
+					<div v-show="activeTab === 'voorzieningen'" class="tab-panel">
 						<div class="tab-content">
 							<!-- Voorzieningen Schema Configuration -->
 							<div v-if="voorzieningenRegister && voorzieningenSchemas.length > 0">
 								<h4>Voorzieningen Schema Configuration</h4>
 								<p>Configure schemas for the Voorzieningen register</p>
 								<div class="schema-configuration-grid">
-									<div class="object-type-section">
+									<div
+										v-for="item in voorzieningenItems"
+										:key="item.key"
+										class="object-type-section">
 										<div class="object-type-header">
-											<h5>Organisatie Schema</h5>
-											<span class="object-type-description">Schema for organizations</span>
+											<h5>{{ item.title }}</h5>
+											<span class="object-type-description">{{ item.description }}</span>
 										</div>
 										<NcSelect
-											v-model="configuration.voorzieningen_organisatie.schema"
+											v-model="configuration[item.key].schema"
 											:options="voorzieningenSchemaOptions"
-											input-label="Organisatie Schema"
-											:disabled="loading"
-											@change="validateConfiguration" />
-									</div>
-
-									<div class="object-type-section">
-										<div class="object-type-header">
-											<h5>Contactpersoon Schema</h5>
-											<span class="object-type-description">Schema for contact persons</span>
-										</div>
-										<NcSelect
-											v-model="configuration.voorzieningen_contactpersoon.schema"
-											:options="voorzieningenSchemaOptions"
-											input-label="Contactpersoon Schema"
+											:input-label="item.title"
 											:disabled="loading"
 											@change="validateConfiguration" />
 									</div>
 								</div>
 							</div>
-
 							<!-- Voorzieningen Empty State -->
 							<div v-else-if="voorzieningenRegister && voorzieningenSchemas.length === 0">
 								<NcNoteCard type="warning">
 									The selected Voorzieningen register has no schemas. Please create schemas in this register.
 								</NcNoteCard>
 							</div>
-
 							<!-- No Register Selected -->
 							<div v-else>
 								<NcNoteCard type="info">
@@ -134,10 +134,10 @@
 								</NcNoteCard>
 							</div>
 						</div>
-					</BTab>
+					</div>
 
 					<!-- AMEF Tab -->
-					<BTab title="AMEF">
+					<div v-show="activeTab === 'amef'" class="tab-panel">
 						<div class="tab-content">
 							<!-- AMEF Schema Configuration -->
 							<div v-if="amefRegister && amefSchemas.length > 0">
@@ -236,14 +236,12 @@
 									</div>
 								</div>
 							</div>
-
 							<!-- AMEF Empty State -->
 							<div v-else-if="amefRegister && amefSchemas.length === 0">
 								<NcNoteCard type="warning">
 									The selected AMEF register has no schemas. Please create schemas in this register.
 								</NcNoteCard>
 							</div>
-
 							<!-- No Register Selected -->
 							<div v-else>
 								<NcNoteCard type="info">
@@ -251,16 +249,17 @@
 								</NcNoteCard>
 							</div>
 						</div>
-					</BTab>
-				</BTabs>
+					</div>
+				</StandardTabs>
 			</div>
 		</div>
 
 		<!-- Loading State -->
 		<NcLoadingIcon v-else
 			class="loading-icon"
-			:size="64"
+			:size="32"
 			appearance="dark" />
+		<p v-if="loading" class="loading-copy">Loading OpenRegister configuration...</p>
 	</NcSettingsSection>
 </template>
 
@@ -287,8 +286,8 @@ import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 
-// Bootstrap Vue components
-import { BTabs, BTab } from 'bootstrap-vue'
+// Custom components
+import StandardTabs from '../../../components/StandardTabs.vue'
 
 // Icons
 import Save from 'vue-material-design-icons/ContentSave.vue'
@@ -303,8 +302,7 @@ export default {
 		NcButton,
 		NcNoteCard,
 		NcLoadingIcon,
-		BTabs,
-		BTab,
+		StandardTabs,
 		Save,
 		Refresh,
 	},
@@ -329,16 +327,14 @@ export default {
 	data() {
 		return {
 			saving: false,
+			activeTab: 'general', // Default active tab
 		}
 	},
 
 	computed: {
 		// Store-connected computed properties
-		loading() { 
-			// Add debugging to help identify loading state issues
-			const isLoading = this.store.loading
-			console.log('OpenRegisterIntegration loading state:', isLoading, 'store.loading:', this.store.loading)
-			return isLoading 
+		loading() {
+			return this.store.loading
 		},
 		versionInfo() { return this.store.versionInfo },
 		configuration() { return this.store.configuration },
@@ -347,6 +343,32 @@ export default {
 		amefSchemaOptions() { return this.store.amefSchemaOptions },
 		voorzieningenSchemas() { return this.store.voorzieningenSchemas },
 		amefSchemas() { return this.store.amefSchemas },
+
+		// Dynamic list of all voorzieningen schema config entries
+		voorzieningenItems() {
+			return [
+				{ key: 'voorzieningen_organisatie', title: 'Organisatie Schema', description: 'Schema for organizations' },
+				{ key: 'voorzieningen_contactpersoon', title: 'Contactpersoon Schema', description: 'Schema for contact persons' },
+				{ key: 'voorzieningen_gebruiker', title: 'Gebruiker Schema', description: 'Schema for users' },
+				{ key: 'voorzieningen_contactgegevens', title: 'Contactgegevens Schema', description: 'Schema for contact details' },
+				{ key: 'voorzieningen_voorziening', title: 'Voorziening Schema', description: 'Schema for provisions' },
+				{ key: 'voorzieningen_voorziening_aanbod', title: 'Voorziening Aanbod Schema', description: 'Schema for provision offers' },
+				{ key: 'voorzieningen_voorziening_versie', title: 'Voorziening Versie Schema', description: 'Schema for provision versions' },
+				{ key: 'voorzieningen_kwetsbaarheid', title: 'Kwetsbaarheid Schema', description: 'Schema for vulnerabilities' },
+				{ key: 'voorzieningen_contract', title: 'Contract Schema', description: 'Schema for contracts' },
+				{ key: 'voorzieningen_standaard', title: 'Standaard Schema', description: 'Schema for standards' },
+				{ key: 'voorzieningen_review', title: 'Review Schema', description: 'Schema for reviews' },
+				{ key: 'voorzieningen_koppeling', title: 'Koppeling Schema', description: 'Schema for links' },
+				{ key: 'voorzieningen_beoordeeling', title: 'Beoordeeling Schema', description: 'Schema for assessments' },
+				{ key: 'voorzieningen_voorziening_module', title: 'Voorziening Module Schema', description: 'Schema for provision modules' },
+				{ key: 'voorzieningen_verklaring', title: 'Verklaring Schema', description: 'Schema for declarations' },
+				{ key: 'voorzieningen_koppeling_gebruik', title: 'Koppeling Gebruik Schema', description: 'Schema for link usage' },
+				{ key: 'voorzieningen_compliancy', title: 'Compliancy Schema', description: 'Schema for compliancy' },
+				{ key: 'voorzieningen_module_gebruik', title: 'Module Gebruik Schema', description: 'Schema for module usage' },
+				{ key: 'voorzieningen_module_versie', title: 'Module Versie Schema', description: 'Schema for module versions' },
+				{ key: 'voorzieningen_sector', title: 'Sector Schema', description: 'Schema for sectors' },
+			]
+		},
 
 		// Two-way computed properties for register selections
 		voorzieningenRegister: {
@@ -423,7 +445,11 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async refreshSettings() {
-			await this.store.loadSettings()
+			// Only reload the specific configurations needed for this component
+			await Promise.all([
+				this.store.loadAmefConfig(),
+				this.store.loadVoorzieningenConfig()
+			])
 		},
 	},
 }
@@ -435,7 +461,7 @@ export default {
 }
 
 .tab-content {
-	padding: 20px 0;
+	padding: 0;
 }
 
 .register-selection-grid {
@@ -499,6 +525,27 @@ export default {
 	margin-top: 20px;
 	padding-top: 20px;
 	border-top: 1px solid var(--color-border);
+}
+
+.section-title-with-buttons {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.title-buttons {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.title-save-button {
+	margin-left: auto;
+}
+
+.title-refresh-button {
+	margin-left: 8px;
 }
 
 .loading-icon {

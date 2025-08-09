@@ -28,8 +28,16 @@
 		:has-info-content="true"
 		@save="saveEmailSettings">
 		
-		<BTabs>
-			<BTab title="Settings" active>
+		<StandardTabs
+			:tabs="[
+				{ key: 'settings', title: 'Settings' },
+				{ key: 'email-types', title: 'Email Types' },
+				{ key: 'testing', title: 'Testing' },
+				{ key: 'templates', title: 'Templates' }
+			]"
+			:active-tab="activeTab"
+			@update:active-tab="activeTab = $event">
+			<div v-show="activeTab === 'settings'" class="tab-panel">
 				<div class="email-settings-section">
 					<h3>Email Settings</h3>
 					<p>Configure email notifications for organization and user events</p>
@@ -135,9 +143,9 @@
 							:disabled="!emailSettings.enabled" />
 					</div>
 				</div>
-			</BTab>
+			</div>
 
-			<BTab title="Email Types">
+			<div v-show="activeTab === 'email-types'" class="tab-panel">
 				<div class="email-types-section">
 					<h3>Email Types</h3>
 					<p>Configure which types of emails are automatically sent</p>
@@ -182,9 +190,9 @@
 						<p class="setting-description">Send emails for password reset requests</p>
 					</div>
 				</div>
-			</BTab>
+			</div>
 
-			<BTab title="Testing">
+			<div v-show="activeTab === 'testing'" class="tab-panel">
 				<div class="email-testing-section">
 					<h3>Email Testing</h3>
 					<p>Test your email configuration to ensure emails are delivered correctly</p>
@@ -237,9 +245,9 @@
 						</div>
 					</div>
 				</div>
-			</BTab>
+			</div>
 
-			<BTab title="Templates">
+			<div v-show="activeTab === 'templates'" class="tab-panel">
 				<div class="email-templates-section">
 					<h3>Email Templates</h3>
 					<p>Customize email templates for different types of notifications</p>
@@ -306,8 +314,8 @@
 						</div>
 					</div>
 				</div>
-			</BTab>
-		</BTabs>
+			</div>
+		</StandardTabs>
 
 		<!-- Info Content Slot -->
 		<template #info-content>
@@ -399,7 +407,7 @@ import Save from 'vue-material-design-icons/ContentSave.vue'
 import Email from 'vue-material-design-icons/Email.vue'
 
 // Bootstrap Vue components for tabs
-import { BTabs, BTab } from 'bootstrap-vue'
+import StandardTabs from '../../../components/StandardTabs.vue'
 
 export default {
 	name: 'EmailConfiguration',
@@ -416,8 +424,7 @@ export default {
 		NcLoadingIcon,
 		Save,
 		Email,
-		BTabs,
-		BTab,
+		StandardTabs,
 	},
 
 	setup() {
@@ -428,6 +435,7 @@ export default {
 
 	data() {
 		return {
+			activeTab: 'settings', // Default active tab
 			saving: false,
 			testingConnection: false,
 			testingEmail: false,
