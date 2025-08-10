@@ -150,7 +150,7 @@
 											<span class="object-type-description">Schema for organizations in AMEF</span>
 										</div>
 										<NcSelect
-											v-model="configuration.amef_organization.schema"
+											v-model="configuration.organization.schema"
 											:options="amefSchemaOptions"
 											input-label="Organizations Schema"
 											:disabled="loading"
@@ -159,39 +159,91 @@
 
 									<div class="object-type-section">
 										<div class="object-type-header">
-											<h5>Elements Schema</h5>
+											<h5>Element Schema</h5>
 											<span class="object-type-description">Schema for ArchiMate elements</span>
 										</div>
 										<NcSelect
-											v-model="configuration.amef_elements.schema"
+											v-model="configuration.element.schema"
 											:options="amefSchemaOptions"
-											input-label="Elements Schema"
+											input-label="Element Schema"
 											:disabled="loading"
 											@change="validateConfiguration" />
 									</div>
 
 									<div class="object-type-section">
 										<div class="object-type-header">
-											<h5>Relationships Schema</h5>
+											<h5>Relation Schema</h5>
 											<span class="object-type-description">Schema for ArchiMate relationships</span>
 										</div>
 										<NcSelect
-											v-model="configuration.amef_relationships.schema"
+											v-model="configuration.relation.schema"
 											:options="amefSchemaOptions"
-											input-label="Relationships Schema"
+											input-label="Relation Schema"
 											:disabled="loading"
 											@change="validateConfiguration" />
 									</div>
 
 									<div class="object-type-section">
 										<div class="object-type-header">
-											<h5>Views Schema</h5>
+											<h5>View Schema</h5>
 											<span class="object-type-description">Schema for ArchiMate views</span>
 										</div>
 										<NcSelect
-											v-model="configuration.amef_views.schema"
+											v-model="configuration.view.schema"
 											:options="amefSchemaOptions"
-											input-label="Views Schema"
+											input-label="View Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Extended View Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate extended views</span>
+										</div>
+										<NcSelect
+											v-model="configuration.extendview.schema"
+											:options="amefSchemaOptions"
+											input-label="Extended View Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Model Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate models</span>
+										</div>
+										<NcSelect
+											v-model="configuration.model.schema"
+											:options="amefSchemaOptions"
+											input-label="Model Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Property Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate properties</span>
+										</div>
+										<NcSelect
+											v-model="configuration.property.schema"
+											:options="amefSchemaOptions"
+											input-label="Property Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Property Definition Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate property definition objects</span>
+										</div>
+										<NcSelect
+											v-model="configuration.property_definition.schema"
+											:options="amefSchemaOptions"
+											input-label="Property Definition Schema"
 											:disabled="loading"
 											@change="validateConfiguration" />
 									</div>
