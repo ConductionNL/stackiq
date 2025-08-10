@@ -2846,17 +2846,19 @@ class SettingsService
     {
         $config = $this->config->getValueString($this->_appName, 'voorzieningen_config', '{}');
         $decoded = json_decode($config, true);
-        
+
+        // Backward compatibility: build minimal structure from legacy scalar keys
         if (!is_array($decoded)) {
-            // Fallback to individual config values for backward compatibility
             $decoded = [
                 'register' => $this->config->getValueString($this->_appName, 'voorzieningen_register', ''),
                 'organisatie_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', ''),
                 'contactpersoon_schema' => $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', ''),
             ];
         }
-        
-        return $decoded;
+
+        // Normalize to the new, clean structure: no *_source or *_register keys,
+        // include all known schema keys, and accept legacy 'voorzieningen_*_schema' fallbacks
+        return $this->normalizeVoorzieningenConfig($decoded);
     }
 
     /**
@@ -2867,8 +2869,61 @@ class SettingsService
      */
     public function setVoorzieningenConfig(array $config): void
     {
-        $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
+        // Persist only normalized structure
+        $normalized = $this->normalizeVoorzieningenConfig($config);
+        $jsonConfig = json_encode($normalized, JSON_PRETTY_PRINT);
         $this->config->setValueString($this->_appName, 'voorzieningen_config', $jsonConfig);
+    }
+
+    /**
+     * Normalize voorzieningen configuration to the new, clean format.
+     * - Keep only 'register' and individual '*_schema' keys
+     * - Drop any '*_source' and '*_register' keys
+     * - Ensure all known schema keys are present (null if missing)
+     *
+     * @param array $input Raw/legacy configuration
+     * @return array Normalized configuration
+     */
+    private function normalizeVoorzieningenConfig(array $input): array
+    {
+        $normalized = [];
+
+        // Register id
+        $normalized['register'] = isset($input['register']) ? (string)$input['register'] : '';
+
+        // Known schema keys to support (18 total)
+        $schemaKeys = [
+            'organisatie_schema',
+            'contactpersoon_schema',
+            'voorziening_schema',
+            'voorziening_aanbod_schema',
+            'voorziening_versie_schema',
+            'kwetsbaarheid_schema',
+            'contract_schema',
+            'standaard_schema',
+            'review_schema',
+            'koppeling_schema',
+            'beoordeeling_schema',
+            'voorziening_module_schema',
+            'verklaring_schema',
+            'koppeling_gebruik_schema',
+            'compliancy_schema',
+            'module_gebruik_schema',
+            'module_versie_schema',
+            'sector_schema',
+        ];
+
+        // Copy any present schema keys; ignore sources/registers
+        foreach ($schemaKeys as $key) {
+            if (array_key_exists($key, $input)) {
+                $normalized[$key] = $input[$key] === null ? '' : (string)$input[$key];
+            } else {
+                // Accept legacy keys that might be nested under 'voorzieningen_*_schema'
+                $normalized[$key] = '';
+            }
+        }
+
+        return $normalized;
     }
 
     /**

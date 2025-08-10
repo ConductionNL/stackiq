@@ -80,16 +80,21 @@
 							type="file"
 							accept=".archimate,.xml"
 							:disabled="importing || isImportRunning"
-							@change="handleFileSelect" />
+							@change="handleFileSelect">
 					</div>
 
 					<!-- Import Configuration SECOND -->
 					<div class="performance-mode-section">
 						<h5>Processing Mode</h5>
-						<p class="mode-description">Choose performance vs memory efficiency for large files.</p>
+						<p class="mode-description">
+							Choose performance vs memory efficiency for large files.
+						</p>
 						<div class="mode-options">
 							<label class="mode-option">
-								<input type="radio" value="speed" v-model="processingMode" :disabled="importing || isImportRunning">
+								<input v-model="processingMode"
+									type="radio"
+									value="speed"
+									:disabled="importing || isImportRunning">
 								<span class="mode-label">
 									<div class="mode-header">
 										<strong>High Performance</strong>
@@ -105,7 +110,10 @@
 								</span>
 							</label>
 							<label class="mode-option">
-								<input type="radio" value="memory" v-model="processingMode" :disabled="importing || isImportRunning">
+								<input v-model="processingMode"
+									type="radio"
+									value="memory"
+									:disabled="importing || isImportRunning">
 								<span class="mode-label">
 									<div class="mode-header">
 										<strong>Memory Efficient</strong>
@@ -183,7 +191,7 @@
 						<NcButton
 							type="primary"
 							:disabled="exporting"
-							@click="exportArchiMateFile">
+							@click="exportToArchiMate">
 							<template #icon>
 								<NcLoadingIcon v-if="exporting" :size="20" />
 								<Download v-else :size="20" />
@@ -273,11 +281,11 @@ import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 
 // Icons
-import Upload from 'vue-material-design-icons/Upload.vue'
+// import Upload from 'vue-material-design-icons/Upload.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import Alert from 'vue-material-design-icons/Alert.vue'
+// import Alert from 'vue-material-design-icons/Alert.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
 import StopIcon from 'vue-material-design-icons/Stop.vue'
 
@@ -293,11 +301,11 @@ export default {
 		NcSelect,
 		NcNoteCard,
 		NcLoadingIcon,
-		Upload,
+		// Upload,
 		Download,
 		CloudUpload,
 		CheckCircle,
-		Alert,
+		// Alert,
 		Sync,
 		StopIcon,
 		StandardTabs,
@@ -377,26 +385,26 @@ export default {
 			}
 
 			this.cancelling = true
-			
+
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import/cancel', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 						'OCS-APIREQUEST': 'true',
-						'requesttoken': OC.requestToken
-					}
+						requesttoken: OC.requestToken,
+					},
 				})
 
 				const result = await response.json()
-				
+
 				if (result.success) {
 					// Show success notification
 					OC.Notification.showTemporary(
 						`Import cancelled successfully${result.details.process_killed ? ' (process terminated)' : ''}`,
-						{ type: 'success' }
+						{ type: 'success' },
 					)
-					
+
 					// Refresh the status to reflect cancellation
 					await this.store.refreshArchiMateStatus()
 				} else {
@@ -406,7 +414,7 @@ export default {
 				console.error('Error cancelling import:', error)
 				OC.Notification.showTemporary(
 					'Failed to cancel import: ' + error.message,
-					{ type: 'error' }
+					{ type: 'error' },
 				)
 			} finally {
 				this.cancelling = false
@@ -470,17 +478,17 @@ export default {
 		/**
 		 * Calculate progress percentage based on processed vs found objects
 		 *
-		 * @param {Object} progress Progress object with found, created, updated, skipped counts
+		 * @param {object} progress Progress object with found, created, updated, skipped counts
 		 * @return {number} Progress percentage (0-100)
 		 */
 		calculateProgress(progress) {
 			const found = progress.found || 0
 			const processed = (progress.created || 0) + (progress.updated || 0) + (progress.skipped || 0)
-			
+
 			if (found === 0) {
 				return 0
 			}
-			
+
 			return Math.round((processed / found) * 100)
 		},
 	},

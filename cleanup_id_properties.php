@@ -79,3 +79,5 @@ if (file_put_contents($jsonFile, $cleanedJson) !== false) {
 }
 
 echo "Done!\n";
+
+

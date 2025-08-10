@@ -259,7 +259,9 @@
 			class="loading-icon"
 			:size="32"
 			appearance="dark" />
-		<p v-if="loading" class="loading-copy">Loading OpenRegister configuration...</p>
+		<p v-if="loading" class="loading-copy">
+			Loading OpenRegister configuration...
+		</p>
 	</NcSettingsSection>
 </template>
 
@@ -349,8 +351,6 @@ export default {
 			return [
 				{ key: 'voorzieningen_organisatie', title: 'Organisatie Schema', description: 'Schema for organizations' },
 				{ key: 'voorzieningen_contactpersoon', title: 'Contactpersoon Schema', description: 'Schema for contact persons' },
-				{ key: 'voorzieningen_gebruiker', title: 'Gebruiker Schema', description: 'Schema for users' },
-				{ key: 'voorzieningen_contactgegevens', title: 'Contactgegevens Schema', description: 'Schema for contact details' },
 				{ key: 'voorzieningen_voorziening', title: 'Voorziening Schema', description: 'Schema for provisions' },
 				{ key: 'voorzieningen_voorziening_aanbod', title: 'Voorziening Aanbod Schema', description: 'Schema for provision offers' },
 				{ key: 'voorzieningen_voorziening_versie', title: 'Voorziening Versie Schema', description: 'Schema for provision versions' },
@@ -448,7 +448,7 @@ export default {
 			// Only reload the specific configurations needed for this component
 			await Promise.all([
 				this.store.loadAmefConfig(),
-				this.store.loadVoorzieningenConfig()
+				this.store.loadVoorzieningenConfig(),
 			])
 		},
 	},

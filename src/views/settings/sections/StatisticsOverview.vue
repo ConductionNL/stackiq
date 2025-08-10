@@ -2,15 +2,14 @@
 	<NcSettingsSection
 		name="Object Statistics"
 		description="Overview of objects stored in configured registers">
-		
 		<!-- Refresh Button in Title Section -->
 		<template #title>
 			<div class="section-title-with-button">
 				<span>Object Statistics</span>
 				<NcButton
 					:disabled="loadingStats"
-					@click="refreshStatistics"
-					class="title-refresh-button">
+					class="title-refresh-button"
+					@click="refreshStatistics">
 					<template #icon>
 						<RefreshIcon :size="16" />
 					</template>
@@ -18,7 +17,7 @@
 				</NcButton>
 			</div>
 		</template>
-		
+
 		<div class="statistics-section">
 			<!-- Last Updated Info -->
 			<div class="statistics-header">
@@ -40,13 +39,17 @@
 					</thead>
 					<tbody>
 						<tr v-for="stat in formattedStatistics" :key="`${stat.register}-${stat.type}`">
-							<td class="register-cell">{{ stat.register }}</td>
-							<td class="type-cell">{{ stat.type }}</td>
+							<td class="register-cell">
+								{{ stat.register }}
+							</td>
+							<td class="type-cell">
+								{{ stat.type }}
+							</td>
 							<td class="count-cell" :class="{ 'high-count': stat.count > 10000 }">
 								{{ formatNumber(stat.count) }}
 							</td>
 							<td class="status-cell">
-								<span 
+								<span
 									class="status-badge"
 									:class="stat.configured ? 'status-configured' : 'status-not-configured'">
 									{{ stat.configured ? 'Configured' : 'Not Configured' }}
@@ -83,12 +86,12 @@
 
 <script>
 import { defineComponent } from 'vue'
-import { 
-	NcSettingsSection, 
-	NcButton, 
-	NcEmptyContent, 
+import {
+	NcSettingsSection,
+	NcButton,
+	NcEmptyContent,
 	NcLoadingIcon,
-	NcNoteCard
+	NcNoteCard,
 } from '@nextcloud/vue'
 import { useSettingsStore } from '../../../store/modules/settings.js'
 import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
@@ -104,7 +107,7 @@ import ChartLineIcon from 'vue-material-design-icons/ChartLine.vue'
  */
 export default defineComponent({
 	name: 'StatisticsOverview',
-	
+
 	components: {
 		NcSettingsSection,
 		NcButton,
@@ -117,7 +120,7 @@ export default defineComponent({
 
 	setup() {
 		const settingsStore = useSettingsStore()
-		
+
 		return {
 			settingsStore,
 		}
@@ -127,15 +130,15 @@ export default defineComponent({
 		statistics() {
 			return this.settingsStore.statistics
 		},
-		
+
 		formattedStatistics() {
 			return this.settingsStore.formattedStatistics
 		},
-		
+
 		loadingStats() {
 			return this.settingsStore.loadingStats
 		},
-		
+
 		error() {
 			return this.settingsStore.error
 		},
@@ -299,11 +302,11 @@ export default defineComponent({
 		align-items: flex-start;
 		gap: 8px;
 	}
-	
+
 	.statistics-table {
 		overflow-x: auto;
 	}
-	
+
 	.statistics-table table {
 		min-width: 500px;
 	}

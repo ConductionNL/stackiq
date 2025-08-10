@@ -18,49 +18,49 @@
 
 <template>
 	<NcSettingsSection :name="name" :description="description" :doc-url="docUrl">
-		<!-- Title with right-aligned controls -->
-		<template #title>
-			<div class="section-title-with-buttons">
-				<span>{{ name }}</span>
-				<div class="title-buttons">
-					<NcButton
-						v-if="showSaveButton"
-						type="primary"
-						:disabled="loading || saving || !canSave"
-						class="title-save-button"
-						@click="handleSave">
-						<template #icon>
-							<NcLoadingIcon v-if="saving" :size="20" />
-							<Save v-else :size="20" />
-						</template>
-						{{ saveButtonText }}
-					</NcButton>
+		<!-- Header actions positioned at top-right of the section title area -->
+		<div class="section-header-actions">
+			<div class="header-buttons">
+				<NcButton
+					v-if="showSaveButton"
+					type="primary"
+					:disabled="loading || saving || !canSave"
+					class="title-save-button"
+					@click="handleSave">
+					<template #icon>
+						<NcLoadingIcon v-if="saving" :size="20" />
+						<Save v-else :size="20" />
+					</template>
+					{{ saveButtonText }}
+				</NcButton>
 
-					<NcButton
-						v-if="showRefreshButton"
-						type="secondary"
-						:disabled="loading || refreshing"
-						class="title-refresh-button"
-						@click="handleRefresh">
-						<template #icon>
-							<NcLoadingIcon v-if="refreshing" :size="20" />
-							<Refresh v-else :size="20" />
-						</template>
-						{{ refreshButtonText }}
-					</NcButton>
+				<NcButton
+					v-if="showRefreshButton"
+					type="secondary"
+					:disabled="loading || refreshing"
+					class="title-refresh-button"
+					@click="handleRefresh">
+					<template #icon>
+						<NcLoadingIcon v-if="refreshing" :size="20" />
+						<Refresh v-else :size="20" />
+					</template>
+					{{ refreshButtonText }}
+				</NcButton>
 
-					<NcButton
-						v-if="hasInfoContent"
-						type="tertiary-no-background"
-						:aria-label="'Show information about ' + name"
-						@click="showInfoModal = true">
-						<template #icon>
-							<Information :size="20" />
-						</template>
-					</NcButton>
-				</div>
+				<NcButton
+					v-if="hasInfoContent"
+					type="tertiary-no-background"
+					:aria-label="'Show information about ' + name"
+					@click="showInfoModal = true">
+					<template #icon>
+						<Information :size="20" />
+					</template>
+				</NcButton>
+
+				<!-- Optional header actions from parent -->
+				<slot name="header-actions" />
 			</div>
-		</template>
+		</div>
 
 		<div class="always-visible-section">
 			<!-- Always Visible Content -->
@@ -75,7 +75,9 @@
 					class="loading-icon"
 					:size="32"
 					appearance="dark" />
-				<p v-if="loading" class="loading-text">{{ loadingText }}</p>
+				<p v-if="loading" class="loading-text">
+					{{ loadingText }}
+				</p>
 			</div>
 		</div>
 
@@ -84,6 +86,7 @@
 			v-if="hasInfoContent"
 			:show="showInfoModal"
 			:title="name + ' Information'"
+			:name="name + ' Info'"
 			@close="showInfoModal = false">
 			<div class="info-content">
 				<slot name="info" />
@@ -222,7 +225,7 @@ export default defineComponent({
 		 */
 		loadingText: {
 			type: String,
-			default: 'Loading...'
+			default: 'Loading...',
 		},
 	},
 
@@ -258,11 +261,11 @@ export default defineComponent({
 		width: 100%;
 	}
 
-	.title-buttons {
-		display: flex;
-		gap: 8px;
-		align-items: center;
-	}
+.header-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
 
 	.title-save-button {
 		margin-left: auto;
@@ -275,6 +278,19 @@ export default defineComponent({
 	.always-visible-section {
 		width: 100%;
 	}
+
+/* Place header actions container in the top-right corner of the section */
+.section-header-actions {
+    position: absolute;
+    top: 6px; /* align with title baseline */
+    right: 0;
+    z-index: 1;
+}
+
+/* Ensure the parent has relative context */
+.settings-section {
+    position: relative;
+}
 
 	.section-content {
 		margin-top: 1rem;

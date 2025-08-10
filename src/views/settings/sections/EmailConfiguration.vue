@@ -1,17 +1,17 @@
 <!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license AGPL-3.0-or-later
- - 
+ -
  - This program is free software: you can redistribute it and/or modify
  - it under the terms of the GNU Affero General Public License as
  - published by the Free Software Foundation, either version 3 of the
  - License, or (at your option) any later version.
- - 
+ -
  - This program is distributed in the hope that it will be useful,
  - but WITHOUT ANY WARRANTY; without even the implied warranty of
  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  - GNU Affero General Public License for more details.
- - 
+ -
  - You should have received a copy of the GNU Affero General Public License
  - along with this program. If not, see <http://www.gnu.org/licenses/>.
  -->
@@ -27,7 +27,6 @@
 		save-button-text="Save Email Settings"
 		:has-info-content="true"
 		@save="saveEmailSettings">
-		
 		<StandardTabs
 			:tabs="[
 				{ key: 'settings', title: 'Settings' },
@@ -49,33 +48,40 @@
 							type="switch">
 							Enable Email Notifications
 						</NcCheckboxRadioSwitch>
-						<p class="setting-description">Enable or disable all email notifications from the system</p>
+						<p class="setting-description">
+							Enable or disable all email notifications from the system
+						</p>
 					</div>
 
 					<!-- Sender Information -->
 					<div class="setting-group">
 						<h4>Sender Information</h4>
 						<NcTextField
-							:value.sync="emailSettings.senderEmail"
 							label="Sender Email"
 							placeholder="noreply@example.com"
-							:disabled="!emailSettings.enabled" />
+							:disabled="!emailSettings.enabled"
+							:value="(emailSettings.senderEmail || '').toString()"
+							@update:value="emailSettings.senderEmail = $event" />
 						<NcTextField
-							:value.sync="emailSettings.senderName"
 							label="Sender Name"
 							placeholder="Software Catalog"
-							:disabled="!emailSettings.enabled" />
+							:disabled="!emailSettings.enabled"
+							:value="(emailSettings.senderName || '').toString()"
+							@update:value="emailSettings.senderName = $event" />
 					</div>
 
 					<!-- Test Receiver Override -->
 					<div class="setting-group">
 						<h4>Test Configuration</h4>
 						<NcTextField
-							:value.sync="emailSettings.testReceiverOverride"
 							label="Test Receiver Override"
 							placeholder="test@example.com"
-							:disabled="!emailSettings.enabled" />
-						<p class="setting-description">If set, all emails will be sent to this address instead of the intended recipients (useful for testing)</p>
+							:disabled="!emailSettings.enabled"
+							:value="(emailSettings.testReceiverOverride || '').toString()"
+							@update:value="emailSettings.testReceiverOverride = $event" />
+						<p class="setting-description">
+							If set, all emails will be sent to this address instead of the intended recipients (useful for testing)
+						</p>
 					</div>
 
 					<!-- Transport Configuration -->
@@ -89,7 +95,7 @@
 								{ label: 'SendGrid', value: 'sendgrid' },
 								{ label: 'Local Mail', value: 'mail' }
 							]"
-							label="Transport Type"
+							input-label="Transport Type"
 							:disabled="!emailSettings.enabled" />
 					</div>
 
@@ -98,16 +104,18 @@
 						<h4>SMTP Configuration</h4>
 						<div class="smtp-fields">
 							<NcTextField
-								:value.sync="emailSettings.smtpHost"
 								label="SMTP Host"
 								placeholder="smtp.gmail.com"
-								:disabled="!emailSettings.enabled" />
+								:disabled="!emailSettings.enabled"
+								:value="(emailSettings.smtpHost || '').toString()"
+								@update:value="emailSettings.smtpHost = $event" />
 							<NcTextField
-								:value.sync="emailSettings.smtpPort"
 								label="SMTP Port"
 								placeholder="587"
-								type="number"
-								:disabled="!emailSettings.enabled" />
+								type="text"
+								:disabled="!emailSettings.enabled"
+								:value="(emailSettings.smtpPort == null ? '' : String(emailSettings.smtpPort))"
+								@update:value="emailSettings.smtpPort = $event" />
 							<NcSelect
 								:value.sync="emailSettings.smtpEncryption"
 								:options="[
@@ -115,18 +123,20 @@
 									{ label: 'TLS', value: 'tls' },
 									{ label: 'SSL', value: 'ssl' }
 								]"
-								label="Encryption"
+								input-label="Encryption"
 								:disabled="!emailSettings.enabled" />
 							<NcTextField
-								:value.sync="emailSettings.smtpUsername"
 								label="SMTP Username"
 								placeholder="your-email@gmail.com"
-								:disabled="!emailSettings.enabled" />
+								:disabled="!emailSettings.enabled"
+								:value="(emailSettings.smtpUsername || '').toString()"
+								@update:value="emailSettings.smtpUsername = $event" />
 							<NcPasswordField
-								:value.sync="emailSettings.smtpPassword"
 								label="SMTP Password"
 								placeholder="Your app password"
-								:disabled="!emailSettings.enabled" />
+								:disabled="!emailSettings.enabled"
+								:value="(emailSettings.smtpPassword || '').toString()"
+								@update:value="emailSettings.smtpPassword = $event" />
 						</div>
 					</div>
 
@@ -134,13 +144,15 @@
 					<div v-else-if="emailSettings.transportType === 'mailjet'" class="setting-group">
 						<h4>Mailjet Configuration</h4>
 						<NcTextField
-							:value.sync="emailSettings.mailjetApiKey"
 							label="Mailjet API Key"
-							:disabled="!emailSettings.enabled" />
+							:disabled="!emailSettings.enabled"
+							:value="(emailSettings.mailjetApiKey || '').toString()"
+							@update:value="emailSettings.mailjetApiKey = $event" />
 						<NcPasswordField
-							:value.sync="emailSettings.mailjetApiSecret"
 							label="Mailjet API Secret"
-							:disabled="!emailSettings.enabled" />
+							:disabled="!emailSettings.enabled"
+							:value="(emailSettings.mailjetApiSecret || '').toString()"
+							@update:value="emailSettings.mailjetApiSecret = $event" />
 					</div>
 				</div>
 			</div>
@@ -157,7 +169,9 @@
 							:disabled="!emailSettings.enabled">
 							Organization Registration
 						</NcCheckboxRadioSwitch>
-						<p class="setting-description">Send emails when new organizations are registered</p>
+						<p class="setting-description">
+							Send emails when new organizations are registered
+						</p>
 					</div>
 
 					<div class="email-type-group">
@@ -167,7 +181,9 @@
 							:disabled="!emailSettings.enabled">
 							Organization Activation
 						</NcCheckboxRadioSwitch>
-						<p class="setting-description">Send emails when organizations are activated</p>
+						<p class="setting-description">
+							Send emails when organizations are activated
+						</p>
 					</div>
 
 					<div class="email-type-group">
@@ -177,7 +193,9 @@
 							:disabled="!emailSettings.enabled">
 							User Creation
 						</NcCheckboxRadioSwitch>
-						<p class="setting-description">Send emails when new user accounts are created</p>
+						<p class="setting-description">
+							Send emails when new user accounts are created
+						</p>
 					</div>
 
 					<div class="email-type-group">
@@ -187,7 +205,9 @@
 							:disabled="!emailSettings.enabled">
 							Password Reset
 						</NcCheckboxRadioSwitch>
-						<p class="setting-description">Send emails for password reset requests</p>
+						<p class="setting-description">
+							Send emails for password reset requests
+						</p>
 					</div>
 				</div>
 			</div>
@@ -375,16 +395,16 @@
 
 <script>
 /**
-* Email Configuration Component
-*
-* This component handles email settings configuration including
-* transport settings, email types, testing, and template management.
-*
-* @author Ruben Linde <info@conduction.nl>
-* @copyright 2023 Conduction B.V.
-* @license AGPL-3.0-or-later
-* @version 1.0.0
-*/
+ * Email Configuration Component
+ *
+ * This component handles email settings configuration including
+ * transport settings, email types, testing, and template management.
+ *
+ * @author Ruben Linde <info@conduction.nl>
+ * @copyright 2023 Conduction B.V.
+ * @license AGPL-3.0-or-later
+ * @version 1.0.0
+ */
 
 import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -456,7 +476,7 @@ export default {
 						'organization.website': 'Organization website',
 						'user.name': 'Name of the registering user',
 						'user.email': 'Email of the registering user',
-						'activation_url': 'URL to activate the organization',
+						activation_url: 'URL to activate the organization',
 					},
 				},
 				{
@@ -468,7 +488,7 @@ export default {
 						'organization.email': 'Organization contact email',
 						'user.name': 'Name of the contact person',
 						'user.email': 'Email of the contact person',
-						'login_url': 'URL to log into the system',
+						login_url: 'URL to log into the system',
 					},
 				},
 				{
@@ -480,8 +500,8 @@ export default {
 						'user.email': 'Email of the new user',
 						'user.username': 'Username for the new account',
 						'organization.name': 'Name of the user\'s organization',
-						'login_url': 'URL to log into the system',
-						'password_reset_url': 'URL to set initial password',
+						login_url: 'URL to log into the system',
+						password_reset_url: 'URL to set initial password',
 					},
 				},
 				{
@@ -491,8 +511,8 @@ export default {
 					variables: {
 						'user.name': 'Name of the user',
 						'user.email': 'Email of the user',
-						'reset_url': 'URL to reset the password',
-						'expiry_time': 'When the reset link expires',
+						reset_url: 'URL to reset the password',
+						expiry_time: 'When the reset link expires',
 					},
 				},
 			],
@@ -508,8 +528,8 @@ export default {
 		},
 		canSave() {
 			// Always allow saving for email settings
-			return true;
-		}
+			return true
+		},
 	},
 
 	async created() {
@@ -621,6 +641,9 @@ export default {
 
 		/**
 		 * Update template content
+		 *
+		 * @param {string} content Description: New template content to save for the currently active template
+		 * @return {void}
 		 */
 		updateTemplateContent(content) {
 			this.templates[this.activeTemplate] = content
@@ -628,13 +651,19 @@ export default {
 
 		/**
 		 * Format template variable for display
+		 *
+		 * @param {string} variable Description: Variable key (e.g., 'user.email') to format as a template placeholder
+		 * @return {string}
 		 */
 		formatTemplateVariable(variable) {
 			return `{{ ${variable} }}`
 		},
 
 		/**
-		 * Insert variable into template
+		 * Insert variable into the active template at the end of the content
+		 *
+		 * @param {string} variable Description: Variable key to insert (e.g., 'organization.name')
+		 * @return {void}
 		 */
 		insertVariable(variable) {
 			const formattedVariable = this.formatTemplateVariable(variable)

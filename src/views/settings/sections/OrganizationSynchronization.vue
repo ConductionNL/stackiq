@@ -22,13 +22,12 @@
 		description="Synchronize organization data between OpenRegister and external systems"
 		:loading="loading"
 		:show-refresh-button="true"
-		:refreshing="syncing"
-		refresh-button-text="Sync Now"
+		:refreshing="loadingSyncStatus"
+		refresh-button-text="Refresh Status"
 		:has-info-content="true"
-		@refresh="performSync">
+		@refresh="loadSyncStatus">
 		<div>
 			<div class="sync-section">
-				<h3>Synchronization Status</h3>
 				<p>Monitor the status of organization and contact person synchronization</p>
 
 				<!-- Time Window Configuration -->
@@ -42,7 +41,7 @@
 								v-model="selectedTimeWindow"
 								:options="timeWindowOptions"
 								input-label="Time Window"
-								:disabled="loading || syncing"
+								:disabled="loading || loadingSyncStatus"
 								@change="handleTimeWindowChange" />
 						</div>
 
@@ -50,10 +49,10 @@
 						<div class="sync-actions">
 							<NcButton
 								type="secondary"
-								:disabled="loading || syncing"
+								:disabled="loading || loadingSyncStatus"
 								@click="loadSyncStatus">
 								<template #icon>
-									<NcLoadingIcon v-if="syncing" :size="20" />
+									<NcLoadingIcon v-if="loadingSyncStatus" :size="20" />
 									<Refresh v-else :size="20" />
 								</template>
 								Refresh Status

@@ -40,9 +40,9 @@
 <script>
 /**
  * Standard Tabs Component
- * 
+ *
  * A reusable tab component with consistent styling across all sections
- * 
+ *
  * @author Ruben Linde <info@conduction.nl>
  * @copyright 2023 Conduction B.V.
  * @license AGPL-3.0-or-later

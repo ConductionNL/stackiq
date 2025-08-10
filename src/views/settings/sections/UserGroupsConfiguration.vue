@@ -40,189 +40,188 @@
 			@update:active-tab="activeTab = $event">
 			<!-- Generic Groups Tab -->
 			<div v-show="activeTab === 'generic-groups'" class="tab-panel">
-					<h3>Generic User Groups</h3>
-					<p>Define the list of generic user groups that can be assigned to users based on their roles</p>
+				<h3>Generic User Groups</h3>
+				<p>Define the list of generic user groups that can be assigned to users based on their roles</p>
 
-					<div class="groups-configuration">
-						<h4>Current Generic User Groups</h4>
-						<div class="group-list">
-							<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
-								<NcTextField
-									:value="(group || '').toString()"
-									:placeholder="'Group name'"
-									label="Group Name"
-									@update:value="updateGroupName(index, $event)" />
-								<NcButton
-									type="tertiary-no-background"
-									:aria-label="'Remove group'"
-									@click="removeGroup(index)">
-									<template #icon>
-										<Close :size="16" />
-									</template>
-								</NcButton>
-							</div>
-						</div>
-
-						<div class="group-actions">
+				<div class="groups-configuration">
+					<h4>Current Generic User Groups</h4>
+					<div class="group-list">
+						<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
+							<NcTextField
+								:value="(group || '').toString()"
+								:placeholder="'Group name'"
+								label="Group Name"
+								@update:value="updateGroupName(index, $event)" />
 							<NcButton
-								type="secondary"
-								@click="addGroup">
+								type="tertiary-no-background"
+								:aria-label="'Remove group'"
+								@click="removeGroup(index)">
 								<template #icon>
-									<Plus :size="20" />
+									<Close :size="16" />
 								</template>
-								Add Group
 							</NcButton>
-						</div>
-
-						<div v-if="groupValidation && groupValidation.errors.length > 0" class="validation-errors">
-							<NcNoteCard type="error">
-								<template #icon>
-									<Alert :size="20" />
-								</template>
-								<strong>Validation Errors:</strong>
-								<ul>
-									<li v-for="error in groupValidation.errors" :key="error">
-										{{ error }}
-									</li>
-								</ul>
-							</NcNoteCard>
-						</div>
-
-						<div v-if="groupsSaveResult" class="save-results">
-							<NcNoteCard v-if="groupsSaveResult.success" type="success">
-								Groups saved successfully!
-							</NcNoteCard>
-							<NcNoteCard v-else type="error">
-								{{ groupsSaveResult.error || 'Failed to save groups' }}
-							</NcNoteCard>
-						</div>
-
-						<div class="groups-info">
-							<h4>Group Information</h4>
-							<p>These groups will be used for:</p>
-							<ul>
-								<li><strong>Role-based assignment:</strong> Users will be automatically assigned to groups based on their roles</li>
-								<li><strong>Permission management:</strong> Groups can be used to control access to different parts of the system</li>
-								<li><strong>Organization structure:</strong> Special groups like 'ambtenaar' are assigned based on organization type</li>
-							</ul>
-
-							<div class="default-groups-info">
-								<h5>Recommended Groups:</h5>
-								<ul>
-									<li v-for="group in genericUserGroups" :key="group">
-										<code>{{ group }}</code> - {{ getGroupDescription(group) }}
-									</li>
-								</ul>
-							</div>
 						</div>
 					</div>
-				</div>
 
-				<!-- Organization Admin Groups Tab -->
-				<div v-show="activeTab === 'organization-admin-groups'" class="tab-panel">
-					<h3>Organization Admin Groups</h3>
-					<p>Define groups that organization administrators (first contacts) are automatically assigned to</p>
+					<div class="group-actions">
+						<NcButton
+							type="secondary"
+							@click="addGroup">
+							<template #icon>
+								<Plus :size="20" />
+							</template>
+							Add Group
+						</NcButton>
+					</div>
 
-					<div class="groups-configuration">
-						<h4>Current Organization Admin Groups</h4>
-						<div class="group-list">
-							<div v-for="(group, index) in organizationAdminGroups" :key="index" class="group-item">
-								<NcTextField
-									:value="group || ''"
-									:placeholder="'Group name'"
-									label="Group Name"
-									@update:value="updateOrganizationAdminGroupName(index, $event)" />
-								<NcButton
-									type="tertiary-no-background"
-									:aria-label="'Remove group'"
-									@click="removeOrganizationAdminGroup(index)">
-									<template #icon>
-										<Close :size="16" />
-									</template>
-								</NcButton>
-							</div>
-						</div>
-
-						<div class="group-actions">
-							<NcButton
-								type="secondary"
-								@click="addOrganizationAdminGroup">
-								<template #icon>
-									<Plus :size="20" />
-								</template>
-								Add Organization Admin Group
-							</NcButton>
-						</div>
-
-						<div v-if="organizationAdminGroupsSaveResult" class="save-results">
-							<NcNoteCard :type="organizationAdminGroupsSaveResult.success ? 'success' : 'error'">
-								{{ organizationAdminGroupsSaveResult.success ? 'Organization admin groups saved successfully!' : organizationAdminGroupsSaveResult.error }}
-							</NcNoteCard>
-						</div>
-
-						<div class="groups-info">
-							<h4>Organization Admin Group Information</h4>
-							<p>These groups will be assigned to:</p>
+					<div v-if="groupValidation && groupValidation.errors.length > 0" class="validation-errors">
+						<NcNoteCard type="error">
+							<template #icon>
+								<Alert :size="20" />
+							</template>
+							<strong>Validation Errors:</strong>
 							<ul>
-								<li><strong>First contacts:</strong> The first contact person created for an organization</li>
-								<li><strong>Organization administrators:</strong> Users designated as organization administrators</li>
-								<li><strong>Management permissions:</strong> Users who need to manage their organization's data</li>
+								<li v-for="error in groupValidation.errors" :key="error">
+									{{ error }}
+								</li>
+							</ul>
+						</NcNoteCard>
+					</div>
+
+					<div v-if="groupsSaveResult" class="save-results">
+						<NcNoteCard v-if="groupsSaveResult.success" type="success">
+							Groups saved successfully!
+						</NcNoteCard>
+						<NcNoteCard v-else type="error">
+							{{ groupsSaveResult.error || 'Failed to save groups' }}
+						</NcNoteCard>
+					</div>
+
+					<div class="groups-info">
+						<h4>Group Information</h4>
+						<p>These groups will be used for:</p>
+						<ul>
+							<li><strong>Role-based assignment:</strong> Users will be automatically assigned to groups based on their roles</li>
+							<li><strong>Permission management:</strong> Groups can be used to control access to different parts of the system</li>
+							<li><strong>Organization structure:</strong> Special groups like 'ambtenaar' are assigned based on organization type</li>
+						</ul>
+
+						<div class="default-groups-info">
+							<h5>Recommended Groups:</h5>
+							<ul>
+								<li v-for="group in genericUserGroups" :key="group">
+									<code>{{ group }}</code> - {{ getGroupDescription(group) }}
+								</li>
 							</ul>
 						</div>
 					</div>
 				</div>
+			</div>
 
-				<!-- Super User Groups Tab -->
-				<div v-show="activeTab === 'super-user-groups'" class="tab-panel">
-					<h3>Super User Groups</h3>
-					<p>Define groups that super users (system administrators) are automatically assigned to</p>
+			<!-- Organization Admin Groups Tab -->
+			<div v-show="activeTab === 'organization-admin-groups'" class="tab-panel">
+				<h3>Organization Admin Groups</h3>
+				<p>Define groups that organization administrators (first contacts) are automatically assigned to</p>
 
-					<div class="groups-configuration">
-						<h4>Current Super User Groups</h4>
-						<div class="group-list">
-							<div v-for="(group, index) in superUserGroups" :key="index" class="group-item">
-								<NcTextField
-									:value="group || ''"
-									:placeholder="'Group name'"
-									label="Group Name"
-									@update:value="updateSuperUserGroupName(index, $event)" />
-								<NcButton
-									type="tertiary-no-background"
-									:aria-label="'Remove group'"
-									@click="removeSuperUserGroup(index)">
-									<template #icon>
-										<Close :size="16" />
-									</template>
-								</NcButton>
-							</div>
-						</div>
-
-						<div class="group-actions">
+				<div class="groups-configuration">
+					<h4>Current Organization Admin Groups</h4>
+					<div class="group-list">
+						<div v-for="(group, index) in organizationAdminGroups" :key="index" class="group-item">
+							<NcTextField
+								:value="group || ''"
+								:placeholder="'Group name'"
+								label="Group Name"
+								@update:value="updateOrganizationAdminGroupName(index, $event)" />
 							<NcButton
-								type="secondary"
-								@click="addSuperUserGroup">
+								type="tertiary-no-background"
+								:aria-label="'Remove group'"
+								@click="removeOrganizationAdminGroup(index)">
 								<template #icon>
-									<Plus :size="20" />
+									<Close :size="16" />
 								</template>
-								Add Super User Group
 							</NcButton>
 						</div>
+					</div>
 
-						<div v-if="superUserGroupsSaveResult" class="save-results">
-							<NcNoteCard :type="superUserGroupsSaveResult.success ? 'success' : 'error'">
-								{{ superUserGroupsSaveResult.success ? 'Super user groups saved successfully!' : superUserGroupsSaveResult.error }}
-							</NcNoteCard>
-						</div>
+					<div class="group-actions">
+						<NcButton
+							type="secondary"
+							@click="addOrganizationAdminGroup">
+							<template #icon>
+								<Plus :size="20" />
+							</template>
+							Add Organization Admin Group
+						</NcButton>
+					</div>
 
-						<div class="groups-info">
-							<h4>Super User Group Information</h4>
-							<p>These groups will be assigned to:</p>
-							<ul>
-								<li><strong>System administrators:</strong> Users with full system access</li>
-								<li><strong>Platform managers:</strong> Users who manage the entire platform</li>
-								<li><strong>Advanced permissions:</strong> Users who need access to all system features</li>
-							</ul>
+					<div v-if="organizationAdminGroupsSaveResult" class="save-results">
+						<NcNoteCard :type="organizationAdminGroupsSaveResult.success ? 'success' : 'error'">
+							{{ organizationAdminGroupsSaveResult.success ? 'Organization admin groups saved successfully!' : organizationAdminGroupsSaveResult.error }}
+						</NcNoteCard>
+					</div>
+
+					<div class="groups-info">
+						<h4>Organization Admin Group Information</h4>
+						<p>These groups will be assigned to:</p>
+						<ul>
+							<li><strong>First contacts:</strong> The first contact person created for an organization</li>
+							<li><strong>Organization administrators:</strong> Users designated as organization administrators</li>
+							<li><strong>Management permissions:</strong> Users who need to manage their organization's data</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<!-- Super User Groups Tab -->
+			<div v-show="activeTab === 'super-user-groups'" class="tab-panel">
+				<h3>Super User Groups</h3>
+				<p>Define groups that super users (system administrators) are automatically assigned to</p>
+
+				<div class="groups-configuration">
+					<h4>Current Super User Groups</h4>
+					<div class="group-list">
+						<div v-for="(group, index) in superUserGroups" :key="index" class="group-item">
+							<NcTextField
+								:value="group || ''"
+								:placeholder="'Group name'"
+								label="Group Name"
+								@update:value="updateSuperUserGroupName(index, $event)" />
+							<NcButton
+								type="tertiary-no-background"
+								:aria-label="'Remove group'"
+								@click="removeSuperUserGroup(index)">
+								<template #icon>
+									<Close :size="16" />
+								</template>
+							</NcButton>
 						</div>
+					</div>
+
+					<div class="group-actions">
+						<NcButton
+							type="secondary"
+							@click="addSuperUserGroup">
+							<template #icon>
+								<Plus :size="20" />
+							</template>
+							Add Super User Group
+						</NcButton>
+					</div>
+
+					<div v-if="superUserGroupsSaveResult" class="save-results">
+						<NcNoteCard :type="superUserGroupsSaveResult.success ? 'success' : 'error'">
+							{{ superUserGroupsSaveResult.success ? 'Super user groups saved successfully!' : superUserGroupsSaveResult.error }}
+						</NcNoteCard>
+					</div>
+
+					<div class="groups-info">
+						<h4>Super User Group Information</h4>
+						<p>These groups will be assigned to:</p>
+						<ul>
+							<li><strong>System administrators:</strong> Users with full system access</li>
+							<li><strong>Platform managers:</strong> Users who manage the entire platform</li>
+							<li><strong>Advanced permissions:</strong> Users who need access to all system features</li>
+						</ul>
 					</div>
 				</div>
 			</div>

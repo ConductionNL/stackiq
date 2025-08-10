@@ -21,12 +21,34 @@
 		name="Version Information"
 		description="Current application and configuration versions"
 		:loading="loadingVersionInfo"
-		:show-refresh-button="true"
-		:refreshing="autoConfiguring"
-		refresh-button-text="Auto Configure"
+		:show-refresh-button="false"
 		loading-text="Loading version information..."
-		:has-info-content="true"
-		@refresh="consolidatedAutoConfigure">
+		:has-info-content="true">
+		<template #header-actions>
+			<NcButton
+				v-if="versionInfo.autoConfigCompleted === false"
+				type="secondary"
+				:disabled="autoConfiguring"
+				@click="consolidatedAutoConfigure">
+				Auto Configure
+			</NcButton>
+			<NcButton
+				class="ml-8"
+				type="error"
+				:disabled="autoConfiguring"
+				@click="handleForceUpdate">
+				Force Update
+			</NcButton>
+			<NcButton
+				v-if="versionInfo.autoConfigCompleted === true"
+				class="ml-8"
+				type="tertiary"
+				:disabled="autoConfiguring"
+				@click="handleResetAutoConfig">
+				Reset Auto-Config
+			</NcButton>
+		</template>
+
 		<div class="version-info">
 			<div class="version-details">
 				<div class="version-item">
@@ -150,15 +172,42 @@
 					<li><strong>✗ Not installed</strong> - OpenRegister app is missing and needs to be installed</li>
 				</ul>
 
-				<h4>Auto Configuration</h4>
-				<p>The Auto Configure button automatically sets up:</p>
+				<h4>Actions</h4>
+				<p>Three maintenance actions are available here. They map to backend operations in <code>SettingsService.php</code>:</p>
+				<ul>
+					<li>
+						<strong>Auto Configure</strong> — Calls the consolidated auto-config routine (<code>performConsolidatedAutoConfiguration</code>). It:
+						<ul>
+							<li>Loads/Imports the bundled register configuration when needed</li>
+							<li>Configures the Voorzieningen register (register + organisatie/contactpersoon schemas)</li>
+							<li>Configures AMEF (VNG-GEMMA register and required schemas)</li>
+							<li>Creates/configures required user groups</li>
+						</ul>
+						Use this after install or when configuration is incomplete.
+					</li>
+					<li>
+						<strong>Force Update</strong> — Triggers a full forced import and version sync (<code>forceUpdate</code>):
+						<ul>
+							<li>Resets the auto-config completed flag</li>
+							<li>Forces re-import of the bundled configuration (same as <code>manualImport(true)</code>)</li>
+							<li>Runs post-import auto-configuration</li>
+							<li>Refreshes version info and configuration status</li>
+						</ul>
+						Use this if config drift occurred or you want to fully re-apply the shipped configuration.
+					</li>
+					<li>
+						<strong>Reset Auto‑Config</strong> — Only clears the <code>auto_config_completed</code> flag and can optionally clear schema/register keys (<code>resetAutoConfiguration</code>). The UI triggers a safe reset (flag only). After resetting, you can run Auto Configure again.
+					</li>
+				</ul>
+
+				<h4>What Auto Configure sets up</h4>
 				<ul>
 					<li>Register mappings for Voorzieningen and AMEF</li>
 					<li>Schema configurations for organizations and contacts</li>
 					<li>User group creation and assignment</li>
 					<li>Default email settings</li>
 				</ul>
-				<p>Use this when setting up the application for the first time or after major updates.</p>
+				<p>Use Auto Configure when setting up the application for the first time or after major updates.</p>
 			</div>
 		</template>
 	</AlwaysVisibleSection>
@@ -178,12 +227,13 @@
  */
 
 import { settingsStore } from '../../../store/store.js'
+import { showSuccess, showError } from '@nextcloud/dialogs'
 
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import { NcNoteCard } from '@nextcloud/vue'
+import { NcNoteCard, NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'VersionInformation',
@@ -191,6 +241,7 @@ export default {
 	components: {
 		AlwaysVisibleSection,
 		NcNoteCard,
+		NcButton,
 	},
 
 	/**
@@ -237,11 +288,49 @@ export default {
 			try {
 				const result = await this.store.consolidatedAutoConfigure()
 				this.consolidatedResult = result
+				if (result && result.success) {
+					showSuccess('Auto configuration completed successfully')
+				} else if (result && result.message) {
+					showError('Auto configuration failed: ' + result.message)
+				}
 			} catch (error) {
 				console.error('Failed to perform auto-configuration:', error)
 				this.consolidatedResult = {
 					success: false,
 					message: 'Failed to perform auto-configuration: ' + error.message,
+				}
+				showError('Failed to perform auto-configuration: ' + error.message)
+			} finally {
+				this.autoConfiguring = false
+			}
+		},
+
+		async handleResetAutoConfig() {
+			this.autoConfiguring = true
+			this.resetAutoConfigResult = null
+			try {
+				this.resetAutoConfigResult = await this.store.resetAutoConfig()
+				await this.store.loadVersionInfo()
+				if (this.resetAutoConfigResult && this.resetAutoConfigResult.success) {
+					showSuccess(this.resetAutoConfigResult.message || 'Auto-config reset successfully')
+				} else if (this.resetAutoConfigResult) {
+					showError(this.resetAutoConfigResult.message || 'Failed to reset auto-config')
+				}
+			} finally {
+				this.autoConfiguring = false
+			}
+		},
+
+		async handleForceUpdate() {
+			this.autoConfiguring = true
+			this.consolidatedResult = null
+			try {
+				this.consolidatedResult = await this.store.forceUpdate()
+				await this.store.loadVersionInfo()
+				if (this.consolidatedResult && this.consolidatedResult.success) {
+					showSuccess(this.consolidatedResult.message || 'Force update completed successfully')
+				} else if (this.consolidatedResult) {
+					showError(this.consolidatedResult.message || 'Force update failed')
 				}
 			} finally {
 				this.autoConfiguring = false

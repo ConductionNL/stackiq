@@ -51,8 +51,6 @@ export const useSettingsStore = defineStore('settings', {
 			// Voorzieningen register configuration
 			voorzieningen_organisatie: { schema: null },
 			voorzieningen_contactpersoon: { schema: null },
-			voorzieningen_gebruiker: { schema: null },
-			voorzieningen_contactgegevens: { schema: null },
 			// Extended schemas
 			voorzieningen_voorziening: { schema: null },
 			voorzieningen_voorziening_aanbod: { schema: null },
@@ -196,8 +194,6 @@ export const useSettingsStore = defineStore('settings', {
 			return state.isImportRunning || state.isExportRunning
 		},
 
-
-
 		/**
 		 * Get formatted statistics for display
 		 * @param {object} state - The store state
@@ -311,16 +307,16 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async loadStatistics() {
 			this.loadingStats = true
-			
+
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
-				
+
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
-				
+
 				const data = await response.json()
-				
+
 				if (data.success && data.counts) {
 					// Update statistics with object counts
 					if (data.counts.voorzieningen) {
@@ -336,7 +332,7 @@ export const useSettingsStore = defineStore('settings', {
 					console.error('Statistics API error:', data.error)
 					this.setError(data.error || 'Failed to load statistics')
 				}
-				
+
 			} catch (error) {
 				console.error('Failed to load statistics:', error)
 				this.setError('Failed to load statistics: ' + error.message)
@@ -574,19 +570,17 @@ export const useSettingsStore = defineStore('settings', {
 		initializeConfiguration() {
 			// Initialize register-specific configuration
 			this.configuration = {
-			// AMEF register configuration
-			amef_elements: { schema: null },
-			amef_organization: { schema: null },
-			amef_relationships: { schema: null },
-			amef_views: { schema: null },
-			amef_models: { schema: null },
-			amef_properties: { schema: null },
+				// AMEF register configuration
+				amef_elements: { schema: null },
+				amef_organization: { schema: null },
+				amef_relationships: { schema: null },
+				amef_views: { schema: null },
+				amef_models: { schema: null },
+				amef_properties: { schema: null },
 				amef_property_definitions: { schema: null },
-			// Voorzieningen register configuration
-			voorzieningen_organisatie: { schema: null },
-			voorzieningen_contactpersoon: { schema: null },
-			voorzieningen_gebruiker: { schema: null },
-			voorzieningen_contactgegevens: { schema: null },
+				// Voorzieningen register configuration
+				voorzieningen_organisatie: { schema: null },
+				voorzieningen_contactpersoon: { schema: null },
 				voorzieningen_voorziening: { schema: null },
 				voorzieningen_voorziening_aanbod: { schema: null },
 				voorzieningen_voorziening_versie: { schema: null },
@@ -651,8 +645,6 @@ export const useSettingsStore = defineStore('settings', {
 			const vMap = [
 				['organisatie_schema', 'voorzieningen_organisatie'],
 				['contactpersoon_schema', 'voorzieningen_contactpersoon'],
-				['gebruiker_schema', 'voorzieningen_gebruiker'],
-				['contactgegevens_schema', 'voorzieningen_contactgegevens'],
 				['voorziening_schema', 'voorzieningen_voorziening'],
 				['voorziening_aanbod_schema', 'voorzieningen_voorziening_aanbod'],
 				['voorziening_versie_schema', 'voorzieningen_voorziening_versie'],
@@ -989,7 +981,7 @@ export const useSettingsStore = defineStore('settings', {
 				// Save configurations to their respective focused endpoints
 				const savePromises = []
 
-				// Save AMEF configuration
+				// Save AMEF configuration (clean payload)
 				const amefConfig = {}
 				const amefKeys = [
 					'amef_elements',
@@ -1000,13 +992,23 @@ export const useSettingsStore = defineStore('settings', {
 					'amef_properties',
 					'amef_property_definitions',
 				]
-
+				// Map UI keys to API keys
+				const amefMap = {
+					amef_organization: 'organizations_schema',
+					amef_elements: 'elements_schema',
+					amef_relationships: 'relationships_schema',
+					amef_views: 'views_schema',
+					amef_models: 'models_schema',
+					amef_properties: 'properties_schema',
+					amef_property_definitions: 'property_definitions_schema',
+				}
+				if (this.amefRegister?.value) {
+					amefConfig.register_id = this.amefRegister.value
+				}
 				amefKeys.forEach(configKey => {
 					const config = this.configuration[configKey]
 					if (config && config.schema) {
-						amefConfig[`${configKey}_source`] = 'openregister'
-						amefConfig[`${configKey}_register`] = this.amefRegister?.value
-						amefConfig[`${configKey}_schema`] = config.schema.value || config.schema
+						amefConfig[amefMap[configKey]] = config.schema.value || config.schema
 					}
 				})
 
@@ -1019,17 +1021,15 @@ export const useSettingsStore = defineStore('settings', {
 								'X-Requested-With': 'XMLHttpRequest',
 							},
 							body: JSON.stringify(amefConfig),
-						})
+						}),
 					)
 				}
 
-				// Save Voorzieningen configuration
+				// Save Voorzieningen configuration (clean payload)
 				const voorzieningenConfig = {}
 				const voorzieningenKeys = [
 					'voorzieningen_organisatie',
 					'voorzieningen_contactpersoon',
-					'voorzieningen_gebruiker',
-					'voorzieningen_contactgegevens',
 					'voorzieningen_voorziening',
 					'voorzieningen_voorziening_aanbod',
 					'voorzieningen_voorziening_versie',
@@ -1047,13 +1047,34 @@ export const useSettingsStore = defineStore('settings', {
 					'voorzieningen_module_versie',
 					'voorzieningen_sector',
 				]
-
+				// Map UI keys to API keys
+				const vzMap = {
+					voorzieningen_organisatie: 'organisatie_schema',
+					voorzieningen_contactpersoon: 'contactpersoon_schema',
+					voorzieningen_voorziening: 'voorziening_schema',
+					voorzieningen_voorziening_aanbod: 'voorziening_aanbod_schema',
+					voorzieningen_voorziening_versie: 'voorziening_versie_schema',
+					voorzieningen_kwetsbaarheid: 'kwetsbaarheid_schema',
+					voorzieningen_contract: 'contract_schema',
+					voorzieningen_standaard: 'standaard_schema',
+					voorzieningen_review: 'review_schema',
+					voorzieningen_koppeling: 'koppeling_schema',
+					voorzieningen_beoordeeling: 'beoordeeling_schema',
+					voorzieningen_voorziening_module: 'voorziening_module_schema',
+					voorzieningen_verklaring: 'verklaring_schema',
+					voorzieningen_koppeling_gebruik: 'koppeling_gebruik_schema',
+					voorzieningen_compliancy: 'compliancy_schema',
+					voorzieningen_module_gebruik: 'module_gebruik_schema',
+					voorzieningen_module_versie: 'module_versie_schema',
+					voorzieningen_sector: 'sector_schema',
+				}
+				if (this.voorzieningenRegister?.value) {
+					voorzieningenConfig.register = this.voorzieningenRegister.value
+				}
 				voorzieningenKeys.forEach(configKey => {
 					const config = this.configuration[configKey]
 					if (config && config.schema) {
-						voorzieningenConfig[`${configKey}_source`] = 'openregister'
-						voorzieningenConfig[`${configKey}_register`] = this.voorzieningenRegister?.value
-						voorzieningenConfig[`${configKey}_schema`] = config.schema.value || config.schema
+						voorzieningenConfig[vzMap[configKey]] = config.schema.value || config.schema
 					}
 				})
 
@@ -1066,7 +1087,7 @@ export const useSettingsStore = defineStore('settings', {
 								'X-Requested-With': 'XMLHttpRequest',
 							},
 							body: JSON.stringify(voorzieningenConfig),
-						})
+						}),
 					)
 				}
 
@@ -1086,7 +1107,7 @@ export const useSettingsStore = defineStore('settings', {
 								'X-Requested-With': 'XMLHttpRequest',
 							},
 							body: JSON.stringify(userGroupsConfig),
-						})
+						}),
 					)
 				}
 
@@ -1094,13 +1115,13 @@ export const useSettingsStore = defineStore('settings', {
 				if (this.emailSettings && Object.keys(this.emailSettings).length > 0) {
 					savePromises.push(
 						fetch('/index.php/apps/softwarecatalog/api/email/config', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
-					},
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
 							body: JSON.stringify(this.emailSettings),
-				})
+						}),
 					)
 				}
 
@@ -1109,10 +1130,10 @@ export const useSettingsStore = defineStore('settings', {
 					const responses = await Promise.all(savePromises)
 					// Check all responses
 					for (const response of responses) {
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
-				const result = await response.json()
+						if (!response.ok) {
+							throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+						}
+						const result = await response.json()
 						if (!result.success) {
 							throw new Error(result.message || 'Unknown error occurred')
 						}
@@ -1170,6 +1191,58 @@ export const useSettingsStore = defineStore('settings', {
 				}
 				showError(errorResult.message)
 				return errorResult
+			}
+		},
+
+		/**
+		 * Reset auto-configuration flag and optionally schema/register keys
+		 * Calls POST /api/settings/reset-auto-config
+		 * @return {Promise<object>} Result
+		 */
+		async resetAutoConfig() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/reset-auto-config', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+					body: JSON.stringify({ resetConfiguration: false }),
+				})
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const result = await response.json()
+				// Refresh version info after reset
+				await this.loadVersionInfo()
+				return result
+			} catch (error) {
+				return { success: false, message: error.message }
+			}
+		},
+
+		/**
+		 * Force update: forced import + version sync
+		 * Calls POST /api/settings/force-update
+		 * @return {Promise<object>} Result
+		 */
+		async forceUpdate() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/force-update', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				})
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const result = await response.json()
+				await this.loadVersionInfo()
+				return result
+			} catch (error) {
+				return { success: false, message: error.message }
 			}
 		},
 
@@ -1396,9 +1469,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.exporting = false
 			this.loadingVersionInfo = false
 			this.settings = {
-				openRegisters: false,
 				availableRegisters: [],
-				consolidatedConfig: {},
 			}
 			this.versionInfo = {}
 			this.voorzieningenRegister = null
@@ -1417,8 +1488,6 @@ export const useSettingsStore = defineStore('settings', {
 				// Voorzieningen register configuration
 				voorzieningen_organisatie: { schema: null },
 				voorzieningen_contactpersoon: { schema: null },
-				voorzieningen_gebruiker: { schema: null },
-				voorzieningen_contactgegevens: { schema: null },
 				// Extended schemas
 				voorzieningen_voorziening: { schema: null },
 				voorzieningen_voorziening_aanbod: { schema: null },
