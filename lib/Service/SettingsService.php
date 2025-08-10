@@ -364,23 +364,27 @@ class SettingsService
                 'register_associated_schemas' => count($voorzieningenRegister['schemas'] ?? [])
             ]);
 
-            // Define expected voorzieningen schemas with their configuration mapping
+            // Define expected voorzieningen schemas with their configuration mapping (19 total)
             $voorzieningenSchemaMapping = [
                 'organisatie' => ['organisatie', 'organization'], // Support both names for backward compatibility
                 'contactpersoon' => ['contactpersoon', 'contact'],
                 'sector' => ['sector'],
                 'voorziening' => ['voorziening', 'product'], // voorziening is also called "Product" in title
-                'voorzieningaanbod' => ['voorzieningaanbod', 'voorziening_aanbod', 'dienst'], // dienst is service
-                'voorzieningversie' => ['voorzieningversie', 'voorziening_versie', 'module_versie'],
+                'voorzieningaanbod' => ['voorzieningaanbod', 'voorziening_aanbod', 'dienst'], // dienst is service/aanbod
+                'voorzieningversie' => ['voorzieningversie', 'voorziening_versie', 'module-versie'], // Module-versie title
                 'kwetsbaarheid' => ['kwetsbaarheid'],
-                'voorzieninggebruik' => ['voorzieninggebruik', 'voorziening_gebruik', 'gebruik'],
+                'voorzieninggebruik' => ['voorzieninggebruik', 'voorziening_gebruik', 'gebruik'], // Gebruik title
                 'contract' => ['contract'],
                 'standaard' => ['standaard'],
                 'review' => ['review'],
                 'koppeling' => ['koppeling'],
                 'beoordeeling' => ['beoordeeling'],
-                'voorzieningmodule' => ['voorzieningmodule', 'voorziening_module', 'module'],
-                'verklaring' => ['verklaring']
+                'voorzieningmodule' => ['voorzieningmodule', 'voorziening_module', 'module'], // Module title
+                'verklaring' => ['verklaring'],
+                'koppeling_gebruik' => ['koppeling_gebruik', 'koppelinggebruik'], // Koppeling Gebruik title
+                'compliancy' => ['compliancy'],
+                'module_gebruik' => ['module_gebruik', 'modulegebruik'], // Module Gebruik title  
+                'module_versie' => ['module_versie', 'moduleversie'] // Module Versie title (different from voorzieningversie)
             ];
 
             $foundSchemas = [];
@@ -453,13 +457,13 @@ class SettingsService
             if ($amefRegister !== null) {
                 $amefSchemaMapping = [
                     'organization' => ['organization', 'organisatie'],
-                    'elements' => ['element', 'elements'],
-                    'relationships' => ['relation', 'relationship', 'relationships'],
-                    'views' => ['view', 'views'],
+                    'element' => ['element'],
+                    'relation' => ['relation', 'relationship'],
+                    'view' => ['view'],
                     'extendview' => ['extendview', 'extended_view', 'extendedview'],
-                    'models' => ['model', 'models'],
-                    'properties' => ['property', 'properties'],
-                    'property_definitions' => ['property-definition', 'property_definition', 'propertydefinition']
+                    'model' => ['model'],
+                    'property' => ['property'],
+                    'property_definition' => ['property-definition', 'property_definition', 'propertydefinition']
                 ];
 
                 foreach ($allSchemas as $schema) {
@@ -481,10 +485,10 @@ class SettingsService
                         }
                         
                         if ($found) {
-                            // Configure AMEF schema
-                            $configuration["amef_{$configKey}_source"] = 'openregister';
-                            $configuration["amef_{$configKey}_register"] = (string) $amefRegister['id'];
-                            $configuration["amef_{$configKey}_schema"] = (string) $schema['id'];
+                            // Configure AMEF schema (no prefix, singular forms)
+                            $configuration["{$configKey}_source"] = 'openregister';
+                            $configuration["{$configKey}_register"] = (string) $amefRegister['id'];
+                            $configuration["{$configKey}_schema"] = (string) $schema['id'];
                             
                             $configuredCount++;
                             

@@ -586,7 +586,11 @@
           "koppeling",
           "beoordeeling",
           "voorzieningModule",
-          "verklaring"
+          "verklaring",
+          "koppelinggebruik",
+          "compliancy",
+          "modulegebruik",
+          "moduleversie"
         ],
         "source": "internal",
         "tablePrefix": "",
@@ -6860,6 +6864,170 @@
         "configuration": {
           "objectNameField": "naam",
           "objectDescriptionField": "type"
+        }
+      },
+      "koppelinggebruik": {
+        "uri": null,
+        "slug": "koppelinggebruik",
+        "title": "Koppeling Gebruik",
+        "description": "Het gebruik van een koppeling tussen systemen of voorzieningen",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": null,
+        "required": [
+          "naam",
+          "type"
+        ],
+        "properties": {
+          "naam": {
+            "description": "De naam van het koppelinggebruik",
+            "type": "string",
+            "maxLength": 255
+          },
+          "type": {
+            "description": "Het type koppelinggebruik",
+            "type": "string"
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "updated": "2025-01-15T12:00:00+00:00",
+        "created": "2025-01-15T12:00:00+00:00",
+        "maxDepth": 0,
+        "owner": "system",
+        "application": null,
+        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "groups": null,
+        "authorization": null,
+        "deleted": null,
+        "configuration": {
+          "objectNameField": "naam",
+          "objectDescriptionField": "type"
+        }
+      },
+      "compliancy": {
+        "uri": null,
+        "slug": "compliancy",
+        "title": "Compliancy",
+        "description": "Compliance en naleving van voorschriften, standaarden en regelgeving",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": null,
+        "required": [
+          "naam",
+          "type"
+        ],
+        "properties": {
+          "naam": {
+            "description": "De naam van de compliancy",
+            "type": "string",
+            "maxLength": 255
+          },
+          "type": {
+            "description": "Het type compliancy",
+            "type": "string"
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "updated": "2025-01-15T12:00:00+00:00",
+        "created": "2025-01-15T12:00:00+00:00",
+        "maxDepth": 0,
+        "owner": "system",
+        "application": null,
+        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "groups": null,
+        "authorization": null,
+        "deleted": null,
+        "configuration": {
+          "objectNameField": "naam",
+          "objectDescriptionField": "type"
+        }
+      },
+      "modulegebruik": {
+        "uri": null,
+        "slug": "modulegebruik",
+        "title": "Module Gebruik",
+        "description": "Het gebruik van een module binnen een voorziening of systeem",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": null,
+        "required": [
+          "naam",
+          "type"
+        ],
+        "properties": {
+          "naam": {
+            "description": "De naam van het modulegebruik",
+            "type": "string",
+            "maxLength": 255
+          },
+          "type": {
+            "description": "Het type modulegebruik",
+            "type": "string"
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "updated": "2025-01-15T12:00:00+00:00",
+        "created": "2025-01-15T12:00:00+00:00",
+        "maxDepth": 0,
+        "owner": "system",
+        "application": null,
+        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "groups": null,
+        "authorization": null,
+        "deleted": null,
+        "configuration": {
+          "objectNameField": "naam",
+          "objectDescriptionField": "type"
+        }
+      },
+      "moduleversie": {
+        "uri": null,
+        "slug": "moduleversie",
+        "title": "Module Versie",
+        "description": "Een specifieke versie van een module",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": null,
+        "required": [
+          "naam",
+          "versie"
+        ],
+        "properties": {
+          "naam": {
+            "description": "De naam van de module",
+            "type": "string",
+            "maxLength": 255
+          },
+          "versie": {
+            "description": "De versie van de module",
+            "type": "string"
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "updated": "2025-01-15T12:00:00+00:00",
+        "created": "2025-01-15T12:00:00+00:00",
+        "maxDepth": 0,
+        "owner": "system",
+        "application": null,
+        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "groups": null,
+        "authorization": null,
+        "deleted": null,
+        "configuration": {
+          "objectNameField": "naam",
+          "objectDescriptionField": "versie"
         }
       }
     },
