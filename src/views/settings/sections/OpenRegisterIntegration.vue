@@ -195,6 +195,58 @@
 											:disabled="loading"
 											@change="validateConfiguration" />
 									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Extended Views Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate extended views</span>
+										</div>
+										<NcSelect
+											v-model="configuration.amef_extendview.schema"
+											:options="amefSchemaOptions"
+											input-label="Extended Views Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Models Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate models</span>
+										</div>
+										<NcSelect
+											v-model="configuration.amef_models.schema"
+											:options="amefSchemaOptions"
+											input-label="Models Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Properties Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate properties</span>
+										</div>
+										<NcSelect
+											v-model="configuration.amef_properties.schema"
+											:options="amefSchemaOptions"
+											input-label="Properties Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
+
+									<div class="object-type-section">
+										<div class="object-type-header">
+											<h5>Property Definitions Schema</h5>
+											<span class="object-type-description">Schema for ArchiMate property definition objects</span>
+										</div>
+										<NcSelect
+											v-model="configuration.amef_property_definitions.schema"
+											:options="amefSchemaOptions"
+											input-label="Property Definitions Schema"
+											:disabled="loading"
+											@change="validateConfiguration" />
+									</div>
 								</div>
 							</div>
 

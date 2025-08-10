@@ -609,6 +609,7 @@
           "element",
           "model",
           "organization",
+          "property",
           "property-definition",
           "relation",
           "view",
@@ -5724,6 +5725,44 @@
         "hardValidation": false,
         "updated": "2025-04-03T09:28:37+00:00",
         "created": "2025-03-03T13:56:55+00:00",
+        "maxDepth": 4,
+        "owner": null,
+        "application": null,
+        "organisation": null,
+        "authorization": null,
+        "deleted": null,
+        "configuration": null
+      },
+      "property": {
+        "slug": "property",
+        "title": "Property",
+        "description": "AMEF Property",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": null,
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "description": "The property key",
+            "type": "string",
+            "format": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "value": {
+            "description": "The property value",
+            "type": "string",
+            "format": "string"
+          }
+        },
+        "archive": [],
+        "source": "",
+        "hardValidation": false,
+        "updated": "2025-01-15T12:00:00+00:00",
+        "created": "2025-01-15T12:00:00+00:00",
         "maxDepth": 4,
         "owner": null,
         "application": null,

@@ -364,91 +364,158 @@ class SettingsService
                 'register_associated_schemas' => count($voorzieningenRegister['schemas'] ?? [])
             ]);
 
-            $foundOrganisatie = false;
-            $foundContactpersoon = false;
+            // Define expected voorzieningen schemas with their configuration mapping
+            $voorzieningenSchemaMapping = [
+                'organisatie' => ['organisatie', 'organization'], // Support both names for backward compatibility
+                'contactpersoon' => ['contactpersoon', 'contact'],
+                'sector' => ['sector'],
+                'voorziening' => ['voorziening', 'product'], // voorziening is also called "Product" in title
+                'voorzieningaanbod' => ['voorzieningaanbod', 'voorziening_aanbod', 'dienst'], // dienst is service
+                'voorzieningversie' => ['voorzieningversie', 'voorziening_versie', 'module_versie'],
+                'kwetsbaarheid' => ['kwetsbaarheid'],
+                'voorzieninggebruik' => ['voorzieninggebruik', 'voorziening_gebruik', 'gebruik'],
+                'contract' => ['contract'],
+                'standaard' => ['standaard'],
+                'review' => ['review'],
+                'koppeling' => ['koppeling'],
+                'beoordeeling' => ['beoordeeling'],
+                'voorzieningmodule' => ['voorzieningmodule', 'voorziening_module', 'module'],
+                'verklaring' => ['verklaring']
+            ];
 
-            // Search through ALL schemas, not just those associated with the register
+            $foundSchemas = [];
+            $configuredCount = 0;
+
+            // Search through ALL schemas to find and configure voorzieningen schemas
             foreach ($allSchemas as $schema) {
                 $schemaTitle = strtolower($schema['title'] ?? '');
                 $schemaSlug = strtolower($schema['slug'] ?? '');
                 
-                // Look for organisatie schema
-                if (!$foundOrganisatie && (
-                    stripos($schemaTitle, 'organisatie') !== false || 
-                    stripos($schemaSlug, 'organisatie') !== false ||
-                    $schemaTitle === 'organisatie' ||
-                    $schemaSlug === 'organisatie')) {
+                // Check if this schema matches any of our expected voorzieningen schemas
+                foreach ($voorzieningenSchemaMapping as $configKey => $searchTerms) {
+                    $found = false;
                     
-                    // Set voorzieningen_organisatie configuration
-                    $configuration['voorzieningen_organisatie_source'] = 'openregister';
-                    $configuration['voorzieningen_organisatie_register'] = (string) $voorzieningenRegister['id'];
-                    $configuration['voorzieningen_organisatie_schema'] = (string) $schema['id'];
+                    foreach ($searchTerms as $searchTerm) {
+                        $searchTerm = strtolower($searchTerm);
+                        if ($schemaSlug === $searchTerm || 
+                            $schemaTitle === $searchTerm ||
+                            stripos($schemaSlug, $searchTerm) !== false ||
+                            stripos($schemaTitle, $searchTerm) !== false) {
+                            $found = true;
+                            break;
+                        }
+                    }
                     
-                    // Set sync-compatible configuration (OrganizationSyncService expects this key)
-                    $configuration['voorzieningen_register'] = (string) $voorzieningenRegister['id'];
-                    
-                    // Also set backward compatibility organization configuration
-                    $configuration['organization_source'] = 'openregister';
-                    $configuration['organization_register'] = (string) $voorzieningenRegister['id'];
-                    $configuration['organization_schema'] = (string) $schema['id'];
-                    
-                    $this->logger->info('Configured organisatie schema', [
-                        'schema_id' => $schema['id'],
-                        'schema_title' => $schema['title'],
-                        'schema_slug' => $schema['slug'],
-                        'register_id' => $voorzieningenRegister['id']
-                    ]);
-                    
-                    $foundOrganisatie = true;
+                    if ($found && !isset($foundSchemas[$configKey])) {
+                        // Configure this schema
+                        $configuration["voorzieningen_{$configKey}_source"] = 'openregister';
+                        $configuration["voorzieningen_{$configKey}_register"] = (string) $voorzieningenRegister['id'];
+                        $configuration["voorzieningen_{$configKey}_schema"] = (string) $schema['id'];
+                        
+                        // Also set the base configuration key (without voorzieningen prefix)
+                        $configuration["{$configKey}_source"] = 'openregister';
+                        $configuration["{$configKey}_register"] = (string) $voorzieningenRegister['id'];
+                        $configuration["{$configKey}_schema"] = (string) $schema['id'];
+                        
+                        // Set sync-compatible configuration (OrganizationSyncService expects this key)
+                        $configuration['voorzieningen_register'] = (string) $voorzieningenRegister['id'];
+                        
+                        $foundSchemas[$configKey] = $schema;
+                        $configuredCount++;
+                        
+                        $this->logger->info("Configured {$configKey} schema", [
+                            'schema_id' => $schema['id'],
+                            'schema_title' => $schema['title'],
+                            'schema_slug' => $schema['slug'],
+                            'config_key' => $configKey,
+                            'register_id' => $voorzieningenRegister['id']
+                        ]);
+                        
+                        break; // Move to next schema
+                    }
                 }
-                // Look for contactpersoon schema
-                else if (!$foundContactpersoon && (
-                    stripos($schemaTitle, 'contactpersoon') !== false || 
-                    stripos($schemaSlug, 'contactpersoon') !== false ||
-                    $schemaTitle === 'contactpersoon' ||
-                    $schemaSlug === 'contactpersoon')) {
-                    
-                    // Set voorzieningen_contactpersoon configuration
-                    $configuration['voorzieningen_contactpersoon_source'] = 'openregister';
-                    $configuration['voorzieningen_contactpersoon_register'] = (string) $voorzieningenRegister['id'];
-                    $configuration['voorzieningen_contactpersoon_schema'] = (string) $schema['id'];
-                    
-                    // Set sync-compatible configuration (OrganizationSyncService expects this key)
-                    $configuration['voorzieningen_register'] = (string) $voorzieningenRegister['id'];
-                    
-                    // Also set backward compatibility contact configuration
-                    $configuration['contact_source'] = 'openregister';
-                    $configuration['contact_register'] = (string) $voorzieningenRegister['id'];
-                    $configuration['contact_schema'] = (string) $schema['id'];
-                    
-                    $this->logger->info('Configured contactpersoon schema', [
-                        'schema_id' => $schema['id'],
-                        'schema_title' => $schema['title'],
-                        'schema_slug' => $schema['slug'],
-                        'register_id' => $voorzieningenRegister['id']
-                    ]);
-                    
-                    $foundContactpersoon = true;
-                }
+            }
+
+            // Also configure AMEF schemas if an AMEF register is available
+            $amefRegister = null;
+            foreach ($registers as $register) {
+                $registerTitle = strtolower($register['title'] ?? '');
+                $registerSlug = strtolower($register['slug'] ?? '');
                 
-                // Break early if we found both schemas we're looking for
-                if ($foundOrganisatie && $foundContactpersoon) {
+                if ($registerTitle === 'amef' || $registerSlug === 'amef' ||
+                    stripos($registerTitle, 'amef') !== false || 
+                    stripos($registerSlug, 'amef') !== false) {
+                    $amefRegister = $register;
                     break;
+                }
+            }
+
+            if ($amefRegister !== null) {
+                $amefSchemaMapping = [
+                    'organization' => ['organization', 'organisatie'],
+                    'elements' => ['element', 'elements'],
+                    'relationships' => ['relation', 'relationship', 'relationships'],
+                    'views' => ['view', 'views'],
+                    'extendview' => ['extendview', 'extended_view', 'extendedview'],
+                    'models' => ['model', 'models'],
+                    'properties' => ['property', 'properties'],
+                    'property_definitions' => ['property-definition', 'property_definition', 'propertydefinition']
+                ];
+
+                foreach ($allSchemas as $schema) {
+                    $schemaTitle = strtolower($schema['title'] ?? '');
+                    $schemaSlug = strtolower($schema['slug'] ?? '');
+                    
+                    foreach ($amefSchemaMapping as $configKey => $searchTerms) {
+                        $found = false;
+                        
+                        foreach ($searchTerms as $searchTerm) {
+                            $searchTerm = strtolower($searchTerm);
+                            if ($schemaSlug === $searchTerm || 
+                                $schemaTitle === $searchTerm ||
+                                stripos($schemaSlug, $searchTerm) !== false ||
+                                stripos($schemaTitle, $searchTerm) !== false) {
+                                $found = true;
+                                break;
+                            }
+                        }
+                        
+                        if ($found) {
+                            // Configure AMEF schema
+                            $configuration["amef_{$configKey}_source"] = 'openregister';
+                            $configuration["amef_{$configKey}_register"] = (string) $amefRegister['id'];
+                            $configuration["amef_{$configKey}_schema"] = (string) $schema['id'];
+                            
+                            $configuredCount++;
+                            
+                            $this->logger->info("Configured AMEF {$configKey} schema", [
+                                'schema_id' => $schema['id'],
+                                'schema_title' => $schema['title'],
+                                'schema_slug' => $schema['slug'],
+                                'config_key' => $configKey,
+                                'register_id' => $amefRegister['id']
+                            ]);
+                            
+                            break;
+                        }
+                    }
                 }
             }
 
             if (empty($configuration)) {
                 $this->logger->info('No matching schemas found for auto-configuration', [
                     'searched_schemas' => count($allSchemas),
-                    'found_organisatie' => $foundOrganisatie,
-                    'found_contactpersoon' => $foundContactpersoon
+                    'voorzieningen_found' => count($foundSchemas),
+                    'amef_register_found' => $amefRegister !== null
                 ]);
             } else {
                 $this->logger->info('Auto-configuration after import completed successfully', [
-                    'configuration_keys' => array_keys($configuration),
-                    'register_used' => $voorzieningenRegister['title'],
-                    'found_organisatie' => $foundOrganisatie,
-                    'found_contactpersoon' => $foundContactpersoon
+                    'total_configurations' => count($configuration),
+                    'voorzieningen_schemas_configured' => count($foundSchemas),
+                    'voorzieningen_register' => $voorzieningenRegister['title'],
+                    'amef_register_found' => $amefRegister !== null,
+                    'amef_register_title' => $amefRegister['title'] ?? null,
+                    'total_configured_count' => $configuredCount
                 ]);
             }
 
