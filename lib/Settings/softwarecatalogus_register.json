@@ -600,9 +600,9 @@
         "groups": null,
         "deleted": null
       },
-      "vng-gemma": {
-        "slug": "vng-gemma",
-        "title": "VNG Gemma",
+      "amef": {
+        "slug": "amef",
+        "title": "AMEF",
         "version": "0.0.2",
         "description": "",
         "schemas": [
@@ -630,7 +630,7 @@
       "sector": {
         "uri": null,
         "slug": "sector",
-        "title": "sector",
+        "title": "Sector",
         "description": "",
         "version": "0.0.2",
         "summary": "",
@@ -4944,7 +4944,7 @@
       },
       "model": {
         "slug": "model",
-        "title": "GEMMA Model",
+        "title": "Model",
         "description": "This object represents an entire AMEF collection",
         "version": "0.0.37",
         "summary": "",
