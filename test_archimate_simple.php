@@ -22,7 +22,8 @@ function makeApiCall($url, $method = 'GET', $data = null, $files = null, $auth =
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_USERPWD, $auth);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    // Increase default timeout to accommodate larger imports (~36s observed)
+    curl_setopt($ch, CURLOPT_TIMEOUT, 300);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     
     // Set headers

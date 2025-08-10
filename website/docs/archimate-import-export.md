@@ -167,12 +167,13 @@ The round-trip test validates data integrity by:
 ## Configuration
 
 ### AMEF Schema Mapping
-The system automatically maps ArchiMate elements to AMEF schemas:
-- **Elements** → `vng-gemma.element`
-- **Organizations** → `vng-gemma.organization`
-- **Relationships** → `vng-gemma.relation`
-- **Views** → `vng-gemma.view`
-- **Properties** → `vng-gemma.property-definition`
+The system automatically maps ArchiMate elements to AMEF schemas (register independent, based on schema slugs):
+- **Elements** → `element`
+- **Organizations** → `organization`
+- **Relationships** → `relation`
+- **Views** → `view`
+- **Models** → `model`
+- **Property definitions** → `property-definition`
 
 ### Batch Processing Configuration
 Batch sizes and concurrency can be configured based on processing mode:

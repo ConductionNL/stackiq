@@ -1082,7 +1082,7 @@ class ArchiMateService
                 }
             }
         } else {
-            // Fallback: Extract organizations from elements (BusinessActor, BusinessRole types)
+            // Fallback: Extract organizations from elements (BusinessActor types only)
             $normalized['organizations'] = $this->extractOrganizations($normalized['elements']);
         }
 
@@ -1362,8 +1362,8 @@ class ArchiMateService
     {
         $organizations = [];
         foreach ($elements as $element) {
-            if (str_contains($element['type'] ?? '', 'BusinessActor') || 
-                str_contains($element['type'] ?? '', 'BusinessRole')) {
+            // Only map BusinessActor to organizations; keep BusinessRole as an element for round-trip fidelity
+            if (str_contains($element['type'] ?? '', 'BusinessActor')) {
                 $organizations[$element['id']] = $element;
             }
         }
@@ -2648,61 +2648,114 @@ class ArchiMateService
 
     /**
      * Get AMEF register ID from configuration
+     *
+     * This method retrieves the register ID from the AMEF configuration.
+     * The register ID must be configured and must be a positive integer.
+     *
+     * @return int The register ID for AMEF operations
+     * @throws \RuntimeException When no register ID is configured or when it's invalid
+     *
+     * @phpstan-return positive-int
+     * @psalm-return positive-int
      */
     private function getAmefRegisterId(): ?int
     {
+        // Retrieve AMEF configuration
         $amefConfig = $this->getAmefConfig();
-        return isset($amefConfig['register_id']) ? (int) $amefConfig['register_id'] : null;
+
+        // Try JSON config keys first: support both 'register_id' and 'register'
+        $rawRegisterId = $amefConfig['register_id']
+            ?? $amefConfig['register']
+            ?? null;
+
+        // Fallback to legacy individual app config keys if not present in JSON
+        if ($rawRegisterId === null || $rawRegisterId === '') {
+            $rawRegisterId = $this->config->getValueString(self::APP_NAME, 'amef_register', '')
+                ?: $this->config->getValueString(self::APP_NAME, 'amef_register_id', '');
+        }
+
+        // Validate and normalize to positive int
+        if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string) $rawRegisterId)) {
+            $registerId = (int) $rawRegisterId;
+            return $registerId > 0 ? $registerId : null;
+        }
+
+        return null;
     }
 
     /**
-     * Get AMEF schema ID for specific ArchiMate type
+     * Get AMEF schema ID for a specific ArchiMate type
+     *
+     * This method retrieves the schema ID for a given ArchiMate type from the AMEF configuration.
+     * It looks for the schema ID using the pattern '{type}_schema' in the configuration.
+     *
+     * @param string $archiMateType The ArchiMate type (e.g., 'element', 'organization', 'relationship')
+     * @return int The schema ID for the given type
+     * @throws \RuntimeException When no schema ID is configured for the given type
+     *
+     * @phpstan-param non-empty-string $archiMateType
+     * @phpstan-return int
+     * @psalm-param non-empty-string $archiMateType
+     * @psalm-return int
      */
     private function getAmefSchemaIdForType(string $archiMateType): ?int
     {
+        // Get AMEF configuration
         $amefConfig = $this->getAmefConfig();
-        
-        // Map plural schema types to singular types for compatibility
+
+        // Normalize plural → singular
         $typeMapping = [
             'elements' => 'element',
-            'organizations' => 'organization', 
+            'organizations' => 'organization',
+            // Accept both 'relationships' (AMEF wording) and UI term 'relation'
             'relationships' => 'relationship',
             'views' => 'view',
             'models' => 'model',
             'properties' => 'property',
+            // Accept both underscored and dashed naming conventions
             'property_definitions' => 'property_definition'
         ];
-        
-        // Convert plural type to singular if needed
-        $archiMateType = $typeMapping[$archiMateType] ?? $archiMateType;
-        
-        switch ($archiMateType) {
-            case 'element':
-                $schemaId = $amefConfig['elements_schema'] ?? '';
-                break;
-            case 'organization':
-                $schemaId = $amefConfig['organizations_schema'] ?? '';
-                break;
-            case 'relationship':
-                $schemaId = $amefConfig['relationships_schema'] ?? '';
-                break;
-            case 'view':
-                $schemaId = $amefConfig['views_schema'] ?? '';
-                break;
-            case 'model':
-                $schemaId = $amefConfig['models_schema'] ?? '';
-                break;
-            case 'property':
-                $schemaId = $amefConfig['properties_schema'] ?? '';
-                break;
-            case 'property_definition':
-                $schemaId = $amefConfig['property_definitions_schema'] ?? '';
-                break;
-            default:
-                throw new \RuntimeException("Unknown ArchiMate type: {$archiMateType}");
+        $normalizedType = $typeMapping[$archiMateType] ?? $archiMateType;
+
+        // Candidate keys: accept plural and singular styles and UI variants
+        $schemaKeyCandidatesByType = [
+            'element' => ['elements_schema', 'element_schema'],
+            'organization' => ['organizations_schema', 'organization_schema'],
+            'relationship' => ['relationships_schema', 'relationship_schema', 'relations_schema', 'relation_schema'],
+            'view' => ['views_schema', 'view_schema'],
+            'model' => ['models_schema', 'model_schema'],
+            'property' => ['properties_schema', 'property_schema'],
+            'property_definition' => ['property_definitions_schema', 'property_definition_schema', 'property-definition_schema']
+        ];
+
+        $candidates = $schemaKeyCandidatesByType[$normalizedType] ?? [$normalizedType . '_schema'];
+
+        // 1) Try JSON config
+        foreach ($candidates as $key) {
+            if (array_key_exists($key, $amefConfig)) {
+                $raw = $amefConfig[$key];
+                if ($raw !== '' && $raw !== null && is_numeric((string) $raw)) {
+                    $id = (int) $raw;
+                    if ($id > 0) {
+                        return $id;
+                    }
+                }
+            }
         }
-        
-        return $schemaId ? (int) $schemaId : null;
+
+        // 2) Fallback to legacy individual app config keys
+        foreach ($candidates as $key) {
+            $raw = $this->config->getValueString(self::APP_NAME, 'amef_' . $key, '')
+                ?: $this->config->getValueString(self::APP_NAME, $key, '');
+            if ($raw !== '' && is_numeric((string) $raw)) {
+                $id = (int) $raw;
+                if ($id > 0) {
+                    return $id;
+                }
+            }
+        }
+
+        return null;
     }
 
     // Schema ID getters
@@ -2944,6 +2997,9 @@ class ArchiMateService
     private function convertObjectToArchiMateElement(array $object): ?array
     {
         try {
+            // Flatten when data is nested under 'object' (as returned by OpenRegister)
+            $object = $this->flattenOpenRegisterObject($object);
+
             // Handle both API response format and ObjectEntity format
             $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
             if (!$archiMateId) {
@@ -2994,6 +3050,9 @@ class ArchiMateService
     private function convertObjectToArchiMateOrganization(array $object): ?array
     {
         try {
+            // Flatten when data is nested under 'object'
+            $object = $this->flattenOpenRegisterObject($object);
+
             // Handle both API response format and ObjectEntity format
             $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
             if (!$archiMateId) {
@@ -3032,6 +3091,9 @@ class ArchiMateService
     private function convertObjectToArchiMateRelationship(array $object): ?array
     {
         try {
+            // Flatten when data is nested under 'object'
+            $object = $this->flattenOpenRegisterObject($object);
+
             // Handle both API response format and ObjectEntity format
             $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
             if (!$archiMateId) {
@@ -3047,8 +3109,8 @@ class ArchiMateService
                 'name' => $object['name'] ?? '',
                 'type' => $object['original_archimate_type'] ?? $object['archimate_type'] ?? 'Relationship',
                 'documentation' => $object['documentation'] ?? '',
-                'source' => $object['source_id'] ?? '',
-                'target' => $object['target_id'] ?? '',
+                'source' => $object['source_id'] ?? $object['source'] ?? '',
+                'target' => $object['target_id'] ?? $object['target'] ?? '',
                 'properties' => []
             ];
 
@@ -3073,6 +3135,9 @@ class ArchiMateService
     private function convertObjectToArchiMateView(array $object): ?array
     {
         try {
+            // Flatten when data is nested under 'object'
+            $object = $this->flattenOpenRegisterObject($object);
+
             // Handle both API response format and ObjectEntity format
             $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
             if (!$archiMateId) {
@@ -3119,6 +3184,9 @@ class ArchiMateService
     private function convertObjectToArchiMatePropertyDefinition(array $object): ?array
     {
         try {
+            // Flatten when data is nested under 'object'
+            $object = $this->flattenOpenRegisterObject($object);
+
             // Handle both API response format and ObjectEntity format
             $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
             if (!$archiMateId) {
@@ -4249,20 +4317,7 @@ class ArchiMateService
     {
         $config = $this->config->getValueString(self::APP_NAME, 'amef_config', '{}');
         $decoded = json_decode($config, true);
-        
-        if (!is_array($decoded)) {
-            // Fallback to individual config values for backward compatibility
-            $decoded = [
-                'register_id' => $this->config->getValueString(self::APP_NAME, 'amef_register_id', ''),
-                'organizations_schema' => $this->config->getValueString(self::APP_NAME, 'amef_organizations_schema', ''),
-                'elements_schema' => $this->config->getValueString(self::APP_NAME, 'amef_elements_schema', ''),
-                'relationships_schema' => $this->config->getValueString(self::APP_NAME, 'amef_relationships_schema', ''),
-                'views_schema' => $this->config->getValueString(self::APP_NAME, 'amef_views_schema', ''),
-                'models_schema' => $this->config->getValueString(self::APP_NAME, 'amef_models_schema', ''),
-                'properties_schema' => $this->config->getValueString(self::APP_NAME, 'amef_properties_schema', '')
-            ];
-        }
-        
+                
         return $decoded;
     }
 

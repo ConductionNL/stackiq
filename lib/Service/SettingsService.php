@@ -2624,35 +2624,95 @@ class SettingsService
     private function configureVoorzieningen(): array
     {
         try {
-            // The voorzieningen configuration is already handled by autoConfigureAfterImport
-            // in the manualImport() call, so we just verify it was successful
-            $voorzieningenRegister = $this->config->getValueString($this->_appName, 'voorzieningen_register', '');
-            $organisatieSchema = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
-            $contactSchema = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', '');
-            
-            $configured = [];
-            if (!empty($voorzieningenRegister)) {
-                $configured['register'] = $voorzieningenRegister;
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
+                return [
+                    'success' => false,
+                    'message' => 'OpenRegister service not available',
+                ];
             }
-            if (!empty($organisatieSchema)) {
-                $configured['organisatieSchema'] = $organisatieSchema;
+
+            $registers = $objectService->getRegisters();
+            if (empty($registers)) {
+                return [
+                    'success' => false,
+                    'message' => 'No registers available',
+                ];
             }
-            if (!empty($contactSchema)) {
-                $configured['contactSchema'] = $contactSchema;
+
+            // Find the voorzieningen register by slug OR by presence of expected schema slugs
+            $targetRegister = null;
+            $expectedSlugs = [
+                'organisatie', 'contactpersoon', 'voorziening', 'voorzieningaanbod', 'voorzieningversie',
+                'kwetsbaarheid', 'contract', 'standaard', 'review', 'koppeling', 'beoordeeling',
+                'voorzieningmodule', 'verklaring', 'koppelinggebruik', 'compliancy', 'modulegebruik',
+                'moduleversie', 'sector'
+            ];
+
+            foreach ($registers as $register) {
+                $slug = strtolower($register['slug'] ?? '');
+                if ($slug === 'voorzieningen') {
+                    $targetRegister = $register;
+                    break;
+                }
+                // Heuristic: count matching schemas
+                $schemas = array_map(static function ($s) { return strtolower($s['slug'] ?? ''); }, $register['schemas'] ?? []);
+                $matches = array_intersect($expectedSlugs, $schemas);
+                if (count($matches) >= 6) { // good confidence
+                    $targetRegister = $register;
+                }
             }
-            
-            $success = !empty($voorzieningenRegister) && !empty($organisatieSchema);
-            
+
+            if ($targetRegister === null) {
+                return [
+                    'success' => false,
+                    'message' => 'Voorzieningen register not found',
+                ];
+            }
+
+            // Map schema slugs to configuration keys (singular slug + _schema)
+            $slugToKey = [
+                'organisatie' => 'organisatie_schema',
+                'contactpersoon' => 'contactpersoon_schema',
+                'voorziening' => 'voorziening_schema',
+                'voorzieningaanbod' => 'voorziening_aanbod_schema',
+                'voorzieningversie' => 'voorziening_versie_schema',
+                'kwetsbaarheid' => 'kwetsbaarheid_schema',
+                'contract' => 'contract_schema',
+                'standaard' => 'standaard_schema',
+                'review' => 'review_schema',
+                'koppeling' => 'koppeling_schema',
+                'beoordeeling' => 'beoordeeling_schema',
+                'voorzieningmodule' => 'voorziening_module_schema',
+                'verklaring' => 'verklaring_schema',
+                'koppelinggebruik' => 'koppeling_gebruik_schema',
+                'compliancy' => 'compliancy_schema',
+                'modulegebruik' => 'module_gebruik_schema',
+                'moduleversie' => 'module_versie_schema',
+                'sector' => 'sector_schema',
+            ];
+
+            $config = [ 'register' => (string)($targetRegister['id'] ?? '') ];
+            foreach (($targetRegister['schemas'] ?? []) as $schema) {
+                $schemaSlug = strtolower($schema['slug'] ?? '');
+                if (isset($slugToKey[$schemaSlug])) {
+                    $config[$slugToKey[$schemaSlug]] = (string)$schema['id'];
+                }
+            }
+
+            // Persist normalized config
+            $this->setVoorzieningenConfig($config);
+
             return [
-                'success' => $success,
-                'message' => $success ? 'Voorzieningen configured successfully' : 'Voorzieningen configuration incomplete',
-                'configured' => $configured
+                'success' => true,
+                'message' => 'Voorzieningen configured successfully',
+                'configured' => $config,
             ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
                 'message' => 'Voorzieningen configuration failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -2667,10 +2727,10 @@ class SettingsService
         try {
             // Get available registers
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 return [
                     'success' => false,
-                    'message' => 'OpenRegister service not available'
+                    'message' => 'OpenRegister service not available',
                 ];
             }
 
@@ -2678,81 +2738,69 @@ class SettingsService
             if (empty($registers)) {
                 return [
                     'success' => false,
-                    'message' => 'No registers available'
+                    'message' => 'No registers available',
                 ];
             }
 
-            // Find vng-gemma register (strict requirement for AMEF)
-            $vngGemmaRegister = null;
+            // Detect AMEF register by presence of core AMEF schemas (not by slug)
+            $candidate = null;
+            $amefCoreSlugs = ['model', 'element', 'relation', 'view', 'organization', 'property', 'property-definition'];
             foreach ($registers as $register) {
-                $slug = strtolower($register['slug'] ?? '');
-                if ($slug === 'vng-gemma') {
-                    $vngGemmaRegister = $register;
-                    break;
-                }
-            }
-
-            if (!$vngGemmaRegister) {
-                return [
-                    'success' => false,
-                    'message' => 'VNG-GEMMA register not found - required for AMEF configuration'
-                ];
-            }
-
-            // Configure AMEF schemas (English only, strict)
-            $amefSchemaMappings = [
-                'organizationsSchema' => ['organization'],  // Only English for AMEF
-                'modelsSchema' => ['model'],
-                'propertiesSchema' => ['property', 'property-definition']
-            ];
-
-            $configured = [];
-            $errors = [];
-
-            foreach ($amefSchemaMappings as $settingKey => $schemaNames) {
-                $schemaFound = false;
-                
-                foreach ($vngGemmaRegister['schemas'] as $schema) {
-                    $schemaSlug = strtolower($schema['slug'] ?? '');
-                    
-                    if (in_array($schemaSlug, $schemaNames)) {
-                        // Save to the correct keys
-                        if ($settingKey === 'organizationsSchema') {
-                            $this->config->setValueString($this->_appName, 'amef_organization_source', 'openregister');
-                            $this->config->setValueString($this->_appName, 'amef_organization_register', (string)$vngGemmaRegister['id']);
-                            $this->config->setValueString($this->_appName, 'amef_organization_schema', (string)$schema['id']);
-                        }
-                        
-                        // Also save to the AMEF-specific endpoint keys
-                        $configKey = 'amef_' . strtolower(str_replace('Schema', '', $settingKey)) . '_schema';
-                        $this->config->setValueString($this->_appName, $configKey, (string)$schema['id']);
-                        
-                        $configured[$settingKey] = $schema['id'];
-                        $schemaFound = true;
-                        break;
+                $schemaSlugs = array_map(static function ($s) { return strtolower($s['slug'] ?? ''); }, $register['schemas'] ?? []);
+                $matches = array_intersect($amefCoreSlugs, $schemaSlugs);
+                if (count($matches) >= 3) { // threshold: at least model + 2 others
+                    $candidate = $register;
+                    // prefer the register with most matches
+                    if (!isset($bestCount) || count($matches) > $bestCount) {
+                        $best = $register;
+                        $bestCount = count($matches);
                     }
                 }
-                
-                if (!$schemaFound) {
-                    $errors[] = "No suitable schema found for {$settingKey} in VNG-GEMMA register";
+            }
+            $targetRegister = isset($best) ? $best : $candidate;
+
+            if ($targetRegister === null) {
+                return [
+                    'success' => false,
+                    'message' => 'AMEF register not found',
+                ];
+            }
+
+            $config = [
+                'register' => (string)($targetRegister['id'] ?? ''),
+                // Initialize all known keys with empty strings to provide a stable shape
+                'organization_schema' => '',
+                'element_schema' => '',
+                'relation_schema' => '',
+                'view_schema' => '',
+                'model_schema' => '',
+                'property-definition_schema' => '',
+                'property_schema' => '',
+                'extendview_schema' => '',
+            ];
+
+            foreach (($targetRegister['schemas'] ?? []) as $schema) {
+                $slug = strtolower($schema['slug'] ?? '');
+                $allowed = ['organization','element','relation','view','model','property','property-definition','extendview'];
+                if (in_array($slug, $allowed, true)) {
+                    $config[$slug . '_schema'] = (string)$schema['id'];
                 }
             }
 
-            // Set register ID for AMEF operations
-            $this->config->setValueString($this->_appName, 'amef_register_id', (string)$vngGemmaRegister['id']);
-            $configured['registerId'] = $vngGemmaRegister['id'];
+            // Persist consolidated AMEF config JSON
+            $this->setAmefConfig($config);
 
             return [
-                'success' => empty($errors),
-                'message' => empty($errors) ? 'AMEF configuration completed successfully' : 'AMEF configuration completed with errors',
-                'configured' => $configured,
-                'errors' => $errors
+                'success' => true,
+                'message' => 'AMEF configuration completed successfully',
+                'configured' => $config,
+                'errors' => [],
             ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
                 'message' => 'AMEF configuration failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -4058,7 +4106,81 @@ class SettingsService
     public function updateAmefConfig(array $config): array
     {
         try {
-            $this->setAmefConfig($config);
+            // Remove framework routing keys
+            unset($config['_route']);
+
+            // Load existing config to allow merging
+            $existing = $this->getAmefConfig();
+            if (!is_array($existing)) {
+                $existing = [];
+            }
+
+            // Determine target register id
+            $targetRegisterId = isset($config['register']) ? (string)$config['register']
+                : (isset($existing['register']) ? (string)$existing['register'] : '');
+
+            // If a register is provided, validate that provided schema ids belong to that register
+            // Only accept singular keys; ignore unknown keys silently
+            $allowedKeys = [
+                'organization_schema',
+                'element_schema',
+                'relation_schema',
+                'view_schema',
+                'model_schema',
+                'property-definition_schema',
+                'property_schema',
+            ];
+
+            $validated = [];
+            if ($targetRegisterId !== '') {
+                $objectService = $this->getObjectService();
+                if ($objectService !== null) {
+                    // Build a set of schema ids for the chosen register
+                    $registers = $objectService->getRegisters();
+                    $schemaIdSet = [];
+                    foreach ($registers as $register) {
+                        if ((string)($register['id'] ?? '') === $targetRegisterId) {
+                            foreach (($register['schemas'] ?? []) as $schema) {
+                                $schemaIdSet[(string)$schema['id']] = true;
+                            }
+                            break;
+                        }
+                    }
+
+                    // Validate each provided schema id against the chosen register
+                    foreach ($allowedKeys as $key) {
+                        if (array_key_exists($key, $config)) {
+                            $value = (string)$config[$key];
+                            if ($value !== '' && isset($schemaIdSet[$value])) {
+                                $validated[$key] = $value;
+                            } else {
+                                // Skip invalid or cross-register ids
+                                $this->logger->warning('SettingsService: Ignored AMEF config key due to invalid schema/register combination', [
+                                    'key' => $key,
+                                    'value' => $value,
+                                    'register' => $targetRegisterId,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Merge: keep register and any validated schema keys; drop unknowns
+            $merged = $existing;
+            if ($targetRegisterId !== '') {
+                $merged['register'] = $targetRegisterId;
+            }
+            foreach ($allowedKeys as $key) {
+                if (array_key_exists($key, $validated)) {
+                    $merged[$key] = $validated[$key];
+                } elseif (!array_key_exists($key, $merged)) {
+                    // Ensure key presence with empty string for frontend mapping stability
+                    $merged[$key] = '';
+                }
+            }
+
+            $this->setAmefConfig($merged);
             
             return [
                 'success' => true,

@@ -616,9 +616,9 @@ export const useSettingsStore = defineStore('settings', {
 					this.voorzieningenSchemas = reg.schemas || []
 				}
 			}
-			// AMEF register
-			if (this.amefRawConfig && (this.amefRawConfig.register_id || this.amefRawConfig.register)) {
-				const regId = (this.amefRawConfig.register_id || this.amefRawConfig.register).toString()
+            // AMEF register (singular key only; fallback kept for robustness)
+            if (this.amefRawConfig && (this.amefRawConfig.register || this.amefRawConfig.register_id)) {
+                const regId = (this.amefRawConfig.register || this.amefRawConfig.register_id).toString()
 				const reg = this.settings.availableRegisters.find(r => r.id.toString() === regId)
 				if (reg) {
 					this.amefRegister = {
@@ -634,11 +634,11 @@ export const useSettingsStore = defineStore('settings', {
 		 * Populate schema selections using the focused endpoint configs
 		 */
 		populateSchemaSelectionsFromFocused() {
-			const findSchemaLabel = (schemaId, schemas) => {
-				if (!schemas || !Array.isArray(schemas)) return `Schema ${schemaId}`
-				const schema = schemas.find(s => s.id.toString() === schemaId.toString())
-				return schema ? (schema.title || schema.name || `Schema ${schemaId}`) : `Schema ${schemaId}`
-			}
+            const findOption = (schemaId, options) => {
+                if (!schemaId || !options || !Array.isArray(options)) return null
+                const id = schemaId.toString()
+                return options.find(o => o && o.value && o.value.toString() === id) || null
+            }
 
 			// Voorzieningen schemas
 			const vc = this.voorzieningenRawConfig || {}
@@ -662,58 +662,44 @@ export const useSettingsStore = defineStore('settings', {
 				['module_versie_schema', 'voorzieningen_module_versie'],
 				['sector_schema', 'voorzieningen_sector'],
 			]
-			vMap.forEach(([cfgKey, uiKey]) => {
-				if (vc[cfgKey]) {
-					this.configuration[uiKey].schema = {
-						label: findSchemaLabel(vc[cfgKey], this.voorzieningenSchemas),
-						value: vc[cfgKey].toString(),
-					}
-				}
-			})
+            vMap.forEach(([cfgKey, uiKey]) => {
+                if (vc[cfgKey]) {
+                    const opt = findOption(vc[cfgKey], this.voorzieningenSchemaOptions)
+                    if (opt) {
+                        this.configuration[uiKey].schema = opt
+                    }
+                }
+            })
 
-			// AMEF schemas
-			const ac = this.amefRawConfig || {}
-			if (ac.organizations_schema) {
-				this.configuration.amef_organization.schema = {
-					label: findSchemaLabel(ac.organizations_schema, this.amefSchemas),
-					value: ac.organizations_schema.toString(),
-				}
+            // AMEF schemas (singular keys)
+            const ac = this.amefRawConfig || {}
+            if (ac.organization_schema || ac.organizations_schema) {
+                const opt = findOption((ac.organization_schema || ac.organizations_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_organization.schema = opt
+            }
+            if (ac.element_schema || ac.elements_schema) {
+                const opt = findOption((ac.element_schema || ac.elements_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_elements.schema = opt
 			}
-			if (ac.elements_schema) {
-				this.configuration.amef_elements.schema = {
-					label: findSchemaLabel(ac.elements_schema, this.amefSchemas),
-					value: ac.elements_schema.toString(),
-				}
+            if (ac.relation_schema || ac.relationships_schema) {
+                const opt = findOption((ac.relation_schema || ac.relationships_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_relationships.schema = opt
 			}
-			if (ac.relationships_schema) {
-				this.configuration.amef_relationships.schema = {
-					label: findSchemaLabel(ac.relationships_schema, this.amefSchemas),
-					value: ac.relationships_schema.toString(),
-				}
+            if (ac.view_schema || ac.views_schema) {
+                const opt = findOption((ac.view_schema || ac.views_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_views.schema = opt
 			}
-			if (ac.views_schema) {
-				this.configuration.amef_views.schema = {
-					label: findSchemaLabel(ac.views_schema, this.amefSchemas),
-					value: ac.views_schema.toString(),
-				}
+            if (ac.model_schema || ac.models_schema) {
+                const opt = findOption((ac.model_schema || ac.models_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_models.schema = opt
 			}
-			if (ac.models_schema) {
-				this.configuration.amef_models.schema = {
-					label: findSchemaLabel(ac.models_schema, this.amefSchemas),
-					value: ac.models_schema.toString(),
-				}
+            if (ac.property_schema || ac.properties_schema) {
+                const opt = findOption((ac.property_schema || ac.properties_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_properties.schema = opt
 			}
-			if (ac.properties_schema) {
-				this.configuration.amef_properties.schema = {
-					label: findSchemaLabel(ac.properties_schema, this.amefSchemas),
-					value: ac.properties_schema.toString(),
-				}
-			}
-			if (ac.property_definitions_schema) {
-				this.configuration.amef_property_definitions.schema = {
-					label: findSchemaLabel(ac.property_definitions_schema, this.amefSchemas),
-					value: ac.property_definitions_schema.toString(),
-				}
+            if (ac['property-definition_schema'] || ac.property_definitions_schema) {
+                const opt = findOption((ac['property-definition_schema'] || ac.property_definitions_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_property_definitions.schema = opt
 			}
 		},
 
@@ -993,18 +979,18 @@ export const useSettingsStore = defineStore('settings', {
 					'amef_property_definitions',
 				]
 				// Map UI keys to API keys
-				const amefMap = {
-					amef_organization: 'organizations_schema',
-					amef_elements: 'elements_schema',
-					amef_relationships: 'relationships_schema',
-					amef_views: 'views_schema',
-					amef_models: 'models_schema',
-					amef_properties: 'properties_schema',
-					amef_property_definitions: 'property_definitions_schema',
-				}
-				if (this.amefRegister?.value) {
-					amefConfig.register_id = this.amefRegister.value
-				}
+                const amefMap = {
+                    amef_organization: 'organization_schema',
+                    amef_elements: 'element_schema',
+                    amef_relationships: 'relation_schema',
+                    amef_views: 'view_schema',
+                    amef_models: 'model_schema',
+                    amef_properties: 'property_schema',
+                    amef_property_definitions: 'property-definition_schema',
+                }
+                if (this.amefRegister?.value) {
+                    amefConfig.register = this.amefRegister.value
+                }
 				amefKeys.forEach(configKey => {
 					const config = this.configuration[configKey]
 					if (config && config.schema) {
@@ -1239,7 +1225,8 @@ export const useSettingsStore = defineStore('settings', {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
 				const result = await response.json()
-				await this.loadVersionInfo()
+				// Reload all settings so UI reflects the new configuration fully
+				await this.loadSettings()
 				return result
 			} catch (error) {
 				return { success: false, message: error.message }

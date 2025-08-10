@@ -24,6 +24,19 @@ $baseUrl = 'http://localhost/index.php/apps/softwarecatalog/api/archimate';
 $auth = 'admin:admin';
 $testFile = '/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml';
 
+// Target object focus (optional) e.g. --object=<archimate-id>. If omitted, no single-object focus is performed.
+$targetObjectId = null;
+foreach ($argv ?? [] as $arg) {
+    if (str_starts_with($arg, '--object=')) {
+        $targetObjectId = substr($arg, strlen('--object='));
+    }
+}
+if ($targetObjectId) {
+    echo "Focus object: $targetObjectId (override with --object=<archimate-id>)\n\n";
+} else {
+    echo "No focus object specified; running full test for all objects.\n\n";
+}
+
 /**
  * Execute cURL command and return response
  */
@@ -64,6 +77,81 @@ function waitForCompletion($statusUrl, $operationType, $maxWaitTime = 300) {
     
     echo "\n❌ $operationType timed out!\n";
     return false;
+}
+
+/**
+ * Quick DB lookup for an object by ArchiMate UUID
+ */
+function fetchObjectByUuid(string $uuid): ?array {
+    try {
+        $db = \OC::$server->getDatabaseConnection();
+        $stmt = $db->prepare('SELECT id, uuid, name, object FROM oc_openregister_objects WHERE uuid = ? LIMIT 1');
+        $stmt->execute([$uuid]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            return null;
+        }
+        $row['object_decoded'] = json_decode($row['object'] ?? 'null', true);
+        return $row;
+    } catch (\Throwable $e) {
+        echo "DB lookup error: {$e->getMessage()}\n";
+        return null;
+    }
+}
+
+/**
+ * Find object in exported XML by identifier, return brief info
+ */
+function findInExportedXml(string $xmlPath, string $identifier): array {
+    $result = ['present' => false, 'section' => null, 'type' => null, 'name' => null];
+    if (!is_file($xmlPath)) {
+        return $result;
+    }
+    $xmlStr = file_get_contents($xmlPath);
+    if ($xmlStr === false) {
+        return $result;
+    }
+    $xml = simplexml_load_string($xmlStr);
+    if (!$xml) {
+        return $result;
+    }
+    $xml->registerXPathNamespace('archimate', 'http://www.opengroup.org/xsd/archimate/3.0/');
+    $xml->registerXPathNamespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+
+    // Search elements
+    $nodes = $xml->xpath('//*[local-name()="element" and @identifier="' . $identifier . '"]');
+    if ($nodes && isset($nodes[0])) {
+        $node = $nodes[0];
+        $result['present'] = true;
+        $result['section'] = 'elements';
+        $result['type'] = (string)$node->attributes('xsi', true)['type'];
+        $result['name'] = (string)$node->name;
+        return $result;
+    }
+
+    // Search organizations
+    $nodes = $xml->xpath('//*[local-name()="organizations"]/*[local-name()="item" and @identifier="' . $identifier . '"]');
+    if ($nodes && isset($nodes[0])) {
+        $node = $nodes[0];
+        $result['present'] = true;
+        $result['section'] = 'organizations';
+        $result['type'] = 'Organization';
+        $result['name'] = (string)$node->label;
+        return $result;
+    }
+
+    // Search relationships
+    $nodes = $xml->xpath('//*[local-name()="relationship" and @identifier="' . $identifier . '"]');
+    if ($nodes && isset($nodes[0])) {
+        $node = $nodes[0];
+        $result['present'] = true;
+        $result['section'] = 'relationships';
+        $result['type'] = (string)$node->attributes('xsi', true)['type'];
+        $result['name'] = (string)$node->name;
+        return $result;
+    }
+
+    return $result;
 }
 
 try {
@@ -108,6 +196,23 @@ try {
     $dbCheckOutput = shell_exec('php /var/www/html/apps-extra/softwarecatalog/debug_db.php 2>&1');
     echo "Database check output:\n";
     echo substr($dbCheckOutput, 0, 1000) . (strlen($dbCheckOutput) > 1000 ? "...[truncated]" : "") . "\n\n";
+
+    // Focus object DB verification
+    if ($targetObjectId) {
+        echo "🔎 Focus object DB lookup: {$targetObjectId}\n";
+        $focusDb = fetchObjectByUuid($targetObjectId);
+        if ($focusDb) {
+            $obj = $focusDb['object_decoded'] ?? [];
+            echo "   - Found in DB with id={$focusDb['id']}, name=\"" . ($focusDb['name'] ?? '') . "\"\n";
+            echo "   - archimate_type=" . ($obj['archimate_type'] ?? 'NULL') . ", original_archimate_type=" . ($obj['original_archimate_type'] ?? 'NULL') . "\n";
+            echo "   - schema_id=" . ($obj['schema_id'] ?? 'NULL') . ", register_id=" . ($obj['register_id'] ?? 'NULL') . "\n";
+            $props = $obj['properties'] ?? [];
+            $propKeysSample = implode(', ', array_slice(array_keys($props), 0, 5));
+            echo "   - properties_keys_sample=[{$propKeysSample}] (total " . count($props) . ")\n\n";
+        } else {
+            echo "   - NOT FOUND in DB\n\n";
+        }
+    }
     
     // Step 4: Export the data
     echo "4️⃣ EXPORTING DATA\n";
@@ -132,9 +237,118 @@ try {
     
     $compareOutput = shell_exec('php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php 2>&1');
     echo $compareOutput . "\n";
+
+    // Focus object export verification
+    $latestExportPath = '/tmp/archimate_export_latest.xml';
+    if ($targetObjectId) {
+        echo "🔎 Focus object export lookup: {$targetObjectId} in {$latestExportPath}\n";
+        $exportCheck = findInExportedXml($latestExportPath, $targetObjectId);
+        if ($exportCheck['present']) {
+            echo "   - Present in export under section='{$exportCheck['section']}', type='{$exportCheck['type']}', name=\"{$exportCheck['name']}\"\n\n";
+        } else {
+            echo "   - NOT PRESENT in export\n\n";
+        }
+    }
+
+    // Step 6: Detailed per-difference triage (original XML, exported XML, database)
+    echo "6️⃣ PER-DIFFERENCE TRIAGE\n";
+    echo "========================\n";
+
+    $reportPath = '/tmp/archimate_comparison_report.json';
+    $reportJson = is_file($reportPath) ? file_get_contents($reportPath) : null;
+    $report = $reportJson ? json_decode($reportJson, true) : null;
+    if (!$report || empty($report['differences'])) {
+        echo "No structured differences available (or report missing).\n\n";
+    } else {
+        // Load XML roots once for node lookups
+        $originalXmlPath = '/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml';
+        $exportedXmlPath = $latestExportPath;
+        $origStr = @file_get_contents($originalXmlPath);
+        $expStr = @file_get_contents($exportedXmlPath);
+        $origRoot = $origStr ? simplexml_load_string($origStr) : null;
+        $expRoot = $expStr ? simplexml_load_string($expStr) : null;
+        if ($origRoot) { $origRoot->registerXPathNamespace('archimate', 'http://www.opengroup.org/xsd/archimate/3.0/'); $origRoot->registerXPathNamespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance'); }
+        if ($expRoot) { $expRoot->registerXPathNamespace('archimate', 'http://www.opengroup.org/xsd/archimate/3.0/'); $expRoot->registerXPathNamespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance'); }
+
+        // Helper to fetch node XML string by section/id
+        $getNodeXml = function($root, string $section, string $id): string {
+            if (!$root) return '';
+            switch ($section) {
+                case 'elements':
+                    $nodes = $root->xpath('//*[local-name()="element" and @identifier="' . $id . '"]');
+                    break;
+                case 'relationships':
+                    $nodes = $root->xpath('//*[local-name()="relationship" and @identifier="' . $id . '"]');
+                    break;
+                case 'organizations':
+                    $nodes = $root->xpath('//*[local-name()="organizations"]/*[local-name()="item" and @identifier="' . $id . '"]');
+                    break;
+                case 'property_definitions':
+                    $nodes = $root->xpath('//*[local-name()="propertyDefinition" and @identifier="' . $id . '"]');
+                    break;
+                case 'folders':
+                    $nodes = $root->xpath('//*[local-name()="folder" and @identifier="' . $id . '"]');
+                    break;
+                case 'views':
+                    $nodes = $root->xpath('//*[local-name()="view" and @identifier="' . $id . '"]');
+                    break;
+                default:
+                    $nodes = [];
+            }
+            if ($nodes && isset($nodes[0])) {
+                $dom = dom_import_simplexml($nodes[0]);
+                if ($dom && $dom->ownerDocument) {
+                    return trim($dom->ownerDocument->saveXML($dom));
+                }
+            }
+            return '';
+        };
+
+        // Iterate differences
+        $idx = 0;
+        foreach ($report['differences'] as $diff) {
+            $idx++;
+            $section = $diff['section'] ?? 'unknown';
+            $path = $diff['path'] ?? '';
+            $originalVal = $diff['original'] ?? '';
+            $exportedVal = $diff['exported'] ?? '';
+            $id = $path;
+            $slashPos = strpos($path, '/');
+            if ($slashPos !== false) { $id = substr($path, 0, $slashPos); }
+
+            echo "#{$idx} [{$section}] {$path}\n";
+            echo "- difference: original='" . substr($originalVal, 0, 200) . "' vs exported='" . substr($exportedVal, 0, 200) . "'\n";
+
+            // How it was imported (original XML node)
+            $origNode = $getNodeXml($origRoot, $section, $id);
+            echo "- imported (original xml): " . ($origNode ? substr($origNode, 0, 600) : 'MISSING') . (strlen($origNode) > 600 ? '...[truncated]' : '') . "\n";
+
+            // How it's exported (exported XML node)
+            $expNode = $getNodeXml($expRoot, $section, $id);
+            echo "- exported (xml): " . ($expNode ? substr($expNode, 0, 600) : 'MISSING') . (strlen($expNode) > 600 ? '...[truncated]' : '') . "\n";
+
+            // How it's in the database
+            $row = fetchObjectByUuid($id);
+            if ($row) {
+                $obj = $row['object_decoded'] ?? [];
+                $props = $obj['properties'] ?? [];
+                $propKeys = implode(',', array_slice(array_keys($props), 0, 10));
+                echo "- database: found id={$row['id']} name=\"" . ($row['name'] ?? '') . "\" archimate_type=" . ($obj['archimate_type'] ?? 'NULL') . " original_archimate_type=" . ($obj['original_archimate_type'] ?? 'NULL') . " schema_id=" . ($obj['schema_id'] ?? 'NULL') . " register_id=" . ($obj['register_id'] ?? 'NULL') . " properties_keys_sample=[{$propKeys}]\n";
+            } else {
+                echo "- database: NOT FOUND\n";
+            }
+
+            echo "\n";
+            // Optional: limit very large outputs
+            if ($idx >= 200) {
+                echo "... truncated after 200 differences for brevity ...\n\n";
+                break;
+            }
+        }
+    }
     
-    // Step 6: Analysis and recommendations
-    echo "\n6️⃣ ANALYSIS & RECOMMENDATIONS\n";
+    // Step 7: Analysis and recommendations
+    echo "\n7️⃣ ANALYSIS & RECOMMENDATIONS\n";
     echo "==============================\n";
     
     // Check for specific issues
@@ -166,7 +380,7 @@ try {
         }
         echo "\n📋 NEXT STEPS:\n";
         echo "   1. Fix the issues listed above\n";
-        echo "   2. Re-run this script to test fixes\n";
+        echo "   2. Re-run this script to test fixes (optionally add --object=<archimate-id> to focus)\n";
         echo "   3. Repeat until no issues remain\n";
     }
     
