@@ -184,6 +184,20 @@ class Application extends App implements IBootstrap
             );
         });
 
+        // Register ArchiMate import service
+        $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateImportService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ArchiMateImportService(
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
+
+        // Register ArchiMate export service
+        $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateExportService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ArchiMateExportService(
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
+
         // Register ArchiMate import/export service
         $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateService::class, function ($container) {
             return new \OCA\SoftwareCatalog\Service\ArchiMateService(
@@ -193,7 +207,8 @@ class Application extends App implements IBootstrap
                 $container->get('OCP\App\IAppManager'),
                 $container,
                 $container->get('Psr\Log\LoggerInterface'),
-                $container->get(\OCA\SoftwareCatalog\Service\SettingsService::class)
+                $container->get(\OCA\SoftwareCatalog\Service\ArchiMateImportService::class),
+                $container->get(\OCA\SoftwareCatalog\Service\ArchiMateExportService::class)
             );
         });
 
