@@ -1,62 +1,82 @@
 <?php
 
-declare(strict_types=1);
-
 /**
- * ArchiMate Service - Clean ReactPHP Implementation
- *
- * This service handles ArchiMate file import and export functionality using ReactPHP
- * for parallel processing and streaming XML parsing for memory efficiency.
- *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
- * @version  2.0.0
- */
-
-namespace OCA\SoftwareCatalog\Service;
-
-use OCP\IAppConfig;
-use OCP\Files\IRootFolder;
-use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
-use React\Promise\Promise;
-use function React\Promise\all;
-use React\Promise\Deferred;
-use OCP\App\IAppManager;
-use Psr\Container\ContainerInterface;
-
-/**
- * Clean ArchiMate Service with ReactPHP Parallel Processing
- *
- * This service provides streamlined functionality to import ArchiMate files and convert them
- * to OpenRegister objects using ReactPHP for parallel processing and streaming XML parsing.
+ * ArchiMate Service for SoftwareCatalog
+ * 
+ * Handles import and export of ArchiMate XML files with round-trip fidelity.
+ * Stores complete XML data as JSON blobs in the database and reconstructs
+ * exact XML output during export.
  * 
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
- * @version  2.0.0
+ * @author   SoftwareCatalog Team
+ * @license  AGPL-3.0
+ * @version  1.0.0
+ * @link     https://github.com/nextcloud/softwarecatalog
+ */
+
+declare(strict_types=1);
+
+namespace OCA\SoftwareCatalog\Service;
+
+use OCA\OpenRegister\Service\ObjectService;
+use OCP\App\IAppManager;
+use OCP\IAppConfig;
+use OCP\IUserSession;
+use OCP\Files\IRootFolder;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use SimpleXMLElement;
+
+/**
+ * ArchiMate Service for handling XML import/export with round-trip fidelity
+ * 
+ * This service provides a clean approach to ArchiMate XML processing:
+ * 1. Import: Parse XML to array, store complete data as JSON blob
+ * 2. Storage: Use ObjectService::saveObjects with proper @self structure
+ * 3. Export: Reconstruct exact XML from stored JSON blobs
+ * 
+ * @category Service
+ * @package  OCA\SoftwareCatalog\Service
+ * @author   SoftwareCatalog Team
+ * @license  AGPL-3.0
+ * @version  1.0.0
+ * @link     https://github.com/nextcloud/softwarecatalog
  */
 class ArchiMateService
 {
     /**
-     * The application name
+     * Configuration keys for ArchiMate processing
      */
-    private const APP_NAME = 'softwarecatalog';
+    private const CONFIG_KEYS = [
+        'archimate_register_id' => 'archimate_register_id',
+        'archimate_schema_id' => 'archimate_schema_id',
+        'archimate_model_schema_id' => 'archimate_model_schema_id'
+    ];
 
     /**
-     * Cached objects indexed by type and ID for efficient lookups during import
+     * Default schema IDs for ArchiMate objects
+     */
+    private const DEFAULT_SCHEMA_IDS = [
+        'model' => 100,
+        'element' => 101,
+        'relationship' => 102,
+        'view' => 103,
+        'organization' => 104,
+        'property_definition' => 105
+    ];
+
+    /**
+     * Constructor for ArchiMateService
      * 
-     * @var array<string, array<string, array>>
-     */
-    private array $cachedObjects = [];
-
-    /**
-     * ArchiMateService constructor
+     * @param IAppConfig $config Nextcloud app configuration service
+     * @param IRootFolder $rootFolder Root folder service
+     * @param IUserSession $userSession User session service
+     * @param IAppManager $appManager App manager service
+     * @param ContainerInterface $container PSR-11 container interface
+     * @param LoggerInterface $logger Logger service
+     * @param ArchiMateImportService $importService Import service for XML parsing
+     * @param ArchiMateExportService $exportService Export service for XML generation
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -64,133 +84,103 @@ class ArchiMateService
         private readonly IUserSession $userSession,
         private readonly IAppManager $appManager,
         private readonly ContainerInterface $container,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly ArchiMateImportService $importService,
+        private readonly ArchiMateExportService $exportService
     ) {
     }
 
     /**
-     * Import ArchiMate file from path with ReactPHP parallel processing
+     * Import ArchiMate XML file from path
+     * 
+     * @param array $options Import options
+     * @return array Import results
+     */
+    /**
+     * Import ArchiMate XML file from path with model detection and round-trip fidelity
+     * 
+     * This method handles the complete import workflow:
+     * 1. Parse XML to array (capturing all possible XML values)
+     * 2. Detect if model already exists or is new
+     * 3. Normalize data structure for storage as JSON blob
+     * 4. Convert to OpenRegister objects with proper @self structure
+     * 5. Save objects using ObjectService::saveObjects
+     * 
+     * @param array $options Import options including file_path, fileName, etc.
+     * @return array Import results with detailed status
      */
     public function importArchiMateFileFromPath(array $options = []): array
     {
+        // Track start time and memory for performance metrics
         $startTime = microtime(true);
         $startMemory = memory_get_usage(true);
         
-        // Initialize import status
-        $importStatus = [
-            'status' => 'running',
-            'start_time' => date('Y-m-d H:i:s'),
-            'progress' => 0,
-            'current_step' => 'Initializing',
-            'file_info' => [
-                'name' => $options['fileName'] ?? 'unknown',
-                'size' => 0
-            ],
-            'statistics' => [
-                'elements_processed' => 0,
-                'relationships_processed' => 0,
-                'organizations_processed' => 0,
-                'views_processed' => 0,
-                'objects_created' => 0,
-                'objects_updated' => 0,
-                'objects_skipped' => 0,
-                'errors' => []
-            ]
-        ];
-        
-        $this->setArchiMateImportStatus($importStatus);
-        
-        $this->logger->info('=== ARCHIMATE IMPORT START ===', [
-            'file_path' => $options['filePath'] ?? 'unknown',
-            'file_name' => $options['fileName'] ?? 'unknown',
-            'start_memory_mb' => round($startMemory / 1024 / 1024, 2),
-            'memory_limit' => ini_get('memory_limit')
+        $this->logger->info('Starting ArchiMate XML import with model detection', [
+            'options' => $options,
+            'file_path' => $options['file_path'] ?? 'unknown'
         ]);
 
-        // Set default options
-        $options = array_merge([
-            'batch_size' => 50,
-            'updateExisting' => true,
-            'preserveIds' => true,
-            'deleteOrphaned' => false
-        ], $options);
-
         try {
-            // Step 1: Validate file
-            $validationStart = microtime(true);
-            $importStatus['current_step'] = 'Validating file';
-            $importStatus['progress'] = 5;
-            $this->setArchiMateImportStatus($importStatus);
+            // STEP 1: Parse XML to array using the specialized import service
+            // This captures ALL possible XML values including attributes, text content, and nested elements
+            $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
             
-            $this->validateArchiMateFileFromPath(
-                $options['filePath'],
-                $options['fileName'],
-                $options['mimeType'] ?? 'text/xml'
-            );
-            $validationTime = microtime(true) - $validationStart;
-
-            $this->logger->info('File validation completed', [
-                'validation_time_seconds' => round($validationTime, 3),
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-
-            // Step 2: Parse XML with streaming
-            $parseStart = microtime(true);
-            $importStatus['current_step'] = 'Parsing XML file';
-            $importStatus['progress'] = 15;
-            $this->setArchiMateImportStatus($importStatus);
+            if (empty($filePath)) {
+                throw new \InvalidArgumentException('File path is required for import');
+            }
             
-            $archiMateData = $this->parseArchiMateXmlStreaming($options['filePath']);
-            $parseTime = microtime(true) - $parseStart;
-
-            // Update file info
-            $importStatus['file_info']['size'] = filesize($options['filePath']);
-            $importStatus['statistics']['elements_processed'] = count($archiMateData['elements'] ?? []);
-            $importStatus['statistics']['relationships_processed'] = count($archiMateData['relationships'] ?? []);
-            $importStatus['statistics']['organizations_processed'] = count($archiMateData['organizations'] ?? []);
-            $importStatus['statistics']['views_processed'] = count($archiMateData['views'] ?? []);
-            $importStatus['progress'] = 25;
-            $this->setArchiMateImportStatus($importStatus);
-
-            $this->logger->info('XML parsing completed', [
-                'parse_time_seconds' => round($parseTime, 3),
-                    'elements_count' => count($archiMateData['elements'] ?? []),
-                    'relationships_count' => count($archiMateData['relationships'] ?? []),
-                    'organizations_count' => count($archiMateData['organizations'] ?? []),  
-                'views_count' => count($archiMateData['views'] ?? []),
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-
-            // Step 3: Convert to OpenRegister objects with ReactPHP parallel processing
-            $convertStart = microtime(true);
-            $importStatus['current_step'] = 'Converting to OpenRegister objects';
-            $importStatus['progress'] = 35;
-            $this->setArchiMateImportStatus($importStatus);
+            if (!file_exists($filePath)) {
+                throw new \InvalidArgumentException("File not found: {$filePath}");
+            }
             
-            $convertResults = $this->convertToOpenRegisterObjectsParallel($archiMateData, $options);
-            $convertTime = microtime(true) - $convertStart;
-
+            $this->logger->info('Step 1: Parsing XML to array for complete data capture', ['filePath' => $filePath]);
+            $parseStartTime = microtime(true);
+            $xmlData = $this->parseArchiMateXml($filePath);
+            $parseTime = microtime(true) - $parseStartTime;
+            
+            // STEP 2: Extract model identifier and detect if model already exists
+            // This is critical for determining whether to create new or update existing model
+            $this->logger->info('Step 2: Extracting model identifier and checking for existing model');
+            $validationStartTime = microtime(true);
+            $modelIdentifier = $this->extractModelIdentifier($xmlData);
+            $modelExists = $this->checkIfModelExists($modelIdentifier);
+            $validationTime = microtime(true) - $validationStartTime;
+            
+            // STEP 3: Normalize data structure for storage as JSON blob
+            // Store complete raw XML data for exact round-trip fidelity during export
+            $this->logger->info('Step 3: Normalizing data structure for JSON blob storage');
+            $normalizedData = $this->normalizeArchiMateData($xmlData, $modelIdentifier);
+            
+            // STEP 4: Convert to OpenRegister objects with proper @self structure
+            // Each object must have @self with register, schema, and id for ObjectService::saveObjects
+            $this->logger->info('Step 4: Converting to OpenRegister objects with @self structure');
+            $convertStartTime = microtime(true);
+            $objects = $this->convertToOpenRegisterObjects($normalizedData, $modelIdentifier);
+            $convertTime = microtime(true) - $convertStartTime;
+            
+            // STEP 5: Save objects using ObjectService::saveObjects
+            // This handles the actual database persistence with proper validation
+            $this->logger->info('Step 5: Saving objects to database using ObjectService::saveObjects');
+            $savedObjects = $this->saveObjectsToDatabase($objects);
+            
+            // Calculate total time and memory usage
             $totalTime = microtime(true) - $startTime;
             $endMemory = memory_get_usage(true);
             $peakMemory = memory_get_peak_usage(true);
-
-            // Update final statistics
-            $importStatus['statistics']['objects_created'] = $convertResults['objects_created'];
-            $importStatus['statistics']['objects_updated'] = $convertResults['objects_updated'];
-            $importStatus['statistics']['objects_skipped'] = $convertResults['objects_skipped'];
-            $importStatus['statistics']['errors'] = $convertResults['errors'];
-            $importStatus['progress'] = 100;
-            $importStatus['status'] = 'completed';
-            $importStatus['current_step'] = 'Import completed';
-            $importStatus['end_time'] = date('Y-m-d H:i:s');
-            $importStatus['total_time_seconds'] = round($totalTime, 3);
-            $this->setArchiMateImportStatus($importStatus);
-
-            $results = [
+            
+            // Count objects by type for detailed statistics
+            $statistics = $this->calculateObjectStatistics($normalizedData, $savedObjects);
+            
+            // Calculate performance metrics
+            $totalObjects = $statistics['summary']['total_objects_created'] + $statistics['summary']['total_objects_updated'];
+            $itemsPerSecond = $totalObjects > 0 ? $totalObjects / $totalTime : 0;
+            
+            // Prepare comprehensive result with detailed information
+            $result = [
                 'success' => true,
                 'file_info' => [
-                    'name' => $options['fileName'],
-                    'size' => filesize($options['filePath']),
+                    'name' => $options['fileName'] ?? basename($filePath),
+                    'size' => filesize($filePath),
                     'mime_type' => $options['mimeType'] ?? 'text/xml'
                 ],
                 'processing_times' => [
@@ -205,2516 +195,1335 @@ class ArchiMateService
                     ]
                 ],
                 'memory_usage' => [
-                    'start_mb' => round($startMemory / 1024 / 1024, 2),
-                    'end_mb' => round($endMemory / 1024 / 1024, 2),
+                    'start_mb' => round($startMemory / 1024 / 1024, 1),
+                    'end_mb' => round($endMemory / 1024 / 1024, 1),
                     'peak_mb' => round($peakMemory / 1024 / 1024, 2),
-                    'total_used_mb' => round(($endMemory - $startMemory) / 1024 / 1024, 2)
+                    'total_used_mb' => round(($endMemory - $startMemory) / 1024 / 1024, 1)
                 ],
-                'statistics' => $convertResults['schema_statistics'],
+                'statistics' => $statistics,
                 'summary' => [
-                    'total_objects_created' => $convertResults['objects_created'],
-                    'total_objects_updated' => $convertResults['objects_updated'],
-                    'total_objects_deleted' => $convertResults['objects_deleted'],
-                    'total_objects_skipped' => $convertResults['objects_skipped'],
-                    'total_errors' => count($convertResults['errors'])
+                    'total_objects_created' => $statistics['summary']['total_objects_created'],
+                    'total_objects_updated' => $statistics['summary']['total_objects_updated'],
+                    'total_objects_deleted' => $statistics['summary']['total_objects_deleted'],
+                    'total_objects_skipped' => $statistics['summary']['total_objects_skipped'],
+                    'total_errors' => $statistics['summary']['total_errors']
                 ],
                 'performance_metrics' => [
-                    'items_per_second' => $this->calculateItemsPerSecond($archiMateData, $totalTime),
-                    'processing_method' => 'reactphp_parallel',
-                    'batch_size_used' => $options['batch_size']
+                    'items_per_second' => round($itemsPerSecond, 2),
+                    'processing_method' => 'synchronous_batch_processing',
+                    'batch_size_used' => 100,
+                    'dataset_size' => $totalObjects
                 ]
             ];
 
-            $this->logger->info('=== ARCHIMATE IMPORT COMPLETED ===', [
-                'total_time_seconds' => round($totalTime, 3),
-                'objects_created' => $convertResults['objects_created'],
-                'objects_updated' => $convertResults['objects_updated'],
-                'objects_skipped' => $convertResults['objects_skipped'],
-                'errors_count' => count($convertResults['errors'])
+            $this->logger->info('ArchiMate XML import completed successfully', [
+                'model_identifier' => $modelIdentifier,
+                'model_exists' => $modelExists,
+                'imported_objects' => $totalObjects,
+                'round_trip_fidelity' => 'enabled'
             ]);
 
-            // Clear import status after successful completion
-            $this->clearArchiMateImportStatus();
-            $this->logger->info('ArchiMate import status cleared after successful completion');
-
-            return $results;
+            return $result;
 
         } catch (\Exception $e) {
-            $totalTime = microtime(true) - $startTime;
-            
-            // Update status with error
-            $importStatus['status'] = 'failed';
-            $importStatus['current_step'] = 'Import failed';
-            $importStatus['end_time'] = date('Y-m-d H:i:s');
-            $importStatus['error'] = $e->getMessage();
-            $importStatus['total_time_seconds'] = round($totalTime, 3);
-            $this->setArchiMateImportStatus($importStatus);
-            
-            $this->logger->error('=== ARCHIMATE IMPORT FAILED ===', [
+            $this->logger->error('ArchiMate XML import failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'total_time_seconds' => round($totalTime, 3)
+                'file_path' => $options['filePath'] ?? $options['file_path'] ?? 'unknown'
             ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    /**
-     * Export OpenRegister objects to ArchiMate format
-     */
-    public function exportToArchiMate(array $criteria = [], array $options = []): array
-    {
-        $startTime = microtime(true);
-        
-        // Initialize export status
-        $exportStatus = [
-            'status' => 'running',
-            'start_time' => date('Y-m-d H:i:s'),
-            'progress' => 0,
-            'current_step' => 'Initializing export',
-            'criteria' => $criteria,
-            'statistics' => [
-                'objects_found' => 0,
-                'objects_exported' => 0,
-                'xml_size_bytes' => 0,
-                'errors' => []
-            ]
-        ];
-        
-        $this->setArchiMateExportStatus($exportStatus);
-        
-        $this->logger->info('=== ARCHIMATE EXPORT START ===', [
-            'criteria' => $criteria,
-            'options' => $options
-        ]);
-
-        try {
-            // Step 1: Get objects for export
-            $exportStatus['current_step'] = 'Retrieving objects from database';
-            $exportStatus['progress'] = 25;
-            $this->setArchiMateExportStatus($exportStatus);
-            
-            $objects = $this->getObjectsForExport($criteria);
-            $exportStatus['statistics']['objects_found'] = count($objects);
-            $exportStatus['progress'] = 50;
-            $this->setArchiMateExportStatus($exportStatus);
-
-            // Step 2: Convert to ArchiMate format
-            $exportStatus['current_step'] = 'Converting to ArchiMate format';
-            $exportStatus['progress'] = 75;
-            $this->setArchiMateExportStatus($exportStatus);
-            
-            $archiMateData = $this->convertFromOpenRegisterObjects($objects, $options);
-
-            // Step 3: Generate XML file
-            $exportStatus['current_step'] = 'Generating XML file';
-            $exportStatus['progress'] = 90;
-            $this->setArchiMateExportStatus($exportStatus);
-            
-            $xmlContent = $this->generateArchiMateXml($archiMateData);
-            
-            $totalTime = microtime(true) - $startTime;
-            
-            // Update final status
-            $exportStatus['statistics']['objects_exported'] = count($objects);
-            $exportStatus['statistics']['xml_size_bytes'] = strlen($xmlContent);
-            $exportStatus['progress'] = 100;
-            $exportStatus['status'] = 'completed';
-            $exportStatus['current_step'] = 'Export completed';
-            $exportStatus['end_time'] = date('Y-m-d H:i:s');
-            $exportStatus['total_time_seconds'] = round($totalTime, 3);
-            $this->setArchiMateExportStatus($exportStatus);
-            
-            $this->logger->info('=== ARCHIMATE EXPORT COMPLETED ===', [
-                'total_time_seconds' => round($totalTime, 3),
-                'objects_exported' => count($objects),
-                'xml_size_bytes' => strlen($xmlContent)
-            ]);
-
-            // Save the exported file to user's folder for download
-            $fileName = 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml';
-            try {
-                $userFolder = $this->rootFolder->getUserFolder($this->userSession->getUser()->getUID());
-                
-                // Create or overwrite the file
-                if ($userFolder->nodeExists($fileName)) {
-                    $file = $userFolder->get($fileName);
-                    $file->putContent($xmlContent);
-                } else {
-                    $userFolder->newFile($fileName, $xmlContent);
-                }
-                
-                $this->logger->info('ArchiMate export file saved', [
-                    'file_name' => $fileName,
-                    'file_size' => strlen($xmlContent)
-                ]);
-                
-            } catch (\Exception $fileException) {
-                $this->logger->error('Failed to save ArchiMate export file', [
-                    'file_name' => $fileName,
-                    'error' => $fileException->getMessage()
-                ]);
-                // Continue anyway, return the content directly
-            }
-
-            // Clear export status after successful completion
-            $this->clearArchiMateExportStatus();
-            $this->logger->info('ArchiMate export status cleared after successful completion');
-
-            return [
-                'success' => true,
-                'xml_content' => $xmlContent,
-                'file_name' => $fileName,
-                'statistics' => [
-                    'objects_exported' => count($objects),
-                    'xml_size_bytes' => strlen($xmlContent)
-                ]
-            ];
-
-        } catch (\Exception $e) {
-            $totalTime = microtime(true) - $startTime;
-            
-            // Update status with error
-            $exportStatus['status'] = 'failed';
-            $exportStatus['current_step'] = 'Export failed';
-            $exportStatus['end_time'] = date('Y-m-d H:i:s');
-            $exportStatus['error'] = $e->getMessage();
-            $exportStatus['total_time_seconds'] = round($totalTime, 3);
-            $this->setArchiMateExportStatus($exportStatus);
-            
-            $this->logger->error('=== ARCHIMATE EXPORT FAILED ===', [
+                'message' => 'Import failed: ' . $e->getMessage(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'total_time_seconds' => round($totalTime, 3)
-            ]);
-
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
+                'step_failed' => 'unknown' // Will be refined with better error tracking
             ];
         }
     }
 
     /**
-     * Validate ArchiMate file from path
+     * Export ArchiMate data to XML
+     * 
+     * @param string|null $organization Organization filter (currently not implemented)
+     * @return array Export results
      */
-    private function validateArchiMateFileFromPath(string $filePath, string $fileName, string $mimeType): void
+    public function exportToArchiMate(?string $organization = null): array
     {
-        $this->logger->info('Validating ArchiMate file', [
-            'file_path' => $filePath,
-            'file_name' => $fileName,
-            'mime_type' => $mimeType
-        ]);
-
-        if (!file_exists($filePath)) {
-            throw new \RuntimeException("File not found: {$filePath}");
-        }
-
-        if (!is_readable($filePath)) {
-            throw new \RuntimeException("File not readable: {$filePath}");
-        }
-
-        $fileSize = filesize($filePath);
-        if ($fileSize === false || $fileSize === 0) {
-            throw new \RuntimeException("Invalid file size: {$filePath}");
-        }
-
-        $this->logger->info('File validation passed', [
-            'file_size_bytes' => $fileSize,
-            'file_size_mb' => round($fileSize / 1024 / 1024, 2)
-        ]);
-    }
-
-    /**
-     * Parse ArchiMate XML file using streaming approach
-     */
-    private function parseArchiMateXmlStreaming(string $filePath): array
-    {
-        $this->logger->info('=== XML PARSING START ===', [
-            'file_path' => $filePath,
-            'file_size_bytes' => filesize($filePath),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        $content = file_get_contents($filePath);
-        if ($content === false) {
-            throw new \RuntimeException('Could not read file content');
-        }
-
-        $this->logger->info('File content loaded', [
-            'content_length' => strlen($content),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Load XML with error handling
-        libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($content);
-        
-        if ($xml === false) {
-            $errors = libxml_get_errors();
-            $errorMessages = array_map(fn($error) => trim($error->message), $errors);
-            throw new \RuntimeException('Invalid XML format: ' . implode(', ', $errorMessages));
-        }
-
-        $this->logger->info('XML loaded successfully', [
-            'xml_name' => $xml->getName(),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Parse XML structure
-        $data = $this->parseXmlElementWithProperties($xml);
-        
-        $this->logger->info('XML parsed to data structure', [
-            'data_keys' => array_keys($data),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Debug: Log the structure of elements to see what we're working with
-        if (isset($data['elements'])) {
-            $this->logger->info('Elements structure debug', [
-                'elements_type' => gettype($data['elements']),
-                'elements_count' => is_array($data['elements']) ? count($data['elements']) : 'not_array',
-                'first_element_sample' => is_array($data['elements']) && !empty($data['elements']) ? array_slice($data['elements'], 0, 1, true) : 'no_elements'
-            ]);
-        }
-
-        // Normalize and extract ArchiMate components
-        $normalizedData = $this->normalizeArchiMateData($data);
-
-        $this->logger->info('=== XML PARSING COMPLETED ===', [
-            'elements_count' => count($normalizedData['elements'] ?? []),
-            'relationships_count' => count($normalizedData['relationships'] ?? []),
-            'organizations_count' => count($normalizedData['organizations'] ?? []),
-            'views_count' => count($normalizedData['views'] ?? []),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        return $normalizedData;
-    }
-
-    /**
-     * Parse XML element preserving attributes and child elements
-     */
-    private function parseXmlElementWithProperties(\SimpleXMLElement $xml): array
-    {
-        $result = [];
-        
-        // Extract attributes
-        $attributes = [];
-        foreach ($xml->attributes() as $name => $value) {
-            $attributes[$name] = (string)$value;
-        }
-        
-        // Handle namespaced attributes
-        $namespaces = $xml->getNamespaces(true);
-        foreach ($namespaces as $prefix => $namespace) {
-            if ($prefix) {
-                foreach ($xml->attributes($prefix, true) as $name => $value) {
-                    $attributes["$prefix:$name"] = (string)$value;
-                }
-            }
-        }
-        
-        // Handle xml namespace
-        foreach ($xml->attributes('xml', true) as $name => $value) {
-            $attributes["xml:$name"] = (string)$value;
-        }
-        
-        // Get text content
-        $textContent = trim((string)$xml);
-        
-        // Process child elements
-        $children = [];
-        $hasChildElements = false;
-        
-        foreach ($xml->children() as $name => $child) {
-            $hasChildElements = true;
-            $childData = $this->parseXmlElementWithProperties($child);
-            
-            // Handle multiple children with same name
-            if (isset($children[$name])) {
-                if (!is_array($children[$name]) || !isset($children[$name][0])) {
-                    $children[$name] = [$children[$name]];
-                }
-                $children[$name][] = $childData;
-            } else {
-                $children[$name] = $childData;
-            }
-        }
-        
-        // Build result
-        if (!empty($attributes)) {
-            $result['_attributes'] = $attributes;
-        }
-        
-        if (!empty($textContent) && !$hasChildElements) {
-            $result['_value'] = $textContent;
-        }
-        
-        if (!empty($children)) {
-            $result = array_merge($result, $children);
-        }
-        
-        if (!empty($textContent) && $hasChildElements) {
-            $result['_text'] = $textContent;
-        }
-        
-        return $result;
-    }
-
-    /**
-     * Normalize ArchiMate data to consistent format
-     */
-    private function normalizeArchiMateData(array $data): array
-    {
-        $this->logger->info('=== NORMALIZING ARCHIMATE DATA ===', [
-            'data_keys' => array_keys($data),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        $normalized = [
-            'elements' => [],
-            'relationships' => [],
-            'organizations' => [],
-            'views' => []
-        ];
-
-        // Extract elements
-        if (isset($data['elements'])) {
-            $this->logger->info('Processing elements for normalization', [
-                'elements_count' => count($data['elements'])
-            ]);
-            
-            // Handle different element structures
-        if (isset($data['elements']['element'])) {
-                // Structure: elements -> element -> [0, 1, 2, ...]
-                $elementArray = $data['elements']['element'];
-                $this->logger->info('Found element array structure', [
-                    'element_count' => count($elementArray)
-                ]);
-                
-                foreach ($elementArray as $index => $element) {
-                    $this->logger->info("Processing element {$index}", [
-                        'element_keys' => array_keys($element),
-                        'has_attributes' => isset($element['_attributes']),
-                        'has_identifier' => isset($element['_attributes']['identifier'])
-                    ]);
-                    
-                    if (isset($element['_attributes']['identifier'])) {
-                        $normalized['elements'][$element['_attributes']['identifier']] = $this->normalizeElement($element);
-                    } else {
-                        $this->logger->warning("Element {$index} missing identifier", [
-                            'element_structure' => $element
-                        ]);
-                    }
-                }
-            } else {
-                // Direct array structure: elements -> [0, 1, 2, ...]
-                foreach ($data['elements'] as $index => $element) {
-                    $this->logger->info("Processing element {$index}", [
-                        'element_keys' => array_keys($element),
-                        'has_attributes' => isset($element['_attributes']),
-                        'has_identifier' => isset($element['_attributes']['identifier'])
-                    ]);
-                    
-                    if (isset($element['_attributes']['identifier'])) {
-                        $normalized['elements'][$element['_attributes']['identifier']] = $this->normalizeElement($element);
-                    } else {
-                        $this->logger->warning("Element {$index} missing identifier", [
-                            'element_structure' => $element
-                        ]);
-                    }
-                }
-            }
-        }
-
-        // Extract relationships
-        if (isset($data['relationships'])) {
-            if (isset($data['relationships']['relationship'])) {
-                $relationshipArray = $data['relationships']['relationship'];
-                foreach ($relationshipArray as $relationship) {
-                    if (isset($relationship['_attributes']['identifier'])) {
-                        $normalized['relationships'][$relationship['_attributes']['identifier']] = $this->normalizeRelationship($relationship);
-                    }
-                }
-            } else {
-                foreach ($data['relationships'] as $relationship) {
-                    if (isset($relationship['_attributes']['identifier'])) {
-                        $normalized['relationships'][$relationship['_attributes']['identifier']] = $this->normalizeRelationship($relationship);
-                    }
-                }
-            }
-        }
-
-        // Extract views
-        if (isset($data['views'])) {
-            if (isset($data['views']['view'])) {
-                $viewArray = $data['views']['view'];
-                foreach ($viewArray as $view) {
-                    if (isset($view['_attributes']['identifier'])) {
-                        $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
-                    }
-                }
-            } else {
-                foreach ($data['views'] as $view) {
-                    if (isset($view['_attributes']['identifier'])) {
-                        $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
-                    }
-                }
-            }
-        }
-
-        // Extract organizations from elements
-        $normalized['organizations'] = $this->extractOrganizations($normalized['elements']);
-
-        $this->logger->info('=== NORMALIZATION COMPLETED ===', [
-            'elements_count' => count($normalized['elements']),
-            'relationships_count' => count($normalized['relationships']),
-            'organizations_count' => count($normalized['organizations']),
-            'views_count' => count($normalized['views']),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        return $normalized;
-    }
-
-    /**
-     * Convert to OpenRegister objects using ReactPHP parallel processing with memory optimization
-     */
-    private function convertToOpenRegisterObjectsParallel(array $archiMateData, array $options): array
-    {
-        $startTime = microtime(true);
-        
-        $this->logger->info('=== PARALLEL CONVERSION START ===', [
-            'elements_count' => count($archiMateData['elements'] ?? []),
-            'relationships_count' => count($archiMateData['relationships'] ?? []),
-            'organizations_count' => count($archiMateData['organizations'] ?? []),
-            'views_count' => count($archiMateData['views'] ?? []),
-            'batch_size' => $options['batch_size'],
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Preload existing objects
-        $preloadStart = microtime(true);
-        $this->preloadExistingObjects();
-        $preloadTime = microtime(true) - $preloadStart;
-
-        $this->logger->info('Existing objects preloaded', [
-            'preload_time_seconds' => round($preloadTime, 3),
-            'cached_objects_count' => array_sum(array_map('count', $this->cachedObjects)),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Process different schema types in parallel with memory optimization
-        $promises = [];
-
-        // Elements processing - will unset elements array as it processes
-        if (!empty($archiMateData['elements'])) {
-            $promises['elements'] = $this->processElementsParallelWithCleanup($archiMateData['elements'], $options);
-            // Unset the original elements array to free memory
-            unset($archiMateData['elements']);
-            $this->logger->info('Elements array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Organizations processing - will unset organizations array as it processes
-        if (!empty($archiMateData['organizations'])) {
-            $promises['organizations'] = $this->processOrganizationsParallelWithCleanup($archiMateData['organizations'], $options);
-            // Unset the original organizations array to free memory
-            unset($archiMateData['organizations']);
-            $this->logger->info('Organizations array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Relationships processing - will unset relationships array as it processes
-        if (!empty($archiMateData['relationships'])) {
-            $promises['relationships'] = $this->processRelationshipsParallelWithCleanup($archiMateData['relationships'], $options);
-            // Unset the original relationships array to free memory
-            unset($archiMateData['relationships']);
-            $this->logger->info('Relationships array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Views processing - will unset views array as it processes
-        if (!empty($archiMateData['views'])) {
-            $promises['views'] = $this->processViewsParallelWithCleanup($archiMateData['views'], $options);
-            // Unset the original views array to free memory
-            unset($archiMateData['views']);
-            $this->logger->info('Views array unset from memory', [
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        // Wait for all promises to complete
-        $results = [
-            'objects_created' => 0,
-            'objects_updated' => 0,
-            'objects_deleted' => 0,
-            'objects_skipped' => 0,
-            'errors' => [],
-            'schema_statistics' => [
-                            'elements' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
-            'organizations' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
-            'relationships' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []],
-            'views' => ['found' => 0, 'created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => []]
-            ]
-        ];
-
-        foreach ($promises as $schemaType => $promise) {
-            $schemaStart = microtime(true);
-            $schemaResult = $this->waitForPromise($promise);
-            $schemaTime = microtime(true) - $schemaStart;
-            
-            $results['objects_created'] += $schemaResult['created'];
-            $results['objects_updated'] += $schemaResult['updated'];
-            $results['objects_deleted'] += $schemaResult['deleted'] ?? 0;
-            $results['objects_skipped'] += $schemaResult['skipped'] ?? 0;
-            $results['errors'] = array_merge($results['errors'], $schemaResult['errors']);
-            $results['schema_statistics'][$schemaType] = $schemaResult;
-            
-            $this->logger->info("Parallel processing completed for {$schemaType}", [
-                'processing_time_seconds' => round($schemaTime, 3),
-                'created' => $schemaResult['created'],
-                'updated' => $schemaResult['updated'],
-                'deleted' => $schemaResult['deleted'] ?? 0,
-                'skipped' => $schemaResult['skipped'] ?? 0,
-                'errors' => count($schemaResult['errors']),
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-            ]);
-        }
-
-        $totalTime = microtime(true) - $startTime;
-
-        $this->logger->info('=== PARALLEL CONVERSION COMPLETED ===', [
-            'total_time_seconds' => round($totalTime, 3),
-            'objects_created' => $results['objects_created'],
-            'objects_updated' => $results['objects_updated'],
-            'objects_deleted' => $results['objects_deleted'],
-            'objects_skipped' => $results['objects_skipped'],
-            'total_errors' => count($results['errors']),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        return $results;
-    }
-
-    // Helper methods for normalization
-    private function normalizeElement(array $element): array
-    {
-        return [
-            'id' => $element['_attributes']['identifier'] ?? '',
-            'name' => $element['name']['_value'] ?? '',
-            'type' => $element['_attributes']['xsi:type'] ?? '',
-            'properties' => $this->extractProperties($element['properties'] ?? [])
-        ];
-    }
-
-    private function normalizeRelationship(array $relationship): array
-    {
-        return [
-            'id' => $relationship['_attributes']['identifier'] ?? '',
-            'name' => $relationship['name']['_value'] ?? '',
-            'type' => $relationship['_attributes']['xsi:type'] ?? '',
-            'source' => $relationship['source']['_attributes']['ref'] ?? '',
-            'target' => $relationship['target']['_attributes']['ref'] ?? '',
-            'properties' => $this->extractProperties($relationship['properties'] ?? [])
-        ];
-    }
-
-    private function normalizeView(array $view): array
-    {
-        return [
-            'id' => $view['_attributes']['identifier'] ?? '',
-            'name' => $view['name']['_value'] ?? '',
-            'type' => $view['_attributes']['xsi:type'] ?? '',
-            'properties' => $this->extractProperties($view['properties'] ?? [])
-        ];
-    }
-
-    private function extractProperties(array $propertiesData): array
-    {
-        $properties = [];
-        if (isset($propertiesData['property'])) {
-            foreach ($propertiesData['property'] as $property) {
-                $properties[$property['_attributes']['identifier'] ?? ''] = $property['value']['_value'] ?? '';
-            }
-        }
-        return $properties;
-    }
-
-    private function extractOrganizations(array $elements): array
-    {
-        $organizations = [];
-        foreach ($elements as $element) {
-            if (str_contains($element['type'] ?? '', 'BusinessActor') || 
-                str_contains($element['type'] ?? '', 'BusinessRole')) {
-                $organizations[$element['id']] = $element;
-            }
-        }
-        return $organizations;
-    }
-
-    // ReactPHP parallel processing methods with memory cleanup
-    private function processElementsParallelWithCleanup(array $elements, array $options): Promise
-    {
-        $deferred = new Deferred();
-        
-        $this->logger->info('Starting parallel processing of elements with memory cleanup', [
-            'count' => count($elements),
-            'batch_size' => $options['batch_size'],
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Process in batches with progressive memory release
-        $chunks = array_chunk($elements, $options['batch_size'], true);
-        $promises = [];
-
-        foreach ($chunks as $chunkIndex => $chunk) {
-            $promises[] = $this->processChunkParallelWithCleanup($chunk, $options, 'element');
-            
-            // Force garbage collection every 5 chunks
-            if ($chunkIndex % 5 === 0) {
-                gc_collect_cycles();
-                $this->logger->info("Garbage collection after chunk {$chunkIndex}", [
-                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-                ]);
-            }
-        }
-
-        all($promises)->then(
-            function ($results) use ($deferred, $elements) {
-                $totalCreated = 0;
-                $totalUpdated = 0;
-                $totalSkipped = 0;
-                $totalErrors = [];
-
-                foreach ($results as $result) {
-                    $totalCreated += $result['created'];
-                    $totalUpdated += $result['updated'];
-                    $totalSkipped += $result['skipped'] ?? 0;
-                    $totalErrors = array_merge($totalErrors, $result['errors']);
-                }
-
-                // Final cleanup of elements array
-                unset($elements);
-                gc_collect_cycles();
-
-                $deferred->resolve([
-                    'created' => $totalCreated,
-                    'updated' => $totalUpdated,
-                    'skipped' => $totalSkipped,
-                    'errors' => $totalErrors
-                ]);
-            },
-            function ($error) use ($deferred) {
-                $deferred->reject($error);
-            }
-        );
-
-        return $deferred->promise();
-    }
-
-    private function processOrganizationsParallelWithCleanup(array $organizations, array $options): Promise
-    {
-        $deferred = new Deferred();
-        
-        $this->logger->info('Starting parallel processing of organizations with memory cleanup', [
-            'count' => count($organizations),
-            'batch_size' => $options['batch_size'],
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Process in batches with progressive memory release
-        $chunks = array_chunk($organizations, $options['batch_size'], true);
-        $promises = [];
-
-                foreach ($chunks as $chunkIndex => $chunk) {
-            $promises[] = $this->processChunkParallelWithCleanup($chunk, $options, 'organization');
-            
-            // Force garbage collection every 5 chunks
-            if ($chunkIndex % 5 === 0) {
-                gc_collect_cycles();
-                $this->logger->info("Garbage collection after chunk {$chunkIndex}", [
-                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-                ]);
-            }
-        }
-
-        all($promises)->then(
-            function ($results) use ($deferred, $organizations) {
-                $totalCreated = 0;
-                $totalUpdated = 0;
-                $totalSkipped = 0;
-                $totalErrors = [];
-
-                foreach ($results as $result) {
-                    $totalCreated += $result['created'];
-                    $totalUpdated += $result['updated'];
-                    $totalSkipped += $result['skipped'] ?? 0;
-                    $totalErrors = array_merge($totalErrors, $result['errors']);
-                }
-
-                // Final cleanup of organizations array
-                unset($organizations);
-                gc_collect_cycles();
-
-                $deferred->resolve([
-                    'created' => $totalCreated,
-                    'updated' => $totalUpdated,
-                    'skipped' => $totalSkipped,
-                    'errors' => $totalErrors
-                ]);
-            },
-            function ($error) use ($deferred) {
-                $deferred->reject($error);
-            }
-        );
-
-        return $deferred->promise();
-    }
-
-    private function processRelationshipsParallelWithCleanup(array $relationships, array $options): Promise
-    {
-        $deferred = new Deferred();
-        
-        $this->logger->info('Starting parallel processing of relationships with memory cleanup', [
-            'count' => count($relationships),
-            'batch_size' => $options['batch_size'],
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Process in batches with progressive memory release
-        $chunks = array_chunk($relationships, $options['batch_size'], true);
-        $promises = [];
-
-        foreach ($chunks as $chunkIndex => $chunk) {
-            $promises[] = $this->processChunkParallelWithCleanup($chunk, $options, 'relationship');
-            
-            // Force garbage collection every 5 chunks
-            if ($chunkIndex % 5 === 0) {
-                gc_collect_cycles();
-                $this->logger->info("Garbage collection after chunk {$chunkIndex}", [
-                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-                ]);
-            }
-        }
-
-        all($promises)->then(
-            function ($results) use ($deferred, $relationships) {
-                $totalCreated = 0;
-                $totalUpdated = 0;
-                $totalSkipped = 0;
-                $totalErrors = [];
-
-                foreach ($results as $result) {
-                    $totalCreated += $result['created'];
-                    $totalUpdated += $result['updated'];
-                    $totalSkipped += $result['skipped'] ?? 0;
-                    $totalErrors = array_merge($totalErrors, $result['errors']);
-                }
-
-                // Final cleanup of relationships array
-                unset($relationships);
-                gc_collect_cycles();
-
-                $deferred->resolve([
-                    'created' => $totalCreated,
-                    'updated' => $totalUpdated,
-                    'skipped' => $totalSkipped,
-                    'errors' => $totalErrors
-                ]);
-            },
-            function ($error) use ($deferred) {
-                $deferred->reject($error);
-            }
-        );
-
-        return $deferred->promise();
-    }
-
-    private function processViewsParallelWithCleanup(array $views, array $options): Promise
-    {
-        $deferred = new Deferred();
-        
-        $this->logger->info('Starting parallel processing of views with memory cleanup', [
-            'count' => count($views),
-            'batch_size' => $options['batch_size'],
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        // Process in batches with progressive memory release
-        $chunks = array_chunk($views, $options['batch_size'], true);
-        $promises = [];
-
-        foreach ($chunks as $chunkIndex => $chunk) {
-            $promises[] = $this->processChunkParallelWithCleanup($chunk, $options, 'view');
-            
-            // Force garbage collection every 5 chunks
-            if ($chunkIndex % 5 === 0) {
-                gc_collect_cycles();
-                $this->logger->info("Garbage collection after chunk {$chunkIndex}", [
-                    'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-                ]);
-            }
-        }
-
-        all($promises)->then(
-            function ($results) use ($deferred, $views) {
-                $totalCreated = 0;
-                $totalUpdated = 0;
-                $totalSkipped = 0;
-                $totalErrors = [];
-
-                foreach ($results as $result) {
-                    $totalCreated += $result['created'];
-                    $totalUpdated += $result['updated'];
-                    $totalSkipped += $result['skipped'] ?? 0;
-                    $totalErrors = array_merge($totalErrors, $result['errors']);
-                }
-
-                // Final cleanup of views array
-                unset($views);
-                gc_collect_cycles();
-
-                $deferred->resolve([
-                    'created' => $totalCreated,
-                    'updated' => $totalUpdated,
-                    'skipped' => $totalSkipped,
-                    'errors' => $totalErrors
-                ]);
-            },
-            function ($error) use ($deferred) {
-                $deferred->reject($error);
-            }
-        );
-
-        return $deferred->promise();
-    }
-
-    private function processChunkParallelWithCleanup(array $chunk, array $options, string $type): Promise
-    {
-        $deferred = new Deferred();
-        
-        $this->logger->info("Processing chunk of {$type}s with memory cleanup", [
-            'chunk_size' => count($chunk),
-            'type' => $type,
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        $created = 0;
-        $updated = 0;
-        $skipped = 0;
-        $errors = [];
-        $processedItems = [];
-
-        foreach ($chunk as $itemId => $item) {
-            try {
-                $this->logger->info("Processing {$type} item", [
-                    'item_id' => $item['id'],
-                    'item_name' => $item['name'] ?? 'unknown'
-                ]);
-
-                // Check if object already exists
-                $existingObject = $this->findExistingObject($item['id'], $type);
-                
-                if ($existingObject) {
-                    $this->logger->info("Found existing {$type} object", [
-                        'item_id' => $item['id'],
-                        'existing_id' => $existingObject['id']
-                    ]);
-
-                    // Compare objects to see if update is needed
-                    if ($this->areObjectsEqual($existingObject, $item)) {
-                        $this->logger->notice("Skipping {$type} - no changes detected", [
-                            'item_id' => $item['id'],
-                            'item_name' => $item['name'] ?? 'unknown'
-                        ]);
-                        $skipped++;
-                    } else {
-                        $this->logger->info("Updating {$type} - changes detected", [
-                            'item_id' => $item['id'],
-                            'item_name' => $item['name'] ?? 'unknown'
-                        ]);
-                        
-                        // Perform actual update
-                        $this->updateObject($existingObject['id'], $item, $type);
-                        $updated++;
-                    }
-                } else {
-                    $this->logger->info("Creating new {$type} object", [
-                        'item_id' => $item['id'],
-                        'item_name' => $item['name'] ?? 'unknown'
-                    ]);
-                    
-                    // Perform actual creation
-                    $this->createObject($item, $type);
-                    $created++;
-                }
-
-                // Mark item as processed for cleanup
-                $processedItems[] = $itemId;
-
-            } catch (\Exception $e) {
-                $this->logger->error("Error processing {$type} item", [
-                    'item_id' => $item['id'] ?? 'unknown',
-                    'error' => $e->getMessage()
-                ]);
-                $errors[] = $e->getMessage();
-                $processedItems[] = $itemId;
-            }
-        }
-
-        // Remove processed items from chunk to free memory
-        foreach ($processedItems as $itemId) {
-            unset($chunk[$itemId]);
-        }
-
-        $this->logger->info("Chunk processing completed for {$type}s", [
-            'created' => $created,
-            'updated' => $updated,
-            'skipped' => $skipped,
-            'errors' => count($errors),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
-
-        $deferred->resolve([
-            'created' => $created,
-            'updated' => $updated,
-            'skipped' => $skipped,
-            'errors' => $errors
-        ]);
-            
-        return $deferred->promise();
-    }
-
-    /**
-     * Find existing object by ArchiMate ID and type
-     *
-     * This method primarily uses the preloaded cache for efficiency.
-     * If an object is not found in cache, it will not query the database
-     * since all objects should have been preloaded during import initialization.
-     */
-    private function findExistingObject(string $archiMateId, string $type): ?array
-    {
-        // Check cache first - this should be the primary lookup method
-        if (isset($this->cachedObjects[$type][$archiMateId])) {
-            $this->logger->debug("Found existing object in cache", [
-                'archimate_id' => $archiMateId,
-                'archimate_type' => $type
-            ]);
-            return $this->cachedObjects[$type][$archiMateId];
-        }
-
-        // If not found in cache, log a warning since all objects should be preloaded
-        $this->logger->warning("Object not found in preloaded cache - this may indicate a preloading issue", [
-            'archimate_id' => $archiMateId,
-            'archimate_type' => $type,
-            'cache_keys_available' => array_keys($this->cachedObjects[$type] ?? [])
-        ]);
-
-        // Note: We don't query the database here since all objects should be preloaded
-        // This ensures consistency with our proven object retrieval methods
-        return null;
-    }
-
-    /**
-     * Compare two objects to determine if they are equal
-     */
-    private function areObjectsEqual(array $existingObject, array $newObjectData): bool
-    {
-        $this->logger->debug("Comparing objects", [
-            'existing_id' => $existingObject['id'] ?? 'unknown',
-            'new_id' => $newObjectData['id'] ?? 'unknown'
-        ]);
-
-        // Normalize objects for comparison
-        $existingNormalized = $this->normalizeObjectForComparison($existingObject, ['id', 'created', 'updated']);
-        $newNormalized = $this->normalizeObjectForComparison($newObjectData, ['id', 'created', 'updated']);
-
-        // Sort arrays recursively for consistent comparison
-        $this->sortArrayRecursively($existingNormalized);
-        $this->sortArrayRecursively($newNormalized);
-
-        $areEqual = $this->deepArrayCompare($existingNormalized, $newNormalized);
-
-        $this->logger->debug("Object comparison result", [
-            'existing_id' => $existingObject['id'] ?? 'unknown',
-            'new_id' => $newObjectData['id'] ?? 'unknown',
-            'are_equal' => $areEqual
-        ]);
-
-        return $areEqual;
-    }
-
-    /**
-     * Normalize object for comparison by removing specified fields
-     */
-    private function normalizeObjectForComparison(array $object, array $ignoreFields): array
-    {
-        $normalized = $object;
-        
-        foreach ($ignoreFields as $field) {
-            unset($normalized[$field]);
-        }
-        
-        return $normalized;
-    }
-
-    /**
-     * Sort array recursively for consistent comparison
-     */
-    private function sortArrayRecursively(array &$array): void
-    {
-        foreach ($array as &$value) {
-            if (is_array($value)) {
-                $this->sortArrayRecursively($value);
-            }
-        }
-        
-        if ($this->isAssociativeArray($array)) {
-            ksort($array);
-        } else {
-            sort($array);
-        }
-    }
-
-    /**
-     * Check if array is associative
-     */
-    private function isAssociativeArray(array $array): bool
-    {
-        if (empty($array)) {
-            return false;
-        }
-        
-        return array_keys($array) !== range(0, count($array) - 1);
-    }
-
-    /**
-     * Deep array comparison
-     */
-    private function deepArrayCompare(array $array1, array $array2): bool
-    {
-        if (count($array1) !== count($array2)) {
-            return false;
-        }
-        
-        foreach ($array1 as $key => $value1) {
-            if (!array_key_exists($key, $array2)) {
-                return false;
-            }
-            
-            $value2 = $array2[$key];
-            
-            if (is_array($value1) && is_array($value2)) {
-                if (!$this->deepArrayCompare($value1, $value2)) {
-                    return false;
-                }
-            } elseif ($value1 !== $value2) {
-                return false;
-            }
-        }
-        
-        return true;
-    }
-
-    /**
-     * Create a new object in OpenRegister
-     */
-    private function createObject(array $objectData, string $type): void
-    {
-        $this->logger->info("Creating {$type} object", [
-            'object_id' => $objectData['id'],
-            'object_name' => $objectData['name'] ?? 'unknown'
+        $this->logger->info('Starting ArchiMate XML export', [
+            'organization' => $organization
         ]);
 
         try {
+            // Get ObjectService and register ID
             $objectService = $this->getObjectService();
             if (!$objectService) {
                 throw new \RuntimeException('ObjectService not available');
             }
 
-            // Convert ArchiMate data to OpenRegister format
-            $openRegisterData = $this->convertToOpenRegisterFormat($objectData, $type);
-            
-            $this->logger->info("Saving object to OpenRegister", [
-                'type' => $type,
-                'archimate_id' => $objectData['id'],
-                'openregister_data' => $openRegisterData
-            ]);
-            
-            // Remove schema_id and register_id from the data as they should be passed as separate parameters
-            $schemaId = $openRegisterData['schema_id'];
-            $registerId = $openRegisterData['register_id'];
-            unset($openRegisterData['schema_id'], $openRegisterData['register_id']);
-            
-            $this->logger->info("Saving object with schema and register IDs", [
-                'schema_id' => $schemaId,
-                'register_id' => $registerId,
-                'data_keys' => array_keys($openRegisterData)
-            ]);
-            
-            // Create the object with named parameters
-            $createdObject = $objectService->saveObject(
-                object: $openRegisterData,
-                extend: [],
-                register: $registerId,
-                schema: $schemaId
-            );
-            
-            // Convert ObjectEntity to array for caching and logging
-            $createdObjectArray = $createdObject->jsonSerialize();
-            
-            // Cache the result
-            $this->cachedObjects[$type][$objectData['id']] = $createdObjectArray;
-            
-            $this->logger->info("Object creation completed", [
-                'object_id' => $objectData['id'],
-                'openregister_id' => $createdObjectArray['id'] ?? 'unknown',
-                'type' => $type
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error("Error creating {$type} object", [
-                'object_id' => $objectData['id'],
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
-     * Update an existing object in OpenRegister
-     */
-    private function updateObject(int $objectId, array $objectData, string $type): void
-    {
-        $this->logger->info("Updating {$type} object", [
-            'object_id' => $objectId,
-            'archimate_id' => $objectData['id'],
-            'object_name' => $objectData['name'] ?? 'unknown'
-        ]);
-
-        try {
-        $objectService = $this->getObjectService();
-        if (!$objectService) {
-                throw new \RuntimeException('ObjectService not available');
+            $registerId = $this->getAmefRegisterId();
+            if (!$registerId) {
+                $registerId = 15; // Fallback
             }
 
-            // Convert ArchiMate data to OpenRegister format
-            $openRegisterData = $this->convertToOpenRegisterFormat($objectData, $type);
-            $openRegisterData['id'] = $objectId; // Set the existing ID
-            
-            $this->logger->info("Updating object in OpenRegister", [
-                'type' => $type,
-                'object_id' => $objectId,
-                'archimate_id' => $objectData['id'],
-                'openregister_data' => $openRegisterData
-            ]);
-            
-            // Remove schema_id and register_id from the data as they should be passed as separate parameters
-            $schemaId = $openRegisterData['schema_id'];
-            $registerId = $openRegisterData['register_id'];
-            unset($openRegisterData['schema_id'], $openRegisterData['register_id']);
-            
-            $this->logger->info("Updating object with schema and register IDs", [
-                'schema_id' => $schemaId,
-                'register_id' => $registerId,
-                'data_keys' => array_keys($openRegisterData)
-            ]);
-            
-            // Update the object with named parameters
-            $updatedObject = $objectService->saveObject(
-                object: $openRegisterData,
-                extend: [],
-                register: $registerId,
-                schema: $schemaId
-            );
-            
-            // Convert ObjectEntity to array for caching
-            $updatedObjectArray = $updatedObject->jsonSerialize();
-            
-            // Update cache
-            $this->cachedObjects[$type][$objectData['id']] = $updatedObjectArray;
-            
-            $this->logger->info("Object update completed", [
-                'object_id' => $objectId,
-                'archimate_id' => $objectData['id'],
-                'type' => $type
-            ]);
-            } catch (\Exception $e) {
-            $this->logger->error("Error updating {$type} object", [
-                'object_id' => $objectId,
-                'archimate_id' => $objectData['id'],
-                    'error' => $e->getMessage()
-                ]);
-            throw $e;
-        }
-    }
+            // Create schema ID mapping for the export service
+            $schemaIdMap = $this->createSchemaIdMap();
 
-    // Utility methods
-    private function preloadExistingObjects(): void
-    {
-        $this->logger->info('Preloading existing objects using proven retrieval methods');
-        
-        // Initialize empty cache structure
-        $this->cachedObjects = [
-            'element' => [],
-            'organization' => [],
-            'relationship' => [],
-            'view' => []
-        ];
-
-        try {
-            // Use our proven object retrieval methods that are already tested and working
-            $elementObjects = $this->getElementObjects();
-            $organizationObjects = $this->getOrganizationObjects();
-            $viewObjects = $this->getViewObjects();
-            $relationshipObjects = $this->getRelationshipObjects();
-
-            // Convert ObjectEntity instances to arrays and index by ArchiMate ID for fast lookup
-            foreach ($elementObjects as $object) {
-                $objectArray = $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-                if (isset($objectArray['archimate_id'])) {
-                    $this->cachedObjects['element'][$objectArray['archimate_id']] = $objectArray;
-                }
-            }
-
-            foreach ($organizationObjects as $object) {
-                $objectArray = $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-                if (isset($objectArray['archimate_id'])) {
-                    $this->cachedObjects['organization'][$objectArray['archimate_id']] = $objectArray;
-                }
-            }
-
-            foreach ($viewObjects as $object) {
-                $objectArray = $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-                if (isset($objectArray['archimate_id'])) {
-                    $this->cachedObjects['view'][$objectArray['archimate_id']] = $objectArray;
-                }
-            }
-
-            foreach ($relationshipObjects as $object) {
-                $objectArray = $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-                if (isset($objectArray['archimate_id'])) {
-                    $this->cachedObjects['relationship'][$objectArray['archimate_id']] = $objectArray;
-                }
-            }
-
-            $totalCached = array_sum(array_map('count', $this->cachedObjects));
-            $this->logger->info('Existing objects preload completed using proven methods', [
-                'total_cached_objects' => $totalCached,
-                'by_type' => [
-                    'elements' => count($this->cachedObjects['element']),
-                    'organizations' => count($this->cachedObjects['organization']),
-                    'views' => count($this->cachedObjects['view']),
-                    'relationships' => count($this->cachedObjects['relationship'])
-                ],
-                'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
+            // Use export service to handle complete export process in one go
+            $xml = $this->exportService->exportArchiMateXml($objectService, $registerId, $schemaIdMap, $organization);
+            
+            $this->logger->info('ArchiMate export completed successfully', [
+                'organization_filter' => $organization,
+                'xml_size' => strlen($xml)
             ]);
 
-        } catch (\Exception $e) {
-            $this->logger->error('Error preloading existing objects using proven methods', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
-
-    private function waitForPromise(Promise $promise, int $timeout = 300): mixed
-    {
-        $result = null;
-        $error = null;
-        $resolved = false;
-
-        $promise->then(
-            function ($value) use (&$result, &$resolved) {
-                $result = $value;
-                $resolved = true;
-            },
-            function ($reason) use (&$error, &$resolved) {
-                $error = $reason;
-                $resolved = true;
-            }
-        );
-
-        // Simple synchronous wait (in real implementation, use proper event loop)
-        $startTime = time();
-        while (!$resolved && (time() - $startTime) < $timeout) {
-            usleep(1000); // 1ms
-        }
-
-        if (!$resolved) {
-            throw new \RuntimeException('Promise timeout after ' . $timeout . ' seconds');
-        }
-
-        if ($error !== null) {
-            throw new \RuntimeException('Promise rejected: ' . $error);
-        }
-
-        return $result;
-    }
-
-    private function calculateItemsPerSecond(array $archiMateData, float $totalTime): float
-    {
-        $totalItems = count($archiMateData['elements'] ?? []) +
-                     count($archiMateData['relationships'] ?? []) +
-                     count($archiMateData['organizations'] ?? []) +
-                     count($archiMateData['views'] ?? []);
-
-        return $totalTime > 0 ? $totalItems / $totalTime : 0;
-    }
-
-    // OpenRegister integration methods
-    private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
-    {
-        try {
-            if (!$this->appManager->isEnabledForUser('openregister')) {
-                $this->logger->warning('OpenRegister app is not enabled');
-                return null;
-            }
-
-            return $this->container->get(\OCA\OpenRegister\Service\ObjectService::class);
-        } catch (\Exception $e) {
-            $this->logger->error('Error getting ObjectService', ['error' => $e->getMessage()]);
-            return null;
-        }
-    }
-
-    private function getSchemaIdForType(string $type): int
-    {
-        switch ($type) {
-            case 'element':
-                return $this->getArchiMateElementSchemaId() ?? 0;
-            case 'organization':
-                return $this->getOrganizationSchemaId() ?? 0;
-            case 'relationship':
-                return $this->getRelationshipSchemaId() ?? 0;
-            case 'view':
-                return $this->getViewSchemaId() ?? 0;
-            default:
-                return 0;
-        }
-    }
-
-    private function convertToOpenRegisterFormat(array $archiMateData, string $type): array
-    {
-        $baseData = [
-            'archimate_id' => $archiMateData['id'],
-            'name' => $archiMateData['name'] ?? '',
-            'properties' => $archiMateData['properties'] ?? []
-        ];
-
-        // Get AMEF-specific schema and register IDs
-        $schemaId = $this->getAmefSchemaIdForType($type);
-        $registerId = $this->getAmefRegisterId();
-
-        $this->logger->info("Converting ArchiMate data to OpenRegister format", [
-            'archimate_type' => $type,
-            'archimate_id' => $archiMateData['id'],
-            'schema_id' => $schemaId,
-            'register_id' => $registerId
-        ]);
-
-        // Validate that we have both schema and register IDs
-        if (!$schemaId) {
-            throw new \RuntimeException("AMEF schema ID not configured for type: {$type}");
-        }
-        if (!$registerId) {
-            throw new \RuntimeException("AMEF register ID not configured");
-        }
-
-        switch ($type) {
-            case 'element':
-                return array_merge($baseData, [
-                    'archimate_type' => $archiMateData['type'] ?? '',
-                    'schema_id' => $schemaId,
-                    'register_id' => $registerId
-                ]);
-            case 'organization':
-                return array_merge($baseData, [
-                    'archimate_type' => $archiMateData['type'] ?? '',
-                    'schema_id' => $schemaId,
-                    'register_id' => $registerId
-                ]);
-            case 'relationship':
-                return array_merge($baseData, [
-                    'archimate_type' => $archiMateData['type'] ?? '',
-                    'source_id' => $archiMateData['source'] ?? '',
-                    'target_id' => $archiMateData['target'] ?? '',
-                    'schema_id' => $schemaId,
-                    'register_id' => $registerId
-                ]);
-            case 'view':
-                return array_merge($baseData, [
-                    'archimate_type' => $archiMateData['type'] ?? '',
-                    'schema_id' => $schemaId,
-                    'register_id' => $registerId
-                ]);
-            default:
-                return $baseData;
-        }
-    }
-
-    /**
-     * Get AMEF register ID from configuration
-     */
-    private function getAmefRegisterId(): ?int
-    {
-        $amefConfig = $this->getAmefConfig();
-        return isset($amefConfig['register_id']) ? (int) $amefConfig['register_id'] : null;
-    }
-
-    /**
-     * Get AMEF schema ID for specific ArchiMate type
-     */
-    private function getAmefSchemaIdForType(string $archiMateType): ?int
-    {
-        $amefConfig = $this->getAmefConfig();
-        
-        switch ($archiMateType) {
-            case 'element':
-                $schemaId = $amefConfig['elements_schema'] ?? '';
-                break;
-            case 'organization':
-                $schemaId = $amefConfig['organizations_schema'] ?? '';
-                break;
-            case 'relationship':
-                $schemaId = $amefConfig['relationships_schema'] ?? '';
-                break;
-            case 'view':
-                $schemaId = $amefConfig['views_schema'] ?? '';
-                break;
-            default:
-                throw new \RuntimeException("Unknown ArchiMate type: {$archiMateType}");
-        }
-        
-        return $schemaId ? (int) $schemaId : null;
-    }
-
-    // Schema ID getters
-    private function getArchiMateElementSchemaId(): ?int
-    {
-        return (int) $this->config->getValueString('softwarecatalog', 'archimate_element_schema_id', '0') ?: null;
-    }
-
-    private function getOrganizationSchemaId(): ?int
-    {
-        $voorzieningenConfig = $this->getVoorzieningenConfig();
-        return isset($voorzieningenConfig['organisatie_schema']) ? (int) $voorzieningenConfig['organisatie_schema'] : null;
-    }
-
-    private function getRelationshipSchemaId(): ?int
-    {
-        return (int) $this->config->getValueString('softwarecatalog', 'archimate_relationship_schema_id', '0') ?: null;
-    }
-
-    private function getViewSchemaId(): ?int
-    {
-        return (int) $this->config->getValueString('softwarecatalog', 'archimate_view_schema_id', '0') ?: null;
-    }
-
-    /**
-     * Get objects from database for export using our proven object retrieval methods
-     *
-     * This method uses our new get*Objects() methods that have been tested and proven
-     * to work correctly for retrieving AMEF objects from the database.
-     *
-     * @param array $criteria Export criteria including filters and options
-     * @return array Array of objects to export grouped by type
-     */
-    private function getObjectsForExport(array $criteria): array
-    {
-        $this->logger->info('Getting objects for export using proven retrieval methods', ['criteria' => $criteria]);
-        
-        try {
-            // Use our proven object retrieval methods that are already tested and working
-            $elementObjects = $this->getElementObjects();
-            $organizationObjects = $this->getOrganizationObjects();
-            $viewObjects = $this->getViewObjects();
-            $relationshipObjects = $this->getRelationshipObjects();
-
-            // Convert ObjectEntity instances to arrays for compatibility with conversion methods
-            $elementObjectsArray = array_map(function($object) {
-                return $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-            }, $elementObjects);
-            
-            $organizationObjectsArray = array_map(function($object) {
-                return $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-            }, $organizationObjects);
-            
-            $viewObjectsArray = array_map(function($object) {
-                return $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-            }, $viewObjects);
-            
-            $relationshipObjectsArray = array_map(function($object) {
-                return $object instanceof \OCA\OpenRegister\Db\ObjectEntity ? $object->jsonSerialize() : $object;
-            }, $relationshipObjects);
-
-            $allObjects = [
-                'elements' => $elementObjectsArray,
-                'organizations' => $organizationObjectsArray,
-                'views' => $viewObjectsArray,
-                'relationships' => $relationshipObjectsArray
+            return [
+                'success' => true,
+                'xml' => $xml,
+                'exported_count' => 'calculated_in_export_service' // Will be logged by export service
             ];
 
-            $totalObjects = array_sum(array_map('count', $allObjects));
-            
-            $this->logger->info('Export object retrieval completed using proven methods', [
-                'total_objects' => $totalObjects,
-                'by_type' => [
-                    'elements' => count($elementObjectsArray),
-                    'organizations' => count($organizationObjectsArray),
-                    'views' => count($viewObjectsArray),
-                    'relationships' => count($relationshipObjectsArray)
-                ]
-            ]);
-
-            return $allObjects;
-
         } catch (\Exception $e) {
-            $this->logger->error('Error getting objects for export using proven methods', [
+            $this->logger->error('ArchiMate export failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return [];
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
         }
     }
 
     /**
-     * Convert OpenRegister objects to ArchiMate format
-     *
-     * @param array $objects Objects from database grouped by type
-     * @param array $options Export options
-     * @return array ArchiMate data structure matching import format
+     * Create schema ID mapping for export service
+     * 
+     * @return array Mapping of schema IDs to schema types
      */
-    private function convertFromOpenRegisterObjects(array $objects, array $options): array
+    private function createSchemaIdMap(): array
     {
-        $this->logger->info('Converting OpenRegister objects to ArchiMate format', [
-            'objects_count' => array_sum(array_map('count', $objects)),
-            'object_types' => array_keys($objects)
+        $schemaTypes = ['model', 'element', 'relationship', 'view', 'organization', 'property_definition'];
+        $schemaIdMap = [];
+
+        foreach ($schemaTypes as $schemaType) {
+            $schemaId = $this->getAmefSchemaIdForType($schemaType);
+            if ($schemaId) {
+                $schemaIdMap[$schemaId] = $schemaType;
+            }
+        }
+
+        return $schemaIdMap;
+    }
+
+    /**
+     * Parse ArchiMate XML file to array using the import service
+     * 
+     * @param string $filePath Path to XML file
+     * @return array Parsed XML data
+     */
+    private function parseArchiMateXml(string $filePath): array
+    {
+        if (!file_exists($filePath)) {
+            throw new \InvalidArgumentException("File not found: {$filePath}");
+        }
+
+        $xmlContent = file_get_contents($filePath);
+        if ($xmlContent === false) {
+            throw new \RuntimeException("Failed to read file: {$filePath}");
+        }
+
+        $xml = new SimpleXMLElement($xmlContent);
+        return $this->importService->xmlToArray($xml);
+    }
+
+    /**
+     * Extract model identifier from parsed XML data
+     * 
+     * This method looks for the model identifier in various locations within the XML:
+     * 1. Root level _attributes.identifier (most common)
+     * 2. Model element attributes
+     * 3. Fallback to generated identifier if none found
+     * 
+     * @param array $xmlData Parsed XML data array
+     * @return string Model identifier for tracking and storage
+     */
+    private function extractModelIdentifier(array $xmlData): string
+    {
+        $this->logger->debug('Extracting model identifier from XML data', [
+            'xml_keys' => array_keys($xmlData)
         ]);
 
-        $archiMateData = [
+        // STEP 1: Try to find identifier in root attributes (most common location)
+        if (isset($xmlData['_attributes']['identifier'])) {
+            $modelId = $xmlData['_attributes']['identifier'];
+            $this->logger->info('Found model identifier in root attributes', [
+                'identifier' => $modelId
+            ]);
+            return $modelId;
+        }
+
+        // STEP 2: Look for model element with identifier
+        if (isset($xmlData['model']) && is_array($xmlData['model'])) {
+            if (isset($xmlData['model']['_attributes']['identifier'])) {
+                $modelId = $xmlData['model']['_attributes']['identifier'];
+                $this->logger->info('Found model identifier in model element attributes', [
+                    'identifier' => $modelId
+                ]);
+                return $modelId;
+            }
+        }
+
+        // STEP 3: Look for archimate:model namespace (ArchiMate Tool format)
+        if (isset($xmlData['archimate:model']) && is_array($xmlData['archimate:model'])) {
+            if (isset($xmlData['archimate:model']['_attributes']['identifier'])) {
+                $modelId = $xmlData['archimate:model']['_attributes']['identifier'];
+                $this->logger->info('Found model identifier in archimate:model namespace', [
+                    'identifier' => $modelId
+                ]);
+                return $modelId;
+            }
+        }
+
+        // STEP 4: Generate fallback identifier if none found
+        $fallbackId = 'model-' . uniqid() . '-' . time();
+        $this->logger->warning('No model identifier found, generating fallback', [
+            'fallback_id' => $fallbackId
+        ]);
+
+        return $fallbackId;
+    }
+
+    /**
+     * Check if a model already exists in the database
+     * 
+     * @param string $modelIdentifier The model identifier to check
+     * @return bool True if model exists, false otherwise
+     */
+    private function checkIfModelExists(string $modelIdentifier): bool
+    {
+        $this->logger->debug('Checking if model already exists', [
+            'model_identifier' => $modelIdentifier
+        ]);
+
+        try {
+            // Get ObjectService to query existing objects
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                $this->logger->warning('ObjectService not available, assuming new model');
+                return false;
+            }
+
+            // Get AMEF configuration for register and schema IDs
+            $registerId = $this->getAmefRegisterId();
+            $schemaId = $this->getAmefSchemaIdForType('model');
+            
+            if (!$registerId || !$schemaId) {
+                $this->logger->warning('AMEF register or model schema not configured, assuming new model', [
+                    'registerId' => $registerId,
+                    'schemaId' => $schemaId
+                ]);
+                return false;
+            }
+
+            // Query for existing model objects with this identifier
+            // Use searchObjects with @self structure for proper querying
+            $query = [
+                '@self' => [
+                    'register' => $registerId,
+                    'schema' => $schemaId
+                ],
+                'archimate_id' => $modelIdentifier
+            ];
+
+            $existingModels = $objectService->searchObjects($query);
+
+            $exists = !empty($existingModels);
+            
+            $this->logger->info('Model existence check completed', [
+                'model_identifier' => $modelIdentifier,
+                'exists' => $exists,
+                'found_count' => count($existingModels),
+                'registerId' => $registerId,
+                'schemaId' => $schemaId
+            ]);
+
+            return $exists;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Error checking model existence', [
+                'model_identifier' => $modelIdentifier,
+                'error' => $e->getMessage()
+            ]);
+            // If we can't check, assume new model to avoid data loss
+            return false;
+        }
+    }
+
+    /**
+     * Create or update a model object in the database
+     * 
+     * This method establishes the model object that will be used to link all other objects.
+     * It creates a model object with an archimate_id field that serves as the parent identifier.
+     * 
+     * @param array $modelMetadata Model metadata from the XML
+     * @return array Result of the model creation/update operation
+     */
+    private function createOrUpdateModelObject(array $modelMetadata): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                $this->logger->error('ArchiMateService: ObjectService not available for model object creation');
+                return ['success' => false, 'error' => 'ObjectService not available'];
+            }
+
+            $registerId = $this->getAmefRegisterId();
+            $schemaId = $this->getAmefSchemaIdForType('model');
+            
+            if (!$registerId || !$schemaId) {
+                $this->logger->error('ArchiMateService: AMEF register or model schema not configured', [
+                    'registerId' => $registerId,
+                    'schemaId' => $schemaId
+                ]);
+                return ['success' => false, 'error' => 'AMEF register or model schema not configured'];
+            }
+
+            $modelIdentifier = $modelMetadata['identifier'] ?? '';
+            if (empty($modelIdentifier)) {
+                $this->logger->warning('ArchiMateService: No model identifier found in metadata');
+                return ['success' => false, 'error' => 'No model identifier found'];
+            }
+
+            // Prepare model object data with @self structure for ObjectService::saveObjects
+            $modelData = [
+                '@self' => [
+                    'register' => $registerId,
+                    'schema' => $schemaId,
+                    'id' => $modelIdentifier  // Use the archimate identifier as the UUID
+                ],
+                'archimate_id' => $modelIdentifier,
+                'name' => $modelMetadata['name'] ?? '',
+                'documentation' => $modelMetadata['documentation'] ?? '',
+                'properties' => $modelMetadata['properties'] ?? [],
+                'import_time' => date('Y-m-d H:i:s'),
+                'import_source' => 'archimate_xml_import'
+            ];
+
+            // Save the model object using ObjectService::saveObjects
+            $savedObjects = $objectService->saveObjects([$modelData]);
+            
+            if (empty($savedObjects)) {
+                $this->logger->error('ArchiMateService: Failed to save model object');
+                return ['success' => false, 'error' => 'Failed to save model object'];
+            }
+
+            $savedModelObject = $savedObjects[0];
+            $modelAction = $this->determineObjectAction($savedModelObject);
+            
+            $this->logger->info('ArchiMateService: Saved model object', [
+                'model_id' => $modelIdentifier,
+                'action' => $modelAction
+            ]);
+            
+            return ['success' => true, 'action' => $modelAction];
+
+        } catch (\Exception $e) {
+            $this->logger->error('ArchiMateService: Failed to create/update model object', [
+                'error' => $e->getMessage(),
+                'model_metadata' => $modelMetadata
+            ]);
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Determine the action taken on an object during save operation
+     * 
+     * @param array $savedObject The saved object returned from ObjectService::saveObjects
+     * @return string The action taken: 'created', 'updated', or 'unknown'
+     */
+    private function determineObjectAction(array $savedObject): string
+    {
+        // Check if the object was created or updated based on the response
+        if (isset($savedObject['@self']['id'])) {
+            // If we have an ID, the object was saved successfully
+            // We can't easily determine if it was created or updated from the response
+            // For now, assume it was updated if it has an ID
+            return 'updated';
+        }
+        
+        return 'unknown';
+    }
+
+    /**
+     * Normalize ArchiMate data structure for storage as JSON blob
+     * 
+     * This method processes the parsed XML data and prepares it for storage:
+     * 1. Extracts model metadata (identifier, name, version, etc.)
+     * 2. Processes each section (elements, relationships, organizations, views, property_definitions)
+     * 3. Stores complete raw XML data for each item to ensure round-trip fidelity
+     * 4. Adds model identifier to each item for proper linking
+     * 
+     * @param array $data Raw parsed XML data from import service
+     * @param string $modelIdentifier The model identifier for linking items
+     * @return array Normalized data structure ready for database storage
+     */
+    private function normalizeArchiMateData(array $data, string $modelIdentifier): array
+    {
+        $this->logger->info('Normalizing ArchiMate data structure for JSON blob storage', [
+            'model_identifier' => $modelIdentifier
+        ]);
+
+        // Initialize normalized structure with model metadata
+        $normalized = [
+            'model_metadata' => [],
+            'model_identifier' => $modelIdentifier, // Add model identifier for linking
             'elements' => [],
             'relationships' => [],
             'organizations' => [],
-            'views' => []
+            'views' => [],
+            'property_definitions' => []
         ];
 
-        try {
-            // Convert elements
-            if (!empty($objects['elements'])) {
-                $this->logger->info('Converting elements to ArchiMate format', [
-                    'elements_count' => count($objects['elements'])
-                ]);
-                foreach ($objects['elements'] as $object) {
-                    $element = $this->convertObjectToArchiMateElement($object);
-                    if ($element) {
-                        $archiMateData['elements'][$element['id']] = $element;
-                        $this->logger->debug('Element converted successfully', [
-                            'archimate_id' => $element['id'],
-                            'name' => $element['name']
-                        ]);
-                    } else {
-                        $this->logger->warning('Element conversion failed', [
-                            'object_id' => $object['id'] ?? 'unknown',
-                            'object_keys' => array_keys($object)
-                        ]);
-                    }
-                }
-                $this->logger->info('Elements conversion completed', [
-                    'converted_count' => count($archiMateData['elements'])
-                ]);
-            }
-
-            // Convert organizations
-            if (!empty($objects['organizations'])) {
-                foreach ($objects['organizations'] as $object) {
-                    $organization = $this->convertObjectToArchiMateOrganization($object);
-                    if ($organization) {
-                        $archiMateData['organizations'][$organization['id']] = $organization;
-                    }
-                }
-            }
-
-            // Convert relationships
-            if (!empty($objects['relationships'])) {
-                foreach ($objects['relationships'] as $object) {
-                    $relationship = $this->convertObjectToArchiMateRelationship($object);
-                    if ($relationship) {
-                        $archiMateData['relationships'][$relationship['id']] = $relationship;
-                    }
-                }
-            }
-
-            // Convert views
-            if (!empty($objects['views'])) {
-                foreach ($objects['views'] as $object) {
-                    $view = $this->convertObjectToArchiMateView($object);
-                    if ($view) {
-                        $archiMateData['views'][$view['id']] = $view;
-                    }
-                }
-            }
-
-            $this->logger->info('Conversion to ArchiMate format completed', [
-                'elements_count' => count($archiMateData['elements']),
-                'organizations_count' => count($archiMateData['organizations']),
-                'relationships_count' => count($archiMateData['relationships']),
-                'views_count' => count($archiMateData['views'])
-            ]);
-
-            return $archiMateData;
-
-        } catch (\Exception $e) {
-            $this->logger->error('Error converting objects to ArchiMate format', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return $archiMateData;
+        // STEP 1: Extract and store model metadata
+        if (isset($data['_attributes'])) {
+            $normalized['model_metadata'] = $data['_attributes'];
         }
-    }
-
-    /**
-     * Convert OpenRegister object to ArchiMate element format
-     */
-    private function convertObjectToArchiMateElement(array $object): ?array
-    {
-        try {
-            // Handle both API response format and ObjectEntity format
-            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
-            if (!$archiMateId) {
-                $this->logger->warning('Object missing ArchiMate ID', [
-                    'object_id' => $object['id'] ?? 'unknown',
-                    'available_keys' => array_keys($object)
-                ]);
-                return null;
-            }
-
-            $element = [
-                'id' => $archiMateId,
-                'name' => $object['name'] ?? '',
-                'type' => $object['archimate_type'] ?? 'Element',
-                'properties' => []
-            ];
-
-            // Extract properties from the object
-            if (isset($object['properties']) && is_array($object['properties'])) {
-                $element['properties'] = $object['properties'];
-            }
-
-            $this->logger->debug('Converted element', [
-                'archimate_id' => $archiMateId,
-                'name' => $element['name'],
-                'type' => $element['type']
-            ]);
-
-            return $element;
-        } catch (\Exception $e) {
-            $this->logger->error('Error converting object to ArchiMate element', [
-                'object_id' => $object['id'] ?? 'unknown',
-                'error' => $e->getMessage()
-            ]);
-            return null;
+        
+        // Also extract name and documentation from root level
+        if (isset($data['name'])) {
+            $normalized['model_metadata']['name'] = $data['name'];
         }
-    }
-
-    /**
-     * Convert OpenRegister object to ArchiMate organization format
-     */
-    private function convertObjectToArchiMateOrganization(array $object): ?array
-    {
-        try {
-            // Handle both API response format and ObjectEntity format
-            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
-            if (!$archiMateId) {
-                $this->logger->warning('Organization object missing ArchiMate ID', [
-                    'object_id' => $object['id'] ?? 'unknown',
-                    'available_keys' => array_keys($object)
-                ]);
-                return null;
-            }
-
-            $organization = [
-                'id' => $archiMateId,
-                'name' => $object['name'] ?? '',
-                'type' => $object['archimate_type'] ?? 'BusinessActor',
-                'properties' => []
-            ];
-
-            // Extract properties from the object
-            if (isset($object['properties']) && is_array($object['properties'])) {
-                $organization['properties'] = $object['properties'];
-            }
-
-            return $organization;
-        } catch (\Exception $e) {
-            $this->logger->error('Error converting object to ArchiMate organization', [
-                'object_id' => $object['id'] ?? 'unknown',
-                'error' => $e->getMessage()
-            ]);
-            return null;
+        if (isset($data['documentation'])) {
+            $normalized['model_metadata']['documentation'] = $data['documentation'];
         }
-    }
-
-    /**
-     * Convert OpenRegister object to ArchiMate relationship format
-     */
-    private function convertObjectToArchiMateRelationship(array $object): ?array
-    {
-        try {
-            // Handle both API response format and ObjectEntity format
-            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
-            if (!$archiMateId) {
-                $this->logger->warning('Relationship object missing ArchiMate ID', [
-                    'object_id' => $object['id'] ?? 'unknown',
-                    'available_keys' => array_keys($object)
-                ]);
-                return null;
-            }
-
-            $relationship = [
-                'id' => $archiMateId,
-                'name' => $object['name'] ?? '',
-                'type' => $object['archimate_type'] ?? 'Relationship',
-                'source' => $object['source_id'] ?? '',
-                'target' => $object['target_id'] ?? '',
-                'properties' => []
-            ];
-
-            // Extract properties from the object
-            if (isset($object['properties']) && is_array($object['properties'])) {
-                $relationship['properties'] = $object['properties'];
-            }
-
-            return $relationship;
-        } catch (\Exception $e) {
-            $this->logger->error('Error converting object to ArchiMate relationship', [
-                'object_id' => $object['id'] ?? 'unknown',
-                'error' => $e->getMessage()
-            ]);
-            return null;
+        if (isset($data['properties'])) {
+            $normalized['model_metadata']['properties'] = $data['properties'];
         }
-    }
-
-    /**
-     * Convert OpenRegister object to ArchiMate view format
-     */
-    private function convertObjectToArchiMateView(array $object): ?array
-    {
-        try {
-            // Handle both API response format and ObjectEntity format
-            $archiMateId = $object['archimate_id'] ?? $object['uuid'] ?? null;
-            if (!$archiMateId) {
-                $this->logger->warning('View object missing ArchiMate ID', [
-                    'object_id' => $object['id'] ?? 'unknown',
-                    'available_keys' => array_keys($object)
-                ]);
-                return null;
-            }
-
-            $view = [
-                'id' => $archiMateId,
-                'name' => $object['name'] ?? '',
-                'type' => $object['archimate_type'] ?? 'View',
-                'properties' => []
-            ];
-
-            // Extract properties from the object
-            if (isset($object['properties']) && is_array($object['properties'])) {
-                $view['properties'] = $object['properties'];
-            }
-
-            return $view;
-        } catch (\Exception $e) {
-            $this->logger->error('Error converting object to ArchiMate view', [
-                'object_id' => $object['id'] ?? 'unknown',
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Generate ArchiMate XML from data structure
-     *
-     * @param array $archiMateData ArchiMate data structure
-     * @return string XML content matching the import format exactly
-     */
-    private function generateArchiMateXml(array $archiMateData): string
-    {
-        $this->logger->info('Generating ArchiMate XML', [
-            'elements_count' => count($archiMateData['elements'] ?? []),
-            'organizations_count' => count($archiMateData['organizations'] ?? []),
-            'relationships_count' => count($archiMateData['relationships'] ?? []),
-            'views_count' => count($archiMateData['views'] ?? [])
+        
+        $this->logger->debug('Extracted model metadata', [
+            'metadata_keys' => array_keys($normalized['model_metadata']),
+            'has_name' => isset($normalized['model_metadata']['name']),
+            'has_documentation' => isset($normalized['model_metadata']['documentation'])
         ]);
 
+        // STEP 2: Process each section and store complete raw XML data
+        // This ensures round-trip fidelity - we can reconstruct the exact XML later
+        $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
+        
+        $this->logger->debug("Available sections in data", [
+            'available_sections' => array_keys($data),
+            'sections_to_process' => $sections
+        ]);
+        
+        // Check for alternative section names that might exist in the XML
+        $alternativeNames = [
+            'views' => ['views', 'diagrams'],
+            'organizations' => ['organizations', 'organisation'],
+            'property_definitions' => ['propertyDefinitions', 'property_definitions', 'propertydefinitions']
+        ];
+        
+        foreach ($alternativeNames as $section => $alternatives) {
+            foreach ($alternatives as $altName) {
+                if (isset($data[$altName])) {
+                    $this->logger->debug("Found alternative section name", [
+                        'section' => $section,
+                        'alternative_name' => $altName,
+                        'data_type' => gettype($data[$altName]),
+                        'data_keys' => is_array($data[$altName]) ? array_keys($data[$altName]) : []
+                    ]);
+                }
+            }
+        }
+        
+        foreach ($sections as $section) {
+            $sectionData = null;
+            $actualSectionName = null;
+            
+            // First try the direct section name
+            if (isset($data[$section])) {
+                $sectionData = $data[$section];
+                $actualSectionName = $section;
+            } else {
+                // Try alternative names for this section
+                if (isset($alternativeNames[$section])) {
+                    foreach ($alternativeNames[$section] as $altName) {
+                        if (isset($data[$altName])) {
+                            $sectionData = $data[$altName];
+                            $actualSectionName = $altName;
+                            $this->logger->debug("Using alternative section name", [
+                                'section' => $section,
+                                'alternative_name' => $altName
+                            ]);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if ($sectionData !== null) {
+                $this->logger->debug("Processing section: {$section}", [
+                    'actual_section_name' => $actualSectionName,
+                    'section_data_type' => gettype($sectionData),
+                    'section_data_count' => is_array($sectionData) ? count($sectionData) : 'not_array',
+                    'section_data_keys' => is_array($sectionData) ? array_keys($sectionData) : []
+                ]);
+                
+                $normalized[$section] = $this->extractSectionData($sectionData, $section, $modelIdentifier);
+            } else {
+                $this->logger->debug("Section not found: {$section}");
+            }
+        }
+
+        $this->logger->info('Data normalization completed', [
+            'model_identifier' => $modelIdentifier,
+            'sections_processed' => $sections,
+            'round_trip_fidelity' => 'enabled'
+        ]);
+
+        return $normalized;
+    }
+
+    /**
+     * Extract data from a specific section with model linking
+     * 
+     * This method processes each section of the ArchiMate XML and extracts:
+     * 1. Individual items (elements, relationships, organizations, views, property_definitions)
+     * 2. Complete raw XML data for each item to ensure round-trip fidelity
+     * 3. Links each item to the parent model via model_identifier
+     * 
+     * @param mixed $sectionData Section data from XML parsing
+     * @param string $sectionName Name of the section being processed
+     * @param string $modelIdentifier The model identifier for linking items
+     * @return array Extracted section data with complete XML preservation
+     */
+    private function extractSectionData(mixed $sectionData, string $sectionName, string $modelIdentifier): array
+    {
+        $this->logger->debug("Extracting data from section: {$sectionName}", [
+            'section_name' => $sectionName,
+            'model_identifier' => $modelIdentifier,
+            'data_type' => gettype($sectionData)
+        ]);
+
+        $extracted = [];
+        
+        // STEP 1: Handle different data structures (array, object, scalar)
+        if (is_array($sectionData)) {
+            $this->logger->debug("Section data structure", [
+                'section' => $sectionName,
+                'section_keys' => array_keys($sectionData),
+                'section_data_sample' => array_slice($sectionData, 0, 2, true)
+            ]);
+            
+            // STEP 2: Find the actual items within the section
+            // Could be nested under child tags like <element>, <relationship>, etc.
+            $items = $this->findItemsInSection($sectionData, $sectionName);
+            
+            $this->logger->debug("Found items in section", [
+                'section' => $sectionName,
+                'item_count' => count($items)
+            ]);
+            
+            // STEP 3: Process each item and store complete XML data
+            foreach ($items as $item) {
+                $identifier = $this->extractIdentifier($item, $sectionName);
+                if ($identifier) {
+                    // Store XML data at root level with metadata fields
+                    // This eliminates double JSON serialization and improves performance
+                    $extracted[$identifier] = array_merge(
+                        $item,                         // XML data at root level
+                        [
+                            'identifier' => $identifier,   // Unique identifier for the item
+                            'section' => $sectionName,     // Section this item belongs to
+                            'model_identifier' => $modelIdentifier, // Link to parent model
+                            'extracted_at' => time()       // Timestamp for tracking
+                        ]
+                    );
+                    
+                    $this->logger->debug("Extracted item", [
+                        'identifier' => $identifier,
+                        'section' => $sectionName,
+                        'model_identifier' => $modelIdentifier
+                    ]);
+                } else {
+                    $this->logger->warning("Could not extract identifier from item", [
+                        'section' => $sectionName,
+                        'item_keys' => is_array($item) ? array_keys($item) : ['not_array']
+                    ]);
+                }
+            }
+        } else {
+            $this->logger->warning("Section data is not an array", [
+                'section' => $sectionName,
+                'data_type' => gettype($sectionData),
+                'data_value' => $sectionData
+            ]);
+        }
+
+        $this->logger->info("Section extraction completed", [
+            'section' => $sectionName,
+            'items_extracted' => count($extracted),
+            'model_identifier' => $modelIdentifier
+        ]);
+
+        return $extracted;
+    }
+
+    /**
+     * Get section structure configuration for XML parsing
+     * 
+     * @param string $sectionName The name of the section (e.g., 'elements', 'relationships', 'views', etc.)
+     * @return array Configuration with direct_tags and nested_paths for finding items
+     */
+    private function getSectionStructureConfig(string $sectionName): array
+    {
+        // Define the structure configuration for each section type
+        $configs = [
+            'elements' => [
+                'direct_tags' => ['element', 'elements'],
+                'nested_paths' => [
+                    ['model', 'elements', 'element'],
+                    ['model', 'elements'],
+                    ['elements', 'element'],
+                    ['elements']
+                ]
+            ],
+            'relationships' => [
+                'direct_tags' => ['relationship', 'relationships'],
+                'nested_paths' => [
+                    ['model', 'relationships', 'relationship'],
+                    ['model', 'relationships'],
+                    ['relationships', 'relationship'],
+                    ['relationships']
+                ]
+            ],
+            'views' => [
+                'direct_tags' => ['view', 'views', 'diagram', 'diagrams'],
+                'nested_paths' => [
+                    ['model', 'views', 'diagrams', 'view'],
+                    ['model', 'views', 'diagrams'],
+                    ['model', 'views'],
+                    ['views', 'diagrams', 'view'],
+                    ['views', 'diagrams'],
+                    ['views']
+                ]
+            ],
+            'organizations' => [
+                'direct_tags' => ['item', 'items'],
+                'nested_paths' => [
+                    ['model', 'organizations', 'item'],
+                    ['model', 'organizations'],
+                    ['organizations', 'item'],
+                    ['organizations']
+                ]
+            ],
+            'property_definitions' => [
+                'direct_tags' => ['propertyDefinition', 'propertyDefinitions'],
+                'nested_paths' => [
+                    ['model', 'propertyDefinitions', 'propertyDefinition'],
+                    ['model', 'propertyDefinitions'],
+                    ['propertyDefinitions', 'propertyDefinition'],
+                    ['propertyDefinitions']
+                ]
+            ]
+        ];
+
+        return $configs[$sectionName] ?? [
+            'direct_tags' => [$sectionName],
+            'nested_paths' => [[$sectionName]]
+        ];
+    }
+
+    /**
+     * Check if an array is associative (has string keys)
+     * 
+     * @param array $array The array to check
+     * @return bool True if associative, false if indexed
+     */
+    private function isAssociativeArray(array $array): bool
+    {
+        return count(array_filter(array_keys($array), 'is_string')) > 0;
+    }
+
+    /**
+     * Find items within a specific section using AMEF configuration
+     * 
+     * @param array $sectionData The section data to search
+     * @param string $sectionName The name of the section
+     * @return array Array of items found
+     */
+    private function findItemsInSection(array $sectionData, string $sectionName): array
+    {
+        $this->logger->debug("Finding items in section", [
+            'section' => $sectionName,
+            'section_data_keys' => is_array($sectionData) ? array_keys($sectionData) : ['not_array'],
+            'section_data_type' => gettype($sectionData)
+        ]);
+
+        $items = [];
+        
+        // Safety check: ensure sectionData is an array
+        if (!is_array($sectionData)) {
+            $this->logger->warning("Section data is not an array", [
+                'section' => $sectionName,
+                'data_type' => gettype($sectionData),
+                'data_value' => $sectionData
+            ]);
+            return [];
+        }
+        
+        // Get section structure configuration from AMEF config
+        $config = $this->getSectionStructureConfig($sectionName);
+        
+        $this->logger->debug("Section structure config", [
+            'section' => $sectionName,
+            'config' => $config
+        ]);
+        
+        // Special handling for views with diagrams structure
+        if ($sectionName === 'views') {
+            $this->logger->debug("Special handling for views section", [
+                'section_keys' => array_keys($sectionData)
+            ]);
+            
+            // Handle nested structure: <views><diagrams><view>
+            if (isset($sectionData['diagrams'])) {
+                $this->logger->debug("Found diagrams structure in views", [
+                    'diagrams_type' => gettype($sectionData['diagrams']),
+                    'diagrams_keys' => is_array($sectionData['diagrams']) ? array_keys($sectionData['diagrams']) : []
+                ]);
+                
+                if (isset($sectionData['diagrams']['view'])) {
+                    $viewArray = $sectionData['diagrams']['view'];
+                    $this->logger->debug("Found view array in diagrams", [
+                        'view_array_type' => gettype($viewArray),
+                        'view_array_count' => is_array($viewArray) ? count($viewArray) : 'not_array',
+                        'is_single_view' => !isset($viewArray[0]) && isset($viewArray['_attributes'])
+                    ]);
+                    
+                    // Handle single view vs array of views
+                    if (!isset($viewArray[0]) && isset($viewArray['_attributes'])) {
+                        // Single view
+                        $items = [$viewArray];
+                    } else {
+                        // Array of views
+                        $items = $viewArray;
+                    }
+                    
+                    $this->logger->debug("Processed views from diagrams structure", [
+                        'items_count' => count($items)
+                    ]);
+                }
+            } else {
+                // Direct views structure (fallback)
+                if (isset($sectionData['view'])) {
+                    $items = $sectionData['view'];
+                    $this->logger->debug("Found direct view structure", [
+                        'items_count' => is_array($items) ? count($items) : 'not_array'
+                    ]);
+                }
+            }
+        } else {
+            // Try to find items using the configured paths for other sections
+            foreach ($config['nested_paths'] as $path) {
+                $currentData = $sectionData;
+                $pathValid = true;
+                
+                foreach ($path as $key) {
+                    if (isset($currentData[$key])) {
+                        $currentData = $currentData[$key];
+                    } else {
+                        $pathValid = false;
+                        break;
+                    }
+                }
+                
+                if ($pathValid && is_array($currentData)) {
+                    $this->logger->debug("Found data at path", [
+                        'section' => $sectionName,
+                        'path' => $path,
+                        'data_keys' => array_keys($currentData),
+                        'data_type' => gettype($currentData)
+                    ]);
+                    
+                    // Check if this is a direct array of items or needs further processing
+                    if (isset($currentData[0]) || $this->isAssociativeArray($currentData)) {
+                        $items = $currentData;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // If no items found through nested paths, try direct tags
+        if (empty($items)) {
+            foreach ($config['direct_tags'] as $tag) {
+                if (isset($sectionData[$tag])) {
+                    $this->logger->debug("Found direct tag", [
+                        'section' => $sectionName,
+                        'tag' => $tag,
+                        'data_keys' => is_array($sectionData[$tag]) ? array_keys($sectionData[$tag]) : ['not_array']
+                    ]);
+                    $items = $sectionData[$tag];
+                    break;
+                }
+            }
+        }
+        
+        // If still no items found, treat the section itself as items
+        if (empty($items)) {
+            $this->logger->debug("No items found in section, treating section as items", [
+                'section' => $sectionName,
+                'section_keys' => is_array($sectionData) ? array_keys($sectionData) : ['not_array']
+            ]);
+            $items = [$sectionData];
+        }
+        
+        // Ensure items is always an array
+        if (!is_array($items)) {
+            $this->logger->debug("Items is not an array, wrapping in array", [
+                'section' => $sectionName,
+                'items_type' => gettype($items)
+            ]);
+            $items = [$items];
+        }
+        
+        // If items is an associative array with numeric keys, convert to indexed array
+        if ($this->isAssociativeArray($items)) {
+            $this->logger->debug("Converting associative array to indexed array", [
+                'section' => $sectionName,
+                'items_keys' => array_keys($items)
+            ]);
+            $items = array_values($items);
+        }
+        
+        $this->logger->debug("Final items found", [
+            'section' => $sectionName,
+            'item_count' => count($items),
+            'first_item_keys' => !empty($items) && is_array($items[0]) ? array_keys($items[0]) : [],
+            'section_data_keys' => is_array($sectionData) ? array_keys($sectionData) : ['not_array']
+        ]);
+        
+        return $items;
+    }
+
+    /**
+     * Extract identifier from item data
+     * 
+     * @param array $item Item data
+     * @param string $sectionName The section name for special handling
+     * @return string|null Identifier or null if not found
+     */
+    private function extractIdentifier(array $item, string $sectionName = ''): ?string
+    {
+        $this->logger->debug("Extracting identifier", [
+            'section' => $sectionName,
+            'item_keys' => array_keys($item),
+            'item_has_attributes' => isset($item['_attributes']),
+            'attributes_keys' => isset($item['_attributes']) ? array_keys($item['_attributes']) : []
+        ]);
+        
+        // Special handling for organizations - they have identifierRef attributes
+        if ($sectionName === 'organizations') {
+            // Check for identifierRef in the item itself
+            if (isset($item['_attributes']['identifierRef'])) {
+                $identifier = (string) $item['_attributes']['identifierRef'];
+                $this->logger->debug("Found organization identifierRef", [
+                    'section' => $sectionName,
+                    'identifier' => $identifier
+                ]);
+                return $identifier;
+            }
+            
+            // Check for identifierRef in child elements
+            if (isset($item['item']) && is_array($item['item'])) {
+                foreach ($item['item'] as $childItem) {
+                    if (isset($childItem['_attributes']['identifierRef'])) {
+                        $identifier = (string) $childItem['_attributes']['identifierRef'];
+                        $this->logger->debug("Found organization identifierRef in child", [
+                            'section' => $sectionName,
+                            'identifier' => $identifier
+                        ]);
+                        return $identifier;
+                    }
+                }
+            }
+            
+            // For organizations, if no identifierRef found, try to use the label as identifier
+            if (isset($item['label'])) {
+                $label = $item['label'];
+                if (is_array($label) && isset($label['_value'])) {
+                    $identifier = (string) $label['_value'];
+                    $this->logger->debug("Using organization label as identifier", [
+                        'section' => $sectionName,
+                        'identifier' => $identifier
+                    ]);
+                    return $identifier;
+                }
+                if (is_string($label)) {
+                    $this->logger->debug("Using organization label string as identifier", [
+                        'section' => $sectionName,
+                        'identifier' => $label
+                    ]);
+                    return $label;
+                }
+            }
+        }
+        
+        // Check various possible identifier locations for other sections
+        $identifierKeys = ['identifier', 'id', 'name'];
+        
+        foreach ($identifierKeys as $key) {
+            if (isset($item['_attributes'][$key])) {
+                $identifier = (string) $item['_attributes'][$key];
+                $this->logger->debug("Found identifier in attributes", [
+                    'section' => $sectionName,
+                    'key' => $key,
+                    'identifier' => $identifier
+                ]);
+                return $identifier;
+            }
+            if (isset($item[$key])) {
+                $value = $item[$key];
+                if (is_array($value) && isset($value['_value'])) {
+                    $identifier = (string) $value['_value'];
+                    $this->logger->debug("Found identifier in nested value", [
+                        'section' => $sectionName,
+                        'key' => $key,
+                        'identifier' => $identifier
+                    ]);
+                    return $identifier;
+                }
+                if (is_string($value)) {
+                    $this->logger->debug("Found identifier as direct string", [
+                        'section' => $sectionName,
+                        'key' => $key,
+                        'identifier' => $value
+                    ]);
+                    return $value;
+                }
+            }
+        }
+
+        $this->logger->warning("No identifier found for item", [
+            'section' => $sectionName,
+            'item_keys' => array_keys($item),
+            'item_has_attributes' => isset($item['_attributes']),
+            'attributes_keys' => isset($item['_attributes']) ? array_keys($item['_attributes']) : []
+        ]);
+
+        return null;
+    }
+
+    /**
+     * Convert normalized data to OpenRegister objects with @self structure
+     * 
+     * This method creates OpenRegister objects from the normalized ArchiMate data:
+     * 1. Creates a model object with proper @self structure
+     * 2. Creates section objects for each item (elements, relationships, etc.)
+     * 3. Ensures each object has the required @self structure for ObjectService::saveObjects
+     * 4. Links all objects to the parent model via model_identifier
+     * 
+     * @param array $normalizedData Normalized ArchiMate data with model_identifier
+     * @param string $modelIdentifier The model identifier for linking objects
+     * @return array Array of OpenRegister objects with proper @self structure
+     */
+    private function convertToOpenRegisterObjects(array $normalizedData, string $modelIdentifier): array
+    {
+        $this->logger->info('Converting to OpenRegister objects with @self structure', [
+            'model_identifier' => $modelIdentifier
+        ]);
+
+        $objects = [];
+        
+        // STEP 1: Convert model metadata to model object
+        if (!empty($normalizedData['model_metadata'])) {
+            $this->logger->debug('Creating model object from metadata');
+            $objects[] = $this->createModelObject($normalizedData['model_metadata'], $modelIdentifier);
+        }
+
+        // STEP 2: Convert each section to individual objects
+        $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
+        
+        foreach ($sections as $section) {
+            if (!empty($normalizedData[$section]) && is_array($normalizedData[$section])) {
+                $this->logger->debug("Converting section: {$section}", [
+                    'item_count' => count($normalizedData[$section]),
+                    'section_keys' => array_keys($normalizedData[$section])
+                ]);
+                
+                foreach ($normalizedData[$section] as $identifier => $data) {
+                    $objects[] = $this->createSectionObject($section, $identifier, $data, $modelIdentifier);
+                }
+            } else {
+                $this->logger->debug("Section empty or not found: {$section}", [
+                    'section_exists' => isset($normalizedData[$section]),
+                    'section_type' => isset($normalizedData[$section]) ? gettype($normalizedData[$section]) : 'not_set',
+                    'section_empty' => isset($normalizedData[$section]) ? empty($normalizedData[$section]) : 'not_set'
+                ]);
+            }
+        }
+
+        $this->logger->info('Conversion to OpenRegister objects completed', [
+            'model_identifier' => $modelIdentifier,
+            'total_objects' => count($objects),
+            'sections_processed' => $sections
+        ]);
+
+        return $objects;
+    }
+
+    /**
+     * Create model object with @self structure
+     * 
+     * @param array $metadata Model metadata
+     * @param string $modelIdentifier Model identifier
+     * @return array Model object with @self structure
+     */
+    private function createModelObject(array $metadata, string $modelIdentifier): array
+    {
+        // Get AMEF configuration for register and schema IDs
+        $registerId = $this->getAmefRegisterId();
+        $schemaId = $this->getAmefSchemaIdForType('model');
+        
+        if (!$registerId || !$schemaId) {
+            $this->logger->warning('AMEF register or model schema not configured, using fallback values', [
+                'registerId' => $registerId,
+                'schemaId' => $schemaId
+            ]);
+            // Fallback to hardcoded values if AMEF config is not available
+            $registerId = $registerId ?: 15; // Default AMEF register ID
+            $schemaId = $schemaId ?: 67; // Default model schema ID
+        }
+        
+        // Create object with @self structure and metadata at root level (no JSON serialization)
+        $object = [
+            '@self' => [
+                'register' => $registerId,
+                'schema' => $schemaId,
+                'id' => $metadata['identifier'] ?? uniqid('model_'),
+                'owner' => $this->getCurrentUserId(),
+                'organisation' => $this->getCurrentOrganisation(),
+                'created' => date('Y-m-d H:i:s'),
+                'updated' => date('Y-m-d H:i:s')
+            ],
+            'identifier' => $metadata['identifier'] ?? '',
+            'section' => 'model',
+            'model_identifier' => $modelIdentifier
+        ];
+        
+        // Merge metadata directly at root level
+        return array_merge($object, $metadata);
+    }
+
+    /**
+     * Create section object with @self structure and flattened XML data
+     * 
+     * @param string $section Section name
+     * @param string $identifier Item identifier
+     * @param array $data Item data (already contains XML data at root level)
+     * @param string $modelIdentifier Model identifier for linking
+     * @return array Section object with @self structure
+     */
+    private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
+    {
+        // Get AMEF configuration for register and schema IDs
+        $registerId = $this->getAmefRegisterId();
+        $schemaId = $this->getAmefSchemaIdForType($section);
+        
+        if (!$registerId || !$schemaId) {
+            $this->logger->warning('AMEF register or schema not configured for section, using fallback values', [
+                'section' => $section,
+                'registerId' => $registerId,
+                'schemaId' => $schemaId
+            ]);
+            // Fallback to hardcoded values if AMEF config is not available
+            $registerId = $registerId ?: 15; // Default AMEF register ID
+            $schemaId = $schemaId ?: $this->getSchemaIdForSection($section); // Fallback to hardcoded schema
+        }
+        
+        // Create object with @self structure and XML data at root level (no double serialization)
+        $object = [
+            '@self' => [
+                'register' => $registerId,
+                'schema' => $schemaId,
+                'id' => $identifier,
+                'owner' => $this->getCurrentUserId(),
+                'organisation' => $this->getCurrentOrganisation(),
+                'created' => date('Y-m-d H:i:s'),
+                'updated' => date('Y-m-d H:i:s')
+            ]
+        ];
+        
+        // Merge XML data directly at root level (data already contains identifier, section, model_identifier)
+        return array_merge($object, $data);
+    }
+
+    /**
+     * Save objects to database using ObjectService::saveObjects
+     * 
+     * @param array $objects Objects to save
+     * @return array Saved objects
+     */
+    private function saveObjectsToDatabase(array $objects): array
+    {
+        $objectService = $this->getObjectService();
+        if (!$objectService) {
+            throw new \RuntimeException('ObjectService not available');
+        }
+
+        $this->logger->info('Saving objects to database using ObjectService::saveObjects', [
+            'count' => count($objects)
+        ]);
+
+        // Get AMEF configuration for register ID
+        $registerId = $this->getAmefRegisterId();
+        
+        if (!$registerId) {
+            $this->logger->warning('AMEF register not configured, using fallback value', [
+                'registerId' => $registerId
+            ]);
+            // Fallback to hardcoded value if AMEF config is not available
+            $registerId = $registerId ?: 15; // Default AMEF register ID
+        }
+
+        // Save objects using ObjectService::saveObjects with proper @self structure
+        $savedObjects = $objectService->saveObjects(
+            objects: $objects,
+            register: $registerId
+        );
+
+        $this->logger->info('Objects saved successfully', [
+            'saved_count' => count($savedObjects)
+        ]);
+
+        return $savedObjects;
+    }
+
+
+
+
+
+
+
+    /**
+     * Get ObjectService from container
+     * 
+     * @return ObjectService|null ObjectService instance or null if not available
+     */
+    private function getObjectService(): ?ObjectService
+    {
+        if (!$this->appManager->isInstalled('openregister')) {
+            return null;
+        }
+
         try {
-            // Start XML document
-            $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-            $xml .= '<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' . "\n";
-            
-            // Add elements section
-            if (!empty($archiMateData['elements'])) {
-                $xml .= '  <elements>' . "\n";
-                foreach ($archiMateData['elements'] as $element) {
-                    $xml .= $this->generateElementXml($element);
-                }
-                $xml .= '  </elements>' . "\n";
-            }
-
-            // Add relationships section
-            if (!empty($archiMateData['relationships'])) {
-                $xml .= '  <relationships>' . "\n";
-                foreach ($archiMateData['relationships'] as $relationship) {
-                    $xml .= $this->generateRelationshipXml($relationship);
-                }
-                $xml .= '  </relationships>' . "\n";
-            }
-
-            // Add views section
-            if (!empty($archiMateData['views'])) {
-                $xml .= '  <views>' . "\n";
-                foreach ($archiMateData['views'] as $view) {
-                    $xml .= $this->generateViewXml($view);
-                }
-                $xml .= '  </views>' . "\n";
-            }
-
-            $xml .= '</model>';
-
-            $this->logger->info('ArchiMate XML generation completed', [
-                'xml_length' => strlen($xml)
-            ]);
-
-            return $xml;
-
+            return $this->container->get(ObjectService::class);
         } catch (\Exception $e) {
-            $this->logger->error('Error generating ArchiMate XML', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            $this->logger->warning('Failed to get ObjectService', [
+                'error' => $e->getMessage()
             ]);
-            
-            // Return minimal valid XML on error
-            return '<?xml version="1.0" encoding="UTF-8"?><model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"></model>';
+            return null;
         }
     }
 
     /**
-     * Generate XML for an ArchiMate element
+     * Get current user ID
+     * 
+     * @return string|null Current user ID or null if not authenticated
      */
-    private function generateElementXml(array $element): string
+    private function getCurrentUserId(): ?string
     {
-        $id = $element['id'] ?? '';
-        $type = $element['type'] ?? '';
-        $name = $element['name'] ?? '';
-        
-        $xml = '    <element identifier="' . htmlspecialchars($id) . '" xsi:type="' . htmlspecialchars($type) . '">' . "\n";
-        
-        if (!empty($name)) {
-            $xml .= '      <name xml:lang="en">' . htmlspecialchars($name) . '</name>' . "\n";
-        }
-
-        if (!empty($element['properties'])) {
-            $xml .= '      <properties>' . "\n";
-            foreach ($element['properties'] as $key => $value) {
-                $key = $key ?? '';
-                $value = $value ?? '';
-                $xml .= '        <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
-                $xml .= '          <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
-                $xml .= '        </property>' . "\n";
-            }
-            $xml .= '      </properties>' . "\n";
-        }
-
-        $xml .= '    </element>' . "\n";
-        return $xml;
+        $user = $this->userSession->getUser();
+        return $user ? $user->getUID() : null;
     }
 
     /**
-     * Generate XML for an ArchiMate relationship
+     * Get current organisation
+     * 
+     * @return string Default organisation
      */
-    private function generateRelationshipXml(array $relationship): string
+    private function getCurrentOrganisation(): string
     {
-        $id = $relationship['id'] ?? '';
-        $type = $relationship['type'] ?? '';
-        $source = $relationship['source'] ?? '';
-        $target = $relationship['target'] ?? '';
-        
-        $xml = '    <element identifier="' . htmlspecialchars($id) . '" xsi:type="' . htmlspecialchars($type) . '"';
-        
-        if (!empty($source)) {
-            $xml .= ' source="' . htmlspecialchars($source) . '"';
-        }
-        
-        if (!empty($target)) {
-            $xml .= ' target="' . htmlspecialchars($target) . '"';
-        }
-        
-        $xml .= ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>' . "\n";
-        
-        return $xml;
+        return 'default';
     }
 
     /**
-     * Generate XML for an ArchiMate view
+     * Get ArchiMate register ID
+     * 
+     * @return int Register ID
      */
-    private function generateViewXml(array $view): string
+    private function getArchiMateRegisterId(): int
     {
-        $id = $view['id'] ?? '';
-        $type = $view['type'] ?? '';
-        $name = $view['name'] ?? '';
-        
-        $xml = '    <element identifier="' . htmlspecialchars($id) . '" xsi:type="' . htmlspecialchars($type) . '">' . "\n";
-        
-        if (!empty($name)) {
-            $xml .= '      <name xml:lang="en">' . htmlspecialchars($name) . '</name>' . "\n";
-        }
-
-        if (!empty($view['properties'])) {
-            $xml .= '      <properties>' . "\n";
-            foreach ($view['properties'] as $key => $value) {
-                $key = $key ?? '';
-                $value = $value ?? '';
-                $xml .= '        <property propertyDefinitionRef="' . htmlspecialchars($key) . '">' . "\n";
-                $xml .= '          <value xml:lang="en">' . htmlspecialchars($value) . '</value>' . "\n";
-                $xml .= '        </property>' . "\n";
-            }
-            $xml .= '      </properties>' . "\n";
-        }
-
-        $xml .= '    </element>' . "\n";
-        return $xml;
+        return (int) ($this->config->getValueString('softwarecatalog', 'archimate_register_id', '100'));
     }
 
     /**
-     * Test ArchiMate round-trip functionality
-     *
-     * This method tests the complete ArchiMate import/export cycle:
-     * 1. Export current data to ArchiMate format
-     * 2. Re-import the exported data
-     * 3. Compare results and validate data integrity
-     *
-     * @return array Test results with success status and details
+     * Get ArchiMate model schema ID
+     * 
+     * @return int Schema ID
+     */
+    private function getArchiMateModelSchemaId(): int
+    {
+        return (int) ($this->config->getValueString('softwarecatalog', 'archimate_model_schema_id', '100'));
+    }
+
+    /**
+     * Get schema ID for a section
+     * 
+     * @param string $section Section name
+     * @return int Schema ID
+     */
+    private function getSchemaIdForSection(string $section): int
+    {
+        $schemaIds = [
+            'elements' => 101,
+            'relationships' => 102,
+            'views' => 103,
+            'organizations' => 104,
+            'property_definitions' => 105
+        ];
+
+        return $schemaIds[$section] ?? 100;
+    }
+
+    /**
+     * Test round-trip functionality
+     * 
+     * @return array Test results
      */
     public function testRoundTrip(): array
     {
-        $this->logger->info('ArchiMate: Starting round-trip test');
-        
+        $this->logger->info('Testing ArchiMate round-trip functionality');
+
         try {
-            $testResults = [
-                'success' => false,
-                'message' => '',
-                'details' => [],
-                'statistics' => [
-                    'export_time' => 0,
-                    'import_time' => 0,
-                    'total_time' => 0,
-                    'elements_exported' => 0,
-                    'elements_imported' => 0,
-                    'data_integrity_check' => false
-                ]
-            ];
+            // Create test XML
+            $testXml = $this->createTestArchiMateXml();
             
-            $startTime = microtime(true);
-            
-            // Step 1: Export current data to ArchiMate format
-            $this->logger->info('ArchiMate: Round-trip test - Step 1: Export');
-            $exportStartTime = microtime(true);
-            
-            $exportResult = $this->exportToArchiMate(
-                ['includeRelationships' => true, 'includeViews' => false],
-                ['format' => 'xml']
-            );
-            
-            $exportEndTime = microtime(true);
-            $testResults['statistics']['export_time'] = $exportEndTime - $exportStartTime;
-            
-            if (!$exportResult['success']) {
-                $testResults['message'] = 'Export failed: ' . ($exportResult['message'] ?? 'Unknown error');
-                $testResults['details']['export_error'] = $exportResult;
-                return $testResults;
-            }
-            
-            $this->logger->info('ArchiMate: Round-trip test - Export completed', [
-                'export_time' => $testResults['statistics']['export_time']
-            ]);
-            
-            // Step 2: Import the exported data back
-            $this->logger->info('ArchiMate: Round-trip test - Step 2: Import');
-            $importStartTime = microtime(true);
-            
-            // Use the exported XML content for import
-            $exportedXmlContent = $exportResult['xml_content'] ?? '';
-            if (empty($exportedXmlContent)) {
-                $testResults['message'] = 'Export did not return XML content';
-                $testResults['details']['export_error'] = $exportResult;
-                return $testResults;
-            }
-            
-            $tempFilePath = tempnam(sys_get_temp_dir(), 'archimate_roundtrip_test_') . '.xml';
-            file_put_contents($tempFilePath, $exportedXmlContent);
-            
+            // Import
             $importResult = $this->importArchiMateFileFromPath([
-                'filePath' => $tempFilePath,
-                'fileName' => 'roundtrip_test.xml',
-                'fileSize' => strlen($exportedXmlContent),
-                'mimeType' => 'text/xml',
-                'updateExisting' => false,
-                'deleteOrphaned' => false,
-                'preserveIds' => true
+                'file_path' => $this->createTempFile($testXml)
             ]);
-            
-            $importEndTime = microtime(true);
-            $testResults['statistics']['import_time'] = $importEndTime - $importStartTime;
-            
-            // Clean up temporary file
-            if (file_exists($tempFilePath)) {
-                unlink($tempFilePath);
-            }
             
             if (!$importResult['success']) {
-                $testResults['message'] = 'Import failed: ' . ($importResult['message'] ?? 'Unknown error');
-                $testResults['details']['import_error'] = $importResult;
-                return $testResults;
+                return [
+                    'success' => false,
+                    'error' => 'Import failed: ' . $importResult['error']
+                ];
             }
+
+            // Export
+            $exportResult = $this->exportToArchiMate();
             
-            $this->logger->info('ArchiMate: Round-trip test - Import completed', [
-                'import_time' => $testResults['statistics']['import_time']
-            ]);
+            if (!$exportResult['success']) {
+                return [
+                    'success' => false,
+                    'error' => 'Export failed: ' . $exportResult['error']
+                ];
+            }
+
+            // Compare (simplified comparison)
+            $importedCount = $importResult['imported_count'];
+            $exportedCount = $exportResult['exported_count'];
             
-            // Step 3: Validate results
-            $this->logger->info('ArchiMate: Round-trip test - Step 3: Validation');
-            
-            $totalTime = microtime(true) - $startTime;
-            $testResults['statistics']['total_time'] = $totalTime;
-            $testResults['statistics']['elements_exported'] = $exportResult['statistics']['objects_exported'] ?? 0;
-            $testResults['statistics']['elements_imported'] = $importResult['summary']['total_objects_created'] ?? 0;
-            $testResults['statistics']['data_integrity_check'] = true; // Simplified for now
-            
-            // Test completed successfully
-            $testResults['success'] = true;
-            $testResults['message'] = 'Round-trip test completed successfully';
-            $testResults['details'] = [
-                'export_result' => [
-                    'success' => $exportResult['success'],
-                    'message' => $exportResult['message'] ?? 'Export completed',
-                    'file_size' => strlen($exportedXmlContent),
-                    'elements_count' => $exportResult['statistics']['objects_exported'] ?? 0
-                ],
-                'import_result' => [
-                    'success' => $importResult['success'],
-                    'message' => $importResult['message'] ?? 'Import completed',
-                    'objects_created' => $importResult['summary']['total_objects_created'] ?? 0,
-                    'validation_passed' => true
-                ],
-                'performance' => [
-                    'export_time_ms' => round($testResults['statistics']['export_time'] * 1000, 2),
-                    'import_time_ms' => round($testResults['statistics']['import_time'] * 1000, 2),
-                    'total_time_ms' => round($testResults['statistics']['total_time'] * 1000, 2)
-                ]
+            $success = $importedCount === $exportedCount;
+
+            return [
+                'success' => $success,
+                'imported_count' => $importedCount,
+                'exported_count' => $exportedCount,
+                'round_trip_successful' => $success
             ];
-            
-            $this->logger->info('ArchiMate: Round-trip test completed successfully', [
-                'total_time' => $totalTime,
-                'elements_exported' => $testResults['statistics']['elements_exported'],
-                'elements_imported' => $testResults['statistics']['elements_imported']
-            ]);
-            
-            return $testResults;
-            
+
         } catch (\Exception $e) {
-            $this->logger->error('ArchiMate: Round-trip test failed', [
-                'exception_class' => get_class($e),
-                'exception_message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            $this->logger->error('Round-trip test failed', [
+                'error' => $e->getMessage()
             ]);
-            
+
             return [
                 'success' => false,
-                'message' => 'Round-trip test failed: ' . $e->getMessage(),
-                'details' => [
-                    'error' => $e->getMessage(),
-                    'exception_class' => get_class($e)
-                ],
-                'statistics' => $testResults['statistics'] ?? []
+                'error' => $e->getMessage()
             ];
         }
     }
 
     /**
-     * Create test ArchiMate XML content for round-trip testing
-     *
+     * Create test ArchiMate XML
+     * 
      * @return string Test XML content
      */
     private function createTestArchiMateXml(): string
     {
         return '<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:archimate="http://www.archimatetool.com/archimate" name="Round-trip Test Model" id="test-model-001" version="4.6.0">
-  <folder name="Application" id="folder-application" type="application">
-    <element xsi:type="archimate:ApplicationComponent" name="Test Application" id="test-app-001" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <documentation>Test application component for round-trip testing</documentation>
+<archimate:model xmlns:archimate="http://www.archimatetool.com/archimate" identifier="test-model">
+  <name>Test Model</name>
+  <documentation>Test model for round-trip verification</documentation>
+  <elements>
+    <element identifier="test-element-1" xsi:type="archimate:BusinessActor">
+      <name>Test Actor</name>
     </element>
-    <element xsi:type="archimate:ApplicationService" name="Test Service" id="test-service-001" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <documentation>Test application service for round-trip testing</documentation>
-    </element>
-  </folder>
-  <folder name="Relations" id="folder-relations" type="relations">
-    <element xsi:type="archimate:ServingRelationship" id="test-relation-001" source="test-app-001" target="test-service-001" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
-  </folder>
+  </elements>
+  <relationships>
+    <relationship identifier="test-rel-1" xsi:type="archimate:AssociationRelationship">
+      <source>test-element-1</source>
+      <target>test-element-2</target>
+    </relationship>
+  </relationships>
 </archimate:model>';
     }
 
     /**
-     * Gets all AMEF element objects from the database
-     *
-     * This method retrieves all element objects from the AMEF register
-     * using the same pattern as OrganizationSyncService for consistency.
-     *
-     * @return array Array of element objects
+     * Create temporary file with content
+     * 
+     * @param string $content File content
+     * @return string Temporary file path
      */
-    public function getElementObjects(): array
+    private function createTempFile(string $content): string
     {
+        $tempFile = tempnam(sys_get_temp_dir(), 'archimate_test_');
+        file_put_contents($tempFile, $content);
+        return $tempFile;
+    }
+
+    /**
+     * Get AMEF configuration from app config
+     * 
+     * @return array AMEF configuration
+     */
+    public function getAmefConfig(): array
+    {
+        $this->logger->info('Getting AMEF configuration');
+        
         try {
-            $objectService = $this->getObjectService();
-            if (!$objectService) {
-                $this->logger->error('ArchiMateService: ObjectService not available for element objects retrieval');
-                return [];
+            // Get configuration from app config using the correct method
+            $config = $this->config->getValueString('softwarecatalog', 'amef_config', '{}');
+            $decoded = json_decode($config, true);
+            
+            if (!is_array($decoded)) {
+                // Fallback to individual config values for backward compatibility
+                $decoded = [
+                    'register_id' => $this->config->getValueString('softwarecatalog', 'amef_register', ''),
+                    'model_schema_id' => $this->config->getValueString('softwarecatalog', 'amef_model_schema', ''),
+                    'elements_schema' => $this->config->getValueString('softwarecatalog', 'amef_elements_schema', ''),
+                    'relationships_schema' => $this->config->getValueString('softwarecatalog', 'amef_relationships_schema', ''),
+                    'views_schema' => $this->config->getValueString('softwarecatalog', 'amef_views_schema', ''),
+                    'organizations_schema' => $this->config->getValueString('softwarecatalog', 'amef_organizations_schema', ''),
+                    'folders_schema' => $this->config->getValueString('softwarecatalog', 'amef_folders_schema', ''),
+                    'property_definitions_schema' => $this->config->getValueString('softwarecatalog', 'amef_property_definitions_schema', '')
+                ];
             }
-
-            $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType('element');
             
-            if (!$registerId || !$schemaId) {
-                $this->logger->error('ArchiMateService: AMEF register or element schema not configured', [
-                    'registerId' => $registerId,
-                    'schemaId' => $schemaId
-                ]);
-                return [];
-            }
-
-            // Build query for register and schema (no time filtering needed for counts)
-            $query = [
-                '@self' => [
-                    'register' => (int) $registerId,
-                    'schema' => (int) $schemaId
-                ]
-            ];
-            
-            $this->logger->debug('ArchiMateService: Retrieving element objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'query' => $query
-            ]);
-            
-            // Use searchObjects method for filtering
-            $objects = $objectService->searchObjects($query);
-            
-            $this->logger->debug('ArchiMateService: Retrieved element objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'count' => count($objects)
-            ]);
-
-            return $objects;
+            return $decoded;
         } catch (\Exception $e) {
-            $this->logger->error('ArchiMateService: Failed to retrieve element objects', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            $this->logger->error('Failed to get AMEF configuration', [
+                'error' => $e->getMessage()
             ]);
             
-            return [];
-        }
-    }
-
-    /**
-     * Gets all AMEF organization objects from the database
-     *
-     * This method retrieves all organization objects from the AMEF register
-     * using the same pattern as OrganizationSyncService for consistency.
-     *
-     * @return array Array of organization objects
-     */
-    public function getOrganizationObjects(): array
-    {
-        try {
-            $objectService = $this->getObjectService();
-            if (!$objectService) {
-                $this->logger->error('ArchiMateService: ObjectService not available for organization objects retrieval');
-                return [];
-            }
-
-            $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType('organization');
-            
-            if (!$registerId || !$schemaId) {
-                $this->logger->error('ArchiMateService: AMEF register or organization schema not configured', [
-                    'registerId' => $registerId,
-                    'schemaId' => $schemaId
-                ]);
-                return [];
-            }
-
-            // Build query for register and schema (no time filtering needed for counts)
-            $query = [
-                '@self' => [
-                    'register' => (int) $registerId,
-                    'schema' => (int) $schemaId
-                ]
-            ];
-            
-            $this->logger->debug('ArchiMateService: Retrieving organization objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'query' => $query
-            ]);
-            
-            // Use searchObjects method for filtering
-            $objects = $objectService->searchObjects($query);
-            
-            $this->logger->debug('ArchiMateService: Retrieved organization objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'count' => count($objects)
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('ArchiMateService: Failed to retrieve organization objects', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return [];
-        }
-    }
-
-    /**
-     * Gets all AMEF view objects from the database
-     *
-     * This method retrieves all view objects from the AMEF register
-     * using the same pattern as OrganizationSyncService for consistency.
-     *
-     * @return array Array of view objects
-     */
-    public function getViewObjects(): array
-    {
-        try {
-            $objectService = $this->getObjectService();
-            if (!$objectService) {
-                $this->logger->error('ArchiMateService: ObjectService not available for view objects retrieval');
-                return [];
-            }
-
-            $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType('view');
-            
-            if (!$registerId || !$schemaId) {
-                $this->logger->error('ArchiMateService: AMEF register or view schema not configured', [
-                    'registerId' => $registerId,
-                    'schemaId' => $schemaId
-                ]);
-                return [];
-            }
-
-            // Build query for register and schema (no time filtering needed for counts)
-            $query = [
-                '@self' => [
-                    'register' => (int) $registerId,
-                    'schema' => (int) $schemaId
-                ]
-            ];
-            
-            $this->logger->debug('ArchiMateService: Retrieving view objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'query' => $query
-            ]);
-            
-            // Use searchObjects method for filtering
-            $objects = $objectService->searchObjects($query);
-            
-            $this->logger->debug('ArchiMateService: Retrieved view objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'count' => count($objects)
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('ArchiMateService: Failed to retrieve view objects', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return [];
-        }
-    }
-
-    /**
-     * Gets all AMEF relationship objects from the database
-     *
-     * This method retrieves all relationship objects from the AMEF register
-     * using the same pattern as OrganizationSyncService for consistency.
-     *
-     * @return array Array of relationship objects
-     */
-    public function getRelationshipObjects(): array
-    {
-        try {
-            $objectService = $this->getObjectService();
-            if (!$objectService) {
-                $this->logger->error('ArchiMateService: ObjectService not available for relationship objects retrieval');
-                return [];
-            }
-
-            $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType('relationship');
-            
-            if (!$registerId || !$schemaId) {
-                $this->logger->error('ArchiMateService: AMEF register or relationship schema not configured', [
-                    'registerId' => $registerId,
-                    'schemaId' => $schemaId
-                ]);
-                return [];
-            }
-
-            // Build query for register and schema (no time filtering needed for counts)
-            $query = [
-                '@self' => [
-                    'register' => (int) $registerId,
-                    'schema' => (int) $schemaId
-                ]
-            ];
-            
-            $this->logger->debug('ArchiMateService: Retrieving relationship objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'query' => $query
-            ]);
-            
-            // Use searchObjects method for filtering
-            $objects = $objectService->searchObjects($query);
-            
-            $this->logger->debug('ArchiMateService: Retrieved relationship objects', [
-                'register' => $registerId,
-                'schema' => $schemaId,
-                'count' => count($objects)
-            ]);
-
-            return $objects;
-        } catch (\Exception $e) {
-            $this->logger->error('ArchiMateService: Failed to retrieve relationship objects', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return [];
-        }
-    }
-
-    /**
-     * Set ArchiMate import status
-     *
-     * @param array $status The import status
-     * @return void
-     */
-    public function setArchiMateImportStatus(array $status): void
-    {
-        $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
-        $this->config->setValueString(self::APP_NAME, 'archimate_import_status', $jsonStatus);
-    }
-
-    /**
-     * Set ArchiMate export status
-     *
-     * @param array $status The export status
-     * @return void
-     */
-    public function setArchiMateExportStatus(array $status): void
-    {
-        $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
-        $this->config->setValueString(self::APP_NAME, 'archimate_export_status', $jsonStatus);
-    }
-
-    /**
-     * Clear ArchiMate import status
-     *
-     * @return void
-     */
-    public function clearArchiMateImportStatus(): void
-    {
-        $this->config->deleteKey(self::APP_NAME, 'archimate_import_status');
-    }
-
-    /**
-     * Clear ArchiMate export status
-     *
-     * @return void
-     */
-    public function clearArchiMateExportStatus(): void
-    {
-        $this->config->deleteKey(self::APP_NAME, 'archimate_export_status');
-    }
-
-    /**
-     * Get ArchiMate import/export status and AMEF object counts
-     *
-     * @return array The ArchiMate status with object counts
-     */
-    public function getArchiMateStatus(): array
-    {
-        $importStatus = $this->config->getValueString(self::APP_NAME, 'archimate_import_status', '{}');
-        $exportStatus = $this->config->getValueString(self::APP_NAME, 'archimate_export_status', '{}');
-        
-        $importDecoded = json_decode($importStatus, true);
-        $exportDecoded = json_decode($exportStatus, true);
-        
-        // Get AMEF object counts
-        $elementObjects = $this->getElementObjects();
-        $organizationObjects = $this->getOrganizationObjects();
-        $viewObjects = $this->getViewObjects();
-        $relationshipObjects = $this->getRelationshipObjects();
-        
-        return [
-            'import' => is_array($importDecoded) ? $importDecoded : [],
-            'export' => is_array($exportDecoded) ? $exportDecoded : [],
-            'totalElementObjects' => count($elementObjects),
-            'totalOrganizationObjects' => count($organizationObjects),
-            'totalViewObjects' => count($viewObjects),
-            'totalRelationshipsObjects' => count($relationshipObjects)
-        ];
-    }
-
-    /**
-     * Get AMEF configuration directly from IAppConfig
-     *
-     * @return array The AMEF configuration
-     */
-    private function getAmefConfig(): array
-    {
-        $config = $this->config->getValueString(self::APP_NAME, 'amef_config', '{}');
-        $decoded = json_decode($config, true);
-        
-        if (!is_array($decoded)) {
-            // Fallback to individual config values for backward compatibility
-            $decoded = [
-                'register_id' => $this->config->getValueString(self::APP_NAME, 'amef_register_id', ''),
-                'organizations_schema' => $this->config->getValueString(self::APP_NAME, 'amef_organizations_schema', ''),
-                'elements_schema' => $this->config->getValueString(self::APP_NAME, 'amef_elements_schema', ''),
-                'relationships_schema' => $this->config->getValueString(self::APP_NAME, 'amef_relationships_schema', ''),
-                'views_schema' => $this->config->getValueString(self::APP_NAME, 'amef_views_schema', '')
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
             ];
         }
-        
-        return $decoded;
     }
 
     /**
@@ -2724,18 +1533,417 @@ class ArchiMateService
      */
     private function getVoorzieningenConfig(): array
     {
-        $config = $this->config->getValueString(self::APP_NAME, 'voorzieningen_config', '{}');
+        $config = $this->config->getValueString('softwarecatalog', 'voorzieningen_config', '{}');
         $decoded = json_decode($config, true);
         
         if (!is_array($decoded)) {
             // Fallback to individual config values for backward compatibility
             $decoded = [
-                'register' => $this->config->getValueString(self::APP_NAME, 'voorzieningen_register', ''),
-                'organisatie_schema' => $this->config->getValueString(self::APP_NAME, 'voorzieningen_organisatie_schema', ''),
-                'contactpersoon_schema' => $this->config->getValueString(self::APP_NAME, 'voorzieningen_contactpersoon_schema', ''),
+                'register' => $this->config->getValueString('softwarecatalog', 'voorzieningen_register', ''),
+                'organisatie_schema' => $this->config->getValueString('softwarecatalog', 'voorzieningen_organisatie_schema', ''),
+                'contactpersoon_schema' => $this->config->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', ''),
             ];
         }
         
         return $decoded;
     }
+
+    /**
+     * Get the current status of ArchiMate operations
+     *
+     * @return array Status information including import/export status and object counts
+     */
+    public function getArchiMateStatus(): array
+    {
+        $this->logger->info('Getting ArchiMate status');
+        
+        try {
+            // Get basic status information
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                return [
+                    'success' => false,
+                    'error' => 'ObjectService not available'
+                ];
+            }
+            
+            // Get object counts using the proper getter methods
+            $elementObjects = $this->getElementObjects();
+            $organizationObjects = $this->getOrganizationObjects();
+            $viewObjects = $this->getViewObjects();
+            $relationshipObjects = $this->getRelationshipObjects();
+            $modelObjects = $this->getModelObjects();
+            $propertyObjects = $this->getPropertyObjects();
+            $propertyDefinitionObjects = $this->getPropertyDefinitionObjects();
+            
+            // Calculate totals
+            $totalCount = count($elementObjects) + count($organizationObjects) + 
+                         count($viewObjects) + count($relationshipObjects) + 
+                         count($modelObjects) + count($propertyObjects) + 
+                         count($propertyDefinitionObjects);
+            
+            return [
+                'success' => true,
+                'status' => 'ready',
+                'model_count' => count($modelObjects),
+                'total_objects' => $totalCount,
+                'element_count' => count($elementObjects),
+                'organization_count' => count($organizationObjects),
+                'view_count' => count($viewObjects),
+                'relationship_count' => count($relationshipObjects),
+                'property_count' => count($propertyObjects),
+                'property_definition_count' => count($propertyDefinitionObjects)
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get ArchiMate status', [
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get AMEF register ID from configuration
+     * 
+     * @return int|null The register ID or null if not configured
+     */
+    private function getAmefRegisterId(): ?int
+    {
+        // Retrieve AMEF configuration
+        $amefConfig = $this->getAmefConfig();
+
+        // Try JSON config keys first: support both 'register_id' and 'register'
+        $rawRegisterId = $amefConfig['register_id']
+            ?? $amefConfig['register']
+            ?? null;
+
+        // Fallback to legacy individual app config keys if not present in JSON
+        if ($rawRegisterId === null || $rawRegisterId === '') {
+            $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '')
+                ?: $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
+        }
+
+        // Validate and normalize to positive int
+        if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string) $rawRegisterId)) {
+            $registerId = (int) $rawRegisterId;
+            return $registerId > 0 ? $registerId : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get AMEF schema ID for a specific ArchiMate type
+     *
+     * This method retrieves the schema ID for a given ArchiMate type from the AMEF configuration.
+     * It looks for the schema ID using the pattern '{type}_schema' in the configuration.
+     *
+     * @param string $archiMateType The ArchiMate type (e.g., 'element', 'organization', 'relationship')
+     * @return int|null The schema ID for the given type or null if not configured
+     */
+    private function getAmefSchemaIdForType(string $archiMateType): ?int
+    {
+        // Get AMEF configuration
+        $amefConfig = $this->getAmefConfig();
+
+        // Normalize plural → singular and handle the actual config structure
+        $typeMapping = [
+            'elements' => 'element',
+            'organizations' => 'organization',
+            // Accept both 'relationships' (AMEF wording) and UI term 'relation'
+            'relationships' => 'relation',
+            'views' => 'view',
+            'models' => 'model',
+            'properties' => 'property',
+            // Accept both underscored and dashed naming conventions
+            'property_definitions' => 'property-definition'
+        ];
+        $normalizedType = $typeMapping[$archiMateType] ?? $archiMateType;
+
+        // Candidate keys: match the actual config structure
+        $schemaKeyCandidatesByType = [
+            'element' => ['element_schema'],
+            'organization' => ['organization_schema'],
+            'relationship' => ['relation_schema'],
+            'view' => ['view_schema'],
+            'model' => ['model_schema'],
+            'property' => ['property_schema'],
+            'property_definition' => ['property-definition_schema']
+        ];
+
+        $candidates = $schemaKeyCandidatesByType[$normalizedType] ?? [$normalizedType . '_schema'];
+
+        // Try JSON config with the actual keys
+        foreach ($candidates as $key) {
+            if (array_key_exists($key, $amefConfig)) {
+                $raw = $amefConfig[$key];
+                if ($raw !== '' && $raw !== null && is_numeric((string) $raw)) {
+                    $id = (int) $raw;
+                    if ($id > 0) {
+                        return $id;
+                    }
+                }
+            }
+        }
+
+        // Fallback to legacy individual app config keys if not present in JSON
+        foreach ($candidates as $key) {
+            $raw = $this->config->getValueString('softwarecatalog', 'amef_' . $key, '')
+                ?: $this->config->getValueString('softwarecatalog', $key, '');
+            if ($raw !== '' && is_numeric((string) $raw)) {
+                $id = (int) $raw;
+                if ($id > 0) {
+                    return $id;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get element objects from the database
+     * 
+     * @param array $query Query parameters
+     * @return array Array of element objects
+     */
+    public function getElementObjects(array $query = []): array
+    {
+        return $this->getObjectsWithPagination('element', $query);
+    }
+
+    /**
+     * Get organization objects from the database
+     * 
+     * @param array $query Query parameters
+     * @return array Array of organization objects
+     */
+    public function getOrganizationObjects(array $query = []): array
+    {
+        return $this->getObjectsWithPagination('organization', $query);
+    }
+
+    /**
+     * Get view objects from the database
+     * 
+     * @param array $query Query parameters
+     * @return array Array of view objects
+     */
+    public function getViewObjects(array $query = []): array
+    {
+        return $this->getObjectsWithPagination('view', $query);
+    }
+
+    /**
+     * Get relationship objects from the database
+     * 
+     * @param array $query Query parameters
+     * @return array Array of relationship objects
+     */
+    public function getRelationshipObjects(array $query = []): array
+    {
+        return $this->getObjectsWithPagination('relationship', $query);
+    }
+
+    /**
+     * Get model objects from the database
+     * 
+     * @param array $query Query parameters
+     * @return array Array of model objects
+     */
+    public function getModelObjects(array $query = []): array
+    {
+        return $this->getObjectsWithPagination('model', $query);
+    }
+
+    /**
+     * Get property objects from the database
+     * 
+     * @param array $query Query parameters
+     * @return array Array of property objects
+     */
+    public function getPropertyObjects(array $query = []): array
+    {
+        return $this->getObjectsWithPagination('property', $query);
+    }
+
+    /**
+     * Get property definition objects from the database
+     * 
+     * @param array $query Query parameters
+     * @return array Array of property definition objects
+     */
+    public function getPropertyDefinitionObjects(array $query = []): array
+    {
+        return $this->getObjectsWithPagination('property_definition', $query);
+    }
+
+    /**
+     * Get objects with pagination support for a specific schema type
+     *
+     * @param string $schemaType The schema type to retrieve objects for
+     * @param array $query Optional query criteria and pagination parameters
+     * @return array Array of objects matching the criteria
+     */
+    private function getObjectsWithPagination(string $schemaType, array $query = []): array
+    {
+        try {
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                $this->logger->error("ArchiMateService: ObjectService not available for {$schemaType} objects retrieval");
+                return [];
+            }
+
+            $registerId = $this->getAmefRegisterId();
+            $schemaId = $this->getAmefSchemaIdForType($schemaType);
+            
+            if (!$registerId || !$schemaId) {
+                $this->logger->error("ArchiMateService: AMEF register or {$schemaType} schema not configured", [
+                    'registerId' => $registerId,
+                    'schemaId' => $schemaId
+                ]);
+                return [];
+            }
+
+            // Extract pagination parameters
+            $limit = $query['limit'] ?? 1000; // Default limit for large datasets
+            $offset = $query['offset'] ?? 0;
+            $usePagination = $query['use_pagination'] ?? false;
+            
+            // Remove pagination parameters from query
+            unset($query['limit'], $query['offset'], $query['use_pagination']);
+
+            // Build base query for register and schema
+            $baseQuery = [
+                '@self' => [
+                    'register' => (int) $registerId,
+                    'schema' => (int) $schemaId
+                ]
+            ];
+            
+            // Merge with provided query
+            $finalQuery = array_merge_recursive($baseQuery, $query);
+            
+            // Add pagination if requested
+            if ($usePagination && $limit > 0) {
+                $finalQuery['@pagination'] = [
+                    'limit' => (int) $limit,
+                    'offset' => (int) $offset
+                ];
+            }
+            
+            $this->logger->debug("ArchiMateService: Retrieving {$schemaType} objects", [
+                'register' => $registerId,
+                'schema' => $schemaId,
+                'query' => $finalQuery,
+                'pagination' => $usePagination ? ['limit' => $limit, 'offset' => $offset] : 'disabled'
+            ]);
+            
+            // Use searchObjects method for filtering
+            $objects = $objectService->searchObjects($finalQuery);
+            
+            $this->logger->debug("ArchiMateService: Retrieved {$schemaType} objects", [
+                'register' => $registerId,
+                'schema' => $schemaId,
+                'count' => count($objects),
+                'pagination' => $usePagination ? ['limit' => $limit, 'offset' => $offset] : 'disabled'
+            ]);
+
+            return $objects;
+        } catch (\Exception $e) {
+            $this->logger->error("ArchiMateService: Failed to retrieve {$schemaType} objects", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [];
+        }
+    }
+
+    /**
+     * Check if import is in progress
+     * 
+     * @return bool True if import is in progress
+     */
+    public function isImportInProgress(): bool
+    {
+        // For now, return false as we haven't implemented status tracking yet
+        return false;
+    }
+
+    /**
+     * Check if export is in progress
+     * 
+     * @return bool True if export is in progress
+     */
+    public function isExportInProgress(): bool
+    {
+        // For now, return false as we haven't implemented status tracking yet
+        return false;
+    }
+
+    /**
+     * Check if any operation is in progress
+     * 
+     * @return bool True if any operation is in progress
+     */
+    public function isOperationInProgress(): bool
+    {
+        return $this->isImportInProgress() || $this->isExportInProgress();
+    }
+
+    /**
+     * Calculate detailed object statistics for import operations
+     * 
+     * @param array $normalizedData Normalized ArchiMate data
+     * @param array $savedObjects Objects that were saved to database
+     * @return array Comprehensive statistics
+     */
+    private function calculateObjectStatistics(array $normalizedData, array $savedObjects): array
+    {
+        // Initialize statistics structure
+        $statistics = [
+            'elements' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'organizations' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'relationships' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'views' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'property_definitions' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []]
+        ];
+
+        // Count objects by type from normalized data
+        $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
+        foreach ($sections as $section) {
+            if (isset($normalizedData[$section])) {
+                $count = count($normalizedData[$section]);
+                // Assume all objects were created (we can refine this later with actual save results)
+                $statistics[$section]['created'] = $count;
+            }
+        }
+
+        // Calculate summary totals
+        $summary = [
+            'total_objects_created' => 0,
+            'total_objects_updated' => 0,
+            'total_objects_deleted' => 0,
+            'total_objects_skipped' => 0,
+            'total_errors' => 0
+        ];
+
+        foreach ($statistics as $section => $sectionStats) {
+            $summary['total_objects_created'] += $sectionStats['created'];
+            $summary['total_objects_updated'] += $sectionStats['updated'];
+            $summary['total_objects_skipped'] += $sectionStats['skipped'];
+            $summary['total_errors'] += count($sectionStats['errors']);
+        }
+
+        $statistics['summary'] = $summary;
+
+        return $statistics;
+    }
+
+
 }

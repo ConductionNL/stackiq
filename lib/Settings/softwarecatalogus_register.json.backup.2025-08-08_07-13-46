@@ -41,7 +41,7 @@
             },
             "vng-gemma": {
                 "slug": "vng-gemma",
-                "title": "AMEF",
+                "title": "VNG Gemma",
                 "version": "0.0.2",
                 "description": "",
                 "schemas": [
@@ -51,8 +51,7 @@
                     "property-definition",
                     "relation",
                     "view",
-                    "extendview",
-                    "property"
+                    "extendview"
                 ],
                 "source": "",
                 "tablePrefix": "",
@@ -67,63 +66,6 @@
             }
         },
         "schemas": {
-            "property": {
-                "uri": null,
-                "slug": "property",
-                "title": "Property",
-                "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
-                "version": "0.0.1",
-                "summary": "",
-                "icon": null,
-                "required": [
-                    "name",
-                    "type"
-                ],
-                "properties": {
-                    "name": {
-                        "description": "Naam van de eigenschap",
-                        "type": "string",
-                        "minLength": 1,
-                        "title": "Naam"
-                    },
-                    "type": {
-                        "description": "Datatype van de eigenschap",
-                        "type": "string",
-                        "enum": [
-                            "string",
-                            "number",
-                            "boolean",
-                            "date"
-                        ],
-                        "title": "Type"
-                    },
-                    "value": {
-                        "description": "Waarde van de eigenschap",
-                        "type": "string",
-                        "title": "Waarde"
-                    },
-                    "lang": {
-                        "description": "Taalcode (optioneel)",
-                        "type": "string",
-                        "minLength": 2,
-                        "maxLength": 2,
-                        "title": "Taal"
-                    }
-                },
-                "archive": [],
-                "source": "",
-                "hardValidation": false,
-                "updated": "2025-08-10T00:00:00+00:00",
-                "created": "2025-08-10T00:00:00+00:00",
-                "maxDepth": 0,
-                "owner": "system",
-                "application": null,
-                "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-                "groups": null,
-                "authorization": null,
-                "deleted": null,
-                "configuration": null
-            },
             "sector": {
                 "uri": null,
                 "slug": "sector",
@@ -2335,6 +2277,9 @@
                     "voorzieningAanbod": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             }
@@ -2351,6 +2296,9 @@
                     "voorzieningGebruik": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "organisatie": {
                                 "type": "object",
                                 "properties": {
@@ -2443,6 +2391,9 @@
                     "contactpersoonAanbieder": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             },
@@ -2461,6 +2412,9 @@
                     "contactpersoonGebruiker": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "naam": {
                                 "type": "string"
                             },
@@ -3500,7 +3454,7 @@
             },
             "model": {
                 "slug": "model",
-                "title": "Model",
+                "title": "GEMMA Model",
                 "description": "This object represents an entire AMEF collection",
                 "version": "0.0.37",
                 "summary": "",

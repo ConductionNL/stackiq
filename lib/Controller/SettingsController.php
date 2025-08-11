@@ -348,6 +348,33 @@ class SettingsController extends Controller
     }
 
     /**
+     * Get object counts statistics for all configured registers
+     *
+     * @return JSONResponse JSON response containing object counts statistics
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function stats(): JSONResponse
+    {
+        try {
+            $statistics = $this->settingsService->getObjectCountsStatistics();
+            return new JSONResponse([
+                'success' => true,
+                'statistics' => $statistics
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object counts statistics', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get debug information for settings
      *
      * @return JSONResponse JSON response containing debug information
@@ -638,329 +665,9 @@ class SettingsController extends Controller
 
 
 
-    /**
-     * Get AMEF register configuration settings
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * 
-     * @return JSONResponse The current AMEF configuration settings
-     */
-    public function getAmefSettings(): JSONResponse
-    {
-        try {
-            $settings = [
-                'registerId' => $this->config->getValueString('softwarecatalog', 'amef_register_id', ''),
-                'elementsSchema' => $this->config->getValueString('softwarecatalog', 'amef_elements_schema', ''),
-                'organizationsSchema' => $this->config->getValueString('softwarecatalog', 'amef_organizations_schema', ''),
-                'relationshipsSchema' => $this->config->getValueString('softwarecatalog', 'amef_relationships_schema', ''),
-                'viewsSchema' => $this->config->getValueString('softwarecatalog', 'amef_views_schema', ''),
-            ];
 
-            // Convert empty strings to null for better UI handling
-            foreach ($settings as $key => $value) {
-                if (empty($value)) {
-                    $settings[$key] = null;
-                }
-            }
 
-            return new JSONResponse([
-                'success' => true,
-                'settings' => $settings
-            ]);
 
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to get AMEF settings', [
-                'error' => $e->getMessage()
-            ]);
-
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get AMEF settings: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Save AMEF register configuration settings
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * 
-     * @return JSONResponse Result of saving the AMEF configuration
-     */
-    public function saveAmefSettings(): JSONResponse
-    {
-        try {
-            $data = json_decode(file_get_contents('php://input'), true);
-            
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'Invalid JSON data',
-                    'error' => 'INVALID_JSON'
-                ], 400);
-            }
-
-            // Save each setting, using empty string for null values
-            $settingsMap = [
-                'registerId' => 'amef_register_id',
-                'elementsSchema' => 'amef_elements_schema',
-                'organizationsSchema' => 'amef_organizations_schema', 
-                'relationshipsSchema' => 'amef_relationships_schema',
-                'viewsSchema' => 'amef_views_schema'
-            ];
-
-            foreach ($settingsMap as $jsonKey => $configKey) {
-                $value = $data[$jsonKey] ?? null;
-                $this->config->setValueString('softwarecatalog', $configKey, (string)($value ?? ''));
-            }
-
-            $this->logger->info('AMEF settings saved successfully', [
-                'settings' => $data
-            ]);
-
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'AMEF settings saved successfully'
-            ]);
-
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to save AMEF settings', [
-                'error' => $e->getMessage()
-            ]);
-
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to save AMEF settings: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Auto-configure AMEF register settings
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * 
-     * @return JSONResponse Auto-configuration results
-     */
-    public function autoConfigureAmef(): JSONResponse
-    {
-        try {
-            $configured = [];
-            $errors = [];
-
-            // Get the actual registers and schemas from OpenRegister
-            $objectService = $this->getObjectService();
-            if (!$objectService) {
-                throw new \RuntimeException('OpenRegister service not available');
-            }
-
-            $registers = $objectService->getRegisters();
-            if (empty($registers)) {
-                throw new \RuntimeException('No registers available');
-            }
-
-            // Look for the vng-gemma register (AMEF schemas)
-            $vngGemmaRegister = null;
-            $voorzieningenRegister = null;
-            
-            foreach ($registers as $register) {
-                $registerSlug = strtolower($register['slug'] ?? '');
-                $registerTitle = strtolower($register['title'] ?? '');
-                
-                if ($registerSlug === 'vng-gemma' || $registerTitle === 'vng gemma') {
-                    $vngGemmaRegister = $register;
-                } elseif ($registerSlug === 'voorzieningen' || $registerTitle === 'voorzieningen') {
-                    $voorzieningenRegister = $register;
-                }
-            }
-
-            // If vng-gemma register is not found, try to import it from softwarecatalogus_register.json
-            if (!$vngGemmaRegister) {
-                $this->logger->info('vng-gemma register not found, attempting to import from softwarecatalogus_register.json');
-                
-                try {
-                    $configurationService = $this->getConfigurationService();
-                    if ($configurationService) {
-                        $softwareCatalogPath = __DIR__ . '/../Settings/softwarecatalogus_register.json';
-                        if (file_exists($softwareCatalogPath)) {
-                            $softwareCatalogContent = file_get_contents($softwareCatalogPath);
-                            $softwareCatalogSettings = json_decode($softwareCatalogContent, true);
-                            
-                            if (json_last_error() === JSON_ERROR_NONE) {
-                                $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
-                                
-                                $importResult = $configurationService->importFromJson(
-                                    data: $softwareCatalogSettings,
-                                    owner: null,
-                                    appId: \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
-                                    version: $currentAppVersion,
-                                    force: true
-                                );
-                                
-                                $this->logger->info('Imported softwarecatalogus_register.json', ['result' => $importResult]);
-                                
-                                // Refresh registers after import
-                                $registers = $objectService->getRegisters();
-                                foreach ($registers as $register) {
-                                    $registerSlug = strtolower($register['slug'] ?? '');
-                                    if ($registerSlug === 'vng-gemma') {
-                                        $vngGemmaRegister = $register;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (\Exception $e) {
-                    $this->logger->error('Failed to import softwarecatalogus_register.json', ['error' => $e->getMessage()]);
-                    $errors[] = 'Failed to import vng-gemma register: ' . $e->getMessage();
-                }
-            }
-
-            // Define AMEF schema mappings - STRICT English only (no Dutch fallbacks)
-            $amefSchemaMappings = [
-                'elementsSchema' => ['element', 'archimate-element'],
-                'organizationsSchema' => ['organization'],  // STRICT: English only for AMEF
-                'relationshipsSchema' => ['relation', 'relationship'],
-                'viewsSchema' => ['view', 'diagram', 'extendview']
-            ];
-
-            // First try to find schemas in vng-gemma register (AMEF specific)
-            if ($vngGemmaRegister && !empty($vngGemmaRegister['schemas'])) {
-                $this->logger->info('Found vng-gemma register, configuring AMEF schemas', [
-                    'register_id' => $vngGemmaRegister['id'],
-                    'schemas' => array_column($vngGemmaRegister['schemas'], 'slug')
-                ]);
-
-                // Debug: Log all schema details
-                $this->logger->info('Full vng-gemma schema details', [
-                    'register_id' => $vngGemmaRegister['id'],
-                    'register_title' => $vngGemmaRegister['title'] ?? 'unknown',
-                    'register_slug' => $vngGemmaRegister['slug'] ?? 'unknown',
-                    'all_schemas' => $vngGemmaRegister['schemas']
-                ]);
-
-                foreach ($amefSchemaMappings as $settingKey => $patterns) {
-                    if (isset($configured[$settingKey])) {
-                        continue; // Already configured
-                    }
-
-                    // Try to find exact English schema matches (STRICT)
-                    foreach ($patterns as $pattern) {
-                        foreach ($vngGemmaRegister['schemas'] as $schema) {
-                            $schemaSlug = strtolower($schema['slug'] ?? '');
-                            $schemaTitle = strtolower($schema['title'] ?? '');
-                            
-                            if ($schemaSlug === $pattern || $schemaTitle === $pattern || 
-                                strpos($schemaSlug, $pattern) !== false || strpos($schemaTitle, $pattern) !== false) {
-                                $configured[$settingKey] = $schema['id'];
-                                
-                                // Save to the correct keys that the main settings endpoint expects
-                                if ($settingKey === 'organizationsSchema') {
-                                    $this->config->setValueString('softwarecatalog', 'amef_organization_source', 'openregister');
-                                    $this->config->setValueString('softwarecatalog', 'amef_organization_register', (string)$vngGemmaRegister['id']);
-                                    $this->config->setValueString('softwarecatalog', 'amef_organization_schema', (string)$schema['id']);
-                                }
-                                
-                                // Also save to the AMEF-specific endpoint keys for backward compatibility
-                                $configKey = 'amef_' . strtolower(str_replace('Schema', '', $settingKey)) . '_schema';
-                                $this->config->setValueString('softwarecatalog', $configKey, (string)$schema['id']);
-                                
-                                $this->logger->info("Configured AMEF schema: {$settingKey} -> {$schema['id']} ({$schema['title']}) [slug: {$schema['slug']}]");
-                                break 2;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // REMOVED: No fallback to voorzieningen register for AMEF (STRICT English schemas only)
-
-            // Set register ID for AMEF operations - prefer vng-gemma (STRICT)
-            if ($vngGemmaRegister) {
-                // Save to both the AMEF-specific key and main settings key using consistent API
-                $this->config->setValueString('softwarecatalog', 'amef_register_id', (string)$vngGemmaRegister['id']);
-                $configured['registerId'] = $vngGemmaRegister['id'];
-                $this->logger->info("Set AMEF register to vng-gemma: {$vngGemmaRegister['id']} (PREFERRED)");
-            } elseif ($voorzieningenRegister) {
-                $this->config->setValueString('softwarecatalog', 'amef_register_id', (string)$voorzieningenRegister['id']);
-                $configured['registerId'] = $voorzieningenRegister['id'];
-                $this->logger->warning("FALLBACK: Set AMEF register to voorzieningen: {$voorzieningenRegister['id']} - vng-gemma register not found!");
-                $errors[] = 'WARNING: Using voorzieningen register for AMEF instead of preferred vng-gemma register';
-            } else {
-                $errors[] = 'CRITICAL: No suitable register found for AMEF operations (neither vng-gemma nor voorzieningen)';
-            }
-
-            // Check what's missing
-            $missingSchemas = [];
-            foreach (array_keys($amefSchemaMappings) as $schemaType) {
-                if (!isset($configured[$schemaType])) {
-                    $missingSchemas[] = $schemaType;
-                }
-            }
-
-            if (!empty($missingSchemas)) {
-                $errors[] = 'Could not find schemas for: ' . implode(', ', $missingSchemas);
-                
-                if ($vngGemmaRegister && !empty($vngGemmaRegister['schemas'])) {
-                    $vngGemmaSchemas = array_map(function($schema) {
-                        return $schema['slug'] . ' (' . $schema['title'] . ')';
-                    }, $vngGemmaRegister['schemas']);
-                    $errors[] = 'Available schemas in vng-gemma: ' . implode(', ', $vngGemmaSchemas);
-                } else {
-                    $errors[] = 'Available schemas in vng-gemma: none (register not found or no schemas)';
-                }
-                
-                if ($voorzieningenRegister && !empty($voorzieningenRegister['schemas'])) {
-                    $voorzieningenSchemas = array_map(function($schema) {
-                        return $schema['slug'] . ' (' . $schema['title'] . ')';
-                    }, $voorzieningenRegister['schemas']);
-                    $errors[] = 'Available schemas in voorzieningen: ' . implode(', ', $voorzieningenSchemas);
-                } else {
-                    $errors[] = 'Available schemas in voorzieningen: none (register not found or no schemas)';
-                }
-                
-                $errors[] = 'AMEF requires STRICT English schemas from vng-gemma register: element, organization, relation, view';
-                $errors[] = 'No fallbacks to Dutch schemas are allowed for AMEF - ensure vng-gemma register has proper English schemas';
-                $errors[] = 'Try running manual import to ensure softwarecatalogus_register.json is properly imported into OpenRegister';
-            }
-
-            $this->logger->info('AMEF auto-configuration completed', [
-                'configured' => $configured,
-                'errors' => $errors,
-                'vng_gemma_register' => $vngGemmaRegister ? $vngGemmaRegister['id'] : null,
-                'voorzieningen_register' => $voorzieningenRegister ? $voorzieningenRegister['id'] : null
-            ]);
-
-            return new JSONResponse([
-                'success' => !empty($configured),
-                'message' => !empty($configured) ? 'AMEF configuration updated successfully' : 'No suitable schemas found',
-                'configured' => $configured,
-                'errors' => $errors,
-                'register_info' => [
-                    'vng_gemma_found' => $vngGemmaRegister !== null,
-                    'voorzieningen_found' => $voorzieningenRegister !== null
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            $this->logger->error('AMEF auto-configuration failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Auto-configuration failed: ' . $e->getMessage(),
-                'errors' => [$e->getMessage()]
-            ], 500);
-        }
-    }
 
     /**
      * Get current progress for an operation
@@ -1118,32 +825,67 @@ class SettingsController extends Controller
             $rawInput = file_get_contents('php://input');
             $data = json_decode($rawInput, true);
             
+            // Debug logging
+            $this->logger->info('ArchiMate import request received', [
+                'rawInput' => $rawInput,
+                'decodedData' => $data,
+                'jsonError' => json_last_error_msg(),
+                'contentType' => $this->request->getHeader('Content-Type'),
+                'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false
+            ]);
+            
             // Check if a file was uploaded (traditional file upload)
             $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
             
-            if ($uploadedFiles) {
+            // Also check $_FILES directly as fallback
+            $filesArray = $_FILES['archiMateFile'] ?? null;
+            
+            $this->logger->info('File upload detection', [
+                'uploadedFiles' => $uploadedFiles,
+                'filesArray' => $filesArray,
+                'requestMethod' => $this->request->getMethod(),
+                'contentType' => $this->request->getHeader('Content-Type')
+            ]);
+            
+            if ($uploadedFiles || $filesArray) {
+                // Use $_FILES as fallback if getUploadedFile doesn't work
+                $fileData = $uploadedFiles ?: $filesArray;
+                
                 // Handle file upload
                 $options = [
                     'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
                     'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
                     'preserveIds' => $this->request->getParam('preserveIds', 'true') === 'true',
-                    'filePath' => $uploadedFiles['tmp_name'],
-                    'fileName' => $uploadedFiles['name'],
-                    'fileSize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name']),
-                    'mimeType' => $uploadedFiles['type']
+                    'processingMode' => $this->request->getParam('processingMode', 'speed'),
+                    'filePath' => $fileData['tmp_name'],
+                    'fileName' => $fileData['name'],
+                    'fileSize' => $fileData['size'] ?? filesize($fileData['tmp_name']),
+                    'mimeType' => $fileData['type'] ?? 'text/xml'
                 ];
+                
+                $this->logger->info('File upload detected', ['options' => $options]);
             } elseif ($data && isset($data['file_path'])) {
                 // Handle file path from JSON payload
                 $options = [
                     'updateExisting' => $data['updateExisting'] ?? true,
                     'deleteOrphaned' => $data['deleteOrphaned'] ?? false,
                     'preserveIds' => $data['preserveIds'] ?? true,
+                    'processingMode' => $data['processingMode'] ?? 'speed',
                     'filePath' => $data['file_path'],
                     'fileName' => $data['fileName'] ?? basename($data['file_path']),
                     'fileSize' => $data['fileSize'] ?? (file_exists($data['file_path']) ? filesize($data['file_path']) : 0),
                     'mimeType' => $data['mimeType'] ?? 'text/xml'
                 ];
+                
+                $this->logger->info('JSON payload detected', ['options' => $options]);
             } else {
+                $this->logger->error('No file uploaded or file path provided', [
+                    'uploadedFiles' => $uploadedFiles,
+                    'filesArray' => $filesArray,
+                    'data' => $data,
+                    'rawInput' => $rawInput
+                ]);
+                
                 return new JSONResponse([
                     'success' => false,
                     'message' => 'No ArchiMate file uploaded or file path provided',
@@ -1188,32 +930,15 @@ class SettingsController extends Controller
             if (json_last_error() !== JSON_ERROR_NONE) {
                 // Fallback to request parameters if JSON decode fails
                 $data = [
-                    'format' => $this->request->getParam('format', 'xml'),
-                    'includeRelationships' => $this->request->getParam('includeRelationships', true),
-                    'includeViews' => $this->request->getParam('includeViews', false),
-                    'organizationSpecific' => $this->request->getParam('organizationSpecific', false),
-                    'organizationId' => $this->request->getParam('organizationId', null),
-                    'organizationFilter' => $this->request->getParam('organizationFilter', null),
-                    'selectedSchemas' => $this->request->getParam('selectedSchemas', [])
+                    'organization' => $this->request->getParam('organization', null)
                 ];
             }
 
-            // Get export criteria and options
-            $criteria = [
-                'organizationSpecific' => $data['organizationSpecific'] ?? false,
-                'organizationId' => $data['organizationId'] ?? null,
-                'organizationFilter' => $data['organizationFilter'] ?? null,
-                'selectedSchemas' => $data['selectedSchemas'] ?? [],
-                'includeRelationships' => $data['includeRelationships'] ?? true,
-                'includeViews' => $data['includeViews'] ?? false
-            ];
+            // Simple organization filter - only parameter we support
+            $organization = $data['organization'] ?? null;
 
-            $options = [
-                'format' => $data['format'] ?? 'xml'
-            ];
-
-            // Call export service
-            $result = $this->archiMateService->exportToArchiMate($criteria, $options);
+            // Call export service with simplified parameters
+            $result = $this->archiMateService->exportToArchiMate($organization);
 
             // Check if export was successful
             if (!$result['success']) {
@@ -1226,15 +951,10 @@ class SettingsController extends Controller
 
             // Return the XML file directly for download
             $fileName = $result['file_name'] ?? 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml';
-            $xmlContent = $result['xml_content'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
+            $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
             
-            // Determine content type based on format
-            $format = $options['format'];
-            $contentType = match($format) {
-                'json' => 'application/json',
-                'xml', 'archimate' => 'application/xml',
-                default => 'application/xml'
-            };
+            // Always return XML format
+            $contentType = 'application/xml';
 
             // Create direct download response
             $response = new class($xmlContent) extends Response {
@@ -1874,11 +1594,12 @@ class SettingsController extends Controller
     public function clearArchiMateImportStatus(): JSONResponse
     {
         try {
-            $this->settingsService->clearArchiMateImportStatus();
+            $result = $this->settingsService->clearArchiMateImportStatus();
             
             return new JSONResponse([
                 'success' => true,
-                'message' => 'ArchiMate import status cleared successfully'
+                'message' => 'ArchiMate import status cleared successfully',
+                'details' => $result
             ]);
             
         } catch (\Exception $e) {
@@ -1888,6 +1609,72 @@ class SettingsController extends Controller
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Failed to clear ArchiMate import status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Force kill running ArchiMate import process and clear status
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Kill result
+     * @deprecated Use cancelArchiMateImport() instead
+     */
+    public function killArchiMateImport(): JSONResponse
+    {
+        try {
+            $result = $this->settingsService->killArchiMateImport();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'ArchiMate import termination completed',
+                'details' => $result
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to kill ArchiMate import process', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to kill ArchiMate import process: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel a running ArchiMate import
+     * This combines force clearing and process killing for complete cancellation
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Cancellation result
+     */
+    public function cancelArchiMateImport(): JSONResponse
+    {
+        try {
+            $result = $this->settingsService->cancelArchiMateImport();
+            
+            $message = $result['cancelled'] 
+                ? 'ArchiMate import cancelled successfully'
+                : 'ArchiMate import cancellation failed';
+            
+            return new JSONResponse([
+                'success' => $result['cancelled'],
+                'message' => $message,
+                'details' => $result
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to cancel ArchiMate import', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to cancel ArchiMate import: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1967,6 +1754,380 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Get ArchiMate settings and status (without object counts for performance)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse ArchiMate settings and status
+     */
+    public function getArchiMateSettings(): JSONResponse
+    {
+        try {
+            $archimateStatus = $this->settingsService->getArchiMateStatus();
+            
+            return new JSONResponse([
+                'success' => true,
+                'archimate' => $archimateStatus,
+                'timestamp' => time()
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get ArchiMate settings', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get ArchiMate settings: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get object counts for all registers (separate endpoint for performance)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Object counts for all registers
+     */
+    public function getObjectCounts(): JSONResponse
+    {
+        try {
+            $objectCounts = $this->settingsService->getObjectCounts();
+            
+            return new JSONResponse([
+                'success' => true,
+                'objectCounts' => $objectCounts
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object counts', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get object counts: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================================================
+    // FOCUSED ENDPOINT CONTROLLER METHODS FOR PERFORMANCE OPTIMIZATION
+    // ========================================================================
+
+    /**
+     * Get ArchiMate configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse ArchiMate configuration
+     */
+    public function getArchiMateConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getArchiMateConfig();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get ArchiMate config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get ArchiMate config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update ArchiMate configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateArchiMateConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateArchiMateConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update ArchiMate config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update ArchiMate config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get email configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Email configuration
+     */
+    public function getEmailConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getEmailConfigFocused();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get email config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get email config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update email configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateEmailConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateEmailConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update email config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update email config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get AMEF configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse AMEF configuration
+     */
+    public function getAmefConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getAmefConfigFocused();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get AMEF config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get AMEF config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update AMEF configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateAmefConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateAmefConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update AMEF config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update AMEF config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get Voorzieningen configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Voorzieningen configuration
+     */
+    public function getVoorzieningenConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getVoorzieningenConfigFocused();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get Voorzieningen config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get Voorzieningen config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update Voorzieningen configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateVoorzieningenConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateVoorzieningenConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update Voorzieningen config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update Voorzieningen config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get object counts only (lightweight)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Object counts
+     */
+    public function getObjectsCounts(): JSONResponse
+    {
+        try {
+            $counts = $this->settingsService->getObjectsCounts();
+            
+            return new JSONResponse($counts);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object counts', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get object counts: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get object statistics (full statistics with configuration)
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Object statistics
+     */
+    public function getObjectsStatistics(): JSONResponse
+    {
+        try {
+            $statistics = $this->settingsService->getObjectsStatistics();
+            
+            return new JSONResponse($statistics);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get object statistics', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get object statistics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user groups configuration only
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse User groups configuration
+     */
+    public function getUserGroupsConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getUserGroupsConfig();
+            
+            return new JSONResponse($config);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get user groups config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get user groups config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update user groups configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateUserGroupsConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateUserGroupsConfig($data);
+            
+            return new JSONResponse($result);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update user groups config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update user groups config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 }//end class
 

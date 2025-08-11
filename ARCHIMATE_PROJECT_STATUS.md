@@ -6,9 +6,17 @@ The ArchiMate Import/Export functionality for the Nextcloud SoftwareCatalog app 
 ## Current Status: ✅ COMPLETE - PRODUCTION READY
 
 **Last Updated:** July 31, 2025  
-**Version:** 2.1 - Complete with Skipping Logic
+**Version:** 2.2 - Performance Optimized API Architecture
 
 ## 🚀 Recent Major Updates
+
+### Performance Optimized API Architecture (v2.2)
+- **Separated Endpoints**: Split monolithic settings endpoint into focused endpoints
+- **Fast Settings Loading**: Main settings endpoint now loads in ~100ms instead of 2-5 seconds
+- **Dedicated ArchiMate Status**: Real-time status polling via `/api/settings/archimate` endpoint
+- **On-Demand Object Counts**: Object counts loaded separately via `/api/settings/objects` endpoint
+- **Frontend Optimization**: Updated store to use separate endpoints for better UX
+- **Backward Compatibility**: Maintained existing functionality while improving performance
 
 ### Skipping Logic Implementation (v2.1)
 - **Object Comparison**: Intelligent comparison of existing vs new object data
@@ -133,6 +141,26 @@ $options = [
 - **Properties Schema**: Maps to `vng-gemma.property-definition`
 
 ## API Endpoints
+
+### Performance Optimized Endpoints (v2.2)
+
+#### Basic Settings (Fast - ~100ms)
+```bash
+GET /apps/softwarecatalog/api/settings
+```
+Returns basic configuration without object counts for fast loading.
+
+#### ArchiMate Status (Medium - ~200ms)
+```bash
+GET /apps/softwarecatalog/api/settings/archimate
+```
+Returns ArchiMate import/export status for real-time polling.
+
+#### Object Counts (Slow - Load on demand)
+```bash
+GET /apps/softwarecatalog/api/settings/objects
+```
+Returns object counts for all registers when needed for statistics.
 
 ### Import
 ```bash

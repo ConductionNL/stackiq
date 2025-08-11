@@ -17,15 +17,38 @@
  -->
 
 <template>
-	<CollapsibleSection
+	<AlwaysVisibleSection
 		name="Version Information"
 		description="Current application and configuration versions"
 		:loading="loadingVersionInfo"
-		:show-refresh-button="true"
-		:refreshing="autoConfiguring"
-		refresh-button-text="Auto Configure"
-		:has-info-content="true"
-		@refresh="consolidatedAutoConfigure">
+		:show-refresh-button="false"
+		loading-text="Loading version information..."
+		:has-info-content="true">
+		<template #header-actions>
+			<NcButton
+				v-if="versionInfo.autoConfigCompleted === false"
+				type="secondary"
+				:disabled="autoConfiguring"
+				@click="consolidatedAutoConfigure">
+				Auto Configure
+			</NcButton>
+			<NcButton
+				class="ml-8"
+				type="error"
+				:disabled="autoConfiguring"
+				@click="handleForceUpdate">
+				Force Update
+			</NcButton>
+			<NcButton
+				v-if="versionInfo.autoConfigCompleted === true"
+				class="ml-8"
+				type="tertiary"
+				:disabled="autoConfiguring"
+				@click="handleResetAutoConfig">
+				Reset Auto-Config
+			</NcButton>
+		</template>
+
 		<div class="version-info">
 			<div class="version-details">
 				<div class="version-item">
@@ -50,97 +73,81 @@
 				</div>
 			</div>
 
-			<!-- Consolidated Auto-Configuration Section -->
-			<div class="consolidated-config">
-				<div class="config-actions">
-					<NcButton
-						:type="versionInfo.needsUpdate ? 'primary' : 'secondary'"
-						:disabled="autoConfiguring"
-						@click="consolidatedAutoConfigure()">
-						<template #icon>
-							<NcLoadingIcon v-if="autoConfiguring" :size="20" />
-							<Cog v-else :size="20" />
-						</template>
-						{{ versionInfo.needsUpdate ? 'Auto Configure' : 'Reload Configuration' }}
-					</NcButton>
-				</div>
+			<!-- Configuration Results -->
+			<div v-if="consolidatedResult" class="config-result">
+				<NcNoteCard
+					v-if="consolidatedResult.success"
+					type="success">
+					{{ consolidatedResult.message }}
 
-				<!-- Configuration Results -->
-				<div v-if="consolidatedResult" class="config-result">
-					<NcNoteCard
-						v-if="consolidatedResult.success"
-						type="success">
-						{{ consolidatedResult.message }}
+					<!-- Configuration Steps Details -->
+					<div v-if="consolidatedResult.steps" class="config-steps">
+						<h4>Configuration Steps:</h4>
+						<ul>
+							<li v-if="consolidatedResult.steps.configurationLoad?.success">
+								✅ Configuration Loading: {{ consolidatedResult.steps.configurationLoad.message }}
+							</li>
+							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.success">
+								🇳🇱 Voorzieningen: {{ consolidatedResult.steps.voorzieningenConfiguration.message }}
+							</li>
+							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.register">
+								📋 Voorzieningen Register: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.register }}
+							</li>
+							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.organisatieSchema">
+								📊 Organisatie Schema: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.organisatieSchema }}
+							</li>
+							<li v-if="consolidatedResult.steps.amefConfiguration?.success">
+								🏗️ AMEF: {{ consolidatedResult.steps.amefConfiguration.message }}
+							</li>
+							<li v-if="consolidatedResult.steps.amefConfiguration?.configured?.registerId">
+								📋 AMEF Register: {{ consolidatedResult.steps.amefConfiguration.configured.registerId }}
+							</li>
+							<li v-if="consolidatedResult.steps.groupsConfiguration?.success">
+								👥 User Groups: {{ consolidatedResult.steps.groupsConfiguration.message }}
+							</li>
+							<li v-if="consolidatedResult.steps.groupsConfiguration?.created?.length > 0">
+								➕ Created Groups: {{ consolidatedResult.steps.groupsConfiguration.created.join(', ') }}
+							</li>
+							<li v-if="consolidatedResult.steps.groupsConfiguration?.existing?.length > 0">
+								✓ Existing Groups: {{ consolidatedResult.steps.groupsConfiguration.existing.length }} groups already exist
+							</li>
+						</ul>
+					</div>
+				</NcNoteCard>
+				<NcNoteCard
+					v-else
+					type="error">
+					{{ consolidatedResult.message }}
 
-						<!-- Configuration Steps Details -->
-						<div v-if="consolidatedResult.steps" class="config-steps">
-							<h4>Configuration Steps:</h4>
-							<ul>
-								<li v-if="consolidatedResult.steps.configurationLoad?.success">
-									✅ Configuration Loading: {{ consolidatedResult.steps.configurationLoad.message }}
-								</li>
-								<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.success">
-									🇳🇱 Voorzieningen: {{ consolidatedResult.steps.voorzieningenConfiguration.message }}
-								</li>
-								<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.register">
-									📋 Voorzieningen Register: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.register }}
-								</li>
-								<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.organisatieSchema">
-									📊 Organisatie Schema: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.organisatieSchema }}
-								</li>
-								<li v-if="consolidatedResult.steps.amefConfiguration?.success">
-									🏗️ AMEF: {{ consolidatedResult.steps.amefConfiguration.message }}
-								</li>
-								<li v-if="consolidatedResult.steps.amefConfiguration?.configured?.registerId">
-									📋 AMEF Register: {{ consolidatedResult.steps.amefConfiguration.configured.registerId }}
-								</li>
-								<li v-if="consolidatedResult.steps.groupsConfiguration?.success">
-									👥 User Groups: {{ consolidatedResult.steps.groupsConfiguration.message }}
-								</li>
-								<li v-if="consolidatedResult.steps.groupsConfiguration?.created?.length > 0">
-									➕ Created Groups: {{ consolidatedResult.steps.groupsConfiguration.created.join(', ') }}
-								</li>
-								<li v-if="consolidatedResult.steps.groupsConfiguration?.existing?.length > 0">
-									✓ Existing Groups: {{ consolidatedResult.steps.groupsConfiguration.existing.length }} groups already exist
-								</li>
-							</ul>
-						</div>
-					</NcNoteCard>
-					<NcNoteCard
-						v-else
-						type="error">
-						{{ consolidatedResult.message }}
+					<!-- Show errors if any -->
+					<div v-if="consolidatedResult.errors && consolidatedResult.errors.length > 0" class="config-errors">
+						<h4>Errors:</h4>
+						<ul>
+							<li v-for="error in consolidatedResult.errors" :key="error">
+								{{ error }}
+							</li>
+						</ul>
+					</div>
+				</NcNoteCard>
+			</div>
 
-						<!-- Show errors if any -->
-						<div v-if="consolidatedResult.errors && consolidatedResult.errors.length > 0" class="config-errors">
-							<h4>Errors:</h4>
-							<ul>
-								<li v-for="error in consolidatedResult.errors" :key="error">
-									{{ error }}
-								</li>
-							</ul>
-						</div>
-					</NcNoteCard>
-				</div>
-
-				<!-- Reset Auto-Config Results -->
-				<div v-if="resetAutoConfigResult" class="reset-result">
-					<NcNoteCard
-						v-if="resetAutoConfigResult.success"
-						type="success">
-						{{ resetAutoConfigResult.message }}
-					</NcNoteCard>
-					<NcNoteCard
-						v-else
-						type="error">
-						{{ resetAutoConfigResult.message }}
-					</NcNoteCard>
-				</div>
+			<!-- Reset Auto-Config Results -->
+			<div v-if="resetAutoConfigResult" class="reset-result">
+				<NcNoteCard
+					v-if="resetAutoConfigResult.success"
+					type="success">
+					{{ resetAutoConfigResult.message }}
+				</NcNoteCard>
+				<NcNoteCard
+					v-else
+					type="error">
+					{{ resetAutoConfigResult.message }}
+				</NcNoteCard>
 			</div>
 		</div>
 
 		<!-- Info Content Slot -->
-		<template #info-content>
+		<template #info>
 			<div class="version-info-help">
 				<h3>About Version Information</h3>
 				<p>This section displays version information for the Software Catalog application and its configuration status.</p>
@@ -165,18 +172,45 @@
 					<li><strong>✗ Not installed</strong> - OpenRegister app is missing and needs to be installed</li>
 				</ul>
 
-				<h4>Auto Configuration</h4>
-				<p>The Auto Configure button automatically sets up:</p>
+				<h4>Actions</h4>
+				<p>Three maintenance actions are available here. They map to backend operations in <code>SettingsService.php</code>:</p>
+				<ul>
+					<li>
+						<strong>Auto Configure</strong> — Calls the consolidated auto-config routine (<code>performConsolidatedAutoConfiguration</code>). It:
+						<ul>
+							<li>Loads/Imports the bundled register configuration when needed</li>
+							<li>Configures the Voorzieningen register (register + organisatie/contactpersoon schemas)</li>
+							<li>Configures AMEF (VNG-GEMMA register and required schemas)</li>
+							<li>Creates/configures required user groups</li>
+						</ul>
+						Use this after install or when configuration is incomplete.
+					</li>
+					<li>
+						<strong>Force Update</strong> — Triggers a full forced import and version sync (<code>forceUpdate</code>):
+						<ul>
+							<li>Resets the auto-config completed flag</li>
+							<li>Forces re-import of the bundled configuration (same as <code>manualImport(true)</code>)</li>
+							<li>Runs post-import auto-configuration</li>
+							<li>Refreshes version info and configuration status</li>
+						</ul>
+						Use this if config drift occurred or you want to fully re-apply the shipped configuration.
+					</li>
+					<li>
+						<strong>Reset Auto‑Config</strong> — Only clears the <code>auto_config_completed</code> flag and can optionally clear schema/register keys (<code>resetAutoConfiguration</code>). The UI triggers a safe reset (flag only). After resetting, you can run Auto Configure again.
+					</li>
+				</ul>
+
+				<h4>What Auto Configure sets up</h4>
 				<ul>
 					<li>Register mappings for Voorzieningen and AMEF</li>
 					<li>Schema configurations for organizations and contacts</li>
 					<li>User group creation and assignment</li>
 					<li>Default email settings</li>
 				</ul>
-				<p>Use this when setting up the application for the first time or after major updates.</p>
+				<p>Use Auto Configure when setting up the application for the first time or after major updates.</p>
 			</div>
 		</template>
-	</CollapsibleSection>
+	</AlwaysVisibleSection>
 </template>
 
 <script>
@@ -193,27 +227,21 @@
  */
 
 import { settingsStore } from '../../../store/store.js'
+import { showSuccess, showError } from '@nextcloud/dialogs'
 
 // Components
-import CollapsibleSection from '../../../components/CollapsibleSection.vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-
-// Icons
-import Cog from 'vue-material-design-icons/Cog.vue'
+import { NcNoteCard, NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'VersionInformation',
 
 	components: {
-		CollapsibleSection,
-		NcButton,
+		AlwaysVisibleSection,
 		NcNoteCard,
-		NcLoadingIcon,
-		Cog,
+		NcButton,
 	},
 
 	/**
@@ -260,11 +288,49 @@ export default {
 			try {
 				const result = await this.store.consolidatedAutoConfigure()
 				this.consolidatedResult = result
+				if (result && result.success) {
+					showSuccess('Auto configuration completed successfully')
+				} else if (result && result.message) {
+					showError('Auto configuration failed: ' + result.message)
+				}
 			} catch (error) {
 				console.error('Failed to perform auto-configuration:', error)
 				this.consolidatedResult = {
 					success: false,
 					message: 'Failed to perform auto-configuration: ' + error.message,
+				}
+				showError('Failed to perform auto-configuration: ' + error.message)
+			} finally {
+				this.autoConfiguring = false
+			}
+		},
+
+		async handleResetAutoConfig() {
+			this.autoConfiguring = true
+			this.resetAutoConfigResult = null
+			try {
+				this.resetAutoConfigResult = await this.store.resetAutoConfig()
+				await this.store.loadVersionInfo()
+				if (this.resetAutoConfigResult && this.resetAutoConfigResult.success) {
+					showSuccess(this.resetAutoConfigResult.message || 'Auto-config reset successfully')
+				} else if (this.resetAutoConfigResult) {
+					showError(this.resetAutoConfigResult.message || 'Failed to reset auto-config')
+				}
+			} finally {
+				this.autoConfiguring = false
+			}
+		},
+
+		async handleForceUpdate() {
+			this.autoConfiguring = true
+			this.consolidatedResult = null
+			try {
+				this.consolidatedResult = await this.store.forceUpdate()
+				await this.store.loadVersionInfo()
+				if (this.consolidatedResult && this.consolidatedResult.success) {
+					showSuccess(this.consolidatedResult.message || 'Force update completed successfully')
+				} else if (this.consolidatedResult) {
+					showError(this.consolidatedResult.message || 'Force update failed')
 				}
 			} finally {
 				this.autoConfiguring = false

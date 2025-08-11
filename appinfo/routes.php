@@ -20,7 +20,7 @@ return [
         // Dashboard route
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
         
-        // Unified Settings API routes
+        // Core Settings API routes (minimal, for basic app functionality)
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'GET'],
@@ -29,6 +29,10 @@ return [
         ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
         ['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
         
+        // Separate endpoints for performance optimization
+        ['name' => 'settings#getArchiMateSettings', 'url' => '/api/settings/archimate', 'verb' => 'GET'],
+        ['name' => 'settings#getObjectCounts', 'url' => '/api/settings/objects', 'verb' => 'GET'],
+        
         // Organization synchronization routes
         ['name' => 'settings#getSyncStatus', 'url' => '/api/settings/sync-status', 'verb' => 'GET'],
         ['name' => 'settings#performSync', 'url' => '/api/settings/sync', 'verb' => 'POST'],
@@ -36,7 +40,7 @@ return [
         // Version and import management routes
         ['name' => 'settings#getVersionInfo', 'url' => '/api/settings/version', 'verb' => 'GET'],
         ['name' => 'settings#manualImport', 'url' => '/api/settings/import', 'verb' => 'POST'],
-        		        ['name' => 'settings#forceUpdate', 'url' => '/api/settings/force-update', 'verb' => 'POST'],
+        ['name' => 'settings#forceUpdate', 'url' => '/api/settings/force-update', 'verb' => 'POST'],
         ['name' => 'settings#resetAutoConfig', 'url' => '/api/settings/reset-auto-config', 'verb' => 'POST'],
 
         // Email management routes
@@ -65,11 +69,11 @@ return [
         
         // ArchiMate status management routes (status reading is via main settings endpoint)
         ['name' => 'settings#clearArchiMateImportStatus', 'url' => '/api/archimate/status/import/clear', 'verb' => 'POST'],
+        ['name' => 'settings#cancelArchiMateImport', 'url' => '/api/archimate/import/cancel', 'verb' => 'POST'],
+        ['name' => 'settings#killArchiMateImport', 'url' => '/api/archimate/import/kill', 'verb' => 'POST'], // deprecated
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
         
         ['name' => 'settings#test_archimate_round_trip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
-
-
 
         // User Groups management routes
         ['name' => 'settings#get_generic_user_groups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
@@ -80,13 +84,37 @@ return [
         ['name' => 'settings#set_super_user_groups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'POST'],
         ['name' => 'settings#get_all_groups', 'url' => '/api/settings/user-groups/all', 'verb' => 'GET'],
 
-        // AMEF register configuration routes
-        ['name' => 'settings#getAmefSettings', 'url' => '/api/settings/amef', 'verb' => 'GET'],
-        ['name' => 'settings#saveAmefSettings', 'url' => '/api/settings/amef', 'verb' => 'POST'],
-        ['name' => 'settings#autoConfigureAmef', 'url' => '/api/settings/amef/auto-configure', 'verb' => 'POST'],
-
         // Progress streaming routes
         ['name' => 'settings#getProgress', 'url' => '/api/progress/{operationId}', 'verb' => 'GET'],
         ['name' => 'settings#streamProgress', 'url' => '/api/progress/{operationId}/stream', 'verb' => 'GET'],
+        
+        // ========================================================================
+        // FOCUSED ENDPOINTS FOR PERFORMANCE OPTIMIZATION
+        // ========================================================================
+        
+        // ArchiMate focused endpoints
+        ['name' => 'settings#getArchiMateConfig', 'url' => '/api/archimate/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateArchiMateConfig', 'url' => '/api/archimate/config', 'verb' => 'POST'],
+        ['name' => 'settings#getArchiMateConfig', 'url' => '/api/archimate/status', 'verb' => 'GET'],
+        
+        // Email focused endpoints
+        ['name' => 'settings#getEmailConfig', 'url' => '/api/email/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateEmailConfig', 'url' => '/api/email/config', 'verb' => 'POST'],
+        
+        // AMEF focused endpoints
+        ['name' => 'settings#getAmefConfig', 'url' => '/api/amef/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateAmefConfig', 'url' => '/api/amef/config', 'verb' => 'POST'],
+        
+        // Voorzieningen focused endpoints
+        ['name' => 'settings#getVoorzieningenConfig', 'url' => '/api/voorzieningen/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateVoorzieningenConfig', 'url' => '/api/voorzieningen/config', 'verb' => 'POST'],
+        
+        // Objects focused endpoints (for object counts)
+        ['name' => 'settings#getObjectsCounts', 'url' => '/api/objects/counts', 'verb' => 'GET'],
+        ['name' => 'settings#getObjectsStatistics', 'url' => '/api/objects/statistics', 'verb' => 'GET'],
+        
+        // User Groups focused endpoints
+        ['name' => 'settings#getUserGroupsConfig', 'url' => '/api/user-groups/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateUserGroupsConfig', 'url' => '/api/user-groups/config', 'verb' => 'POST'],
     ],
 ];

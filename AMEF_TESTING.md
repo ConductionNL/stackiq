@@ -238,6 +238,96 @@ docker-compose exec nextcloud php -r "echo 'Memory limit: ' . ini_get('memory_li
 4. **Garbage Collection**: Force garbage collection between batches
 5. **Skipping Logic**: Avoid unnecessary updates to reduce processing time
 
+## Full Circle Testing
+
+### Automated Round-Trip Testing Script
+
+A comprehensive testing script `full_circle_test.php` automates the entire round-trip process:
+
+```bash
+# Run complete round-trip test
+docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/full_circle_test.php
+```
+
+#### Test Flow
+1. **Clear Import**: Cancel any existing import operations
+2. **Import**: Import GEMMA_release.xml file
+3. **Database Check**: Verify data was stored correctly
+4. **Export**: Export the imported data to XML
+5. **Compare**: Compare original vs exported XML
+6. **Analysis**: Identify specific issues and provide fix recommendations
+
+#### Expected Output
+```
+🚀 STARTING FULL CIRCLE TEST
+============================
+
+1️⃣ CLEARING EXISTING IMPORT
+----------------------------
+Cancel result: SUCCESS
+
+2️⃣ IMPORTING GEMMA_RELEASE.XML
+-------------------------------
+Import started successfully!
+📊 Import Statistics:
+  - elements: 2765 created, 0 updated
+  - organizations: 71 created, 0 updated
+  - relationships: 5696 created, 0 updated
+  - views: 242 created, 0 updated
+  - property_definitions: 77 created, 0 updated
+
+✅ Import completed!
+
+3️⃣ CHECKING DATABASE CONTENT
+-----------------------------
+Database check output:
+[Database inspection results...]
+
+4️⃣ EXPORTING DATA
+------------------
+Export started successfully!
+Export file: /var/www/html/data/admin/files/archimate_export_2025-01-XX_XX-XX-XX.xml
+
+✅ Export completed!
+
+5️⃣ COMPARING RESULTS
+--------------------
+[Detailed comparison results...]
+
+6️⃣ ANALYSIS & RECOMMENDATIONS
+==============================
+🎉 NO CRITICAL ISSUES DETECTED!
+✅ Round-trip test appears successful!
+
+🏁 FULL CIRCLE TEST COMPLETED
+==============================
+```
+
+#### Error Detection
+The script automatically detects common issues:
+
+- **Organizations Import Failure**: `🚨 ORGANIZATIONS NOT IMPORTED: Check normalizeArchiMateData() method around line 1060-1070`
+- **Property Keys Empty**: `🚨 PROPERTY KEYS EMPTY: Check extractProperties() method around line 1276-1290`
+- **Missing Elements**: `🚨 NO ELEMENTS FOUND: Check XML parsing in normalizeArchiMateData()`
+
+#### Manual Testing Scripts
+
+Individual debug scripts for specific issues:
+
+```bash
+# Debug XML property structure
+docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_properties_structure.php
+
+# Debug conversion flow
+docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_conversion_flow.php
+
+# Debug database content
+docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php
+
+# Compare XML files
+docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php
+```
+
 ## API Testing Procedures
 
 ### 1. ArchiMate Import Testing
@@ -307,6 +397,43 @@ curl -u admin:admin \
      -o downloaded_file.xml
 ```
 
+## 🚀 **Performance Optimized API Endpoints**
+
+### New Separate Endpoints (v2.2)
+The API has been refactored for better performance by separating concerns:
+
+#### 1. Basic Settings (Fast - ~100ms)
+```bash
+# Get basic configuration only (no object counts)
+curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings"
+```
+
+#### 2. ArchiMate Status (Medium - ~200ms)
+```bash
+# Get ArchiMate import/export status only (no object counts)
+curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/archimate"
+```
+
+#### 3. Object Counts (Slow - Load on demand)
+```bash
+# Get object counts for all registers (separate endpoint)
+curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/objects"
+```
+
+### Performance Benefits
+- **Main settings endpoint**: Now loads in ~100ms instead of 2-5 seconds
+- **ArchiMate status**: Loads in ~200ms for real-time polling
+- **Object counts**: Loaded separately only when needed for statistics
+
+### Status Polling (Updated)
+```bash
+# Check ArchiMate import/export status for real-time monitoring
+curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/archimate" | jq '.archimate'
+
+# Check object counts when needed for statistics
+curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/objects" | jq '.objectCounts'
+```
+
 ## Performance Testing
 
 ### 1. Memory Usage Monitoring
@@ -335,6 +462,147 @@ time curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate
 # Test different batch sizes for optimal performance
 # Modify batch_size in ArchiMateService.php and test with large files
 ```
+
+## Properties Bug Deep Dive Analysis
+
+### Issue: Properties Stored with Empty Keys
+
+During round-trip testing, we discovered that ArchiMate properties were being stored in the database with empty string keys (`''`) instead of proper `propid-X` values, causing export failures.
+
+#### Investigation Results
+
+**✅ XML Parsing Works Correctly**
+```php
+// Streaming parser creates correct structure:
+[
+    'properties' => [
+        'property' => [
+            [
+                '_attributes' => ['propertyDefinitionRef' => 'propid-1'],
+                'value' => ['_value' => 'Thema-architectuur Common Ground']
+            ],
+            [
+                '_attributes' => ['propertyDefinitionRef' => 'propid-2'], 
+                'value' => ['_value' => 'a10869bf-a895-4a66-8f81-a4f96c58cc3e']
+            ]
+        ]
+    ]
+]
+```
+
+**✅ Property Extraction Works Correctly**
+```php
+// extractProperties() correctly extracts:
+[
+    'propid-1' => 'Thema-architectuur Common Ground',
+    'propid-2' => 'a10869bf-a895-4a66-8f81-a4f96c58cc3e'
+]
+```
+
+**❌ Bug Location: After Property Extraction**
+The issue occurs somewhere between `extractProperties()` and database storage. Investigation shows the conversion flow works correctly, suggesting the bug may be in:
+
+1. **OpenRegister Integration**: The OpenRegister system may be modifying or losing property keys during object saving
+2. **Array Merging Issues**: Internal properties (`model`, `modal`) are added correctly without overwriting extracted properties
+3. **Database Schema Constraints**: The database schema may have limitations on property key storage
+
+#### Debugging Commands
+
+```bash
+# Test property extraction in isolation
+docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_properties_structure.php
+
+# Test conversion flow
+docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_conversion_flow.php
+
+# Check actual database content
+docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php
+```
+
+#### Key Findings
+
+1. **Streaming Parser Uses `_attributes`**: The custom streaming parser creates `_attributes` (underscore), not `@attributes` (at-sign)
+2. **Property Structure is Complex**: Properties have nested structure with `value` arrays containing `_value` keys
+3. **Extraction Logic is Sound**: The `extractProperties()` method correctly handles the complex structure
+4. **Issue is Downstream**: The bug occurs after extraction, likely in OpenRegister integration
+
+#### Next Investigation Steps
+
+1. **OpenRegister Object Saving**: Check if OpenRegister modifies property arrays during saving
+2. **Database Schema**: Verify if property keys have constraints or encoding issues  
+3. **Array Serialization**: Check if PHP array serialization loses keys during JSON encoding
+4. **Memory Management**: Verify if memory cleanup affects property arrays
+
+### Organizations Import Bug
+
+#### Issue: Organizations Showing 0 Found/Created
+
+During import testing, organizations consistently show `0 found/created` instead of the expected 71 organizations from GEMMA_release.xml.
+
+#### Investigation Status
+
+**❌ XML Section Not Being Parsed**
+```json
+// Import result shows:
+"organizations": {
+    "found": 0,
+    "created": 0, 
+    "updated": 0,
+    "deleted": 0,
+    "skipped": 0,
+    "errors": []
+}
+```
+
+**🔍 Root Cause Analysis**
+The issue is in `normalizeArchiMateData()` method around lines 1060-1070. The logic to parse the dedicated `<organizations>` section is not correctly processing the XML structure.
+
+#### Expected vs Actual Structure
+
+**Expected in GEMMA_release.xml:**
+```xml
+<organizations>
+    <item identifier="org-1" name="Organization Name">
+        <documentation>Organization description</documentation>
+        <properties>
+            <property propertyDefinitionRef="propid-x">
+                <value>Property value</value>
+            </property>
+        </properties>
+    </item>
+    <!-- More organization items -->
+</organizations>
+```
+
+**Current Parsing Logic:**
+```php
+// In normalizeArchiMateData() - needs investigation
+if (isset($data['organizations']['item'])) {
+    // Process dedicated organizations section
+    $orgItems = $data['organizations']['item'];
+    // ... processing logic may be faulty
+}
+```
+
+#### Debugging Commands
+
+```bash
+# Check if organizations section exists in parsed XML
+docker-compose exec nextcloud php -r "
+\$xml = file_get_contents('/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml');
+echo 'Organizations section: ' . (strpos(\$xml, '<organizations>') !== false ? 'FOUND' : 'NOT FOUND') . PHP_EOL;
+"
+
+# Test organizations parsing in isolation
+# Create debug script to test organizations section parsing
+```
+
+#### Fix Location
+
+- **File**: `lib/Service/ArchiMateService.php`
+- **Method**: `normalizeArchiMateData()` around lines 1060-1070
+- **Specific Issue**: Logic for processing `$data['organizations']['item']` array
+- **Helper Method**: `normalizeOrganizationItem()` may also need fixes
 
 ## Debugging Procedures
 

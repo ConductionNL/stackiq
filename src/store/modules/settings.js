@@ -26,9 +26,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		// Settings data
 		settings: {
-			openRegisters: false,
 			availableRegisters: [],
-			consolidatedConfig: {},
 		},
 
 		// Version information
@@ -47,11 +45,29 @@ export const useSettingsStore = defineStore('settings', {
 			amef_organization: { schema: null },
 			amef_relationships: { schema: null },
 			amef_views: { schema: null },
+			amef_models: { schema: null },
+			amef_properties: { schema: null },
+			amef_property_definitions: { schema: null },
 			// Voorzieningen register configuration
 			voorzieningen_organisatie: { schema: null },
 			voorzieningen_contactpersoon: { schema: null },
-			voorzieningen_gebruiker: { schema: null },
-			voorzieningen_contactgegevens: { schema: null },
+			// Extended schemas
+			voorzieningen_voorziening: { schema: null },
+			voorzieningen_voorziening_aanbod: { schema: null },
+			voorzieningen_voorziening_versie: { schema: null },
+			voorzieningen_kwetsbaarheid: { schema: null },
+			voorzieningen_contract: { schema: null },
+			voorzieningen_standaard: { schema: null },
+			voorzieningen_review: { schema: null },
+			voorzieningen_koppeling: { schema: null },
+			voorzieningen_beoordeeling: { schema: null },
+			voorzieningen_voorziening_module: { schema: null },
+			voorzieningen_verklaring: { schema: null },
+			voorzieningen_koppeling_gebruik: { schema: null },
+			voorzieningen_compliancy: { schema: null },
+			voorzieningen_module_gebruik: { schema: null },
+			voorzieningen_module_versie: { schema: null },
+			voorzieningen_sector: { schema: null },
 		},
 
 		// ArchiMate status and operations
@@ -62,6 +78,7 @@ export const useSettingsStore = defineStore('settings', {
 		isImportRunning: false,
 		isExportRunning: false,
 		statusPollingInterval: null,
+		isStatusPolling: false, // Prevent concurrent status polls
 
 		// Import/Export options
 		importOptions: {
@@ -105,6 +122,22 @@ export const useSettingsStore = defineStore('settings', {
 			mailjetApiKey: '',
 			mailjetSecretKey: '',
 		},
+
+		// Statistics
+		statistics: {
+			voorzieningen: {
+				config: {},
+				object_counts: {},
+				configured: false,
+			},
+			amef: {
+				config: {},
+				object_counts: {},
+				configured: false,
+			},
+			timestamp: null,
+		},
+		loadingStats: false,
 
 		// Error handling
 		error: null,
@@ -162,12 +195,85 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Get consolidated configuration
+		 * Get formatted statistics for display
 		 * @param {object} state - The store state
-		 * @return {object} Consolidated configuration
+		 * @return {Array} Array of formatted statistics rows
 		 */
-		consolidatedConfig: (state) => {
-			return state.settings.consolidatedConfig || {}
+		formattedStatistics: (state) => {
+			const stats = []
+			// Voorzieningen statistics
+			if (state.statistics.voorzieningen.configured) {
+				const voorzieningenCounts = state.statistics.voorzieningen.object_counts
+				const voorzieningenSchemaMap = {
+					totalOrganisatieObjects: 'Organisatie',
+					totalContactpersoonObjects: 'Contactpersoon',
+					totalVoorzieningObjects: 'Voorziening',
+					totalVoorzieningAanbodObjects: 'Voorziening Aanbod',
+					totalVoorzieningVersieObjects: 'Voorziening Versie',
+					totalKwetsbaarheidObjects: 'Kwetsbaarheid',
+					totalContractObjects: 'Contract',
+					totalStandaardObjects: 'Standaard',
+					totalReviewObjects: 'Review',
+					totalKoppelingObjects: 'Koppeling',
+					totalBeoordeelingObjects: 'Beoordeeling',
+					totalVoorzieningModuleObjects: 'Voorziening Module',
+					totalVerklaringObjects: 'Verklaring',
+					totalKoppelingGebruikObjects: 'Koppeling Gebruik',
+					totalCompliancyObjects: 'Compliancy',
+					totalModuleGebruikObjects: 'Module Gebruik',
+					totalModuleVersieObjects: 'Module Versie',
+					totalSectorObjects: 'Sector',
+				}
+				Object.entries(voorzieningenSchemaMap).forEach(([countKey, displayName]) => {
+					stats.push({
+						register: 'Voorzieningen',
+						type: displayName,
+						count: voorzieningenCounts[countKey] || 0,
+						configured: true,
+					})
+				})
+			}
+			// AMEF statistics
+			if (state.statistics.amef.configured) {
+				const amefCounts = state.statistics.amef.object_counts
+				stats.push({
+					register: 'AMEF',
+					type: 'Elements',
+					count: amefCounts.totalElementObjects || 0,
+					configured: true,
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Organizations',
+					count: amefCounts.totalOrganizationObjects || 0,
+					configured: true,
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Relationships',
+					count: amefCounts.totalRelationshipsObjects || 0,
+					configured: true,
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Views',
+					count: amefCounts.totalViewObjects || 0,
+					configured: true,
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Models',
+					count: amefCounts.totalModelObjects || 0,
+					configured: true,
+				})
+				stats.push({
+					register: 'AMEF',
+					type: 'Properties',
+					count: amefCounts.totalPropertyObjects || 0,
+					configured: true,
+				})
+			}
+			return stats
 		},
 	},
 
@@ -196,93 +302,265 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Load all settings data (version info, settings, ArchiMate status)
-		 * This is the main initialization function that should be called from components
+		 * Load statistics from the objects/counts endpoint
 		 * @return {Promise<void>}
 		 */
+		async loadStatistics() {
+			this.loadingStats = true
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const data = await response.json()
+
+				if (data.success && data.counts) {
+					// Update statistics with object counts
+					if (data.counts.voorzieningen) {
+						this.statistics.voorzieningen.object_counts = data.counts.voorzieningen
+						this.statistics.voorzieningen.configured = true
+					}
+					if (data.counts.amef) {
+						this.statistics.amef.object_counts = data.counts.amef
+						this.statistics.amef.configured = true
+					}
+					this.statistics.timestamp = data.counts.timestamp
+				} else {
+					console.error('Statistics API error:', data.error)
+					this.setError(data.error || 'Failed to load statistics')
+				}
+
+			} catch (error) {
+				console.error('Failed to load statistics:', error)
+				this.setError('Failed to load statistics: ' + error.message)
+			} finally {
+				this.loadingStats = false
+			}
+		},
+
+		/**
+		 * Load all settings from the API
+		 */
 		async loadSettings() {
+			// Prevent multiple simultaneous calls
+			if (this.loading) {
+				return
+			}
 			this.loading = true
 			this.loadingVersionInfo = true
 			this.clearError()
 
 			try {
-				// Load version info and settings in parallel
-				const [versionResponse, settingsResponse] = await Promise.all([
-					fetch('/index.php/apps/softwarecatalog/api/settings/version'),
-					fetch('/index.php/apps/softwarecatalog/api/settings'),
-				])
-
-				// Handle version info response
-				if (versionResponse.ok) {
-					const versionData = await versionResponse.json()
-					if (!versionData.error) {
-						this.versionInfo = versionData
-						if (versionData.openRegisterEnabled !== undefined) {
-							this.settings.openRegisters = versionData.openRegisterEnabled
-						}
-					} else {
-						console.error('Version API error:', versionData.error)
-					}
-				} else {
-					console.error('Failed to load version info:', versionResponse.statusText)
+				// Load basic settings first (minimal data)
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
-
-				// Handle settings response
-				if (settingsResponse.ok) {
-					const settingsData = await settingsResponse.json()
-					if (!settingsData.error) {
-						this.settings = settingsData
-
-						// Load data from consolidated configuration
-						const consolidatedConfig = settingsData.consolidatedConfig || {}
-
-						// Load user groups
-						if (consolidatedConfig.userGroups) {
-							this.genericUserGroups = consolidatedConfig.userGroups.generic || []
-							this.organizationAdminGroups = consolidatedConfig.userGroups.organizationAdmin || []
-							this.superUserGroups = consolidatedConfig.userGroups.superUser || []
-						}
-
-						// Load email settings
-						if (consolidatedConfig.email) {
-							this.emailSettings = { ...this.emailSettings, ...consolidatedConfig.email }
-						}
-
-						// Load ArchiMate status
-						if (consolidatedConfig.archimate) {
-							this.archimateStatus = consolidatedConfig.archimate
-							this.isImportRunning = consolidatedConfig.archimate.import?.status === 'running'
-							this.isExportRunning = consolidatedConfig.archimate.export?.status === 'running'
-
-							// Start polling if any operation is running
-							if (this.isImportRunning || this.isExportRunning) {
-								this.startStatusPolling()
-							}
-						}
-
-						// Initialize configuration first, then populate register selections
-						this.initializeConfiguration()
-						this.populateRegisterSelections()
-					} else {
-						console.error('Settings API error:', settingsData.error)
-						this.setError(settingsData.error)
-					}
+				const data = await response.json()
+				if (data.success !== false) {
+					// Basic app settings
+					this.settings.availableRegisters = data.availableRegisters || []
+					this.versionInfo = data.versionInfo || {}
+					this.isFullyConfigured = data.isFullyConfigured || false
+					this.configurationStatus = data.configurationStatus || {}
+					// Initialize base configuration containers
+					this.initializeConfiguration()
+					// Load focused data from separate endpoints in parallel
+					await Promise.all([
+						this.loadVersionInfo(),
+						this.loadArchiMateStatus(),
+						this.loadObjectCounts(),
+						this.loadEmailConfig(),
+						this.loadUserGroupsConfig(),
+						this.loadAmefConfig(),
+						this.loadVoorzieningenConfig(),
+					])
+					// After focused loads, map register selections and schema choices from their configs
+					this.populateRegisterSelectionsFromFocused()
+					this.populateSchemaSelectionsFromFocused()
 				} else {
-					throw new Error(`Settings API failed: ${settingsResponse.status} ${settingsResponse.statusText}`)
+					this.setError(data.error || 'Failed to load settings')
 				}
-
 			} catch (error) {
-				console.error('Failed to load settings:', error)
 				this.setError('Failed to load settings: ' + error.message)
-				// Set defaults to allow the component to function
-				this.settings = {
-					openRegisters: this.settings.openRegisters ?? false,
-					availableRegisters: [],
-					consolidatedConfig: {},
-				}
 			} finally {
 				this.loading = false
 				this.loadingVersionInfo = false
+			}
+		},
+
+		/**
+		 * Load version information from focused endpoint
+		 */
+		async loadVersionInfo() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success !== false) {
+					this.versionInfo = data
+				}
+			} catch (error) {
+				// ignore
+			}
+		},
+
+		/**
+		 * Load ArchiMate status from focused endpoint
+		 */
+		async loadArchiMateStatus() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.status) {
+					this.archimateStatus = data.status
+					this.isImportRunning = data.status.import?.status === 'running'
+					this.isExportRunning = data.status.export?.status === 'running'
+					if (!this.isImportRunning && !this.isExportRunning) {
+						this.stopStatusPolling()
+					}
+				}
+			} catch (error) {
+				// ignore
+			}
+		},
+
+		/**
+		 * Load object counts from focused endpoint
+		 */
+		async loadObjectCounts() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.counts) {
+					if (data.counts.voorzieningen) {
+						this.statistics.voorzieningen.object_counts = data.counts.voorzieningen
+					}
+					if (data.counts.amef) {
+						this.statistics.amef.object_counts = data.counts.amef
+					}
+					this.statistics.timestamp = data.counts.timestamp
+				}
+			} catch (error) {
+				// ignore
+			}
+		},
+
+		/**
+		 * Load email configuration from focused endpoint
+		 */
+		async loadEmailConfig() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/email/config')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.emailSettings) {
+					this.emailSettings = data.emailSettings
+					this.emailTemplates = data.emailTemplates || {}
+				}
+			} catch (error) {
+				// ignore
+			}
+		},
+
+		/**
+		 * Load user groups configuration from focused endpoint
+		 */
+		async loadUserGroupsConfig() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.userGroups = {
+						generic: data.config.generic || [],
+						organizationAdmin: data.config.organizationAdmin || [],
+						superUser: data.config.superUser || [],
+					}
+					this.allGroups = data.config.allGroups || []
+					// Populate top-level arrays used by components
+					this.genericUserGroups = [...(data.config.generic || [])]
+					this.organizationAdminGroups = [...(data.config.organizationAdmin || [])]
+					this.superUserGroups = [...(data.config.superUser || [])]
+				}
+			} catch (error) {
+				// ignore
+			}
+		},
+
+		/**
+		 * Load only user groups configuration (for individual component refresh)
+		 */
+		async loadUserGroupsOnly() {
+			const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+			}
+			const data = await response.json()
+			if (data.success && data.config) {
+				this.userGroups = {
+					generic: data.config.generic || [],
+					organizationAdmin: data.config.organizationAdmin || [],
+					superUser: data.config.superUser || [],
+				}
+				this.allGroups = data.config.allGroups || []
+				// Populate top-level arrays used by components
+				this.genericUserGroups = [...(data.config.generic || [])]
+				this.organizationAdminGroups = [...(data.config.organizationAdmin || [])]
+				this.superUserGroups = [...(data.config.superUser || [])]
+			}
+		},
+
+		/**
+		 * Load AMEF configuration from focused endpoint
+		 */
+		async loadAmefConfig() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.config) {
+					// Store raw AMEF config for mapping
+					this.amefRawConfig = data.config
+				}
+			} catch (error) {
+				// ignore
+			}
+		},
+
+		/**
+		 * Load Voorzieningen configuration from focused endpoint
+		 */
+		async loadVoorzieningenConfig() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.config) {
+					// Store raw Voorzieningen config for mapping
+					this.voorzieningenRawConfig = data.config
+				}
+			} catch (error) {
+				// ignore
 			}
 		},
 
@@ -297,212 +575,146 @@ export const useSettingsStore = defineStore('settings', {
 				amef_organization: { schema: null },
 				amef_relationships: { schema: null },
 				amef_views: { schema: null },
+				amef_models: { schema: null },
+				amef_properties: { schema: null },
+				amef_property_definitions: { schema: null },
 				// Voorzieningen register configuration
 				voorzieningen_organisatie: { schema: null },
 				voorzieningen_contactpersoon: { schema: null },
-				voorzieningen_gebruiker: { schema: null },
-				voorzieningen_contactgegevens: { schema: null },
+				voorzieningen_voorziening: { schema: null },
+				voorzieningen_voorziening_aanbod: { schema: null },
+				voorzieningen_voorziening_versie: { schema: null },
+				voorzieningen_kwetsbaarheid: { schema: null },
+				voorzieningen_contract: { schema: null },
+				voorzieningen_standaard: { schema: null },
+				voorzieningen_review: { schema: null },
+				voorzieningen_koppeling: { schema: null },
+				voorzieningen_beoordeeling: { schema: null },
+				voorzieningen_voorziening_module: { schema: null },
+				voorzieningen_verklaring: { schema: null },
+				voorzieningen_koppeling_gebruik: { schema: null },
+				voorzieningen_compliancy: { schema: null },
+				voorzieningen_module_gebruik: { schema: null },
+				voorzieningen_module_versie: { schema: null },
+				voorzieningen_sector: { schema: null },
 			}
+		},
 
-			// Map consolidated config to our configuration structure
-			const consolidatedConfig = this.settings.consolidatedConfig || {}
-
-			// Helper function to find schema label by ID in a register
-			const findSchemaLabel = (schemaId, schemas) => {
-				if (!schemas || !Array.isArray(schemas)) return `Schema ${schemaId}`
-				const schema = schemas.find(s => s.id.toString() === schemaId.toString())
-				return schema ? schema.title || schema.name || `Schema ${schemaId}` : `Schema ${schemaId}`
-			}
-
-			// Map Voorzieningen schemas
-			if (consolidatedConfig.voorzieningen) {
-				const voorzieningenConfig = consolidatedConfig.voorzieningen
-
-				if (voorzieningenConfig.organisatie_schema) {
-					this.configuration.voorzieningen_organisatie.schema = {
-						label: findSchemaLabel(voorzieningenConfig.organisatie_schema, this.voorzieningenSchemas),
-						value: voorzieningenConfig.organisatie_schema,
+		/**
+		 * Populate register selections using the focused endpoint configs
+		 */
+		populateRegisterSelectionsFromFocused() {
+			// Voorzieningen register
+			if (this.voorzieningenRawConfig && this.voorzieningenRawConfig.register) {
+				const regId = this.voorzieningenRawConfig.register.toString()
+				const reg = this.settings.availableRegisters.find(r => r.id.toString() === regId)
+				if (reg) {
+					this.voorzieningenRegister = {
+						label: reg.title || reg.name || `Register ${reg.id}`,
+						value: reg.id.toString(),
 					}
-				}
-				if (voorzieningenConfig.contactpersoon_schema) {
-					this.configuration.voorzieningen_contactpersoon.schema = {
-						label: findSchemaLabel(voorzieningenConfig.contactpersoon_schema, this.voorzieningenSchemas),
-						value: voorzieningenConfig.contactpersoon_schema,
-					}
+					this.voorzieningenSchemas = reg.schemas || []
 				}
 			}
-
-			// Map AMEF schemas
-			if (consolidatedConfig.amef) {
-				const amefConfig = consolidatedConfig.amef
-
-				if (amefConfig.organizations_schema) {
-					this.configuration.amef_organization.schema = {
-						label: findSchemaLabel(amefConfig.organizations_schema, this.amefSchemas),
-						value: amefConfig.organizations_schema,
+            // AMEF register (singular key only; fallback kept for robustness)
+            if (this.amefRawConfig && (this.amefRawConfig.register || this.amefRawConfig.register_id)) {
+                const regId = (this.amefRawConfig.register || this.amefRawConfig.register_id).toString()
+				const reg = this.settings.availableRegisters.find(r => r.id.toString() === regId)
+				if (reg) {
+					this.amefRegister = {
+						label: reg.title || reg.name || `Register ${reg.id}`,
+						value: reg.id.toString(),
 					}
-				}
-				if (amefConfig.elements_schema) {
-					this.configuration.amef_elements.schema = {
-						label: findSchemaLabel(amefConfig.elements_schema, this.amefSchemas),
-						value: amefConfig.elements_schema,
-					}
-				}
-				if (amefConfig.relationships_schema) {
-					this.configuration.amef_relationships.schema = {
-						label: findSchemaLabel(amefConfig.relationships_schema, this.amefSchemas),
-						value: amefConfig.relationships_schema,
-					}
-				}
-				if (amefConfig.views_schema) {
-					this.configuration.amef_views.schema = {
-						label: findSchemaLabel(amefConfig.views_schema, this.amefSchemas),
-						value: amefConfig.views_schema,
-					}
+					this.amefSchemas = reg.schemas || []
 				}
 			}
 		},
 
 		/**
-		 * Populate register selections from consolidated configuration
+		 * Populate schema selections using the focused endpoint configs
 		 */
-		populateRegisterSelections() {
-			const consolidatedConfig = this.settings.consolidatedConfig || {}
+		populateSchemaSelectionsFromFocused() {
+            const findOption = (schemaId, options) => {
+                if (!schemaId || !options || !Array.isArray(options)) return null
+                const id = schemaId.toString()
+                return options.find(o => o && o.value && o.value.toString() === id) || null
+            }
 
-			// Check for Voorzieningen register usage
-			if (consolidatedConfig.voorzieningen) {
-				const voorzieningenConfig = consolidatedConfig.voorzieningen
-				const voorzieningenRegisterId = voorzieningenConfig.register?.toString()
+			// Voorzieningen schemas
+			const vc = this.voorzieningenRawConfig || {}
+			const vMap = [
+				['organisatie_schema', 'voorzieningen_organisatie'],
+				['contactpersoon_schema', 'voorzieningen_contactpersoon'],
+				['voorziening_schema', 'voorzieningen_voorziening'],
+				['voorziening_aanbod_schema', 'voorzieningen_voorziening_aanbod'],
+				['voorziening_versie_schema', 'voorzieningen_voorziening_versie'],
+				['kwetsbaarheid_schema', 'voorzieningen_kwetsbaarheid'],
+				['contract_schema', 'voorzieningen_contract'],
+				['standaard_schema', 'voorzieningen_standaard'],
+				['review_schema', 'voorzieningen_review'],
+				['koppeling_schema', 'voorzieningen_koppeling'],
+				['beoordeeling_schema', 'voorzieningen_beoordeeling'],
+				['voorziening_module_schema', 'voorzieningen_voorziening_module'],
+				['verklaring_schema', 'voorzieningen_verklaring'],
+				['koppeling_gebruik_schema', 'voorzieningen_koppeling_gebruik'],
+				['compliancy_schema', 'voorzieningen_compliancy'],
+				['module_gebruik_schema', 'voorzieningen_module_gebruik'],
+				['module_versie_schema', 'voorzieningen_module_versie'],
+				['sector_schema', 'voorzieningen_sector'],
+			]
+            vMap.forEach(([cfgKey, uiKey]) => {
+                if (vc[cfgKey]) {
+                    const opt = findOption(vc[cfgKey], this.voorzieningenSchemaOptions)
+                    if (opt) {
+                        this.configuration[uiKey].schema = opt
+                    }
+                }
+            })
 
-				if (voorzieningenRegisterId) {
-					const voorzieningenRegister = this.settings.availableRegisters.find(
-						r => r.id.toString() === voorzieningenRegisterId,
-					)
-					if (voorzieningenRegister) {
-						this.voorzieningenRegister = {
-							label: voorzieningenRegister.title,
-							value: voorzieningenRegister.id.toString(),
-						}
-						this.voorzieningenSchemas = voorzieningenRegister.schemas || []
-					}
-				}
+            // AMEF schemas (singular keys)
+            const ac = this.amefRawConfig || {}
+            if (ac.organization_schema || ac.organizations_schema) {
+                const opt = findOption((ac.organization_schema || ac.organizations_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_organization.schema = opt
+            }
+            if (ac.element_schema || ac.elements_schema) {
+                const opt = findOption((ac.element_schema || ac.elements_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_elements.schema = opt
 			}
-
-			// Check for AMEF register usage
-			if (consolidatedConfig.amef) {
-				const amefConfig = consolidatedConfig.amef
-				const amefRegisterId = amefConfig.register_id?.toString() || amefConfig.register?.toString()
-
-				if (amefRegisterId) {
-					const amefRegister = this.settings.availableRegisters.find(
-						r => r.id.toString() === amefRegisterId,
-					)
-					if (amefRegister) {
-						this.amefRegister = {
-							label: amefRegister.title,
-							value: amefRegister.id.toString(),
-						}
-						this.amefSchemas = amefRegister.schemas || []
-					}
-				}
+            if (ac.relation_schema || ac.relationships_schema) {
+                const opt = findOption((ac.relation_schema || ac.relationships_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_relationships.schema = opt
 			}
-
-			// Populate schema selections from consolidated config
-			this.populateSchemaSelections()
-		},
-
-		/**
-		 * Populate schema selections from consolidated configuration
-		 */
-		populateSchemaSelections() {
-			const consolidatedConfig = this.settings.consolidatedConfig || {}
-
-			// Helper function to find schema label by ID in a register
-			const findSchemaLabel = (schemaId, schemas) => {
-				if (!schemas || !Array.isArray(schemas)) return `Schema ${schemaId}`
-				const schema = schemas.find(s => s.id.toString() === schemaId.toString())
-				return schema ? schema.title || schema.name || `Schema ${schemaId}` : `Schema ${schemaId}`
+            if (ac.view_schema || ac.views_schema) {
+                const opt = findOption((ac.view_schema || ac.views_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_views.schema = opt
 			}
-
-			// Populate Voorzieningen schema selections
-			if (consolidatedConfig.voorzieningen) {
-				const voorzieningenConfig = consolidatedConfig.voorzieningen
-
-				if (voorzieningenConfig.organisatie_schema) {
-					this.configuration.voorzieningen_organisatie.schema = {
-						label: findSchemaLabel(voorzieningenConfig.organisatie_schema, this.voorzieningenSchemas),
-						value: voorzieningenConfig.organisatie_schema,
-					}
-				}
-				if (voorzieningenConfig.contactpersoon_schema) {
-					this.configuration.voorzieningen_contactpersoon.schema = {
-						label: findSchemaLabel(voorzieningenConfig.contactpersoon_schema, this.voorzieningenSchemas),
-						value: voorzieningenConfig.contactpersoon_schema,
-					}
-				}
-				if (voorzieningenConfig.gebruiker_schema) {
-					this.configuration.voorzieningen_gebruiker.schema = {
-						label: findSchemaLabel(voorzieningenConfig.gebruiker_schema, this.voorzieningenSchemas),
-						value: voorzieningenConfig.gebruiker_schema,
-					}
-				}
-				if (voorzieningenConfig.contactgegevens_schema) {
-					this.configuration.voorzieningen_contactgegevens.schema = {
-						label: findSchemaLabel(voorzieningenConfig.contactgegevens_schema, this.voorzieningenSchemas),
-						value: voorzieningenConfig.contactgegevens_schema,
-					}
-				}
+            if (ac.model_schema || ac.models_schema) {
+                const opt = findOption((ac.model_schema || ac.models_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_models.schema = opt
 			}
-
-			// Populate AMEF schema selections
-			if (consolidatedConfig.amef) {
-				const amefConfig = consolidatedConfig.amef
-
-				if (amefConfig.organizations_schema) {
-					this.configuration.amef_organization.schema = {
-						label: findSchemaLabel(amefConfig.organizations_schema, this.amefSchemas),
-						value: amefConfig.organizations_schema,
-					}
-				}
-				if (amefConfig.elements_schema) {
-					this.configuration.amef_elements.schema = {
-						label: findSchemaLabel(amefConfig.elements_schema, this.amefSchemas),
-						value: amefConfig.elements_schema,
-					}
-				}
-				if (amefConfig.relationships_schema) {
-					this.configuration.amef_relationships.schema = {
-						label: findSchemaLabel(amefConfig.relationships_schema, this.amefSchemas),
-						value: amefConfig.relationships_schema,
-					}
-				}
-				if (amefConfig.views_schema) {
-					this.configuration.amef_views.schema = {
-						label: findSchemaLabel(amefConfig.views_schema, this.amefSchemas),
-						value: amefConfig.views_schema,
-					}
-				}
+            if (ac.property_schema || ac.properties_schema) {
+                const opt = findOption((ac.property_schema || ac.properties_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_properties.schema = opt
+			}
+            if (ac['property-definition_schema'] || ac.property_definitions_schema) {
+                const opt = findOption((ac['property-definition_schema'] || ac.property_definitions_schema), this.amefSchemaOptions)
+                if (opt) this.configuration.amef_property_definitions.schema = opt
 			}
 		},
 
 		/**
 		 * Import ArchiMate file with proper error handling (async approach)
+		 * @param {('speed'|'memory')} processingMode Processing strategy
 		 * @return {void}
 		 */
-		importArchiMateFile() {
-			console.log('importArchiMateFile() called')
-
+		importArchiMateFile(processingMode = 'speed') {
 			if (!this.selectedFile) {
 				showError('No file selected for import')
 				return
 			}
-
 			this.importing = true
 			this.importError = null
-
-			// Immediately set import as running and start polling
-			// This is the proper async approach - don't wait for server response
-			console.log('Setting import status to running and starting polling immediately')
 			this.isImportRunning = true
 			this.archimateStatus.import = {
 				status: 'running',
@@ -510,37 +722,21 @@ export const useSettingsStore = defineStore('settings', {
 				progress: 0,
 				statistics: null,
 			}
-
-			// Start polling immediately - this is key for async operations
-			console.log('Starting status polling immediately (async approach)')
 			this.startStatusPolling()
 			showSuccess('ArchiMate import started - monitoring progress...')
-
-			// Now trigger the actual import in the background (fire and forget)
 			try {
-				console.log('Preparing FormData for import...')
 				const formData = new FormData()
 				formData.append('archiMateFile', this.selectedFile)
 				formData.append('updateExisting', this.importOptions.updateExisting)
 				formData.append('deleteOrphaned', this.importOptions.deleteOrphaned)
 				formData.append('preserveIds', 'true')
-
-				console.log('FormData prepared, file size:', this.selectedFile.size, 'bytes')
-				console.log('Triggering background import request...')
-
-				// Fire the request but don't wait for completion
+				formData.append('processingMode', processingMode)
 				fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
 					method: 'POST',
-					headers: {
-						'X-Requested-With': 'XMLHttpRequest',
-					},
+					headers: { 'X-Requested-With': 'XMLHttpRequest' },
 					body: formData,
 				}).then(response => {
-					console.log('Background import request completed:', response.status, response.statusText)
-					
-					// Only handle immediate failures (500 errors)
 					if (response.status === 500) {
-						console.log('Import failed immediately with 500 error')
 						this.stopStatusPolling()
 						this.isImportRunning = false
 						this.archimateStatus.import = {
@@ -552,10 +748,7 @@ export const useSettingsStore = defineStore('settings', {
 						}
 						showError('Import failed: Server error. Please try with a smaller file or check server logs.')
 					}
-					// For all other responses (200, 503, etc.), let polling handle the status
 				}).catch(error => {
-					console.error('Background import request failed:', error)
-					// Only stop polling if it's a network error, not a timeout
 					if (error.name !== 'AbortError') {
 						this.stopStatusPolling()
 						this.isImportRunning = false
@@ -569,15 +762,12 @@ export const useSettingsStore = defineStore('settings', {
 						showError('Import failed: ' + error.message)
 					}
 				})
-
 			} catch (error) {
-				console.error('Failed to start import:', error)
 				this.stopStatusPolling()
 				this.isImportRunning = false
 				this.importError = error.message
 				showError('Failed to start ArchiMate import: ' + error.message)
 			} finally {
-				console.log('Import setup complete - setting importing = false')
 				this.importing = false
 			}
 		},
@@ -586,96 +776,58 @@ export const useSettingsStore = defineStore('settings', {
 		 * Start status polling with more frequent initial polls
 		 */
 		startStatusPolling() {
-			console.log('startStatusPolling() called')
-
 			if (this.statusPollingInterval) {
-				console.log('Clearing existing polling interval')
 				clearInterval(this.statusPollingInterval)
 			}
-
-			// Wait a brief moment for server to start the operation, then fetch status
-			console.log('Setting up initial status check in 500ms...')
 			setTimeout(() => {
-				console.log('Running initial status check')
 				this.refreshArchiMateStatus()
-			}, 500) // Wait 500ms before first poll
-
-			// Start with more frequent polling (every 2 seconds) for the first minute
-			let pollCount = 0
-			console.log('Setting up status polling interval (2 seconds initially)')
+			}, 500)
 			this.statusPollingInterval = setInterval(() => {
-				console.log(`Status poll #${pollCount + 1}`)
 				this.refreshArchiMateStatus()
-				pollCount++
-
-				// After 30 polls (1 minute at 2-second intervals), switch to 5-second intervals
-				if (pollCount >= 30) {
-					console.log('Switching to 5-second polling intervals')
-					clearInterval(this.statusPollingInterval)
-					this.statusPollingInterval = setInterval(() => {
-						console.log('Status poll (5-second interval)')
-						this.refreshArchiMateStatus()
-					}, 5000) // Poll every 5 seconds after first minute
-				}
-			}, 2000) // Poll every 2 seconds initially
+			}, 5000)
 		},
 
 		/**
 		 * Stop status polling
 		 */
 		stopStatusPolling() {
-			console.log('stopStatusPolling() called')
 			if (this.statusPollingInterval) {
-				console.log('Clearing status polling interval')
 				clearInterval(this.statusPollingInterval)
 				this.statusPollingInterval = null
-			} else {
-				console.log('No polling interval to clear')
 			}
+			this.isStatusPolling = false
 		},
 
 		/**
-		 * Refresh ArchiMate status from main settings endpoint
+		 * Refresh ArchiMate status from dedicated ArchiMate endpoint
 		 * Used for real-time polling during import/export operations
+		 * Prevents concurrent calls to avoid stacking requests
 		 *
 		 * @return {Promise<void>}
 		 */
 		async refreshArchiMateStatus() {
-			console.log('refreshArchiMateStatus() called')
+			if (this.isStatusPolling) {
+				return
+			}
+			this.isStatusPolling = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
-				console.log('Settings API response status:', response.status)
-
+				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
-
 				const data = await response.json()
-				console.log('Settings API data:', data)
-
-				if (!data.error && data.consolidatedConfig?.archimate) {
-					console.log('Updating ArchiMate status:', data.consolidatedConfig.archimate)
-					this.archimateStatus = data.consolidatedConfig.archimate
-
-					// Update running states
-					const wasImportRunning = this.isImportRunning
-					const wasExportRunning = this.isExportRunning
-
-					this.isImportRunning = data.consolidatedConfig.archimate.import?.status === 'running'
-					this.isExportRunning = data.consolidatedConfig.archimate.export?.status === 'running'
-
-					console.log(`Import: ${wasImportRunning} -> ${this.isImportRunning}, Export: ${wasExportRunning} -> ${this.isExportRunning}`)
-
-					// Stop polling if no operations are running
+				if (data.success && data.status) {
+					this.archimateStatus = data.status
+					this.isImportRunning = data.status.import?.status === 'running'
+					this.isExportRunning = data.status.export?.status === 'running'
 					if (!this.isImportRunning && !this.isExportRunning) {
-						console.log('No operations running, stopping polling')
 						this.stopStatusPolling()
 					}
-				} else {
-					console.log('No ArchiMate data in response or API error:', data.error)
 				}
 			} catch (error) {
-				console.error('Failed to refresh ArchiMate status:', error)
+				// ignore
+			} finally {
+				this.isStatusPolling = false
 			}
 		},
 
@@ -806,83 +958,178 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Save configuration to backend
+		 * Save configuration to backend using focused endpoints
 		 *
 		 * @return {Promise<void>}
 		 */
 		async saveConfiguration() {
 			try {
-				const configToSave = {}
+				// Save configurations to their respective focused endpoints
+				const savePromises = []
 
-				// Save register-specific configuration
-				const registerSpecificKeys = [
+				// Save AMEF configuration (clean payload)
+				const amefConfig = {}
+				const amefKeys = [
 					'amef_elements',
 					'amef_organization',
 					'amef_relationships',
 					'amef_views',
-					'voorzieningen_organisatie',
-					'voorzieningen_contactpersoon',
+					'amef_models',
+					'amef_properties',
+					'amef_property_definitions',
 				]
-
-				registerSpecificKeys.forEach(configKey => {
+				// Map UI keys to API keys
+                const amefMap = {
+                    amef_organization: 'organization_schema',
+                    amef_elements: 'element_schema',
+                    amef_relationships: 'relation_schema',
+                    amef_views: 'view_schema',
+                    amef_models: 'model_schema',
+                    amef_properties: 'property_schema',
+                    amef_property_definitions: 'property-definition_schema',
+                }
+                if (this.amefRegister?.value) {
+                    amefConfig.register = this.amefRegister.value
+                }
+				amefKeys.forEach(configKey => {
 					const config = this.configuration[configKey]
 					if (config && config.schema) {
-						// Always use openregister as source
-						configToSave[`${configKey}_source`] = 'openregister'
-
-						// Determine which register to use based on config key
-						let registerId = null
-						if (configKey.startsWith('voorzieningen_')) {
-							registerId = this.voorzieningenRegister?.value
-						} else if (configKey.startsWith('amef_')) {
-							registerId = this.amefRegister?.value
-						}
-
-						// Set the register ID
-						if (registerId) {
-							configToSave[`${configKey}_register`] = registerId
-						}
-
-						// Set the schema ID
-						configToSave[`${configKey}_schema`] = config.schema
+						amefConfig[amefMap[configKey]] = config.schema.value || config.schema
 					}
 				})
 
+				if (Object.keys(amefConfig).length > 0) {
+					savePromises.push(
+						fetch('/index.php/apps/softwarecatalog/api/amef/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify(amefConfig),
+						}),
+					)
+				}
+
+				// Save Voorzieningen configuration (clean payload)
+				const voorzieningenConfig = {}
+				const voorzieningenKeys = [
+					'voorzieningen_organisatie',
+					'voorzieningen_contactpersoon',
+					'voorzieningen_voorziening',
+					'voorzieningen_voorziening_aanbod',
+					'voorzieningen_voorziening_versie',
+					'voorzieningen_kwetsbaarheid',
+					'voorzieningen_contract',
+					'voorzieningen_standaard',
+					'voorzieningen_review',
+					'voorzieningen_koppeling',
+					'voorzieningen_beoordeeling',
+					'voorzieningen_voorziening_module',
+					'voorzieningen_verklaring',
+					'voorzieningen_koppeling_gebruik',
+					'voorzieningen_compliancy',
+					'voorzieningen_module_gebruik',
+					'voorzieningen_module_versie',
+					'voorzieningen_sector',
+				]
+				// Map UI keys to API keys
+				const vzMap = {
+					voorzieningen_organisatie: 'organisatie_schema',
+					voorzieningen_contactpersoon: 'contactpersoon_schema',
+					voorzieningen_voorziening: 'voorziening_schema',
+					voorzieningen_voorziening_aanbod: 'voorziening_aanbod_schema',
+					voorzieningen_voorziening_versie: 'voorziening_versie_schema',
+					voorzieningen_kwetsbaarheid: 'kwetsbaarheid_schema',
+					voorzieningen_contract: 'contract_schema',
+					voorzieningen_standaard: 'standaard_schema',
+					voorzieningen_review: 'review_schema',
+					voorzieningen_koppeling: 'koppeling_schema',
+					voorzieningen_beoordeeling: 'beoordeeling_schema',
+					voorzieningen_voorziening_module: 'voorziening_module_schema',
+					voorzieningen_verklaring: 'verklaring_schema',
+					voorzieningen_koppeling_gebruik: 'koppeling_gebruik_schema',
+					voorzieningen_compliancy: 'compliancy_schema',
+					voorzieningen_module_gebruik: 'module_gebruik_schema',
+					voorzieningen_module_versie: 'module_versie_schema',
+					voorzieningen_sector: 'sector_schema',
+				}
+				if (this.voorzieningenRegister?.value) {
+					voorzieningenConfig.register = this.voorzieningenRegister.value
+				}
+				voorzieningenKeys.forEach(configKey => {
+					const config = this.configuration[configKey]
+					if (config && config.schema) {
+						voorzieningenConfig[vzMap[configKey]] = config.schema.value || config.schema
+					}
+				})
+
+				if (Object.keys(voorzieningenConfig).length > 0) {
+					savePromises.push(
+						fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify(voorzieningenConfig),
+						}),
+					)
+				}
+
 				// Save user groups configuration
 				if (this.genericUserGroups.length > 0 || this.organizationAdminGroups.length > 0 || this.superUserGroups.length > 0) {
-					configToSave.userGroups = {
+					const userGroupsConfig = {
 						generic: this.genericUserGroups.filter(group => group && group.trim()),
 						organizationAdmin: this.organizationAdminGroups.filter(group => group && group.trim()),
 						superUser: this.superUserGroups.filter(group => group && group.trim()),
 					}
+
+					savePromises.push(
+						fetch('/index.php/apps/softwarecatalog/api/user-groups/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify(userGroupsConfig),
+						}),
+					)
 				}
 
 				// Save email settings
 				if (this.emailSettings && Object.keys(this.emailSettings).length > 0) {
-					configToSave.email = { ...this.emailSettings }
+					savePromises.push(
+						fetch('/index.php/apps/softwarecatalog/api/email/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify(this.emailSettings),
+						}),
+					)
 				}
 
-				// Send to backend
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
-					},
-					body: JSON.stringify(configToSave),
-				})
+				// Execute all save operations
+				if (savePromises.length > 0) {
+					const responses = await Promise.all(savePromises)
+					// Check all responses
+					for (const response of responses) {
+						if (!response.ok) {
+							throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+						}
+						const result = await response.json()
+						if (!result.success) {
+							throw new Error(result.message || 'Unknown error occurred')
+						}
+					}
 
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
-
-				const result = await response.json()
-				if (result.success) {
 					showSuccess('Configuration saved successfully')
 					// Reload settings to get updated configuration
 					await this.loadSettings()
 				} else {
-					throw new Error(result.message || 'Unknown error occurred')
+					showSuccess('No configuration changes to save')
 				}
 			} catch (error) {
 				console.error('Failed to save configuration:', error)
@@ -930,6 +1177,59 @@ export const useSettingsStore = defineStore('settings', {
 				}
 				showError(errorResult.message)
 				return errorResult
+			}
+		},
+
+		/**
+		 * Reset auto-configuration flag and optionally schema/register keys
+		 * Calls POST /api/settings/reset-auto-config
+		 * @return {Promise<object>} Result
+		 */
+		async resetAutoConfig() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/reset-auto-config', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+					body: JSON.stringify({ resetConfiguration: false }),
+				})
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const result = await response.json()
+				// Refresh version info after reset
+				await this.loadVersionInfo()
+				return result
+			} catch (error) {
+				return { success: false, message: error.message }
+			}
+		},
+
+		/**
+		 * Force update: forced import + version sync
+		 * Calls POST /api/settings/force-update
+		 * @return {Promise<object>} Result
+		 */
+		async forceUpdate() {
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/force-update', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				})
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const result = await response.json()
+				// Reload all settings so UI reflects the new configuration fully
+				await this.loadSettings()
+				return result
+			} catch (error) {
+				return { success: false, message: error.message }
 			}
 		},
 
@@ -1045,11 +1345,7 @@ export const useSettingsStore = defineStore('settings', {
 		async exportToArchiMate(format = 'xml') {
 			this.exporting = true
 			this.exportError = null
-
 			try {
-				console.log('Starting ArchiMate export, format:', format)
-
-				// Create form data for the request
 				const requestData = {
 					format,
 					includeRelationships: this.exportOptions.includeRelationships ?? true,
@@ -1057,80 +1353,46 @@ export const useSettingsStore = defineStore('settings', {
 					organizationSpecific: false,
 					selectedSchemas: [],
 				}
-
-				console.log('Export request data:', requestData)
-
-				// Create a temporary link to trigger download
 				const link = document.createElement('a')
 				link.style.display = 'none'
 				document.body.appendChild(link)
-
-				// Fetch the export (which will return a file directly)
 				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
 					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
-					},
+					headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
 					body: JSON.stringify(requestData),
 				})
-
-				console.log('Export response status:', response.status, response.statusText)
-
 				if (response.status === 500) {
-					// Handle server error
 					const errorData = await response.json()
 					throw new Error(errorData.message || 'Server error occurred')
 				}
-
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 				}
-
-				// Check if response is JSON (error) or file content
 				const contentType = response.headers.get('content-type')
-				console.log('Response content type:', contentType)
-
 				if (contentType && contentType.includes('application/json')) {
-					// Handle JSON error response
 					const errorData = await response.json()
 					throw new Error(errorData.message || errorData.error || 'Export failed')
 				}
-
-				// Handle successful file download
 				const blob = await response.blob()
 				const url = window.URL.createObjectURL(blob)
-
-				// Get filename from Content-Disposition header or create default
 				const contentDisposition = response.headers.get('content-disposition')
 				let fileName = `archimate_export_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xml`
-
 				if (contentDisposition) {
 					const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
 					if (fileNameMatch) {
 						fileName = fileNameMatch[1].replace(/['"]/g, '')
 					}
 				}
-
-				console.log('Downloading file:', fileName)
-
-				// Trigger download
 				link.href = url
 				link.download = fileName
 				link.click()
-
-				// Cleanup
 				document.body.removeChild(link)
 				window.URL.revokeObjectURL(url)
-
 				showSuccess(`Export completed! Downloaded ${fileName}`)
-
 			} catch (error) {
-				console.error('Export failed:', error)
 				this.exportError = error.message
 				showError('Failed to export ArchiMate: ' + error.message)
 			} finally {
-				console.log('Export completed - setting exporting = false')
 				this.exporting = false
 			}
 		},
@@ -1179,6 +1441,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		cleanup() {
 			this.stopStatusPolling()
+			this.isStatusPolling = false
 		},
 
 		/**
@@ -1186,22 +1449,50 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		reset() {
 			this.stopStatusPolling()
+			this.isStatusPolling = false
 			this.loading = false
 			this.saving = false
 			this.importing = false
 			this.exporting = false
 			this.loadingVersionInfo = false
 			this.settings = {
-				openRegisters: false,
 				availableRegisters: [],
-				consolidatedConfig: {},
 			}
 			this.versionInfo = {}
 			this.voorzieningenRegister = null
 			this.amefRegister = null
 			this.voorzieningenSchemas = []
 			this.amefSchemas = []
-			this.configuration = {}
+			this.configuration = {
+				// AMEF register configuration
+				amef_elements: { schema: null },
+				amef_organization: { schema: null },
+				amef_relationships: { schema: null },
+				amef_views: { schema: null },
+				amef_models: { schema: null },
+				amef_properties: { schema: null },
+				amef_property_definitions: { schema: null },
+				// Voorzieningen register configuration
+				voorzieningen_organisatie: { schema: null },
+				voorzieningen_contactpersoon: { schema: null },
+				// Extended schemas
+				voorzieningen_voorziening: { schema: null },
+				voorzieningen_voorziening_aanbod: { schema: null },
+				voorzieningen_voorziening_versie: { schema: null },
+				voorzieningen_kwetsbaarheid: { schema: null },
+				voorzieningen_contract: { schema: null },
+				voorzieningen_standaard: { schema: null },
+				voorzieningen_review: { schema: null },
+				voorzieningen_koppeling: { schema: null },
+				voorzieningen_beoordeeling: { schema: null },
+				voorzieningen_voorziening_module: { schema: null },
+				voorzieningen_verklaring: { schema: null },
+				voorzieningen_koppeling_gebruik: { schema: null },
+				voorzieningen_compliancy: { schema: null },
+				voorzieningen_module_gebruik: { schema: null },
+				voorzieningen_module_versie: { schema: null },
+				voorzieningen_sector: { schema: null },
+			}
 			this.archimateStatus = {
 				import: {},
 				export: {},
@@ -1212,6 +1503,20 @@ export const useSettingsStore = defineStore('settings', {
 			this.genericUserGroups = []
 			this.organizationAdminGroups = []
 			this.superUserGroups = []
+			this.statistics = {
+				voorzieningen: {
+					config: {},
+					object_counts: {},
+					configured: false,
+				},
+				amef: {
+					config: {},
+					object_counts: {},
+					configured: false,
+				},
+				timestamp: null,
+			}
+			this.loadingStats = false
 			this.error = null
 			this.importError = null
 			this.exportError = null
