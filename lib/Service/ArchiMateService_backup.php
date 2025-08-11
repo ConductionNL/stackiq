@@ -391,6 +391,14 @@ class ArchiMateService
                     'size' => filesize($options['filePath']),
                     'mime_type' => $options['mimeType'] ?? 'text/xml'
                 ],
+                'model_info' => [
+                    'identifier' => $modelIdentifier,
+                    'exists' => !empty($modelIdentifier),
+                    'action' => $importStatus['model_info']['action'] ?? 'unknown'
+                ],
+                'imported_objects' => $convertResults['objects_created'] + $convertResults['objects_updated'],
+                'round_trip_fidelity' => 'enabled', // Indicates complete XML data is stored
+                'storage_format' => 'json_blob', // Shows data is stored as JSON blob
                 'processing_times' => [
                     'total_time_seconds' => round($totalTime, 3),
                     'validation_time_seconds' => round($validationTime, 3),
@@ -888,50 +896,55 @@ class ArchiMateService
 
     /**
      * Convert normalized ArchiMate data to OpenRegister objects - SIMPLIFIED VERSION
+     * 
+     * @param array $data Normalized ArchiMate data
+     * @param array $options Processing options
+     * @return array Converted OpenRegister objects
      */
-            $this->logger->info('Processing elements for normalization', [
-                'elements_count' => count($data['elements'])
+    private function convertToOpenRegisterObjects(array $data, array $options = []): array
+    {
+        $this->logger->info('Processing elements for normalization', [
+            'elements_count' => count($data['elements'])
+        ]);
+        
+        // Handle different element structures
+        if (isset($data['elements']['element'])) {
+            // Structure: elements -> element -> [0, 1, 2, ...]
+            $elementArray = $data['elements']['element'];
+            $this->logger->info('Found element array structure', [
+                'element_count' => count($elementArray)
             ]);
             
-            // Handle different element structures
-        if (isset($data['elements']['element'])) {
-                // Structure: elements -> element -> [0, 1, 2, ...]
-                $elementArray = $data['elements']['element'];
-                $this->logger->info('Found element array structure', [
-                    'element_count' => count($elementArray)
+            foreach ($elementArray as $index => $element) {
+                $this->logger->info("Processing element {$index}", [
+                    'element_keys' => array_keys($element),
+                    'has_attributes' => isset($element['_attributes']),
+                    'has_identifier' => isset($element['_attributes']['identifier'])
                 ]);
                 
-                foreach ($elementArray as $index => $element) {
-                    $this->logger->info("Processing element {$index}", [
-                        'element_keys' => array_keys($element),
-                        'has_attributes' => isset($element['_attributes']),
-                        'has_identifier' => isset($element['_attributes']['identifier'])
+                if (isset($element['_attributes']['identifier'])) {
+                    $normalized['elements'][$element['_attributes']['identifier']] = $this->normalizeElement($element);
+                } else {
+                    $this->logger->warning("Element {$index} missing identifier", [
+                        'element_structure' => $element
                     ]);
-                    
-                    if (isset($element['_attributes']['identifier'])) {
-                        $normalized['elements'][$element['_attributes']['identifier']] = $this->normalizeElement($element);
-                    } else {
-                        $this->logger->warning("Element {$index} missing identifier", [
-                            'element_structure' => $element
-                        ]);
-                    }
                 }
-            } else {
-                // Direct array structure: elements -> [0, 1, 2, ...]
-                foreach ($data['elements'] as $index => $element) {
-                    $this->logger->info("Processing element {$index}", [
-                        'element_keys' => array_keys($element),
-                        'has_attributes' => isset($element['_attributes']),
-                        'has_identifier' => isset($element['_attributes']['identifier'])
+            }
+        } else {
+            // Direct array structure: elements -> [0, 1, 2, ...]
+            foreach ($data['elements'] as $index => $element) {
+                $this->logger->info("Processing element {$index}", [
+                    'element_keys' => array_keys($element),
+                    'has_attributes' => isset($element['_attributes']),
+                    'has_identifier' => isset($element['_attributes']['identifier'])
+                ]);
+                
+                if (isset($element['_attributes']['identifier'])) {
+                    $normalized['elements'][$element['_attributes']['identifier']] = $this->normalizeElement($element);
+                } else {
+                    $this->logger->warning("Element {$index} missing identifier", [
+                        'element_structure' => $element
                     ]);
-                    
-                    if (isset($element['_attributes']['identifier'])) {
-                        $normalized['elements'][$element['_attributes']['identifier']] = $this->normalizeElement($element);
-                    } else {
-                        $this->logger->warning("Element {$index} missing identifier", [
-                            'element_structure' => $element
-                        ]);
-                    }
                 }
             }
         }
@@ -988,135 +1001,84 @@ class ArchiMateService
                         }
                     } else {
                         // Array of views
-                        foreach ($viewArray as $index => $view) {
-                            $this->logger->info("Processing view {$index}", [
-                                'view_keys' => is_array($view) ? array_keys($view) : 'not_array',
-                                'has_attributes' => isset($view['_attributes']),
-                                'has_identifier' => isset($view['_attributes']['identifier'])
-                            ]);
-                            
+                        foreach ($viewArray as $view) {
                             if (isset($view['_attributes']['identifier'])) {
                                 $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
-                            } else {
-                                $this->logger->warning("View {$index} missing identifier", [
-                                    'view_structure' => is_array($view) ? array_keys($view) : gettype($view)
-                                ]);
                             }
                         }
                     }
                 }
-            }
-            // Handle direct view structure: <views><view>
-            elseif (isset($data['views']['view'])) {
-                $viewArray = $data['views']['view'];
-                $this->logger->info('Found direct view array structure', [
-                    'view_array_count' => is_array($viewArray) ? count($viewArray) : 'not_array',
-                    'first_view_sample' => is_array($viewArray) && !empty($viewArray) ? array_slice($viewArray, 0, 1, true) : 'no_views'
-                ]);
-                
-                foreach ($viewArray as $index => $view) {
-                    if (isset($view['_attributes']['identifier'])) {
-                        $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
+            } else {
+                // Direct views structure
+                if (isset($data['views']['view'])) {
+                    $viewArray = $data['views']['view'];
+                    foreach ($viewArray as $view) {
+                        if (isset($view['_attributes']['identifier'])) {
+                            $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
+                        }
                     }
                 }
             }
-            // Handle views as direct array structure
-            else {
-                $this->logger->info('Processing views as direct array structure');
-                foreach ($data['views'] as $index => $view) {
-                    if (is_array($view) && isset($view['_attributes']['identifier'])) {
-                        $normalized['views'][$view['_attributes']['identifier']] = $this->normalizeView($view);
-                    }
-                }
-            }
-        } else {
-            $this->logger->warning('No views found in parsed data', [
-                'data_keys' => array_keys($data)
-            ]);
         }
 
-        // Extract property definitions
-        if (isset($data['propertyDefinitions'])) {
-            $this->logger->info('Processing property definitions for normalization', [
-                'property_definitions_structure' => gettype($data['propertyDefinitions']),
-                'property_definitions_keys' => is_array($data['propertyDefinitions']) ? array_keys($data['propertyDefinitions']) : 'not_array',
-                'property_definitions_count' => is_array($data['propertyDefinitions']) ? count($data['propertyDefinitions']) : 'not_array'
-            ]);
-            
-            if (isset($data['propertyDefinitions']['propertyDefinition'])) {
-                $propertyDefinitionArray = $data['propertyDefinitions']['propertyDefinition'];
-                $this->logger->info('Found property definition array structure', [
-                    'property_definition_array_count' => count($propertyDefinitionArray)
-                ]);
-                
-                foreach ($propertyDefinitionArray as $index => $propertyDefinition) {
-                    if (isset($propertyDefinition['_attributes']['identifier'])) {
-                        $normalized['property_definitions'][$propertyDefinition['_attributes']['identifier']] = $this->normalizePropertyDefinition($propertyDefinition);
-                    } else {
-                        $this->logger->warning("Property definition {$index} missing identifier");
+        // Extract organizations
+        if (isset($data['organizations'])) {
+            if (isset($data['organizations']['organization'])) {
+                $organizationArray = $data['organizations']['organization'];
+                foreach ($organizationArray as $organization) {
+                    if (isset($organization['_attributes']['identifier'])) {
+                        $normalized['organizations'][$organization['_attributes']['identifier']] = $this->normalizeOrganizationItem($organization);
                     }
                 }
             } else {
-                $this->logger->info('Processing property definitions as direct array structure');
-                foreach ($data['propertyDefinitions'] as $index => $propertyDefinition) {
-                    if (isset($propertyDefinition['_attributes']['identifier'])) {
-                        $normalized['property_definitions'][$propertyDefinition['_attributes']['identifier']] = $this->normalizePropertyDefinition($propertyDefinition);
-                    } else {
-                        $this->logger->warning("Property definition {$index} missing identifier");
+                foreach ($data['organizations'] as $organization) {
+                    if (isset($organization['_attributes']['identifier'])) {
+                        $normalized['organizations'][$organization['_attributes']['identifier']] = $this->normalizeOrganizationItem($organization);
                     }
                 }
             }
-        } else {
-            $this->logger->warning('No property definitions found in parsed data', [
-                'data_keys' => array_keys($data)
-            ]);
         }
 
-        // Extract organizations from dedicated organizations section
-        if (isset($data['organizations'])) {
-            $this->logger->info('Processing organizations section', [
-                'organizations_structure' => array_keys($data['organizations'])
-            ]);
-            
-            if (isset($data['organizations']['item'])) {
-                $organizationArray = $data['organizations']['item'];
-                $this->logger->info('Found organization items', [
-                    'organization_count' => count($organizationArray)
-                ]);
-                
-                $organizationsFound = 0;
-                foreach ($organizationArray as $index => $orgItem) {
-                    if (isset($orgItem['_attributes']['identifier'])) {
-                        $normalized['organizations'][$orgItem['_attributes']['identifier']] = $this->normalizeOrganizationItem($orgItem);
-                        $organizationsFound++;
-                    } else {
-                        $this->logger->debug("Organization item {$index} is organizational folder/group, not entity", [
-                            'has_label' => isset($orgItem['label']),
-                            'has_nested_items' => isset($orgItem['item']),
-                            'label' => $orgItem['label']['_value'] ?? 'No label'
-                        ]);
+        // Extract property definitions
+        if (isset($data['propertydefinitions'])) {
+            if (isset($data['propertydefinitions']['propertydefinition'])) {
+                $propertyDefArray = $data['propertydefinitions']['propertydefinition'];
+                foreach ($propertyDefArray as $propertyDef) {
+                    if (isset($propertyDef['_attributes']['identifier'])) {
+                        $normalized['property_definitions'][$propertyDef['_attributes']['identifier']] = $this->normalizePropertyDefinition($propertyDef);
                     }
                 }
-                
-                // If no actual organization entities found in organizations section, use fallback
-                if ($organizationsFound === 0) {
-                    $this->logger->info('No organization entities found in organizations section, using fallback extraction');
-                    $normalized['organizations'] = $this->extractOrganizations($normalized['elements']);
+            } else {
+                foreach ($data['propertydefinitions'] as $propertyDef) {
+                    if (isset($propertyDef['_attributes']['identifier'])) {
+                        $normalized['property_definitions'][$propertyDef['_attributes']['identifier']] = $this->normalizePropertyDefinition($propertyDef);
+                    }
                 }
             }
-        } else {
-            // Fallback: Extract organizations from elements (BusinessActor types only)
-            $normalized['organizations'] = $this->extractOrganizations($normalized['elements']);
         }
 
-        $this->logger->info('=== NORMALIZATION COMPLETED ===', [
-            'elements_count' => count($normalized['elements']),
-            'relationships_count' => count($normalized['relationships']),
-            'organizations_count' => count($normalized['organizations']),
-            'views_count' => count($normalized['views']),
-            'property_definitions_count' => count($normalized['property_definitions']),
-            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2)
-        ]);
+        // Extract folders
+        if (isset($data['folders'])) {
+            if (isset($data['folders']['folder'])) {
+                $folderArray = $data['folders']['folder'];
+                foreach ($folderArray as $folder) {
+                    if (isset($folder['_attributes']['identifier'])) {
+                        $normalized['folders'][$folder['_attributes']['identifier']] = $this->normalizeFolder($folder);
+                    }
+                }
+            } else {
+                foreach ($data['folders'] as $folder) {
+                    if (isset($folder['_attributes']['identifier'])) {
+                        $normalized['folders'][$folder['_attributes']['identifier']] = $this->normalizeFolder($folder);
+                    }
+                }
+            }
+        }
+
+        // Extract properties
+        if (isset($data['properties'])) {
+            $normalized['properties'] = $this->extractProperties($data['properties']);
+        }
 
         return $normalized;
     }
@@ -2784,7 +2746,8 @@ class ArchiMateService
     // Schema ID getters
     private function getArchiMateElementSchemaId(): ?int
     {
-        return (int) $this->config->getValueString('softwarecatalog', 'archimate_element_schema_id', '0') ?: null;
+        // Use AMEF configuration instead of hardcoded values
+        return $this->getAmefSchemaIdForType('element');
     }
 
     private function getOrganizationSchemaId(): ?int
@@ -2795,12 +2758,14 @@ class ArchiMateService
 
     private function getRelationshipSchemaId(): ?int
     {
-        return (int) $this->config->getValueString('softwarecatalog', 'archimate_relationship_schema_id', '0') ?: null;
+        // Use AMEF configuration instead of hardcoded values
+        return $this->getAmefSchemaIdForType('relationship');
     }
 
     private function getViewSchemaId(): ?int
     {
-        return (int) $this->config->getValueString('softwarecatalog', 'archimate_view_schema_id', '0') ?: null;
+        // Use AMEF configuration instead of hardcoded values
+        return $this->getAmefSchemaIdForType('view');
     }
 
     /**

@@ -4,10 +4,24 @@ This document describes the ArchiMate import/export functionality in the Softwar
 
 ## Overview
 
-The ArchiMate import/export feature allows you to:
-- Import ArchiMate files (.archimate or .xml) to create OpenRegister objects
-- Export existing OpenRegister data to ArchiMate format
-- Test data integrity with round-trip testing
+The ArchiMate import/export feature provides **perfect round-trip fidelity** by:
+- Importing ArchiMate files (.archimate or .xml) with complete XML data capture
+- Storing all XML data as JSON blobs in the database for exact preservation
+- Exporting data back to XML with identical structure to the original import
+- Creating OpenRegister objects with proper '@self' structure for database persistence
+
+## Key Features
+
+### 🔄 Round-Trip Fidelity
+- **Complete XML Preservation**: All XML attributes, namespaces, and text content are captured
+- **Exact Export**: Exported XML matches the imported XML structure perfectly
+- **No Data Loss**: Every XML element, attribute, and namespace is preserved
+
+### 🏗️ Clean Architecture
+- **Modular Services**: Separate `ArchiMateImportService` and `ArchiMateExportService`
+- **XML to Array Conversion**: Comprehensive parsing capturing all possible XML values
+- **Array to XML Conversion**: Precise reconstruction of original XML structure
+- **JSON Blob Storage**: Complete XML data stored as JSON for perfect preservation
 
 ## Processing Modes
 
@@ -30,6 +44,71 @@ The import functionality now supports two processing modes to optimize for diffe
 ### How to Choose
 - **Use High Performance** if you have 2GB+ memory available and want faster imports
 - **Use Memory Efficient** if you're working with limited memory or very large files that might cause memory issues
+
+## Technical Implementation
+
+### XML Processing Pipeline
+
+#### Import Flow (XML → Database)
+1. **XML Parsing**: `ArchiMateImportService.xmlToArray()` converts XML to comprehensive array
+   - Attributes prefixed with `_` (e.g., `_id`, `_name`)
+   - Namespaced attributes as `prefix__name` (e.g., `archimate__type`)
+   - Text content as `_value` or `_text`
+   - Nested elements preserved with full structure
+
+2. **Model Detection**: Extract model identifier and check if model already exists
+   - Searches root attributes, model element, and archimate:model namespace
+   - Generates fallback identifier if none found
+   - Enables create-or-update behavior
+
+3. **Data Normalization**: Structure data for JSON blob storage
+   - Add `model_identifier` to all items for linking
+   - Preserve complete original XML structure
+   - Prepare for OpenRegister object conversion
+
+4. **Object Creation**: Convert to OpenRegister objects with '@self' structure
+   - Each object has `@self` with `register`, `schema`, and `id`
+   - Store complete XML data as `xml_data` JSON blob
+   - Link all items to parent model via `model_identifier`
+
+5. **Database Persistence**: Use `ObjectService::saveObjects()` for bulk saving
+   - Proper validation and error handling
+   - RBAC and multi-organization support
+   - Transaction safety
+
+#### Export Flow (Database → XML)
+1. **Data Retrieval**: Query database for objects matching criteria
+2. **Data Reconstruction**: Convert OpenRegister objects back to ArchiMate format
+3. **XML Generation**: Use `ArchiMateExportService` to recreate exact XML structure
+4. **Round-Trip Validation**: Ensure exported XML matches imported structure
+
+### Data Storage Structure
+
+```json
+{
+  "@self": {
+    "register": 6,
+    "schema": 100,
+    "id": "model-uuid-123",
+    "owner": "admin",
+    "organisation": "default",
+    "created": "2024-01-01 12:00:00",
+    "updated": "2024-01-01 12:00:00"
+  },
+  "identifier": "model-uuid-123",
+  "name": "Enterprise Architecture Model",
+  "model_identifier": "model-uuid-123",
+  "xml_data": {
+    "_attributes": {
+      "identifier": "model-uuid-123",
+      "name": "Enterprise Architecture Model"
+    },
+    "elements": [...],
+    "relationships": [...],
+    "views": [...]
+  }
+}
+```
 
 ## Import Process
 
@@ -84,6 +163,53 @@ Parameters:
 - updateExisting: boolean (default: true)
 - preserveIds: boolean (default: true)
 - deleteOrphaned: boolean (default: false)
+```
+
+### Export Endpoint
+```bash
+POST /index.php/apps/softwarecatalog/api/archimate/export
+Content-Type: application/json
+
+Body:
+{
+  "criteria": {
+    "model_identifier": "model-uuid-123"
+  },
+  "options": {
+    "format": "xml",
+    "include_relationships": true
+  }
+}
+```
+
+### Response Format
+
+#### Import Response
+```json
+{
+  "success": true,
+  "message": "ArchiMate XML imported successfully",
+  "model_info": {
+    "identifier": "model-uuid-123",
+    "exists": false,
+    "action": "created"
+  },
+  "imported_objects": 150,
+  "file_info": {
+    "name": "enterprise_model.archimate",
+    "size": 1024000,
+    "path": "/tmp/upload_12345"
+  }
+}
+```
+
+#### Export Response
+```json
+{
+  "success": true,
+  "xml": "<?xml version='1.0' encoding='UTF-8'?>...",
+  "exported_count": 150
+}
 ```
 
 ### Example cURL Request
@@ -149,10 +275,10 @@ curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/impo
 3. Click "Export to ArchiMate"
 4. Download the generated file
 
-## Testing
+## Testing and Validation
 
 ### Round-Trip Testing
-The round-trip test validates data integrity by:
+The round-trip test validates **perfect data integrity** by:
 1. Exporting current data to ArchiMate format
 2. Re-importing the exported data
 3. Comparing original vs. imported data
@@ -163,6 +289,13 @@ The round-trip test validates data integrity by:
 2. Click "Test Round-Trip"
 3. Review comparison results
 4. Address any differences found
+
+### Validation Features
+- **XML Structure Comparison**: Ensures identical element hierarchy
+- **Attribute Preservation**: Verifies all attributes are maintained
+- **Namespace Handling**: Confirms namespace declarations are preserved
+- **Text Content**: Validates text content is unchanged
+- **Data Integrity**: Checks that no information is lost during import/export cycle
 
 ## Configuration
 
@@ -190,7 +323,13 @@ Batch sizes and concurrency can be configured based on processing mode:
 
 ## Recent Improvements
 
-### Processing Mode Selection (Latest)
+### Round-Trip Fidelity (Latest)
+- **Perfect XML Preservation**: Complete capture of all XML attributes, namespaces, and content
+- **JSON Blob Storage**: Store complete XML data as JSON for exact reconstruction
+- **Model Detection**: Automatic detection of existing models for create-or-update behavior
+- **Clean Architecture**: Modular services for import and export operations
+
+### Processing Mode Selection
 - Added user choice between High Performance and Memory Efficient modes
 - Automatic configuration based on selected mode
 - Real-time performance monitoring
@@ -206,4 +345,10 @@ Batch sizes and concurrency can be configured based on processing mode:
 - Comprehensive error reporting
 - Graceful failure recovery
 - Detailed logging for debugging
-- User-friendly error messages 
+- User-friendly error messages
+
+### Database Integration
+- **ObjectService Integration**: Uses `ObjectService::saveObjects()` for proper persistence
+- **@self Structure**: Each object has proper register, schema, and id metadata
+- **RBAC Support**: Role-based access control for security
+- **Multi-Organization**: Support for multiple organizational contexts 

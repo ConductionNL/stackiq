@@ -825,21 +825,45 @@ class SettingsController extends Controller
             $rawInput = file_get_contents('php://input');
             $data = json_decode($rawInput, true);
             
+            // Debug logging
+            $this->logger->info('ArchiMate import request received', [
+                'rawInput' => $rawInput,
+                'decodedData' => $data,
+                'jsonError' => json_last_error_msg(),
+                'contentType' => $this->request->getHeader('Content-Type'),
+                'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false
+            ]);
+            
             // Check if a file was uploaded (traditional file upload)
             $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
             
-            if ($uploadedFiles) {
+            // Also check $_FILES directly as fallback
+            $filesArray = $_FILES['archiMateFile'] ?? null;
+            
+            $this->logger->info('File upload detection', [
+                'uploadedFiles' => $uploadedFiles,
+                'filesArray' => $filesArray,
+                'requestMethod' => $this->request->getMethod(),
+                'contentType' => $this->request->getHeader('Content-Type')
+            ]);
+            
+            if ($uploadedFiles || $filesArray) {
+                // Use $_FILES as fallback if getUploadedFile doesn't work
+                $fileData = $uploadedFiles ?: $filesArray;
+                
                 // Handle file upload
                 $options = [
                     'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
                     'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
                     'preserveIds' => $this->request->getParam('preserveIds', 'true') === 'true',
                     'processingMode' => $this->request->getParam('processingMode', 'speed'),
-                    'filePath' => $uploadedFiles['tmp_name'],
-                    'fileName' => $uploadedFiles['name'],
-                    'fileSize' => $uploadedFiles['size'] ?? filesize($uploadedFiles['tmp_name']),
-                    'mimeType' => $uploadedFiles['type']
+                    'filePath' => $fileData['tmp_name'],
+                    'fileName' => $fileData['name'],
+                    'fileSize' => $fileData['size'] ?? filesize($fileData['tmp_name']),
+                    'mimeType' => $fileData['type'] ?? 'text/xml'
                 ];
+                
+                $this->logger->info('File upload detected', ['options' => $options]);
             } elseif ($data && isset($data['file_path'])) {
                 // Handle file path from JSON payload
                 $options = [
@@ -852,7 +876,16 @@ class SettingsController extends Controller
                     'fileSize' => $data['fileSize'] ?? (file_exists($data['file_path']) ? filesize($data['file_path']) : 0),
                     'mimeType' => $data['mimeType'] ?? 'text/xml'
                 ];
+                
+                $this->logger->info('JSON payload detected', ['options' => $options]);
             } else {
+                $this->logger->error('No file uploaded or file path provided', [
+                    'uploadedFiles' => $uploadedFiles,
+                    'filesArray' => $filesArray,
+                    'data' => $data,
+                    'rawInput' => $rawInput
+                ]);
+                
                 return new JSONResponse([
                     'success' => false,
                     'message' => 'No ArchiMate file uploaded or file path provided',
@@ -897,32 +930,15 @@ class SettingsController extends Controller
             if (json_last_error() !== JSON_ERROR_NONE) {
                 // Fallback to request parameters if JSON decode fails
                 $data = [
-                    'format' => $this->request->getParam('format', 'xml'),
-                    'includeRelationships' => $this->request->getParam('includeRelationships', true),
-                    'includeViews' => $this->request->getParam('includeViews', false),
-                    'organizationSpecific' => $this->request->getParam('organizationSpecific', false),
-                    'organizationId' => $this->request->getParam('organizationId', null),
-                    'organizationFilter' => $this->request->getParam('organizationFilter', null),
-                    'selectedSchemas' => $this->request->getParam('selectedSchemas', [])
+                    'organization' => $this->request->getParam('organization', null)
                 ];
             }
 
-            // Get export criteria and options
-            $criteria = [
-                'organizationSpecific' => $data['organizationSpecific'] ?? false,
-                'organizationId' => $data['organizationId'] ?? null,
-                'organizationFilter' => $data['organizationFilter'] ?? null,
-                'selectedSchemas' => $data['selectedSchemas'] ?? [],
-                'includeRelationships' => $data['includeRelationships'] ?? true,
-                'includeViews' => $data['includeViews'] ?? false
-            ];
+            // Simple organization filter - only parameter we support
+            $organization = $data['organization'] ?? null;
 
-            $options = [
-                'format' => $data['format'] ?? 'xml'
-            ];
-
-            // Call export service
-            $result = $this->archiMateService->exportToArchiMate($criteria, $options);
+            // Call export service with simplified parameters
+            $result = $this->archiMateService->exportToArchiMate($organization);
 
             // Check if export was successful
             if (!$result['success']) {
@@ -935,15 +951,10 @@ class SettingsController extends Controller
 
             // Return the XML file directly for download
             $fileName = $result['file_name'] ?? 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml';
-            $xmlContent = $result['xml_content'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
+            $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
             
-            // Determine content type based on format
-            $format = $options['format'];
-            $contentType = match($format) {
-                'json' => 'application/json',
-                'xml', 'archimate' => 'application/xml',
-                default => 'application/xml'
-            };
+            // Always return XML format
+            $contentType = 'application/xml';
 
             // Create direct download response
             $response = new class($xmlContent) extends Response {

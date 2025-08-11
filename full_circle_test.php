@@ -52,30 +52,25 @@ function executeCurl($url, $method = 'GET', $data = null, $auth = 'admin:admin')
 }
 
 /**
- * Wait for operation to complete
+ * Check if operation completed successfully (synchronous operations)
  */
-function waitForCompletion($statusUrl, $operationType, $maxWaitTime = 300) {
-    $startTime = time();
-    echo "⏳ Waiting for $operationType to complete...\n";
-    
-    while (time() - $startTime < $maxWaitTime) {
-        $status = executeCurl($statusUrl);
-        
-        if (isset($status[$operationType]) && $status[$operationType] === false) {
-            echo "✅ $operationType completed!\n";
-            return true;
-        }
-        
-        if (isset($status[$operationType]['status']) && $status[$operationType]['status'] === 'completed') {
-            echo "✅ $operationType completed!\n";
-            return true;
-        }
-        
-        echo ".";
-        sleep(2);
+function checkOperationSuccess($response, $operationType) {
+    if (!$response) {
+        echo "❌ $operationType failed: No response\n";
+        return false;
     }
     
-    echo "\n❌ $operationType timed out!\n";
+    if (isset($response['success']) && $response['success'] === true) {
+        echo "✅ $operationType completed successfully!\n";
+        return true;
+    }
+    
+    if (isset($response['error'])) {
+        echo "❌ $operationType failed: {$response['error']}\n";
+        return false;
+    }
+    
+    echo "❌ $operationType failed: Unknown error\n";
     return false;
 }
 
@@ -184,59 +179,54 @@ try {
     
     echo "\n";
     
-    // Wait for import to complete
-    if (!waitForCompletion("$baseUrl/../status", 'import_in_progress')) {
-        throw new Exception("Import did not complete in time");
+    // Check if import completed successfully (synchronous)
+    if (!checkOperationSuccess($importResult, 'Import')) {
+        throw new Exception("Import failed");
     }
     
-    // Step 3: Check database content
-    echo "\n3️⃣ CHECKING DATABASE CONTENT\n";
-    echo "-----------------------------\n";
-    
-    $dbCheckOutput = shell_exec('php /var/www/html/apps-extra/softwarecatalog/debug_db.php 2>&1');
-    echo "Database check output:\n";
-    echo substr($dbCheckOutput, 0, 1000) . (strlen($dbCheckOutput) > 1000 ? "...[truncated]" : "") . "\n\n";
 
-    // Focus object DB verification
-    if ($targetObjectId) {
-        echo "🔎 Focus object DB lookup: {$targetObjectId}\n";
-        $focusDb = fetchObjectByUuid($targetObjectId);
-        if ($focusDb) {
-            $obj = $focusDb['object_decoded'] ?? [];
-            echo "   - Found in DB with id={$focusDb['id']}, name=\"" . ($focusDb['name'] ?? '') . "\"\n";
-            echo "   - archimate_type=" . ($obj['archimate_type'] ?? 'NULL') . ", original_archimate_type=" . ($obj['original_archimate_type'] ?? 'NULL') . "\n";
-            echo "   - schema_id=" . ($obj['schema_id'] ?? 'NULL') . ", register_id=" . ($obj['register_id'] ?? 'NULL') . "\n";
-            $props = $obj['properties'] ?? [];
-            $propKeysSample = implode(', ', array_slice(array_keys($props), 0, 5));
-            echo "   - properties_keys_sample=[{$propKeysSample}] (total " . count($props) . ")\n\n";
-        } else {
-            echo "   - NOT FOUND in DB\n\n";
-        }
-    }
     
-    // Step 4: Export the data
-    echo "4️⃣ EXPORTING DATA\n";
+    // Step 3: Export the data
+    echo "3️⃣ EXPORTING DATA\n";
     echo "------------------\n";
-    $exportResult = executeCurl("$baseUrl/export", 'POST');
+    $exportData = json_encode([
+        'format' => 'archimate',
+        'includeRelationships' => true,
+        'includeViews' => true,
+        'organizationSpecific' => false,
+        'selectedSchemas' => []
+    ]);
     
-    if (!$exportResult || !($exportResult['success'] ?? false)) {
-        throw new Exception("Export failed: " . json_encode($exportResult));
+    // Use raw curl for XML response (not JSON)
+    $exportCmd = "curl -s -X POST \"$baseUrl/export\" -u $auth -H \"Content-Type: application/json\" -d '$exportData'";
+    $exportXml = shell_exec($exportCmd);
+    
+    if (!$exportXml || strlen($exportXml) < 100) {
+        throw new Exception("Export failed: " . ($exportXml ?: 'No response'));
     }
     
-    echo "Export started successfully!\n";
-    echo "Export file: " . ($exportResult['file_path'] ?? 'Unknown') . "\n\n";
-    
-    // Wait for export to complete
-    if (!waitForCompletion("$baseUrl/../status", 'export_in_progress')) {
-        throw new Exception("Export did not complete in time");
+    // Check if it starts with XML declaration
+    if (!str_starts_with(trim($exportXml), '<?xml')) {
+        throw new Exception("Export failed: Response is not XML - " . substr($exportXml, 0, 200));
     }
     
-    // Step 5: Compare results
-    echo "5️⃣ COMPARING RESULTS\n";
-    echo "--------------------\n";
+    echo "✅ Export completed successfully!\n";
+    $exportedXmlPath = '/tmp/exported_archimate.xml';
+    file_put_contents($exportedXmlPath, $exportXml);
+    echo "Export saved to: $exportedXmlPath\n";
+    echo "Export size: " . number_format(strlen($exportXml)) . " bytes\n\n";
     
-    $compareOutput = shell_exec('php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php 2>&1');
-    echo $compareOutput . "\n";
+    // Step 4: Compare original vs exported XML
+    echo "4️⃣ COMPARING ORIGINAL VS EXPORTED XML\n";
+    echo "--------------------------------------\n";
+    
+    if (isset($exportedXmlPath) && file_exists($exportedXmlPath)) {
+        echo "Running XML comparison...\n";
+        $compareOutput = shell_exec('php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php 2>&1');
+        echo $compareOutput;
+    } else {
+        echo "❌ Cannot compare: exported XML file not found\n";
+    }
 
     // Focus object export verification
     $latestExportPath = '/tmp/archimate_export_latest.xml';

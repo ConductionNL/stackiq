@@ -27,6 +27,9 @@ class ArchiMateComparator
     {
         echo "=== ArchiMate Import/Export Comparison ===\n\n";
         
+        // Compare file sizes first
+        $this->compareFileSizes($originalFile, $exportedFile);
+        
         // Parse both XML files
         echo "Parsing original file: $originalFile\n";
         $originalXml = $this->parseXmlFile($originalFile);
@@ -54,6 +57,58 @@ class ArchiMateComparator
             'differences' => $this->differences,
             'stats' => $this->stats
         ];
+    }
+
+    private function compareFileSizes(string $originalFile, string $exportedFile): void
+    {
+        echo "📊 FILE SIZE COMPARISON\n";
+        echo str_repeat("=", 50) . "\n";
+        
+        $originalSize = file_exists($originalFile) ? filesize($originalFile) : 0;
+        $exportedSize = file_exists($exportedFile) ? filesize($exportedFile) : 0;
+        
+        echo sprintf("Original file: %s (%s)\n", 
+            basename($originalFile), 
+            $this->formatBytes($originalSize)
+        );
+        echo sprintf("Exported file: %s (%s)\n", 
+            basename($exportedFile), 
+            $this->formatBytes($exportedSize)
+        );
+        
+        if ($originalSize > 0 && $exportedSize > 0) {
+            $ratio = $exportedSize / $originalSize;
+            $difference = $exportedSize - $originalSize;
+            
+            echo sprintf("Size ratio: %.2fx (%s)\n", 
+                $ratio, 
+                $difference > 0 ? "+" . $this->formatBytes($difference) : $this->formatBytes($difference)
+            );
+            
+            if ($ratio > 1.5) {
+                echo "⚠️  WARNING: Export is significantly larger than original!\n";
+                $this->addDifference('file_size', 'ratio', '1.0x', number_format($ratio, 2) . 'x larger');
+            } elseif ($ratio < 0.8) {
+                echo "⚠️  WARNING: Export is significantly smaller than original!\n";
+                $this->addDifference('file_size', 'ratio', '1.0x', number_format(1/$ratio, 2) . 'x smaller');
+            } else {
+                echo "✅ File sizes are reasonably similar\n";
+            }
+        }
+        
+        echo "\n";
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        
+        $bytes /= (1 << (10 * $pow));
+        
+        return round($bytes, 2) . ' ' . $units[$pow];
     }
     
     private function parseXmlFile(string $filePath): ?\SimpleXMLElement
@@ -118,18 +173,55 @@ class ArchiMateComparator
     {
         echo "\n--- Comparing Elements ---\n";
         
-        $originalElements = $this->indexByAttribute($original->xpath('//*[local-name()="element"]'), 'identifier');
-        $exportedElements = $this->indexByAttribute($exported->xpath('//*[local-name()="element"]'), 'identifier');
+        $originalElements = $original->xpath('//*[local-name()="element"]');
+        $exportedElements = $exported->xpath('//*[local-name()="element"]');
         
         $this->stats['elements_compared'] = count($originalElements);
         
-        foreach ($originalElements as $id => $originalElement) {
-            if (!isset($exportedElements[$id])) {
+        echo sprintf("Original elements found: %d\n", count($originalElements));
+        echo sprintf("Exported elements found: %d\n", count($exportedElements));
+        
+        // Check if exported elements have identifiers
+        $exportedHasIdentifiers = false;
+        $exportedHasXsiType = false;
+        
+        if (!empty($exportedElements)) {
+            $firstExported = $exportedElements[0];
+            $exportedHasIdentifiers = !empty((string)$firstExported['identifier']);
+            $exportedHasXsiType = !empty((string)$firstExported->attributes('xsi', true)['type']);
+            
+            echo sprintf("Exported elements have identifier attribute: %s\n", 
+                $exportedHasIdentifiers ? 'YES' : 'NO');
+            echo sprintf("Exported elements have xsi:type attribute: %s\n", 
+                $exportedHasXsiType ? 'YES' : 'NO');
+        }
+        
+        // If exported elements don't have identifiers, we can't do detailed comparison
+        if (!$exportedHasIdentifiers && !empty($originalElements)) {
+            echo "❌ CRITICAL: Exported elements missing identifier attributes!\n";
+            $this->addDifference('elements', 'ALL', 'HAS_IDENTIFIERS', 'MISSING_IDENTIFIERS');
+            
+            // Show sample of what's missing
+            $sampleOriginal = $originalElements[0];
+            echo sprintf("Expected: <element identifier=\"%s\" xsi:type=\"%s\">\n",
+                (string)$sampleOriginal['identifier'],
+                (string)$sampleOriginal->attributes('xsi', true)['type']
+            );
+            echo sprintf("Actual: <element> (no attributes)\n");
+            return;
+        }
+        
+        // Do detailed comparison if identifiers exist
+        $originalIndexed = $this->indexByAttribute($originalElements, 'identifier');
+        $exportedIndexed = $this->indexByAttribute($exportedElements, 'identifier');
+        
+        foreach ($originalIndexed as $id => $originalElement) {
+            if (!isset($exportedIndexed[$id])) {
                 $this->addDifference('elements', $id, 'EXISTS', 'MISSING');
                 continue;
             }
             
-            $exportedElement = $exportedElements[$id];
+            $exportedElement = $exportedIndexed[$id];
             
             // Compare xsi:type
             $originalType = (string)$originalElement->attributes('xsi', true)['type'];
