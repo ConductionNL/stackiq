@@ -18,18 +18,20 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 use OCP\IAppConfig;
+use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 
 /**
  * Service for synchronizing organizations and contact persons
- * 
+ *
  * This service provides comprehensive synchronization between SoftwareCatalog objects
  * and OpenRegister entities, ensuring data consistency and proper user management.
- * 
+ *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
@@ -96,7 +98,8 @@ class OrganizationSyncService
         SymfonyEmailService $emailService,
         IAppConfig $config,
         LoggerInterface $logger,
-        SettingsService $settingsService
+        SettingsService $settingsService,
+        private IDBConnection $db,
     ) {
         $this->organisatieService = $organisatieService;
         $this->contactpersoonService = $contactpersoonService;
@@ -106,6 +109,60 @@ class OrganizationSyncService
         $this->settingsService = $settingsService;
     }
 
+    public function performOrganizationsSync(): array
+    {
+        // Check configuration
+        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+        $register = $voorzieningenConfig['register'] ?? '';
+        $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+//        $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
+
+        $stats = [
+            'organizationsProcessed' => 0,
+            'entitiesCreated' => 0,
+            'entitiesUpdated' => 0,
+            'contactPersonsProcessed' => 0,
+            'usersCreated' => 0,
+            'usersUpdated' => 0,
+            'errors' => [],
+            'startTime' => date('Y-m-d H:i:s'),
+            'endTime' => null,
+            'duration' => null
+        ];
+
+        $qb = $this->db->getQueryBuilder();
+
+        $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(o.object, \'$.status\')) as status'), 'o2.uuid as oreg_uuid', 'o2.active as active')
+            ->from('openregister_objects', 'o')
+            ->leftJoin(fromAlias:'o', join: 'openregister_organisations', alias: 'o2', condition: 'o.uuid = o2.uuid')
+            ->where($qb->expr()->eq('o.schema', $qb->createNamedParameter($organizationSchema)))
+            ->andWhere($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
+            ->andWhere($qb->expr()->orX(
+                $qb->expr()->neq('o2.active', $qb->createFunction('(json_unquote(json_extract(o.object, \'$.status\')) = \'actief\')')),
+                $qb->expr()->isNull('o2.uuid')
+            ));
+
+        $sql = $qb->getSQL();
+        $objects = $qb->execute()->fetchAll();
+        $orgs = [];
+
+        foreach($objects as $object) {
+            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            if($objectService instanceOf ObjectService === false) {
+                return [];
+            }
+
+            $object = $objectService->find($object['uuid']);
+
+            $org = $this->ensureOrganisationEntity($object,$stats);
+
+        }
+
+        return $stats;
+    }
+
+
+
     /**
      * Performs comprehensive organization and contact person synchronization
      *
@@ -113,7 +170,7 @@ class OrganizationSyncService
      * the specified time window with organisation entities.
      *
      * @param int $minutesBack Number of minutes to look back for changes (0 = all objects)
-     * 
+     *
      * @return array Synchronization results and statistics
      */
     public function performFullSync(int $minutesBack = 10): array
@@ -122,7 +179,7 @@ class OrganizationSyncService
             'minutesBack' => $minutesBack,
             'syncMode' => $minutesBack === 0 ? 'full' : 'incremental'
         ]);
-        
+
         $stats = [
             'organizationsProcessed' => 0,
             'entitiesCreated' => 0,
@@ -179,7 +236,7 @@ class OrganizationSyncService
             $stats['duration'] = $endTime->diff($startTime)->format('%H:%I:%S');
 
             $this->logger->info('OrganizationSyncService: Completed comprehensive synchronization', $stats);
-            
+
             return $stats;
 
         } catch (\Exception $e) {
@@ -199,14 +256,14 @@ class OrganizationSyncService
      * @param string $register The register ID
      * @param string $organizationSchema The organization schema ID
      * @param int $minutesBack Number of minutes to look back (0 = all objects)
-     * 
+     *
      * @return array Array of organisatie objects
      */
     private function getOrganisatieObjectsByTimeWindow(string $register, string $organizationSchema, int $minutesBack): array
     {
         try {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            
+
             // Build base query for register and schema
             $query = [
                 '@self' => [
@@ -214,17 +271,17 @@ class OrganizationSyncService
                     'schema' => (int) $organizationSchema
                 ]
             ];
-            
+
             // Add time-based filtering if minutesBack > 0
             if ($minutesBack > 0) {
                 $cutoffTime = new \DateTime();
                 $cutoffTime->sub(new \DateInterval('PT' . $minutesBack . 'M'));
                 $cutoffTimeString = $cutoffTime->format('Y-m-d\TH:i:sP');
-                
+
                 // Add time filtering to the query
                 // Filter objects that were updated within the time window
                 $query['@self']['updated'] = ['gte' => $cutoffTimeString];
-                
+
                 $this->logger->debug('OrganizationSyncService: Using searchObjects with time-based filtering', [
                     'register' => $register,
                     'schema' => $organizationSchema,
@@ -241,10 +298,10 @@ class OrganizationSyncService
                     'query' => $query
                 ]);
             }
-            
+
             // Use searchObjects method for filtering
             $objects = $objectService->searchObjects($query);
-            
+
             $this->logger->debug('OrganizationSyncService: Retrieved organisatie objects with searchObjects', [
                 'register' => $register,
                 'schema' => $organizationSchema,
@@ -261,7 +318,7 @@ class OrganizationSyncService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return [];
         }
     }
@@ -328,24 +385,24 @@ class OrganizationSyncService
         try {
             $objectData = $organisatieObject->getObject();
             $organisatieId = $objectData['id'] ?? $organisatieObject->getId();
-            
+
             // Try to find existing organisation entity
             $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
-            
+
             try {
                 $organisationEntity = $organisationMapper->findByUuid($organisatieId);
-                
+
                 // Entity exists - update it if needed
-                $beoordeling = strtolower($objectData['beoordeling'] ?? 'actief');
-                $shouldBeActive = in_array($beoordeling, ['actief', 'active']);
-                
+                $status = strtolower($objectData['status'] ?? 'actief');
+                $shouldBeActive = in_array($status, ['actief', 'active']);
+
                 if ($organisationEntity->getActive() !== $shouldBeActive) {
                     $this->logger->info('OrganizationSyncService: Updating organisation entity status', [
                         'organisatieId' => $organisatieId,
                         'oldActive' => $organisationEntity->getActive(),
                         'newActive' => $shouldBeActive
                     ]);
-                    
+
                     $organisationEntity->setActive($shouldBeActive);
                     $organisationMapper->save($organisationEntity);
                     $stats['entitiesUpdated']++;
@@ -364,7 +421,7 @@ class OrganizationSyncService
                         }
                     }
                 }
-                
+
                 $this->logger->debug('OrganizationSyncService: Found existing organisation entity', [
                     'organisatieId' => $organisatieId,
                     'entityId' => $organisationEntity->getId(),
@@ -376,7 +433,7 @@ class OrganizationSyncService
                 $this->logger->info('OrganizationSyncService: Creating new organisation entity', [
                     'organisatieId' => $organisatieId
                 ]);
-                
+
                 $organisationEntity = $this->organisatieService->createOrganisationInOpenRegister($objectData);
                 if ($organisationEntity) {
                     $stats['entitiesCreated']++;
@@ -400,7 +457,7 @@ class OrganizationSyncService
                 }
                 return $organisationEntity;
             }
-            
+
         } catch (\Exception $e) {
             $this->logger->error('OrganizationSyncService: Failed to ensure organisation entity', [
                 'organisatieId' => $organisatieObject->getId(),
@@ -409,7 +466,7 @@ class OrganizationSyncService
             return null;
         }
     }
-    
+
     /**
      * Safely sends organization registration email with error handling
      *
@@ -429,7 +486,7 @@ class OrganizationSyncService
             return false;
         }
     }
-    
+
     /**
      * Safely sends organization activation email with error handling
      *
@@ -468,7 +525,7 @@ class OrganizationSyncService
 
         try {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            
+
             // Use searchObjects for more efficient filtering on-demand
             $query = [
                 '@self' => [
@@ -477,7 +534,7 @@ class OrganizationSyncService
                 ],
                 'organisatie' => $organisatieId
             ];
-            
+
             $contactPersons = $objectService->searchObjects($query);
 
             $this->logger->debug('OrganizationSyncService: Retrieved contact persons on-demand', [
@@ -585,7 +642,7 @@ class OrganizationSyncService
         try {
             $organisationUuid = $organisationEntity->getUuid();
             $currentUsers = $organisationEntity->getUsers() ?? [];
-            
+
             // Add admin users to ensure they're always included
             $adminUsers = $this->getAdminUsers();
             $allUsernames = array_unique(array_merge($usernames, $adminUsers));
@@ -605,12 +662,12 @@ class OrganizationSyncService
                 ]);
 
                 $organisationEntity->setUsers($allUsernames);
-                
+
                 $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
                 $organisationMapper->save($organisationEntity);
-                
+
                 $stats['entitiesUpdated']++;
-                
+
                 $this->logger->info('OrganizationSyncService: Successfully updated organisation entity users', [
                     'organisationUuid' => $organisationUuid,
                     'totalUsers' => count($allUsernames)
@@ -640,7 +697,7 @@ class OrganizationSyncService
         try {
             $groupManager = \OC::$server->get('OCP\IGroupManager');
             $adminGroup = $groupManager->get('admin');
-            
+
             if ($adminGroup) {
                 $adminUsers = $adminGroup->getUsers();
                 $adminUsernames = [];
@@ -649,7 +706,7 @@ class OrganizationSyncService
                 }
                 return $adminUsernames;
             }
-            
+
             return [];
         } catch (\Exception $e) {
             $this->logger->error('OrganizationSyncService: Failed to get admin users', [
@@ -663,7 +720,7 @@ class OrganizationSyncService
      * Performs a quick sync status check with prediction of objects to be processed
      *
      * @param int $minutesBack Number of minutes to look back for prediction (default: 10 for scheduled sync)
-     * 
+     *
      * @return array Status information about sync requirements including processing predictions
      */
     public function getSyncStatus(int $minutesBack = 10): array
@@ -684,10 +741,10 @@ class OrganizationSyncService
 
             // Get total counts (all objects)
             $allOrganisatieObjects = $this->getOrganisatieObjectsByTimeWindow($register, $organizationSchema, 0);
-            
+
             // Get incremental counts (objects to be processed in next sync)
             $incrementalOrganisatieObjects = $this->getOrganisatieObjectsByTimeWindow($register, $organizationSchema, $minutesBack);
-            
+
             // Get organization entities count
             $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
             $entitiesCount = 0;
@@ -710,7 +767,7 @@ class OrganizationSyncService
             }
 
             // Calculate efficiency metrics
-            $efficiencyImprovement = count($allOrganisatieObjects) > 0 
+            $efficiencyImprovement = count($allOrganisatieObjects) > 0
                 ? round((1 - (count($incrementalOrganisatieObjects) / count($allOrganisatieObjects))) * 100, 1)
                 : 0;
 
@@ -718,31 +775,31 @@ class OrganizationSyncService
                 'configured' => true,
                 'syncMode' => $minutesBack === 0 ? 'full' : 'incremental',
                 'timeWindow' => $minutesBack,
-                
+
                 // Total counts
                 'totalOrganizationObjects' => count($allOrganisatieObjects),
                 'totalOrganizationEntities' => $entitiesCount,
-                
+
                 // Processing predictions
                 'organizationsToProcess' => count($incrementalOrganisatieObjects),
                 'contactPersonsToProcess' => $predictedContactPersonsToProcess,
-                
+
                 // Efficiency metrics
                 'efficiencyImprovement' => $efficiencyImprovement . '%',
                 'processingReduction' => count($allOrganisatieObjects) - count($incrementalOrganisatieObjects),
-                
+
                 // Configuration
                 'contactSchemaConfigured' => !empty($contactSchema),
                 'lastSyncTime' => $this->config->getValueString('softwarecatalog', 'last_sync_time', 'Never'),
-                
+
                 // Email configuration status
                 'emailStatus' => $this->getEmailConfigurationStatus(),
-                
+
                 // Status messages
-                'message' => count($incrementalOrganisatieObjects) > 0 
+                'message' => count($incrementalOrganisatieObjects) > 0
                     ? "Ready to process {$this->formatNumber(count($incrementalOrganisatieObjects))} organizations and {$this->formatNumber($predictedContactPersonsToProcess)} contact persons"
                     : 'No organizations to process in the current time window',
-                'nextScheduledSync' => $minutesBack > 0 
+                'nextScheduledSync' => $minutesBack > 0
                     ? "Will process organizations updated in the last {$minutesBack} minutes"
                     : 'Will process all organizations (full sync)'
             ];
@@ -781,7 +838,7 @@ class OrganizationSyncService
      * Format numbers for better readability
      *
      * @param int $number The number to format
-     * 
+     *
      * @return string Formatted number
      */
     private function formatNumber(int $number): string
@@ -810,7 +867,7 @@ class OrganizationSyncService
      * Uses default 10-minute lookback for incremental sync.
      *
      * @param int $minutesBack Number of minutes to look back for changes (default: 10)
-     * 
+     *
      * @return array Synchronization results with detailed logging information
      */
     public function performScheduledSync(int $minutesBack = 10): array
@@ -822,8 +879,8 @@ class OrganizationSyncService
 
         try {
             // Perform the core synchronization with time-based filtering
-            $syncResults = $this->performFullSync($minutesBack);
-
+//            $syncResults = $this->performFullSync($minutesBack);
+            $syncResults = $this->performOrganizationsSync();
             // Record the sync time
             $this->recordSyncTime();
 
@@ -855,7 +912,7 @@ class OrganizationSyncService
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return [
                 'organizationsProcessed' => 0,
                 'entitiesCreated' => 0,
@@ -879,7 +936,7 @@ class OrganizationSyncService
      * Uses full sync (minutesBack = 0) for manual triggers by default.
      *
      * @param int $minutesBack Number of minutes to look back for changes (default: 0 for full sync)
-     * 
+     *
      * @return array Synchronization results formatted for API response
      */
     public function performManualSync(int $minutesBack = 0): array
@@ -890,8 +947,11 @@ class OrganizationSyncService
         ]);
 
         try {
+            $syncResults = $this->performOrganizationsSync();
+//            die;
+
             // Perform the core synchronization with time-based filtering
-            $syncResults = $this->performFullSync($minutesBack);
+//            $syncResults = $this->performFullSync($minutesBack);
 
             // Record the sync time
             $this->recordSyncTime();
@@ -942,7 +1002,7 @@ class OrganizationSyncService
                 'minutesBack' => $minutesBack,
                 'exception' => $e->getMessage()
             ]);
-            
+
             return [
                 'configured' => false,
                 'syncMode' => $minutesBack === 0 ? 'full' : 'incremental',
@@ -951,4 +1011,4 @@ class OrganizationSyncService
             ];
         }
     }
-} 
+}
