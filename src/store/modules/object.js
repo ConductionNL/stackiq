@@ -588,9 +588,10 @@ export const useObjectStore = defineStore('object', {
 		 * @param {string} slug - The schema slug to use as type identifier
 		 * @param {string} schema - The schema ID
 		 * @param {string} register - The register ID
+		 * @param {boolean} fetchCollection - Whether to fetch the collection immediately
 		 * @return {Promise<void>}
 		 */
-		async registerObjectType(slug, schema, register) {
+		async registerObjectType(slug, schema, register, fetchCollection = false) {
 			if (this.objectTypeRegistry[slug]) {
 				console.info(`Object type ${slug} already registered`)
 				return
@@ -610,8 +611,10 @@ export const useObjectStore = defineStore('object', {
 				}
 			}
 
-			// Fetch the initial collection
-			await this.fetchCollection(slug)
+			// Optionally fetch the initial collection
+			if (fetchCollection) {
+				await this.fetchCollection(slug)
+			}
 		},
 
 		/**
@@ -666,13 +669,33 @@ export const useObjectStore = defineStore('object', {
 				throw new Error('Settings not loaded')
 			}
 
-			const config = this.settings.configuration
-			const source = config[`${objectType}_source`]
-			const schema = config[`${objectType}_schema`]
-			const register = config[`${objectType}_register`]
+			// Check for voorzieningen-specific configuration first (our primary use case)
+			if (objectType === 'organisatie') {
+				const voorzieningenConfig = this.settings.voorzieningen || {}
+				if (voorzieningenConfig.register && voorzieningenConfig.organisatie_schema) {
+					return {
+						source: 'openregister',
+						schema: voorzieningenConfig.organisatie_schema,
+						register: voorzieningenConfig.register,
+					}
+				}
+			}
 
-			if (!source || !schema || !register) {
-				throw new Error(`Invalid configuration for object type: ${objectType}`)
+			// Check legacy settings format in configuration object
+			const config = this.settings.configuration || {}
+
+			// Try voorzieningen-prefixed configuration first
+			let source = config[`voorzieningen_${objectType}_source`] || config[`${objectType}_source`]
+			const schema = config[`voorzieningen_${objectType}_schema`] || config[`${objectType}_schema`]
+			const register = config[`voorzieningen_${objectType}_register`] || config[`${objectType}_register`] || config.voorzieningen_register
+
+			// Default to openregister as source
+			if (!source) {
+				source = 'openregister'
+			}
+
+			if (!schema || !register) {
+				throw new Error(`Invalid configuration for object type: ${objectType}. Schema: ${schema}, Register: ${register}`)
 			}
 
 			return { source, schema, register }
@@ -695,7 +718,8 @@ export const useObjectStore = defineStore('object', {
 			} else {
 				config = this.getSchemaConfig(type)
 			}
-			const baseUrl = '/index.php/apps/softwarecatalog/api/objects'
+			// Use OpenRegister API directly - objects are stored in OpenRegister, not SoftwareCatalog
+			const baseUrl = '/index.php/apps/openregister/api/objects'
 
 			// Ensure register and schema are strings (extract id if they're objects)
 			const registerId = typeof config.register === 'object' ? config.register?.id || config.register?.uuid : config.register
@@ -912,12 +936,74 @@ export const useObjectStore = defineStore('object', {
 		 */
 		async fetchSettings() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
-				if (!response.ok) throw new Error('Failed to fetch settings')
-				this.settings = await response.json()
+				// Fetch main settings
+				const settingsResponse = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				if (!settingsResponse.ok) throw new Error('Failed to fetch settings')
+				this.settings = await settingsResponse.json()
+
+				// Fetch voorzieningen-specific configuration for better performance
+				try {
+					const voorzieningenResponse = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+					if (voorzieningenResponse.ok) {
+						const voorzieningenData = await voorzieningenResponse.json()
+						if (voorzieningenData.success && voorzieningenData.config) {
+							this.settings.voorzieningen = voorzieningenData.config
+						}
+					}
+				} catch (error) {
+					console.warn('Failed to fetch voorzieningen config:', error)
+				}
+
+				// After loading settings, initialize voorzieningen object types
+				await this.initializeVoorzieningenObjectTypes()
 			} catch (error) {
 				console.error('Error fetching settings:', error)
 				throw error
+			}
+		},
+
+		/**
+		 * Initialize voorzieningen object types from settings
+		 * @return {Promise<void>}
+		 */
+		async initializeVoorzieningenObjectTypes() {
+			try {
+				// Get voorzieningen configuration
+				const voorzieningenConfig = this.settings?.voorzieningen || {}
+				const config = this.settings?.configuration || {}
+
+				// Register organisatie object type if configured
+				const organisatieSchema = voorzieningenConfig.organisatie_schema || config.voorzieningen_organisatie_schema
+				const voorzieningenRegister = voorzieningenConfig.register || config.voorzieningen_register
+
+				if (organisatieSchema && voorzieningenRegister) {
+					console.info('Registering organisatie object type:', {
+						schema: organisatieSchema,
+						register: voorzieningenRegister,
+					})
+					await this.registerObjectType('organisatie', organisatieSchema, voorzieningenRegister)
+				} else {
+					console.warn('Organisatie configuration not found in settings:', {
+						voorzieningenConfig,
+						organisatieSchema,
+						voorzieningenRegister,
+					})
+				}
+
+				// Register other voorzieningen object types if they exist
+				const objectTypes = ['contactpersoon', 'voorziening', 'contract', 'standaard', 'review', 'kwetsbaarheid']
+				for (const objectType of objectTypes) {
+					const schema = voorzieningenConfig[`${objectType}_schema`] || config[`voorzieningen_${objectType}_schema`]
+					if (schema && voorzieningenRegister) {
+						console.info(`Registering ${objectType} object type:`, {
+							schema,
+							register: voorzieningenRegister,
+						})
+						await this.registerObjectType(objectType, schema, voorzieningenRegister)
+					}
+				}
+			} catch (error) {
+				console.warn('Failed to initialize voorzieningen object types:', error)
 			}
 		},
 

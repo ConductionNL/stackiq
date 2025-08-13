@@ -5,29 +5,27 @@ import { navigationStore } from '../store/store.js'
 <template>
 	<NcAppNavigation>
 		<NcAppNavigationList>
-			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" name="Dashboard" @click="navigationStore.setSelected('dashboard')">
-				<template #icon>
-					<Finance :size="20" />
-				</template>
-			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'organisaties'" name="Organisaties" @click="navigationStore.setSelected('organisaties')">
 				<template #icon>
 					<AccountGroup :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'contactpersonen'" name="Contactpersonen" @click="navigationStore.setSelected('contactpersonen')">
+				<template #icon>
+					<AccountMultiple :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'voorzieningen'" name="Voorzieningen" @click="navigationStore.setSelected('voorzieningen')">
+				<template #icon>
+					<ApplicationCog :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'contracten'" name="Contracten" @click="navigationStore.setSelected('contracten')">
+				<template #icon>
+					<FileDocumentEdit :size="20" />
 				</template>
 			</NcAppNavigationItem>
 		</NcAppNavigationList>
-		<NcAppNavigationSettings>
-			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" name="Dashboard" @click="navigationStore.setSelected('dashboard')">
-				<template #icon>
-					<Finance :size="20" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'organisaties'" name="Organisaties" @click="navigationStore.setSelected('organisaties')">
-				<template #icon>
-					<AccountGroup :size="20" />
-				</template>
-			</NcAppNavigationItem>
-		</NcAppNavigationSettings>
 	</NcAppNavigation>
 </template>
 <script>
@@ -35,13 +33,14 @@ import { navigationStore } from '../store/store.js'
 import {
 	NcAppNavigation,
 	NcAppNavigationList,
-	NcAppNavigationSettings,
 	NcAppNavigationItem,
 } from '@nextcloud/vue'
 
 // Icons
-import Finance from 'vue-material-design-icons/Finance.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
+import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
+import ApplicationCog from 'vue-material-design-icons/ApplicationCog.vue'
+import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 
 export default {
 	name: 'MainMenu',
@@ -51,8 +50,10 @@ export default {
 		NcAppNavigationList,
 		NcAppNavigationItem,
 		// icons
-		Finance,
 		AccountGroup,
+		AccountMultiple,
+		ApplicationCog,
+		FileDocumentEdit,
 	},
 	methods: {
 		openLink(url, type = '') {

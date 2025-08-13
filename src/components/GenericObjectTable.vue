@@ -179,25 +179,70 @@ import { objectStore, navigationStore } from '../store/store.js'
 									</NcActionButton>
 								</NcActions>
 							</div>
-							<!-- Card Statistics Table -->
-							<table class="statisticsTable">
-								<thead>
-									<tr>
-										<th>{{ t('opencatalogi', 'Property') }}</th>
-										<th>{{ t('opencatalogi', 'Value') }}</th>
-										<th>{{ t('opencatalogi', 'Status') }}</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr v-for="property in getCardProperties(item)" :key="property.key">
-										<td>{{ property.label }}</td>
-										<td class="truncatedText">
-											{{ property.value }}
-										</td>
-										<td>{{ property.status }}</td>
-									</tr>
-								</tbody>
-							</table>
+							<!-- Card Content -->
+							<div v-if="cardDisplayMode === 'description'" class="cardDescription">
+								<p v-if="getObjectSummary(item)" class="summaryText">
+									{{ getObjectSummary(item) }}
+								</p>
+								<p v-else class="noSummaryText">
+									{{ t('opencatalogi', 'No description available') }}
+								</p>
+
+								<!-- Show key properties in a compact format -->
+								<div v-if="getKeyProperties(item).length > 0" class="keyProperties">
+									<span v-for="property in getKeyProperties(item)"
+										:key="property.key"
+										class="keyProperty">
+										<strong>{{ property.label }}:</strong> {{ property.value }}
+									</span>
+								</div>
+							</div>
+
+							<div v-else-if="cardDisplayMode === 'properties'" class="cardProperties">
+								<!-- Card Statistics Table -->
+								<table class="statisticsTable">
+									<thead>
+										<tr>
+											<th>{{ t('opencatalogi', 'Property') }}</th>
+											<th>{{ t('opencatalogi', 'Value') }}</th>
+											<th>{{ t('opencatalogi', 'Status') }}</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr v-for="property in getCardProperties(item)" :key="property.key">
+											<td>{{ property.label }}</td>
+											<td class="truncatedText">
+												{{ property.value }}
+											</td>
+											<td>{{ property.status }}</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+							<div v-else-if="cardDisplayMode === 'mixed'" class="cardMixed">
+								<!-- Description first -->
+								<div class="cardDescription">
+									<p v-if="getObjectSummary(item)" class="summaryText">
+										{{ getObjectSummary(item) }}
+									</p>
+									<p v-else class="noSummaryText">
+										{{ t('opencatalogi', 'No description available') }}
+									</p>
+								</div>
+
+								<!-- Compact properties table -->
+								<table v-if="getCardProperties(item).length > 0" class="statisticsTable compact">
+									<tbody>
+										<tr v-for="property in getCardProperties(item).slice(0, 3)" :key="property.key">
+											<td><strong>{{ property.label }}</strong></td>
+											<td class="truncatedText">
+												{{ property.value }}
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
 				</template>
@@ -512,6 +557,14 @@ export default {
 			type: String,
 			default: null,
 		},
+		/**
+		 * Display mode for cards: 'properties' shows property table, 'description' shows description, 'mixed' shows both
+		 */
+		cardDisplayMode: {
+			type: String,
+			default: 'properties',
+			validator: value => ['properties', 'description', 'mixed'].includes(value),
+		},
 	},
 
 	data() {
@@ -670,11 +723,26 @@ export default {
 		},
 
 		getObjectTitle(item) {
-			return item?.title || item?.name || item?.['@self']?.name || this.getObjectId(item) || 'Unknown'
+			// For organizations, prioritize naam field which is the proper Dutch name field
+			if (this.objectType === 'organisatie' && item?.naam) {
+				return item.naam
+			}
+
+			// For other objects or fallback, use the @self.name (which we fixed) or other fallbacks
+			return item?.title || item?.name || item?.naam || item?.['@self']?.name || this.getObjectId(item) || 'Unknown'
 		},
 
 		getObjectSummary(item) {
-			return item?.summary || item?.description || ''
+			// For organizations, create a meaningful description from available fields
+			if (this.objectType === 'organisatie') {
+				if (item?.beschrijvingKort) return item.beschrijvingKort
+				if (item?.beschrijvingLang) return item.beschrijvingLang
+				if (item?.type && item?.naam) return `${item.type} organisatie`
+				if (item?.type) return item.type
+			}
+
+			// For other object types, use standard fields
+			return item?.summary || item?.description || item?.beschrijvingKort || item?.beschrijvingLang || ''
 		},
 
 		getColumnValue(item, column) {
@@ -699,6 +767,15 @@ export default {
 				value: this.getColumnValue(item, column),
 				status: 'Available', // Default status, can be customized
 			})).filter(prop => prop.value !== 'N/A')
+		},
+
+		getKeyProperties(item) {
+			// Show only the first few most important properties in a compact format
+			return this.orderedEnabledColumns.slice(0, 3).map(column => ({
+				key: column.key || column.id,
+				label: column.label,
+				value: this.getColumnValue(item, column),
+			})).filter(prop => prop.value !== 'N/A' && prop.value !== null && prop.value !== undefined)
 		},
 
 		getActionDisabled(action) {
@@ -878,6 +955,54 @@ export default {
 	min-width: 0;
 }
 
+.cardDescription {
+	margin-top: 12px;
+}
+
+.summaryText {
+	font-size: 14px;
+	line-height: 1.4;
+	color: var(--color-main-text);
+	margin: 0 0 12px 0;
+}
+
+.noSummaryText {
+	font-size: 14px;
+	color: var(--color-text-lighter);
+	font-style: italic;
+	margin: 0 0 12px 0;
+}
+
+.keyProperties {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding-top: 8px;
+	border-top: 1px solid var(--color-border-dark);
+}
+
+.keyProperty {
+	font-size: 12px;
+	color: var(--color-main-text);
+}
+
+.keyProperty strong {
+	color: var(--color-text-lighter);
+	font-weight: 600;
+}
+
+.cardProperties {
+	margin-top: 12px;
+}
+
+.cardMixed {
+	margin-top: 12px;
+}
+
+.cardMixed .cardDescription {
+	margin-bottom: 12px;
+}
+
 .statisticsTable {
 	width: 100%;
 	border-collapse: collapse;
@@ -895,6 +1020,21 @@ export default {
 	background: var(--color-background-dark);
 	font-weight: 600;
 	font-size: 12px;
+}
+
+.statisticsTable.compact {
+	font-size: 12px;
+}
+
+.statisticsTable.compact td {
+	padding: 4px 8px;
+}
+
+.truncatedText {
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .viewTableContainer {

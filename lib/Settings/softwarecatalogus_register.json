@@ -147,7 +147,10 @@
                 "groups": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "naam",
+                    "objectDescriptionField": "beschrijving"
+                }
             },
             "voorziening": {
                 "uri": null,
@@ -1114,7 +1117,8 @@
                 },
                 "deleted": null,
                 "configuration": {
-                    "objectDescriptionField": ""
+                    "objectNameField": "naam",
+                    "objectDescriptionField": "beschrijving"
                 }
             },
             "contactpersoon": {
@@ -1837,7 +1841,7 @@
                 "deleted": null,
                 "configuration": {
                     "objectNameField": "naam",
-                    "objectDescriptionField": "beschrijvingKort"
+                    "objectDescriptionField": "type"
                 }
             },
             "voorzieninggebruik": {
@@ -2311,8 +2315,8 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "",
-                    "objectDescriptionField": ""
+                    "objectNameField": "organisatie",
+                    "objectDescriptionField": "status"
                 }
             },
             "contract": {
@@ -2815,7 +2819,10 @@
                 "groups": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "type",
+                    "objectDescriptionField": "beschrijvingKort"
+                }
             },
             "beoordeeling": {
                 "uri": null,
@@ -5092,7 +5099,10 @@
                 "groups": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "ondersteuntStandaardversie",
+                    "objectDescriptionField": "moduleIsCompliant"
+                }
             },
             "moduleGebruik": {
                 "uri": null,
@@ -5286,7 +5296,10 @@
                 "groups": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "module",
+                    "objectDescriptionField": "beschrijvingKort"
+                }
             }
         },
         "objects": []
