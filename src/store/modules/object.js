@@ -968,40 +968,40 @@ export const useObjectStore = defineStore('object', {
 		 */
 		async initializeVoorzieningenObjectTypes() {
 			try {
-				// Get voorzieningen configuration
-				const voorzieningenConfig = this.settings?.voorzieningen || {}
-				const config = this.settings?.configuration || {}
-
-				// Register organisatie object type if configured
-				const organisatieSchema = voorzieningenConfig.organisatie_schema || config.voorzieningen_organisatie_schema
-				const voorzieningenRegister = voorzieningenConfig.register || config.voorzieningen_register
-
-				if (organisatieSchema && voorzieningenRegister) {
-					console.info('Registering organisatie object type:', {
-						schema: organisatieSchema,
-						register: voorzieningenRegister,
-					})
-					await this.registerObjectType('organisatie', organisatieSchema, voorzieningenRegister)
-				} else {
-					console.warn('Organisatie configuration not found in settings:', {
-						voorzieningenConfig,
-						organisatieSchema,
-						voorzieningenRegister,
-					})
+				console.info('ObjectStore: Initializing voorzieningen object types from settings')
+				
+				if (!this.settings?.availableRegisters) {
+					console.warn('ObjectStore: No available registers found for voorzieningen initialization')
+					return
 				}
 
-				// Register other voorzieningen object types if they exist
-				const objectTypes = ['contactpersoon', 'voorziening', 'contract', 'standaard', 'review', 'kwetsbaarheid']
-				for (const objectType of objectTypes) {
-					const schema = voorzieningenConfig[`${objectType}_schema`] || config[`voorzieningen_${objectType}_schema`]
-					if (schema && voorzieningenRegister) {
-						console.info(`Registering ${objectType} object type:`, {
-							schema,
-							register: voorzieningenRegister,
-						})
-						await this.registerObjectType(objectType, schema, voorzieningenRegister)
-					}
+				// Find the voorzieningen register
+				const voorzieningenRegister = this.settings.availableRegisters.find(
+					register => register.slug === 'voorzieningen'
+				)
+
+				if (!voorzieningenRegister?.schemas) {
+					console.warn('ObjectStore: No voorzieningen register found or no schemas available')
+					return
 				}
+
+				let registeredCount = 0
+
+				// Register each schema from the voorzieningen register
+				for (const schema of voorzieningenRegister.schemas) {
+					console.info(`ObjectStore: Registering voorzieningen object type: ${schema.slug}`, {
+						title: schema.title,
+						description: schema.description,
+						id: schema.id,
+						uuid: schema.uuid,
+					})
+
+					// Register the object type using schema ID and voorzieningen register ID
+					await this.registerObjectType(schema.slug, schema.id, voorzieningenRegister.id)
+					registeredCount++
+				}
+
+				console.info(`ObjectStore: Registered ${registeredCount} voorzieningen object types from register`)
 			} catch (error) {
 				console.warn('Failed to initialize voorzieningen object types:', error)
 			}

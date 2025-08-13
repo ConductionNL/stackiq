@@ -31,6 +31,7 @@ import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 		:help-url="'https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties'"
 		card-display-mode="description"
 		:custom-card-component="OrganisatieCard"
+		:filters="organisatieFilters"
 		@mounted="onMounted" />
 </template>
 
@@ -52,6 +53,7 @@ export default {
 	name: 'OrganisatieIndex',
 	components: {
 		GenericObjectTable,
+		// eslint-disable-next-line vue/no-unused-components
 		OrganisatieCard,
 	},
 	data() {
@@ -213,6 +215,17 @@ export default {
 					handler: () => {
 						window.open('https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties', '_blank')
 					},
+				},
+			],
+			organisatieFilters: [
+				{
+					key: 'status',
+					label: 'Status',
+					options: [
+						{ value: 'all', label: 'Alle statussen' },
+						{ value: 'Actief', label: 'Actief' },
+						{ value: 'concept', label: 'Concept' },
+					],
 				},
 			],
 			addOrganisatieAction: {
