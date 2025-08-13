@@ -28,6 +28,7 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
+use OCP\IDBConnection;
 use OCP\IUserManager;
 use OCP\IGroupManager;
 use OCP\IAppConfig;
@@ -67,13 +68,13 @@ class Application extends App implements IBootstrap
      * Register event listeners and services
      *
      * @param IRegistrationContext $context Registration context
-     * 
+     *
      * @return void
      */
     public function register(IRegistrationContext $context): void
     {
         include_once __DIR__ . '/../../vendor/autoload.php';
-        
+
         // Register the handlers as services
         $context->registerService('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler', function (ContainerInterface $c) {
             return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler(
@@ -124,10 +125,10 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
-        
+
         // Organization event listeners removed - now using cron job for organization synchronization
         // Contact person event listeners are still active for real-time processing
-        
+
         // Register new focused services
         $context->registerService(\OCA\SoftwareCatalog\Service\OrganisatieService::class, function ($container) {
             return new \OCA\SoftwareCatalog\Service\OrganisatieService(
@@ -180,7 +181,8 @@ class Application extends App implements IBootstrap
                 $container->get(SymfonyEmailService::class),
                 $container->get(IAppConfig::class),
                 $container->get('Psr\Log\LoggerInterface'),
-                $container->get(SettingsService::class)
+                $container->get(SettingsService::class),
+                $container->get(IDBConnection::class)
             );
         });
 
@@ -233,14 +235,14 @@ class Application extends App implements IBootstrap
      * Boot the application
      *
      * @param IBootContext $context Boot context
-     * 
+     *
      * @return void
      */
     public function boot(IBootContext $context): void
     {
         $container = $context->getServerContainer();
         $logger = $container->get(LoggerInterface::class);
-        
+
         try {
             $config = $container->get(IAppConfig::class);
             $appManager = $container->get(IAppManager::class);
@@ -256,7 +258,7 @@ class Application extends App implements IBootstrap
             // Check if we actually have a valid configuration, not just version matching
             $needsInitialization = false;
             $initReason = '';
-            
+
             if ($lastInitializedVersion !== $currentAppVersion || empty($lastInitializedVersion)) {
                 $needsInitialization = true;
                 $initReason = empty($lastInitializedVersion) ? 'never_initialized' : 'version_changed';
@@ -264,7 +266,7 @@ class Application extends App implements IBootstrap
                 // Even if version matches, check if we have valid configuration
                 $hasValidConfig = $config->getValueString(self::APP_ID, 'voorzieningen_organisatie_schema', '') !== '' ||
                                   $config->getValueString(self::APP_ID, 'organization_schema', '') !== '';
-                
+
                 if (!$hasValidConfig) {
                     $needsInitialization = true;
                     $initReason = 'missing_configuration';
@@ -274,25 +276,25 @@ class Application extends App implements IBootstrap
                     ]);
                 }
             }
-            
+
             if ($needsInitialization) {
                 $logger->info('SoftwareCatalog boot: Starting initialization', [
                     'reason' => $initReason,
                     'currentVersion' => $currentAppVersion,
                     'lastInitializedVersion' => $lastInitializedVersion
                 ]);
-                
+
                 try {
                     $settingsService = $container->get(SettingsService::class);
                     $initResult = $settingsService->initialize();
-                    
+
                     $logger->info('SoftwareCatalog boot: Initialization completed', [
                         'result' => $initResult,
                         'hasErrors' => !empty($initResult['errors'])
                     ]);
-                    
+
                     // Only update version if initialization was actually successful
-                    if (empty($initResult['errors']) && 
+                    if (empty($initResult['errors']) &&
                         ($initResult['autoConfigured'] || $initResult['fullyConfigured'])) {
                         $config->setValueString(self::APP_ID, 'last_initialized_version', $currentAppVersion);
                         $logger->info('SoftwareCatalog boot: Version updated to ' . $currentAppVersion . ' (successful init)');
@@ -303,7 +305,7 @@ class Application extends App implements IBootstrap
                             'fullyConfigured' => $initResult['fullyConfigured'] ?? false
                         ]);
                     }
-                    
+
                 } catch (\RuntimeException $e) {
                     // Don't update version if OpenRegister is not available
                     $logger->warning('SoftwareCatalog boot: OpenRegister not available during initialization', [
@@ -320,7 +322,7 @@ class Application extends App implements IBootstrap
             } else {
                 $logger->debug('SoftwareCatalog boot: Skipping initialization (version unchanged and config valid)');
             }
-            
+
         } catch (\Exception $e) {
             // Log error but don't fail the boot process
             $logger->error('SoftwareCatalog boot error during version check: ' . $e->getMessage(), [
