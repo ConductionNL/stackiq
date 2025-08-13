@@ -156,7 +156,17 @@ import { objectStore, navigationStore } from '../store/store.js'
 			<div v-else>
 				<template v-if="viewMode === 'cards'">
 					<div class="cardGrid">
-						<div v-for="item in paginatedObjects" :key="getObjectId(item)" class="card">
+						<!-- Custom Card Component -->
+						<component v-if="customCardComponent"
+							v-for="item in paginatedObjects"
+							:key="getObjectId(item)"
+							:is="customCardComponent"
+							:item="item"
+							:object-actions="objectActions"
+							:card-icon="cardIcon" />
+
+						<!-- Default Generic Cards -->
+						<div v-else v-for="item in paginatedObjects" :key="getObjectId(item)" class="card">
 							<div class="cardHeader">
 								<h2 v-tooltip.bottom="getObjectSummary(item)">
 									<component :is="cardIcon" :size="20" />
@@ -564,6 +574,13 @@ export default {
 			type: String,
 			default: 'properties',
 			validator: value => ['properties', 'description', 'mixed'].includes(value),
+		},
+		/**
+		 * Custom card component to use instead of the default card
+		 */
+		customCardComponent: {
+			type: [String, Object],
+			default: null,
 		},
 	},
 

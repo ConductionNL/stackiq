@@ -12,6 +12,7 @@
 
 <script setup>
 import { navigationStore, objectStore } from '../../store/store.js'
+import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 </script>
 
 <template>
@@ -29,6 +30,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 		:add-action="addOrganisatieAction"
 		:help-url="'https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties'"
 		card-display-mode="description"
+		:custom-card-component="OrganisatieCard"
 		@mounted="onMounted" />
 </template>
 
@@ -50,6 +52,7 @@ export default {
 	name: 'OrganisatieIndex',
 	components: {
 		GenericObjectTable,
+		OrganisatieCard,
 	},
 	data() {
 		return {
