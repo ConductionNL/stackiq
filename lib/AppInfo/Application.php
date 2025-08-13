@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\AppInfo;
 
+use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -182,7 +183,8 @@ class Application extends App implements IBootstrap
                 $container->get(IAppConfig::class),
                 $container->get('Psr\Log\LoggerInterface'),
                 $container->get(SettingsService::class),
-                $container->get(IDBConnection::class)
+                $container->get(IDBConnection::class),
+                $container->get(ContactPersonHandler::class),
             );
         });
 

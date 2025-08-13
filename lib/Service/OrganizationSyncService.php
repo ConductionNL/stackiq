@@ -21,6 +21,7 @@ namespace OCA\SoftwareCatalog\Service;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
+use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -100,6 +101,7 @@ class OrganizationSyncService
         LoggerInterface $logger,
         SettingsService $settingsService,
         private IDBConnection $db,
+        private readonly ContactPersonHandler $contactpersonHandler,
     ) {
         $this->organisatieService = $organisatieService;
         $this->contactpersoonService = $contactpersoonService;
@@ -156,6 +158,69 @@ class OrganizationSyncService
 
             $org = $this->ensureOrganisationEntity($object,$stats);
 
+        }
+
+        return $stats;
+    }
+
+    public function performContactSync() :array
+    {
+        // Check configuration
+        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+        $register = $voorzieningenConfig['register'] ?? '';
+//        $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+        $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
+
+        $stats = [
+            'organizationsProcessed' => 0,
+            'entitiesCreated' => 0,
+            'entitiesUpdated' => 0,
+            'contactPersonsProcessed' => 0,
+            'usersCreated' => 0,
+            'usersUpdated' => 0,
+            'errors' => [],
+            'startTime' => date('Y-m-d H:i:s'),
+            'endTime' => null,
+            'duration' => null
+        ];
+
+        $qb = $this->db->getQueryBuilder();
+
+        $qb->select(
+            'o.uuid',
+            'a.uid',
+            $qb->createFunction('json_unquote(json_extract(o.object, \'$.e-mailadres\')) as email'),
+            $qb->createFunction('json_unquote(json_extract(o.object, \'$.username\')) as username')
+        )
+            ->from('openregister_objects', 'o')
+            ->leftJoin(
+                fromAlias: 'o',
+                join: 'accounts_data',
+                alias: 'a',
+                condition: 'json_unquote(json_extract(o.object, \'$.e-mailadres\')) = a.value')
+            ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
+            ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
+            ->andWhere($qb->expr()->isNull($qb->createFunction('json_unquote(json_extract(o.object, \'$.username\'))')));
+
+//        var_dump($qb->getSQL());
+        $contacts = $qb->execute()->fetchAll();
+
+        foreach ($contacts as $contact) {
+            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $contactEntity = $objectService->find($contact['uuid']);
+            $contactEntityObject = $contactEntity->getObject();
+
+            $contactEntityObject['username'] = $contact['uid'];
+
+            if ($contact['uid'] === null) {
+                $user = $this->contactpersonHandler->createUserAccount($contactEntity);
+                $contactEntityObject['username'] = $user->getUID();
+            }
+
+            $contactEntity->setObject($contactEntityObject);
+            $objectService->saveObject(object: $contactEntity, register: $register, schema: $contactSchema);
+
+            $stats['contactPersonsProcessed']++;
         }
 
         return $stats;
@@ -948,6 +1013,8 @@ class OrganizationSyncService
 
         try {
             $syncResults = $this->performOrganizationsSync();
+
+            $syncResults = array_merge($this->performContactSync(), $syncResults);
 //            die;
 
             // Perform the core synchronization with time-based filtering
