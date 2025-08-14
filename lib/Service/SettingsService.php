@@ -237,6 +237,9 @@ class SettingsService
                 $data['configuration'][$key] = $this->config->getValueString($this->_appName, $key, $defaultValue);
             }
 
+            // Add catalog location
+            $data['catalogLocation'] = $this->getCatalogLocation();
+
             return $data;
         } catch (\Exception $e) {
             throw new \RuntimeException('Failed to retrieve settings: ' . $e->getMessage());
@@ -4394,4 +4397,25 @@ class SettingsService
         }
     }
 
-}
+    /**
+     * Get catalog location
+     *
+     * @return string The catalog location URL
+     */
+    public function getCatalogLocation(): string
+    {
+        return $this->config->getValueString($this->_appName, 'catalog_location', '');
+    }
+
+    /**
+     * Set catalog location
+     *
+     * @param string $location The catalog location URL
+     * @return void
+     */
+    public function setCatalogLocation(string $location): void
+    {
+        $this->config->setValueString($this->_appName, 'catalog_location', $location);
+    }
+
+} 

@@ -2129,6 +2129,39 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Update catalog location
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateCatalogLocation(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $catalogLocation = $data['catalogLocation'] ?? '';
+            
+            $this->settingsService->setCatalogLocation($catalogLocation);
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Catalog location updated successfully',
+                'catalogLocation' => $catalogLocation
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update catalog location', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update catalog location: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }//end class
 
 

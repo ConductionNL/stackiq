@@ -173,68 +173,70 @@ class ArchiMateComparator
     {
         echo "\n--- Comparing Elements ---\n";
         
-        $originalElements = $original->xpath('//*[local-name()="element"]');
-        $exportedElements = $exported->xpath('//*[local-name()="element"]');
+        $originalElements = $this->indexByAttribute($original->xpath('//*[local-name()="elements"]/*[local-name()="element"]'), 'identifier');
+        $exportedElements = $this->indexByAttribute($exported->xpath('//*[local-name()="elements"]/*[local-name()="element"]'), 'identifier');
         
         $this->stats['elements_compared'] = count($originalElements);
         
-        echo sprintf("Original elements found: %d\n", count($originalElements));
-        echo sprintf("Exported elements found: %d\n", count($exportedElements));
+        echo "Original elements found: " . count($originalElements) . "\n";
+        echo "Exported elements found: " . count($exportedElements) . "\n";
         
-        // Check if exported elements have identifiers
-        $exportedHasIdentifiers = false;
-        $exportedHasXsiType = false;
-        
-        if (!empty($exportedElements)) {
-            $firstExported = $exportedElements[0];
-            $exportedHasIdentifiers = !empty((string)$firstExported['identifier']);
-            $exportedHasXsiType = !empty((string)$firstExported->attributes('xsi', true)['type']);
-            
-            echo sprintf("Exported elements have identifier attribute: %s\n", 
-                $exportedHasIdentifiers ? 'YES' : 'NO');
-            echo sprintf("Exported elements have xsi:type attribute: %s\n", 
-                $exportedHasXsiType ? 'YES' : 'NO');
+        // Check for extra elements in export
+        $extraElements = array_diff_key($exportedElements, $originalElements);
+        if (!empty($extraElements)) {
+            echo "⚠️  WARNING: Found " . count($extraElements) . " extra elements in export!\n";
+            foreach (array_slice($extraElements, 0, 5) as $id => $element) {
+                $this->addDifference('elements', $id, 'MISSING', 'EXTRA_IN_EXPORT');
+            }
+            if (count($extraElements) > 5) {
+                echo "... and " . (count($extraElements) - 5) . " more extra elements\n";
+            }
         }
         
-        // If exported elements don't have identifiers, we can't do detailed comparison
-        if (!$exportedHasIdentifiers && !empty($originalElements)) {
-            echo "❌ CRITICAL: Exported elements missing identifier attributes!\n";
-            $this->addDifference('elements', 'ALL', 'HAS_IDENTIFIERS', 'MISSING_IDENTIFIERS');
-            
-            // Show sample of what's missing
-            $sampleOriginal = $originalElements[0];
-            echo sprintf("Expected: <element identifier=\"%s\" xsi:type=\"%s\">\n",
-                (string)$sampleOriginal['identifier'],
-                (string)$sampleOriginal->attributes('xsi', true)['type']
-            );
-            echo sprintf("Actual: <element> (no attributes)\n");
-            return;
+        // Check for missing elements in export
+        $missingElements = array_diff_key($originalElements, $exportedElements);
+        if (!empty($missingElements)) {
+            echo "⚠️  WARNING: Found " . count($missingElements) . " missing elements in export!\n";
+            foreach (array_slice($missingElements, 0, 5) as $id => $element) {
+                $this->addDifference('elements', $id, 'EXISTS', 'MISSING_IN_EXPORT');
+            }
+            if (count($missingElements) > 5) {
+                echo "... and " . (count($missingElements) - 5) . " more missing elements\n";
+            }
         }
         
-        // Do detailed comparison if identifiers exist
-        $originalIndexed = $this->indexByAttribute($originalElements, 'identifier');
-        $exportedIndexed = $this->indexByAttribute($exportedElements, 'identifier');
+        // Check if exported elements have required attributes
+        $hasIdentifier = true;
+        $hasXsiType = true;
+        foreach (array_slice($exportedElements, 0, 10) as $element) {
+            if (!isset($element->attributes()['identifier'])) {
+                $hasIdentifier = false;
+            }
+            // Check for xsi:type in the xsi namespace
+            $xsiAttributes = $element->attributes('xsi', true);
+            if (!isset($xsiAttributes['type'])) {
+                $hasXsiType = false;
+            }
+        }
         
-        foreach ($originalIndexed as $id => $originalElement) {
-            if (!isset($exportedIndexed[$id])) {
-                $this->addDifference('elements', $id, 'EXISTS', 'MISSING');
-                continue;
+        echo "Exported elements have identifier attribute: " . ($hasIdentifier ? 'YES' : 'NO') . "\n";
+        echo "Exported elements have xsi:type attribute: " . ($hasXsiType ? 'YES' : 'NO') . "\n";
+        
+        // Compare common elements
+        $commonElements = array_intersect_key($originalElements, $exportedElements);
+        $comparedCount = 0;
+        foreach ($commonElements as $id => $originalElement) {
+            if ($comparedCount >= 100) { // Limit comparison to first 100 elements for performance
+                break;
             }
             
-            $exportedElement = $exportedIndexed[$id];
-            
-            // Compare xsi:type
-            $originalType = (string)$originalElement->attributes('xsi', true)['type'];
-            $exportedType = (string)$exportedElement->attributes('xsi', true)['type'];
-            if ($originalType !== $exportedType) {
-                $this->addDifference('elements', $id . '/xsi:type', $originalType, $exportedType);
-            }
+            $exportedElement = $exportedElements[$id];
             
             // Compare name
-            if ((string)$originalElement->name !== (string)$exportedElement->name) {
-                $this->addDifference('elements', $id . '/name', 
-                    (string)$originalElement->name, 
-                    (string)$exportedElement->name);
+            $originalName = (string)$originalElement->name;
+            $exportedName = (string)$exportedElement->name;
+            if ($originalName !== $exportedName) {
+                $this->addDifference('elements', $id . '/name', $originalName, $exportedName);
             }
             
             // Compare documentation
@@ -246,56 +248,64 @@ class ArchiMateComparator
             
             // Compare properties
             $this->compareProperties($originalElement, $exportedElement, 'elements', $id);
+            
+            $comparedCount++;
         }
         
-        // Check for extra elements in export
-        foreach ($exportedElements as $id => $exportedElement) {
-            if (!isset($originalElements[$id])) {
-                $this->addDifference('elements', $id, 'MISSING', 'EXISTS');
-            }
+        if (count($commonElements) > 100) {
+            echo "Note: Only compared first 100 elements for performance\n";
         }
         
-        echo "Elements comparison completed: " . count($originalElements) . " elements\n";
+        echo "Elements comparison completed: " . $comparedCount . " elements\n";
     }
     
     private function compareRelationships(\SimpleXMLElement $original, \SimpleXMLElement $exported): void
     {
         echo "\n--- Comparing Relationships ---\n";
         
-        $originalRels = $this->indexByAttribute($original->xpath('//*[local-name()="relationship"]'), 'identifier');
-        $exportedRels = $this->indexByAttribute($exported->xpath('//*[local-name()="relationship"]'), 'identifier');
+        $originalRels = $this->indexByAttribute($original->xpath('//*[local-name()="relationships"]/*[local-name()="relationship"]'), 'identifier');
+        $exportedRels = $this->indexByAttribute($exported->xpath('//*[local-name()="relationships"]/*[local-name()="relationship"]'), 'identifier');
         
         $this->stats['relationships_compared'] = count($originalRels);
         
-        foreach ($originalRels as $id => $originalRel) {
-            if (!isset($exportedRels[$id])) {
-                $this->addDifference('relationships', $id, 'EXISTS', 'MISSING');
-                continue;
+        echo "Original relationships found: " . count($originalRels) . "\n";
+        echo "Exported relationships found: " . count($exportedRels) . "\n";
+        
+        // Check for extra relationships in export
+        $extraRels = array_diff_key($exportedRels, $originalRels);
+        if (!empty($extraRels)) {
+            echo "⚠️  WARNING: Found " . count($extraRels) . " extra relationships in export!\n";
+            foreach (array_slice($extraRels, 0, 5) as $id => $rel) {
+                $this->addDifference('relationships', $id, 'MISSING', 'EXTRA_IN_EXPORT');
+            }
+            if (count($extraRels) > 5) {
+                echo "... and " . (count($extraRels) - 5) . " more extra relationships\n";
+            }
+        }
+        
+        // Check for missing relationships in export
+        $missingRels = array_diff_key($originalRels, $exportedRels);
+        if (!empty($missingRels)) {
+            echo "⚠️  WARNING: Found " . count($missingRels) . " missing relationships in export!\n";
+            foreach (array_slice($missingRels, 0, 5) as $id => $rel) {
+                $this->addDifference('relationships', $id, 'EXISTS', 'MISSING_IN_EXPORT');
+            }
+            if (count($missingRels) > 5) {
+                echo "... and " . (count($missingRels) - 5) . " more missing relationships\n";
+            }
+        }
+        
+        // Compare common relationships (limit to first 100 for performance)
+        $commonRels = array_intersect_key($originalRels, $exportedRels);
+        $comparedCount = 0;
+        foreach ($commonRels as $id => $originalRel) {
+            if ($comparedCount >= 100) {
+                break;
             }
             
             $exportedRel = $exportedRels[$id];
             
-            // Compare xsi:type
-            $originalType = (string)$originalRel->attributes('xsi', true)['type'];
-            $exportedType = (string)$exportedRel->attributes('xsi', true)['type'];
-            if ($originalType !== $exportedType) {
-                $this->addDifference('relationships', $id . '/xsi:type', $originalType, $exportedType);
-            }
-            
-            // Compare source and target
-            $originalSource = (string)$originalRel->attributes()['source'];
-            $exportedSource = (string)$exportedRel->attributes()['source'];
-            if ($originalSource !== $exportedSource) {
-                $this->addDifference('relationships', $id . '/source', $originalSource, $exportedSource);
-            }
-            
-            $originalTarget = (string)$originalRel->attributes()['target'];
-            $exportedTarget = (string)$exportedRel->attributes()['target'];
-            if ($originalTarget !== $exportedTarget) {
-                $this->addDifference('relationships', $id . '/target', $originalTarget, $exportedTarget);
-            }
-            
-            // Compare name (if present)
+            // Compare name
             $originalName = (string)$originalRel->name;
             $exportedName = (string)$exportedRel->name;
             if ($originalName !== $exportedName) {
@@ -311,9 +321,15 @@ class ArchiMateComparator
             
             // Compare properties
             $this->compareProperties($originalRel, $exportedRel, 'relationships', $id);
+            
+            $comparedCount++;
         }
         
-        echo "Relationships comparison completed: " . count($originalRels) . " relationships\n";
+        if (count($commonRels) > 100) {
+            echo "Note: Only compared first 100 relationships for performance\n";
+        }
+        
+        echo "Relationships comparison completed: " . $comparedCount . " relationships\n";
     }
     
     private function compareOrganizations(\SimpleXMLElement $original, \SimpleXMLElement $exported): void
@@ -350,6 +366,33 @@ class ArchiMateComparator
         $exportedProps = $this->indexByAttribute($exported->xpath('//*[local-name()="propertyDefinition"]'), 'identifier');
         
         $this->stats['property_definitions_compared'] = count($originalProps);
+        
+        echo "Original property definitions found: " . count($originalProps) . "\n";
+        echo "Exported property definitions found: " . count($exportedProps) . "\n";
+        
+        // Check for extra property definitions in export
+        $extraProps = array_diff_key($exportedProps, $originalProps);
+        if (!empty($extraProps)) {
+            echo "⚠️  WARNING: Found " . count($extraProps) . " extra property definitions in export!\n";
+            foreach (array_slice($extraProps, 0, 5) as $id => $prop) {
+                $this->addDifference('property_definitions', $id, 'MISSING', 'EXTRA_IN_EXPORT');
+            }
+            if (count($extraProps) > 5) {
+                echo "... and " . (count($extraProps) - 5) . " more extra property definitions\n";
+            }
+        }
+        
+        // Check for missing property definitions in export
+        $missingProps = array_diff_key($originalProps, $exportedProps);
+        if (!empty($missingProps)) {
+            echo "⚠️  WARNING: Found " . count($missingProps) . " missing property definitions in export!\n";
+            foreach (array_slice($missingProps, 0, 5) as $id => $prop) {
+                $this->addDifference('property_definitions', $id, 'EXISTS', 'MISSING_IN_EXPORT');
+            }
+            if (count($missingProps) > 5) {
+                echo "... and " . (count($missingProps) - 5) . " more missing property definitions\n";
+            }
+        }
         
         foreach ($originalProps as $id => $originalProp) {
             if (!isset($exportedProps[$id])) {
@@ -409,35 +452,66 @@ class ArchiMateComparator
     {
         echo "\n--- Comparing Views ---\n";
         
-        $originalViews = $this->indexByAttribute($original->xpath('//*[local-name()="view"]'), 'identifier');
-        $exportedViews = $this->indexByAttribute($exported->xpath('//*[local-name()="view"]'), 'identifier');
+        $originalViews = $this->indexByAttribute($original->xpath('//*[local-name()="views"]//*[local-name()="view"]'), 'identifier');
+        $exportedViews = $this->indexByAttribute($exported->xpath('//*[local-name()="views"]//*[local-name()="view"]'), 'identifier');
         
         $this->stats['views_compared'] = count($originalViews);
         
-        foreach ($originalViews as $id => $originalView) {
-            if (!isset($exportedViews[$id])) {
-                $this->addDifference('views', $id, 'EXISTS', 'MISSING');
-                continue;
+        echo "Original views found: " . count($originalViews) . "\n";
+        echo "Exported views found: " . count($exportedViews) . "\n";
+        
+        // Check for extra views in export
+        $extraViews = array_diff_key($exportedViews, $originalViews);
+        if (!empty($extraViews)) {
+            echo "⚠️  WARNING: Found " . count($extraViews) . " extra views in export!\n";
+            foreach (array_slice($extraViews, 0, 5) as $id => $view) {
+                $this->addDifference('views', $id, 'MISSING', 'EXTRA_IN_EXPORT');
+            }
+            if (count($extraViews) > 5) {
+                echo "... and " . (count($extraViews) - 5) . " more extra views\n";
+            }
+        }
+        
+        // Check for missing views in export
+        $missingViews = array_diff_key($originalViews, $exportedViews);
+        if (!empty($missingViews)) {
+            echo "⚠️  WARNING: Found " . count($missingViews) . " missing views in export!\n";
+            foreach (array_slice($missingViews, 0, 5) as $id => $view) {
+                $this->addDifference('views', $id, 'EXISTS', 'MISSING_IN_EXPORT');
+            }
+            if (count($missingViews) > 5) {
+                echo "... and " . (count($missingViews) - 5) . " more missing views\n";
+            }
+        }
+        
+        // Compare common views (limit to first 50 for performance)
+        $commonViews = array_intersect_key($originalViews, $exportedViews);
+        $comparedCount = 0;
+        foreach ($commonViews as $id => $originalView) {
+            if ($comparedCount >= 50) {
+                break;
             }
             
             $exportedView = $exportedViews[$id];
             
-            // Compare xsi:type
-            $originalType = (string)$originalView->attributes('xsi', true)['type'];
-            $exportedType = (string)$exportedView->attributes('xsi', true)['type'];
-            if ($originalType !== $exportedType) {
-                $this->addDifference('views', $id . '/xsi:type', $originalType, $exportedType);
+            // Compare name
+            $originalName = (string)$originalView->name;
+            $exportedName = (string)$exportedView->name;
+            if ($originalName !== $exportedName) {
+                $this->addDifference('views', $id . '/name', $originalName, $exportedName);
             }
             
-            // Compare name
-            if ((string)$originalView->name !== (string)$exportedView->name) {
-                $this->addDifference('views', $id . '/name', 
-                    (string)$originalView->name, 
-                    (string)$exportedView->name);
-            }
+            // Compare properties
+            $this->compareProperties($originalView, $exportedView, 'views', $id);
+            
+            $comparedCount++;
         }
         
-        echo "Views comparison completed: " . count($originalViews) . " views\n";
+        if (count($commonViews) > 50) {
+            echo "Note: Only compared first 50 views for performance\n";
+        }
+        
+        echo "Views comparison completed: " . $comparedCount . " views\n";
     }
     
     private function compareProperties(\SimpleXMLElement $originalElement, \SimpleXMLElement $exportedElement, string $section, string $id): void

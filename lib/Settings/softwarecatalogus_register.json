@@ -147,7 +147,10 @@
                 "groups": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "naam",
+                    "objectDescriptionField": "beschrijving"
+                }
             },
             "voorziening": {
                 "uri": null,
@@ -156,7 +159,7 @@
                 "description": "Een generieke voorziening (software product)",
                 "version": "0.0.80",
                 "summary": "",
-                "icon": null,
+                "icon": "ApplicationCog",
                 "required": [
                     "naam"
                 ],
@@ -1114,7 +1117,8 @@
                 },
                 "deleted": null,
                 "configuration": {
-                    "objectDescriptionField": ""
+                    "objectNameField": "naam",
+                    "objectDescriptionField": "beschrijving"
                 }
             },
             "contactpersoon": {
@@ -1124,7 +1128,7 @@
                 "description": "Contactgegevens van een persoon",
                 "version": "0.0.17",
                 "summary": "",
-                "icon": null,
+                "icon": "AccountMultiple",
                 "required": [
                     "organisatie",
                     "e-mailadres"
@@ -1349,7 +1353,7 @@
                 "description": "Een organisatie die voorzieningen aanbiedt",
                 "version": "0.0.90",
                 "summary": "",
-                "icon": null,
+                "icon": "OfficeBuildingOutline",
                 "required": [
                     "naam",
                     "type",
@@ -1837,7 +1841,7 @@
                 "deleted": null,
                 "configuration": {
                     "objectNameField": "naam",
-                    "objectDescriptionField": "beschrijvingKort"
+                    "objectDescriptionField": "type"
                 }
             },
             "voorzieninggebruik": {
@@ -2311,8 +2315,8 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "",
-                    "objectDescriptionField": ""
+                    "objectNameField": "organisatie",
+                    "objectDescriptionField": "status"
                 }
             },
             "contract": {
@@ -2322,7 +2326,7 @@
                 "description": "Een formele overeenkomst voor het inzetten van een VoorzieningAanbod op een VoorzieningGebruik",
                 "version": "0.0.4",
                 "summary": "",
-                "icon": null,
+                "icon": "FileDocumentEdit",
                 "required": [
                     "voorzieningAanbod",
                     "voorzieningGebruik",
@@ -2529,7 +2533,7 @@
                 "description": "Een specifieke standaard waaraan een voorziening kan voldoen",
                 "version": "0.0.3",
                 "summary": "",
-                "icon": null,
+                "icon": "FileDocumentCheck",
                 "required": [
                     "naam"
                 ],
@@ -2622,7 +2626,7 @@
                 "description": "Beoordeling van een voorziening",
                 "version": "0.0.3",
                 "summary": "",
-                "icon": null,
+                "icon": "Star",
                 "required": [
                     "voorziening",
                     "score"
@@ -2815,7 +2819,10 @@
                 "groups": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "type",
+                    "objectDescriptionField": "beschrijvingKort"
+                }
             },
             "beoordeeling": {
                 "uri": null,
@@ -5052,7 +5059,7 @@
                 "description": "Schema voor compliancy en standaard ondersteuning",
                 "version": "0.0.1",
                 "summary": "",
-                "icon": null,
+                "icon": "CheckCircle",
                 "required": [],
                 "properties": {
                     "ondersteuntStandaardversie": {
@@ -5092,7 +5099,10 @@
                 "groups": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "ondersteuntStandaardversie",
+                    "objectDescriptionField": "moduleIsCompliant"
+                }
             },
             "moduleGebruik": {
                 "uri": null,
@@ -5174,7 +5184,7 @@
                 "description": "Schema voor module versies",
                 "version": "0.0.1",
                 "summary": "",
-                "icon": null,
+                "icon": "ViewModule",
                 "required": [],
                 "properties": {
                     "module": {
@@ -5286,7 +5296,10 @@
                 "groups": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "module",
+                    "objectDescriptionField": "beschrijvingKort"
+                }
             }
         },
         "objects": []
