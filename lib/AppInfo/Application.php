@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\AppInfo;
 
+use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -28,6 +29,7 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
+use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\IUserManager;
 use OCP\IGroupManager;
@@ -95,7 +97,8 @@ class Application extends App implements IBootstrap
                 $c,
                 $c->get(IAppManager::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
-                $c->get(SymfonyEmailService::class)
+                $c->get(SymfonyEmailService::class),
+                $c->get(IConfig::class)
             );
         });
 
@@ -182,7 +185,8 @@ class Application extends App implements IBootstrap
                 $container->get(IAppConfig::class),
                 $container->get('Psr\Log\LoggerInterface'),
                 $container->get(SettingsService::class),
-                $container->get(IDBConnection::class)
+                $container->get(IDBConnection::class),
+                $container->get(ContactPersonHandler::class),
             );
         });
 
