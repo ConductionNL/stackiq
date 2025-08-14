@@ -12,32 +12,79 @@
 		</div>
 
 		<div v-if="!loading" class="dashboardContent">
-			<!-- Object Statistics Table -->
+			<!-- Object Statistics Tables -->
 			<div class="objectStatistics">
 				<h2 class="sectionTitle">{{ t('softwarecatalog', 'Object Statistics') }}</h2>
 				<p class="sectionDescription">{{ t('softwarecatalog', 'Overview of objects stored in configured registers') }}</p>
 				
-				<div class="statisticsTableContainer">
-					<div class="statisticsTableHeader">
-						<span class="lastUpdated">{{ t('softwarecatalog', 'Last updated: {date}', { date: formatDate(new Date()) }) }}</span>
+				<div class="statisticsTablesRow">
+					<!-- First Table -->
+					<div class="statisticsTableContainer">
+						<div class="statisticsTableHeader">
+							<span class="lastUpdated">{{ t('softwarecatalog', 'Last updated: {date}', { date: formatDate(new Date()) }) }}</span>
+						</div>
+						
+						<table class="objectStatisticsTable">
+							<thead>
+								<tr>
+									<th>{{ t('softwarecatalog', 'Object Type') }}</th>
+									<th class="countHeader">{{ t('softwarecatalog', 'Count') }}</th>
+									<th class="manageHeader">{{ t('softwarecatalog', 'Manage') }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="stat in firstTableStats" :key="stat.objectType">
+									<td>{{ stat.objectType }}</td>
+									<td class="countCell">{{ stat.count.toLocaleString() }}</td>
+									<td class="manageCell">
+										<NcButton
+											size="small"
+											type="tertiary"
+											@click="navigateToObjectType(stat.slug)">
+											<template #icon>
+												<component :is="getIconForObjectType(stat.slug)" :size="16" />
+											</template>
+											Manage
+										</NcButton>
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</div>
-					
-					<table class="objectStatisticsTable">
-						<thead>
-							<tr>
-								<th>{{ t('softwarecatalog', 'Register') }}</th>
-								<th>{{ t('softwarecatalog', 'Object Type') }}</th>
-								<th>{{ t('softwarecatalog', 'Count') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="stat in objectStatistics" :key="`${stat.register}-${stat.objectType}`">
-								<td>{{ stat.register }}</td>
-								<td>{{ stat.objectType }}</td>
-								<td class="countCell">{{ stat.count.toLocaleString() }}</td>
-							</tr>
-						</tbody>
-					</table>
+
+					<!-- Second Table -->
+					<div class="statisticsTableContainer">
+						<div class="statisticsTableHeader">
+							<span class="lastUpdated">{{ t('softwarecatalog', 'Last updated: {date}', { date: formatDate(new Date()) }) }}</span>
+						</div>
+						
+						<table class="objectStatisticsTable">
+							<thead>
+								<tr>
+									<th>{{ t('softwarecatalog', 'Object Type') }}</th>
+									<th class="countHeader">{{ t('softwarecatalog', 'Count') }}</th>
+									<th class="manageHeader">{{ t('softwarecatalog', 'Manage') }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="stat in secondTableStats" :key="stat.objectType">
+									<td>{{ stat.objectType }}</td>
+									<td class="countCell">{{ stat.count.toLocaleString() }}</td>
+									<td class="manageCell">
+										<NcButton
+											size="small"
+											type="tertiary"
+											@click="navigateToObjectType(stat.slug)">
+											<template #icon>
+												<component :is="getIconForObjectType(stat.slug)" :size="16" />
+											</template>
+											Manage
+										</NcButton>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 
@@ -151,11 +198,32 @@ export default {
 					register: voorzieningenRegister.title,
 					objectType: schema.title,
 					count: total,
+					slug: schema.slug,
 				})
 			})
 
 			// Sort by object type name for consistent display
 			return stats.sort((a, b) => a.objectType.localeCompare(b.objectType))
+		},
+
+		/**
+		 * Get first half of statistics for first table
+		 * @return {Array} First half of statistics
+		 */
+		firstTableStats() {
+			const stats = this.objectStatistics
+			const midPoint = Math.ceil(stats.length / 2)
+			return stats.slice(0, midPoint)
+		},
+
+		/**
+		 * Get second half of statistics for second table
+		 * @return {Array} Second half of statistics
+		 */
+		secondTableStats() {
+			const stats = this.objectStatistics
+			const midPoint = Math.ceil(stats.length / 2)
+			return stats.slice(midPoint)
 		},
 
 
@@ -265,6 +333,47 @@ export default {
 				DatabaseOutline,
 			}
 			return iconMap[iconName] || OfficeBuildingOutline
+		},
+
+		/**
+		 * Get icon component for specific object type
+		 * @param {string} objectType - Object type slug
+		 * @return {object} Vue icon component
+		 */
+		getIconForObjectType(objectType) {
+			const iconMap = {
+				organisatie: OfficeBuildingOutline,
+				contactpersoon: AccountMultiple,
+				voorziening: ApplicationCog,
+				contract: FileDocumentEdit,
+				product: ApplicationCog,
+				module: ApplicationCog,
+				koppeling: ApplicationCog,
+				dienst: ApplicationCog,
+				standaard: FileDocumentEdit,
+				compliancy: FileDocumentEdit,
+				kwetsbaarheid: FileDocumentEdit,
+				beoordeling: FileDocumentEdit,
+			}
+			return iconMap[objectType] || DatabaseOutline
+		},
+
+		/**
+		 * Navigate to object type management page
+		 * @param {string} objectType - Object type slug to navigate to
+		 * @return {void}
+		 */
+		navigateToObjectType(objectType) {
+			// Handle special cases for plural routing
+			const routeMap = {
+				organisatie: 'organisaties',
+				contactpersoon: 'contactpersonen',
+				voorziening: 'voorzieningen',
+				contract: 'contracten',
+			}
+			
+			const route = routeMap[objectType] || `${objectType}s`
+			navigationStore.setSelected(route)
 		},
 
 		/**
@@ -443,7 +552,7 @@ export default {
 
 
 
-/* Object Statistics Table */
+/* Object Statistics Tables */
 .objectStatistics {
 	margin-bottom: 32px;
 }
@@ -451,6 +560,12 @@ export default {
 .sectionDescription {
 	margin: 0 0 16px 0;
 	color: var(--color-text-lighter);
+}
+
+.statisticsTablesRow {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 24px;
 }
 
 .statisticsTableContainer {
@@ -487,6 +602,11 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
+.countHeader,
+.manageHeader {
+	text-align: right;
+}
+
 .objectStatisticsTable td {
 	padding: 16px;
 	border-bottom: 1px solid var(--color-border-dark);
@@ -503,6 +623,16 @@ export default {
 .countCell {
 	font-weight: 600;
 	text-align: right;
+}
+
+.manageCell {
+	text-align: right;
+}
+
+@media (max-width: 768px) {
+	.statisticsTablesRow {
+		grid-template-columns: 1fr;
+	}
 }
 
 

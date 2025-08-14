@@ -71,6 +71,55 @@
 				:size="64"
 				appearance="dark" />
 		</NcSettingsSection>
+
+		<NcSettingsSection
+			name="Other Configuration"
+			description="Configure additional application settings">
+			<div v-if="!loading">
+				<!-- Catalog Location -->
+				<div class="catalog-location-section">
+					<h3>Catalog Location</h3>
+					<p>Set the base URL for your catalog interface</p>
+
+					<NcTextField
+						:value.sync="catalogLocation"
+						:label="t('softwarecatalog', 'Catalog Location URL')"
+						:placeholder="t('softwarecatalog', 'https://catalog.example.com')"
+						:disabled="loading || savingCatalogLocation"
+						@update:value="onCatalogLocationChange">
+						<template #icon>
+							<Web :size="16" />
+						</template>
+					</NcTextField>
+
+					<div class="catalog-location-help">
+						<p class="help-text">
+							This URL will be used for "Go to organisation" links. The system will append "/beheer" to this URL.
+						</p>
+					</div>
+
+					<!-- Save Catalog Location Button -->
+					<div class="button-container">
+						<NcButton
+							type="secondary"
+							:disabled="loading || savingCatalogLocation || !catalogLocationChanged"
+							@click="saveCatalogLocation">
+							<template #icon>
+								<NcLoadingIcon v-if="savingCatalogLocation" :size="20" />
+								<Save v-else :size="20" />
+							</template>
+							Save Catalog Location
+						</NcButton>
+					</div>
+				</div>
+			</div>
+
+			<!-- Loading State -->
+			<NcLoadingIcon v-else
+				class="loading-icon"
+				:size="64"
+				appearance="dark" />
+		</NcSettingsSection>
 	</div>
 </template>
 
@@ -82,8 +131,10 @@ import {
 	NcSelect,
 	NcButton,
 	NcLoadingIcon,
+	NcTextField,
 } from '@nextcloud/vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
+import Web from 'vue-material-design-icons/Web.vue'
 
 /**
  * @class Settings
@@ -106,7 +157,9 @@ export default defineComponent({
 		NcSelect,
 		NcButton,
 		NcLoadingIcon,
+		NcTextField,
 		Save,
+		Web,
 	},
 
 	/**
@@ -118,6 +171,7 @@ export default defineComponent({
 		return {
 			loading: true,
 			saving: false,
+			savingCatalogLocation: false,
 			loadingConfiguration: false,
 			configurationResults: null,
 			settings: {
@@ -125,10 +179,13 @@ export default defineComponent({
 				openRegisters: false,
 				availableRegisters: [],
 				configuration: {},
+				catalogLocation: '',
 			},
 			selectedRegister: null,
 			configuration: {},
 			schemaOptions: [],
+			catalogLocation: '',
+			originalCatalogLocation: '',
 		}
 	},
 
@@ -171,6 +228,15 @@ export default defineComponent({
 
 			return this.schemaOptions.filter(option => !usedSchemaIds.includes(option.value))
 		},
+
+		/**
+		 * Check if catalog location has changed
+		 *
+		 * @return {boolean} True if catalog location has changed
+		 */
+		catalogLocationChanged() {
+			return this.catalogLocation !== this.originalCatalogLocation
+		},
 	},
 
 	/**
@@ -192,6 +258,10 @@ export default defineComponent({
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
 				const data = await response.json()
 				this.settings = data
+
+				// Initialize catalog location
+				this.catalogLocation = data.catalogLocation || ''
+				this.originalCatalogLocation = this.catalogLocation
 
 				// Initialize configuration object
 				this.initializeConfiguration()
@@ -450,6 +520,52 @@ export default defineComponent({
 				this.loadingConfiguration = false
 			}
 		},
+
+		/**
+		 * Handle catalog location input change
+		 *
+		 * @param {string} value - New catalog location value
+		 * @return {void}
+		 */
+		onCatalogLocationChange(value) {
+			this.catalogLocation = value
+		},
+
+		/**
+		 * Save catalog location to backend
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async saveCatalogLocation() {
+			if (!this.catalogLocationChanged) {
+				return
+			}
+
+			this.savingCatalogLocation = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/catalog-location', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						catalogLocation: this.catalogLocation,
+					}),
+				})
+
+				if (response.ok) {
+					this.originalCatalogLocation = this.catalogLocation
+					console.info('Catalog location saved successfully')
+				} else {
+					console.error('Failed to save catalog location')
+				}
+			} catch (error) {
+				console.error('Failed to save catalog location:', error)
+			} finally {
+				this.savingCatalogLocation = false
+			}
+		},
 	},
 })
 </script>
@@ -491,5 +607,21 @@ export default defineComponent({
 	display: flex;
 	justify-content: center;
 	margin: 2rem 0;
+}
+
+.catalog-location-section {
+	margin-bottom: 2rem;
+	max-width: 500px;
+}
+
+.catalog-location-help {
+	margin-top: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.help-text {
+	font-size: 12px;
+	color: var(--color-text-lighter);
+	margin: 0;
 }
 </style>

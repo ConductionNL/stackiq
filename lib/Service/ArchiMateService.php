@@ -67,6 +67,12 @@ class ArchiMateService
     ];
 
     /**
+     * Storage for the last save operation results
+     * Contains the structured return from ObjectService::saveObjects
+     */
+    private ?array $lastSaveResult = null;
+
+    /**
      * Constructor for ArchiMateService
      * 
      * @param IAppConfig $config Nextcloud app configuration service
@@ -510,15 +516,38 @@ class ArchiMateService
             ];
 
             // Save the model object using ObjectService::saveObjects
-            $savedObjects = $objectService->saveObjects([$modelData]);
+            $saveResult = $objectService->saveObjects([$modelData]);
+            
+            // Extract the saved/updated objects from the new structured return format
+            $savedObjects = array_merge(
+                $saveResult['saved'] ?? [],
+                $saveResult['updated'] ?? []
+            );
             
             if (empty($savedObjects)) {
+                // Check if there are validation errors
+                if (!empty($saveResult['invalid'])) {
+                    $errorMsg = $saveResult['invalid'][0]['error'] ?? 'Model object failed validation';
+                    $this->logger->error('ArchiMateService: Model object failed validation', [
+                        'error' => $errorMsg,
+                        'model_id' => $modelIdentifier
+                    ]);
+                    return ['success' => false, 'error' => "Validation failed: $errorMsg"];
+                }
+                
                 $this->logger->error('ArchiMateService: Failed to save model object');
                 return ['success' => false, 'error' => 'Failed to save model object'];
             }
 
             $savedModelObject = $savedObjects[0];
-            $modelAction = $this->determineObjectAction($savedModelObject);
+            
+            // Determine if this was a create or update operation
+            $modelAction = 'unknown';
+            if (!empty($saveResult['saved'])) {
+                $modelAction = 'created';
+            } elseif (!empty($saveResult['updated'])) {
+                $modelAction = 'updated';
+            }
             
             $this->logger->info('ArchiMateService: Saved model object', [
                 'model_id' => $modelIdentifier,
@@ -536,24 +565,7 @@ class ArchiMateService
         }
     }
 
-    /**
-     * Determine the action taken on an object during save operation
-     * 
-     * @param array $savedObject The saved object returned from ObjectService::saveObjects
-     * @return string The action taken: 'created', 'updated', or 'unknown'
-     */
-    private function determineObjectAction(array $savedObject): string
-    {
-        // Check if the object was created or updated based on the response
-        if (isset($savedObject['@self']['id'])) {
-            // If we have an ID, the object was saved successfully
-            // We can't easily determine if it was created or updated from the response
-            // For now, assume it was updated if it has an ID
-            return 'updated';
-        }
-        
-        return 'unknown';
-    }
+    // Method removed - action is now determined directly from ObjectService::saveObjects structured return
 
     /**
      * Normalize ArchiMate data structure for storage as JSON blob
@@ -1288,15 +1300,42 @@ class ArchiMateService
         }
 
         // Save objects using ObjectService::saveObjects with proper @self structure
-        $savedObjects = $objectService->saveObjects(
+        $saveResult = $objectService->saveObjects(
             objects: $objects,
             register: $registerId
         );
 
+        // Store the save result for later access to statistics
+        $this->lastSaveResult = $saveResult;
+
+        // Extract saved objects from the new structured return format
+        $savedObjects = array_merge(
+            $saveResult['saved'] ?? [],
+            $saveResult['updated'] ?? []
+        );
+
+        // Log detailed results including validation errors
         $this->logger->info('Objects saved successfully', [
-            'saved_count' => count($savedObjects)
+            'saved_count' => count($saveResult['saved'] ?? []),
+            'updated_count' => count($saveResult['updated'] ?? []),
+            'skipped_count' => count($saveResult['skipped'] ?? []),
+            'invalid_count' => count($saveResult['invalid'] ?? []),
+            'error_count' => count($saveResult['errors'] ?? []),
+            'total_processed' => $saveResult['statistics']['totalProcessed'] ?? 0
         ]);
 
+        // Log any validation errors for debugging
+        if (!empty($saveResult['invalid'])) {
+            foreach ($saveResult['invalid'] as $invalidItem) {
+                $this->logger->warning('Object failed validation during import', [
+                    'object_id' => $invalidItem['object']['@self']['id'] ?? 'unknown',
+                    'error' => $invalidItem['error'] ?? 'Unknown validation error',
+                    'type' => $invalidItem['type'] ?? 'ValidationException'
+                ]);
+            }
+        }
+
+        // Return the combined saved and updated objects (maintaining backward compatibility)
         return $savedObjects;
     }
 
@@ -1914,17 +1953,80 @@ class ArchiMateService
             'property_definitions' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []]
         ];
 
-        // Count objects by type from normalized data
-        $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
-        foreach ($sections as $section) {
-            if (isset($normalizedData[$section])) {
-                $count = count($normalizedData[$section]);
-                // Assume all objects were created (we can refine this later with actual save results)
-                $statistics[$section]['created'] = $count;
+        // If we have access to the actual save results from ObjectService, use those
+        if ($this->lastSaveResult !== null) {
+            $saveResult = $this->lastSaveResult;
+            
+            // Count objects by section type from the actual saved objects
+            $allProcessedObjects = array_merge(
+                $saveResult['saved'] ?? [],
+                $saveResult['updated'] ?? [],
+                $saveResult['skipped'] ?? [],
+                // For invalid objects, extract the original object from the error structure
+                array_map(fn($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
+            );
+            
+            foreach ($allProcessedObjects as $object) {
+                $sectionType = $object['section'] ?? 'elements'; // Default to elements if section not found
+                
+                // Map section types to statistics keys
+                $sectionKey = match($sectionType) {
+                    'elements' => 'elements',
+                    'relationships' => 'relationships', 
+                    'organizations' => 'organizations',
+                    'views' => 'views',
+                    'property_definitions' => 'property_definitions',
+                    default => 'elements' // Default fallback
+                };
+                
+                if (!isset($statistics[$sectionKey])) {
+                    continue; // Skip unknown section types
+                }
+                
+                // Determine if this object was created, updated, or had errors
+                $objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
+                
+                // Check if this object is in the saved (created) list
+                $wasCreated = !empty(array_filter($saveResult['saved'] ?? [], 
+                    fn($saved) => ($saved->getUuid() === $objectId)));
+                
+                // Check if this object is in the updated list
+                $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [], 
+                    fn($updated) => ($updated->getUuid() === $objectId)));
+                
+                // Check if this object had validation errors
+                $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
+                    fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)));
+                
+                if ($wasCreated) {
+                    $statistics[$sectionKey]['created']++;
+                } elseif ($wasUpdated) {
+                    $statistics[$sectionKey]['updated']++;
+                } elseif ($hasErrors) {
+                    // Add to errors array for this section
+                    $errorInfo = array_filter($saveResult['invalid'] ?? [],
+                        fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId));
+                    
+                    if (!empty($errorInfo)) {
+                        $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                    }
+                } else {
+                    $statistics[$sectionKey]['skipped']++;
+                }
+            }
+        } else {
+            // Fallback to old method if no save result is available
+            $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
+            foreach ($sections as $section) {
+                if (isset($normalizedData[$section])) {
+                    $count = count($normalizedData[$section]);
+                    // Assume all objects were created (legacy behavior)
+                    $statistics[$section]['created'] = $count;
+                }
             }
         }
 
-        // Calculate summary totals
+        // Calculate summary totals from actual statistics
         $summary = [
             'total_objects_created' => 0,
             'total_objects_updated' => 0,
@@ -1934,10 +2036,12 @@ class ArchiMateService
         ];
 
         foreach ($statistics as $section => $sectionStats) {
-            $summary['total_objects_created'] += $sectionStats['created'];
-            $summary['total_objects_updated'] += $sectionStats['updated'];
-            $summary['total_objects_skipped'] += $sectionStats['skipped'];
-            $summary['total_errors'] += count($sectionStats['errors']);
+            if ($section !== 'summary') { // Skip summary section itself
+                $summary['total_objects_created'] += $sectionStats['created'];
+                $summary['total_objects_updated'] += $sectionStats['updated'];
+                $summary['total_objects_skipped'] += $sectionStats['skipped'];
+                $summary['total_errors'] += count($sectionStats['errors']);
+            }
         }
 
         $statistics['summary'] = $summary;

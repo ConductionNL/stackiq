@@ -285,6 +285,11 @@ export default {
 	color: #f57c00;
 }
 
+.statusBadge.status-deactief {
+	background: #ffebee;
+	color: #c62828;
+}
+
 .organisatieDescription {
 	line-height: 1.4;
 }
@@ -335,3 +340,4 @@ export default {
 	border-top: 1px solid var(--color-border-dark);
 }
 </style>
+
