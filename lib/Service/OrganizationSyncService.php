@@ -976,6 +976,7 @@ class OrganizationSyncService
             $syncResults = $this->performOrganizationsSync();
 
             $syncResults = array_merge($this->performContactSync(), $syncResults);
+            $this->performUserSync();
             // Record the sync time
             $this->recordSyncTime();
 
