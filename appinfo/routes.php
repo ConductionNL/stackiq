@@ -116,5 +116,8 @@ return [
         // User Groups focused endpoints
         ['name' => 'settings#getUserGroupsConfig', 'url' => '/api/user-groups/config', 'verb' => 'GET'],
         ['name' => 'settings#updateUserGroupsConfig', 'url' => '/api/user-groups/config', 'verb' => 'POST'],
+        
+        // Catalog location endpoint
+        ['name' => 'settings#updateCatalogLocation', 'url' => '/api/settings/catalog-location', 'verb' => 'POST'],
     ],
 ];

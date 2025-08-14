@@ -196,9 +196,9 @@ import { objectStore, navigationStore } from '../store/store.js'
 										</template>
 										<NcActionButton
 											v-for="action in objectActions"
+											v-if="!action.condition || action.condition(item)"
 											:key="action.id"
 											close-after-click
-											:disabled="action.condition && !action.condition(item)"
 											@click="executeObjectAction(action, item)">
 											<template #icon>
 												<component :is="action.icon" :size="20" />
@@ -328,9 +328,9 @@ import { objectStore, navigationStore } from '../store/store.js'
 											<NcActions class="actionsButton">
 												<NcActionButton
 													v-for="action in objectActions"
+													v-if="!action.condition || action.condition(item)"
 													:key="action.id"
 													close-after-click
-													:disabled="action.condition && !action.condition(item)"
 													@click="executeObjectAction(action, item)">
 													<template #icon>
 														<component :is="action.icon" :size="20" />
@@ -389,9 +389,9 @@ import { objectStore, navigationStore } from '../store/store.js'
 										<NcActions class="actionsButton">
 											<NcActionButton
 												v-for="action in objectActions"
+												v-if="!action.condition || action.condition(item)"
 												:key="action.id"
 												close-after-click
-												:disabled="action.condition && !action.condition(item)"
 												@click="executeObjectAction(action, item)">
 												<template #icon>
 													<component :is="action.icon" :size="20" />

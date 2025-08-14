@@ -1824,14 +1824,23 @@ class ArchiMateService
                         'schema_id' => $schemaId
                     ]);
                     
-                    $savedObjects = $objectService->saveObjects(
+                    $saveResult = $objectService->saveObjects(
                         objects: $allProcessedObjects,
                         register: $registerId,
                         schema: $schemaId
                     );
                     
-                    // Analyze the saved objects to determine created vs updated counts
-                    $actionCounts = $this->analyzeBatchObjectActions($savedObjects);
+                    // Extract saved objects from the new structured return format
+                    $savedObjects = array_merge(
+                        $saveResult['saved'] ?? [],
+                        $saveResult['updated'] ?? []
+                    );
+                    
+                    // Use actual counts from the structured return instead of analyzing objects
+                    $actionCounts = [
+                        'created' => count($saveResult['saved'] ?? []),
+                        'updated' => count($saveResult['updated'] ?? [])
+                    ];
                     $totalSaved = count($savedObjects);
                     
                     // Store the action counts for return value

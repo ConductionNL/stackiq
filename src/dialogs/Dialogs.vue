@@ -3,6 +3,7 @@
 		<!-- Object Dialogs -->
 		<DeleteObject v-if="navigationStore.dialog === 'deleteObject'" />
 		<DownloadObject v-if="navigationStore.dialog === 'downloadObject'" />
+		<ChangeOrganisatieStatusDialog v-if="navigationStore.dialog === 'changeOrganisatieStatus'" />
 		<MassDeleteObject v-if="navigationStore.dialog === 'massDeleteObjects'" />
 		<MassPublishObjects v-if="navigationStore.dialog === 'massPublishObjects'" />
 		<MassDepublishObjects v-if="navigationStore.dialog === 'massDepublishObjects'" />
@@ -16,6 +17,7 @@
 import { navigationStore } from '../store/store.js'
 import DeleteObject from '../modals/object/DeleteObject.vue'
 import DownloadObject from '../modals/object/DownloadObject.vue'
+import ChangeOrganisatieStatusDialog from '../modals/object/ChangeOrganisatieStatusDialog.vue'
 import MassDeleteObject from '../modals/object/MassDeleteObject.vue'
 import MassPublishObjects from '../modals/object/MassPublishObjects.vue'
 import MassDepublishObjects from '../modals/object/MassDepublishObjects.vue'
@@ -28,6 +30,7 @@ export default {
 	components: {
 		DeleteObject,
 		DownloadObject,
+		ChangeOrganisatieStatusDialog,
 		MassDeleteObject,
 		MassPublishObjects,
 		MassDepublishObjects,
