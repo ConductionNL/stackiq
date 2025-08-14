@@ -677,7 +677,8 @@ XML;
             if ($sectionName === 'views') {
                 $this->addViewDataToXmlNode($objectNode, $xmlData);
             } else {
-            $this->addCleanDataToXmlNode($objectNode, $xmlData);
+                // Pass section information to help with attribute handling
+                $this->addCleanDataToXmlNode($objectNode, $xmlData, $sectionName);
             }
         }
     }
@@ -890,7 +891,7 @@ XML;
     /**
      * Add clean data to XML node with proper ArchiMate structure
      */
-    private function addCleanDataToXmlNode(\SimpleXMLElement $node, array $data): void
+    private function addCleanDataToXmlNode(\SimpleXMLElement $node, array $data, ?string $sectionName = null): void
     {
         // Extract attributes from various possible locations
         $attributes = [];
@@ -905,8 +906,18 @@ XML;
             foreach ($data['_attributes'] as $attrKey => $attrValue) {
                 // Clean up attribute keys (remove colons, etc.)
                 $cleanKey = str_replace(':', '', $attrKey);
-                if ($cleanKey === 'type' && !isset($attributes['xsi:type'])) {
-                    $attributes['xsi:type'] = (string)$attrValue;
+                
+                // Check if this is a property definition to handle 'type' attribute correctly
+                $isPropertyDefinition = ($sectionName === 'property_definitions');
+                
+                if ($cleanKey === 'type') {
+                    if ($isPropertyDefinition) {
+                        // For property definitions, 'type' should remain as 'type' attribute
+                        $attributes['type'] = (string)$attrValue;
+                    } else {
+                        // For other elements, 'type' becomes 'xsi:type'
+                        $attributes['xsi:type'] = (string)$attrValue;
+                    }
                 } elseif (in_array($cleanKey, ['identifier', 'source', 'target', 'accessType'])) {
                     $attributes[$cleanKey] = (string)$attrValue;
                 }
@@ -916,18 +927,17 @@ XML;
         // 3. Look for xsi:type in various forms (including double underscore from import service)
         foreach (['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type', '_type'] as $typeKey) {
             if (isset($data[$typeKey])) {
-                // For property definitions, _type should be 'type' attribute, not 'xsi:type'
-                // Detect property definitions by checking if we have a section field or if this is in property_definitions
-                $isPropertyDefinition = (isset($data['section']) && $data['section'] === 'property_definitions') || 
-                                       (isset($data['_section']) && $data['_section'] === 'property_definitions') ||
-                                       ($typeKey === '_type' && !isset($attributes['xsi:type']));
+                // Check if this is a property definition to handle type attributes correctly
+                $isPropertyDefinition = ($sectionName === 'property_definitions');
                 
-                if ($isPropertyDefinition && $typeKey === '_type' && !isset($attributes['type'])) {
+                if ($typeKey === '_type' && $isPropertyDefinition && !isset($attributes['type'])) {
+                    // For property definitions, _type becomes 'type' attribute
                     $attributes['type'] = (string)$data[$typeKey];
                     break;
-                } elseif (!$isPropertyDefinition && !isset($attributes['xsi:type'])) {
-                $attributes['xsi:type'] = (string)$data[$typeKey];
-                break;
+                } elseif (in_array($typeKey, ['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type']) && !isset($attributes['xsi:type'])) {
+                    // For other elements, these become 'xsi:type' attribute
+                    $attributes['xsi:type'] = (string)$data[$typeKey];
+                    break;
                 }
             }
         }
@@ -935,11 +945,20 @@ XML;
         // 4. Look for other attributes in various forms  
         foreach (['source', 'target', 'accessType', 'type'] as $attrName) {
             if (isset($data[$attrName]) && !isset($attributes[$attrName])) {
-                // For 'type', only use if we don't have xsi:type
-                if ($attrName === 'type' && isset($attributes['xsi:type'])) {
-                    continue;
+                // Check if this is a property definition to handle 'type' attribute correctly
+                $isPropertyDefinition = ($sectionName === 'property_definitions');
+                
+                if ($attrName === 'type') {
+                    if ($isPropertyDefinition) {
+                        // For property definitions, 'type' should remain as 'type' attribute
+                        $attributes['type'] = (string)$data[$attrName];
+                    } elseif (!isset($attributes['xsi:type'])) {
+                        // For other elements, 'type' becomes 'xsi:type' if not already set
+                        $attributes['xsi:type'] = (string)$data[$attrName];
+                    }
+                } else {
+                    $attributes[$attrName] = (string)$data[$attrName];
                 }
-                $attributes[$attrName] = (string)$data[$attrName];
             }
         }
         
@@ -967,7 +986,7 @@ XML;
                 // Handle xml:lang in various forms (including double underscore from import service)
                 foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                     if (isset($value[$langKey])) {
-                        $nameNode->addAttribute('xml:lang', $value[$langKey]);
+                        $nameNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
                         break;
                     }
                 }
@@ -979,7 +998,7 @@ XML;
                 // Handle xml:lang in various forms (including double underscore from import service)
                 foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                     if (isset($value[$langKey])) {
-                        $docNode->addAttribute('xml:lang', $value[$langKey]);
+                        $docNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
                         break;
                     }
                 }
@@ -993,7 +1012,7 @@ XML;
                 // Handle xml:lang in various forms (including double underscore from import service)
                 foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                     if (isset($value[$langKey])) {
-                        $valueNode->addAttribute('xml:lang', $value[$langKey]);
+                        $valueNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
                         break;
                     }
                 }
@@ -1069,7 +1088,7 @@ XML;
                     // Add xml:lang if present in various forms (including double underscore from import service)
                     foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                         if (isset($property['value'][$langKey])) {
-                            $valueNode->addAttribute('xml:lang', $property['value'][$langKey]);
+                            $valueNode->addAttribute('xml:lang', $property['value'][$langKey], 'http://www.w3.org/XML/1998/namespace');
                             break;
                         }
                     }
@@ -1111,7 +1130,7 @@ XML;
             if (is_array($modelMetadata['name']) && isset($modelMetadata['name']['_value'])) {
                 $nameNode[0] = (string)$modelMetadata['name']['_value'];
                 if (isset($modelMetadata['name']['xml:lang'])) {
-                    $nameNode->addAttribute('xml:lang', $modelMetadata['name']['xml:lang']);
+                    $nameNode->addAttribute('xml:lang', $modelMetadata['name']['xml:lang'], 'http://www.w3.org/XML/1998/namespace');
                 }
             } elseif (is_string($modelMetadata['name'])) {
                 $nameNode[0] = $modelMetadata['name'];
@@ -1124,7 +1143,7 @@ XML;
             if (is_array($modelMetadata['documentation']) && isset($modelMetadata['documentation']['_value'])) {
                 $docNode[0] = (string)$modelMetadata['documentation']['_value'];
                 if (isset($modelMetadata['documentation']['xml:lang'])) {
-                    $docNode->addAttribute('xml:lang', $modelMetadata['documentation']['xml:lang']);
+                    $docNode->addAttribute('xml:lang', $modelMetadata['documentation']['xml:lang'], 'http://www.w3.org/XML/1998/namespace');
                 }
             } elseif (is_string($modelMetadata['documentation'])) {
                 $docNode[0] = $modelMetadata['documentation'];

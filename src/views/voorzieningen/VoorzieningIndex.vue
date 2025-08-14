@@ -1,6 +1,6 @@
 /**
- * OrganisatieIndex.vue
- * Component for displaying and managing organisaties using GenericObjectTable
+ * VoorzieningIndex.vue
+ * Component for displaying and managing voorzieningen using GenericObjectTable
  * @category Views
  * @package softwarecatalog
  * @author Ruben Linde
@@ -12,32 +12,29 @@
 
 <script setup>
 import { navigationStore, objectStore } from '../../store/store.js'
-import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 </script>
 
 <template>
 	<GenericObjectTable
-		object-type="organisatie"
-		object-type-plural="organisaties"
-		:title="t('softwarecatalog', 'Organisaties')"
-		:description="t('softwarecatalog', 'Manage your organisaties and their configurations')"
-		:empty-icon="OfficeBuildingOutline"
-		:card-icon="OfficeBuildingOutline"
-		:properties="organisatieProperties"
-		:object-actions="organisatieObjectActions"
-		:mass-actions="organisatieMassActions"
-		:actions="organisatieActions"
-		:add-action="addOrganisatieAction"
-		:help-url="'https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties'"
-		card-display-mode="description"
-		:custom-card-component="OrganisatieCard"
-		:filters="organisatieFilters"
+		object-type="voorziening"
+		object-type-plural="voorzieningen"
+		:title="t('softwarecatalog', 'Voorzieningen')"
+		:description="t('softwarecatalog', 'Manage your voorzieningen and their specifications')"
+		:empty-icon="ApplicationCog"
+		:card-icon="ApplicationCog"
+		:properties="voorzieningProperties"
+		:object-actions="voorzieningObjectActions"
+		:mass-actions="voorzieningMassActions"
+		:actions="voorzieningActions"
+		:add-action="addVoorzieningAction"
+		:help-url="'https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/voorzieningen'"
+		card-display-mode="mixed"
 		@mounted="onMounted" />
 </template>
 
 <script>
 import GenericObjectTable from '../../components/GenericObjectTable.vue'
-import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
+import ApplicationCog from 'vue-material-design-icons/ApplicationCog.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
@@ -50,15 +47,13 @@ import PublishIcon from 'vue-material-design-icons/Publish.vue'
 import PublishOffIcon from 'vue-material-design-icons/PublishOff.vue'
 
 export default {
-	name: 'OrganisatieIndex',
+	name: 'VoorzieningIndex',
 	components: {
 		GenericObjectTable,
-		// eslint-disable-next-line vue/no-unused-components
-		OrganisatieCard,
 	},
 	data() {
 		return {
-			organisatieProperties: [
+			voorzieningProperties: [
 				{
 					id: 'naam',
 					label: 'Naam',
@@ -74,13 +69,6 @@ export default {
 					searchable: true,
 				},
 				{
-					id: 'type',
-					label: 'Type',
-					key: 'type',
-					sortable: true,
-					searchable: true,
-				},
-				{
 					id: 'beschrijvingKort',
 					label: 'Korte beschrijving',
 					key: 'beschrijvingKort',
@@ -88,55 +76,55 @@ export default {
 					searchable: true,
 				},
 				{
-					id: 'oin',
-					label: 'OIN',
-					key: 'oin',
+					id: 'type',
+					label: 'Type',
+					key: 'type',
 					sortable: true,
 					searchable: true,
 				},
 				{
-					id: 'tooi',
-					label: 'TOOI',
-					key: 'tooi',
+					id: 'status',
+					label: 'Status',
+					key: 'status',
 					sortable: true,
 					searchable: true,
 				},
 				{
-					id: 'rsin',
-					label: 'RSIN',
-					key: 'rsin',
-					sortable: true,
+					id: 'organisatieIsEigenaarVan',
+					label: 'Eigenaar organisatie',
+					key: 'organisatieIsEigenaarVan',
+					sortable: false,
 					searchable: true,
 				},
 			],
-			organisatieObjectActions: [
+			voorzieningObjectActions: [
 				{
 					id: 'view',
 					label: 'View',
 					icon: Eye,
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('viewOrganisatie')
+					handler: (voorziening) => {
+						objectStore.setActiveObject('voorziening', voorziening)
+						navigationStore.setModal('viewVoorziening')
 					},
 				},
 				{
 					id: 'edit',
 					label: 'Edit',
 					icon: Pencil,
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('organisatie')
+					handler: (voorziening) => {
+						objectStore.setActiveObject('voorziening', voorziening)
+						navigationStore.setModal('voorziening')
 					},
 				},
 				{
 					id: 'copy',
 					label: 'Copy',
 					icon: ContentCopy,
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
+					handler: (voorziening) => {
+						objectStore.setActiveObject('voorziening', voorziening)
 						navigationStore.setDialog('copyObject', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie',
+							objectType: 'voorziening',
+							dialogTitle: 'Voorziening',
 						})
 					},
 				},
@@ -144,24 +132,24 @@ export default {
 					id: 'delete',
 					label: 'Delete',
 					icon: TrashCanOutline,
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
+					handler: (voorziening) => {
+						objectStore.setActiveObject('voorziening', voorziening)
 						navigationStore.setDialog('deleteObject', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie',
+							objectType: 'voorziening',
+							dialogTitle: 'Voorziening',
 						})
 					},
 				},
 			],
-			organisatieMassActions: [
+			voorzieningMassActions: [
 				{
 					id: 'massDelete',
 					label: 'Delete Selected',
 					icon: Delete,
 					handler: () => {
 						navigationStore.setDialog('massDeleteObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
+							objectType: 'voorziening',
+							dialogTitle: 'Voorzieningen',
 						})
 					},
 				},
@@ -171,8 +159,8 @@ export default {
 					icon: PublishIcon,
 					handler: () => {
 						navigationStore.setDialog('massPublishObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
+							objectType: 'voorziening',
+							dialogTitle: 'Voorzieningen',
 						})
 					},
 				},
@@ -182,21 +170,21 @@ export default {
 					icon: PublishOffIcon,
 					handler: () => {
 						navigationStore.setDialog('massDepublishObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
+							objectType: 'voorziening',
+							dialogTitle: 'Voorzieningen',
 						})
 					},
 				},
 			],
-			organisatieActions: [
+			voorzieningActions: [
 				{
 					id: 'add',
-					label: 'Add Organisatie',
+					label: 'Add Voorziening',
 					icon: Plus,
 					primary: true,
 					handler: () => {
-						objectStore.clearActiveObject('organisatie')
-						navigationStore.setModal('organisatie')
+						objectStore.clearActiveObject('voorziening')
+						navigationStore.setModal('voorziening')
 					},
 				},
 				{
@@ -204,60 +192,49 @@ export default {
 					label: 'Refresh',
 					icon: Refresh,
 					handler: () => {
-						objectStore.fetchCollection('organisatie')
+						objectStore.fetchCollection('voorziening')
 					},
-					disabled: () => objectStore.isLoading('organisatie'),
+					disabled: () => objectStore.isLoading('voorziening'),
 				},
 				{
 					id: 'help',
 					label: 'Help',
 					icon: HelpCircleOutline,
 					handler: () => {
-						window.open('https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties', '_blank')
+						window.open('https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/voorzieningen', '_blank')
 					},
 				},
 			],
-			organisatieFilters: [
-				{
-					key: 'status',
-					label: 'Status',
-					options: [
-						{ value: 'all', label: 'Alle statussen' },
-						{ value: 'Actief', label: 'Actief' },
-						{ value: 'concept', label: 'Concept' },
-					],
-				},
-			],
-			addOrganisatieAction: {
+			addVoorzieningAction: {
 				id: 'add',
-				label: 'Add Organisatie',
+				label: 'Add Voorziening',
 				icon: Plus,
 				handler: () => {
-					objectStore.clearActiveObject('organisatie')
-					navigationStore.setModal('organisatie')
+					objectStore.clearActiveObject('voorziening')
+					navigationStore.setModal('voorziening')
 				},
 			},
 		}
 	},
 	methods: {
 		/**
-		 * Handle component mount - initialize settings and fetch organisaties
+		 * Handle component mount - initialize settings and fetch voorzieningen
 		 * @return {Promise<void>}
 		 */
 		async onMounted() {
-			console.info('OrganisatieIndex mounted, initializing...')
+			console.info('VoorzieningIndex mounted, initializing...')
 			try {
 				// Ensure settings are loaded first (this will also register object types)
 				if (!objectStore.settings) {
-					console.info('Loading settings before fetching organisaties...')
+					console.info('Loading settings before fetching voorzieningen...')
 					await objectStore.fetchSettings()
 				}
 
-				// Fetch organisaties collection
-				console.info('Fetching organisaties...')
-				await objectStore.fetchCollection('organisatie')
+				// Fetch voorzieningen collection
+				console.info('Fetching voorzieningen...')
+				await objectStore.fetchCollection('voorziening')
 			} catch (error) {
-				console.error('Error initializing OrganisatieIndex:', error)
+				console.error('Error initializing VoorzieningIndex:', error)
 				// Show error to user if needed
 			}
 		},

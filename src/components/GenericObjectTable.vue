@@ -59,6 +59,20 @@ import { objectStore, navigationStore } from '../store/store.js'
 						</NcActionButton>
 					</NcActions>
 
+					<!-- Filters -->
+					<div v-if="filters.length > 0" class="viewFilters">
+						<div v-for="filter in filters" :key="filter.key" class="filterItem">
+							<label :for="`filter-${filter.key}`" class="filterLabel">{{ filter.label }}:</label>
+							<NcSelect
+								:id="`filter-${filter.key}`"
+								class="filterSelect"
+								:value="getActiveFilterOption(filter)"
+								:options="filter.options"
+								:clearable="false"
+								@option:selected="setFilter(filter.key, $event)" />
+						</div>
+					</div>
+
 					<!-- View Mode Switch -->
 					<div class="viewModeSwitchContainer">
 						<NcCheckboxRadioSwitch
@@ -156,49 +170,109 @@ import { objectStore, navigationStore } from '../store/store.js'
 			<div v-else>
 				<template v-if="viewMode === 'cards'">
 					<div class="cardGrid">
-						<div v-for="item in paginatedObjects" :key="getObjectId(item)" class="card">
-							<div class="cardHeader">
-								<h2 v-tooltip.bottom="getObjectSummary(item)">
-									<component :is="cardIcon" :size="20" />
-									{{ getObjectTitle(item) }}
-								</h2>
-								<NcActions :primary="true" menu-name="Actions">
-									<template #icon>
-										<DotsHorizontal :size="20" />
-									</template>
-									<NcActionButton
-										v-for="action in objectActions"
-										:key="action.id"
-										close-after-click
-										:disabled="action.condition && !action.condition(item)"
-										@click="executeObjectAction(action, item)">
+						<!-- Custom Card Component -->
+						<template v-if="customCardComponent">
+							<component :is="customCardComponent"
+								v-for="item in paginatedObjects"
+								:key="getObjectId(item)"
+								:item="item"
+								:object-actions="objectActions"
+								:card-icon="cardIcon" />
+						</template>
+
+						<!-- Default Generic Cards -->
+						<template v-else>
+							<div v-for="item in paginatedObjects"
+								:key="getObjectId(item)"
+								class="card">
+								<div class="cardHeader">
+									<h2 v-tooltip.bottom="getObjectSummary(item)">
+										<component :is="cardIcon" :size="20" />
+										{{ getObjectTitle(item) }}
+									</h2>
+									<NcActions :primary="true" menu-name="Actions">
 										<template #icon>
-											<component :is="action.icon" :size="20" />
+											<DotsHorizontal :size="20" />
 										</template>
-										{{ action.label }}
-									</NcActionButton>
-								</NcActions>
+										<NcActionButton
+											v-for="action in objectActions"
+											:key="action.id"
+											close-after-click
+											:disabled="action.condition && !action.condition(item)"
+											@click="executeObjectAction(action, item)">
+											<template #icon>
+												<component :is="action.icon" :size="20" />
+											</template>
+											{{ action.label }}
+										</NcActionButton>
+									</NcActions>
+								</div>
+								<!-- Card Content -->
+								<div v-if="cardDisplayMode === 'description'" class="cardDescription">
+									<p v-if="getObjectSummary(item)" class="summaryText">
+										{{ getObjectSummary(item) }}
+									</p>
+									<p v-else class="noSummaryText">
+										{{ t('opencatalogi', 'No description available') }}
+									</p>
+
+									<!-- Show key properties in a compact format -->
+									<div v-if="getKeyProperties(item).length > 0" class="keyProperties">
+										<span v-for="property in getKeyProperties(item)"
+											:key="property.key"
+											class="keyProperty">
+											<strong>{{ property.label }}:</strong> {{ property.value }}
+										</span>
+									</div>
+								</div>
+
+								<div v-else-if="cardDisplayMode === 'properties'" class="cardProperties">
+									<!-- Card Statistics Table -->
+									<table class="statisticsTable">
+										<thead>
+											<tr>
+												<th>{{ t('opencatalogi', 'Property') }}</th>
+												<th>{{ t('opencatalogi', 'Value') }}</th>
+												<th>{{ t('opencatalogi', 'Status') }}</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr v-for="property in getCardProperties(item)" :key="property.key">
+												<td>{{ property.label }}</td>
+												<td class="truncatedText">
+													{{ property.value }}
+												</td>
+												<td>{{ property.status }}</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+
+								<div v-else-if="cardDisplayMode === 'mixed'" class="cardMixed">
+									<!-- Description first -->
+									<div class="cardDescription">
+										<p v-if="getObjectSummary(item)" class="summaryText">
+											{{ getObjectSummary(item) }}
+										</p>
+										<p v-else class="noSummaryText">
+											{{ t('opencatalogi', 'No description available') }}
+										</p>
+									</div>
+
+									<!-- Compact properties table -->
+									<table v-if="getCardProperties(item).length > 0" class="statisticsTable compact">
+										<tbody>
+											<tr v-for="property in getCardProperties(item).slice(0, 3)" :key="property.key">
+												<td><strong>{{ property.label }}</strong></td>
+												<td class="truncatedText">
+													{{ property.value }}
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
 							</div>
-							<!-- Card Statistics Table -->
-							<table class="statisticsTable">
-								<thead>
-									<tr>
-										<th>{{ t('opencatalogi', 'Property') }}</th>
-										<th>{{ t('opencatalogi', 'Value') }}</th>
-										<th>{{ t('opencatalogi', 'Status') }}</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr v-for="property in getCardProperties(item)" :key="property.key">
-										<td>{{ property.label }}</td>
-										<td class="truncatedText">
-											{{ property.value }}
-										</td>
-										<td>{{ property.status }}</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
+						</template>
 					</div>
 				</template>
 				<template v-else>
@@ -357,6 +431,7 @@ import {
 	NcActionCaption,
 	NcCheckboxRadioSwitch,
 	NcButton,
+	NcSelect,
 } from '@nextcloud/vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -378,6 +453,7 @@ export default {
 		NcActionCaption,
 		NcCheckboxRadioSwitch,
 		NcButton,
+		NcSelect,
 		VueDraggable,
 		DotsHorizontal,
 		FormatListChecks,
@@ -512,25 +588,81 @@ export default {
 			type: String,
 			default: null,
 		},
+		/**
+		 * Display mode for cards: 'properties' shows property table, 'description' shows description, 'mixed' shows both
+		 */
+		cardDisplayMode: {
+			type: String,
+			default: 'properties',
+			validator: value => ['properties', 'description', 'mixed'].includes(value),
+		},
+		/**
+		 * Custom card component to use instead of the default card
+		 */
+		customCardComponent: {
+			type: [String, Object],
+			default: null,
+		},
+		/**
+		 * Available filters for this object type
+		 */
+		filters: {
+			type: Array,
+			default: () => [],
+		},
 	},
 
 	data() {
 		return {
 			viewMode: 'cards',
 			localSelectedObjects: [],
+			activeFilters: {},
 		}
 	},
 
 	computed: {
 		filteredObjects() {
-			return objectStore.getCollection(this.objectType)?.results || []
+			let objects = objectStore.getCollection(this.objectType)?.results || []
+
+			// Apply active filters
+			Object.keys(this.activeFilters).forEach(filterKey => {
+				const filterValue = this.activeFilters[filterKey]
+				if (filterValue && filterValue !== 'all') {
+					objects = objects.filter(obj => obj[filterKey] === filterValue)
+				}
+			})
+
+			return objects
 		},
 		currentPagination() {
 			const pagination = objectStore.getPagination(this.objectType)
+			console.info(`GenericObjectTable: Pagination for ${this.objectType}:`, {
+				pagination,
+				filteredObjectsLength: this.filteredObjects.length,
+			})
 			return pagination
 		},
 		paginatedObjects() {
-			return this.filteredObjects
+			// Check if we should use server-side pagination
+			// Server-side pagination is when we have proper pagination metadata AND
+			// the total from server matches the actual results length (indicating server handled pagination)
+			const hasServerPagination = this.currentPagination?.page && 
+				this.currentPagination?.limit && 
+				this.currentPagination?.total &&
+				this.filteredObjects.length <= this.currentPagination.limit
+
+			if (hasServerPagination) {
+				// Server has already paginated the results
+				return this.filteredObjects
+			}
+			
+			// Client-side pagination - split the full result set into pages
+			const pageSize = this.currentPagination?.limit || 20
+			const currentPage = this.currentPagination?.page || 1
+			const startIndex = (currentPage - 1) * pageSize
+			const endIndex = startIndex + pageSize
+			
+			return this.filteredObjects.slice(startIndex, endIndex)
 		},
 		selectedObjects() {
 			// Use store-managed selected objects if available, otherwise use local state
@@ -670,11 +802,26 @@ export default {
 		},
 
 		getObjectTitle(item) {
-			return item?.title || item?.name || item?.['@self']?.name || this.getObjectId(item) || 'Unknown'
+			// For organizations, prioritize naam field which is the proper Dutch name field
+			if (this.objectType === 'organisatie' && item?.naam) {
+				return item.naam
+			}
+
+			// For other objects or fallback, use the @self.name (which we fixed) or other fallbacks
+			return item?.title || item?.name || item?.naam || item?.['@self']?.name || this.getObjectId(item) || 'Unknown'
 		},
 
 		getObjectSummary(item) {
-			return item?.summary || item?.description || ''
+			// For organizations, create a meaningful description from available fields
+			if (this.objectType === 'organisatie') {
+				if (item?.beschrijvingKort) return item.beschrijvingKort
+				if (item?.beschrijvingLang) return item.beschrijvingLang
+				if (item?.type && item?.naam) return `${item.type} organisatie`
+				if (item?.type) return item.type
+			}
+
+			// For other object types, use standard fields
+			return item?.summary || item?.description || item?.beschrijvingKort || item?.beschrijvingLang || ''
 		},
 
 		getColumnValue(item, column) {
@@ -699,6 +846,15 @@ export default {
 				value: this.getColumnValue(item, column),
 				status: 'Available', // Default status, can be customized
 			})).filter(prop => prop.value !== 'N/A')
+		},
+
+		getKeyProperties(item) {
+			// Show only the first few most important properties in a compact format
+			return this.orderedEnabledColumns.slice(0, 3).map(column => ({
+				key: column.key || column.id,
+				label: column.label,
+				value: this.getColumnValue(item, column),
+			})).filter(prop => prop.value !== 'N/A' && prop.value !== null && prop.value !== undefined)
 		},
 
 		getActionDisabled(action) {
@@ -773,6 +929,25 @@ export default {
 			}
 		},
 
+		/**
+		 * Get the active filter option for a given filter
+		 * @param {object} filter - The filter configuration
+		 * @return {object} The currently active filter option
+		 */
+		getActiveFilterOption(filter) {
+			const activeValue = this.activeFilters[filter.key] || 'all'
+			return filter.options.find(option => option.value === activeValue) || filter.options[0]
+		},
+
+		/**
+		 * Set a filter value
+		 * @param {string} filterKey - The filter key
+		 * @param {object} option - The selected filter option
+		 */
+		setFilter(filterKey, option) {
+			this.$set(this.activeFilters, filterKey, option.value)
+		},
+
 		refreshObjects() {
 			if (this.refreshFunction) {
 				this.refreshFunction()
@@ -827,6 +1002,7 @@ export default {
 	align-items: center;
 	margin-bottom: 20px;
 	gap: 16px;
+	flex-wrap: wrap;
 }
 
 .viewInfo {
@@ -878,6 +1054,54 @@ export default {
 	min-width: 0;
 }
 
+.cardDescription {
+	margin-top: 12px;
+}
+
+.summaryText {
+	font-size: 14px;
+	line-height: 1.4;
+	color: var(--color-main-text);
+	margin: 0 0 12px 0;
+}
+
+.noSummaryText {
+	font-size: 14px;
+	color: var(--color-text-lighter);
+	font-style: italic;
+	margin: 0 0 12px 0;
+}
+
+.keyProperties {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding-top: 8px;
+	border-top: 1px solid var(--color-border-dark);
+}
+
+.keyProperty {
+	font-size: 12px;
+	color: var(--color-main-text);
+}
+
+.keyProperty strong {
+	color: var(--color-text-lighter);
+	font-weight: 600;
+}
+
+.cardProperties {
+	margin-top: 12px;
+}
+
+.cardMixed {
+	margin-top: 12px;
+}
+
+.cardMixed .cardDescription {
+	margin-bottom: 12px;
+}
+
 .statisticsTable {
 	width: 100%;
 	border-collapse: collapse;
@@ -895,6 +1119,101 @@ export default {
 	background: var(--color-background-dark);
 	font-weight: 600;
 	font-size: 12px;
+}
+
+.statisticsTable.compact {
+	font-size: 12px;
+}
+
+.statisticsTable.compact td {
+	padding: 4px 8px;
+}
+
+.truncatedText {
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Filter Styles */
+.viewFilters {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.filterItem {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.filterLabel {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--color-text-lighter);
+	white-space: nowrap;
+}
+
+.filterSelect {
+	min-width: 120px;
+}
+
+/* Pagination Styles */
+.viewPagination {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 24px;
+	padding: 16px;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.viewPaginationInfo {
+	display: flex;
+	align-items: center;
+	color: var(--color-text-lighter);
+	font-size: 14px;
+}
+
+.viewPaginationNav {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.viewPaginationNumbers {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.viewPaginationEllipsis {
+	padding: 6px 8px;
+	color: var(--color-text-lighter);
+}
+
+.viewPaginationPageSize {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.viewPaginationPageSize label {
+	font-size: 14px;
+	color: var(--color-text-lighter);
+	white-space: nowrap;
+}
+
+.pagination-page-size-select {
+	min-width: 80px;
 }
 
 .viewTableContainer {
