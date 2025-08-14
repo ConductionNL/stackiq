@@ -45,26 +45,27 @@ class ContactPersonHandler
     /**
      * ContactPersonHandler constructor
      *
-     * @param IUserManager           $_userManager    User manager interface
-     * @param ISecureRandom          $_secureRandom   Secure random generator
-     * @param IGroupManager          $_groupManager   Group manager interface
-     * @param IAppConfig             $_config         Config interface
-     * @param ContainerInterface     $_container      Container interface
-     * @param IAppManager            $_appManager     App manager interface
-     * @param LoggerInterface        $_logger         Logger interface
-     * @param SymfonyEmailService    $_emailService   Email service
+     * @param IUserManager $_userManager User manager interface
+     * @param ISecureRandom $_secureRandom Secure random generator
+     * @param IGroupManager $_groupManager Group manager interface
+     * @param IAppConfig $_config Config interface
+     * @param ContainerInterface $_container Container interface
+     * @param IAppManager $_appManager App manager interface
+     * @param LoggerInterface $_logger Logger interface
+     * @param SymfonyEmailService $_emailService Email service
      */
     public function __construct(
-        private readonly IUserManager $_userManager,
-        private readonly ISecureRandom $_secureRandom,
-        private readonly IGroupManager $_groupManager,
-        private readonly IAppConfig $_config,
-        private readonly ContainerInterface $_container,
-        private readonly IAppManager $_appManager,
-        private readonly LoggerInterface $_logger,
+        private readonly IUserManager        $_userManager,
+        private readonly ISecureRandom       $_secureRandom,
+        private readonly IGroupManager       $_groupManager,
+        private readonly IAppConfig          $_config,
+        private readonly ContainerInterface  $_container,
+        private readonly IAppManager         $_appManager,
+        private readonly LoggerInterface     $_logger,
         private readonly SymfonyEmailService $_emailService,
-        private readonly IConfig $config,
-    ) {
+        private readonly IConfig             $config,
+    )
+    {
     }
 
     /**
@@ -83,7 +84,6 @@ class ContactPersonHandler
     }
 
 
-
     /**
      * Generates a username from contact data with fallback strategies
      *
@@ -99,7 +99,6 @@ class ContactPersonHandler
         $tussenvoegsel = $contactData['tussenvoegsel'] ?? '';
         $achternaam = $contactData['achternaam'] ?? '';
         $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
-
 
 
         // Strategy 1: full email address (PRIORITY)
@@ -322,8 +321,8 @@ class ContactPersonHandler
     /**
      * Assigns user groups based on roles and organization
      *
-     * @param \OCP\IUser $user       The user to assign groups to
-     * @param array      $objectData The contact person data
+     * @param \OCP\IUser $user The user to assign groups to
+     * @param array $objectData The contact person data
      *
      * @return void
      */
@@ -455,9 +454,9 @@ class ContactPersonHandler
     /**
      * Adds a user to a group, creating the group if it doesn't exist
      *
-     * @param \OCP\IUser $user      The user to add
-     * @param string     $groupName The group name
-     * @param string     $type      The type of group assignment (for logging)
+     * @param \OCP\IUser $user The user to add
+     * @param string $groupName The group name
+     * @param string $type The type of group assignment (for logging)
      *
      * @return void
      */
@@ -502,9 +501,9 @@ class ContactPersonHandler
     /**
      * Updates user groups when roles change (handles role removal)
      *
-     * @param \OCP\IUser $user        The user to update
-     * @param array      $newRoles    The new roles
-     * @param array      $oldRoles    The old roles (optional)
+     * @param \OCP\IUser $user The user to update
+     * @param array $newRoles The new roles
+     * @param array $oldRoles The old roles (optional)
      *
      * @return void
      */
@@ -700,7 +699,7 @@ class ContactPersonHandler
      * Determines if this contact object is the first contact for the organization
      *
      * @param object $contactObject The contact object being processed (contactpersoon)
-     * @param array  $objectData   The contact data
+     * @param array $objectData The contact data
      *
      * @return bool True if this is the first contact for the organization
      */
@@ -744,7 +743,7 @@ class ContactPersonHandler
                 );
 
                 // Filter out the current contact being processed
-                $otherContacts = array_filter($existingContacts, function($contact) use ($currentContactId) {
+                $otherContacts = array_filter($existingContacts, function ($contact) use ($currentContactId) {
                     return $contact->getId() !== $currentContactId;
                 });
 
@@ -786,7 +785,7 @@ class ContactPersonHandler
      * This method stores the organization UUID in the user's 'core' namespace
      * configuration, making it accessible to other apps like OpenConnector.
      *
-     * @param IUser $user           The user object
+     * @param IUser $user The user object
      * @param string|int $organizationUuid The organization UUID (can be string or int)
      *
      * @return void
@@ -956,8 +955,8 @@ class ContactPersonHandler
      * Assigns beheerder role to a user
      *
      * @param object $contactpersoonObject The contactpersoon object
-     * @param string $username              The username
-     * @param string $organizationUuid      The organization UUID
+     * @param string $username The username
+     * @param string $organizationUuid The organization UUID
      *
      * @return void
      */
@@ -1026,7 +1025,7 @@ class ContactPersonHandler
     /**
      * Sets a user's manager in Nextcloud
      *
-     * @param string $username        The username
+     * @param string $username The username
      * @param string $managerUsername The manager's username
      *
      * @return void
@@ -1158,13 +1157,14 @@ class ContactPersonHandler
     /**
      * Sends user creation email
      *
-     * @param \OCP\IUser $user       The created user
-     * @param array      $objectData The contact person data
+     * @param \OCP\IUser $user The created user
+     * @param array $objectData The contact person data
      *
      * @return void
      */
     private function sendUserCreationEmail(\OCP\IUser $user, array $objectData): void
     {
+
         try {
             $this->_logger->info('Sending user creation email', [
                 'username' => $user->getUID(),
@@ -1188,16 +1188,16 @@ class ContactPersonHandler
                 try {
                     $objectService = $this->_getObjectService();
                     // Get register and schema IDs dynamically from configuration
-            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-            $registerId = $settingsService->getVoorzieningenRegisterId();
-            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+                    $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                    $registerId = $settingsService->getVoorzieningenRegisterId();
+                    $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-            if (!$registerId || !$organisatieSchemaId) {
-                $this->_logger->warning('Register or schema ID not configured for organisatie');
-                return;
-            }
+                    if (!$registerId || !$organisatieSchemaId) {
+                        $this->_logger->warning('Register or schema ID not configured for organisatie');
+                        return;
+                    }
 
-            $organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisatieSchemaId);
+                    $organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisatieSchemaId);
                     if ($organizationObject) {
                         $organizationData = $organizationObject->getObject();
                         $this->_logger->info('Retrieved organization data for email', [
@@ -1228,14 +1228,14 @@ class ContactPersonHandler
                 ]);
             }
 
-                 } catch (\Exception $e) {
-             $this->_logger->error('Exception sending user creation email: ' . $e->getMessage(), [
-                 'username' => $user->getUID(),
-                 'email' => $user->getEMailAddress(),
-                 'exception' => $e
-             ]);
-         }
-     }
+        } catch (\Exception $e) {
+            $this->_logger->error('Exception sending user creation email: ' . $e->getMessage(), [
+                'username' => $user->getUID(),
+                'email' => $user->getEMailAddress(),
+                'exception' => $e
+            ]);
+        }
+    }
 
     /**
      * Processes a contactpersoon object to create an inactive user
@@ -1244,7 +1244,7 @@ class ContactPersonHandler
      * this method will create an inactive user account and set the username property.
      *
      * @param object $contactpersoonObject The contactpersoon object to process
-     * @param bool   $isUpdate             Whether this is an update operation (defaults to false)
+     * @param bool $isUpdate Whether this is an update operation (defaults to false)
      *
      * @return bool True if processing was successful
      * @throws \Exception If processing fails
@@ -1458,7 +1458,7 @@ class ContactPersonHandler
     /**
      * Handles contactpersoon updates, particularly role changes
      *
-     * @param object $contactpersoonObject    The updated contactpersoon object
+     * @param object $contactpersoonObject The updated contactpersoon object
      * @param object $oldContactpersoonObject The previous contactpersoon object
      *
      * @return void
@@ -1524,8 +1524,8 @@ class ContactPersonHandler
     /**
      * Sends account suspension notification email
      *
-     * @param \OCP\IUser $user       The suspended user
-     * @param array      $objectData The contact person data
+     * @param \OCP\IUser $user The suspended user
+     * @param array $objectData The contact person data
      *
      * @return void
      */

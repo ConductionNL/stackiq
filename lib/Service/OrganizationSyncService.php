@@ -159,6 +159,7 @@ class OrganizationSyncService
 
             $org = $this->ensureOrganisationEntity($object,$stats);
 
+
         }
 
         return $stats;
@@ -247,6 +248,8 @@ class OrganizationSyncService
         $sql = $qb->getSQL();
 //        var_dump($sql);
         $users = $qb->execute()->fetchAll();
+
+//        var_dump(count($users));
 //        var_dump('hello');
         foreach($users as $user) {
             $this->organisatieService->addUsersToOrganization($user['organisation'], [$user['username']]);
@@ -496,12 +499,14 @@ class OrganizationSyncService
                         'newActive' => $shouldBeActive
                     ]);
 
+                    $isActive = $organisationEntity->getActive();
+
                     $organisationEntity->setActive($shouldBeActive);
                     $organisationMapper->save($organisationEntity);
                     $stats['entitiesUpdated']++;
 
                     // Send activation email if organization became active
-                    if ($shouldBeActive && !$organisationEntity->getActive()) {
+                    if ($shouldBeActive && !$isActive) {
                         $emailSent = $this->sendOrganizationActivationEmail($objectData);
                         if ($emailSent) {
                             $this->logger->info('OrganizationSyncService: Organization activation email sent successfully', [
