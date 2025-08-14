@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
 
+use OCP\IConfig;
 use OCP\IUserManager;
 use OCP\IUser;
 use OCP\Security\ISecureRandom;
@@ -62,6 +63,7 @@ class ContactPersonHandler
         private readonly IAppManager $_appManager,
         private readonly LoggerInterface $_logger,
         private readonly SymfonyEmailService $_emailService,
+        private readonly IConfig $config,
     ) {
     }
 
@@ -796,7 +798,7 @@ class ContactPersonHandler
                 // Convert to string to ensure consistent storage
                 $organizationUuidStr = (string)$organizationUuid;
 
-                $this->_config->setUserValue(
+                $this->config->setUserValue(
                     $user->getUID(),
                     'core',
                     'organisation',

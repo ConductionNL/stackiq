@@ -29,6 +29,7 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
+use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\IUserManager;
 use OCP\IGroupManager;
@@ -96,7 +97,8 @@ class Application extends App implements IBootstrap
                 $c,
                 $c->get(IAppManager::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
-                $c->get(SymfonyEmailService::class)
+                $c->get(SymfonyEmailService::class),
+                $c->get(IConfig::class)
             );
         });
 

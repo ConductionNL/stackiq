@@ -23,6 +23,7 @@ use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
@@ -135,7 +136,7 @@ class OrganizationSyncService
         $qb = $this->db->getQueryBuilder();
 
         $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(o.object, \'$.status\')) as status'), 'o2.uuid as oreg_uuid', 'o2.active as active')
-            ->from('openregister_objects', 'o')
+            ->from(from: 'openregister_objects', alias: 'o')
             ->leftJoin(fromAlias:'o', join: 'openregister_organisations', alias: 'o2', condition: 'o.uuid = o2.uuid')
             ->where($qb->expr()->eq('o.schema', $qb->createNamedParameter($organizationSchema)))
             ->andWhere($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
@@ -226,6 +227,33 @@ class OrganizationSyncService
         return $stats;
     }
 
+
+    public function performUserSync(): array
+    {
+        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+        $register = $voorzieningenConfig['register'] ?? '';
+//        $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+        $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
+
+
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(`o`.`object`, \'$.username\')) as username'), $qb->createFunction('json_unquote(json_extract(o.object, \'$.organisatie\')) as organisation'), 'oo.users')
+            ->from(from:'openregister_objects', alias: 'o')
+            ->leftJoin(fromAlias: 'o', join: 'openregister_organisations', alias: 'oo', condition: 'oo.uuid = json_unquote(json_extract(o.object, \'$.organisatie\'))')
+            ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
+            ->andWhere($qb->expr()->orX('o.schema', $qb->createNamedParameter($contactSchema)))
+            ->andWhere($qb->expr()->eq($qb->createFunction('json_contains(oo.users, json_extract(`o`.`object`, \'$.username\'))'), $qb->createNamedParameter(0)));
+
+        $sql = $qb->getSQL();
+//        var_dump($sql);
+        $users = $qb->execute()->fetchAll();
+//        var_dump('hello');
+        foreach($users as $user) {
+            $this->organisatieService->addUsersToOrganization($user['organisation'], [$user['username']]);
+        }
+
+        return [];
+    }
 
 
     /**
@@ -946,6 +974,8 @@ class OrganizationSyncService
             // Perform the core synchronization with time-based filtering
 //            $syncResults = $this->performFullSync($minutesBack);
             $syncResults = $this->performOrganizationsSync();
+
+            $syncResults = array_merge($this->performContactSync(), $syncResults);
             // Record the sync time
             $this->recordSyncTime();
 
@@ -1015,6 +1045,8 @@ class OrganizationSyncService
             $syncResults = $this->performOrganizationsSync();
 
             $syncResults = array_merge($this->performContactSync(), $syncResults);
+
+            $this->performUserSync();
 //            die;
 
             // Perform the core synchronization with time-based filtering
