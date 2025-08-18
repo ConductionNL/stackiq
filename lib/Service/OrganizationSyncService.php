@@ -158,7 +158,7 @@ class OrganizationSyncService
                 return [];
             }
 
-            $object = $objectService->find($object['uuid']);
+            $object = $objectService->find(id: $object['uuid'], register: $register, schema: $organizationSchema);
 
             $org = $this->ensureOrganisationEntity($object,$stats);
 
@@ -211,7 +211,7 @@ class OrganizationSyncService
 
         foreach ($contacts as $contact) {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            $contactEntity = $objectService->find($contact['uuid']);
+            $contactEntity = $objectService->find(id: $contact['uuid'], register: $register, schema: $contactSchema);
             $contactEntityObject = $contactEntity->getObject();
 
             $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
