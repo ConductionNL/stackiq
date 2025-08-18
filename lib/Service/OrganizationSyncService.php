@@ -23,6 +23,7 @@ use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -143,11 +144,13 @@ class OrganizationSyncService
             ->andWhere($qb->expr()->orX(
                 $qb->expr()->neq('o2.active', $qb->createFunction('(json_unquote(json_extract(o.object, \'$.status\')) = \'actief\')')),
                 $qb->expr()->isNull('o2.uuid')
-            ));
+            ))
+            ->andWhere($qb->expr()->neq($qb->createFunction('json_unquote(json_extract(o.object, \'$.status\'))'), $qb->createNamedParameter('concept')));
 
         $sql = $qb->getSQL();
         $objects = $qb->execute()->fetchAll();
         $orgs = [];
+
 
         foreach($objects as $object) {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
@@ -155,7 +158,7 @@ class OrganizationSyncService
                 return [];
             }
 
-            $object = $objectService->find($object['uuid']);
+            $object = $objectService->find(id: $object['uuid'], register: $register, schema: $organizationSchema);
 
             $org = $this->ensureOrganisationEntity($object,$stats);
 
@@ -192,7 +195,8 @@ class OrganizationSyncService
             'o.uuid',
             'a.uid',
             $qb->createFunction('json_unquote(json_extract(o.object, \'$.e-mailadres\')) as email'),
-            $qb->createFunction('json_unquote(json_extract(o.object, \'$.username\')) as username')
+            $qb->createFunction('json_unquote(json_extract(o.object, \'$.username\')) as username'),
+            'oo.uuid as organisation'
         )
             ->from('openregister_objects', 'o')
             ->leftJoin(
@@ -200,17 +204,26 @@ class OrganizationSyncService
                 join: 'accounts_data',
                 alias: 'a',
                 condition: 'json_unquote(json_extract(o.object, \'$.e-mailadres\')) = a.value')
+            ->leftJoin(
+                fromAlias: 'o',
+                join: 'openregister_organisations',
+                alias: 'oo',
+                condition: 'oo.uuid = json_unquote(json_extract(o.object, \'$.organisatie\'))'
+            )
             ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
             ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
             ->andWhere($qb->expr()->isNull($qb->createFunction('json_unquote(json_extract(o.object, \'$.username\'))')));
 
-//        var_dump($qb->getSQL());
         $contacts = $qb->execute()->fetchAll();
 
         foreach ($contacts as $contact) {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            $contactEntity = $objectService->find($contact['uuid']);
+            $contactEntity = $objectService->find(id: $contact['uuid'], register: $register, schema: $contactSchema);
             $contactEntityObject = $contactEntity->getObject();
+
+            if ($contact['organisation'] === null) {
+                continue;
+            }
 
             $contactEntityObject['username'] = $contact['uid'];
 
@@ -1084,7 +1097,8 @@ class OrganizationSyncService
 
             return [
                 'success' => false,
-                'message' => 'Synchronization failed: ' . $e->getMessage()
+                'message' => 'Synchronization failed: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ];
         }
     }
