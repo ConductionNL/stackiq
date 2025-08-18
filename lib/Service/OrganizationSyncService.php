@@ -23,6 +23,7 @@ use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -143,11 +144,13 @@ class OrganizationSyncService
             ->andWhere($qb->expr()->orX(
                 $qb->expr()->neq('o2.active', $qb->createFunction('(json_unquote(json_extract(o.object, \'$.status\')) = \'actief\')')),
                 $qb->expr()->isNull('o2.uuid')
-            ));
+            ))
+            ->andWhere($qb->expr()->neq($qb->createFunction('json_unquote(json_extract(o.object, \'$.status\'))'), $qb->createNamedParameter('concept')));
 
         $sql = $qb->getSQL();
         $objects = $qb->execute()->fetchAll();
         $orgs = [];
+
 
         foreach($objects as $object) {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
@@ -204,13 +207,19 @@ class OrganizationSyncService
             ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
             ->andWhere($qb->expr()->isNull($qb->createFunction('json_unquote(json_extract(o.object, \'$.username\'))')));
 
-//        var_dump($qb->getSQL());
         $contacts = $qb->execute()->fetchAll();
 
         foreach ($contacts as $contact) {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
             $contactEntity = $objectService->find($contact['uuid']);
             $contactEntityObject = $contactEntity->getObject();
+
+            $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+            try{
+                $organisationMapper->findByUuid($contactEntityObject['organisatie']);
+            } catch (DoesNotExistException $e) {
+                continue;
+            }
 
             $contactEntityObject['username'] = $contact['uid'];
 
@@ -1084,7 +1093,8 @@ class OrganizationSyncService
 
             return [
                 'success' => false,
-                'message' => 'Synchronization failed: ' . $e->getMessage()
+                'message' => 'Synchronization failed: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ];
         }
     }
