@@ -195,7 +195,8 @@ class OrganizationSyncService
             'o.uuid',
             'a.uid',
             $qb->createFunction('json_unquote(json_extract(o.object, \'$.e-mailadres\')) as email'),
-            $qb->createFunction('json_unquote(json_extract(o.object, \'$.username\')) as username')
+            $qb->createFunction('json_unquote(json_extract(o.object, \'$.username\')) as username'),
+            'oo.uuid as organisation'
         )
             ->from('openregister_objects', 'o')
             ->leftJoin(
@@ -203,21 +204,26 @@ class OrganizationSyncService
                 join: 'accounts_data',
                 alias: 'a',
                 condition: 'json_unquote(json_extract(o.object, \'$.e-mailadres\')) = a.value')
+            ->leftJoin(
+                fromAlias: 'o',
+                join: 'openregister_organisations',
+                alias: 'oo',
+                condition: 'oo.uuid = json_unquote(json_extract(o.object, \'$.organisatie\'))'
+            )
             ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
             ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
             ->andWhere($qb->expr()->isNull($qb->createFunction('json_unquote(json_extract(o.object, \'$.username\'))')));
 
         $contacts = $qb->execute()->fetchAll();
 
+        var_dump($contacts);
+
         foreach ($contacts as $contact) {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
             $contactEntity = $objectService->find(id: $contact['uuid'], register: $register, schema: $contactSchema);
             $contactEntityObject = $contactEntity->getObject();
 
-            $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
-            try{
-                $organisationMapper->findByUuid($contactEntityObject['organisatie']);
-            } catch (DoesNotExistException $e) {
+            if ($contact['organisation'] === null) {
                 continue;
             }
 
