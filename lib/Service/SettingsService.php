@@ -958,7 +958,6 @@ class SettingsService
             return [
                 'beheerder',
                 'inkoper',
-                'ambtenaar',
                 'software-catalog-users'
             ];
         }
@@ -1176,9 +1175,7 @@ class SettingsService
                 'gebruik-beheerder',
                 'gebruik-raadpleger',
                 'functioneel-beheerder',
-                'vng-raadpleger',
                 'organisatie-beheerder',
-                'ambtenaar',
                 'software-catalog-users'
             ]);
 
@@ -4418,4 +4415,4 @@ class SettingsService
         $this->config->setValueString($this->_appName, 'catalog_location', $location);
     }
 
-} 
+}

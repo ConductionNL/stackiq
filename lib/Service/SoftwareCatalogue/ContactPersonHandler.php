@@ -1137,7 +1137,7 @@ class ContactPersonHandler
 
             if ($organizationObject) {
                 $organizationData = $organizationObject->getObject();
-                return $organizationData['type'] ?? '';
+                return strtolower($organizationData['type'] ?? '');
             }
 
             return '';

@@ -216,8 +216,6 @@ class OrganizationSyncService
 
         $contacts = $qb->execute()->fetchAll();
 
-        var_dump($contacts);
-
         foreach ($contacts as $contact) {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
             $contactEntity = $objectService->find(id: $contact['uuid'], register: $register, schema: $contactSchema);
