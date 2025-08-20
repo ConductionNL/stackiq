@@ -259,7 +259,7 @@
 			class="loading-icon"
 			:size="32"
 			appearance="dark" />
-		<p v-if="loading" class="loading-copy">
+		<p v-if="loading" class="loading-text">
 			Loading OpenRegister configuration...
 		</p>
 	</NcSettingsSection>
@@ -336,7 +336,7 @@ export default {
 	computed: {
 		// Store-connected computed properties
 		loading() {
-			return this.store.loading
+			return this.store.loadingOpenRegisterConfig
 		},
 		versionInfo() { return this.store.versionInfo },
 		configuration() { return this.store.configuration },
@@ -552,5 +552,12 @@ export default {
 	display: flex;
 	justify-content: center;
 	margin: 40px 0;
+}
+
+.loading-text {
+	text-align: center;
+	color: var(--color-text-lighter);
+	margin-top: 1rem;
+	font-size: 14px;
 }
 </style>

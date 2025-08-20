@@ -21,11 +21,16 @@
 		name="Organization Synchronization"
 		description="Synchronize organization data between OpenRegister and external systems"
 		:loading="loading"
+		:show-save-button="true"
 		:show-refresh-button="true"
+		:can-save="hasTimeWindowChanges"
+		:saving="savingConfig"
+		save-button-text="Save Configuration"
 		:refreshing="loadingSyncStatus"
 		refresh-button-text="Refresh Status"
 		:has-info-content="true"
-		@refresh="loadSyncStatus">
+		@save="saveConfiguration"
+		@refresh="refreshConfiguration">
 		<div>
 			<div class="sync-section">
 				<p>Monitor the status of organization and contact person synchronization</p>
@@ -47,6 +52,17 @@
 
 						<!-- Sync Actions in same row -->
 						<div class="sync-actions">
+							<NcButton
+								type="secondary"
+								:disabled="loading || loadingSyncStatus"
+								@click="refreshConfiguration">
+								<template #icon>
+									<NcLoadingIcon v-if="loading" :size="20" />
+									<Refresh v-else :size="20" />
+								</template>
+								Refresh Configuration
+							</NcButton>
+
 							<NcButton
 								type="secondary"
 								:disabled="loading || loadingSyncStatus"
@@ -288,9 +304,11 @@ export default {
 		return {
 			loadingSyncStatus: false,
 			performingSync: false,
+			savingConfig: false,
 			syncStatus: null,
 			syncResult: null,
 			selectedTimeWindow: { value: 10, label: '10 minutes' },
+			originalTimeWindow: { value: 10, label: '10 minutes' },
 			timeWindowOptions: [
 				{ value: 0, label: 'Full sync (all organizations)' },
 				{ value: 5, label: '5 minutes' },
@@ -308,7 +326,17 @@ export default {
 
 	computed: {
 		// Store-connected computed properties
-		loading() { return this.store.loading },
+		loading() { return this.store.loadingSyncSettings },
+		settings() { return this.store.settings },
+		
+		/**
+		 * Check if time window configuration has changed
+		 *
+		 * @return {boolean} True if time window has changed
+		 */
+		hasTimeWindowChanges() {
+			return this.selectedTimeWindow.value !== this.originalTimeWindow.value
+		},
 	},
 
 	/**
@@ -318,10 +346,63 @@ export default {
 	 * @return {Promise<void>}
 	 */
 	async created() {
+		await this.loadSavedConfiguration()
 		await this.loadSyncStatus()
 	},
 
+	/**
+	 * Watch for changes in the store's syncTimeWindow
+	 */
+	watch: {
+		'settings.syncTimeWindow': {
+			handler(newValue) {
+				if (newValue !== undefined) {
+					this.loadSavedConfiguration()
+				}
+			},
+			immediate: true
+		},
+		'store.loadingSyncSettings': {
+			handler(newValue, oldValue) {
+				// When loading finishes, reload the configuration
+				if (oldValue === true && newValue === false) {
+					this.loadSavedConfiguration()
+				}
+			}
+		}
+	},
+
 	methods: {
+		/**
+		 * Load saved time window configuration
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadSavedConfiguration() {
+			try {
+				// Load the saved time window configuration from the store
+				let savedTimeWindow = this.store.settings.syncTimeWindow
+				
+				// If not available in store, try to load it directly
+				if (savedTimeWindow === undefined || savedTimeWindow === null) {
+					await this.store.loadSyncConfig()
+					savedTimeWindow = this.store.settings.syncTimeWindow
+				}
+				
+				// Only update if we have a valid value
+				if (savedTimeWindow !== undefined && savedTimeWindow !== null) {
+					// Find the matching option
+					const savedOption = this.timeWindowOptions.find(option => option.value === savedTimeWindow)
+					if (savedOption) {
+						this.selectedTimeWindow = { ...savedOption }
+						this.originalTimeWindow = { ...savedOption }
+					}
+				}
+			} catch (error) {
+				console.error('Failed to load saved configuration:', error)
+			}
+		},
+
 		/**
 		 * Load synchronization status
 		 *
@@ -400,6 +481,45 @@ export default {
 		 */
 		async handleTimeWindowChange() {
 			await this.loadSyncStatus()
+		},
+
+		/**
+		 * Save time window configuration
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async saveConfiguration() {
+			this.savingConfig = true
+			try {
+				// First update the store with the new sync time window value
+				await this.store.updateSyncTimeWindow(this.selectedTimeWindow.value)
+				// Then use the settings store's centralized save method
+				await this.store.saveConfiguration()
+				// Update the original time window to match the saved value
+				this.originalTimeWindow = { ...this.selectedTimeWindow }
+				showSuccess('Time window configuration saved successfully')
+			} catch (error) {
+				console.error('Failed to save time window configuration:', error)
+				showError('Failed to save time window configuration: ' + error.message)
+			} finally {
+				this.savingConfig = false
+			}
+		},
+
+		/**
+		 * Refresh time window configuration from the store
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 */
+		async refreshConfiguration() {
+			try {
+				await this.store.loadSyncConfig()
+				await this.loadSavedConfiguration()
+			} catch (error) {
+				console.error('Failed to refresh configuration:', error)
+			}
 		},
 
 		/**

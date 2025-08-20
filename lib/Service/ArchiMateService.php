@@ -73,6 +73,11 @@ class ArchiMateService
     private ?array $lastSaveResult = null;
 
     /**
+     * Cached configuration values for performance optimization
+     */
+    private ?array $cachedConfig = null;
+
+    /**
      * Constructor for ArchiMateService
      * 
      * @param IAppConfig $config Nextcloud app configuration service
@@ -103,6 +108,102 @@ class ArchiMateService
      * @return array Import results
      */
     /**
+     * OPTIMIZED: Import ArchiMate XML file using OpenRegister-style performance optimization
+     * 
+     * This method follows the same pattern as OpenRegister ImportService:
+     * 1. Parse ALL XML data first (single pass)
+     * 2. Transform to objects array (batch processing)
+     * 3. Single saveObjects() call with all objects
+     * 
+     * Expected performance: <1 minute for 8000 objects (vs current 13 minutes)
+     * 
+     * @param array $options Import options including file_path, fileName, etc.
+     * @return array Import results with detailed status
+     */
+    public function importArchiMateFileFromPathOptimized(array $options = []): array
+    {
+        $startTime = microtime(true);
+        $startMemory = memory_get_usage(true);
+        
+        $this->logger->info('Starting OPTIMIZED ArchiMate XML import', [
+            'file_path' => $options['file_path'] ?? 'unknown'
+        ]);
+
+        try {
+            // OPTIMIZATION: Cache all configuration once at start
+            $this->initializeCache();
+            
+            // STEP 1: Parse XML to array (same as before)
+            $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
+            if (empty($filePath) || !file_exists($filePath)) {
+                throw new \InvalidArgumentException("File not found: {$filePath}");
+            }
+            
+            $parseStartTime = microtime(true);
+            $xmlData = $this->parseArchiMateXml($filePath);
+            $parseTime = microtime(true) - $parseStartTime;
+            
+            // STEP 2: Extract model identifier
+            $modelIdentifier = $this->extractModelIdentifier($xmlData);
+            
+            // STEP 3: Parse ALL objects in one go (like CSV import)
+            $transformStartTime = microtime(true);
+            $allObjects = $this->transformArchiMateXmlToObjectsBatch($xmlData, $modelIdentifier);
+            $transformTime = microtime(true) - $transformStartTime;
+            
+            $this->logger->info('Parsed and transformed all objects', [
+                'object_count' => count($allObjects),
+                'parse_time' => round($parseTime, 3),
+                'transform_time' => round($transformTime, 3)
+            ]);
+            
+            // STEP 4: Single saveObjects() call (like CSV import)
+            $saveStartTime = microtime(true);
+            $savedObjects = $this->saveObjectsToDatabase($allObjects);
+            $saveTime = microtime(true) - $saveStartTime;
+            
+            $totalTime = microtime(true) - $startTime;
+            $itemsPerSecond = count($allObjects) / max($totalTime, 0.001);
+            
+            $this->logger->info('OPTIMIZED import completed successfully', [
+                'total_objects' => count($allObjects),
+                'total_time' => round($totalTime, 3),
+                'items_per_second' => round($itemsPerSecond, 1),
+                'breakdown' => [
+                    'parse' => round($parseTime, 3),
+                    'transform' => round($transformTime, 3), 
+                    'save' => round($saveTime, 3)
+                ]
+            ]);
+
+            return [
+                'success' => true,
+                'file_info' => [
+                    'name' => $options['fileName'] ?? basename($filePath),
+                    'size' => filesize($filePath)
+                ],
+                'performance_metrics' => [
+                    'total_time_seconds' => round($totalTime, 3),
+                    'items_per_second' => round($itemsPerSecond, 1),
+                    'objects_processed' => count($allObjects)
+                ],
+                'statistics' => $this->calculateOptimizedStatistics($savedObjects)
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('OPTIMIZED ArchiMate import failed', [
+                'error' => $e->getMessage(),
+                'file_path' => $options['file_path'] ?? 'unknown'
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Import ArchiMate XML file from path with model detection and round-trip fidelity
      * 
      * This method handles the complete import workflow:
@@ -120,6 +221,9 @@ class ArchiMateService
         // Track start time and memory for performance metrics
         $startTime = microtime(true);
         $startMemory = memory_get_usage(true);
+        
+        // OPTIMIZATION: Cache configuration values once at the start
+        $this->initializeCache();
         
         $this->logger->info('Starting ArchiMate XML import with model detection', [
             'options' => $options,
@@ -586,6 +690,9 @@ class ArchiMateService
             'model_identifier' => $modelIdentifier
         ]);
 
+        // STEP 0: Extract propertyDefinition map and store in model metadata
+        $propertyDefinitionMap = $this->extractPropertyDefinitionMap($data);
+
         // Initialize normalized structure with model metadata
         $normalized = [
             'model_metadata' => [],
@@ -601,7 +708,6 @@ class ArchiMateService
         if (isset($data['_attributes'])) {
             $normalized['model_metadata'] = $data['_attributes'];
         }
-        
         // Also extract name and documentation from root level
         if (isset($data['name'])) {
             $normalized['model_metadata']['name'] = $data['name'];
@@ -612,7 +718,9 @@ class ArchiMateService
         if (isset($data['properties'])) {
             $normalized['model_metadata']['properties'] = $data['properties'];
         }
-        
+        // Store propertyDefinitionMap in model_metadata
+        $normalized['model_metadata']['propertyDefinitionMap'] = $propertyDefinitionMap;
+
         $this->logger->debug('Extracted model metadata', [
             'metadata_keys' => array_keys($normalized['model_metadata']),
             'has_name' => isset($normalized['model_metadata']['name']),
@@ -620,164 +728,102 @@ class ArchiMateService
         ]);
 
         // STEP 2: Process each section and store complete raw XML data
-        // This ensures round-trip fidelity - we can reconstruct the exact XML later
         $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
-        
-        $this->logger->debug("Available sections in data", [
-            'available_sections' => array_keys($data),
-            'sections_to_process' => $sections
-        ]);
-        
-        // Check for alternative section names that might exist in the XML
         $alternativeNames = [
             'views' => ['views', 'diagrams'],
             'organizations' => ['organizations', 'organisation'],
             'property_definitions' => ['propertyDefinitions', 'property_definitions', 'propertydefinitions']
         ];
-        
-        foreach ($alternativeNames as $section => $alternatives) {
-            foreach ($alternatives as $altName) {
-                if (isset($data[$altName])) {
-                    $this->logger->debug("Found alternative section name", [
-                        'section' => $section,
-                        'alternative_name' => $altName,
-                        'data_type' => gettype($data[$altName]),
-                        'data_keys' => is_array($data[$altName]) ? array_keys($data[$altName]) : []
-                    ]);
-                }
-            }
-        }
-        
         foreach ($sections as $section) {
             $sectionData = null;
             $actualSectionName = null;
-            
-            // First try the direct section name
             if (isset($data[$section])) {
                 $sectionData = $data[$section];
                 $actualSectionName = $section;
             } else {
-                // Try alternative names for this section
                 if (isset($alternativeNames[$section])) {
                     foreach ($alternativeNames[$section] as $altName) {
                         if (isset($data[$altName])) {
                             $sectionData = $data[$altName];
                             $actualSectionName = $altName;
-                            $this->logger->debug("Using alternative section name", [
-                                'section' => $section,
-                                'alternative_name' => $altName
-                            ]);
                             break;
                         }
                     }
                 }
             }
-            
             if ($sectionData !== null) {
-                $this->logger->debug("Processing section: {$section}", [
-                    'actual_section_name' => $actualSectionName,
-                    'section_data_type' => gettype($sectionData),
-                    'section_data_count' => is_array($sectionData) ? count($sectionData) : 'not_array',
-                    'section_data_keys' => is_array($sectionData) ? array_keys($sectionData) : []
-                ]);
-                
-                $normalized[$section] = $this->extractSectionData($sectionData, $section, $modelIdentifier);
-            } else {
-                $this->logger->debug("Section not found: {$section}");
+                $normalized[$section] = $this->extractSectionDataWithProperties($sectionData, $section, $modelIdentifier, $propertyDefinitionMap);
             }
         }
-
         $this->logger->info('Data normalization completed', [
             'model_identifier' => $modelIdentifier,
             'sections_processed' => $sections,
             'round_trip_fidelity' => 'enabled'
         ]);
-
         return $normalized;
     }
 
     /**
-     * Extract data from a specific section with model linking
-     * 
-     * This method processes each section of the ArchiMate XML and extracts:
-     * 1. Individual items (elements, relationships, organizations, views, property_definitions)
-     * 2. Complete raw XML data for each item to ensure round-trip fidelity
-     * 3. Links each item to the parent model via model_identifier
-     * 
+     * Extract data from a specific section, flatten properties, and store xml
+     *
      * @param mixed $sectionData Section data from XML parsing
      * @param string $sectionName Name of the section being processed
      * @param string $modelIdentifier The model identifier for linking items
-     * @return array Extracted section data with complete XML preservation
+     * @param array $propertyDefinitionMap Map of propertyDefinitionRef => property name
+     * @return array Extracted section data with complete XML preservation and flattened properties
      */
-    private function extractSectionData(mixed $sectionData, string $sectionName, string $modelIdentifier): array
+    private function extractSectionDataWithProperties(mixed $sectionData, string $sectionName, string $modelIdentifier, array $propertyDefinitionMap): array
     {
-        $this->logger->debug("Extracting data from section: {$sectionName}", [
-            'section_name' => $sectionName,
-            'model_identifier' => $modelIdentifier,
-            'data_type' => gettype($sectionData)
-        ]);
-
         $extracted = [];
-        
-        // STEP 1: Handle different data structures (array, object, scalar)
         if (is_array($sectionData)) {
-            $this->logger->debug("Section data structure", [
-                'section' => $sectionName,
-                'section_keys' => array_keys($sectionData),
-                'section_data_sample' => array_slice($sectionData, 0, 2, true)
-            ]);
-            
-            // STEP 2: Find the actual items within the section
-            // Could be nested under child tags like <element>, <relationship>, etc.
             $items = $this->findItemsInSection($sectionData, $sectionName);
-            
-            $this->logger->debug("Found items in section", [
-                'section' => $sectionName,
-                'item_count' => count($items)
-            ]);
-            
-            // STEP 3: Process each item and store complete XML data
             foreach ($items as $item) {
                 $identifier = $this->extractIdentifier($item, $sectionName);
                 if ($identifier) {
-                    // Store XML data at root level with metadata fields
-                    // This eliminates double JSON serialization and improves performance
-                    $extracted[$identifier] = array_merge(
-                        $item,                         // XML data at root level
-                        [
-                            'identifier' => $identifier,   // Unique identifier for the item
-                            'section' => $sectionName,     // Section this item belongs to
-                            'model_identifier' => $modelIdentifier, // Link to parent model
-                            'extracted_at' => time()       // Timestamp for tracking
-                        ]
-                    );
-                    
-                    $this->logger->debug("Extracted item", [
+                    // OPTIMIZATION: Store XML data directly without expensive deep copy
+                    // Start with base object structure  
+                    $object = [
                         'identifier' => $identifier,
                         'section' => $sectionName,
-                        'model_identifier' => $modelIdentifier
-                    ]);
-                } else {
-                    $this->logger->warning("Could not extract identifier from item", [
-                        'section' => $sectionName,
-                        'item_keys' => is_array($item) ? array_keys($item) : ['not_array']
-                    ]);
+                        'model_identifier' => $modelIdentifier,
+                        'extracted_at' => time(),
+                        'xml' => $item // Store the full parsed XML for this object (direct reference)
+                    ];
+                    
+                    // Flatten properties to root fields using the propertyDefinitionMap
+                    if (isset($item['properties']) && isset($item['properties']['property'])) {
+                        $props = $item['properties']['property'];
+                        if (isset($props[0])) {
+                            // Multiple properties
+                            foreach ($props as $prop) {
+                                $defRef = $prop['_attributes']['propertyDefinitionRef'] ?? null;
+                                $value = $prop['value']['_value'] ?? $prop['value'] ?? null;
+                                if ($defRef && isset($propertyDefinitionMap[$defRef])) {
+                                    $name = $propertyDefinitionMap[$defRef];
+                                    $object[$name] = $value;
+                                    // If this property is 'Object ID', set slug for later use
+                                    if (strtolower($name) === 'object id') {
+                                        $object['_slug'] = $value; // Store temporarily, will be moved to @self.slug later
+                                    }
+                                }
+                            }
+                        } elseif (isset($props['_attributes']['propertyDefinitionRef'])) {
+                            // Single property
+                            $defRef = $props['_attributes']['propertyDefinitionRef'];
+                            $value = $props['value']['_value'] ?? $props['value'] ?? null;
+                            if ($defRef && isset($propertyDefinitionMap[$defRef])) {
+                                $name = $propertyDefinitionMap[$defRef];
+                                $object[$name] = $value;
+                                if (strtolower($name) === 'object id') {
+                                    $object['_slug'] = $value; // Store temporarily, will be moved to @self.slug later
+                                }
+                            }
+                        }
+                    }
+                    $extracted[$identifier] = $object;
                 }
             }
-        } else {
-            $this->logger->warning("Section data is not an array", [
-                'section' => $sectionName,
-                'data_type' => gettype($sectionData),
-                'data_value' => $sectionData
-            ]);
         }
-
-        $this->logger->info("Section extraction completed", [
-            'section' => $sectionName,
-            'items_extracted' => count($extracted),
-            'model_identifier' => $modelIdentifier
-        ]);
-
         return $extracted;
     }
 
@@ -866,52 +912,25 @@ class ArchiMateService
      */
     private function findItemsInSection(array $sectionData, string $sectionName): array
     {
-        $this->logger->debug("Finding items in section", [
-            'section' => $sectionName,
-            'section_data_keys' => is_array($sectionData) ? array_keys($sectionData) : ['not_array'],
-            'section_data_type' => gettype($sectionData)
-        ]);
+        // OPTIMIZATION: Removed debug logging from section processing
 
         $items = [];
         
         // Safety check: ensure sectionData is an array
         if (!is_array($sectionData)) {
-            $this->logger->warning("Section data is not an array", [
-                'section' => $sectionName,
-                'data_type' => gettype($sectionData),
-                'data_value' => $sectionData
-            ]);
             return [];
         }
         
         // Get section structure configuration from AMEF config
         $config = $this->getSectionStructureConfig($sectionName);
         
-        $this->logger->debug("Section structure config", [
-            'section' => $sectionName,
-            'config' => $config
-        ]);
-        
         // Special handling for views with diagrams structure
         if ($sectionName === 'views') {
-            $this->logger->debug("Special handling for views section", [
-                'section_keys' => array_keys($sectionData)
-            ]);
             
             // Handle nested structure: <views><diagrams><view>
             if (isset($sectionData['diagrams'])) {
-                $this->logger->debug("Found diagrams structure in views", [
-                    'diagrams_type' => gettype($sectionData['diagrams']),
-                    'diagrams_keys' => is_array($sectionData['diagrams']) ? array_keys($sectionData['diagrams']) : []
-                ]);
-                
                 if (isset($sectionData['diagrams']['view'])) {
                     $viewArray = $sectionData['diagrams']['view'];
-                    $this->logger->debug("Found view array in diagrams", [
-                        'view_array_type' => gettype($viewArray),
-                        'view_array_count' => is_array($viewArray) ? count($viewArray) : 'not_array',
-                        'is_single_view' => !isset($viewArray[0]) && isset($viewArray['_attributes'])
-                    ]);
                     
                     // Handle single view vs array of views
                     if (!isset($viewArray[0]) && isset($viewArray['_attributes'])) {
@@ -921,18 +940,11 @@ class ArchiMateService
                         // Array of views
                         $items = $viewArray;
                     }
-                    
-                    $this->logger->debug("Processed views from diagrams structure", [
-                        'items_count' => count($items)
-                    ]);
                 }
             } else {
                 // Direct views structure (fallback)
                 if (isset($sectionData['view'])) {
                     $items = $sectionData['view'];
-                    $this->logger->debug("Found direct view structure", [
-                        'items_count' => is_array($items) ? count($items) : 'not_array'
-                    ]);
                 }
             }
         } else {
@@ -951,13 +963,6 @@ class ArchiMateService
                 }
                 
                 if ($pathValid && is_array($currentData)) {
-                    $this->logger->debug("Found data at path", [
-                        'section' => $sectionName,
-                        'path' => $path,
-                        'data_keys' => array_keys($currentData),
-                        'data_type' => gettype($currentData)
-                    ]);
-                    
                     // Check if this is a direct array of items or needs further processing
                     if (isset($currentData[0]) || $this->isAssociativeArray($currentData)) {
                         $items = $currentData;
@@ -971,11 +976,6 @@ class ArchiMateService
         if (empty($items)) {
             foreach ($config['direct_tags'] as $tag) {
                 if (isset($sectionData[$tag])) {
-                    $this->logger->debug("Found direct tag", [
-                        'section' => $sectionName,
-                        'tag' => $tag,
-                        'data_keys' => is_array($sectionData[$tag]) ? array_keys($sectionData[$tag]) : ['not_array']
-                    ]);
                     $items = $sectionData[$tag];
                     break;
                 }
@@ -984,37 +984,18 @@ class ArchiMateService
         
         // If still no items found, treat the section itself as items
         if (empty($items)) {
-            $this->logger->debug("No items found in section, treating section as items", [
-                'section' => $sectionName,
-                'section_keys' => is_array($sectionData) ? array_keys($sectionData) : ['not_array']
-            ]);
             $items = [$sectionData];
         }
         
         // Ensure items is always an array
         if (!is_array($items)) {
-            $this->logger->debug("Items is not an array, wrapping in array", [
-                'section' => $sectionName,
-                'items_type' => gettype($items)
-            ]);
             $items = [$items];
         }
         
         // If items is an associative array with numeric keys, convert to indexed array
         if ($this->isAssociativeArray($items)) {
-            $this->logger->debug("Converting associative array to indexed array", [
-                'section' => $sectionName,
-                'items_keys' => array_keys($items)
-            ]);
             $items = array_values($items);
         }
-        
-        $this->logger->debug("Final items found", [
-            'section' => $sectionName,
-            'item_count' => count($items),
-            'first_item_keys' => !empty($items) && is_array($items[0]) ? array_keys($items[0]) : [],
-            'section_data_keys' => is_array($sectionData) ? array_keys($sectionData) : ['not_array']
-        ]);
         
         return $items;
     }
@@ -1028,12 +1009,7 @@ class ArchiMateService
      */
     private function extractIdentifier(array $item, string $sectionName = ''): ?string
     {
-        $this->logger->debug("Extracting identifier", [
-            'section' => $sectionName,
-            'item_keys' => array_keys($item),
-            'item_has_attributes' => isset($item['_attributes']),
-            'attributes_keys' => isset($item['_attributes']) ? array_keys($item['_attributes']) : []
-        ]);
+        // OPTIMIZATION: Removed debug logging from tight loop
         
         // Special handling for organizations - they have identifierRef attributes
         if ($sectionName === 'organizations') {
@@ -1117,13 +1093,7 @@ class ArchiMateService
             }
         }
 
-        $this->logger->warning("No identifier found for item", [
-            'section' => $sectionName,
-            'item_keys' => array_keys($item),
-            'item_has_attributes' => isset($item['_attributes']),
-            'attributes_keys' => isset($item['_attributes']) ? array_keys($item['_attributes']) : []
-        ]);
-
+        // OPTIMIZATION: Removed warning logging from tight loop
         return null;
     }
 
@@ -1157,24 +1127,21 @@ class ArchiMateService
         // STEP 2: Convert each section to individual objects
         $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
         
+        // OPTIMIZATION: Removed excessive debug logging from tight loops
+        $sectionCounts = [];
         foreach ($sections as $section) {
             if (!empty($normalizedData[$section]) && is_array($normalizedData[$section])) {
-                $this->logger->debug("Converting section: {$section}", [
-                    'item_count' => count($normalizedData[$section]),
-                    'section_keys' => array_keys($normalizedData[$section])
-                ]);
-                
+                $sectionCounts[$section] = count($normalizedData[$section]);
                 foreach ($normalizedData[$section] as $identifier => $data) {
                     $objects[] = $this->createSectionObject($section, $identifier, $data, $modelIdentifier);
                 }
             } else {
-                $this->logger->debug("Section empty or not found: {$section}", [
-                    'section_exists' => isset($normalizedData[$section]),
-                    'section_type' => isset($normalizedData[$section]) ? gettype($normalizedData[$section]) : 'not_set',
-                    'section_empty' => isset($normalizedData[$section]) ? empty($normalizedData[$section]) : 'not_set'
-                ]);
+                $sectionCounts[$section] = 0;
             }
         }
+        
+        // Single consolidated log entry
+        $this->logger->debug('Sections processed', $sectionCounts);
 
         $this->logger->info('Conversion to OpenRegister objects completed', [
             'model_identifier' => $modelIdentifier,
@@ -1194,19 +1161,9 @@ class ArchiMateService
      */
     private function createModelObject(array $metadata, string $modelIdentifier): array
     {
-        // Get AMEF configuration for register and schema IDs
-        $registerId = $this->getAmefRegisterId();
-        $schemaId = $this->getAmefSchemaIdForType('model');
-        
-        if (!$registerId || !$schemaId) {
-            $this->logger->warning('AMEF register or model schema not configured, using fallback values', [
-                'registerId' => $registerId,
-                'schemaId' => $schemaId
-            ]);
-            // Fallback to hardcoded values if AMEF config is not available
-            $registerId = $registerId ?: 15; // Default AMEF register ID
-            $schemaId = $schemaId ?: 67; // Default model schema ID
-        }
+        // OPTIMIZATION: Use cached configuration values
+        $registerId = $this->cachedConfig['registerId'] ?? 15;
+        $schemaId = $this->cachedConfig['schemaIds']['model'] ?? 67;
         
         // Create object with @self structure and metadata at root level (no JSON serialization)
         $object = [
@@ -1239,20 +1196,9 @@ class ArchiMateService
      */
     private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
     {
-        // Get AMEF configuration for register and schema IDs
-        $registerId = $this->getAmefRegisterId();
-        $schemaId = $this->getAmefSchemaIdForType($section);
-        
-        if (!$registerId || !$schemaId) {
-            $this->logger->warning('AMEF register or schema not configured for section, using fallback values', [
-                'section' => $section,
-                'registerId' => $registerId,
-                'schemaId' => $schemaId
-            ]);
-            // Fallback to hardcoded values if AMEF config is not available
-            $registerId = $registerId ?: 15; // Default AMEF register ID
-            $schemaId = $schemaId ?: $this->getSchemaIdForSection($section); // Fallback to hardcoded schema
-        }
+        // OPTIMIZATION: Use cached configuration values
+        $registerId = $this->cachedConfig['registerId'] ?? 15;
+        $schemaId = $this->cachedConfig['schemaIds'][$section] ?? $this->getSchemaIdForSection($section);
         
         // Create object with @self structure and XML data at root level (no double serialization)
         $object = [
@@ -1266,6 +1212,28 @@ class ArchiMateService
                 'updated' => date('Y-m-d H:i:s')
             ]
         ];
+        
+        // Set slug: first try from _slug field, then from Object ID property, then extract from identifier
+        $slug = null;
+        
+        // Check if there's a temporary slug to move to @self structure
+        if (isset($data['_slug'])) {
+            $slug = $data['_slug'];
+            unset($data['_slug']); // Remove the temporary field
+        }
+        // Check if we have "Object ID" property directly
+        elseif (isset($data['Object ID'])) {
+            $slug = $data['Object ID'];
+        }
+        // Fallback: extract from identifier (remove "id-" prefix if present)
+        elseif ($identifier && str_starts_with($identifier, 'id-')) {
+            $slug = substr($identifier, 3); // Remove "id-" prefix
+        }
+        
+        // Set the slug if we found one
+        if ($slug) {
+            $object['@self']['slug'] = $slug;
+        }
         
         // Merge XML data directly at root level (data already contains identifier, section, model_identifier)
         return array_merge($object, $data);
@@ -1288,16 +1256,8 @@ class ArchiMateService
             'count' => count($objects)
         ]);
 
-        // Get AMEF configuration for register ID
-        $registerId = $this->getAmefRegisterId();
-        
-        if (!$registerId) {
-            $this->logger->warning('AMEF register not configured, using fallback value', [
-                'registerId' => $registerId
-            ]);
-            // Fallback to hardcoded value if AMEF config is not available
-            $registerId = $registerId ?: 15; // Default AMEF register ID
-        }
+        // OPTIMIZATION: Use cached register ID
+        $registerId = $this->cachedConfig['registerId'] ?? 15;
 
         // Save objects using ObjectService::saveObjects with proper @self structure
         $saveResult = $objectService->saveObjects(
@@ -1367,24 +1327,49 @@ class ArchiMateService
     }
 
     /**
-     * Get current user ID
+     * Initialize cached configuration values for performance optimization
+     * 
+     * @return void
+     */
+    private function initializeCache(): void
+    {
+        if ($this->cachedConfig !== null) {
+            return; // Already cached
+        }
+
+        $this->cachedConfig = [
+            'userId' => $this->userSession->getUser()?->getUID(),
+            'organisation' => 'default',
+            'registerId' => $this->getAmefRegisterId(),
+            'schemaIds' => [
+                'model' => $this->getAmefSchemaIdForType('model'),
+                'element' => $this->getAmefSchemaIdForType('element'),
+                'relationship' => $this->getAmefSchemaIdForType('relationship'),
+                'view' => $this->getAmefSchemaIdForType('view'),
+                'organization' => $this->getAmefSchemaIdForType('organization'),
+                'property_definition' => $this->getAmefSchemaIdForType('property_definition')
+            ]
+        ];
+    }
+
+    /**
+     * Get current user ID from cache
      * 
      * @return string|null Current user ID or null if not authenticated
      */
     private function getCurrentUserId(): ?string
     {
-        $user = $this->userSession->getUser();
-        return $user ? $user->getUID() : null;
+        return $this->cachedConfig['userId'] ?? null;
     }
 
     /**
-     * Get current organisation
+     * Get current organisation from cache
      * 
      * @return string Default organisation
      */
     private function getCurrentOrganisation(): string
     {
-        return 'default';
+        return $this->cachedConfig['organisation'] ?? 'default';
     }
 
     /**
@@ -1967,6 +1952,11 @@ class ArchiMateService
             );
             
             foreach ($allProcessedObjects as $object) {
+                // Convert ObjectEntity to array if needed
+                if (is_object($object) && method_exists($object, 'jsonSerialize')) {
+                    $object = $object->jsonSerialize();
+                }
+                
                 $sectionType = $object['section'] ?? 'elements'; // Default to elements if section not found
                 
                 // Map section types to statistics keys
@@ -2049,5 +2039,314 @@ class ArchiMateService
         return $statistics;
     }
 
+    /**
+     * Extract propertyDefinitions from the parsed XML and build a map
+     *
+     * @param array $data Parsed XML data
+     * @return array Map of propertyDefinitionRef => property name
+     */
+    private function extractPropertyDefinitionMap(array $data): array
+    {
+        $map = [];
+        // Find propertyDefinitions section (handle possible alternative names)
+        $propertyDefs = null;
+        if (isset($data['propertyDefinitions'])) {
+            $propertyDefs = $data['propertyDefinitions'];
+        } elseif (isset($data['property_definitions'])) {
+            $propertyDefs = $data['property_definitions'];
+        } elseif (isset($data['propertyDefinitions'])) {
+            $propertyDefs = $data['propertyDefinitions'];
+        }
+        if ($propertyDefs && isset($propertyDefs['propertyDefinition'])) {
+            $defs = $propertyDefs['propertyDefinition'];
+            if (isset($defs[0])) {
+                // Array of propertyDefinition
+                foreach ($defs as $def) {
+                    if (isset($def['_attributes']['identifier']) && isset($def['name'])) {
+                        $map[$def['_attributes']['identifier']] = is_array($def['name']) && isset($def['name']['_value']) ? $def['name']['_value'] : $def['name'];
+                    }
+                }
+            } elseif (isset($defs['_attributes']['identifier']) && isset($defs['name'])) {
+                // Single propertyDefinition
+                $map[$defs['_attributes']['identifier']] = is_array($defs['name']) && isset($defs['name']['_value']) ? $defs['name']['_value'] : $defs['name'];
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Transform ArchiMate XML data to objects array in batch (OpenRegister pattern)
+     * 
+     * This method follows the same pattern as OpenRegister CSV import:
+     * - Parse ALL sections at once
+     * - Create objects directly without intermediate normalization
+     * - Use cached configuration values
+     * - Minimize object copying and complex transformations
+     * 
+     * @param array $xmlData Parsed XML data
+     * @param string $modelIdentifier Model identifier
+     * @return array Array of objects ready for saveObjects()
+     */
+    private function transformArchiMateXmlToObjectsBatch(array $xmlData, string $modelIdentifier): array
+    {
+        $allObjects = [];
+        
+        // Extract propertyDefinitionMap once for all objects
+        $propertyDefinitionMap = $this->extractPropertyDefinitionMap($xmlData);
+        
+        // Create model object first
+        if (isset($xmlData['_attributes']) || isset($xmlData['name'])) {
+            $modelMetadata = [
+                'identifier' => $modelIdentifier,
+                'name' => $xmlData['name'] ?? '',
+                'documentation' => $xmlData['documentation'] ?? '',
+                'properties' => $xmlData['properties'] ?? [],
+                'propertyDefinitionMap' => $propertyDefinitionMap
+            ];
+            
+            if (isset($xmlData['_attributes'])) {
+                $modelMetadata = array_merge($modelMetadata, $xmlData['_attributes']);
+            }
+            
+            $allObjects[] = $this->createModelObjectDirect($modelMetadata, $modelIdentifier);
+        }
+        
+        // Process each section type directly (no intermediate normalization)
+        $sections = [
+            'elements' => 'element',
+            'relationships' => 'relationship', 
+            'organizations' => 'organization',
+            'views' => 'view',
+            'property_definitions' => 'property_definition'
+        ];
+        
+        foreach ($sections as $sectionName => $schemaType) {
+            $sectionData = $this->findSectionData($xmlData, $sectionName);
+            if (!empty($sectionData)) {
+                $sectionObjects = $this->transformSectionObjectsBatch(
+                    $sectionData,
+                    $schemaType,
+                    $modelIdentifier,
+                    $propertyDefinitionMap
+                );
+                $allObjects = array_merge($allObjects, $sectionObjects);
+            }
+        }
+        
+        return $allObjects;
+    }
+
+    /**
+     * Create model object directly with cached configuration
+     * 
+     * @param array $metadata Model metadata
+     * @param string $modelIdentifier Model identifier
+     * @return array Model object with @self structure
+     */
+    private function createModelObjectDirect(array $metadata, string $modelIdentifier): array
+    {
+        return [
+            '@self' => [
+                'register' => $this->cachedConfig['registerId'] ?? 15,
+                'schema' => $this->cachedConfig['schemaIds']['model'] ?? 67,
+                'id' => $modelIdentifier,
+                'owner' => $this->cachedConfig['userId'],
+                'organisation' => $this->cachedConfig['organisation'],
+                'created' => date('Y-m-d H:i:s'),
+                'updated' => date('Y-m-d H:i:s')
+            ],
+            'identifier' => $modelIdentifier,
+            'section' => 'model',
+            'model_identifier' => $modelIdentifier
+        ] + $metadata;
+    }
+
+    /**
+     * Find section data efficiently without complex nested searches
+     * 
+     * @param array $xmlData Parsed XML data
+     * @param string $sectionName Section name to find
+     * @return array Section data or empty array
+     */
+    private function findSectionData(array $xmlData, string $sectionName): array
+    {
+        // Direct lookup first
+        if (isset($xmlData[$sectionName])) {
+            return $xmlData[$sectionName];
+        }
+        
+        // Alternative names lookup
+        $alternatives = [
+            'views' => ['diagrams'],
+            'organizations' => ['organisation'],
+            'property_definitions' => ['propertyDefinitions', 'propertydefinitions']
+        ];
+        
+        if (isset($alternatives[$sectionName])) {
+            foreach ($alternatives[$sectionName] as $altName) {
+                if (isset($xmlData[$altName])) {
+                    return $xmlData[$altName];
+                }
+            }
+        }
+        
+        return [];
+    }
+
+    /**
+     * Transform section objects in batch with minimal overhead
+     * 
+     * @param array $sectionData Section data from XML
+     * @param string $schemaType Schema type (singular)
+     * @param string $modelIdentifier Model identifier
+     * @param array $propertyDefinitionMap Property definition map
+     * @return array Array of transformed objects
+     */
+    private function transformSectionObjectsBatch(
+        array $sectionData, 
+        string $schemaType, 
+        string $modelIdentifier, 
+        array $propertyDefinitionMap
+    ): array {
+        $objects = [];
+        
+        // Find items in section (simplified version)
+        $items = $this->findItemsSimplified($sectionData, $schemaType);
+        
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            
+            $identifier = $this->extractIdentifier($item, $schemaType);
+            if (!$identifier) {
+                continue;
+            }
+            
+            // Create object directly (minimal processing)
+            $object = [
+                '@self' => [
+                    'register' => $this->cachedConfig['registerId'] ?? 15,
+                    'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? 100,
+                    'id' => $identifier,
+                    'owner' => $this->cachedConfig['userId'],
+                    'organisation' => $this->cachedConfig['organisation'],
+                    'created' => date('Y-m-d H:i:s'),
+                    'updated' => date('Y-m-d H:i:s')
+                ],
+                'identifier' => $identifier,
+                'section' => $schemaType,
+                'model_identifier' => $modelIdentifier,
+                'xml' => $item // Store complete XML data for round-trip fidelity
+            ];
+            
+            // Flatten properties efficiently (if present)
+            if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
+                $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+            }
+            
+            $objects[] = $object;
+        }
+        
+        return $objects;
+    }
+
+    /**
+     * Simplified item finding for better performance
+     * 
+     * @param array $sectionData Section data
+     * @param string $sectionType Section type
+     * @return array Items array
+     */
+    private function findItemsSimplified(array $sectionData, string $sectionType): array
+    {
+        // Handle views with diagrams structure
+        if ($sectionType === 'view' && isset($sectionData['diagrams']['view'])) {
+            $viewData = $sectionData['diagrams']['view'];
+            return isset($viewData[0]) ? $viewData : [$viewData];
+        }
+        
+        // Try common patterns
+        $patterns = [
+            $sectionType, // singular: element, relationship, etc.
+            $sectionType . 's', // plural: elements, relationships, etc.
+            'item', // organizations use 'item'
+            'propertyDefinition' // property definitions
+        ];
+        
+        foreach ($patterns as $pattern) {
+            if (isset($sectionData[$pattern])) {
+                $data = $sectionData[$pattern];
+                return is_array($data) && isset($data[0]) ? $data : [$data];
+            }
+        }
+        
+        // Fallback: treat section data as single item
+        return [$sectionData];
+    }
+
+    /**
+     * Flatten properties in batch for better performance
+     * 
+     * @param array &$object Object to add properties to (by reference)
+     * @param array $properties Properties array from XML
+     * @param array $propertyDefinitionMap Property definition map
+     * @return void
+     */
+    private function flattenPropertiesBatch(array &$object, array $properties, array $propertyDefinitionMap): void
+    {
+        $props = isset($properties[0]) ? $properties : [$properties];
+        
+        foreach ($props as $prop) {
+            if (!isset($prop['_attributes']['propertyDefinitionRef'])) {
+                continue;
+            }
+            
+            $defRef = $prop['_attributes']['propertyDefinitionRef'];
+            $value = $prop['value']['_value'] ?? $prop['value'] ?? null;
+            
+            if ($value !== null && isset($propertyDefinitionMap[$defRef])) {
+                $propertyName = $propertyDefinitionMap[$defRef];
+                $object[$propertyName] = $value;
+                
+                // Set slug for Object ID property
+                if (strtolower($propertyName) === 'object id') {
+                    $object['@self']['slug'] = $value;
+                }
+            }
+        }
+    }
+
+    /**
+     * Calculate optimized statistics for performance reporting
+     * 
+     * @param array $savedObjects Saved objects from ObjectService::saveObjects
+     * @return array Statistics array
+     */
+    private function calculateOptimizedStatistics(array $savedObjects): array
+    {
+        $statistics = [
+            'summary' => [
+                'total_objects_created' => 0,
+                'total_objects_updated' => 0,
+                'total_objects_deleted' => 0,
+                'total_objects_skipped' => 0,
+                'total_errors' => 0
+            ]
+        ];
+
+        if ($this->lastSaveResult !== null) {
+            $saveResult = $this->lastSaveResult;
+            $statistics['summary'] = [
+                'total_objects_created' => count($saveResult['saved'] ?? []),
+                'total_objects_updated' => count($saveResult['updated'] ?? []),
+                'total_objects_deleted' => 0,
+                'total_objects_skipped' => count($saveResult['skipped'] ?? []),
+                'total_errors' => count($saveResult['invalid'] ?? [])
+            ];
+        }
+
+        return $statistics;
+    }
 
 }
