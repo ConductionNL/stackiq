@@ -18,8 +18,6 @@
                     "koppeling",
                     "beoordeeling",
                     "module",
-                    "verklaring",
-                    "koppelingGebruik",
                     "compliancy",
                     "moduleVersie"
                 ],
@@ -4637,22 +4635,6 @@
                             "Systeemsoftware"
                         ]
                     },
-                    "laag": {
-                        "description": "De Common Ground architectuurlaag waarin deze module zich bevindt",
-                        "type": "string",
-                        "visible": true,
-                        "order": 12,
-                        "facetable": false,
-                        "title": "Laag",
-                        "enum": [
-                            "Laag 0: Infrastructuur",
-                            "Laag 1: Data",
-                            "Laag 2: Proces", 
-                            "Laag 3: Services",
-                            "Laag 4: Integratie",
-                            "Laag 5: Interactie"
-                        ]
-                    },
                     "logo": {
                         "description": "URL naar het logo van de module",
                         "type": "string", 
@@ -4690,160 +4672,6 @@
                     ]
                 }
             },
-            "verklaring": {
-                "uri": null,
-                "slug": "verklaring",
-                "title": "Verklaring",
-                "description": "Een verklaring is een document of uitspraak die bevestigt of verklaart dat een product voldoet aan bepaalde eisen of standaarden",
-                "version": "0.0.1",
-                "summary": "",
-                "icon": null,
-                "required": [
-                    "naam",
-                    "type"
-                ],
-                "properties": {
-                    "naam": {
-                        "type": "string",
-                        "description": "Naam van de verklaring",
-                        "title": "Naam",
-                        "order": 1,
-                        "facetable": true,
-                        "required": true
-                    },
-                    "type": {
-                        "type": "string",
-                        "description": "Type van de verklaring (bijv. certificaat, compliance, audit)",
-                        "title": "Type",
-                        "order": 2,
-                        "facetable": true,
-                        "required": true
-                    },
-                    "link": {
-                        "type": "string",
-                        "format": "url",
-                        "description": "Link naar het document of meer informatie over de verklaring",
-                        "title": "Link",
-                        "order": 3,
-                        "facetable": false
-                    },
-                    "toelichting": {
-                        "type": "string",
-                        "description": "Toelichting of uitleg over de verklaring",
-                        "title": "Toelichting",
-                        "order": 4,
-                        "facetable": false
-                    }
-                },
-                "archive": [],
-                "source": "internal",
-                "hardValidation": false,
-                "immutable": false,
-                "updated": "2025-07-29T12:00:00+00:00",
-                "created": "2025-07-29T12:00:00+00:00",
-                "maxDepth": 0,
-                "owner": "system",
-                "application": null,
-                "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-                "groups": null,
-                "authorization": null,
-                "deleted": null,
-                "configuration": {
-                    "objectNameField": "naam",
-                    "objectDescriptionField": "type"
-                }
-            },
-            "koppelingGebruik": {
-                "uri": null,
-                "slug": "koppelingGebruik",
-                "title": "Koppeling Gebruik",
-                "description": "Schema voor het gebruik van koppelingen",
-                "version": "0.0.1",
-                "summary": "",
-                "icon": null,
-                "required": [],
-                "properties": {
-                    "gebruikVanKoppeling": {
-                        "description": "",
-                        "type": "string",
-                        "order": 1,
-                        "title": "GebruikVanKoppeling"
-                    },
-                    "status": {
-                        "description": "",
-                        "type": "string",
-                        "order": 2,
-                        "title": "Status"
-                    },
-                    "datumStatus": {
-                        "description": "",
-                        "type": "string",
-                        "order": 3,
-                        "title": "DatumStatus"
-                    },
-                    "beschrijvingKort": {
-                        "description": "",
-                        "type": "string",
-                        "order": 4,
-                        "title": "BeschrijvingKort"
-                    },
-                    "beschrijvingLang": {
-                        "description": "",
-                        "type": "string",
-                        "order": 5,
-                        "title": "BeschrijvingLang"
-                    },
-                    "interneAantekening": {
-                        "description": "",
-                        "type": "string",
-                        "order": 6,
-                        "title": "InterneAantekening"
-                    },
-                    "BIVclassificatie": {
-                        "description": "",
-                        "type": "string",
-                        "order": 7,
-                        "title": "BIVclassificatie"
-                    },
-                    "IBPrisicoanalyse": {
-                        "description": "",
-                        "type": "string",
-                        "order": 8,
-                        "title": "IBPrisicoanalyse"
-                    },
-                    "isBedrijfskritisch": {
-                        "description": "",
-                        "type": "string",
-                        "order": 9,
-                        "title": "IsBedrijfskritisch"
-                    },
-                    "isPrivacygevoelig": {
-                        "description": "",
-                        "type": "string",
-                        "order": 10,
-                        "title": "IsPrivacygevoelig"
-                    },
-                    "organisatieRegistreertGebruik": {
-                        "description": "",
-                        "type": "string",
-                        "order": 11,
-                        "title": "OrganisatieRegistreertGebruik"
-                    }
-                },
-                "archive": [],
-                "source": "",
-                "hardValidation": false,
-                "updated": "2025-08-08T07:11:40+00:00",
-                "created": "2025-08-08T07:11:40+00:00",
-                "maxDepth": 0,
-                "owner": "system",
-                "application": null,
-                "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-                "groups": null,
-                "authorization": null,
-                "deleted": null,
-                "configuration": null
-            },
             "compliancy": {
                 "uri": null,
                 "slug": "compliancy",
@@ -4854,29 +4682,32 @@
                 "icon": "CheckCircle",
                 "required": [],
                 "properties": {
-                    "ondersteuntStandaardversie": {
-                        "description": "",
-                        "type": "string",
+                    "standaardversie": {
+                        "description": "Standaardversie die door deze compliance wordt ondersteund",
+                        "type": "object",
                         "order": 1,
-                        "title": "OndersteuntStandaardversie"
+                        "title": "Standaard Versie",
+                        "visible": true,
+                        "facetable": false,
+                        "objectConfiguration": {
+                            "handling": "related-object",
+                            "query": {
+                                "gemmaType": "standaardversie"
+                            }
+                        },
+                        "$ref": "#/components/schemas/element"
                     },
-                    "TestrapportLink": {
-                        "description": "",
-                        "type": "string",
-                        "order": 2,
-                        "title": "TestrapportLink"
-                    },
-                    "ondersteuningIndicatie": {
-                        "description": "",
-                        "type": "boolean",
-                        "order": 3,
-                        "title": "OndersteuningIndicatie"
-                    },
-                    "moduleIsCompliant": {
-                        "description": "",
-                        "type": "string",
+                    "module": {
+                        "description": "De module waarvan de compliance wordt geregistreerd",
+                        "type": "object",
                         "order": 4,
-                        "title": "ModuleIsCompliant"
+                        "title": "Module",
+                        "visible": true,
+                        "facetable": false,
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
+                        "$ref": "#/components/schemas/module"
                     }
                 },
                 "archive": [],
@@ -4892,8 +4723,13 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "ondersteuntStandaardversie",
-                    "objectDescriptionField": "moduleIsCompliant"
+                    "objectNameField": "module",
+                    "objectSummaryField": "standaardversie",
+                    "objectDescriptionField": "module",
+                    "allowFiles": true,
+                    "allowedTags": [
+                        "testraport"
+                    ]
                 }
             },
             "moduleVersie": {
@@ -4938,72 +4774,6 @@
                         "order": 4,
                         "title": "BeschrijvingLang",
                         "maxLength": 5000
-                    },
-                    "mutatiedatum_pakketversie": {
-                        "description": "",
-                        "type": "string",
-                        "order": 5,
-                        "title": "Mutatiedatum pakketversie"
-                    },
-                    "pakketversie_status": {
-                        "description": "",
-                        "type": "string",
-                        "order": 6,
-                        "title": "Pakketversie status"
-                    },
-                    "datumOntwikkeling_org": {
-                        "description": "",
-                        "type": "string",
-                        "order": 7,
-                        "title": "DatumOntwikkeling org"
-                    },
-                    "datumTest_org": {
-                        "description": "",
-                        "type": "string",
-                        "order": 8,
-                        "title": "DatumTest org"
-                    },
-                    "datumDistributie_org": {
-                        "description": "",
-                        "type": "string",
-                        "order": 9,
-                        "title": "DatumDistributie org"
-                    },
-                    "datumEindeOndersteuning_org": {
-                        "description": "",
-                        "type": "string",
-                        "order": 10,
-                        "title": "DatumEindeOndersteuning org"
-                    },
-                    "datumOntwikkeling": {
-                        "description": "",
-                        "type": "string",
-                        "order": 11,
-                        "title": "DatumOntwikkeling"
-                    },
-                    "datumTest": {
-                        "description": "",
-                        "type": "string",
-                        "order": 12,
-                        "title": "DatumTest"
-                    },
-                    "datumDistributie": {
-                        "description": "",
-                        "type": "string",
-                        "order": 13,
-                        "title": "DatumDistributie"
-                    },
-                    "compliancy_indicated": {
-                        "description": "",
-                        "type": "boolean",
-                        "order": 15,
-                        "title": "Compliancy indicated"
-                    },
-                    "testrapport_url": {
-                        "description": "",
-                        "type": "string",
-                        "order": 16,
-                        "title": "Testrapport url"
                     },
                     "status": {
                         "description": "De status van de module",
@@ -5059,7 +4829,7 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "module",
+                    "objectNameField": "versie",
                     "objectSummaryField": "beschrijvingKort",
                     "objectDescriptionField": "beschrijvingLang"
                 }
