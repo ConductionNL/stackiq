@@ -73,6 +73,7 @@ class SettingsController extends Controller
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
+        $this->_appName = $appName;
 
     }//end __construct()
 
@@ -228,6 +229,137 @@ class SettingsController extends Controller
 
     }//end create()
 
+    /**
+     * Get general configuration settings
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse General configuration
+     */
+    public function getGeneralConfig(): JSONResponse
+    {
+        try {
+            $config = [
+                'catalogLocation' => $this->settingsService->getCatalogLocation(),
+            ];
+            
+            return new JSONResponse([
+                'success' => true,
+                'config' => $config
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get general config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get general config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update general configuration settings
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateGeneralConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            
+            if (isset($data['catalogLocation'])) {
+                $this->settingsService->setCatalogLocation($data['catalogLocation']);
+            }
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'General configuration updated successfully',
+                'config' => [
+                    'catalogLocation' => $this->settingsService->getCatalogLocation(),
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update general config', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update general config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get organization synchronization configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Sync configuration
+     */
+    public function getSyncConfig(): JSONResponse
+    {
+        try {
+            $config = [
+                'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+            ];
+            
+            return new JSONResponse([
+                'success' => true,
+                'config' => $config
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get sync config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get sync config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update organization synchronization configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateSyncConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            
+            if (isset($data['syncTimeWindow'])) {
+                $this->config->setValueString($this->_appName, 'syncTimeWindow', (string) $data['syncTimeWindow']);
+            }
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Sync configuration updated successfully',
+                'config' => [
+                    'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update sync config', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update sync config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Load the settings from the publication_register.json file.
@@ -2129,38 +2261,7 @@ class SettingsController extends Controller
         }
     }
 
-    /**
-     * Update catalog location
-     *
-     * @NoCSRFRequired
-     * 
-     * @return JSONResponse Update result
-     */
-    public function updateCatalogLocation(): JSONResponse
-    {
-        try {
-            $data = $this->request->getParams();
-            $catalogLocation = $data['catalogLocation'] ?? '';
-            
-            $this->settingsService->setCatalogLocation($catalogLocation);
-            
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'Catalog location updated successfully',
-                'catalogLocation' => $catalogLocation
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to update catalog location', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update catalog location: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+
 
 }//end class
 

@@ -117,7 +117,14 @@ return [
         ['name' => 'settings#getUserGroupsConfig', 'url' => '/api/user-groups/config', 'verb' => 'GET'],
         ['name' => 'settings#updateUserGroupsConfig', 'url' => '/api/user-groups/config', 'verb' => 'POST'],
         
-        // Catalog location endpoint
-        ['name' => 'settings#updateCatalogLocation', 'url' => '/api/settings/catalog-location', 'verb' => 'POST'],
+        // General Settings focused endpoints
+        ['name' => 'settings#getGeneralConfig', 'url' => '/api/settings/general/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateGeneralConfig', 'url' => '/api/settings/general/config', 'verb' => 'POST'],
+        
+        // Organization Synchronization focused endpoints
+        ['name' => 'settings#getSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'POST'],
+        
+
     ],
 ];

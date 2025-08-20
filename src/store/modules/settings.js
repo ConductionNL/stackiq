@@ -23,6 +23,15 @@ export const useSettingsStore = defineStore('settings', {
 		importing: false,
 		exporting: false,
 		loadingVersionInfo: false,
+		loadingGeneralSettings: false,
+		loadingSyncSettings: false,
+		loadingStatistics: false,
+		loadingOpenRegisterConfig: false,
+		loadingUserGroups: false,
+		loadingEmailConfig: false,
+		loadingArchiMateStatus: false,
+		loadingObjectCounts: false,
+		loadingMainSettings: false,
 
 		// Settings data
 		settings: {
@@ -306,7 +315,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * @return {Promise<void>}
 		 */
 		async loadStatistics() {
-			this.loadingStats = true
+			this.loadingStatistics = true
 
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
@@ -337,7 +346,7 @@ export const useSettingsStore = defineStore('settings', {
 				console.error('Failed to load statistics:', error)
 				this.setError('Failed to load statistics: ' + error.message)
 			} finally {
-				this.loadingStats = false
+				this.loadingStatistics = false
 			}
 		},
 
@@ -350,7 +359,7 @@ export const useSettingsStore = defineStore('settings', {
 				return
 			}
 			this.loading = true
-			this.loadingVersionInfo = true
+			this.loadingMainSettings = true
 			this.clearError()
 
 			try {
@@ -363,13 +372,15 @@ export const useSettingsStore = defineStore('settings', {
 				if (data.success !== false) {
 					// Basic app settings
 					this.settings.availableRegisters = data.availableRegisters || []
+					this.settings.catalogLocation = data.catalogLocation || ''
+					this.settings.syncTimeWindow = data.syncTimeWindow || 10
 					this.versionInfo = data.versionInfo || {}
 					this.isFullyConfigured = data.isFullyConfigured || false
 					this.configurationStatus = data.configurationStatus || {}
 					// Initialize base configuration containers
 					this.initializeConfiguration()
-					// Load focused data from separate endpoints in parallel
-					await Promise.all([
+					// Load focused data from separate endpoints in parallel (don't wait for them)
+					Promise.all([
 						this.loadVersionInfo(),
 						this.loadArchiMateStatus(),
 						this.loadObjectCounts(),
@@ -377,10 +388,15 @@ export const useSettingsStore = defineStore('settings', {
 						this.loadUserGroupsConfig(),
 						this.loadAmefConfig(),
 						this.loadVoorzieningenConfig(),
-					])
-					// After focused loads, map register selections and schema choices from their configs
-					this.populateRegisterSelectionsFromFocused()
-					this.populateSchemaSelectionsFromFocused()
+						this.loadGeneralConfig(),
+						this.loadSyncConfig(),
+					]).then(() => {
+						// After focused loads, map register selections and schema choices from their configs
+						this.populateRegisterSelectionsFromFocused()
+						this.populateSchemaSelectionsFromFocused()
+					}).catch(error => {
+						console.error('Some focused endpoints failed to load:', error)
+					})
 				} else {
 					this.setError(data.error || 'Failed to load settings')
 				}
@@ -388,7 +404,95 @@ export const useSettingsStore = defineStore('settings', {
 				this.setError('Failed to load settings: ' + error.message)
 			} finally {
 				this.loading = false
-				this.loadingVersionInfo = false
+				this.loadingMainSettings = false
+			}
+		},
+
+		/**
+		 * Update catalog location setting
+		 *
+		 * @param {string} catalogLocation - The new catalog location URL
+		 * @return {Promise<void>}
+		 */
+		async updateCatalogLocation(catalogLocation) {
+			try {
+				this.settings.catalogLocation = catalogLocation
+			} catch (error) {
+				console.error('Failed to update catalog location in store:', error)
+				throw error
+			}
+		},
+
+		/**
+		 * Update sync time window setting
+		 *
+		 * @param {number} syncTimeWindow - The new sync time window value
+		 * @return {Promise<void>}
+		 */
+		async updateSyncTimeWindow(syncTimeWindow) {
+			try {
+				this.settings.syncTimeWindow = syncTimeWindow
+			} catch (error) {
+				console.error('Failed to update sync time window in store:', error)
+				throw error
+			}
+		},
+
+		/**
+		 * Load general configuration from focused endpoint
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadGeneralConfig() {
+			this.loadingGeneralSettings = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/general/config', {
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.settings.catalogLocation = data.config.catalogLocation || ''
+				}
+			} catch (error) {
+				console.error('Failed to load general config:', error)
+			} finally {
+				this.loadingGeneralSettings = false
+			}
+		},
+
+		/**
+		 * Load organization synchronization configuration from focused endpoint
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadSyncConfig() {
+			this.loadingSyncSettings = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync/config', {
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.settings.syncTimeWindow = parseInt(data.config.syncTimeWindow) || 10
+				}
+			} catch (error) {
+				console.error('Failed to load sync config:', error)
+			} finally {
+				this.loadingSyncSettings = false
 			}
 		},
 
@@ -396,6 +500,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load version information from focused endpoint
 		 */
 		async loadVersionInfo() {
+			this.loadingVersionInfo = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
 				if (!response.ok) {
@@ -407,6 +512,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingVersionInfo = false
 			}
 		},
 
@@ -414,6 +521,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load ArchiMate status from focused endpoint
 		 */
 		async loadArchiMateStatus() {
+			this.loadingArchiMateStatus = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
 				if (!response.ok) {
@@ -430,6 +538,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingArchiMateStatus = false
 			}
 		},
 
@@ -437,6 +547,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load object counts from focused endpoint
 		 */
 		async loadObjectCounts() {
+			this.loadingObjectCounts = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
 				if (!response.ok) {
@@ -454,6 +565,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingObjectCounts = false
 			}
 		},
 
@@ -461,6 +574,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load email configuration from focused endpoint
 		 */
 		async loadEmailConfig() {
+			this.loadingEmailConfig = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/email/config')
 				if (!response.ok) {
@@ -473,6 +587,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingEmailConfig = false
 			}
 		},
 
@@ -480,6 +596,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load user groups configuration from focused endpoint
 		 */
 		async loadUserGroupsConfig() {
+			this.loadingUserGroups = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
 				if (!response.ok) {
@@ -500,6 +617,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingUserGroups = false
 			}
 		},
 
@@ -530,6 +649,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load AMEF configuration from focused endpoint
 		 */
 		async loadAmefConfig() {
+			this.loadingOpenRegisterConfig = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
 				if (!response.ok) {
@@ -542,6 +662,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingOpenRegisterConfig = false
 			}
 		},
 
@@ -549,6 +671,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load Voorzieningen configuration from focused endpoint
 		 */
 		async loadVoorzieningenConfig() {
+			this.loadingOpenRegisterConfig = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
 				if (!response.ok) {
@@ -561,6 +684,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingOpenRegisterConfig = false
 			}
 		},
 
@@ -1110,6 +1235,40 @@ export const useSettingsStore = defineStore('settings', {
 						}),
 					)
 				}
+
+				// Save general settings (catalog location)
+				if (this.settings.catalogLocation !== undefined) {
+					savePromises.push(
+						fetch('/index.php/apps/softwarecatalog/api/settings/general/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify({
+								catalogLocation: this.settings.catalogLocation,
+							}),
+						}),
+					)
+				}
+
+				// Save organization synchronization settings
+				if (this.settings.syncTimeWindow !== undefined) {
+					savePromises.push(
+						fetch('/index.php/apps/softwarecatalog/api/settings/sync/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify({
+								syncTimeWindow: this.settings.syncTimeWindow,
+							}),
+						}),
+					)
+				}
+
+
 
 				// Execute all save operations
 				if (savePromises.length > 0) {

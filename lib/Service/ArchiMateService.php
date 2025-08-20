@@ -586,6 +586,9 @@ class ArchiMateService
             'model_identifier' => $modelIdentifier
         ]);
 
+        // STEP 0: Extract propertyDefinition map and store in model metadata
+        $propertyDefinitionMap = $this->extractPropertyDefinitionMap($data);
+
         // Initialize normalized structure with model metadata
         $normalized = [
             'model_metadata' => [],
@@ -601,7 +604,6 @@ class ArchiMateService
         if (isset($data['_attributes'])) {
             $normalized['model_metadata'] = $data['_attributes'];
         }
-        
         // Also extract name and documentation from root level
         if (isset($data['name'])) {
             $normalized['model_metadata']['name'] = $data['name'];
@@ -612,7 +614,9 @@ class ArchiMateService
         if (isset($data['properties'])) {
             $normalized['model_metadata']['properties'] = $data['properties'];
         }
-        
+        // Store propertyDefinitionMap in model_metadata
+        $normalized['model_metadata']['propertyDefinitionMap'] = $propertyDefinitionMap;
+
         $this->logger->debug('Extracted model metadata', [
             'metadata_keys' => array_keys($normalized['model_metadata']),
             'has_name' => isset($normalized['model_metadata']['name']),
@@ -620,164 +624,104 @@ class ArchiMateService
         ]);
 
         // STEP 2: Process each section and store complete raw XML data
-        // This ensures round-trip fidelity - we can reconstruct the exact XML later
         $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
-        
-        $this->logger->debug("Available sections in data", [
-            'available_sections' => array_keys($data),
-            'sections_to_process' => $sections
-        ]);
-        
-        // Check for alternative section names that might exist in the XML
         $alternativeNames = [
             'views' => ['views', 'diagrams'],
             'organizations' => ['organizations', 'organisation'],
             'property_definitions' => ['propertyDefinitions', 'property_definitions', 'propertydefinitions']
         ];
-        
-        foreach ($alternativeNames as $section => $alternatives) {
-            foreach ($alternatives as $altName) {
-                if (isset($data[$altName])) {
-                    $this->logger->debug("Found alternative section name", [
-                        'section' => $section,
-                        'alternative_name' => $altName,
-                        'data_type' => gettype($data[$altName]),
-                        'data_keys' => is_array($data[$altName]) ? array_keys($data[$altName]) : []
-                    ]);
-                }
-            }
-        }
-        
         foreach ($sections as $section) {
             $sectionData = null;
             $actualSectionName = null;
-            
-            // First try the direct section name
             if (isset($data[$section])) {
                 $sectionData = $data[$section];
                 $actualSectionName = $section;
             } else {
-                // Try alternative names for this section
                 if (isset($alternativeNames[$section])) {
                     foreach ($alternativeNames[$section] as $altName) {
                         if (isset($data[$altName])) {
                             $sectionData = $data[$altName];
                             $actualSectionName = $altName;
-                            $this->logger->debug("Using alternative section name", [
-                                'section' => $section,
-                                'alternative_name' => $altName
-                            ]);
                             break;
                         }
                     }
                 }
             }
-            
             if ($sectionData !== null) {
-                $this->logger->debug("Processing section: {$section}", [
-                    'actual_section_name' => $actualSectionName,
-                    'section_data_type' => gettype($sectionData),
-                    'section_data_count' => is_array($sectionData) ? count($sectionData) : 'not_array',
-                    'section_data_keys' => is_array($sectionData) ? array_keys($sectionData) : []
-                ]);
-                
-                $normalized[$section] = $this->extractSectionData($sectionData, $section, $modelIdentifier);
-            } else {
-                $this->logger->debug("Section not found: {$section}");
+                $normalized[$section] = $this->extractSectionDataWithProperties($sectionData, $section, $modelIdentifier, $propertyDefinitionMap);
             }
         }
-
         $this->logger->info('Data normalization completed', [
             'model_identifier' => $modelIdentifier,
             'sections_processed' => $sections,
             'round_trip_fidelity' => 'enabled'
         ]);
-
         return $normalized;
     }
 
     /**
-     * Extract data from a specific section with model linking
-     * 
-     * This method processes each section of the ArchiMate XML and extracts:
-     * 1. Individual items (elements, relationships, organizations, views, property_definitions)
-     * 2. Complete raw XML data for each item to ensure round-trip fidelity
-     * 3. Links each item to the parent model via model_identifier
-     * 
+     * Extract data from a specific section, flatten properties, and store xml
+     *
      * @param mixed $sectionData Section data from XML parsing
      * @param string $sectionName Name of the section being processed
      * @param string $modelIdentifier The model identifier for linking items
-     * @return array Extracted section data with complete XML preservation
+     * @param array $propertyDefinitionMap Map of propertyDefinitionRef => property name
+     * @return array Extracted section data with complete XML preservation and flattened properties
      */
-    private function extractSectionData(mixed $sectionData, string $sectionName, string $modelIdentifier): array
+    private function extractSectionDataWithProperties(mixed $sectionData, string $sectionName, string $modelIdentifier, array $propertyDefinitionMap): array
     {
-        $this->logger->debug("Extracting data from section: {$sectionName}", [
-            'section_name' => $sectionName,
-            'model_identifier' => $modelIdentifier,
-            'data_type' => gettype($sectionData)
-        ]);
-
         $extracted = [];
-        
-        // STEP 1: Handle different data structures (array, object, scalar)
         if (is_array($sectionData)) {
-            $this->logger->debug("Section data structure", [
-                'section' => $sectionName,
-                'section_keys' => array_keys($sectionData),
-                'section_data_sample' => array_slice($sectionData, 0, 2, true)
-            ]);
-            
-            // STEP 2: Find the actual items within the section
-            // Could be nested under child tags like <element>, <relationship>, etc.
             $items = $this->findItemsInSection($sectionData, $sectionName);
-            
-            $this->logger->debug("Found items in section", [
-                'section' => $sectionName,
-                'item_count' => count($items)
-            ]);
-            
-            // STEP 3: Process each item and store complete XML data
             foreach ($items as $item) {
                 $identifier = $this->extractIdentifier($item, $sectionName);
                 if ($identifier) {
-                    // Store XML data at root level with metadata fields
-                    // This eliminates double JSON serialization and improves performance
-                    $extracted[$identifier] = array_merge(
-                        $item,                         // XML data at root level
-                        [
-                            'identifier' => $identifier,   // Unique identifier for the item
-                            'section' => $sectionName,     // Section this item belongs to
-                            'model_identifier' => $modelIdentifier, // Link to parent model
-                            'extracted_at' => time()       // Timestamp for tracking
-                        ]
-                    );
+                    // Create a deep copy of the item for XML storage to avoid reference issues
+                    $xmlCopy = json_decode(json_encode($item), true);
                     
-                    $this->logger->debug("Extracted item", [
+                    // Start with base object structure  
+                    $object = [
                         'identifier' => $identifier,
                         'section' => $sectionName,
-                        'model_identifier' => $modelIdentifier
-                    ]);
-                } else {
-                    $this->logger->warning("Could not extract identifier from item", [
-                        'section' => $sectionName,
-                        'item_keys' => is_array($item) ? array_keys($item) : ['not_array']
-                    ]);
+                        'model_identifier' => $modelIdentifier,
+                        'extracted_at' => time(),
+                        'xml' => $xmlCopy // Store the full parsed XML for this object (deep copy)
+                    ];
+                    
+                    // Flatten properties to root fields using the propertyDefinitionMap
+                    if (isset($item['properties']) && isset($item['properties']['property'])) {
+                        $props = $item['properties']['property'];
+                        if (isset($props[0])) {
+                            // Multiple properties
+                            foreach ($props as $prop) {
+                                $defRef = $prop['_attributes']['propertyDefinitionRef'] ?? null;
+                                $value = $prop['value']['_value'] ?? $prop['value'] ?? null;
+                                if ($defRef && isset($propertyDefinitionMap[$defRef])) {
+                                    $name = $propertyDefinitionMap[$defRef];
+                                    $object[$name] = $value;
+                                    // If this property is 'Object ID', set slug for later use
+                                    if (strtolower($name) === 'object id') {
+                                        $object['_slug'] = $value; // Store temporarily, will be moved to @self.slug later
+                                    }
+                                }
+                            }
+                        } elseif (isset($props['_attributes']['propertyDefinitionRef'])) {
+                            // Single property
+                            $defRef = $props['_attributes']['propertyDefinitionRef'];
+                            $value = $props['value']['_value'] ?? $props['value'] ?? null;
+                            if ($defRef && isset($propertyDefinitionMap[$defRef])) {
+                                $name = $propertyDefinitionMap[$defRef];
+                                $object[$name] = $value;
+                                if (strtolower($name) === 'object id') {
+                                    $object['_slug'] = $value; // Store temporarily, will be moved to @self.slug later
+                                }
+                            }
+                        }
+                    }
+                    $extracted[$identifier] = $object;
                 }
             }
-        } else {
-            $this->logger->warning("Section data is not an array", [
-                'section' => $sectionName,
-                'data_type' => gettype($sectionData),
-                'data_value' => $sectionData
-            ]);
         }
-
-        $this->logger->info("Section extraction completed", [
-            'section' => $sectionName,
-            'items_extracted' => count($extracted),
-            'model_identifier' => $modelIdentifier
-        ]);
-
         return $extracted;
     }
 
@@ -1266,6 +1210,28 @@ class ArchiMateService
                 'updated' => date('Y-m-d H:i:s')
             ]
         ];
+        
+        // Set slug: first try from _slug field, then from Object ID property, then extract from identifier
+        $slug = null;
+        
+        // Check if there's a temporary slug to move to @self structure
+        if (isset($data['_slug'])) {
+            $slug = $data['_slug'];
+            unset($data['_slug']); // Remove the temporary field
+        }
+        // Check if we have "Object ID" property directly
+        elseif (isset($data['Object ID'])) {
+            $slug = $data['Object ID'];
+        }
+        // Fallback: extract from identifier (remove "id-" prefix if present)
+        elseif ($identifier && str_starts_with($identifier, 'id-')) {
+            $slug = substr($identifier, 3); // Remove "id-" prefix
+        }
+        
+        // Set the slug if we found one
+        if ($slug) {
+            $object['@self']['slug'] = $slug;
+        }
         
         // Merge XML data directly at root level (data already contains identifier, section, model_identifier)
         return array_merge($object, $data);
@@ -1967,6 +1933,11 @@ class ArchiMateService
             );
             
             foreach ($allProcessedObjects as $object) {
+                // Convert ObjectEntity to array if needed
+                if (is_object($object) && method_exists($object, 'jsonSerialize')) {
+                    $object = $object->jsonSerialize();
+                }
+                
                 $sectionType = $object['section'] ?? 'elements'; // Default to elements if section not found
                 
                 // Map section types to statistics keys
@@ -2049,5 +2020,39 @@ class ArchiMateService
         return $statistics;
     }
 
+    /**
+     * Extract propertyDefinitions from the parsed XML and build a map
+     *
+     * @param array $data Parsed XML data
+     * @return array Map of propertyDefinitionRef => property name
+     */
+    private function extractPropertyDefinitionMap(array $data): array
+    {
+        $map = [];
+        // Find propertyDefinitions section (handle possible alternative names)
+        $propertyDefs = null;
+        if (isset($data['propertyDefinitions'])) {
+            $propertyDefs = $data['propertyDefinitions'];
+        } elseif (isset($data['property_definitions'])) {
+            $propertyDefs = $data['property_definitions'];
+        } elseif (isset($data['propertyDefinitions'])) {
+            $propertyDefs = $data['propertyDefinitions'];
+        }
+        if ($propertyDefs && isset($propertyDefs['propertyDefinition'])) {
+            $defs = $propertyDefs['propertyDefinition'];
+            if (isset($defs[0])) {
+                // Array of propertyDefinition
+                foreach ($defs as $def) {
+                    if (isset($def['_attributes']['identifier']) && isset($def['name'])) {
+                        $map[$def['_attributes']['identifier']] = is_array($def['name']) && isset($def['name']['_value']) ? $def['name']['_value'] : $def['name'];
+                    }
+                }
+            } elseif (isset($defs['_attributes']['identifier']) && isset($defs['name'])) {
+                // Single propertyDefinition
+                $map[$defs['_attributes']['identifier']] = is_array($defs['name']) && isset($defs['name']['_value']) ? $defs['name']['_value'] : $defs['name'];
+            }
+        }
+        return $map;
+    }
 
 }
