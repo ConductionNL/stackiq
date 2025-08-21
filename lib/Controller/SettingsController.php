@@ -1025,8 +1025,15 @@ class SettingsController extends Controller
                 ], 400);
             }
 
-            // Call the ArchiMate service with file data instead of File object
-            $result = $this->archiMateService->importArchiMateFileFromPath($options);
+            // OPTIMIZATION: Use optimized method if available or if explicitly requested
+            $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
+            if ($useOptimized && method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized')) {
+                $this->logger->info('Using OPTIMIZED ArchiMate import method');
+                $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
+            } else {
+                $this->logger->info('Using STANDARD ArchiMate import method');
+                $result = $this->archiMateService->importArchiMateFileFromPath($options);
+            }
 
             return new JSONResponse($result);
 

@@ -913,7 +913,15 @@ class SettingsService
 
                         // Get the current app version dynamically
                         $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
-
+                        
+                        // Log the import attempt for debugging
+                        $this->logger->info('SettingsService: Attempting to import softwarecatalogus_register.json', [
+                            'force' => $force,
+                            'app_id' => \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
+                            'current_version' => $currentAppVersion,
+                            'data_size' => strlen(json_encode($softwareCatalogSettings))
+                        ]);
+                        
                         $importResult = $configurationService->importFromJson(
                             data: $softwareCatalogSettings,
                             owner: null,
@@ -921,14 +929,26 @@ class SettingsService
                             version: $currentAppVersion,
                             force: $force
                         );
-
+                        
+                        $this->logger->info('SettingsService: Import completed successfully', [
+                            'import_result' => $importResult
+                        ]);
+                        
                         $results['softwarecatalog_imported'] = true;
                         $results['import_result'] = $importResult;
                     } catch (\Exception $e) {
                         $results['softwarecatalog_import_error'] = $e->getMessage();
                         $this->logger->error('Failed to import softwarecatalog settings: ' . $e->getMessage(), [
-                            'exception' => $e
+                            'exception' => $e,
+                            'trace' => $e->getTraceAsString(),
+                            'force_flag' => $force,
+                            'app_id' => \OCA\SoftwareCatalog\AppInfo\Application::APP_ID
                         ]);
+                        
+                        // In force mode, we want to surface import errors more prominently
+                        if ($force) {
+                            throw new \RuntimeException('Force import failed: ' . $e->getMessage(), 0, $e);
+                        }
                     }
                 }
             }
