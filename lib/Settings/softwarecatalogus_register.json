@@ -302,7 +302,7 @@
                 "slug": "product",
                 "title": "Product",
                 "description": "Een generieke voorziening (software product)",
-                "version": "0.0.82",
+                "version": "0.0.83",
                 "summary": "",
                 "icon": "ApplicationCog",
                 "required": [
@@ -343,7 +343,7 @@
                         "type": "string",
                         "format": "markdown",
                         "visible": true,
-                        "order": 2,
+                        "order": 5,
                         "minLength": null,
                         "maxLength": 5000,
                         "minimum": null,
@@ -373,7 +373,7 @@
                         "description": "Korte beschrijving van het product, suite of monobrand voor in de weergave in tabellen en zoekresultaten",
                         "facetable": false,
                         "maxLength": 255,
-                        "order": 1
+                        "order": 3
                     },
                     "website": {
                         "description": "Website van het product",
@@ -466,7 +466,7 @@
                         "type": "string",
                         "format": "url",
                         "visible": true,
-                        "order": 0,
+                        "order": 4,
                         "objectConfiguration": {},
                         "fileConfiguration": {},
                         "oneOf": [],
@@ -477,9 +477,9 @@
                         "description": "De aanbieder van het product, suite of monobrand",
                         "type": "object",
                         "visible": true,
-                        "order": 4,
+                        "order": 2,
                         "facetable": false,
-                        "title": "Organization",
+                        "title": "Aanbieder",
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
@@ -497,7 +497,8 @@
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module"
+                            "$ref": "#/components/schemas/module",
+                            "inversedBy": "product"
                         }
                     },
                     "omvat": {
@@ -762,7 +763,8 @@
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module"
+                            "$ref": "#/components/schemas/module",
+                            "inversedBy": "dienst"
                         }
                     },
                     "koppelingen": {
@@ -777,7 +779,8 @@
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/koppeling"
+                            "$ref": "#/components/schemas/koppeling",
+                            "inversedBy": "dienst"
                         }
                     }
                 },
@@ -932,7 +935,8 @@
                         "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module"
+                            "$ref": "#/components/schemas/module",
+                            "inversedBy": "kwetsbaarheid"
                         }
                     }
                 },
@@ -2139,7 +2143,8 @@
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
-                        "$ref": "#/components/schemas/module"
+                        "$ref": "#/components/schemas/module",
+                        "inversedBy": "gebruik"
                     },
                     "moduleVersie": {
                         "description": "De specifieke versie van de module die gebruikt wordt",
@@ -2151,7 +2156,8 @@
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
-                        "$ref": "#/components/schemas/moduleVersie"
+                        "$ref": "#/components/schemas/moduleVersie",
+                        "inversedBy": "gebruik"
                     },
                     "gebruiktVoorReferentiecomponenten": {
                         "description": "GEMMA referentiecomponenten waarvoor dit product wordt gebruikt",
@@ -2609,7 +2615,8 @@
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
-                        "$ref": "#/components/schemas/module"
+                        "$ref": "#/components/schemas/module",
+                        "inversedBy": "koppeling"
                     },
                     "moduleB": {
                         "description": "De module waarnaar de gegevens uitgewisseld worden",
@@ -2619,7 +2626,8 @@
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
-                        "$ref": "#/components/schemas/module"
+                        "$ref": "#/components/schemas/module",
+                        "inversedBy": "koppeling"
                     },
                     "buitengemeentelijkVoorziening": {
                         "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
@@ -2658,7 +2666,8 @@
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
-                        "$ref": "#/components/schemas/module"
+                        "$ref": "#/components/schemas/module",
+                        "inversedBy": "koppeling"
                     },
                     "aanbieder": {
                         "description": "De aanbieder van deze koppeling",
@@ -2671,6 +2680,19 @@
                             "handling": "related-object"
                         },
                         "$ref": "#/components/schemas/organisatie"
+                    },
+                    "dienst": {
+                        "description": "De dienst die deze koppeling gebruikt",
+                        "type": "object",
+                        "visible": true,
+                        "order": 15,
+                        "facetable": false,
+                        "title": "Dienst",
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
+                        "$ref": "#/components/schemas/dienst",
+                        "inversedBy": "koppelingen"
                     }
                 },
                 "archive": [],
@@ -2767,7 +2789,8 @@
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module"
+                            "$ref": "#/components/schemas/module",
+                            "inversedBy": "beoordeeling"
                         }
                     },
                     "diensten": {
@@ -4617,7 +4640,8 @@
                 "summary": "",
                 "icon": null,
                 "required": [
-                    "naam"
+                    "naam",
+                    "product"
                 ],
                 "properties": {
                     "naam": {
@@ -4738,6 +4762,122 @@
                         "facetable": false,
                         "title": "Logo",
                         "maxLength": 500
+                    },
+                    "product": {
+                        "description": "Het product waarvan deze module onderdeel is",
+                        "type": "object",
+                        "visible": true,
+                        "order": 19,
+                        "facetable": false,
+                        "title": "Product",
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
+                        "$ref": "#/components/schemas/product",
+                        "inversedBy": "modules"
+                    },
+                    "dienst": {
+                        "description": "De dienst waarvan deze module onderdeel is",
+                        "type": "object",
+                        "visible": true,
+                        "order": 20,
+                        "facetable": false,
+                        "title": "Dienst",
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
+                        "$ref": "#/components/schemas/dienst",
+                        "inversedBy": "modules"
+                    },
+                    "koppeling": {
+                        "description": "De koppelingen waarbij deze module betrokken is",
+                        "type": "array",
+                        "visible": true,
+                        "order": 21,
+                        "facetable": false,
+                        "title": "Koppelingen",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/koppeling"
+                        }
+                    },
+                    "compliancy": {
+                        "description": "De compliance registraties voor deze module",
+                        "type": "array",
+                        "visible": true,
+                        "order": 22,
+                        "facetable": false,
+                        "title": "Compliance",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/compliancy"
+                        }
+                    },
+                    "moduleVersie": {
+                        "description": "De versies van deze module",
+                        "type": "array",
+                        "visible": true,
+                        "order": 23,
+                        "facetable": false,
+                        "title": "Module Versies",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/moduleVersie"
+                        }
+                    },
+                    "gebruik": {
+                        "description": "Het gebruik van deze module",
+                        "type": "array",
+                        "visible": true,
+                        "order": 24,
+                        "facetable": false,
+                        "title": "Gebruik",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/gebruik"
+                        }
+                    },
+                    "beoordeeling": {
+                        "description": "De beoordelingen van deze module",
+                        "type": "array",
+                        "visible": true,
+                        "order": 25,
+                        "facetable": false,
+                        "title": "Beoordelingen",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/beoordeeling"
+                        }
+                    },
+                    "kwetsbaarheid": {
+                        "description": "De kwetsbaarheden die deze module treffen",
+                        "type": "array",
+                        "visible": true,
+                        "order": 26,
+                        "facetable": false,
+                        "title": "Kwetsbaarheden",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/kwetsbaarheid"
+                        }
                     }
                 },
                 "archive": [],
@@ -4801,7 +4941,8 @@
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
-                        "$ref": "#/components/schemas/module"
+                        "$ref": "#/components/schemas/module",
+                        "inversedBy": "compliancy"
                     },
                     "bewijs": {
                         "description": "Bewijsstuk voor de compliance (bijvoorbeeld testrapport of certificaat)",
@@ -4858,7 +4999,8 @@
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
-                        "$ref": "#/components/schemas/module"
+                        "$ref": "#/components/schemas/module",
+                        "inversedBy": "moduleVersie"
                     },
                     "versie": {
                         "description": "Versienummer in semantic versioning format (MAJOR.MINOR.PATCH)",
@@ -4921,6 +5063,21 @@
                         "format": "date",
                         "order": 17,
                         "title": "Datum Teruggetrokken"
+                    },
+                    "gebruik": {
+                        "description": "Het gebruik van deze module versie",
+                        "type": "array",
+                        "visible": true,
+                        "order": 18,
+                        "facetable": false,
+                        "title": "Gebruik",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/gebruik"
+                        }
                     }
                 },
                 "archive": [],

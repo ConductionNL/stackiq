@@ -597,9 +597,25 @@ XML;
         $validSections = ['elements', 'relationships', 'views', 'organizations', 'property_definitions'];
         $sectionCounts = [];
         
+        // Map singular section names to plural for XML generation
+        $sectionMapping = [
+            'element' => 'elements',
+            'relationship' => 'relationships',
+            'view' => 'views',
+            'organization' => 'organizations',
+            'property_definition' => 'property_definitions'
+        ];
+        
         foreach ($validSections as $sectionName) {
-            if (isset($objectsBySection[$sectionName]) && !empty($objectsBySection[$sectionName])) {
-                $sectionObjects = $objectsBySection[$sectionName];
+            // Check both singular and plural section names
+            $sectionObjects = [];
+            foreach ($objectsBySection as $dbSection => $objects) {
+                if (isset($sectionMapping[$dbSection]) && $sectionMapping[$dbSection] === $sectionName) {
+                    $sectionObjects = array_merge($sectionObjects, $objects);
+                }
+            }
+            
+            if (!empty($sectionObjects)) {
                 $sectionCounts[$sectionName] = count($sectionObjects);
                 
                 // Create section folder
@@ -663,6 +679,7 @@ XML;
             'property_definitions' => 'propertyDefinition',
             'views' => 'view',
             'relationships' => 'relationship',
+            'elements' => 'element',
             default => 'element'
         };
         $objectNode = $folder->addChild($tagName);
