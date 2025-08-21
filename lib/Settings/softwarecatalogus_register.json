@@ -178,8 +178,30 @@
                 "version": "0.0.2",
                 "summary": "",
                 "icon": null,
-                "required": [],
-                "properties": [],
+                "required": [
+                    "naam"
+                ],
+                "properties": {
+                    "naam": {
+                        "description": "Naam van de sector",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 200
+                    },
+                    "beschrijving": {
+                        "description": "Beschrijving van de sector",
+                        "type": "string",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Beschrijving",
+                        "maxLength": 1000
+                    }
+                },
                 "archive": [],
                 "source": "",
                 "hardValidation": false,
