@@ -37,7 +37,7 @@
                 "slug": "vng-gemma",
                 "title": "AMEF",
                 "version": "0.0.2",
-                "description": "",
+                "description": "Register voor AMEF (ArchiMate Model Exchange Format) modellen en architectuur elementen",
                 "schemas": [
                     "element",
                     "model",
@@ -63,7 +63,7 @@
         "endpoints": {
             "register": {
               "name": "Register",
-              "description": "",
+              "description": "Endpoint voor het registreren van organisaties in de softwarecatalogus",
               "reference": "",
               "version": "0.0.2",
               "endpoint": "register",
@@ -88,14 +88,15 @@
 
         },
         "schemas": {
-            "property": {
+            // VOORZIENINGEN REGISTER SCHEMA'S
+            "sector": {
                 "uri": null,
                 "slug": "property",
                 "title": "Eigenschap",
                 "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
                 "version": "0.0.3",
                 "summary": "",
-                "icon": null,
+                "icon": "Tag",
                 "required": [
                     "name",
                     "type"
@@ -204,7 +205,7 @@
                 "description": "Schema voor sectoren binnen de softwarecatalogus",
                 "version": "0.0.4",
                 "summary": "",
-                "icon": null,
+                "icon": "Domain",
                 "required": [
                     "naam"
                 ],
@@ -365,11 +366,11 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Beschrijving lang"
+                        "title": "Beschrijving"
                     },
                     "beschrijvingKort": {
                         "type": "string",
-                        "title": "Beschrijving kort",
+                        "title": "Samenvatting",
                         "description": "Korte beschrijving van het product, suite of monobrand voor in de weergave in tabellen en zoekresultaten",
                         "facetable": false,
                         "maxLength": 255,
@@ -616,7 +617,7 @@
                 "description": "Een specifiek aanbod van een dienst op een of meerdere producten door een leverancier",
                 "version": "0.0.39",
                 "summary": "",
-                "icon": null,
+                "icon": "Handshake",
                 "required": [
                     "naam",
                     "producten",
@@ -655,7 +656,7 @@
                     "beschrijvingKort": {
                         "type": "string",
                         "description": "Korte beschrijving van de dienst",
-                        "title": "Beschrijving kort",
+                        "title": "Samenvatting",
                         "facetable": false,
                         "maxLength": 255,
                         "order": 5
@@ -667,7 +668,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Beschrijving lang",
+                        "title": "Beschrijving",
                         "maxLength": 5000
                     },
                     "website": {
@@ -868,7 +869,7 @@
                 "description": "Schema voor kwetsbaarheden",
                 "version": "1.0.13",
                 "summary": "",
-                "icon": null,
+                "icon": "ShieldAlert",
                 "required": [
                     "naam",
                     "beschrijvingKort",
@@ -1885,7 +1886,7 @@
                 "description": "Het gebruik van producten, modules, diensten en koppelingen door afnemers",
                 "version": "1.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Usage",
                 "required": [
                     "afnemer",
                     "product",
@@ -2170,9 +2171,7 @@
                             "type": "object",
                             "objectConfiguration": {
                                 "handling": "related-object",
-                                "query": {
-                                    "gemmaType": "referentiecomponent"
-                                }
+                                "queryParams": "gemmaType=referentiecomponent"
                             },
                             "$ref": "#/components/schemas/element"
                         }
@@ -2519,23 +2518,23 @@
                 "description": "Schema voor koppelingen tussen modules en systemen. Er moet óf ModuleB óf buitengemeentelijkVoorziening gevuld zijn.",
                 "version": "0.0.3",
                 "summary": "",
-                "icon": null,
+                "icon": "Link",
                 "required": [],
                 "properties": {
                     "naam": {
-                        "description": "",
+                        "description": "Naam van de koppeling",
                         "type": "string",
                         "order": 1,
                         "title": "Naam"
                     },
                     "beschrijvingKort": {
-                        "description": "",
+                        "description": "Korte beschrijving van de koppeling",
                         "type": "string",
                         "order": 5,
                         "title": "BeschrijvingKort"
                     },
                     "beschrijvingLang": {
-                        "description": "",
+                        "description": "Uitgebreide beschrijving van de koppeling",
                         "type": "string",
                         "format": "markdown",
                         "order": 6,
@@ -2636,9 +2635,7 @@
                         "title": "Buitengemeentelijke Voorziening",
                         "objectConfiguration": {
                             "handling": "related-object",
-                            "query": {
-                                "gemmaType": "Buitengemeentenlijke voorziening"
-                            }
+                            "queryParams": "gemmaType=Buitengemeentenlijke voorziening"
                         },
                         "$ref": "#/components/schemas/element"
                     },
@@ -2651,9 +2648,7 @@
                             "type": "object",
                             "objectConfiguration": {
                                 "handling": "related-object",
-                                "query": {
-                                    "gemmaType": "standaardversie"
-                                }
+                                "queryParams": "gemmaType=standaardversie"
                             },
                             "$ref": "#/components/schemas/element"
                         }
@@ -2716,10 +2711,10 @@
                 "uri": null,
                 "slug": "beoordeeling",
                 "title": "Beoordeeling",
-                "description": "",
+                "description": "Schema voor beoordelingen en waarderingen van producten, modules en diensten",
                 "version": "0.0.11",
                 "summary": "",
-                "icon": null,
+                "icon": "Star",
                 "required": [
                     "naam",
                     "waardering",
@@ -2858,10 +2853,10 @@
             "element": {
                 "slug": "element",
                 "title": "Element",
-                "description": "AMEF Element",
+                "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Cube",
                 "required": [
                     "identifier",
                     "type",
@@ -3057,10 +3052,10 @@
             "view": {
                 "slug": "view",
                 "title": "View",
-                "description": "AMEF View",
+                "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Eye",
                 "required": [
                     "identifier",
                     "type",
@@ -3339,10 +3334,10 @@
             "model": {
                 "slug": "model",
                 "title": "Model",
-                "description": "This object represents an entire AMEF collection",
+                "description": "AMEF Model - Volledig ArchiMate model met alle elementen, relaties en views",
                 "version": "0.0.38",
                 "summary": "",
-                "icon": null,
+                "icon": "Database",
                 "required": [
                     "xmlns",
                     "xsi",
@@ -3762,10 +3757,10 @@
             "organization": {
                 "slug": "organization",
                 "title": "Organization",
-                "description": "AMEF Organization",
+                "description": "AMEF Organization - Organisatie structuren uit het ArchiMate model",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Building",
                 "required": [],
                 "properties": {
                     "identifierRef": {
@@ -3933,10 +3928,10 @@
             "property-definition": {
                 "slug": "property-definition",
                 "title": "Property Definition",
-                "description": "AMEF Property Definition",
+                "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Settings",
                 "required": [
                     "identifier",
                     "type"
@@ -4055,10 +4050,10 @@
             "relation": {
                 "slug": "relation",
                 "title": "Relation",
-                "description": "AMEF Relation",
+                "description": "AMEF Relation - Relaties tussen architectuur elementen uit het ArchiMate model",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "ArrowRight",
                 "required": [
                     "identifier",
                     "source",
@@ -4352,10 +4347,10 @@
             "extendview": {
                 "slug": "extendview",
                 "title": "Extended View",
-                "description": "AMEF  view is pre extened copy of a view for performance reasons",
+                "description": "AMEF Extended View - Vooraf uitgebreide view kopie voor prestatie optimalisatie",
                 "version": "0.0.4",
                 "summary": "",
-                "icon": null,
+                "icon": "EyePlus",
                 "required": [
                     "identifier",
                     "type",
@@ -4638,7 +4633,7 @@
                 "description": "Een module is een onderdeel van een product (voorziening)",
                 "version": "0.0.3",
                 "summary": "",
-                "icon": null,
+                "icon": "Package",
                 "required": [
                     "naam",
                     "product"
@@ -4656,7 +4651,7 @@
                     "beschrijvingKort": {
                         "type": "string",
                         "description": "Korte beschrijving van de module",
-                        "title": "Beschrijving kort",
+                        "title": "Samenvatting",
                         "order": 2,
                         "facetable": false,
                         "maxLength": 255
@@ -4664,7 +4659,7 @@
                     "beschrijvingLang": {
                         "type": "string",
                         "description": "Uitgebreide beschrijving van de module",
-                        "title": "Beschrijving lang",
+                        "title": "Beschrijving",
                         "order": 3,
                         "facetable": false,
                         "maxLength": 5000
@@ -4734,9 +4729,7 @@
                             "type": "object",
                         "objectConfiguration": {
                                 "handling": "related-object",
-                                "query": {
-                                    "gemmaType": "referentiecomponent"
-                                }
+                                "queryParams": "gemmaType=referentiecomponent"
                             },
                             "$ref": "#/components/schemas/element"
                         }
@@ -4925,9 +4918,7 @@
                         "facetable": false,
                         "objectConfiguration": {
                             "handling": "related-object",
-                            "query": {
-                                "gemmaType": "standaardversie"
-                            }
+                            "queryParams": "gemmaType=standaardversie"
                         },
                         "$ref": "#/components/schemas/element"
                     },
@@ -5011,14 +5002,14 @@
                         "maxLength": 50
                     },
                     "beschrijvingKort": {
-                        "description": "",
+                        "description": "Korte beschrijving van de module versie",
                         "type": "string",
                         "order": 3,
                         "title": "BeschrijvingKort",
                         "maxLength": 255
                     },
                     "beschrijvingLang": {
-                        "description": "",
+                        "description": "Uitgebreide beschrijving van de module versie",
                         "type": "string",
                         "order": 4,
                         "title": "BeschrijvingLang",
