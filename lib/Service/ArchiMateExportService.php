@@ -244,12 +244,14 @@ XML;
      */
     public function addViewsToXml(\SimpleXMLElement $xml, array $views): void
     {
-        echo "ADDVIEWSTOXML CALLED WITH " . count($views) . " VIEWS\n";
-        var_dump(array_keys($views));
+        $this->logger->debug('Adding views to XML', [
+            'view_count' => count($views),
+            'view_keys' => array_keys($views)
+        ]);
         
         if (empty($views)) {
-            echo "NO VIEWS TO PROCESS\n";
-            die();
+            $this->logger->warning('No views to process');
+            return;
         }
 
         $folder = $xml->addChild('folder');
@@ -281,25 +283,25 @@ XML;
         $viewData = $this->extractViewData($view);
         
         if (!$viewData) {
-            echo "NO VALID VIEW DATA FOUND\n";
-            var_dump(['view_keys' => array_keys($view), 'view' => $view]);
-            die();
+            $this->logger->warning('No valid view data found', [
+                'view_keys' => array_keys($view),
+                'view_structure' => $view
+            ]);
+            return;
         }
 
         // DEBUG: Check if this is our target view with nodes
         if (isset($viewData['_identifier']) && $viewData['_identifier'] === 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af') {
-            echo "FOUND TARGET VIEW WITH ID: id-1c197dc3-71e5-40dc-8f5d-a96e983b41af\n";
-            echo "Raw view input:\n";
-            var_dump($view);
-            echo "\nExtracted viewData:\n";
-            var_dump($viewData);
-            echo "\nNode data check:\n";
-            var_dump([
-                'has_node' => isset($viewData['node']),
-                'node_count' => is_array($viewData['node'] ?? null) ? count($viewData['node']) : 0,
-                'node_sample' => isset($viewData['node'][0]) ? $viewData['node'][0] : 'NO FIRST NODE'
+            $this->logger->debug('Found target view with specific ID', [
+                'identifier' => $viewData['_identifier'],
+                'raw_view' => $view,
+                'extracted_view_data' => $viewData,
+                'node_analysis' => [
+                    'has_node' => isset($viewData['node']),
+                    'node_count' => is_array($viewData['node'] ?? null) ? count($viewData['node']) : 0,
+                    'node_sample' => isset($viewData['node'][0]) ? $viewData['node'][0] : 'NO FIRST NODE'
+                ]
             ]);
-            die();
         }
 
         $this->logger->debug('Processing view with custom logic', [
