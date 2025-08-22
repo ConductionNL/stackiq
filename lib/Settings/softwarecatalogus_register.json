@@ -37,7 +37,7 @@
                 "slug": "vng-gemma",
                 "title": "AMEF",
                 "version": "0.0.2",
-                "description": "",
+                "description": "Register voor AMEF (ArchiMate Model Exchange Format) modellen en architectuur elementen",
                 "schemas": [
                     "element",
                     "model",
@@ -63,7 +63,7 @@
         "endpoints": {
             "register": {
               "name": "Register",
-              "description": "",
+              "description": "Endpoint voor het registreren van organisaties in de softwarecatalogus",
               "reference": "",
               "version": "0.0.2",
               "endpoint": "register",
@@ -95,7 +95,7 @@
                 "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
                 "version": "0.0.3",
                 "summary": "",
-                "icon": null,
+                "icon": "Tag",
                 "required": [
                     "name",
                     "type"
@@ -204,7 +204,7 @@
                 "description": "Schema voor sectoren binnen de softwarecatalogus",
                 "version": "0.0.4",
                 "summary": "",
-                "icon": null,
+                "icon": "Domain",
                 "required": [
                     "naam"
                 ],
@@ -301,7 +301,7 @@
                 "uri": null,
                 "slug": "product",
                 "title": "Product",
-                "description": "Een generieke voorziening (software product)",
+                "description": "Een product, suite of monobrand",
                 "version": "0.0.83",
                 "summary": "",
                 "icon": "ApplicationCog",
@@ -365,11 +365,11 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Beschrijving lang"
+                        "title": "Beschrijving"
                     },
                     "beschrijvingKort": {
                         "type": "string",
-                        "title": "Beschrijving kort",
+                        "title": "Samenvatting",
                         "description": "Korte beschrijving van het product, suite of monobrand voor in de weergave in tabellen en zoekresultaten",
                         "facetable": false,
                         "maxLength": 255,
@@ -616,7 +616,7 @@
                 "description": "Een specifiek aanbod van een dienst op een of meerdere producten door een leverancier",
                 "version": "0.0.39",
                 "summary": "",
-                "icon": null,
+                "icon": "Handshake",
                 "required": [
                     "naam",
                     "producten",
@@ -655,7 +655,7 @@
                     "beschrijvingKort": {
                         "type": "string",
                         "description": "Korte beschrijving van de dienst",
-                        "title": "Beschrijving kort",
+                        "title": "Samenvatting",
                         "facetable": false,
                         "maxLength": 255,
                         "order": 5
@@ -667,7 +667,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Beschrijving lang",
+                        "title": "Beschrijving",
                         "maxLength": 5000
                     },
                     "website": {
@@ -868,7 +868,7 @@
                 "description": "Schema voor kwetsbaarheden",
                 "version": "1.0.13",
                 "summary": "",
-                "icon": null,
+                "icon": "ShieldAlert",
                 "required": [
                     "naam",
                     "beschrijvingKort",
@@ -891,7 +891,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Korte Beschrijving"
+                        "title": "Samenvatting"
                     },
                     "beschrijvingLang": {
                         "description": "Uitgebreide beschrijving van de kwetsbaarheid",
@@ -900,7 +900,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Uitgebreide Beschrijving",
+                        "title": "Beschrijving",
                         "maxLength": 5000
                     },
                     "cveCode": {
@@ -1088,7 +1088,7 @@
                     },
                     "username": {
                         "description": "Gebruikersnaam van de contactpersoon",
-                        "title": "Username",
+                        "title": "Gebruikersnaam",
                         "type": "string",
                         "visible": true,
                         "facetable": false,
@@ -1131,7 +1131,7 @@
                     },
                     "notificaties": {
                         "type": "array",
-                        "title": "Notifications",
+                        "title": "Notificaties",
                         "description": "Lijst van notificaties voor deze contactpersoon",
                         "facetable": false,
                         "items": {
@@ -1141,7 +1141,7 @@
                     },
                     "rollen": {
                         "description": "De rollen die deze contactpersoon heeft",
-                        "title": "Roles",
+                        "title": "Rollen",
                         "type": "array",
                         "visible": true,
                         "facetable": false,
@@ -1324,63 +1324,26 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Name"
+                        "title": "Naam"
                     },
                     "beschrijvingKort": {
                         "description": "Beschrijving van de leverancier",
                         "type": "string",
                         "visible": true,
                         "order": 1,
-                        "minLength": null,
-                        "maxLength": 255,
-                        "minimum": null,
-                        "maximum": null,
-                        "multipleOf": null,
-                        "minItems": null,
-                        "maxItems": null,
-                        "inversedBy": "",
-                        "$ref": "",
-                        "objectConfiguration": {
-                            "handling": "nested-object",
-                            "schema": ""
-                        },
-                        "fileConfiguration": {
-                            "handling": "ignore",
-                            "allowedMimeTypes": [],
-                            "location": "",
-                            "maxSize": 0
-                        },
-                        "oneOf": [],
                         "facetable": false,
-                        "title": "Short Description"
+                        "title": "Samenvatting",
+                        "maxLength": 255
                     },
                     "beschrijvingLang": {
                         "description": "Overige informatie",
                         "type": "string",
                         "visible": true,
                         "order": 2,
-                        "minLength": null,
-                        "maxLength": 2000,
-                        "minimum": null,
-                        "maximum": null,
-                        "multipleOf": null,
-                        "minItems": null,
-                        "maxItems": null,
-                        "inversedBy": "",
-                        "$ref": "",
-                        "objectConfiguration": {
-                            "handling": "nested-object",
-                            "schema": ""
-                        },
-                        "fileConfiguration": {
-                            "handling": "ignore",
-                            "allowedMimeTypes": [],
-                            "location": "",
-                            "maxSize": 0
-                        },
-                        "oneOf": [],
                         "facetable": false,
-                        "title": "Long Description"
+                        "title": "Beschrijving",
+                        "format": "markdown",
+                        "maxLength": 5000
                     },
                     "logo": {
                         "description": "Logo van de organisatie",
@@ -1436,7 +1399,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "CBS Number",
+                        "title": "CBS Nummer",
                         "order": 3
                     },
                     "kvkNummer": {
@@ -1465,7 +1428,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Chamber of Commerce Number"
+                        "title": "KvK Nummer"
                     },
                     "contactpersonen": {
                         "description": "De contactpersoon van de organisatie",
@@ -1502,7 +1465,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Contact Persons"
+                        "title": "Contactpersonen"
                     },
                     "e-mailadres": {
                         "description": "Het e-mailadres van de contactpersoon of de organisatie",
@@ -1530,7 +1493,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Email Address"
+                        "title": "E-mailadres"
                     },
                     "website": {
                         "description": "URL van de website van de organisatie",
@@ -1624,7 +1587,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Participations"
+                        "title": "Deelnames"
                     },
                     "deelnemers": {
                         "description": "Deelnemers in deze organisatie",
@@ -1661,13 +1624,13 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Participants",
+                        "title": "Deelnemers",
                         "writeBack": true,
                         "removeAfterWriteBack": false
                     },
                     "type": {
                         "description": "Type van de organisatie (Gemeente, Leverancier, Samenwerking) ",
-                        "title": "Organization Type",
+                        "title": "Organisatie Type",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -1885,7 +1848,7 @@
                 "description": "Het gebruik van producten, modules, diensten en koppelingen door afnemers",
                 "version": "1.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Usage",
                 "required": [
                     "afnemer",
                     "product",
@@ -1949,7 +1912,7 @@
                         "visible": true,
                         "order": 14,
                         "facetable": false,
-                        "title": "Acquisition Start Date"
+                        "title": "Startdatum Verwerving"
                     },
                     "startDatumGepland": {
                         "description": "De start datum voor het \"Gepland\" status",
@@ -1978,7 +1941,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Planned Start Date"
+                        "title": "Geplande Startdatum"
                     },
                     "startDatumInProductie": {
                         "description": "De start datum voor het \"actief\" status",
@@ -2007,7 +1970,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Active Start Date"
+                        "title": "Startdatum In Productie"
                     },
                     "startDatumUitTeFaseren": {
                         "description": "De start datum voor het \"Beëindigd\" status",
@@ -2036,7 +1999,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Terminated Start Date"
+                        "title": "Startdatum Uit Te Faseren"
                     },
                     "startDatumUitGefaseerd": {
                         "description": "De start datum voor het \"Uit gefaseerd\" status",
@@ -2065,7 +2028,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Terminated Start Date"
+                        "title": "Startdatum Uit Gefaseerd"
                     },
                     "status": {
                         "description": "De status van het gebruik",
@@ -2131,7 +2094,7 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Internal Note"
+                        "title": "Interne Aantekening"
                     },
                     "module": {
                         "description": "De specifieke module die gebruikt wordt",
@@ -2170,9 +2133,7 @@
                             "type": "object",
                             "objectConfiguration": {
                                 "handling": "related-object",
-                                "query": {
-                                    "gemmaType": "referentiecomponent"
-                                }
+                                "queryParams": "gemmaType=referentiecomponent"
                             },
                             "$ref": "#/components/schemas/element"
                         }
@@ -2304,7 +2265,7 @@
                         "type": "object",
                         "facetable": false,
                         "required": true,
-                        "title": "Service",
+                        "title": "Dienst",
                         "order": 12,
                         "objectConfiguration": {
                             "handling": "related-object"
@@ -2329,7 +2290,7 @@
                         "description": "De startdatum van het contract",
                         "facetable": false,
                         "required": true,
-                        "title": "Start Date",
+                        "title": "Startdatum",
                         "order": 10
                     },
                     "eindDatum": {
@@ -2337,7 +2298,7 @@
                         "format": "date",
                         "description": "De einddatum van het contract (indien van toepassing)",
                         "facetable": false,
-                        "title": "End Date",
+                        "title": "Einddatum",
                         "order": 6
                     },
                     "contractNummer": {
@@ -2345,7 +2306,7 @@
                         "description": "Het referentienummer van het contract",
                         "facetable": false,
                         "required": true,
-                        "title": "Contract Number",
+                        "title": "Contract Nummer",
                         "order": 3
                     },
                     "contractType": {
@@ -2365,7 +2326,7 @@
                         "type": "number",
                         "description": "De kosten verbonden aan het contract",
                         "facetable": false,
-                        "title": "Costs",
+                        "title": "Kosten",
                         "order": 7
                     },
                     "kostenPeriode": {
@@ -2377,7 +2338,7 @@
                         ],
                         "description": "De periode waarop de kosten betrekking hebben",
                         "facetable": false,
-                        "title": "Cost Period",
+                        "title": "Kosten Periode",
                         "order": 8
                     },
                     "contactpersoonAanbieder": {
@@ -2395,7 +2356,7 @@
                         "objectConfiguration": {
                             "handling": "nested-object"
                         },
-                        "title": "Provider Contact Person",
+                        "title": "Contactpersoon Aanbieder",
                         "order": 1
                     },
                     "contactpersoonGebruiker": {
@@ -2413,14 +2374,14 @@
                         "objectConfiguration": {
                             "handling": "nested-object"
                         },
-                        "title": "User Contact Person",
+                        "title": "Contactpersoon Gebruiker",
                         "order": 2
                     },
                     "documentReferentie": {
                         "type": "string",
                         "description": "Referentie naar het contractdocument",
                         "facetable": false,
-                        "title": "Document Reference",
+                        "title": "Document Referentie",
                         "order": 5
                     },
                     "status": {
@@ -2519,27 +2480,27 @@
                 "description": "Schema voor koppelingen tussen modules en systemen. Er moet óf ModuleB óf buitengemeentelijkVoorziening gevuld zijn.",
                 "version": "0.0.3",
                 "summary": "",
-                "icon": null,
+                "icon": "Link",
                 "required": [],
                 "properties": {
                     "naam": {
-                        "description": "",
+                        "description": "Naam van de koppeling",
                         "type": "string",
                         "order": 1,
                         "title": "Naam"
                     },
                     "beschrijvingKort": {
-                        "description": "",
+                        "description": "Korte beschrijving van de koppeling",
                         "type": "string",
                         "order": 5,
-                        "title": "BeschrijvingKort"
+                        "title": "Samenvatting"
                     },
                     "beschrijvingLang": {
-                        "description": "",
+                        "description": "Uitgebreide beschrijving van de koppeling",
                         "type": "string",
                         "format": "markdown",
                         "order": 6,
-                        "title": "BeschrijvingLang"
+                        "title": "Beschrijving"
                     },
                     "type": {
                         "description": "Het type koppeling, bijvoorbeeld 'bestandsoverdracht', 'digikoppeling', of 'api'.",
@@ -2636,9 +2597,7 @@
                         "title": "Buitengemeentelijke Voorziening",
                         "objectConfiguration": {
                             "handling": "related-object",
-                            "query": {
-                                "gemmaType": "Buitengemeentenlijke voorziening"
-                            }
+                            "queryParams": "gemmaType=Buitengemeentenlijke voorziening"
                         },
                         "$ref": "#/components/schemas/element"
                     },
@@ -2651,9 +2610,7 @@
                             "type": "object",
                             "objectConfiguration": {
                                 "handling": "related-object",
-                                "query": {
-                                    "gemmaType": "standaardversie"
-                                }
+                                "queryParams": "gemmaType=standaardversie"
                             },
                             "$ref": "#/components/schemas/element"
                         }
@@ -2716,10 +2673,10 @@
                 "uri": null,
                 "slug": "beoordeeling",
                 "title": "Beoordeeling",
-                "description": "",
+                "description": "Schema voor beoordelingen en waarderingen van producten, modules en diensten",
                 "version": "0.0.11",
                 "summary": "",
-                "icon": null,
+                "icon": "Star",
                 "required": [
                     "naam",
                     "waardering",
@@ -2741,7 +2698,7 @@
                         "maxLength": 255,
                         "visible": true,
                         "facetable": false,
-                        "title": "Korte Beschrijving",
+                        "title": "Samenvatting",
                         "order": 2
                     },
                     "beschrijvingLang": {
@@ -2750,7 +2707,7 @@
                         "format": "markdown",
                         "visible": true,
                         "facetable": false,
-                        "title": "Uitgebreide Beschrijving",
+                        "title": "Beschrijving",
                         "order": 3
                     },
                     "waardering": {
@@ -2858,10 +2815,10 @@
             "element": {
                 "slug": "element",
                 "title": "Element",
-                "description": "AMEF Element",
+                "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Cube",
                 "required": [
                     "identifier",
                     "type",
@@ -3057,10 +3014,10 @@
             "view": {
                 "slug": "view",
                 "title": "View",
-                "description": "AMEF View",
+                "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Eye",
                 "required": [
                     "identifier",
                     "type",
@@ -3339,10 +3296,10 @@
             "model": {
                 "slug": "model",
                 "title": "Model",
-                "description": "This object represents an entire AMEF collection",
+                "description": "AMEF Model - Volledig ArchiMate model met alle elementen, relaties en views",
                 "version": "0.0.38",
                 "summary": "",
-                "icon": null,
+                "icon": "Database",
                 "required": [
                     "xmlns",
                     "xsi",
@@ -3762,10 +3719,10 @@
             "organization": {
                 "slug": "organization",
                 "title": "Organization",
-                "description": "AMEF Organization",
+                "description": "AMEF Organization - Organisatie structuren uit het ArchiMate model",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Building",
                 "required": [],
                 "properties": {
                     "identifierRef": {
@@ -3933,10 +3890,10 @@
             "property-definition": {
                 "slug": "property-definition",
                 "title": "Property Definition",
-                "description": "AMEF Property Definition",
+                "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "Settings",
                 "required": [
                     "identifier",
                     "type"
@@ -4055,10 +4012,10 @@
             "relation": {
                 "slug": "relation",
                 "title": "Relation",
-                "description": "AMEF Relation",
+                "description": "AMEF Relation - Relaties tussen architectuur elementen uit het ArchiMate model",
                 "version": "0.0.2",
                 "summary": "",
-                "icon": null,
+                "icon": "ArrowRight",
                 "required": [
                     "identifier",
                     "source",
@@ -4352,10 +4309,10 @@
             "extendview": {
                 "slug": "extendview",
                 "title": "Extended View",
-                "description": "AMEF  view is pre extened copy of a view for performance reasons",
+                "description": "AMEF Extended View - Vooraf uitgebreide view kopie voor prestatie optimalisatie",
                 "version": "0.0.4",
                 "summary": "",
-                "icon": null,
+                "icon": "EyePlus",
                 "required": [
                     "identifier",
                     "type",
@@ -4638,7 +4595,7 @@
                 "description": "Een module is een onderdeel van een product (voorziening)",
                 "version": "0.0.3",
                 "summary": "",
-                "icon": null,
+                "icon": "Package",
                 "required": [
                     "naam",
                     "product"
@@ -4656,7 +4613,7 @@
                     "beschrijvingKort": {
                         "type": "string",
                         "description": "Korte beschrijving van de module",
-                        "title": "Beschrijving kort",
+                        "title": "Samenvatting",
                         "order": 2,
                         "facetable": false,
                         "maxLength": 255
@@ -4664,9 +4621,10 @@
                     "beschrijvingLang": {
                         "type": "string",
                         "description": "Uitgebreide beschrijving van de module",
-                        "title": "Beschrijving lang",
+                        "title": "Beschrijving",
                         "order": 3,
                         "facetable": false,
+                        "format": "markdown",
                         "maxLength": 5000
                     },
                     "licentietype": {
@@ -4734,9 +4692,7 @@
                             "type": "object",
                         "objectConfiguration": {
                                 "handling": "related-object",
-                                "query": {
-                                    "gemmaType": "referentiecomponent"
-                                }
+                                "queryParams": "gemmaType=referentiecomponent"
                             },
                             "$ref": "#/components/schemas/element"
                         }
@@ -4925,9 +4881,7 @@
                         "facetable": false,
                         "objectConfiguration": {
                             "handling": "related-object",
-                            "query": {
-                                "gemmaType": "standaardversie"
-                            }
+                            "queryParams": "gemmaType=standaardversie"
                         },
                         "$ref": "#/components/schemas/element"
                     },
@@ -5011,17 +4965,18 @@
                         "maxLength": 50
                     },
                     "beschrijvingKort": {
-                        "description": "",
+                        "description": "Korte beschrijving van de module versie",
                         "type": "string",
                         "order": 3,
-                        "title": "BeschrijvingKort",
+                        "title": "Samenvatting",
                         "maxLength": 255
                     },
                     "beschrijvingLang": {
-                        "description": "",
+                        "description": "Uitgebreide beschrijving van de module versie",
                         "type": "string",
                         "order": 4,
-                        "title": "BeschrijvingLang",
+                        "title": "Beschrijving",
+                        "format": "markdown",
                         "maxLength": 5000
                     },
                     "status": {
