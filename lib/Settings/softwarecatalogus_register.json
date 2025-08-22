@@ -4,7 +4,7 @@
             "voorzieningen": {
                 "slug": "voorzieningen",
                 "title": "Voorzieningen",
-                "version": "1.0.6",
+                "version": "1.0.7",
                 "description": "Register voor voorzieningen uit de softwarecatalogus",
                 "schemas": [
                     "sector",
@@ -36,7 +36,7 @@
             "vng-gemma": {
                 "slug": "vng-gemma",
                 "title": "AMEF",
-                "version": "0.0.2",
+                "version": "0.0.3",
                 "description": "Register voor AMEF (ArchiMate Model Exchange Format) modellen en architectuur elementen",
                 "schemas": [
                     "element",
@@ -65,7 +65,7 @@
               "name": "Register",
               "description": "Endpoint voor het registreren van organisaties in de softwarecatalogus",
               "reference": "",
-              "version": "0.0.2",
+              "version": "0.0.3",
               "endpoint": "register",
               "endpointArray": [
                 "register"
@@ -93,7 +93,7 @@
                 "slug": "property",
                 "title": "Eigenschap",
                 "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
-                "version": "0.0.3",
+                "version": "0.0.4",
                 "summary": "",
                 "icon": "Tag",
                 "required": [
@@ -202,7 +202,7 @@
                 "slug": "sector",
                 "title": "Sector",
                 "description": "Schema voor sectoren binnen de softwarecatalogus",
-                "version": "0.0.4",
+                "version": "0.0.5",
                 "summary": "",
                 "icon": "Domain",
                 "required": [
@@ -302,7 +302,7 @@
                 "slug": "product",
                 "title": "Product",
                 "description": "Een product, suite of monobrand",
-                "version": "0.0.83",
+                "version": "0.0.84",
                 "summary": "",
                 "icon": "ApplicationCog",
                 "required": [
@@ -614,7 +614,7 @@
                 "slug": "dienst",
                 "title": "Dienst",
                 "description": "Een specifiek aanbod van een dienst op een of meerdere producten door een leverancier",
-                "version": "0.0.39",
+                "version": "0.0.40",
                 "summary": "",
                 "icon": "Handshake",
                 "required": [
@@ -866,7 +866,7 @@
                 "slug": "kwetsbaarheid",
                 "title": "Kwetsbaarheid",
                 "description": "Schema voor kwetsbaarheden",
-                "version": "1.0.13",
+                "version": "1.0.14",
                 "summary": "",
                 "icon": "ShieldAlert",
                 "required": [
@@ -1014,7 +1014,7 @@
                 "slug": "contactpersoon",
                 "title": "Contact Persoon",
                 "description": "Contactgegevens van een persoon",
-                "version": "0.0.19",
+                "version": "0.0.20",
                 "summary": "",
                 "icon": "AccountMultiple",
                 "required": [
@@ -1288,7 +1288,7 @@
                 "slug": "organisatie",
                 "title": "Organisatie",
                 "description": "Een organisatie die voorzieningen aanbiedt",
-                "version": "0.0.92",
+                "version": "0.0.93",
                 "summary": "",
                 "icon": "OfficeBuildingOutline",
                 "required": [
@@ -1846,7 +1846,7 @@
                 "slug": "gebruik",
                 "title": "Gebruik",
                 "description": "Het gebruik van producten, modules, diensten en koppelingen door afnemers",
-                "version": "1.0.2",
+                "version": "1.0.3",
                 "summary": "",
                 "icon": "Usage",
                 "required": [
@@ -2248,7 +2248,7 @@
                 "slug": "contract",
                 "title": "Contract",
                 "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik",
-                "version": "0.0.6",
+                "version": "0.0.7",
                 "summary": "",
                 "icon": "FileDocumentEdit",
                 "required": [
@@ -2478,7 +2478,7 @@
                 "slug": "koppeling",
                 "title": "Koppeling",
                 "description": "Schema voor koppelingen tussen modules en systemen. Er moet óf ModuleB óf buitengemeentelijkVoorziening gevuld zijn.",
-                "version": "0.0.3",
+                "version": "0.0.4",
                 "summary": "",
                 "icon": "Link",
                 "required": [],
@@ -2674,7 +2674,7 @@
                 "slug": "beoordeeling",
                 "title": "Beoordeeling",
                 "description": "Schema voor beoordelingen en waarderingen van producten, modules en diensten",
-                "version": "0.0.11",
+                "version": "0.0.12",
                 "summary": "",
                 "icon": "Star",
                 "required": [
@@ -2816,7 +2816,7 @@
                 "slug": "element",
                 "title": "Element",
                 "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
-                "version": "0.0.2",
+                "version": "0.0.3",
                 "summary": "",
                 "icon": "Cube",
                 "required": [
@@ -3015,7 +3015,7 @@
                 "slug": "view",
                 "title": "View",
                 "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
-                "version": "0.0.2",
+                "version": "0.0.3",
                 "summary": "",
                 "icon": "Eye",
                 "required": [
@@ -3297,7 +3297,7 @@
                 "slug": "model",
                 "title": "Model",
                 "description": "AMEF Model - Volledig ArchiMate model met alle elementen, relaties en views",
-                "version": "0.0.38",
+                "version": "0.0.39",
                 "summary": "",
                 "icon": "Database",
                 "required": [
@@ -3720,7 +3720,7 @@
                 "slug": "organization",
                 "title": "Organization",
                 "description": "AMEF Organization - Organisatie structuren uit het ArchiMate model",
-                "version": "0.0.2",
+                "version": "0.0.3",
                 "summary": "",
                 "icon": "Building",
                 "required": [],
@@ -3891,7 +3891,7 @@
                 "slug": "property-definition",
                 "title": "Property Definition",
                 "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
-                "version": "0.0.2",
+                "version": "0.0.3",
                 "summary": "",
                 "icon": "Settings",
                 "required": [
@@ -4013,7 +4013,7 @@
                 "slug": "relation",
                 "title": "Relation",
                 "description": "AMEF Relation - Relaties tussen architectuur elementen uit het ArchiMate model",
-                "version": "0.0.2",
+                "version": "0.0.3",
                 "summary": "",
                 "icon": "ArrowRight",
                 "required": [
@@ -4310,7 +4310,7 @@
                 "slug": "extendview",
                 "title": "Extended View",
                 "description": "AMEF Extended View - Vooraf uitgebreide view kopie voor prestatie optimalisatie",
-                "version": "0.0.4",
+                "version": "0.0.5",
                 "summary": "",
                 "icon": "EyePlus",
                 "required": [
@@ -4593,7 +4593,7 @@
                 "slug": "module",
                 "title": "Module",
                 "description": "Een module is een onderdeel van een product (voorziening)",
-                "version": "0.0.3",
+                "version": "0.0.4",
                 "summary": "",
                 "icon": "Package",
                 "required": [
@@ -4867,7 +4867,7 @@
                 "slug": "compliancy",
                 "title": "Compliancy",
                 "description": "Schema voor compliancy en standaard ondersteuning",
-                "version": "0.0.3",
+                "version": "0.0.4",
                 "summary": "",
                 "icon": "CheckCircle",
                 "required": [],
@@ -4939,7 +4939,7 @@
                 "slug": "moduleVersie",
                 "title": "Module Versie",
                 "description": "Schema voor module versies",
-                "version": "0.0.3",
+                "version": "0.0.4",
                 "summary": "",
                 "icon": "ViewModule",
                 "required": [],
@@ -5061,6 +5061,6 @@
         "id": 14,
         "title": "Software Catalog Register",
         "description": "Merged register containing both AMEF and Voorzieningen schemas and configurations",
-        "version": "1.0.0"
+        "version": "1.0.1"
     }
 }
