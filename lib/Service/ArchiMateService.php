@@ -739,6 +739,14 @@ class ArchiMateService
 
         // STEP 0: Extract propertyDefinition map and store in model metadata
         $propertyDefinitionMap = $this->extractPropertyDefinitionMap($data);
+        
+        // Log property mapping for debugging
+        if (!empty($propertyDefinitionMap)) {
+            $this->logger->info('Property definitions extracted and mapped', [
+                'total_properties' => count($propertyDefinitionMap),
+                'property_mapping' => $this->getPropertyNameMapping($propertyDefinitionMap)
+            ]);
+        }
 
         // Initialize normalized structure with model metadata
         $normalized = [
@@ -840,6 +848,7 @@ class ArchiMateService
                     // Flatten properties to root fields using the propertyDefinitionMap
                     if (isset($item['properties']) && isset($item['properties']['property'])) {
                         $props = $item['properties']['property'];
+                        $processedProperties = [];
                         if (isset($props[0])) {
                             // Multiple properties
                             foreach ($props as $prop) {
@@ -847,7 +856,15 @@ class ArchiMateService
                                 $value = $prop['value']['_value'] ?? $prop['value'] ?? null;
                                 if ($defRef && isset($propertyDefinitionMap[$defRef])) {
                                     $name = $propertyDefinitionMap[$defRef];
-                                    $object[$name] = $value;
+                                    $camelCaseName = $this->convertToCamelCase($name);
+                                    $object[$camelCaseName] = $value;
+                                    
+                                    // Store property mapping for reference
+                                    if (!isset($object['_propertyMapping'])) {
+                                        $object['_propertyMapping'] = [];
+                                    }
+                                    $object['_propertyMapping'][$camelCaseName] = $name;
+                                    
                                     // If this property is 'Object ID', set slug for later use
                                     if (strtolower($name) === 'object id') {
                                         $object['_slug'] = $value; // Store temporarily, will be moved to @self.slug later
@@ -860,11 +877,34 @@ class ArchiMateService
                             $value = $props['value']['_value'] ?? $props['value'] ?? null;
                             if ($defRef && isset($propertyDefinitionMap[$defRef])) {
                                 $name = $propertyDefinitionMap[$defRef];
-                                $object[$name] = $value;
+                                $camelCaseName = $this->convertToCamelCase($name);
+                                $object[$camelCaseName] = $value;
+                                
+                                // Store property mapping for reference
+                                if (!isset($object['_propertyMapping'])) {
+                                    $object['_propertyMapping'] = [];
+                                }
+                                $object['_propertyMapping'][$camelCaseName] = $name;
+                                
+                                $processedProperties[] = [
+                                    'original' => $name,
+                                    'camelCase' => $camelCaseName,
+                                    'value' => $value
+                                ];
+                                
                                 if (strtolower($name) === 'object id') {
                                     $object['_slug'] = $value; // Store temporarily, will be moved to @self.slug later
                                 }
                             }
+                        }
+                        
+                        // Log property processing for debugging
+                        if (!empty($processedProperties)) {
+                            $this->logger->debug('Properties processed for object', [
+                                'identifier' => $identifier,
+                                'section' => $sectionName,
+                                'properties_processed' => $processedProperties
+                            ]);
                         }
                     }
                     $extracted[$identifier] = $object;
@@ -2489,6 +2529,7 @@ class ArchiMateService
     private function flattenPropertiesBatch(array &$object, array $properties, array $propertyDefinitionMap): void
     {
         $props = isset($properties[0]) ? $properties : [$properties];
+        $processedProperties = [];
         
         foreach ($props as $prop) {
             if (!isset($prop['_attributes']['propertyDefinitionRef'])) {
@@ -2500,7 +2541,20 @@ class ArchiMateService
             
             if ($value !== null && isset($propertyDefinitionMap[$defRef])) {
                 $propertyName = $propertyDefinitionMap[$defRef];
-                $object[$propertyName] = $value;
+                $camelCaseName = $this->convertToCamelCase($propertyName);
+                $object[$camelCaseName] = $value;
+                
+                // Store property mapping for reference
+                if (!isset($object['_propertyMapping'])) {
+                    $object['_propertyMapping'] = [];
+                }
+                $object['_propertyMapping'][$camelCaseName] = $propertyName;
+                
+                $processedProperties[] = [
+                    'original' => $propertyName,
+                    'camelCase' => $camelCaseName,
+                    'value' => $value
+                ];
                 
                 // Set slug for Object ID property
                 if (strtolower($propertyName) === 'object id') {
@@ -2508,6 +2562,68 @@ class ArchiMateService
                 }
             }
         }
+        
+        // Log property processing for debugging
+        if (!empty($processedProperties)) {
+            $this->logger->debug('Properties processed in batch for object', [
+                'object_id' => $object['identifier'] ?? 'unknown',
+                'properties_processed' => $processedProperties
+            ]);
+        }
+    }
+
+    /**
+     * Convert property names with spaces to camelCase for better database compatibility
+     * 
+     * Examples:
+     * - "Object ID" -> "objectId"
+     * - "Business Unit" -> "businessUnit"
+     * - "System Name" -> "systemName"
+     * 
+     * @param string $propertyName Property name that may contain spaces
+     * @return string CamelCase version of the property name
+     */
+    private function convertToCamelCase(string $propertyName): string
+    {
+        // Remove any leading/trailing whitespace
+        $propertyName = trim($propertyName);
+        
+        // Split by spaces and convert to camelCase
+        $words = explode(' ', $propertyName);
+        
+        if (count($words) === 1) {
+            // Single word, just lowercase it
+            return strtolower($words[0]);
+        }
+        
+        // First word is lowercase, subsequent words are capitalized
+        $camelCase = strtolower($words[0]);
+        
+        for ($i = 1; $i < count($words); $i++) {
+            $camelCase .= ucfirst(strtolower($words[$i]));
+        }
+        
+        return $camelCase;
+    }
+
+    /**
+     * Get property mapping information for debugging and reference
+     * 
+     * This method returns a mapping of original property names to their camelCase equivalents
+     * which can be useful for understanding how properties are being processed.
+     * 
+     * @param array $propertyDefinitionMap The original property definition map
+     * @return array Mapping of original names to camelCase names
+     */
+    public function getPropertyNameMapping(array $propertyDefinitionMap): array
+    {
+        $mapping = [];
+        
+        foreach ($propertyDefinitionMap as $propertyRef => $originalName) {
+            $mapping[$originalName] = $this->convertToCamelCase($originalName);
+        }
+        
+        return $mapping;
     }
 
     /**
