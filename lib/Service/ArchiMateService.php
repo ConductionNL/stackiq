@@ -1538,11 +1538,10 @@ class ArchiMateService
     {
         if (function_exists('gc_collect_cycles')) {
             $cycles = gc_collect_cycles();
-            if ($this->logger->isDebug()) {
-                $this->logger->debug('Garbage collection completed', [
-                    'cycles_collected' => $cycles
-                ]);
-            }
+            // Use PSR-3 standard logging instead of isDebug() check
+            $this->logger->debug('Garbage collection completed', [
+                'cycles_collected' => $cycles
+            ]);
         }
     }
 

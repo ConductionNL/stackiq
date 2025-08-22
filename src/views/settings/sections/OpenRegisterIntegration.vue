@@ -60,8 +60,8 @@
 				<StandardTabs
 					:tabs="[
 						{ key: 'general', title: 'General Configuration' },
-						{ key: 'voorzieningen', title: 'Voorzieningen' },
-						{ key: 'amef', title: 'AMEF' },
+						{ key: 'voorzieningen', title: `Voorzieningen${hasVoorzieningenConfigChanges() ? ' *' : ''}` },
+						{ key: 'amef', title: `AMEF${hasAmefConfigChanges() ? ' *' : ''}` },
 					]"
 					:active-tab="activeTab"
 					@update:active-tab="activeTab = $event">
@@ -121,6 +121,26 @@
 									</div>
 								</div>
 							</div>
+
+							<!-- Voorzieningen Configuration Save Button -->
+							<div v-if="voorzieningenRegister && voorzieningenSchemas.length > 0" class="voorzieningen-save-section">
+								<div class="save-button-container">
+									<NcButton
+										type="primary"
+										:disabled="loading || saving || !hasVoorzieningenConfigChanges()"
+										@click="saveConfiguration">
+										<template #icon>
+											<NcLoadingIcon v-if="saving" :size="16" />
+											<Save v-else :size="16" />
+										</template>
+										{{ saving ? 'Saving...' : 'Save Voorzieningen Configuration' }}
+									</NcButton>
+									<p class="save-help-text">
+										Save your Voorzieningen schema configuration to enable organization and contact management.
+									</p>
+								</div>
+							</div>
+
 							<!-- Voorzieningen Empty State -->
 							<div v-else-if="voorzieningenRegister && voorzieningenSchemas.length === 0">
 								<NcNoteCard type="warning">
@@ -236,6 +256,26 @@
 									</div>
 								</div>
 							</div>
+
+							<!-- AMEF Configuration Save Button -->
+							<div v-if="amefRegister && amefSchemas.length > 0" class="amef-save-section">
+								<div class="save-button-container">
+									<NcButton
+										type="primary"
+										:disabled="loading || saving || !hasAmefConfigChanges()"
+										@click="saveConfiguration">
+										<template #icon>
+											<NcLoadingIcon v-if="saving" :size="16" />
+											<Save v-else :size="16" />
+										</template>
+										{{ saving ? 'Saving...' : 'Save AMEF Configuration' }}
+									</NcButton>
+									<p class="save-help-text">
+										Save your AMEF schema configuration to enable ArchiMate import/export functionality.
+									</p>
+								</div>
+							</div>
+
 							<!-- AMEF Empty State -->
 							<div v-else-if="amefRegister && amefSchemas.length === 0">
 								<NcNoteCard type="warning">
@@ -386,7 +426,16 @@ export default {
 		 * @return {boolean} True if configuration is valid and can be saved
 		 */
 		canSave() {
-			return this.voorzieningenRegister || this.amefRegister
+			// Check if any register is selected
+			const hasRegisters = this.voorzieningenRegister || this.amefRegister
+			
+			// Check if AMEF configuration has been modified
+			const amefConfigModified = this.hasAmefConfigChanges()
+			
+			// Check if Voorzieningen configuration has been modified
+			const voorzieningenConfigModified = this.hasVoorzieningenConfigChanges()
+			
+			return hasRegisters && (amefConfigModified || voorzieningenConfigModified)
 		},
 	},
 
@@ -421,6 +470,67 @@ export default {
 		 */
 		validateConfiguration() {
 			this.store.validateConfiguration()
+		},
+
+		/**
+		 * Check if AMEF configuration has been modified
+		 * Compares current configuration with original values
+		 *
+		 * @return {boolean} True if AMEF configuration has changed
+		 */
+		hasAmefConfigChanges() {
+			if (!this.amefRegister) return false
+
+			const amefKeys = [
+				'amef_elements',
+				'amef_organization',
+				'amef_relationships',
+				'amef_views',
+				'amef_models',
+				'amef_properties',
+				'amef_property_definitions',
+			]
+
+			return amefKeys.some(key => {
+				const config = this.configuration[key]
+				return config && config.schema && config.schema.value !== undefined
+			})
+		},
+
+		/**
+		 * Check if Voorzieningen configuration has been modified
+		 * Compares current configuration with original values
+		 *
+		 * @return {boolean} True if Voorzieningen configuration has changed
+		 */
+		hasVoorzieningenConfigChanges() {
+			if (!this.voorzieningenRegister) return false
+
+			const voorzieningenKeys = [
+				'voorzieningen_organisatie',
+				'voorzieningen_contactpersoon',
+				'voorzieningen_voorziening',
+				'voorzieningen_voorziening_aanbod',
+				'voorzieningen_voorziening_versie',
+				'voorzieningen_kwetsbaarheid',
+				'voorzieningen_contract',
+				'voorzieningen_standaard',
+				'voorzieningen_review',
+				'voorzieningen_koppeling',
+				'voorzieningen_beoordeeling',
+				'voorzieningen_voorziening_module',
+				'voorzieningen_verklaring',
+				'voorzieningen_koppeling_gebruik',
+				'voorzieningen_compliancy',
+				'voorzieningen_module_gebruik',
+				'voorzieningen_module_versie',
+				'voorzieningen_sector',
+			]
+
+			return voorzieningenKeys.some(key => {
+				const config = this.configuration[key]
+				return config && config.schema && config.schema.value !== undefined
+			})
 		},
 
 		/**
@@ -525,6 +635,25 @@ export default {
 	margin-top: 20px;
 	padding-top: 20px;
 	border-top: 1px solid var(--color-border);
+}
+
+.amef-save-section {
+	margin-top: 24px;
+	padding: 20px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-hover);
+}
+
+.save-button-container {
+	text-align: center;
+}
+
+.save-help-text {
+	margin: 12px 0 0 0;
+	font-size: 14px;
+	color: var(--color-text-maxcontrast);
+	text-align: center;
 }
 
 .section-title-with-buttons {

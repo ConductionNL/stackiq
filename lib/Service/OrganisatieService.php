@@ -315,7 +315,11 @@ class OrganisatieService
                 'organizationUuid' => $organizationUuid,
                 'error' => $e->getMessage()
             ]);
-            var_dump($e->getMessage(), $e->getTraceAsString());
+            // Log detailed error information using PSR-3 logger
+            $this->logger->error('OrganisatieService: Exception details', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return false;
         }
     }
@@ -328,7 +332,7 @@ class OrganisatieService
     public function getAdminGroupUsernames(): array
     {
         try {
-            $groupManager = \OC::$server->get('OCP\IGroupManager');
+            $groupManager = $this->container->get('OCP\IGroupManager');
             $adminGroup = $groupManager->get('admin');
 
             if ($adminGroup) {
