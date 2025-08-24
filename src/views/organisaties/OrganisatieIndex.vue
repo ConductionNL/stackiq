@@ -17,22 +17,6 @@ import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 
 <template>
 	<div class="organisatieIndex">
-		<!-- Search Bar -->
-		<div class="organisatieSearch">
-			<NcTextField
-				:value.sync="searchQuery"
-				:label="t('softwarecatalog', 'Zoeken in organisaties')"
-				:placeholder="t('softwarecatalog', 'Zoek op naam, website, type...')"
-				trailing-button-icon="close"
-				:show-trailing-button="searchQuery.length > 0"
-				@trailing-button-click="clearSearch"
-				@update:value="onSearchInput">
-				<template #icon>
-					<Magnify :size="16" />
-				</template>
-			</NcTextField>
-		</div>
-
 		<GenericObjectTable
 			object-type="organisatie"
 			object-type-plural="organisaties"
@@ -50,15 +34,15 @@ import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 			:custom-card-component="OrganisatieCard"
 			:filters="organisatieFilters"
 			:search-query="searchQuery"
+			:on-search-input="onSearchInput"
+			:clear-search="clearSearch"
 			@mounted="onMounted" />
 	</div>
 </template>
 
 <script>
 import GenericObjectTable from '../../components/GenericObjectTable.vue'
-import { NcTextField } from '@nextcloud/vue'
 import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
-import Magnify from 'vue-material-design-icons/Magnify.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
@@ -77,13 +61,16 @@ export default {
 	name: 'OrganisatieIndex',
 	components: {
 		GenericObjectTable,
-		NcTextField,
-		Magnify,
 		// eslint-disable-next-line vue/no-unused-components
 		OrganisatieCard,
 	},
 	data() {
 		return {
+			// Current filter values
+			currentFilters: {
+				status: 'all',
+				type: 'all',
+			},
 			organisatieProperties: [
 				{
 					id: 'naam',
@@ -174,17 +161,43 @@ export default {
 						this.goToOrganisation(organisatie)
 					},
 				},
-
+				{
+					id: 'activeren',
+					label: 'Activeren',
+					icon: CheckCircle,
+					condition: (organisatie) => organisatie.status?.toLowerCase() === 'concept' || organisatie.status?.toLowerCase() === 'deactief',
+					handler: (organisatie) => {
+						objectStore.setActiveObject('organisatie', organisatie)
+						navigationStore.setDialog('changeOrganisatieStatus', {
+							objectType: 'organisatie',
+							dialogTitle: 'Organisatie Activeren',
+							newStatus: 'Actief',
+							action: 'activeren',
+						})
+					},
+				},
+				{
+					id: 'deactiveren',
+					label: 'Deactiveren',
+					icon: CloseCircle,
+					condition: (organisatie) => organisatie.status?.toLowerCase() === 'actief',
+					handler: (organisatie) => {
+						objectStore.setActiveObject('organisatie', organisatie)
+						navigationStore.setDialog('changeOrganisatieStatus', {
+							objectType: 'organisatie',
+							dialogTitle: 'Organisatie Deactiveren',
+							newStatus: 'Deactief',
+							action: 'deactiveren',
+						})
+					},
+				},
 				{
 					id: 'delete',
 					label: 'Delete',
 					icon: TrashCanOutline,
 					handler: (organisatie) => {
 						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setDialog('deleteObject', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie',
-						})
+						navigationStore.setModal('deleteObject')
 					},
 				},
 			],
@@ -261,6 +274,7 @@ export default {
 						{ value: 'Actief', label: 'Actief' },
 						{ value: 'Concept', label: 'Concept' },
 					],
+					onChange: (value) => this.onFilterChange('status', value),
 				},
 				{
 					key: 'type',
@@ -272,6 +286,7 @@ export default {
 						{ value: 'Samenwerking', label: 'Samenwerking' },
 						{ value: 'Community', label: 'Community' },
 					],
+					onChange: (value) => this.onFilterChange('type', value),
 				},
 			],
 			searchQuery: '',
@@ -285,85 +300,6 @@ export default {
 					navigationStore.setModal('organisatie')
 				},
 			},
-			organisatieObjectActions: [
-				{
-					id: 'view',
-					label: 'View',
-					icon: Eye,
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('viewOrganisatie')
-					},
-				},
-				{
-					id: 'edit',
-					label: 'Edit',
-					icon: Pencil,
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('organisatie')
-					},
-				},
-				{
-					id: 'copy',
-					label: 'Copy',
-					icon: ContentCopy,
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setDialog('copyObject', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie',
-						})
-					},
-				},
-				{
-					id: 'goToOrganisation',
-					label: 'Go to organisation',
-					icon: OpenInNew,
-					handler: (organisatie) => {
-						this.goToOrganisation(organisatie)
-					},
-				},
-				{
-					id: 'activeren',
-					label: 'Activeren',
-					icon: CheckCircle,
-					condition: (organisatie) => organisatie.status?.toLowerCase() === 'concept' || organisatie.status?.toLowerCase() === 'deactief',
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setDialog('changeOrganisatieStatus', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie Activeren',
-							newStatus: 'Actief',
-							action: 'activeren',
-						})
-					},
-				},
-				{
-					id: 'deactiveren',
-					label: 'Deactiveren',
-					icon: CloseCircle,
-					condition: (organisatie) => organisatie.status?.toLowerCase() === 'actief',
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setDialog('changeOrganisatieStatus', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie Deactiveren',
-							newStatus: 'Deactief',
-							action: 'deactiveren',
-						})
-					},
-				},
-				{
-					id: 'delete',
-					label: 'Delete',
-					icon: TrashCanOutline,
-					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('deleteObject')
-					},
-				},
-			],
 		}
 	},
 	methods: {
@@ -380,9 +316,13 @@ export default {
 					await objectStore.fetchSettings()
 				}
 
-				// Fetch organisaties collection
-				console.info('Fetching organisaties...')
-				await objectStore.fetchCollection('organisatie')
+				// Fetch organisaties collection with contactpersonen extended
+				console.info('Fetching organisaties with contactpersonen...')
+				await objectStore.fetchCollection('organisatie', {
+					_extend: '@self.schema,contactpersonen',
+					_limit: 20,
+					_page: 1
+				})
 			} catch (error) {
 				console.error('Error initializing OrganisatieIndex:', error)
 				// Show error to user if needed
@@ -396,7 +336,7 @@ export default {
 		 */
 		onSearchInput(value) {
 			this.searchQuery = value
-			
+
 			// Clear existing timeout
 			if (this.searchDebounceTimeout) {
 				clearTimeout(this.searchDebounceTimeout)
@@ -415,14 +355,9 @@ export default {
 		async performSearch() {
 			try {
 				console.info('Performing search with query:', this.searchQuery)
-				
-				const searchParams = {}
-				if (this.searchQuery && this.searchQuery.trim()) {
-					searchParams._search = this.searchQuery.trim()
-				}
 
-				// Fetch organisaties with search parameter
-				await objectStore.fetchCollection('organisatie', searchParams)
+				// Use the unified filter method that includes current filters
+				await this.fetchOrganisatiesWithFilters()
 			} catch (error) {
 				console.error('Error performing search:', error)
 			}
@@ -434,14 +369,67 @@ export default {
 		 */
 		async clearSearch() {
 			this.searchQuery = ''
-			
+
 			// Clear any pending timeout
 			if (this.searchDebounceTimeout) {
 				clearTimeout(this.searchDebounceTimeout)
 			}
 
-			// Fetch all organisaties without search filter
-			await objectStore.fetchCollection('organisatie')
+			// Fetch all organisaties without search filter but with contactpersonen extended
+			await this.fetchOrganisatiesWithFilters()
+		},
+
+		/**
+		 * Handle filter changes and refetch data
+		 * @param {string} filterKey - The filter key (status or type)
+		 * @param {string} filterValue - The new filter value
+		 * @return {Promise<void>}
+		 */
+		async onFilterChange(filterKey, filterValue) {
+			console.info('Filter changed:', { filterKey, filterValue })
+
+			// Update the current filter
+			this.currentFilters[filterKey] = filterValue
+
+			// Reset to first page when filters change
+			await this.fetchOrganisatiesWithFilters()
+		},
+
+		/**
+		 * Fetch organisaties with current filters and search
+		 * @return {Promise<void>}
+		 */
+		async fetchOrganisatiesWithFilters() {
+			try {
+				console.info('Fetching organisaties with filters:', this.currentFilters)
+
+				const searchParams = {
+					_extend: '@self.schema,contactpersonen',
+					_page: 1, // Reset to first page
+				}
+
+				// Add search query if present
+				if (this.searchQuery.trim()) {
+					searchParams._search = this.searchQuery.trim()
+				}
+
+				// Add status filter if not 'all'
+				if (this.currentFilters.status !== 'all') {
+					searchParams.status = this.currentFilters.status
+				}
+
+				// Add type filter if not 'all'
+				if (this.currentFilters.type !== 'all') {
+					searchParams.type = this.currentFilters.type
+				}
+
+				console.info('Final search params:', searchParams)
+
+				// Fetch organisaties with all parameters
+				await objectStore.fetchCollection('organisatie', searchParams)
+			} catch (error) {
+				console.error('Error fetching organisaties with filters:', error)
+			}
 		},
 
 		/**
@@ -453,7 +441,7 @@ export default {
 			try {
 				// Get the catalog location from settings
 				const catalogLocation = objectStore.settings?.catalogLocation
-				
+
 				if (!catalogLocation) {
 					console.warn('No catalog location configured')
 					// Fallback: could show a notification to user
@@ -470,7 +458,7 @@ export default {
 
 				// First, set the active organisation in OpenRegister via Nextcloud endpoint
 				const setActiveUrl = `${window.location.origin}/index.php/apps/openregister/api/organizations/${organisatieId}/set-active`
-				
+
 				try {
 					await fetch(setActiveUrl, {
 						method: 'POST',
@@ -485,7 +473,7 @@ export default {
 				}
 
 				// Build the target URL: catalogLocation + '/beheer'
-				const targetUrl = catalogLocation.endsWith('/') 
+				const targetUrl = catalogLocation.endsWith('/')
 					? `${catalogLocation}beheer`
 					: `${catalogLocation}/beheer`
 
@@ -513,14 +501,5 @@ export default {
 <style scoped>
 .organisatieIndex {
 	padding: 16px;
-}
-
-.organisatieSearch {
-	margin-bottom: 24px;
-	max-width: 400px;
-}
-
-.organisatieSearch :deep(.input-field__input) {
-	border-radius: var(--border-radius);
 }
 </style>

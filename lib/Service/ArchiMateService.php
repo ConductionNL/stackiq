@@ -48,6 +48,13 @@ class ArchiMateService
     /**
      * Configuration keys for ArchiMate processing
      */
+    
+    /**
+     * Store last save operation timing breakdown for performance metrics
+     * 
+     * @var array
+     */
+    private array $lastSaveTimingBreakdown = [];
     private const CONFIG_KEYS = [
         'archimate_register_id' => 'archimate_register_id',
         'archimate_schema_id' => 'archimate_schema_id',
@@ -145,29 +152,36 @@ class ArchiMateService
         ]);
 
         try {
-                    // OPTIMIZATION: Cache all configuration once at start
-        $this->initializeCache();
-        
-        // PERFORMANCE OPTIMIZATION: Monitor memory usage
-        $this->logMemoryUsage('After cache initialization');
-        
-        // STEP 1: Parse XML to array (same as before)
-        $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
-        if (empty($filePath) || !file_exists($filePath)) {
-            throw new \InvalidArgumentException("File not found: {$filePath}");
-        }
-        
-        $parseStartTime = microtime(true);
-        $xmlData = $this->parseArchiMateXml($filePath);
-        $parseTime = microtime(true) - $parseStartTime;
-        
-        // PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing
-        if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup']) {
-            $this->cleanupMemory();
-        }
+            // OPTIMIZATION: Cache all configuration once at start
+            $cacheStartTime = microtime(true);
+            $this->initializeCache();
+            $cacheTime = microtime(true) - $cacheStartTime;
+            
+            // PERFORMANCE OPTIMIZATION: Monitor memory usage
+            $this->logMemoryUsage('After cache initialization');
+            
+            // STEP 1: Parse XML to array (same as before)
+            $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
+            if (empty($filePath) || !file_exists($filePath)) {
+                throw new \InvalidArgumentException("File not found: {$filePath}");
+            }
+            
+            $parseStartTime = microtime(true);
+            $xmlData = $this->parseArchiMateXml($filePath);
+            $parseTime = microtime(true) - $parseStartTime;
+            
+            // PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing
+            $memoryCleanupTime = 0;
+            if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup']) {
+                $memoryCleanupStartTime = microtime(true);
+                $this->cleanupMemory();
+                $memoryCleanupTime = microtime(true) - $memoryCleanupStartTime;
+            }
             
             // STEP 2: Extract model identifier
+            $modelIdentifierStartTime = microtime(true);
             $modelIdentifier = $this->extractModelIdentifier($xmlData);
+            $modelIdentifierTime = microtime(true) - $modelIdentifierStartTime;
             
             // STEP 3: Parse ALL objects in one go (like CSV import)
             $transformStartTime = microtime(true);
@@ -184,6 +198,9 @@ class ArchiMateService
             $saveStartTime = microtime(true);
             $savedObjects = $this->saveObjectsToDatabase($allObjects);
             $saveTime = microtime(true) - $saveStartTime;
+            
+            // Capture detailed save timing from internal tracking
+            $saveBreakdown = $this->lastSaveTimingBreakdown;
             
             $totalTime = microtime(true) - $startTime;
             $itemsPerSecond = count($allObjects) / max($totalTime, 0.001);
@@ -208,7 +225,26 @@ class ArchiMateService
                 'performance_metrics' => [
                     'total_time_seconds' => round($totalTime, 3),
                     'items_per_second' => round($itemsPerSecond, 1),
-                    'objects_processed' => count($allObjects)
+                    'objects_processed' => count($allObjects),
+                    'timing_breakdown' => [
+                        'cache_initialization_seconds' => round($cacheTime, 3),
+                        'xml_parsing_seconds' => round($parseTime, 3),
+                        'memory_cleanup_seconds' => round($memoryCleanupTime, 3),
+                        'model_identifier_extraction_seconds' => round($modelIdentifierTime, 3),
+                        'data_transformation_seconds' => round($transformTime, 3),
+                        'database_save_seconds' => round($saveTime, 3)
+                    ],
+                    'save_operation_breakdown' => $saveBreakdown,
+                    'memory_usage' => [
+                        'start_memory_mb' => round($startMemory / 1024 / 1024, 2),
+                        'current_memory_mb' => round(memory_get_usage(true) / 1024 / 1024, 2),
+                        'peak_memory_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 2)
+                    ],
+                    'processing_rates' => [
+                        'xml_parse_objects_per_second' => round(count($allObjects) / max($parseTime, 0.001), 1),
+                        'transform_objects_per_second' => round(count($allObjects) / max($transformTime, 0.001), 1),
+                        'save_objects_per_second' => round(count($allObjects) / max($saveTime, 0.001), 1)
+                    ]
                 ],
                 'statistics' => $this->calculateOptimizedStatistics($savedObjects)
             ];
@@ -845,6 +881,24 @@ class ArchiMateService
                         'xml' => $item // Store the full parsed XML for this object (direct reference)
                     ];
                     
+                    // Extract name from XML if it exists
+                    if (isset($item['name'])) {
+                        if (is_array($item['name']) && isset($item['name']['_value'])) {
+                            $object['name'] = $item['name']['_value'];
+                        } elseif (is_string($item['name'])) {
+                            $object['name'] = $item['name'];
+                        }
+                    }
+                    
+                    // Extract documentation from XML if it exists and set to summary
+                    if (isset($item['documentation'])) {
+                        if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
+                            $object['summary'] = $item['documentation']['_value'];
+                        } elseif (is_string($item['documentation'])) {
+                            $object['summary'] = $item['documentation'];
+                        }
+                    }
+                    
                     // Flatten properties to root fields using the propertyDefinitionMap
                     if (isset($item['properties']) && isset($item['properties']['property'])) {
                         $props = $item['properties']['property'];
@@ -1334,27 +1388,63 @@ class ArchiMateService
      */
     private function saveObjectsToDatabase(array $objects): array
     {
+        $saveStartTime = microtime(true);
+        
+        $serviceInitStartTime = microtime(true);
         $objectService = $this->getObjectService();
         if (!$objectService) {
             throw new \RuntimeException('ObjectService not available');
         }
+        $serviceInitTime = microtime(true) - $serviceInitStartTime;
+
+        // ENHANCEMENT: Process GEMMA Referentiecomponent-Standaard relationships before saving
+        $gemmaProcessingStartTime = microtime(true);
+        $objects = $this->processGemmaReferenceComponentStandards($objects);
+        $gemmaProcessingTime = microtime(true) - $gemmaProcessingStartTime;
 
         $this->logger->info('Saving objects to database using parallel batch processing', [
             'count' => count($objects),
             'batch_size' => self::PERFORMANCE_OPTIMIZATIONS['batch_size'],
-            'parallel_batches' => self::PERFORMANCE_OPTIMIZATIONS['parallel_batches']
+            'parallel_batches' => self::PERFORMANCE_OPTIMIZATIONS['parallel_batches'],
+            'service_init_time' => round($serviceInitTime, 3),
+            'gemma_processing_time' => round($gemmaProcessingTime, 3)
         ]);
 
         // OPTIMIZATION: Use cached register ID
         $registerId = $this->cachedConfig['registerId'] ?? 15;
 
         // PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets
+        $batchProcessingStartTime = microtime(true);
         if (self::PERFORMANCE_OPTIMIZATIONS['parallel_processing'] && count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']) {
-            return $this->saveObjectsInParallelBatches($objects, $objectService, $registerId);
+            $result = $this->saveObjectsInParallelBatches($objects, $objectService, $registerId);
+        } else {
+            // Fallback to single batch for small datasets
+            $result = $this->saveObjectsInSingleBatch($objects, $objectService, $registerId);
         }
+        $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
+        
+        $totalSaveTime = microtime(true) - $saveStartTime;
+        
+        $this->logger->info('Database save operation completed', [
+            'total_save_time' => round($totalSaveTime, 3),
+            'service_init_time' => round($serviceInitTime, 3),
+            'gemma_processing_time' => round($gemmaProcessingTime, 3),
+            'batch_processing_time' => round($batchProcessingTime, 3),
+            'objects_saved' => count($result),
+            'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1)
+        ]);
 
-                // Fallback to single batch for small datasets
-        return $this->saveObjectsInSingleBatch($objects, $objectService, $registerId);
+        // Store timing breakdown for performance metrics
+        $this->lastSaveTimingBreakdown = [
+            'total_save_seconds' => round($totalSaveTime, 3),
+            'service_init_seconds' => round($serviceInitTime, 3),
+            'gemma_processing_seconds' => round($gemmaProcessingTime, 3),
+            'batch_processing_seconds' => round($batchProcessingTime, 3),
+            'objects_saved' => count($result),
+            'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1)
+        ];
+
+        return $result;
     }
 
     /**
@@ -2473,6 +2563,24 @@ class ArchiMateService
                 'xml' => $item // Store complete XML data for round-trip fidelity
             ];
             
+            // Extract name from XML if it exists
+            if (isset($item['name'])) {
+                if (is_array($item['name']) && isset($item['name']['_value'])) {
+                    $object['name'] = $item['name']['_value'];
+                } elseif (is_string($item['name'])) {
+                    $object['name'] = $item['name'];
+                }
+            }
+            
+            // Extract documentation from XML if it exists and set to summary
+            if (isset($item['documentation'])) {
+                if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
+                    $object['summary'] = $item['documentation']['_value'];
+                } elseif (is_string($item['documentation'])) {
+                    $object['summary'] = $item['documentation'];
+                }
+            }
+            
             // Flatten properties efficiently (if present)
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
@@ -2656,6 +2764,208 @@ class ArchiMateService
         }
 
         return $statistics;
+    }
+
+    /**
+     * Process GEMMA Referentiecomponent-Standaard relationships with Verbindingsrol support
+     * 
+     * This method analyzes all objects to find Referentiecomponenten and Standaarden,
+     * then uses relationships to link them together based on Verbindingsrol property.
+     * Each Referentiecomponent gets two properties:
+     * - 'aanbevolenStandaarden' array for standards with Verbindingsrol = "Aanbevolen"
+     * - 'verplichteStandaarden' array for standards with Verbindingsrol = "Verplicht"
+     * 
+     * @param array $objects All objects from the import
+     * @return array Objects with enhanced Referentiecomponent data
+     */
+    private function processGemmaReferenceComponentStandards(array $objects): array
+    {
+        $this->logger->info('Processing GEMMA Referentiecomponent-Standaard relationships with Verbindingsrol support');
+        
+        // STEP 1: Filter objects by GEMMA type using flattened camelCase properties
+        $referentieComponenten = [];
+        $standaarden = [];
+        $relationships = [];
+        
+        foreach ($objects as $index => $object) {
+            // Check if this is an element with GEMMA type property
+            if (isset($object['section']) && $object['section'] === 'element' && isset($object['gemmaType'])) {
+                if ($object['gemmaType'] === 'Referentiecomponent') {
+                    $referentieComponenten[$object['identifier']] = $index;
+                    $this->logger->debug('Found Referentiecomponent', [
+                        'identifier' => $object['identifier'],
+                        'name' => $object['name'] ?? 'Unknown'
+                    ]);
+                } elseif ($object['gemmaType'] === 'Standaard') {
+                    $standaarden[$object['identifier']] = $index;
+                    $this->logger->debug('Found Standaard', [
+                        'identifier' => $object['identifier'],
+                        'name' => $object['name'] ?? 'Unknown'
+                    ]);
+                }
+            }
+            
+            // Collect relationships for linking
+            if (isset($object['section']) && $object['section'] === 'relationship') {
+                $relationships[] = $object;
+            }
+        }
+        
+        $this->logger->info('GEMMA objects found', [
+            'referentiecomponenten_count' => count($referentieComponenten),
+            'standaarden_count' => count($standaarden),
+            'relationships_count' => count($relationships)
+        ]);
+        
+        // STEP 2: Process relationships to find connections with Verbindingsrol
+        $referentieComponentStandaardMap = [];
+        
+        foreach ($relationships as $relationship) {
+            // Get source and target from relationship XML or flattened properties
+            $source = $this->extractRelationshipEndpoint($relationship, 'source');
+            $target = $this->extractRelationshipEndpoint($relationship, 'target');
+            
+            if (!$source || !$target) {
+                continue;
+            }
+            
+            // Get Verbindingsrol from flattened properties (camelCase: verbindingsrol)
+            $verbindingsrol = $relationship['verbindingsrol'] ?? null;
+            
+            // Skip if no Verbindingsrol is defined
+            if (!$verbindingsrol) {
+                continue;
+            }
+            
+            // Check if one end is a Referentiecomponent and the other is a Standaard
+            $refCompId = null;
+            $standaardId = null;
+            
+            if (isset($referentieComponenten[$source]) && isset($standaarden[$target])) {
+                // Referentiecomponent -> Standaard
+                $refCompId = $source;
+                $standaardId = $target;
+            } elseif (isset($standaarden[$source]) && isset($referentieComponenten[$target])) {
+                // Standaard -> Referentiecomponent (reverse direction)
+                $refCompId = $target;
+                $standaardId = $source;
+            }
+            
+            if ($refCompId && $standaardId) {
+                // Initialize arrays if not exists
+                if (!isset($referentieComponentStandaardMap[$refCompId])) {
+                    $referentieComponentStandaardMap[$refCompId] = [
+                        'aanbevolen' => [],
+                        'verplicht' => []
+                    ];
+                }
+                
+                // Add to appropriate array based on Verbindingsrol
+                if (strtolower($verbindingsrol) === 'aanbevolen') {
+                    $referentieComponentStandaardMap[$refCompId]['aanbevolen'][] = $standaardId;
+                } elseif (strtolower($verbindingsrol) === 'verplicht') {
+                    $referentieComponentStandaardMap[$refCompId]['verplicht'][] = $standaardId;
+                } else {
+                    // Log unknown Verbindingsrol for debugging
+                    $this->logger->warning('Unknown Verbindingsrol found', [
+                        'verbindingsrol' => $verbindingsrol,
+                        'relationship' => $relationship['identifier'] ?? 'unknown',
+                        'referentiecomponent' => $refCompId,
+                        'standaard' => $standaardId
+                    ]);
+                    continue;
+                }
+                
+                $this->logger->debug('Found Referentiecomponent-Standaard link with Verbindingsrol', [
+                    'referentiecomponent' => $refCompId,
+                    'standaard' => $standaardId,
+                    'verbindingsrol' => $verbindingsrol,
+                    'relationship' => $relationship['identifier'] ?? 'unknown'
+                ]);
+            }
+        }
+        
+        // STEP 3: Add 'aanbevolenStandaarden' and 'verplichteStandaarden' properties to Referentiecomponenten
+        $enhancedCount = 0;
+        foreach ($referentieComponentStandaardMap as $referentieComponentId => $standaardenMap) {
+            if (isset($referentieComponenten[$referentieComponentId])) {
+                $objectIndex = $referentieComponenten[$referentieComponentId];
+                
+                // Remove duplicates and add the properties
+                $aanbevolenStandaarden = array_unique($standaardenMap['aanbevolen']);
+                $verplichteStandaarden = array_unique($standaardenMap['verplicht']);
+                
+                $objects[$objectIndex]['aanbevolenStandaarden'] = $aanbevolenStandaarden;
+                $objects[$objectIndex]['verplichteStandaarden'] = $verplichteStandaarden;
+                
+                // Also add combined array for backward compatibility
+                $allStandaarden = array_unique(array_merge($aanbevolenStandaarden, $verplichteStandaarden));
+                $objects[$objectIndex]['standaarden'] = $allStandaarden;
+                
+                $this->logger->info('Enhanced Referentiecomponent with categorized standaarden', [
+                    'referentiecomponent_id' => $referentieComponentId,
+                    'referentiecomponent_name' => $objects[$objectIndex]['name'] ?? 'Unknown',
+                    'aanbevolen_count' => count($aanbevolenStandaarden),
+                    'verplicht_count' => count($verplichteStandaarden),
+                    'aanbevolen_ids' => $aanbevolenStandaarden,
+                    'verplicht_ids' => $verplichteStandaarden
+                ]);
+                
+                $enhancedCount++;
+            }
+        }
+        
+        $this->logger->info('GEMMA Referentiecomponent-Standaard processing completed', [
+            'referentiecomponenten_enhanced' => $enhancedCount,
+            'total_referentiecomponenten' => count($referentieComponenten),
+            'total_relationships_processed' => count($relationships)
+        ]);
+        
+        return $objects;
+    }
+
+    /**
+     * Extract relationship endpoint (source or target) from relationship object
+     * 
+     * @param array $relationship The relationship object
+     * @param string $endpoint Either 'source' or 'target'
+     * @return string|null The endpoint identifier or null if not found
+     */
+    private function extractRelationshipEndpoint(array $relationship, string $endpoint): ?string
+    {
+        // Try flattened camelCase property first
+        if (isset($relationship[$endpoint])) {
+            return $relationship[$endpoint];
+        }
+        
+        // Try XML structure
+        if (isset($relationship['xml'][$endpoint])) {
+            $endpointData = $relationship['xml'][$endpoint];
+            
+            // Handle different XML structures
+            if (is_string($endpointData)) {
+                return $endpointData;
+            } elseif (is_array($endpointData)) {
+                // Try _attributes.href or _value
+                if (isset($endpointData['_attributes']['href'])) {
+                    return $endpointData['_attributes']['href'];
+                } elseif (isset($endpointData['_value'])) {
+                    return $endpointData['_value'];
+                }
+            }
+        }
+        
+        // Try direct XML access for ArchiMate format
+        if (isset($relationship['xml']['_attributes'])) {
+            $attr = $relationship['xml']['_attributes'];
+            if ($endpoint === 'source' && isset($attr['source'])) {
+                return $attr['source'];
+            } elseif ($endpoint === 'target' && isset($attr['target'])) {
+                return $attr['target'];
+            }
+        }
+        
+        return null;
     }
 
 }
