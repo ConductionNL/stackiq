@@ -48,6 +48,13 @@ class ArchiMateService
     /**
      * Configuration keys for ArchiMate processing
      */
+    
+    /**
+     * Store last save operation timing breakdown for performance metrics
+     * 
+     * @var array
+     */
+    private array $lastSaveTimingBreakdown = [];
     private const CONFIG_KEYS = [
         'archimate_register_id' => 'archimate_register_id',
         'archimate_schema_id' => 'archimate_schema_id',
@@ -145,29 +152,36 @@ class ArchiMateService
         ]);
 
         try {
-                    // OPTIMIZATION: Cache all configuration once at start
-        $this->initializeCache();
-        
-        // PERFORMANCE OPTIMIZATION: Monitor memory usage
-        $this->logMemoryUsage('After cache initialization');
-        
-        // STEP 1: Parse XML to array (same as before)
-        $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
-        if (empty($filePath) || !file_exists($filePath)) {
-            throw new \InvalidArgumentException("File not found: {$filePath}");
-        }
-        
-        $parseStartTime = microtime(true);
-        $xmlData = $this->parseArchiMateXml($filePath);
-        $parseTime = microtime(true) - $parseStartTime;
-        
-        // PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing
-        if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup']) {
-            $this->cleanupMemory();
-        }
+            // OPTIMIZATION: Cache all configuration once at start
+            $cacheStartTime = microtime(true);
+            $this->initializeCache();
+            $cacheTime = microtime(true) - $cacheStartTime;
+            
+            // PERFORMANCE OPTIMIZATION: Monitor memory usage
+            $this->logMemoryUsage('After cache initialization');
+            
+            // STEP 1: Parse XML to array (same as before)
+            $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
+            if (empty($filePath) || !file_exists($filePath)) {
+                throw new \InvalidArgumentException("File not found: {$filePath}");
+            }
+            
+            $parseStartTime = microtime(true);
+            $xmlData = $this->parseArchiMateXml($filePath);
+            $parseTime = microtime(true) - $parseStartTime;
+            
+            // PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing
+            $memoryCleanupTime = 0;
+            if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup']) {
+                $memoryCleanupStartTime = microtime(true);
+                $this->cleanupMemory();
+                $memoryCleanupTime = microtime(true) - $memoryCleanupStartTime;
+            }
             
             // STEP 2: Extract model identifier
+            $modelIdentifierStartTime = microtime(true);
             $modelIdentifier = $this->extractModelIdentifier($xmlData);
+            $modelIdentifierTime = microtime(true) - $modelIdentifierStartTime;
             
             // STEP 3: Parse ALL objects in one go (like CSV import)
             $transformStartTime = microtime(true);
@@ -184,6 +198,9 @@ class ArchiMateService
             $saveStartTime = microtime(true);
             $savedObjects = $this->saveObjectsToDatabase($allObjects);
             $saveTime = microtime(true) - $saveStartTime;
+            
+            // Capture detailed save timing from internal tracking
+            $saveBreakdown = $this->lastSaveTimingBreakdown;
             
             $totalTime = microtime(true) - $startTime;
             $itemsPerSecond = count($allObjects) / max($totalTime, 0.001);
@@ -208,7 +225,26 @@ class ArchiMateService
                 'performance_metrics' => [
                     'total_time_seconds' => round($totalTime, 3),
                     'items_per_second' => round($itemsPerSecond, 1),
-                    'objects_processed' => count($allObjects)
+                    'objects_processed' => count($allObjects),
+                    'timing_breakdown' => [
+                        'cache_initialization_seconds' => round($cacheTime, 3),
+                        'xml_parsing_seconds' => round($parseTime, 3),
+                        'memory_cleanup_seconds' => round($memoryCleanupTime, 3),
+                        'model_identifier_extraction_seconds' => round($modelIdentifierTime, 3),
+                        'data_transformation_seconds' => round($transformTime, 3),
+                        'database_save_seconds' => round($saveTime, 3)
+                    ],
+                    'save_operation_breakdown' => $saveBreakdown,
+                    'memory_usage' => [
+                        'start_memory_mb' => round($startMemory / 1024 / 1024, 2),
+                        'current_memory_mb' => round(memory_get_usage(true) / 1024 / 1024, 2),
+                        'peak_memory_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 2)
+                    ],
+                    'processing_rates' => [
+                        'xml_parse_objects_per_second' => round(count($allObjects) / max($parseTime, 0.001), 1),
+                        'transform_objects_per_second' => round(count($allObjects) / max($transformTime, 0.001), 1),
+                        'save_objects_per_second' => round(count($allObjects) / max($saveTime, 0.001), 1)
+                    ]
                 ],
                 'statistics' => $this->calculateOptimizedStatistics($savedObjects)
             ];
@@ -1352,30 +1388,63 @@ class ArchiMateService
      */
     private function saveObjectsToDatabase(array $objects): array
     {
+        $saveStartTime = microtime(true);
+        
+        $serviceInitStartTime = microtime(true);
         $objectService = $this->getObjectService();
         if (!$objectService) {
             throw new \RuntimeException('ObjectService not available');
         }
+        $serviceInitTime = microtime(true) - $serviceInitStartTime;
 
         // ENHANCEMENT: Process GEMMA Referentiecomponent-Standaard relationships before saving
+        $gemmaProcessingStartTime = microtime(true);
         $objects = $this->processGemmaReferenceComponentStandards($objects);
+        $gemmaProcessingTime = microtime(true) - $gemmaProcessingStartTime;
 
         $this->logger->info('Saving objects to database using parallel batch processing', [
             'count' => count($objects),
             'batch_size' => self::PERFORMANCE_OPTIMIZATIONS['batch_size'],
-            'parallel_batches' => self::PERFORMANCE_OPTIMIZATIONS['parallel_batches']
+            'parallel_batches' => self::PERFORMANCE_OPTIMIZATIONS['parallel_batches'],
+            'service_init_time' => round($serviceInitTime, 3),
+            'gemma_processing_time' => round($gemmaProcessingTime, 3)
         ]);
 
         // OPTIMIZATION: Use cached register ID
         $registerId = $this->cachedConfig['registerId'] ?? 15;
 
         // PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets
+        $batchProcessingStartTime = microtime(true);
         if (self::PERFORMANCE_OPTIMIZATIONS['parallel_processing'] && count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']) {
-            return $this->saveObjectsInParallelBatches($objects, $objectService, $registerId);
+            $result = $this->saveObjectsInParallelBatches($objects, $objectService, $registerId);
+        } else {
+            // Fallback to single batch for small datasets
+            $result = $this->saveObjectsInSingleBatch($objects, $objectService, $registerId);
         }
+        $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
+        
+        $totalSaveTime = microtime(true) - $saveStartTime;
+        
+        $this->logger->info('Database save operation completed', [
+            'total_save_time' => round($totalSaveTime, 3),
+            'service_init_time' => round($serviceInitTime, 3),
+            'gemma_processing_time' => round($gemmaProcessingTime, 3),
+            'batch_processing_time' => round($batchProcessingTime, 3),
+            'objects_saved' => count($result),
+            'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1)
+        ]);
 
-                // Fallback to single batch for small datasets
-        return $this->saveObjectsInSingleBatch($objects, $objectService, $registerId);
+        // Store timing breakdown for performance metrics
+        $this->lastSaveTimingBreakdown = [
+            'total_save_seconds' => round($totalSaveTime, 3),
+            'service_init_seconds' => round($serviceInitTime, 3),
+            'gemma_processing_seconds' => round($gemmaProcessingTime, 3),
+            'batch_processing_seconds' => round($batchProcessingTime, 3),
+            'objects_saved' => count($result),
+            'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1)
+        ];
+
+        return $result;
     }
 
     /**
