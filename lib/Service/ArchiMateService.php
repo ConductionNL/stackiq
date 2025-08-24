@@ -845,6 +845,24 @@ class ArchiMateService
                         'xml' => $item // Store the full parsed XML for this object (direct reference)
                     ];
                     
+                    // Extract name from XML if it exists
+                    if (isset($item['name'])) {
+                        if (is_array($item['name']) && isset($item['name']['_value'])) {
+                            $object['name'] = $item['name']['_value'];
+                        } elseif (is_string($item['name'])) {
+                            $object['name'] = $item['name'];
+                        }
+                    }
+                    
+                    // Extract documentation from XML if it exists and set to summary
+                    if (isset($item['documentation'])) {
+                        if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
+                            $object['summary'] = $item['documentation']['_value'];
+                        } elseif (is_string($item['documentation'])) {
+                            $object['summary'] = $item['documentation'];
+                        }
+                    }
+                    
                     // Flatten properties to root fields using the propertyDefinitionMap
                     if (isset($item['properties']) && isset($item['properties']['property'])) {
                         $props = $item['properties']['property'];
@@ -1338,6 +1356,9 @@ class ArchiMateService
         if (!$objectService) {
             throw new \RuntimeException('ObjectService not available');
         }
+
+        // ENHANCEMENT: Process GEMMA Referentiecomponent-Standaard relationships before saving
+        $objects = $this->processGemmaReferenceComponentStandards($objects);
 
         $this->logger->info('Saving objects to database using parallel batch processing', [
             'count' => count($objects),
@@ -2473,6 +2494,24 @@ class ArchiMateService
                 'xml' => $item // Store complete XML data for round-trip fidelity
             ];
             
+            // Extract name from XML if it exists
+            if (isset($item['name'])) {
+                if (is_array($item['name']) && isset($item['name']['_value'])) {
+                    $object['name'] = $item['name']['_value'];
+                } elseif (is_string($item['name'])) {
+                    $object['name'] = $item['name'];
+                }
+            }
+            
+            // Extract documentation from XML if it exists and set to summary
+            if (isset($item['documentation'])) {
+                if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
+                    $object['summary'] = $item['documentation']['_value'];
+                } elseif (is_string($item['documentation'])) {
+                    $object['summary'] = $item['documentation'];
+                }
+            }
+            
             // Flatten properties efficiently (if present)
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
@@ -2656,6 +2695,208 @@ class ArchiMateService
         }
 
         return $statistics;
+    }
+
+    /**
+     * Process GEMMA Referentiecomponent-Standaard relationships with Verbindingsrol support
+     * 
+     * This method analyzes all objects to find Referentiecomponenten and Standaarden,
+     * then uses relationships to link them together based on Verbindingsrol property.
+     * Each Referentiecomponent gets two properties:
+     * - 'aanbevolenStandaarden' array for standards with Verbindingsrol = "Aanbevolen"
+     * - 'verplichteStandaarden' array for standards with Verbindingsrol = "Verplicht"
+     * 
+     * @param array $objects All objects from the import
+     * @return array Objects with enhanced Referentiecomponent data
+     */
+    private function processGemmaReferenceComponentStandards(array $objects): array
+    {
+        $this->logger->info('Processing GEMMA Referentiecomponent-Standaard relationships with Verbindingsrol support');
+        
+        // STEP 1: Filter objects by GEMMA type using flattened camelCase properties
+        $referentieComponenten = [];
+        $standaarden = [];
+        $relationships = [];
+        
+        foreach ($objects as $index => $object) {
+            // Check if this is an element with GEMMA type property
+            if (isset($object['section']) && $object['section'] === 'element' && isset($object['gemmaType'])) {
+                if ($object['gemmaType'] === 'Referentiecomponent') {
+                    $referentieComponenten[$object['identifier']] = $index;
+                    $this->logger->debug('Found Referentiecomponent', [
+                        'identifier' => $object['identifier'],
+                        'name' => $object['name'] ?? 'Unknown'
+                    ]);
+                } elseif ($object['gemmaType'] === 'Standaard') {
+                    $standaarden[$object['identifier']] = $index;
+                    $this->logger->debug('Found Standaard', [
+                        'identifier' => $object['identifier'],
+                        'name' => $object['name'] ?? 'Unknown'
+                    ]);
+                }
+            }
+            
+            // Collect relationships for linking
+            if (isset($object['section']) && $object['section'] === 'relationship') {
+                $relationships[] = $object;
+            }
+        }
+        
+        $this->logger->info('GEMMA objects found', [
+            'referentiecomponenten_count' => count($referentieComponenten),
+            'standaarden_count' => count($standaarden),
+            'relationships_count' => count($relationships)
+        ]);
+        
+        // STEP 2: Process relationships to find connections with Verbindingsrol
+        $referentieComponentStandaardMap = [];
+        
+        foreach ($relationships as $relationship) {
+            // Get source and target from relationship XML or flattened properties
+            $source = $this->extractRelationshipEndpoint($relationship, 'source');
+            $target = $this->extractRelationshipEndpoint($relationship, 'target');
+            
+            if (!$source || !$target) {
+                continue;
+            }
+            
+            // Get Verbindingsrol from flattened properties (camelCase: verbindingsrol)
+            $verbindingsrol = $relationship['verbindingsrol'] ?? null;
+            
+            // Skip if no Verbindingsrol is defined
+            if (!$verbindingsrol) {
+                continue;
+            }
+            
+            // Check if one end is a Referentiecomponent and the other is a Standaard
+            $refCompId = null;
+            $standaardId = null;
+            
+            if (isset($referentieComponenten[$source]) && isset($standaarden[$target])) {
+                // Referentiecomponent -> Standaard
+                $refCompId = $source;
+                $standaardId = $target;
+            } elseif (isset($standaarden[$source]) && isset($referentieComponenten[$target])) {
+                // Standaard -> Referentiecomponent (reverse direction)
+                $refCompId = $target;
+                $standaardId = $source;
+            }
+            
+            if ($refCompId && $standaardId) {
+                // Initialize arrays if not exists
+                if (!isset($referentieComponentStandaardMap[$refCompId])) {
+                    $referentieComponentStandaardMap[$refCompId] = [
+                        'aanbevolen' => [],
+                        'verplicht' => []
+                    ];
+                }
+                
+                // Add to appropriate array based on Verbindingsrol
+                if (strtolower($verbindingsrol) === 'aanbevolen') {
+                    $referentieComponentStandaardMap[$refCompId]['aanbevolen'][] = $standaardId;
+                } elseif (strtolower($verbindingsrol) === 'verplicht') {
+                    $referentieComponentStandaardMap[$refCompId]['verplicht'][] = $standaardId;
+                } else {
+                    // Log unknown Verbindingsrol for debugging
+                    $this->logger->warning('Unknown Verbindingsrol found', [
+                        'verbindingsrol' => $verbindingsrol,
+                        'relationship' => $relationship['identifier'] ?? 'unknown',
+                        'referentiecomponent' => $refCompId,
+                        'standaard' => $standaardId
+                    ]);
+                    continue;
+                }
+                
+                $this->logger->debug('Found Referentiecomponent-Standaard link with Verbindingsrol', [
+                    'referentiecomponent' => $refCompId,
+                    'standaard' => $standaardId,
+                    'verbindingsrol' => $verbindingsrol,
+                    'relationship' => $relationship['identifier'] ?? 'unknown'
+                ]);
+            }
+        }
+        
+        // STEP 3: Add 'aanbevolenStandaarden' and 'verplichteStandaarden' properties to Referentiecomponenten
+        $enhancedCount = 0;
+        foreach ($referentieComponentStandaardMap as $referentieComponentId => $standaardenMap) {
+            if (isset($referentieComponenten[$referentieComponentId])) {
+                $objectIndex = $referentieComponenten[$referentieComponentId];
+                
+                // Remove duplicates and add the properties
+                $aanbevolenStandaarden = array_unique($standaardenMap['aanbevolen']);
+                $verplichteStandaarden = array_unique($standaardenMap['verplicht']);
+                
+                $objects[$objectIndex]['aanbevolenStandaarden'] = $aanbevolenStandaarden;
+                $objects[$objectIndex]['verplichteStandaarden'] = $verplichteStandaarden;
+                
+                // Also add combined array for backward compatibility
+                $allStandaarden = array_unique(array_merge($aanbevolenStandaarden, $verplichteStandaarden));
+                $objects[$objectIndex]['standaarden'] = $allStandaarden;
+                
+                $this->logger->info('Enhanced Referentiecomponent with categorized standaarden', [
+                    'referentiecomponent_id' => $referentieComponentId,
+                    'referentiecomponent_name' => $objects[$objectIndex]['name'] ?? 'Unknown',
+                    'aanbevolen_count' => count($aanbevolenStandaarden),
+                    'verplicht_count' => count($verplichteStandaarden),
+                    'aanbevolen_ids' => $aanbevolenStandaarden,
+                    'verplicht_ids' => $verplichteStandaarden
+                ]);
+                
+                $enhancedCount++;
+            }
+        }
+        
+        $this->logger->info('GEMMA Referentiecomponent-Standaard processing completed', [
+            'referentiecomponenten_enhanced' => $enhancedCount,
+            'total_referentiecomponenten' => count($referentieComponenten),
+            'total_relationships_processed' => count($relationships)
+        ]);
+        
+        return $objects;
+    }
+
+    /**
+     * Extract relationship endpoint (source or target) from relationship object
+     * 
+     * @param array $relationship The relationship object
+     * @param string $endpoint Either 'source' or 'target'
+     * @return string|null The endpoint identifier or null if not found
+     */
+    private function extractRelationshipEndpoint(array $relationship, string $endpoint): ?string
+    {
+        // Try flattened camelCase property first
+        if (isset($relationship[$endpoint])) {
+            return $relationship[$endpoint];
+        }
+        
+        // Try XML structure
+        if (isset($relationship['xml'][$endpoint])) {
+            $endpointData = $relationship['xml'][$endpoint];
+            
+            // Handle different XML structures
+            if (is_string($endpointData)) {
+                return $endpointData;
+            } elseif (is_array($endpointData)) {
+                // Try _attributes.href or _value
+                if (isset($endpointData['_attributes']['href'])) {
+                    return $endpointData['_attributes']['href'];
+                } elseif (isset($endpointData['_value'])) {
+                    return $endpointData['_value'];
+                }
+            }
+        }
+        
+        // Try direct XML access for ArchiMate format
+        if (isset($relationship['xml']['_attributes'])) {
+            $attr = $relationship['xml']['_attributes'];
+            if ($endpoint === 'source' && isset($attr['source'])) {
+                return $attr['source'];
+            } elseif ($endpoint === 'target' && isset($attr['target'])) {
+                return $attr['target'];
+            }
+        }
+        
+        return null;
     }
 
 }

@@ -36,6 +36,21 @@ import { objectStore, navigationStore } from '../store/store.js'
 					</span>
 				</div>
 				<div class="viewActions">
+					<!-- Search Field -->
+					<div v-if="searchQuery !== undefined" class="viewSearch">
+						<NcTextField
+							:value="searchQuery"
+							:placeholder="t('opencatalogi', 'Search...')"
+							trailing-button-icon="close"
+							:show-trailing-button="searchQuery && searchQuery.length > 0"
+							@trailing-button-click="handleClearSearch"
+							@update:value="handleSearchInput">
+							<template #icon>
+								<Magnify :size="16" />
+							</template>
+						</NcTextField>
+					</div>
+
 					<!-- Mass Actions Dropdown -->
 					<NcActions
 						v-if="massActions && massActions.length > 0"
@@ -432,12 +447,14 @@ import {
 	NcCheckboxRadioSwitch,
 	NcButton,
 	NcSelect,
+	NcTextField,
 } from '@nextcloud/vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
 import FormatColumns from 'vue-material-design-icons/FormatColumns.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 
 import PaginationComponent from './PaginationComponent.vue'
 
@@ -454,10 +471,12 @@ export default {
 		NcCheckboxRadioSwitch,
 		NcButton,
 		NcSelect,
+		NcTextField,
 		VueDraggable,
 		DotsHorizontal,
 		FormatListChecks,
 		FormatColumns,
+		Magnify,
 		PaginationComponent,
 	},
 
@@ -610,6 +629,27 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+		/**
+		 * Search query for filtering objects
+		 */
+		searchQuery: {
+			type: String,
+			default: '',
+		},
+		/**
+		 * Search query change handler
+		 */
+		onSearchInput: {
+			type: Function,
+			default: null,
+		},
+		/**
+		 * Clear search handler
+		 */
+		clearSearch: {
+			type: Function,
+			default: null,
+		},
 	},
 
 	data() {
@@ -631,6 +671,16 @@ export default {
 					objects = objects.filter(obj => obj[filterKey] === filterValue)
 				}
 			})
+
+			// Apply search query
+			if (this.searchQuery && this.searchQuery.trim()) {
+				const searchTerm = this.searchQuery.toLowerCase().trim()
+				objects = objects.filter(obj => {
+					const objTitle = this.getObjectTitle(obj).toLowerCase()
+					const objSummary = this.getObjectSummary(obj).toLowerCase()
+					return objTitle.includes(searchTerm) || objSummary.includes(searchTerm)
+				})
+			}
 
 			return objects
 		},
@@ -735,6 +785,14 @@ export default {
 
 	mounted() {
 		console.info(`GenericObjectTable mounted for ${this.objectType}, fetching objects...`)
+		
+		// Initialize active filters with default values
+		if (this.filters && this.filters.length > 0) {
+			this.filters.forEach(filter => {
+				this.$set(this.activeFilters, filter.key, 'all')
+			})
+		}
+		
 		this.refreshObjects()
 		// Initialize column filters
 		objectStore.initializeColumnFilters()
@@ -916,7 +974,12 @@ export default {
 			if (this.paginationFunction) {
 				this.paginationFunction(page, this.currentPagination.limit || 20)
 			} else {
-				objectStore.fetchCollection(this.objectType, { _page: page, _limit: this.currentPagination.limit || 20 })
+				const params = { _page: page, _limit: this.currentPagination.limit || 20 }
+				// For organisatie, always include contactpersonen extend
+				if (this.objectType === 'organisatie') {
+					params._extend = '@self.schema,contactpersonen'
+				}
+				objectStore.fetchCollection(this.objectType, params)
 			}
 		},
 
@@ -925,7 +988,12 @@ export default {
 			if (this.paginationFunction) {
 				this.paginationFunction(1, pageSize)
 			} else {
-				objectStore.fetchCollection(this.objectType, { _page: 1, _limit: pageSize })
+				const params = { _page: 1, _limit: pageSize }
+				// For organisatie, always include contactpersonen extend
+				if (this.objectType === 'organisatie') {
+					params._extend = '@self.schema,contactpersonen'
+				}
+				objectStore.fetchCollection(this.objectType, params)
 			}
 		},
 
@@ -946,20 +1014,56 @@ export default {
 		 */
 		setFilter(filterKey, option) {
 			this.$set(this.activeFilters, filterKey, option.value)
+			
+			// Call the onChange handler if it exists for this filter
+			const filter = this.filters.find(f => f.key === filterKey)
+			if (filter && filter.onChange) {
+				filter.onChange(option.value)
+			}
 		},
 
 		refreshObjects() {
 			if (this.refreshFunction) {
 				this.refreshFunction()
 			} else {
-				objectStore.fetchCollection(this.objectType)
+				// For organisatie, always include contactpersonen extend
+				const extendParams = this.objectType === 'organisatie' 
+					? { _extend: '@self.schema,contactpersonen' }
+					: {}
+				objectStore.fetchCollection(this.objectType, extendParams)
 			}
 			// Clear selection after refresh
 			objectStore.setSelectedObjects([])
+			
+			// Reset filters to default values
+			if (this.filters && this.filters.length > 0) {
+				this.filters.forEach(filter => {
+					this.$set(this.activeFilters, filter.key, 'all')
+				})
+			}
 		},
 
 		openLink(url, type = '') {
 			window.open(url, type)
+		},
+
+		/**
+		 * Handle search input
+		 * @param {string} value - The search input value
+		 */
+		handleSearchInput(value) {
+			if (this.onSearchInput) {
+				this.onSearchInput(value)
+			}
+		},
+
+		/**
+		 * Handle clear search
+		 */
+		handleClearSearch() {
+			if (this.clearSearch) {
+				this.clearSearch()
+			}
 		},
 	},
 }
@@ -1142,6 +1246,10 @@ export default {
 	align-items: center;
 	gap: 16px;
 	flex-wrap: wrap;
+}
+
+.viewSearch {
+	min-width: 200px;
 }
 
 .filterItem {

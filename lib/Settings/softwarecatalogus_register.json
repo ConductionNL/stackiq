@@ -91,7 +91,7 @@
             "property": {
                 "uri": null,
                 "slug": "property",
-                "title": "Eigenschap",
+                "title": "Property",
                 "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
                 "version": "0.0.4",
                 "summary": "",
@@ -217,7 +217,8 @@
                         "order": 1,
                         "facetable": false,
                         "title": "Naam",
-                        "maxLength": 200
+                        "maxLength": 200,
+                        "example": "Bijvoorbeeld: Overheid"
                     },
                     "beschrijving": {
                         "description": "Beschrijving van de sector",
@@ -226,7 +227,8 @@
                         "order": 2,
                         "facetable": false,
                         "title": "Beschrijving",
-                        "maxLength": 1000
+                        "maxLength": 1000,
+                        "example": "Bijvoorbeeld: Publieke sector en overheidsdiensten"
                     }
                 },
                 "archive": [],
@@ -306,7 +308,8 @@
                 "summary": "",
                 "icon": "ApplicationCog",
                 "required": [
-                    "naam"
+                    "naam",
+                    "beschrijvingKort"
                 ],
                 "properties": {
                     "naam": {
@@ -336,7 +339,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Naam"
+                        "title": "Naam",
+                        "example": "Voorbeeld: VNG Product Suite"
                     },
                     "beschrijvingLang": {
                         "description": "Beschrijving van het product, suite of monobrand voor op de detailpagina",
@@ -365,7 +369,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Beschrijving"
+                        "title": "Beschrijving",
+                        "example": "Bijvoorbeeld: Een uitgebreide beschrijving van het product met alle functionaliteiten en kenmerken"
                     },
                     "beschrijvingKort": {
                         "type": "string",
@@ -373,7 +378,8 @@
                         "description": "Korte beschrijving van het product, suite of monobrand voor in de weergave in tabellen en zoekresultaten",
                         "facetable": false,
                         "maxLength": 255,
-                        "order": 3
+                        "order": 3,
+                        "example": "Bijvoorbeeld: Een korte samenvatting van het product"
                     },
                     "website": {
                         "description": "Website van het product",
@@ -403,7 +409,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Website"
+                        "title": "Website",
+                        "example": "https://voorbeeld.nl/product"
                     },
                     "contactpersoon": {
                         "description": "Contactpersoon voor het product, suite of monobrand",
@@ -431,7 +438,8 @@
                             "SaaS"
                         ],
                         "facetable": true,
-                        "title": "Cloud Dienstverleningsmodel"
+                        "title": "Cloud Dienstverleningsmodel",
+                        "example": "Bijvoorbeeld: SaaS"
                     },
                     "hostingJurisdictie": {
                         "description": "De jurisdictie waar de hosting plaatsvindt",
@@ -445,7 +453,8 @@
                             "elders"
                         ],
                         "facetable": true,
-                        "title": "Hosting jurisdictie"
+                        "title": "Hosting jurisdictie",
+                        "example": "Bijvoorbeeld: NL"
                     },
                     "hostingLocatie": {
                         "description": "De locatie waar de hosting plaatsvindt",
@@ -459,7 +468,8 @@
                             "elders"
                         ],
                         "facetable": true,
-                        "title": "Hosting locatie"
+                        "title": "Hosting locatie",
+                        "example": "Bijvoorbeeld: NL"
                     },
                     "logo": {
                         "description": "URL naar het logo van het product, suite of monobrand",
@@ -471,7 +481,8 @@
                         "fileConfiguration": {},
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Logo"
+                        "title": "Logo",
+                        "example": "https://voorbeeld.nl/logo.png"
                     },
                     "aanbieder": {
                         "description": "De aanbieder van het product, suite of monobrand",
@@ -650,7 +661,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Naam"
+                        "title": "Naam",
+                        "example": "Bijvoorbeeld: Implementatie en ondersteuning"
                     },
                     "beschrijvingKort": {
                         "type": "string",
@@ -658,7 +670,8 @@
                         "title": "Samenvatting",
                         "facetable": false,
                         "maxLength": 255,
-                        "order": 5
+                        "order": 5,
+                        "example": "Bijvoorbeeld: Korte beschrijving van de dienst"
                     },
                     "beschrijvingLang": {
                         "description": "Uitgebreide beschrijving van de dienst",
@@ -668,7 +681,8 @@
                         "order": 6,
                         "facetable": false,
                         "title": "Beschrijving",
-                        "maxLength": 5000
+                        "maxLength": 5000,
+                        "example": "Bijvoorbeeld: Uitgebreide beschrijving van de dienst met alle details"
                     },
                     "website": {
                         "type": "string",
@@ -678,12 +692,14 @@
                         "title": "Website",
                         "order": 4,
                         "visible": true,
-                        "maxLength": 500
+                        "maxLength": 500,
+                        "example": "https://dienst.voorbeeld.nl"
                     },
                     "status": {
                         "description": "De status van dit aanbod",
                         "type": "string",
-                        "default": "concept"
+                        "default": "concept",
+                        "example": "Bijvoorbeeld: concept"
                     },
                     "contactpersoon": {
                         "description": "Contactpersoon voor deze dienst",
@@ -740,7 +756,8 @@
                             "Implementatieondersteuning",
                             "Opleidingen",
                             "Licentiereseller"
-                        ]
+                        ],
+                        "example": "Bijvoorbeeld: Implementatieondersteuning"
                     },
                     "logo": {
                         "description": "URL naar het logo van de dienst",
@@ -749,7 +766,8 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Logo"
+                        "title": "Logo",
+                        "example": "https://dienst.voorbeeld.nl/logo.png"
                     },
                     "modules": {
                         "description": "De modules die onderdeel zijn van deze dienst",
@@ -882,7 +900,8 @@
                         "order": 1,
                         "facetable": false,
                         "title": "Naam",
-                        "maxLength": 200
+                        "maxLength": 200,
+                        "example": "Bijvoorbeeld: SQL Injection"
                     },
                     "beschrijvingKort": {
                         "description": "Korte beschrijving van de kwetsbaarheid",
@@ -891,7 +910,8 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Samenvatting"
+                        "title": "Samenvatting",
+                        "example": "Bijvoorbeeld: Korte beschrijving van de kwetsbaarheid"
                     },
                     "beschrijvingLang": {
                         "description": "Uitgebreide beschrijving van de kwetsbaarheid",
@@ -901,7 +921,8 @@
                         "order": 3,
                         "facetable": false,
                         "title": "Beschrijving",
-                        "maxLength": 5000
+                        "maxLength": 5000,
+                        "example": "Bijvoorbeeld: Uitgebreide beschrijving van de kwetsbaarheid"
                     },
                     "cveCode": {
                         "description": "CVE (Common Vulnerabilities and Exposures) identificatiecode",
@@ -911,7 +932,8 @@
                         "order": 4,
                         "facetable": true,
                         "title": "CVE Code",
-                        "maxLength": 20
+                        "maxLength": 20,
+                        "example": "Bijvoorbeeld: CVE-2021-44228"
                     },
                     "cvssScore": {
                         "description": "CVSS (Common Vulnerability Scoring System) score van 0.0 tot 10.0",
@@ -921,7 +943,8 @@
                         "visible": true,
                         "order": 5,
                         "facetable": true,
-                        "title": "CVSS Score"
+                        "title": "CVSS Score",
+                        "example": "Bijvoorbeeld: 9.8"
                     },
                     "modules": {
                         "description": "De modules die door deze kwetsbaarheid getroffen worden",
@@ -1028,7 +1051,8 @@
                         "facetable": false,
                         "title": "Voornaam",
                         "order": 11,
-                        "maxLength": 100
+                        "maxLength": 100,
+                        "example": "Bijvoorbeeld: Jan"
                     },
                     "tussenvoegsel": {
                         "type": "string",
@@ -1036,7 +1060,8 @@
                         "facetable": false,
                         "title": "Tussenvoegsel",
                         "order": 9,
-                        "maxLength": 20
+                        "maxLength": 20,
+                        "example": "Bijvoorbeeld: van"
                     },
                     "achternaam": {
                         "type": "string",
@@ -1044,7 +1069,8 @@
                         "facetable": false,
                         "title": "Achternaam",
                         "order": 1,
-                        "maxLength": 100
+                        "maxLength": 100,
+                        "example": "Bijvoorbeeld: Jansen"
                     },
                     "functie": {
                         "description": "Functie van de medewerker",
@@ -1072,7 +1098,8 @@
                         "oneOf": [],
                         "facetable": false,
                         "title": "Functie",
-                        "order": 3
+                        "order": 3,
+                        "example": "Bijvoorbeeld: Beheerder"
                     },
                     "organisatie": {
                         "type": "object",
@@ -1120,14 +1147,16 @@
                         "description": "Telefoonnummer van de contactpersoon",
                         "facetable": false,
                         "title": "Telefoonnummer",
-                        "order": 8
+                        "order": 8,
+                        "example": "Bijvoorbeeld: 06 12345678"
                     },
                     "isAanspreekpunt": {
                         "type": "boolean",
                         "title": "Is aanspreekpunt",
                         "description": "Geeft aan of deze persoon het aanspreekpunt is voor deze organisatie (publiek word gedeeld",
                         "facetable": false,
-                        "order": 4
+                        "order": 4,
+                        "example": "Bijvoorbeeld: true"
                     },
                     "notificaties": {
                         "type": "array",
@@ -1137,7 +1166,8 @@
                         "items": {
                             "type": "string"
                         },
-                        "order": 5
+                        "order": 5,
+                        "example": "Bijvoorbeeld: [\"email\", \"sms\"]"
                     },
                     "rollen": {
                         "description": "De rollen die deze contactpersoon heeft",
@@ -1179,7 +1209,8 @@
                             "Functioneel-beheerder",
                             "VNG-raadpleger",
                             "Organisatie-beheerder"
-                        ]
+                        ],
+                        "example": "Bijvoorbeeld: [\"Aanbod-beheerder\", \"Functioneel-beheerder\"]"
                     },
                     "e-mailadres": {
                         "description": "E-mailadres van de contactpersoon",
@@ -1212,7 +1243,8 @@
                             "location": "",
                             "maxSize": 0
                         },
-                        "oneOf": []
+                        "oneOf": [],
+                        "example": "Bijvoorbeeld: jan.jansen@organisatie.nl"
                     }
                 },
                 "archive": [],
@@ -1324,7 +1356,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Naam"
+                        "title": "Naam",
+                        "example": "Bijvoorbeeld: VNG Realisatie"
                     },
                     "beschrijvingKort": {
                         "description": "Beschrijving van de leverancier",
@@ -1428,7 +1461,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "KvK Nummer"
+                        "title": "KvK Nummer",
+                        "example": "12345678"
                     },
                     "contactpersonen": {
                         "description": "De contactpersoon van de organisatie",
@@ -1493,7 +1527,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "E-mailadres"
+                        "title": "E-mailadres",
+                        "example": "contact@organisatie.nl"
                     },
                     "website": {
                         "description": "URL van de website van de organisatie",
@@ -1522,7 +1557,8 @@
                             "location": "",
                             "maxSize": 0
                         },
-                        "oneOf": []
+                        "oneOf": [],
+                        "example": "https://www.organisatie.nl"
                     },
                     "telefoonnummer": {
                         "description": "Telefoonnummer van de contactpersoon of de organisatie",
@@ -1912,7 +1948,8 @@
                         "visible": true,
                         "order": 14,
                         "facetable": false,
-                        "title": "Startdatum Verwerving"
+                        "title": "Startdatum Verwerving",
+                        "example": "Bijvoorbeeld: 2025-01-01"
                     },
                     "startDatumGepland": {
                         "description": "De start datum voor het \"Gepland\" status",
@@ -1941,7 +1978,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Geplande Startdatum"
+                        "title": "Geplande Startdatum",
+                        "example": "Bijvoorbeeld: 2025-02-01"
                     },
                     "startDatumInProductie": {
                         "description": "De start datum voor het \"actief\" status",
@@ -1970,7 +2008,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Startdatum In Productie"
+                        "title": "Startdatum In Productie",
+                        "example": "Bijvoorbeeld: 2025-03-01"
                     },
                     "startDatumUitTeFaseren": {
                         "description": "De start datum voor het \"Beëindigd\" status",
@@ -1999,7 +2038,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Startdatum Uit Te Faseren"
+                        "title": "Startdatum Uit Te Faseren",
+                        "example": "Bijvoorbeeld: 2025-12-31"
                     },
                     "startDatumUitGefaseerd": {
                         "description": "De start datum voor het \"Uit gefaseerd\" status",
@@ -2028,7 +2068,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Startdatum Uit Gefaseerd"
+                        "title": "Startdatum Uit Gefaseerd",
+                        "example": "Bijvoorbeeld: 2025-12-31"
                     },
                     "status": {
                         "description": "De status van het gebruik",
@@ -2065,7 +2106,8 @@
                             "Uitgefaseerd"
                         ],
                         "facetable": false,
-                        "title": "Status"
+                        "title": "Status",
+                        "example": "Bijvoorbeeld: Gepland"
                     },
                     "interneAantekening": {
                         "description": "Aanvullende interne informatie over het gebruik van de voorziening",
@@ -2094,7 +2136,8 @@
                         },
                         "oneOf": [],
                         "facetable": false,
-                        "title": "Interne Aantekening"
+                        "title": "Interne Aantekening",
+                        "example": "Bijvoorbeeld: Interne notitie over het gebruik"
                     },
                     "module": {
                         "description": "De specifieke module die gebruikt wordt",
@@ -2133,7 +2176,7 @@
                             "type": "object",
                             "objectConfiguration": {
                                 "handling": "related-object",
-                                "queryParams": "gemmaType=referentiecomponent"
+                                "queryParams": "gemmaType=referentiecomponent&_extend=aanbevolenStandaarden,verplichteStandaarden"
                             },
                             "$ref": "#/components/schemas/element"
                         }
@@ -2291,7 +2334,8 @@
                         "facetable": false,
                         "required": true,
                         "title": "Startdatum",
-                        "order": 10
+                        "order": 10,
+                        "example": "Bijvoorbeeld: 2025-01-01"
                     },
                     "eindDatum": {
                         "type": "string",
@@ -2299,7 +2343,8 @@
                         "description": "De einddatum van het contract (indien van toepassing)",
                         "facetable": false,
                         "title": "Einddatum",
-                        "order": 6
+                        "order": 6,
+                        "example": "Bijvoorbeeld: 2025-12-31"
                     },
                     "contractNummer": {
                         "type": "string",
@@ -2307,7 +2352,8 @@
                         "facetable": false,
                         "required": true,
                         "title": "Contract Nummer",
-                        "order": 3
+                        "order": 3,
+                        "example": "Bijvoorbeeld: CON-2025-001"
                     },
                     "contractType": {
                         "type": "string",
@@ -2320,14 +2366,16 @@
                         "facetable": false,
                         "required": true,
                         "title": "Contract Type",
-                        "order": 4
+                        "order": 4,
+                        "example": "Bijvoorbeeld: SLA"
                     },
                     "kosten": {
                         "type": "number",
                         "description": "De kosten verbonden aan het contract",
                         "facetable": false,
                         "title": "Kosten",
-                        "order": 7
+                        "order": 7,
+                        "example": "Bijvoorbeeld: 1000.00"
                     },
                     "kostenPeriode": {
                         "type": "string",
@@ -2339,7 +2387,8 @@
                         "description": "De periode waarop de kosten betrekking hebben",
                         "facetable": false,
                         "title": "Kosten Periode",
-                        "order": 8
+                        "order": 8,
+                        "example": "Bijvoorbeeld: Jaarlijks"
                     },
                     "contactpersoonAanbieder": {
                         "type": "object",
@@ -2382,7 +2431,8 @@
                         "description": "Referentie naar het contractdocument",
                         "facetable": false,
                         "title": "Document Referentie",
-                        "order": 5
+                        "order": 5,
+                        "example": "Bijvoorbeeld: CON-2025-001.pdf"
                     },
                     "status": {
                         "type": "string",
@@ -2395,14 +2445,16 @@
                         "facetable": false,
                         "required": true,
                         "title": "Status",
-                        "order": 11
+                        "order": 11,
+                        "example": "Bijvoorbeeld: Actief"
                     },
                     "opmerkingen": {
                         "type": "string",
                         "description": "Aanvullende informatie over het contract",
                         "facetable": false,
                         "title": "Remarks",
-                        "order": 9
+                        "order": 9,
+                        "example": "Bijvoorbeeld: Aanvullende opmerkingen over het contract"
                     }
                 },
                 "archive": [],
@@ -2487,20 +2539,23 @@
                         "description": "Naam van de koppeling",
                         "type": "string",
                         "order": 1,
-                        "title": "Naam"
+                        "title": "Naam",
+                        "example": "Bijvoorbeeld: API Koppeling"
                     },
                     "beschrijvingKort": {
                         "description": "Korte beschrijving van de koppeling",
                         "type": "string",
                         "order": 5,
-                        "title": "Samenvatting"
+                        "title": "Samenvatting",
+                        "example": "Bijvoorbeeld: Korte beschrijving van de koppeling"
                     },
                     "beschrijvingLang": {
                         "description": "Uitgebreide beschrijving van de koppeling",
                         "type": "string",
                         "format": "markdown",
                         "order": 6,
-                        "title": "Beschrijving"
+                        "title": "Beschrijving",
+                        "example": "Bijvoorbeeld: Uitgebreide beschrijving van de koppeling"
                     },
                     "type": {
                         "description": "Het type koppeling, bijvoorbeeld 'bestandsoverdracht', 'digikoppeling', of 'api'.",
@@ -2515,7 +2570,8 @@
                             "upload naar portaal",
                             "webservices",
                             "api"
-                        ]
+                        ],
+                        "example": "Bijvoorbeeld: api"
                     },
                     "status": {
                         "description": "De status van de koppeling",
@@ -2534,7 +2590,8 @@
                         "type": "string",
                         "format": "date",
                         "order": 4,
-                        "title": "Datum In Ontwikkeling"
+                        "title": "Datum In Ontwikkeling",
+                        "example": "Bijvoorbeeld: 2025-01-01"
                     },
                     "datumInGebruik": {
                         "description": "Startdatum van gebruik",
@@ -3009,7 +3066,10 @@
                 "organisation": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectSummaryField": "summary"
+                }
             },
             "view": {
                 "slug": "view",
@@ -4598,7 +4658,8 @@
                 "icon": "Package",
                 "required": [
                     "naam",
-                    "product"
+                    "product",
+                    "beschrijvingKort"
                 ],
                 "properties": {
                     "naam": {
@@ -4692,7 +4753,7 @@
                             "type": "object",
                         "objectConfiguration": {
                                 "handling": "related-object",
-                                "queryParams": "gemmaType=referentiecomponent"
+                                "queryParams": "gemmaType=referentiecomponent&_extend=aanbevolenStandaarden,verplichteStandaarden"
                             },
                             "$ref": "#/components/schemas/element"
                         }
@@ -4704,6 +4765,7 @@
                         "order": 11,
                         "facetable": false,
                         "title": "Type",
+                        "default": "Applicatie",
                         "enum": [
                             "Applicatie",
                             "Systeemsoftware"
@@ -4719,39 +4781,48 @@
                         "title": "Logo",
                         "maxLength": 500
                     },
-                    "product": {
-                        "description": "Het product waarvan deze module onderdeel is",
-                        "type": "object",
+                    "producten": {
+                        "description": "De producten waarvan deze module onderdeel is",
+                        "type": "array",
                         "visible": true,
                         "order": 19,
                         "facetable": false,
-                        "title": "Product",
-                        "objectConfiguration": {
-                            "handling": "related-object"
-                        },
-                        "$ref": "#/components/schemas/product",
-                        "inversedBy": "modules"
+                        "title": "Producten",
+                        "hideOnForm": true,
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/product",
+                            "inversedBy": "modules"
+                        }
                     },
-                    "dienst": {
-                        "description": "De dienst waarvan deze module onderdeel is",
-                        "type": "object",
+                    "diensten": {
+                        "description": "De diensten waarvan deze module onderdeel is",
+                        "type": "array",
                         "visible": true,
                         "order": 20,
                         "facetable": false,
-                        "title": "Dienst",
-                        "objectConfiguration": {
-                            "handling": "related-object"
-                        },
-                        "$ref": "#/components/schemas/dienst",
-                        "inversedBy": "modules"
+                        "title": "Diensten",
+                        "hideOnForm": true,
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/dienst",
+                            "inversedBy": "modules"
+                        }
                     },
-                    "koppeling": {
+                    "koppelingen": {
                         "description": "De koppelingen waarbij deze module betrokken is",
                         "type": "array",
                         "visible": true,
                         "order": 21,
                         "facetable": false,
                         "title": "Koppelingen",
+                        "hideOnForm": true,
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
@@ -4761,12 +4832,13 @@
                         }
                     },
                     "compliancy": {
-                        "description": "De compliance registraties voor deze module",
+                        "description": "De standaarden waar deze module aan voldoet (compliance registraties)",
                         "type": "array",
                         "visible": true,
                         "order": 22,
                         "facetable": false,
                         "title": "Compliance",
+                        "hideOnForm": true,
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
@@ -4775,13 +4847,14 @@
                             "$ref": "#/components/schemas/compliancy"
                         }
                     },
-                    "moduleVersie": {
+                    "moduleVersies": {
                         "description": "De versies van deze module",
                         "type": "array",
                         "visible": true,
                         "order": 23,
                         "facetable": false,
                         "title": "Module Versies",
+                        "hideOnForm": true,
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
@@ -4790,13 +4863,14 @@
                             "$ref": "#/components/schemas/moduleVersie"
                         }
                     },
-                    "gebruik": {
+                    "gebruiken": {
                         "description": "Het gebruik van deze module",
                         "type": "array",
                         "visible": true,
                         "order": 24,
                         "facetable": false,
                         "title": "Gebruik",
+                        "hideOnForm": true,
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
@@ -4805,13 +4879,14 @@
                             "$ref": "#/components/schemas/gebruik"
                         }
                     },
-                    "beoordeeling": {
+                    "beoordelingen": {
                         "description": "De beoordelingen van deze module",
                         "type": "array",
                         "visible": true,
                         "order": 25,
                         "facetable": false,
                         "title": "Beoordelingen",
+                        "hideOnForm": true,
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
@@ -4820,13 +4895,14 @@
                             "$ref": "#/components/schemas/beoordeeling"
                         }
                     },
-                    "kwetsbaarheid": {
+                    "kwetsbaarheden": {
                         "description": "De kwetsbaarheden die deze module treffen",
                         "type": "array",
                         "visible": true,
                         "order": 26,
                         "facetable": false,
                         "title": "Kwetsbaarheden",
+                        "hideOnForm": true,
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
@@ -4962,7 +5038,8 @@
                         "order": 2,
                         "title": "Versie",
                         "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
-                        "maxLength": 50
+                        "maxLength": 50,
+                        "default": "1.0.0"
                     },
                     "beschrijvingKort": {
                         "description": "Korte beschrijving van de module versie",
@@ -4989,7 +5066,8 @@
                             "in gebruik",
                             "einde ondersteuning",
                             "teruggetrokken"
-                        ]
+                        ],
+                        "default": "in gebruik"
                     },
                     "datumInOntwikkeling": {
                         "description": "Startdatum van de ontwikkelingsfase",
@@ -5019,7 +5097,7 @@
                         "order": 17,
                         "title": "Datum Teruggetrokken"
                     },
-                    "gebruik": {
+                    "gebruiken": {
                         "description": "Het gebruik van deze module versie",
                         "type": "array",
                         "visible": true,
