@@ -1066,12 +1066,8 @@ class OrganizationSyncService
             $syncResults = array_merge($this->performContactSync(), $syncResults);
 
             $this->performUserSync();
-//            die;
-
-            // Perform the core synchronization with time-based filtering
-//            $syncResults = $this->performFullSync($minutesBack);
-
-            // Record the sync time
+            
+            // Record the sync time for consistency with scheduled sync
             $this->recordSyncTime();
 
             $this->logger->info('OrganizationSyncService: Manual organization synchronization completed via API', [
