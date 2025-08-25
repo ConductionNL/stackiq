@@ -269,6 +269,7 @@
  */
 
 import { settingsStore } from '../../../store/store.js'
+import { withHeartbeat } from '../../../utils/heartbeat.js'
 
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
@@ -406,10 +407,12 @@ export default {
 			this.importError = null
 
 			try {
-				// Create FormData for file upload
-				const formData = new FormData()
-				formData.append('archiMateFile', this.selectedFile)
+			// Create FormData for file upload
+			const formData = new FormData()
+			formData.append('archiMateFile', this.selectedFile)
 
+			// Wrap the import operation with heartbeat to prevent 504 timeouts
+			const result = await withHeartbeat(async () => {
 				// Make the API call
 				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
 					method: 'POST',
@@ -422,16 +425,20 @@ export default {
 
 				const result = await response.json()
 
-				if (result.success) {
-					this.importResult = result
-					// Show success notification
-					OC.Notification.showTemporary(
-						`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
-						{ type: 'success' },
-					)
-				} else {
+				if (!result.success) {
 					throw new Error(result.message || 'Import failed')
 				}
+
+				return result
+			}, 30000) // 30-second heartbeat interval
+
+			// Handle successful result
+			this.importResult = result
+			// Show success notification
+			OC.Notification.showTemporary(
+				`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
+				{ type: 'success' },
+			)
 
 			} catch (error) {
 				console.error('Error importing ArchiMate file:', error)
@@ -465,8 +472,10 @@ export default {
 				organization: this.selectedOrganization?.value ?? null,
 			}
 
-			// Make the API call
-			const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
+			// Wrap the export operation with heartbeat to prevent 504 timeouts
+			await withHeartbeat(async () => {
+				// Make the API call
+				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -512,8 +521,9 @@ export default {
 					const errorData = await response.json()
 					throw new Error(errorData.message || 'Export failed')
 				}
+			}, 30000) // 30-second heartbeat interval
 
-			} catch (error) {
+		} catch (error) {
 				console.error('Error exporting ArchiMate file:', error)
 
 				// Show error notification

@@ -36,6 +36,9 @@ return [
         // Organization synchronization routes
         ['name' => 'settings#getSyncStatus', 'url' => '/api/settings/sync-status', 'verb' => 'GET'],
         ['name' => 'settings#performSync', 'url' => '/api/settings/sync', 'verb' => 'POST'],
+        
+        // Heartbeat route for keeping connections alive during long operations
+        ['name' => 'settings#heartbeat', 'url' => '/api/heartbeat', 'verb' => 'POST'],
 
         // Version and import management routes
         ['name' => 'settings#getVersionInfo', 'url' => '/api/settings/version', 'verb' => 'GET'],
