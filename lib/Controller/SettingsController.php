@@ -598,7 +598,45 @@ class SettingsController extends Controller
         }
     }
 
-
+    /**
+     * Heartbeat endpoint to keep connections alive during long-running operations
+     *
+     * This endpoint prevents 504 gateway timeouts by responding to periodic
+     * keep-alive requests sent during lengthy operations like sync or export.
+     *
+     * @return JSONResponse JSON response confirming heartbeat received
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function heartbeat(): JSONResponse
+    {
+        try {
+            $timestamp = $this->request->getParam('timestamp', time() * 1000);
+            
+            $this->logger->debug('Heartbeat received', [
+                'timestamp' => $timestamp,
+                'server_time' => time() * 1000
+            ]);
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Heartbeat received',
+                'timestamp' => $timestamp,
+                'server_time' => time() * 1000
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Heartbeat error: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Heartbeat failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Get version information for the app and configuration.

@@ -256,6 +256,7 @@
 
 import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { withHeartbeat } from '../../../utils/heartbeat.js'
 
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
@@ -440,20 +441,25 @@ export default {
 
 			try {
 				const timeWindow = this.selectedTimeWindow?.value || 10
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
-					},
-					body: JSON.stringify({ timeWindow }),
-				})
+				
+				// Wrap the sync operation with heartbeat to prevent 504 timeouts
+				const result = await withHeartbeat(async () => {
+					const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({ timeWindow }),
+					})
 
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					}
 
-				const result = await response.json()
+					return await response.json()
+				}, 30000) // 30-second heartbeat interval
+
 				this.syncResult = result
 
 				if (result.success) {
