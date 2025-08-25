@@ -31,6 +31,18 @@
 		:has-info-content="true"
 		@save="saveConfiguration"
 		@refresh="refreshConfiguration">
+		<template #header-actions>
+			<NcButton
+				type="primary"
+				:disabled="loading || performingSync"
+				@click="performManualSync">
+				<template #icon>
+					<NcLoadingIcon v-if="performingSync" :size="20" />
+					<Sync v-else :size="20" />
+				</template>
+				{{ selectedTimeWindow && selectedTimeWindow.value === 0 ? 'Full Sync Now' : 'Incremental Sync Now' }}
+			</NcButton>
+		</template>
 		<div>
 			<div class="sync-section">
 				<p>Monitor the status of organization and contact person synchronization</p>
@@ -72,17 +84,6 @@
 									<Refresh v-else :size="20" />
 								</template>
 								Refresh Status
-							</NcButton>
-
-							<NcButton
-								type="primary"
-								:disabled="loading || performingSync || !syncStatus?.configured"
-								@click="performManualSync">
-								<template #icon>
-									<NcLoadingIcon v-if="performingSync" :size="20" />
-									<Sync v-else :size="20" />
-								</template>
-								{{ selectedTimeWindow && selectedTimeWindow.value === 0 ? 'Full Sync Now' : 'Incremental Sync Now' }}
 							</NcButton>
 						</div>
 					</div>
