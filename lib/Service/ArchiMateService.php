@@ -76,6 +76,13 @@ class ArchiMateService
      * @var array|null
      */
     private ?array $propertyDefinitionMapCache = null;
+
+    /**
+     * Flag to track if we've already logged finding a GEMMA type property
+     * 
+     * @var bool
+     */
+    private bool $gemmaTypePropertyFound = false;
     private const CONFIG_KEYS = [
         'archimate_register_id' => 'archimate_register_id',
         'archimate_schema_id' => 'archimate_schema_id',
@@ -2090,6 +2097,69 @@ class ArchiMateService
     }
 
     /**
+     * Extract GEMMA type from an object using multiple possible property names
+     * 
+     * This method tries different variations of GEMMA type property names to ensure
+     * compatibility with different ArchiMate model variations.
+     * 
+     * @param array $object The object to extract GEMMA type from
+     * @return string|null The GEMMA type value or null if not found
+     */
+    private function extractGemmaType(array $object): ?string
+    {
+        // Try various possible property names for GEMMA type
+        $possiblePropertyNames = [
+            'gemmaType',        // Standard camelCase conversion of "GEMMA Type"
+            'gemmatype',        // Lowercase version
+            'GemmaType',        // PascalCase version
+            'GEMMA_Type',       // Underscore version
+            'gemma_type',       // Lowercase underscore version
+            'GEMMAType',        // All caps first word
+            'type',             // Sometimes just "Type" in models
+            'elementType',      // Alternative naming
+            'componentType'     // Another alternative
+        ];
+        
+        foreach ($possiblePropertyNames as $propertyName) {
+            if (isset($object[$propertyName]) && !empty($object[$propertyName])) {
+                $value = (string) $object[$propertyName];
+                
+                // Log the first successful match for debugging
+                if (!$this->gemmaTypePropertyFound) {
+                    $this->logger->debug('GEMMA Type property found', [
+                        'property_name' => $propertyName,
+                        'value' => $value,
+                        'object_id' => $object['identifier'] ?? 'unknown'
+                    ]);
+                    $this->gemmaTypePropertyFound = true;
+                }
+                
+                return $value;
+            }
+        }
+        
+        // If no direct property found, check _propertyMapping for original property names
+        if (isset($object['_propertyMapping'])) {
+            foreach ($object['_propertyMapping'] as $camelCase => $original) {
+                // Check if the original property name contains "gemma" or "type"
+                if (stripos($original, 'gemma') !== false && stripos($original, 'type') !== false) {
+                    if (isset($object[$camelCase]) && !empty($object[$camelCase])) {
+                        $this->logger->debug('GEMMA Type found via property mapping', [
+                            'camel_case_name' => $camelCase,
+                            'original_name' => $original,
+                            'value' => $object[$camelCase],
+                            'object_id' => $object['identifier'] ?? 'unknown'
+                        ]);
+                        return (string) $object[$camelCase];
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
      * Process GEMMA Referentiecomponent-Standaard relationships with Verbindingsrol support
      * 
      * This method analyzes all objects to find Referentiecomponenten and Standaarden,
@@ -2110,14 +2180,33 @@ class ArchiMateService
         $standaarden = [];
         $gemmaRelationshipMap = [];
         
+        // Debug: Count objects and property variations
+        $elementCount = 0;
+        $elementsWithGemmaType = 0;
+        $gemmaTypeVariations = [];
+        
         // PASS 1: Collect Referentiecomponenten and Standaarden, process relationships immediately
         foreach ($objects as $index => $object) {
-            // Check if this is an element with GEMMA type property
-            if (isset($object['section']) && $object['section'] === 'element' && isset($object['gemmaType'])) {
-                if ($object['gemmaType'] === 'Referentiecomponent') {
-                    $referentieComponenten[$object['identifier']] = $index;
-                } elseif ($object['gemmaType'] === 'Standaard') {
-                    $standaarden[$object['identifier']] = $index;
+            // Debug: Count elements and GEMMA types
+            if (isset($object['section']) && $object['section'] === 'element') {
+                $elementCount++;
+                
+                // Check for various possible GEMMA type property names
+                $gemmaTypeValue = $this->extractGemmaType($object);
+                if ($gemmaTypeValue !== null) {
+                    $elementsWithGemmaType++;
+                    
+                    // Track GEMMA type variations for debugging
+                    if (!isset($gemmaTypeVariations[$gemmaTypeValue])) {
+                        $gemmaTypeVariations[$gemmaTypeValue] = 0;
+                    }
+                    $gemmaTypeVariations[$gemmaTypeValue]++;
+                    
+                    if ($gemmaTypeValue === 'Referentiecomponent') {
+                        $referentieComponenten[$object['identifier']] = $index;
+                    } elseif ($gemmaTypeValue === 'Standaard') {
+                        $standaarden[$object['identifier']] = $index;
+                    }
                 }
             }
             
@@ -2127,11 +2216,23 @@ class ArchiMateService
             }
         }
         
-        $this->logger->info('GEMMA objects found', [
+        // Enhanced debug logging
+        $this->logger->info('GEMMA objects processing complete', [
+            'total_elements' => $elementCount,
+            'elements_with_gemma_type' => $elementsWithGemmaType,
+            'gemma_type_variations' => $gemmaTypeVariations,
             'referentiecomponenten_count' => count($referentieComponenten),
             'standaarden_count' => count($standaarden),
             'processed_relationships' => count($gemmaRelationshipMap)
         ]);
+        
+        // Additional debugging if no GEMMA types found
+        if ($elementsWithGemmaType === 0 && $elementCount > 0) {
+            $this->logger->warning('No GEMMA types found in any elements', [
+                'total_elements_processed' => $elementCount,
+                'sample_element_keys' => 'Will need to examine individual objects'
+            ]);
+        }
         
         // STEP 2: Apply the processed relationship mappings to Referentiecomponenten
         $enhancedCount = 0;

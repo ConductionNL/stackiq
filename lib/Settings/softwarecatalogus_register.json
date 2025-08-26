@@ -438,7 +438,7 @@
                             "SaaS"
                         ],
                         "facetable": true,
-                        "title": "Cloud Dienstverleningsmodel",
+                        "title": "Hosting vorm",
                         "example": "Bijvoorbeeld: SaaS"
                     },
                     "hostingJurisdictie": {
@@ -450,7 +450,7 @@
                             "NL",
                             "EU",
                             "US",
-                            "elders"
+                            "Elders"
                         ],
                         "facetable": true,
                         "title": "Hosting jurisdictie",
@@ -465,7 +465,7 @@
                             "NL",
                             "EU",
                             "US",
-                            "elders"
+                            "Elders"
                         ],
                         "facetable": true,
                         "title": "Hosting locatie",

@@ -407,38 +407,38 @@ export default {
 			this.importError = null
 
 			try {
-			// Create FormData for file upload
-			const formData = new FormData()
-			formData.append('archiMateFile', this.selectedFile)
+				// Create FormData for file upload
+				const formData = new FormData()
+				formData.append('archiMateFile', this.selectedFile)
 
-			// Wrap the import operation with heartbeat to prevent 504 timeouts
-			const result = await withHeartbeat(async () => {
-				// Make the API call
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
-					method: 'POST',
-					headers: {
-						'OCS-APIREQUEST': 'true',
-						requesttoken: OC.requestToken,
-					},
-					body: formData,
-				})
+				// Wrap the import operation with heartbeat to prevent 504 timeouts
+				const result = await withHeartbeat(async () => {
+					// Make the API call
+					const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
+						method: 'POST',
+						headers: {
+							'OCS-APIREQUEST': 'true',
+							requesttoken: OC.requestToken,
+						},
+						body: formData,
+					})
 
-				const result = await response.json()
+					const result = await response.json()
 
-				if (!result.success) {
-					throw new Error(result.message || 'Import failed')
-				}
+					if (!result.success) {
+						throw new Error(result.message || 'Import failed')
+					}
 
-				return result
-			}, 30000) // 30-second heartbeat interval
+					return result
+				}, 30000) // 30-second heartbeat interval
 
-			// Handle successful result
-			this.importResult = result
-			// Show success notification
-			OC.Notification.showTemporary(
-				`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
-				{ type: 'success' },
-			)
+				// Handle successful result
+				this.importResult = result
+				// Show success notification
+				OC.Notification.showTemporary(
+					`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
+					{ type: 'success' },
+				)
 
 			} catch (error) {
 				console.error('Error importing ArchiMate file:', error)
@@ -467,63 +467,63 @@ export default {
 			this.exporting = true
 
 			try {
-			// Prepare export data with organization filter
-			const exportData = {
-				organization: this.selectedOrganization?.value ?? null,
-			}
-
-			// Wrap the export operation with heartbeat to prevent 504 timeouts
-			await withHeartbeat(async () => {
-				// Make the API call
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'OCS-APIREQUEST': 'true',
-						requesttoken: OC.requestToken,
-					},
-					body: JSON.stringify(exportData),
-				})
-
-				// Handle file download
-				if (response.ok) {
-					const blob = await response.blob()
-					const url = window.URL.createObjectURL(blob)
-
-					// Get filename from response headers or create default
-					const contentDisposition = response.headers.get('content-disposition')
-					let fileName = 'archimate_export.xml'
-					if (contentDisposition) {
-						const match = contentDisposition.match(/filename="?([^"]*)"?/)
-						if (match) {
-							fileName = match[1]
-						}
-					}
-
-					// Create download link and trigger download
-					const a = document.createElement('a')
-					a.href = url
-					a.download = fileName
-					document.body.appendChild(a)
-					a.click()
-					window.URL.revokeObjectURL(url)
-					document.body.removeChild(a)
-
-					// Show success notification
-					const orgName = this.selectedOrganization
-						? this.organizationOptions.find(opt => opt.value === this.selectedOrganization)?.label
-						: 'Generic'
-					OC.Notification.showTemporary(
-						`ArchiMate file exported successfully for ${orgName}`,
-						{ type: 'success' },
-					)
-				} else {
-					const errorData = await response.json()
-					throw new Error(errorData.message || 'Export failed')
+				// Prepare export data with organization filter
+				const exportData = {
+					organization: this.selectedOrganization?.value ?? null,
 				}
-			}, 30000) // 30-second heartbeat interval
 
-		} catch (error) {
+				// Wrap the export operation with heartbeat to prevent 504 timeouts
+				await withHeartbeat(async () => {
+					// Make the API call
+					const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'OCS-APIREQUEST': 'true',
+							requesttoken: OC.requestToken,
+						},
+						body: JSON.stringify(exportData),
+					})
+
+					// Handle file download
+					if (response.ok) {
+						const blob = await response.blob()
+						const url = window.URL.createObjectURL(blob)
+
+						// Get filename from response headers or create default
+						const contentDisposition = response.headers.get('content-disposition')
+						let fileName = 'archimate_export.xml'
+						if (contentDisposition) {
+							const match = contentDisposition.match(/filename="?([^"]*)"?/)
+							if (match) {
+								fileName = match[1]
+							}
+						}
+
+						// Create download link and trigger download
+						const a = document.createElement('a')
+						a.href = url
+						a.download = fileName
+						document.body.appendChild(a)
+						a.click()
+						window.URL.revokeObjectURL(url)
+						document.body.removeChild(a)
+
+						// Show success notification
+						const orgName = this.selectedOrganization
+							? this.organizationOptions.find(opt => opt.value === this.selectedOrganization)?.label
+							: 'Generic'
+						OC.Notification.showTemporary(
+							`ArchiMate file exported successfully for ${orgName}`,
+							{ type: 'success' },
+						)
+					} else {
+						const errorData = await response.json()
+						throw new Error(errorData.message || 'Export failed')
+					}
+				}, 30000) // 30-second heartbeat interval
+
+			} catch (error) {
 				console.error('Error exporting ArchiMate file:', error)
 
 				// Show error notification
@@ -564,25 +564,25 @@ export default {
 			}
 		},
 
-		/**
-		 * Load organization options from the API
-		 *
-		 * @async
-		 * @return {Promise<void>}
-		 */
-		async loadOrganizations() {
-			try {
-				// Get organization objects from OpenRegister
-				// This would need to be implemented based on your organization schema
-				// For now, we'll keep the default Generic option
-				const response = await fetch('/index.php/apps/openregister/api/objects/6/35', {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						'OCS-APIREQUEST': 'true',
-						requesttoken: OC.requestToken,
-					},
-				})
+			/**
+	 * Load organization options from the API
+	 *
+	 * @async
+	 * @return {Promise<void>}
+	 */
+	async loadOrganizations() {
+		try {
+			// Get organization objects from OpenRegister
+			// This would need to be implemented based on your organization schema
+			// For now, we'll keep the default Generic option
+			const response = await fetch('/index.php/apps/openregister/api/objects/6/35', {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'OCS-APIREQUEST': 'true',
+					requesttoken: OC.requestToken,
+				},
+			})
 
 			if (response.ok) {
 				const result = await response.json()

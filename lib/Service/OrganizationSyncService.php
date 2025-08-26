@@ -233,7 +233,7 @@ class OrganizationSyncService
             }
 
             $contactEntity->setObject($contactEntityObject);
-            $objectService->saveObject(object: $contactEntity, register: $register, schema: $contactSchema);
+            $objectService->saveObject(object: $contactEntity, register: $register, schema: $contactSchema, rbac: false, multi: false);
 
             $stats['contactPersonsProcessed']++;
         }
@@ -975,13 +975,13 @@ class OrganizationSyncService
      *
      * This method is designed to be called by the background job and includes
      * all necessary logging, error handling, and status tracking.
-     * Uses default 10-minute lookback for incremental sync.
+     * Uses default full sync (0 minutes) to process all organizations.
      *
-     * @param int $minutesBack Number of minutes to look back for changes (default: 10)
+     * @param int $minutesBack Number of minutes to look back for changes (default: 0 = full sync)
      *
      * @return array Synchronization results with detailed logging information
      */
-    public function performScheduledSync(int $minutesBack = 10): array
+    public function performScheduledSync(int $minutesBack = 0): array
     {
         $this->logger->info('OrganizationSyncService: Starting scheduled synchronization', [
             'minutesBack' => $minutesBack,

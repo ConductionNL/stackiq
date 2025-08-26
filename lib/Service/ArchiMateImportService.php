@@ -104,6 +104,13 @@ class ArchiMateImportService
     private array $identifierPatternCache = [];
 
     /**
+     * Flag to track if we've already logged finding a GEMMA type property
+     * 
+     * @var bool
+     */
+    private bool $gemmaTypePropertyFound = false;
+
+    /**
      * Cache for property definition maps to avoid rebuilding during import
      * 
      * @var array|null
@@ -1056,6 +1063,28 @@ class ArchiMateImportService
         // OPTIMIZATION: Use cached register ID
         $registerId = $this->cachedConfig['registerId'] ?? 15;
 
+        // VAR_DUMP DEBUG: Check objects before save
+        if (count($objects) > 0) {
+            $sampleObject = $objects[0];
+            echo "\n=== VAR_DUMP DEBUG: Sample object BEFORE ObjectService save ===\n";
+            echo "Sample object ID: " . ($sampleObject['identifier'] ?? 'unknown') . "\n";
+            echo "Sample object keys: " . implode(', ', array_keys($sampleObject)) . "\n";
+            echo "Has xml property: " . (isset($sampleObject['xml']) ? 'YES' : 'NO') . "\n";
+            if (isset($sampleObject['xml'])) {
+                echo "XML keys: " . implode(', ', array_keys($sampleObject['xml'])) . "\n";
+            }
+            echo "Has property mapping: " . (isset($sampleObject['_propertyMapping']) ? 'YES (' . count($sampleObject['_propertyMapping']) . ')' : 'NO') . "\n";
+            if (isset($sampleObject['_propertyMapping'])) {
+                echo "Property mapping: " . implode(', ', array_keys($sampleObject['_propertyMapping'])) . "\n";
+            }
+            $nonStandardKeys = array_diff(array_keys($sampleObject), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary']);
+            if (!empty($nonStandardKeys)) {
+                echo "Flattened properties: " . implode(', ', array_slice($nonStandardKeys, 0, 10)) . "\n";
+            } else {
+                echo "NO flattened properties found!\n";
+            }
+        }
+
         // PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets
         $batchProcessingStartTime = microtime(true);
         if (self::PERFORMANCE_OPTIMIZATIONS['parallel_processing'] && count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']) {
@@ -1067,6 +1096,23 @@ class ArchiMateImportService
         $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
         
         $totalSaveTime = microtime(true) - $saveStartTime;
+        
+        // VAR_DUMP DEBUG: Check what ObjectService returned
+        if (count($result) > 0) {
+            $savedSampleObject = $result[0];
+            echo "\n=== VAR_DUMP DEBUG: Sample object AFTER ObjectService save ===\n";
+            echo "Saved object ID: " . ($savedSampleObject['identifier'] ?? $savedSampleObject['id'] ?? 'unknown') . "\n";
+            echo "Saved object keys: " . implode(', ', array_keys($savedSampleObject)) . "\n";
+            echo "Has xml property: " . (isset($savedSampleObject['xml']) ? 'YES' : 'NO') . "\n";
+            echo "Has property mapping: " . (isset($savedSampleObject['_propertyMapping']) ? 'YES' : 'NO') . "\n";
+            
+            $nonStandardKeys = array_diff(array_keys($savedSampleObject), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary', 'id']);
+            if (!empty($nonStandardKeys)) {
+                echo "Flattened properties STILL EXIST: " . implode(', ', array_slice($nonStandardKeys, 0, 10)) . "\n";
+            } else {
+                echo "Flattened properties LOST during save!\n";
+            }
+        }
         
         $this->logger->info('Database save operation completed', [
             'total_save_time' => round($totalSaveTime, 3),
@@ -1181,6 +1227,41 @@ class ArchiMateImportService
         $this->logger->info('Using single batch processing', [
             'count' => count($objects)
         ]);
+        
+        // VAR_DUMP DEBUG: Check objects right before ObjectService call
+        if (count($objects) > 0) {
+            echo "\n=== VAR_DUMP DEBUG: Objects RIGHT BEFORE ObjectService::saveObjects ===\n";
+            echo "Total objects: " . count($objects) . "\n";
+            
+            // Look for objects with flattened properties vs metadata objects
+            $objectsWithFlattenedProps = [];
+            $objectsWithoutFlattenedProps = [];
+            
+            foreach (array_slice($objects, 0, 10) as $index => $object) {
+                $flattenedProps = array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary']);
+                $hasGemmaProps = isset($object['gemmaThema']) || isset($object['objectId']) || isset($object['architectuurlaag']);
+                
+                if ($hasGemmaProps || isset($object['xml']) || isset($object['_propertyMapping'])) {
+                    $objectsWithFlattenedProps[] = $index;
+                } else {
+                    $objectsWithoutFlattenedProps[] = $index;
+                }
+            }
+            
+            echo "Objects WITH flattened/xml properties (first 10 checked): " . implode(', ', $objectsWithFlattenedProps) . "\n";
+            echo "Objects WITHOUT flattened/xml properties (first 10 checked): " . implode(', ', $objectsWithoutFlattenedProps) . "\n";
+            
+            // Show first object with flattened properties if exists
+            foreach ($objects as $object) {
+                if (isset($object['gemmaThema']) || isset($object['objectId']) || isset($object['xml'])) {
+                    echo "\n=== FOUND OBJECT WITH FLATTENED PROPS ===\n";
+                    echo "ID: " . ($object['identifier'] ?? 'unknown') . "\n";
+                    echo "Keys: " . implode(', ', array_keys($object)) . "\n";
+                    echo "Full object JSON: " . json_encode($object, JSON_PRETTY_PRINT) . "\n";
+                    break;
+                }
+            }
+        }
         
         $saveResult = $objectService->saveObjects(
             objects: $objects,
@@ -1967,6 +2048,69 @@ class ArchiMateImportService
     }
 
     /**
+     * Extract GEMMA type from an object using multiple possible property names
+     * 
+     * This method tries different variations of GEMMA type property names to ensure
+     * compatibility with different ArchiMate model variations.
+     * 
+     * @param array $object The object to extract GEMMA type from
+     * @return string|null The GEMMA type value or null if not found
+     */
+    private function extractGemmaType(array $object): ?string
+    {
+        // Try various possible property names for GEMMA type
+        $possiblePropertyNames = [
+            'gemmaType',        // Standard camelCase conversion of "GEMMA Type"
+            'gemmatype',        // Lowercase version
+            'GemmaType',        // PascalCase version
+            'GEMMA_Type',       // Underscore version
+            'gemma_type',       // Lowercase underscore version
+            'GEMMAType',        // All caps first word
+            'type',             // Sometimes just "Type" in models
+            'elementType',      // Alternative naming
+            'componentType'     // Another alternative
+        ];
+        
+        foreach ($possiblePropertyNames as $propertyName) {
+            if (isset($object[$propertyName]) && !empty($object[$propertyName])) {
+                $value = (string) $object[$propertyName];
+                
+                // Log the first successful match for debugging
+                if (!isset($this->gemmaTypePropertyFound)) {
+                    $this->logger->debug('GEMMA Type property found', [
+                        'property_name' => $propertyName,
+                        'value' => $value,
+                        'object_id' => $object['identifier'] ?? 'unknown'
+                    ]);
+                    $this->gemmaTypePropertyFound = true;
+                }
+                
+                return $value;
+            }
+        }
+        
+        // If no direct property found, check _propertyMapping for original property names
+        if (isset($object['_propertyMapping'])) {
+            foreach ($object['_propertyMapping'] as $camelCase => $original) {
+                // Check if the original property name contains "gemma" or "type"
+                if (stripos($original, 'gemma') !== false && stripos($original, 'type') !== false) {
+                    if (isset($object[$camelCase]) && !empty($object[$camelCase])) {
+                        $this->logger->debug('GEMMA Type found via property mapping', [
+                            'camel_case_name' => $camelCase,
+                            'original_name' => $original,
+                            'value' => $object[$camelCase],
+                            'object_id' => $object['identifier'] ?? 'unknown'
+                        ]);
+                        return (string) $object[$camelCase];
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
      * Process GEMMA Referentiecomponent-Standaard relationships with Verbindingsrol support
      * 
      * This method analyzes all objects to find Referentiecomponenten and Standaarden,
@@ -1987,14 +2131,33 @@ class ArchiMateImportService
         $standaarden = [];
         $gemmaRelationshipMap = [];
         
+        // Debug: Count objects and property variations
+        $elementCount = 0;
+        $elementsWithGemmaType = 0;
+        $gemmaTypeVariations = [];
+        
         // PASS 1: Collect Referentiecomponenten and Standaarden, process relationships immediately
         foreach ($objects as $index => $object) {
-            // Check if this is an element with GEMMA type property
-            if (isset($object['section']) && $object['section'] === 'element' && isset($object['gemmaType'])) {
-                if ($object['gemmaType'] === 'Referentiecomponent') {
-                    $referentieComponenten[$object['identifier']] = $index;
-                } elseif ($object['gemmaType'] === 'Standaard') {
-                    $standaarden[$object['identifier']] = $index;
+            // Debug: Count elements and GEMMA types
+            if (isset($object['section']) && $object['section'] === 'element') {
+                $elementCount++;
+                
+                // Check for various possible GEMMA type property names
+                $gemmaTypeValue = $this->extractGemmaType($object);
+                if ($gemmaTypeValue !== null) {
+                    $elementsWithGemmaType++;
+                    
+                    // Track GEMMA type variations for debugging
+                    if (!isset($gemmaTypeVariations[$gemmaTypeValue])) {
+                        $gemmaTypeVariations[$gemmaTypeValue] = 0;
+                    }
+                    $gemmaTypeVariations[$gemmaTypeValue]++;
+                    
+                    if ($gemmaTypeValue === 'Referentiecomponent') {
+                        $referentieComponenten[$object['identifier']] = $index;
+                    } elseif ($gemmaTypeValue === 'Standaard') {
+                        $standaarden[$object['identifier']] = $index;
+                    }
                 }
             }
             
@@ -2004,7 +2167,11 @@ class ArchiMateImportService
             }
         }
         
-        $this->logger->info('GEMMA objects found', [
+        // Enhanced debug logging
+        $this->logger->info('GEMMA objects processing complete', [
+            'total_elements' => $elementCount,
+            'elements_with_gemma_type' => $elementsWithGemmaType,
+            'gemma_type_variations' => $gemmaTypeVariations,
             'referentiecomponenten_count' => count($referentieComponenten),
             'standaarden_count' => count($standaarden),
             'processed_relationships' => count($gemmaRelationshipMap)
@@ -2172,6 +2339,14 @@ class ArchiMateImportService
         // Extract propertyDefinitionMap once for all objects
         $propertyDefinitionMap = $this->extractPropertyDefinitionMap($xmlData);
         
+        // Debug: Log property definition map extraction
+        $this->logger->info('Property definition map extracted', [
+            'total_definitions' => count($propertyDefinitionMap),
+            'sample_definitions' => array_slice($propertyDefinitionMap, 0, 10, true),
+            'has_gemma_type' => isset($propertyDefinitionMap['propid-3']) || in_array('GEMMA type', $propertyDefinitionMap) || in_array('GEMMA Type', $propertyDefinitionMap),
+            'gemma_type_ref' => $propertyDefinitionMap['propid-3'] ?? 'not found'
+        ]);
+        
         // Create model object first
         if (isset($xmlData['_attributes']) || isset($xmlData['name'])) {
             $modelMetadata = [
@@ -2302,6 +2477,8 @@ class ArchiMateImportService
             }
             
             // Create object directly (minimal processing)
+            $essentialXmlData = $this->extractEssentialXmlData($item);
+            
             $object = [
                 '@self' => [
                     'register' => $this->cachedConfig['registerId'] ?? 15,
@@ -2315,8 +2492,19 @@ class ArchiMateImportService
                 'identifier' => $identifier,
                 'section' => $schemaType,
                 'model_identifier' => $modelIdentifier,
-                'xml' => $this->extractEssentialXmlData($item) // OPTIMIZATION: Store only essential XML data
+                'xml' => $essentialXmlData
             ];
+            
+            // Debug: Log XML data extraction
+            $this->logger->debug('XML data extracted for object', [
+                'object_id' => $identifier,
+                'section' => $schemaType,
+                'original_item_keys' => array_keys($item),
+                'essential_xml_keys' => array_keys($essentialXmlData),
+                'essential_xml_size' => strlen(json_encode($essentialXmlData)),
+                'has_properties' => isset($item['properties']),
+                'properties_structure' => isset($item['properties']) ? array_keys($item['properties']) : null
+            ]);
             
             // Extract name from XML if it exists
             if (isset($item['name'])) {
@@ -2336,12 +2524,105 @@ class ArchiMateImportService
                 }
             }
             
+            // VAR_DUMP DEBUG: Check property structure - limit to first element only
+            static $debugCount = 0;
+            if ($debugCount === 0 && isset($item['properties'])) {
+                echo "\n=== VAR_DUMP DEBUG: Item with properties structure ===\n";
+                echo "Object ID: " . $identifier . "\n";
+                echo "Item keys: " . implode(', ', array_keys($item)) . "\n";
+                if (isset($item['properties'])) {
+                    echo "Properties keys: " . implode(', ', array_keys($item['properties'])) . "\n";
+                    if (isset($item['properties']['property'])) {
+                        echo "Properties.property structure:\n";
+                        $props = is_array($item['properties']['property']) && isset($item['properties']['property'][0]) ? 
+                                 $item['properties']['property'] : [$item['properties']['property']];
+                        foreach (array_slice($props, 0, 3) as $i => $prop) {
+                            echo "  Property $i keys: " . implode(', ', array_keys($prop ?? [])) . "\n";
+                            if (isset($prop['_attributes']['propertyDefinitionRef'])) {
+                                echo "    DefRef: " . $prop['_attributes']['propertyDefinitionRef'] . "\n";
+                            }
+                            if (isset($prop['value'])) {
+                                $value = is_array($prop['value']) && isset($prop['value']['_value']) ? $prop['value']['_value'] : $prop['value'];
+                                echo "    Value: " . (is_string($value) ? substr($value, 0, 50) : gettype($value)) . "\n";
+                            }
+                        }
+                    }
+                }
+                echo "Property definition map size: " . count($propertyDefinitionMap) . "\n";
+                echo "Sample prop defs: " . implode(', ', array_slice($propertyDefinitionMap, 0, 5, true)) . "\n";
+                $debugCount++;
+            }
+            
             // Flatten properties efficiently (if present)
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+                
+                // VAR_DUMP DEBUG: Show object after flattening - limit to first element only
+                if ($debugCount === 1) {
+                    echo "\n=== VAR_DUMP DEBUG: Object after property flattening ===\n";
+                    echo "Object keys: " . implode(', ', array_keys($object)) . "\n";
+                    if (isset($object['_propertyMapping'])) {
+                        echo "Property mapping: " . implode(', ', array_keys($object['_propertyMapping'])) . "\n";
+                    }
+                    $nonStandardKeys = array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary']);
+                    if (!empty($nonStandardKeys)) {
+                        echo "Flattened properties: " . implode(', ', $nonStandardKeys) . "\n";
+                    }
+                }
+            } else {
+                // Only show this for first few objects to avoid spam
+                if ($debugCount < 3) {
+                    echo "\n=== VAR_DUMP DEBUG: SKIPPING property flattening for " . $identifier . " ===\n";
+                    echo "Has properties.property: " . (isset($item['properties']['property']) ? 'YES' : 'NO') . "\n";
+                    echo "Property definition map size: " . count($propertyDefinitionMap) . "\n";
+                }
             }
             
+            // DEBUG: Log final object structure before adding to array
+            $this->logger->debug('Final object structure before save', [
+                'object_id' => $identifier,
+                'section' => $schemaType,
+                'object_keys' => array_keys($object),
+                'has_xml_property' => isset($object['xml']),
+                'xml_keys' => isset($object['xml']) ? array_keys($object['xml']) : null,
+                'has_property_mapping' => isset($object['_propertyMapping']),
+                'property_mapping_count' => isset($object['_propertyMapping']) ? count($object['_propertyMapping']) : 0,
+                'sample_properties' => array_slice(array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary']), 0, 5)
+            ]);
+            
             $objects[] = $object;
+        }
+        
+        // VAR_DUMP DEBUG: Check objects right after transformation
+        echo "\n=== VAR_DUMP DEBUG: Objects RIGHT AFTER transformation (before return) ===\n";
+        echo "Total objects created: " . count($objects) . "\n";
+        
+        // Count objects with different characteristics
+        $withXml = 0;
+        $withPropertyMapping = 0; 
+        $withGemmaProps = 0;
+        $metadataObjects = 0;
+        
+        foreach ($objects as $object) {
+            if (isset($object['xml'])) $withXml++;
+            if (isset($object['_propertyMapping'])) $withPropertyMapping++;
+            if (isset($object['gemmaThema']) || isset($object['objectId']) || isset($object['architectuurlaag'])) $withGemmaProps++;
+            if (isset($object['documentation']) || isset($object['propertyDefinitionMap'])) $metadataObjects++;
+        }
+        
+        echo "Objects with xml: $withXml\n";
+        echo "Objects with _propertyMapping: $withPropertyMapping\n";
+        echo "Objects with GEMMA properties: $withGemmaProps\n";
+        echo "Metadata objects: $metadataObjects\n";
+        
+        // Show a sample object with GEMMA properties if any exist
+        foreach ($objects as $object) {
+            if (isset($object['gemmaThema']) || isset($object['objectId'])) {
+                echo "\n=== SAMPLE OBJECT WITH GEMMA PROPS AFTER TRANSFORMATION ===\n";
+                echo "ID: " . ($object['identifier'] ?? 'unknown') . "\n";
+                echo "Keys: " . implode(', ', array_keys($object)) . "\n";
+                break;
+            }
         }
         
         return $objects;
@@ -2394,13 +2675,36 @@ class ArchiMateImportService
         $props = isset($properties[0]) ? $properties : [$properties];
         $processedProperties = [];
         
-        foreach ($props as $prop) {
+        // Debug: Log property flattening process
+        $this->logger->debug('Flattening properties for object', [
+            'object_id' => $object['identifier'] ?? 'unknown',
+            'properties_count' => count($props),
+            'property_definition_map_size' => count($propertyDefinitionMap),
+            'sample_property_definitions' => array_slice($propertyDefinitionMap, 0, 5, true)
+        ]);
+        
+        foreach ($props as $propIndex => $prop) {
             if (!isset($prop['_attributes']['propertyDefinitionRef'])) {
+                $this->logger->warning('Property missing propertyDefinitionRef', [
+                    'object_id' => $object['identifier'] ?? 'unknown',
+                    'property_index' => $propIndex,
+                    'property_structure' => array_keys($prop ?? [])
+                ]);
                 continue;
             }
             
             $defRef = $prop['_attributes']['propertyDefinitionRef'];
             $value = $prop['value']['_value'] ?? $prop['value'] ?? null;
+            
+            // Debug: Log property reference lookup
+            if (!isset($propertyDefinitionMap[$defRef])) {
+                $this->logger->warning('Property definition not found in map', [
+                    'object_id' => $object['identifier'] ?? 'unknown',
+                    'property_def_ref' => $defRef,
+                    'available_refs' => array_keys($propertyDefinitionMap)
+                ]);
+                continue;
+            }
             
             if ($value !== null && isset($propertyDefinitionMap[$defRef])) {
                 $propertyName = $propertyDefinitionMap[$defRef];
@@ -2416,17 +2720,42 @@ class ArchiMateImportService
                 $processedProperties[] = [
                     'original' => $propertyName,
                     'camelCase' => $camelCaseName,
-                    'value' => $value
+                    'value' => $value,
+                    'def_ref' => $defRef
                 ];
                 
                 // Set slug for Object ID property
                 if (strtolower($propertyName) === 'object id') {
                     $object['@self']['slug'] = $value;
                 }
+                
+                // Debug: Log GEMMA type properties specifically
+                if (stripos($propertyName, 'gemma') !== false || $defRef === 'propid-3') {
+                    $this->logger->info('GEMMA type property processed', [
+                        'object_id' => $object['identifier'] ?? 'unknown',
+                        'property_name' => $propertyName,
+                        'camel_case_name' => $camelCaseName,
+                        'value' => $value,
+                        'def_ref' => $defRef
+                    ]);
+                }
+            } else {
+                $this->logger->warning('Property value is null or mapping missing', [
+                    'object_id' => $object['identifier'] ?? 'unknown',
+                    'property_def_ref' => $defRef,
+                    'value' => $value,
+                    'mapping_exists' => isset($propertyDefinitionMap[$defRef])
+                ]);
             }
         }
         
-        // OPTIMIZATION: Removed debug logging from tight loop for performance
+        // Debug: Log final property flattening results
+        $this->logger->debug('Property flattening completed', [
+            'object_id' => $object['identifier'] ?? 'unknown',
+            'processed_count' => count($processedProperties),
+            'processed_properties' => $processedProperties,
+            'object_keys_after_flattening' => array_keys($object)
+        ]);
     }
 
     /**
