@@ -113,7 +113,7 @@ class OrganizationSyncService
         $this->settingsService = $settingsService;
     }
 
-    public function performOrganizationsSync(): array
+    public function performOrganizationsSync(int $batchSize = 50, int $maxExecutionSeconds = 45): array
     {
         // Check configuration
         $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
@@ -121,6 +121,7 @@ class OrganizationSyncService
         $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
 //        $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
 
+        $startTime = time();
         $stats = [
             'organizationsProcessed' => 0,
             'entitiesCreated' => 0,
@@ -129,6 +130,9 @@ class OrganizationSyncService
             'usersCreated' => 0,
             'usersUpdated' => 0,
             'errors' => [],
+            'batchSize' => $batchSize,
+            'maxExecutionSeconds' => $maxExecutionSeconds,
+            'timeoutReached' => false,
             'startTime' => date('Y-m-d H:i:s'),
             'endTime' => null,
             'duration' => null
@@ -145,7 +149,9 @@ class OrganizationSyncService
                 $qb->expr()->neq('o2.active', $qb->createFunction('(json_unquote(json_extract(o.object, \'$.status\')) = \'actief\')')),
                 $qb->expr()->isNull('o2.uuid')
             ))
-            ->andWhere($qb->expr()->neq($qb->createFunction('json_unquote(json_extract(o.object, \'$.status\'))'), $qb->createNamedParameter('concept')));
+            ->andWhere($qb->expr()->neq($qb->createFunction('json_unquote(json_extract(o.object, \'$.status\'))'), $qb->createNamedParameter('concept')))
+            ->orderBy('o.updated', 'ASC')  // Process oldest first for consistency
+            ->setMaxResults($batchSize);  // Limit batch size
 
         $sql = $qb->getSQL();
         $objects = $qb->execute()->fetchAll();
@@ -153,6 +159,17 @@ class OrganizationSyncService
 
 
         foreach($objects as $object) {
+            // Check if we're approaching the time limit
+            if (time() - $startTime >= $maxExecutionSeconds) {
+                $stats['timeoutReached'] = true;
+                $this->logger->info('OrganizationSyncService: Execution time limit reached', [
+                    'processedCount' => $stats['organizationsProcessed'],
+                    'executionTime' => time() - $startTime,
+                    'maxExecutionSeconds' => $maxExecutionSeconds
+                ]);
+                break;
+            }
+
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
             if($objectService instanceOf ObjectService === false) {
                 return [];
@@ -168,7 +185,7 @@ class OrganizationSyncService
         return $stats;
     }
 
-    public function performContactSync() :array
+    public function performContactSync(int $batchSize = 100, int $maxExecutionSeconds = 30) :array
     {
         // Check configuration
         $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
@@ -176,6 +193,7 @@ class OrganizationSyncService
 //        $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
         $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
 
+        $startTime = time();
         $stats = [
             'organizationsProcessed' => 0,
             'entitiesCreated' => 0,
@@ -184,6 +202,9 @@ class OrganizationSyncService
             'usersCreated' => 0,
             'usersUpdated' => 0,
             'errors' => [],
+            'batchSize' => $batchSize,
+            'maxExecutionSeconds' => $maxExecutionSeconds,
+            'timeoutReached' => false,
             'startTime' => date('Y-m-d H:i:s'),
             'endTime' => null,
             'duration' => null
@@ -212,11 +233,24 @@ class OrganizationSyncService
             )
             ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
             ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
-            ->andWhere($qb->expr()->isNull($qb->createFunction('json_unquote(json_extract(o.object, \'$.username\'))')));
+            ->andWhere($qb->expr()->isNull($qb->createFunction('json_unquote(json_extract(o.object, \'$.username\'))')))
+            ->orderBy('o.updated', 'ASC')  // Process oldest first
+            ->setMaxResults($batchSize);   // Limit batch size
 
         $contacts = $qb->execute()->fetchAll();
 
         foreach ($contacts as $contact) {
+            // Check if we're approaching the time limit
+            if (time() - $startTime >= $maxExecutionSeconds) {
+                $stats['timeoutReached'] = true;
+                $this->logger->info('OrganizationSyncService: Contact sync time limit reached', [
+                    'contactsProcessed' => $stats['contactPersonsProcessed'],
+                    'executionTime' => time() - $startTime,
+                    'maxExecutionSeconds' => $maxExecutionSeconds
+                ]);
+                break;
+            }
+
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
             $contactEntity = $objectService->find(id: $contact['uuid'], register: $register, schema: $contactSchema);
             $contactEntityObject = $contactEntity->getObject();
@@ -971,6 +1005,96 @@ class OrganizationSyncService
     }
 
     /**
+     * Performs optimized manual synchronization for large datasets
+     *
+     * This method processes organizations in multiple batches to handle large numbers
+     * (800+) efficiently while staying under timeout limits.
+     *
+     * @param int $maxRounds Maximum number of batch rounds to execute (default: 10)
+     * @param int $batchSize Number of items to process per batch (default: 100)
+     * 
+     * @return array Comprehensive synchronization results
+     */
+    public function performOptimizedManualSync(int $maxRounds = 10, int $batchSize = 100): array
+    {
+        $totalStartTime = time();
+        $allResults = [
+            'totalRounds' => 0,
+            'organizationsProcessed' => 0,
+            'contactPersonsProcessed' => 0,
+            'entitiesCreated' => 0,
+            'entitiesUpdated' => 0,
+            'usersCreated' => 0,
+            'usersUpdated' => 0,
+            'totalExecutionTime' => 0,
+            'timeoutReached' => false,
+            'roundsCompleted' => [],
+            'errors' => [],
+            'startTime' => date('Y-m-d H:i:s')
+        ];
+
+        $this->logger->info('OrganizationSyncService: Starting optimized manual sync', [
+            'maxRounds' => $maxRounds,
+            'batchSize' => $batchSize
+        ]);
+
+        for ($round = 1; $round <= $maxRounds; $round++) {
+            $roundStartTime = time();
+            
+            // Process organizations batch
+            $orgResults = $this->performOrganizationsSync($batchSize, 45);
+            
+            // Process contacts batch
+            $contactResults = $this->performContactSync($batchSize, 15);
+            
+            // Accumulate results
+            $allResults['organizationsProcessed'] += $orgResults['organizationsProcessed'];
+            $allResults['contactPersonsProcessed'] += $contactResults['contactPersonsProcessed'];
+            $allResults['entitiesCreated'] += $orgResults['entitiesCreated'];
+            $allResults['entitiesUpdated'] += $orgResults['entitiesUpdated'];
+            $allResults['usersCreated'] += $contactResults['usersCreated'];
+            $allResults['usersUpdated'] += $contactResults['usersUpdated'];
+            
+            $roundTime = time() - $roundStartTime;
+            $allResults['roundsCompleted'][] = [
+                'round' => $round,
+                'organizationsProcessed' => $orgResults['organizationsProcessed'],
+                'contactPersonsProcessed' => $contactResults['contactPersonsProcessed'],
+                'duration' => $roundTime,
+                'orgTimeoutReached' => $orgResults['timeoutReached'] ?? false,
+                'contactTimeoutReached' => $contactResults['timeoutReached'] ?? false
+            ];
+            
+            // If no items were processed in this round, we're done
+            if ($orgResults['organizationsProcessed'] === 0 && $contactResults['contactPersonsProcessed'] === 0) {
+                $this->logger->info('OrganizationSyncService: No more items to process, stopping', [
+                    'round' => $round,
+                    'totalProcessed' => $allResults['organizationsProcessed'] + $allResults['contactPersonsProcessed']
+                ]);
+                break;
+            }
+            
+            $allResults['totalRounds'] = $round;
+            
+            // Small pause between rounds to prevent resource exhaustion
+            if ($round < $maxRounds) {
+                sleep(1);
+            }
+        }
+        
+        // Final user sync
+        $this->performUserSync();
+        $this->recordSyncTime();
+        
+        $allResults['totalExecutionTime'] = time() - $totalStartTime;
+        $allResults['endTime'] = date('Y-m-d H:i:s');
+        
+        $this->logger->info('OrganizationSyncService: Optimized manual sync completed', $allResults);
+        
+        return $allResults;
+    }
+
+    /**
      * Performs scheduled synchronization with comprehensive logging
      *
      * This method is designed to be called by the background job and includes
@@ -989,11 +1113,18 @@ class OrganizationSyncService
         ]);
 
         try {
-            // Perform the core synchronization with time-based filtering
-//            $syncResults = $this->performFullSync($minutesBack);
-            $syncResults = $this->performOrganizationsSync();
-
-            $syncResults = array_merge($this->performContactSync(), $syncResults);
+            // Perform optimized batch synchronization
+            // Use smaller batches for scheduled sync to ensure it completes within time limits
+            $orgBatchSize = 25;  // Conservative batch size for organizations
+            $contactBatchSize = 50;  // Larger batch size for contacts (faster processing)
+            $maxOrgTime = 30;  // 30 seconds max for organizations
+            $maxContactTime = 15;  // 15 seconds max for contacts
+            
+            $syncResults = $this->performOrganizationsSync($orgBatchSize, $maxOrgTime);
+            
+            $contactResults = $this->performContactSync($contactBatchSize, $maxContactTime);
+            $syncResults = array_merge($contactResults, $syncResults);
+            
             $this->performUserSync();
             // Record the sync time
             $this->recordSyncTime();
