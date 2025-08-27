@@ -589,12 +589,41 @@ class SettingsController extends Controller
      */
     public function performSync(int $minutesBack = 0): JSONResponse
     {
-        $result = $this->organizationSyncService->performManualSync($minutesBack);
-        
-        if ($result['success']) {
-            return new JSONResponse($result);
-        } else {
-            return new JSONResponse($result, 500);
+        try {
+            // For full sync (minutesBack = 0), use optimized batch processing to handle large datasets
+            if ($minutesBack === 0) {
+                $result = $this->organizationSyncService->performOptimizedManualSync(
+                    maxRounds: 15,   // Up to 15 rounds of processing
+                    batchSize: 75    // 75 items per batch for good performance
+                );
+                
+                return new JSONResponse([
+                    'success' => true,
+                    'results' => $result,
+                    'message' => 'Optimized synchronization completed successfully',
+                    'isOptimized' => true
+                ]);
+            } else {
+                // For incremental sync, use the original method
+                $result = $this->organizationSyncService->performManualSync($minutesBack);
+                
+                if ($result['success']) {
+                    return new JSONResponse($result);
+                } else {
+                    return new JSONResponse($result, 500);
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Manual sync failed', [
+                'minutesBack' => $minutesBack,
+                'exception' => $e->getMessage()
+            ]);
+            
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Synchronization failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
