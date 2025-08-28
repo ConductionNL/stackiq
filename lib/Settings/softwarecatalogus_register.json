@@ -75,11 +75,30 @@
         "conditions": [],
         "inputMapping": null,
         "outputMapping": null,
-        "rules": ["register-organization-rule"],
         "configurations": [],
         "slug": "register",
         "created": "2025-05-16T13:11:49+00:00",
         "updated": "2025-05-16T13:38:20+00:00"
+      },
+      "views": {
+        "name": "Views",
+        "description": "Endpoint voor het ophalen van AMEF views uit de vng-gemma register",
+        "reference": "",
+        "version": "0.0.1",
+        "endpoint": "views",
+        "endpointArray": ["views"],
+        "endpointRegex": "#^views$#",
+        "method": "GET",
+        "targetType": "register/schema",
+        "targetId": "vng-gemma/view",
+        "conditions": [],
+        "inputMapping": null,
+        "outputMapping": null,
+        "rules": [],
+        "configurations": [],
+        "slug": "views",
+        "created": "2025-01-17T12:00:00+00:00",
+        "updated": "2025-01-17T12:00:00+00:00"
       }
     },
     "schemas": {
