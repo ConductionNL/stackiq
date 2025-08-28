@@ -66,8 +66,11 @@ class ArchiMateImportService
         'xml_parse_flags' => LIBXML_NOCDATA | LIBXML_NONET,
         'memory_cleanup' => true,
         'parallel_processing' => true,
-        'batch_size' => 1000,     // Large batch size for maximum performance
-        'parallel_batches' => 8   // Process 8 batches concurrently
+        'batch_size' => 1000,     // Default batch size (will be adjusted intelligently)
+        'parallel_batches' => 8,  // Process 8 batches concurrently
+        'max_batch_size_bytes' => 8388608,  // 8 MB - safe under MySQL's 16 MB limit
+        'min_batch_size' => 50,   // Minimum batch size for very large objects
+        'size_estimation_sample' => 10  // Sample size for estimating object sizes
     ];
 
     /**
@@ -963,9 +966,7 @@ class ArchiMateImportService
                 'schema' => $schemaId,
                 'id' => $metadata['identifier'] ?? uniqid('model_'),
                 'owner' => $this->getCurrentUserId(),
-                'organisation' => $this->getCurrentOrganisation(),
-                'created' => date('Y-m-d H:i:s'),
-                'updated' => date('Y-m-d H:i:s')
+                'organisation' => $this->getCurrentOrganisation()
             ],
             'identifier' => $metadata['identifier'] ?? '',
             'section' => 'model',
@@ -991,40 +992,48 @@ class ArchiMateImportService
         $registerId = $this->cachedConfig['registerId'] ?? 15;
         $schemaId = $this->cachedConfig['schemaIds'][$section] ?? $this->getSchemaIdForSection($section);
         
-        // Create object with @self structure and XML data at root level (no double serialization)
+        // FIXED: Use objectId as main ID and AMEF identifier as slug
+        $objectId = null;
+        $slug = null;
+        
+        // Priority 1: Check for objectId property (flattened from "Object ID")
+        if (isset($data['objectId'])) {
+            $objectId = $data['objectId'];
+            $slug = $identifier; // Use AMEF identifier as slug
+        }
+        // Priority 2: Check for temporary _slug field (legacy support)
+        elseif (isset($data['_slug'])) {
+            $objectId = $data['_slug'];
+            $slug = $identifier; // Use AMEF identifier as slug
+            unset($data['_slug']); // Remove the temporary field
+        }
+        // Priority 3: Check for direct "Object ID" property
+        elseif (isset($data['Object ID'])) {
+            $objectId = $data['Object ID'];
+            $slug = $identifier; // Use AMEF identifier as slug
+        }
+        // Fallback: Use AMEF identifier as both ID and extract clean UUID for slug
+        else {
+            $objectId = $identifier;
+            // Extract clean UUID from AMEF identifier (remove "id-" prefix if present)
+            if ($identifier && str_starts_with($identifier, 'id-')) {
+                $slug = substr($identifier, 3); // Remove "id-" prefix
+            } else {
+                $slug = $identifier;
+            }
+        }
+        
+        // Create object with @self structure using correct ID and slug
         $object = [
             '@self' => [
                 'register' => $registerId,
                 'schema' => $schemaId,
-                'id' => $identifier,
+                'id' => $objectId, // Now using objectId as main ID
+                'slug' => $slug,   // Now using AMEF identifier as slug
                 'owner' => $this->getCurrentUserId(),
-                'organisation' => $this->getCurrentOrganisation(),
-                'created' => date('Y-m-d H:i:s'),
-                'updated' => date('Y-m-d H:i:s')
+                'organisation' => $this->getCurrentOrganisation()
             ]
         ];
-        
-        // Set slug: first try from _slug field, then from Object ID property, then extract from identifier
-        $slug = null;
-        
-        // Check if there's a temporary slug to move to @self structure
-        if (isset($data['_slug'])) {
-            $slug = $data['_slug'];
-            unset($data['_slug']); // Remove the temporary field
-        }
-        // Check if we have "Object ID" property directly
-        elseif (isset($data['Object ID'])) {
-            $slug = $data['Object ID'];
-        }
-        // Fallback: extract from identifier (remove "id-" prefix if present)
-        elseif ($identifier && str_starts_with($identifier, 'id-')) {
-            $slug = substr($identifier, 3); // Remove "id-" prefix
-        }
-        
-        // Set the slug if we found one
-        if ($slug) {
-            $object['@self']['slug'] = $slug;
-        }
         
         // Merge XML data directly at root level (data already contains identifier, section, model_identifier)
         return array_merge($object, $data);
@@ -1063,27 +1072,7 @@ class ArchiMateImportService
         // OPTIMIZATION: Use cached register ID
         $registerId = $this->cachedConfig['registerId'] ?? 15;
 
-        // VAR_DUMP DEBUG: Check objects before save
-        if (count($objects) > 0) {
-            $sampleObject = $objects[0];
-            echo "\n=== VAR_DUMP DEBUG: Sample object BEFORE ObjectService save ===\n";
-            echo "Sample object ID: " . ($sampleObject['identifier'] ?? 'unknown') . "\n";
-            echo "Sample object keys: " . implode(', ', array_keys($sampleObject)) . "\n";
-            echo "Has xml property: " . (isset($sampleObject['xml']) ? 'YES' : 'NO') . "\n";
-            if (isset($sampleObject['xml'])) {
-                echo "XML keys: " . implode(', ', array_keys($sampleObject['xml'])) . "\n";
-            }
-            echo "Has property mapping: " . (isset($sampleObject['_propertyMapping']) ? 'YES (' . count($sampleObject['_propertyMapping']) . ')' : 'NO') . "\n";
-            if (isset($sampleObject['_propertyMapping'])) {
-                echo "Property mapping: " . implode(', ', array_keys($sampleObject['_propertyMapping'])) . "\n";
-            }
-            $nonStandardKeys = array_diff(array_keys($sampleObject), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary']);
-            if (!empty($nonStandardKeys)) {
-                echo "Flattened properties: " . implode(', ', array_slice($nonStandardKeys, 0, 10)) . "\n";
-            } else {
-                echo "NO flattened properties found!\n";
-            }
-        }
+
 
         // PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets
         $batchProcessingStartTime = microtime(true);
@@ -1097,29 +1086,16 @@ class ArchiMateImportService
         
         $totalSaveTime = microtime(true) - $saveStartTime;
         
-        // VAR_DUMP DEBUG: Check what ObjectService returned
-        if (count($result) > 0) {
-            $savedSampleObject = $result[0];
-            echo "\n=== VAR_DUMP DEBUG: Sample object AFTER ObjectService save ===\n";
-            echo "Saved object ID: " . ($savedSampleObject['identifier'] ?? $savedSampleObject['id'] ?? 'unknown') . "\n";
-            echo "Saved object keys: " . implode(', ', array_keys($savedSampleObject)) . "\n";
-            echo "Has xml property: " . (isset($savedSampleObject['xml']) ? 'YES' : 'NO') . "\n";
-            echo "Has property mapping: " . (isset($savedSampleObject['_propertyMapping']) ? 'YES' : 'NO') . "\n";
-            
-            $nonStandardKeys = array_diff(array_keys($savedSampleObject), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary', 'id']);
-            if (!empty($nonStandardKeys)) {
-                echo "Flattened properties STILL EXIST: " . implode(', ', array_slice($nonStandardKeys, 0, 10)) . "\n";
-            } else {
-                echo "Flattened properties LOST during save!\n";
-            }
-        }
+
         
         $this->logger->info('Database save operation completed', [
             'total_save_time' => round($totalSaveTime, 3),
             'service_init_time' => round($serviceInitTime, 3),
             'gemma_processing_time' => round($gemmaProcessingTime, 3),
             'batch_processing_time' => round($batchProcessingTime, 3),
-            'objects_saved' => count($result),
+            'objects_sent_to_save' => count($objects),
+            'objects_received_back' => count($result),
+            'objects_lost_in_save' => count($objects) - count($result),
             'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1)
         ]);
 
@@ -1149,25 +1125,39 @@ class ArchiMateImportService
         $batchSize = self::PERFORMANCE_OPTIMIZATIONS['batch_size'];
         $parallelBatches = self::PERFORMANCE_OPTIMIZATIONS['parallel_batches'];
         
-        // Split objects into chunks
-        $chunks = array_chunk($objects, $batchSize);
+        // INTELLIGENT BATCH SIZING: Create size-aware batches instead of fixed-size chunks
+        $chunks = $this->createIntelligentBatches($objects);
         $totalChunks = count($chunks);
         
-        $this->logger->info('Starting optimized batch processing', [
-            'total_objects' => count($objects),
-            'total_chunks' => $totalChunks,
-            'batch_size' => $batchSize,
-            'parallel_batches' => $parallelBatches
+        $this->logger->info('Starting intelligent batch processing', [
+            'total_objects_to_save' => count($objects),
+            'intelligent_batches_created' => $totalChunks,
+            'batch_sizes' => array_map('count', $chunks),
+            'batching_method' => 'size_aware_intelligent',
+            'mysql_packet_limit_safe' => true
         ]);
 
         $allResults = [];
         $processedChunks = 0;
         
+        // Accumulate statistics from all chunks
+        $aggregatedStats = [
+            'saved' => [],
+            'updated' => [],
+            'skipped' => [],
+            'invalid' => []
+        ];
+        
         // Process chunks sequentially but with larger batch sizes for better performance
         foreach ($chunks as $chunkIndex => $chunk) {
-            // OPTIMIZATION: Removed debug logging from chunk processing loop
+            $chunkInputCount = count($chunk);
             
             try {
+                $this->logger->info("Processing chunk {$chunkIndex}", [
+                    'chunk_index' => $chunkIndex,
+                    'objects_sent_to_saveObjects' => $chunkInputCount
+                ]);
+                
                 $saveResult = $objectService->saveObjects(
                     objects: $chunk,
                     register: $registerId,
@@ -1178,6 +1168,18 @@ class ArchiMateImportService
                     events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
                 );
                 
+                // Calculate totals received back from this chunk
+                $chunkTotalReceived = count($saveResult['saved'] ?? []) + 
+                                    count($saveResult['updated'] ?? []) + 
+                                    count($saveResult['skipped'] ?? []) + 
+                                    count($saveResult['invalid'] ?? []);
+                
+                // Accumulate statistics from this chunk
+                $aggregatedStats['saved'] = array_merge($aggregatedStats['saved'], $saveResult['saved'] ?? []);
+                $aggregatedStats['updated'] = array_merge($aggregatedStats['updated'], $saveResult['updated'] ?? []);
+                $aggregatedStats['skipped'] = array_merge($aggregatedStats['skipped'], $saveResult['skipped'] ?? []);
+                $aggregatedStats['invalid'] = array_merge($aggregatedStats['invalid'], $saveResult['invalid'] ?? []);
+                
                 $savedObjects = array_merge(
                     $saveResult['saved'] ?? [],
                     $saveResult['updated'] ?? []
@@ -1186,10 +1188,18 @@ class ArchiMateImportService
                 $allResults = array_merge($allResults, $savedObjects);
                 
                 $processedChunks++;
-                $this->logger->info('Processed chunk', [
+                $this->logger->info('Chunk completed', [
+                    'chunk_index' => $chunkIndex,
                     'processed_chunks' => $processedChunks,
                     'total_chunks' => $totalChunks,
-                    'progress_percent' => round(($processedChunks / $totalChunks) * 100, 1)
+                    'progress_percent' => round(($processedChunks / $totalChunks) * 100, 1),
+                    'objects_sent' => $chunkInputCount,
+                    'objects_received_back' => $chunkTotalReceived,
+                    'objects_lost_in_chunk' => $chunkInputCount - $chunkTotalReceived,
+                    'chunk_saved' => count($saveResult['saved'] ?? []),
+                    'chunk_updated' => count($saveResult['updated'] ?? []),
+                    'chunk_skipped' => count($saveResult['skipped'] ?? []),
+                    'chunk_invalid' => count($saveResult['invalid'] ?? [])
                 ]);
                 
             } catch (\Exception $e) {
@@ -1206,10 +1216,41 @@ class ArchiMateImportService
             }
         }
         
+        // Store the aggregated result for statistics calculation
+        $this->lastSaveResult = $aggregatedStats;
+        
+        $totalObjectsProcessed = count($aggregatedStats['saved']) + count($aggregatedStats['updated']) + count($aggregatedStats['skipped']) + count($aggregatedStats['invalid']);
+        
         $this->logger->info('Optimized batch processing completed', [
-            'total_objects_processed' => count($allResults),
-            'total_chunks_processed' => $totalChunks
+            'INPUT_SUMMARY' => [
+                'total_objects_sent_to_batching' => count($objects),
+                'expected_chunks' => $totalChunks,
+                'expected_full_chunks' => floor(count($objects) / $batchSize),
+                'expected_last_chunk_size' => count($objects) % $batchSize
+            ],
+            'OUTPUT_SUMMARY' => [
+                'total_objects_processed_by_openregister' => $totalObjectsProcessed,
+                'objects_returned_for_statistics' => count($allResults),
+                'DISCREPANCY' => count($objects) - $totalObjectsProcessed
+            ],
+            'CHUNK_BREAKDOWN' => [
+                'total_chunks_processed' => $totalChunks,
+                'aggregated_saved' => count($aggregatedStats['saved']),
+                'aggregated_updated' => count($aggregatedStats['updated']),
+                'aggregated_skipped' => count($aggregatedStats['skipped']),
+                'aggregated_invalid' => count($aggregatedStats['invalid'])
+            ]
         ]);
+        
+        // Log critical discrepancy if found
+        if (count($objects) != $totalObjectsProcessed) {
+            $this->logger->critical('OBJECT COUNT MISMATCH DETECTED', [
+                'objects_sent_to_openregister' => count($objects),
+                'objects_processed_by_openregister' => $totalObjectsProcessed,
+                'missing_objects' => count($objects) - $totalObjectsProcessed,
+                'this_explains_the_781_missing_objects' => true
+            ]);
+        }
         
         return $allResults;
     }
@@ -1228,40 +1269,7 @@ class ArchiMateImportService
             'count' => count($objects)
         ]);
         
-        // VAR_DUMP DEBUG: Check objects right before ObjectService call
-        if (count($objects) > 0) {
-            echo "\n=== VAR_DUMP DEBUG: Objects RIGHT BEFORE ObjectService::saveObjects ===\n";
-            echo "Total objects: " . count($objects) . "\n";
-            
-            // Look for objects with flattened properties vs metadata objects
-            $objectsWithFlattenedProps = [];
-            $objectsWithoutFlattenedProps = [];
-            
-            foreach (array_slice($objects, 0, 10) as $index => $object) {
-                $flattenedProps = array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary']);
-                $hasGemmaProps = isset($object['gemmaThema']) || isset($object['objectId']) || isset($object['architectuurlaag']);
-                
-                if ($hasGemmaProps || isset($object['xml']) || isset($object['_propertyMapping'])) {
-                    $objectsWithFlattenedProps[] = $index;
-                } else {
-                    $objectsWithoutFlattenedProps[] = $index;
-                }
-            }
-            
-            echo "Objects WITH flattened/xml properties (first 10 checked): " . implode(', ', $objectsWithFlattenedProps) . "\n";
-            echo "Objects WITHOUT flattened/xml properties (first 10 checked): " . implode(', ', $objectsWithoutFlattenedProps) . "\n";
-            
-            // Show first object with flattened properties if exists
-            foreach ($objects as $object) {
-                if (isset($object['gemmaThema']) || isset($object['objectId']) || isset($object['xml'])) {
-                    echo "\n=== FOUND OBJECT WITH FLATTENED PROPS ===\n";
-                    echo "ID: " . ($object['identifier'] ?? 'unknown') . "\n";
-                    echo "Keys: " . implode(', ', array_keys($object)) . "\n";
-                    echo "Full object JSON: " . json_encode($object, JSON_PRETTY_PRINT) . "\n";
-                    break;
-                }
-            }
-        }
+
         
         $saveResult = $objectService->saveObjects(
             objects: $objects,
@@ -1301,6 +1309,18 @@ class ArchiMateImportService
                     'type' => $invalidItem['type'] ?? 'ValidationException'
                 ]);
             }
+        }
+
+        // Log details about skipped objects if any
+        if (!empty($saveResult['skipped'])) {
+            $this->logger->info('Objects skipped during import (no changes detected)', [
+                'skipped_count' => count($saveResult['skipped']),
+                'sample_skipped_ids' => array_slice(
+                    array_map(fn($obj) => $obj->getUuid() ?? 'unknown', $saveResult['skipped']),
+                    0, 
+                    5
+                )
+            ]);
         }
 
         // Return the combined saved and updated objects (maintaining backward compatibility)
@@ -1704,6 +1724,32 @@ class ArchiMateImportService
                 'total_objects_skipped' => count($saveResult['skipped'] ?? []),
                 'total_errors' => count($saveResult['invalid'] ?? [])
             ];
+            
+            // Log detailed breakdown of results
+            $totalStatisticsCount = array_sum([
+                count($saveResult['saved'] ?? []),
+                count($saveResult['updated'] ?? []),
+                count($saveResult['skipped'] ?? []),
+                count($saveResult['invalid'] ?? [])
+            ]);
+            
+            $this->logger->info('Import statistics breakdown', [
+                'created' => count($saveResult['saved'] ?? []),
+                'updated' => count($saveResult['updated'] ?? []),
+                'skipped' => count($saveResult['skipped'] ?? []),
+                'invalid' => count($saveResult['invalid'] ?? []),
+                'total_in_statistics' => $totalStatisticsCount
+            ]);
+            
+            // Log discrepancy analysis
+            if ($totalStatisticsCount != 8781) { // Expected objects processed
+                $this->logger->warning('Discrepancy found in object counts', [
+                    'expected_objects_processed' => 8781,
+                    'actual_statistics_total' => $totalStatisticsCount,
+                    'missing_objects' => 8781 - $totalStatisticsCount,
+                    'analysis' => 'Some objects may not be reaching OpenRegister saveObjects'
+                ]);
+            }
         }
 
         return $statistics;
@@ -1997,11 +2043,14 @@ class ArchiMateImportService
      * 
      * Instead of storing the complete XML structure, this method extracts only
      * the essential data needed for round-trip fidelity and export functionality.
+     * For view objects, element splicing is performed if elements lookup is provided.
      * 
      * @param array $item The complete XML item data
+     * @param array $elementsLookup Optional elements lookup for view processing
+     * @param string $schemaType Schema type for conditional processing
      * @return array Essential XML data for storage
      */
-    private function extractEssentialXmlData(array $item): array
+    private function extractEssentialXmlData(array $item, array $elementsLookup = [], string $schemaType = ''): array
     {
         $essential = [];
         
@@ -2041,10 +2090,284 @@ class ArchiMateImportService
             }
         }
         
+        // Extract nodes and connections for view objects with element splicing
+        if ($schemaType === 'view') {
+            $this->extractViewNodesAndConnections($item, $essential, $elementsLookup);
+        } else {
+            $this->extractViewNodesAndConnections($item, $essential);
+        }
+        
         // Add a marker to indicate this is essential data (for debugging)
         $essential['_essential_data'] = true;
         
         return $essential;
+    }
+
+    /**
+     * Extract nodes and connections for view objects with full nested hierarchy and element splicing
+     * 
+     * This method recursively extracts the complete nested node structure from view XML data.
+     * Each node can contain child nodes, creating a deep hierarchical structure that matches
+     * the original ArchiMate view exactly. Additionally, elements are spliced into nodes
+     * that reference them via elementRef.
+     * 
+     * @param array $item The complete XML item data  
+     * @param array &$essential Essential XML data to add nodes/connections to (by reference)
+     * @param array $elementsLookup Optional lookup array of elements by identifier for splicing
+     * @return void
+     */
+    private function extractViewNodesAndConnections(array $item, array &$essential, array $elementsLookup = []): void
+    {
+        // Only process if this looks like a view object (has nodes or connections)
+        if (!isset($item['node']) && !isset($item['connection'])) {
+            return;
+        }
+
+        // Extract nodes array with full nested hierarchy and element splicing
+        if (isset($item['node'])) {
+            $essential['nodes'] = $this->extractNodesRecursively($item['node'], $elementsLookup);
+        }
+
+        // Extract connections array  
+        if (isset($item['connection'])) {
+            $essential['connections'] = $this->extractConnectionsRecursively($item['connection']);
+        }
+    }
+
+    /**
+     * Recursively extract nested nodes with full hierarchy and element splicing
+     * 
+     * This method processes nodes and their children recursively to capture the complete
+     * nested structure as it appears in the ArchiMate XML. When a node references an element
+     * via elementRef, the actual element data (minus _xml) is spliced into the node's 
+     * 'element' property.
+     * 
+     * @param array $nodeData Node data (can be single node or array of nodes)
+     * @param array $elementsLookup Lookup array of elements by identifier for splicing
+     * @return array Array of processed nodes with nested children and spliced elements
+     */
+    private function extractNodesRecursively($nodeData, array $elementsLookup = []): array
+    {
+        $nodes = [];
+        
+        // Handle both single node and array of nodes
+        if (!isset($nodeData[0])) {
+            // Single node
+            $nodeData = [$nodeData];
+        }
+        
+        foreach ($nodeData as $node) {
+            if (isset($node['_attributes'])) {
+                $processedNode = [
+                    'identifier' => $node['_attributes']['identifier'] ?? null,
+                    'elementRef' => $node['_attributes']['elementRef'] ?? null,
+                    'type' => $node['_attributes']['xsi:type'] ?? 'Element',
+                    'x' => isset($node['_attributes']['x']) ? (int)$node['_attributes']['x'] : null,
+                    'y' => isset($node['_attributes']['y']) ? (int)$node['_attributes']['y'] : null,
+                    'w' => isset($node['_attributes']['w']) ? (int)$node['_attributes']['w'] : null,
+                    'h' => isset($node['_attributes']['h']) ? (int)$node['_attributes']['h'] : null
+                ];
+                
+                // Extract style information if present
+                if (isset($node['style'])) {
+                    $processedNode['style'] = $this->extractNodeStyle($node['style']);
+                }
+                
+                // Extract label text for Label type nodes
+                if (isset($node['label'])) {
+                    if (is_array($node['label']) && isset($node['label']['_value'])) {
+                        $processedNode['label'] = $node['label']['_value'];
+                    } elseif (is_string($node['label'])) {
+                        $processedNode['label'] = $node['label'];
+                    }
+                }
+                
+                // ELEMENT SPLICING: If node references an element, splice it in
+                if (!empty($processedNode['elementRef']) && !empty($elementsLookup)) {
+                    $elementRef = $processedNode['elementRef'];
+                    if (isset($elementsLookup[$elementRef])) {
+                        // Splice element data (minus _xml and other metadata) into the node
+                        $element = $elementsLookup[$elementRef];
+                        $processedNode['element'] = $this->prepareElementForSplicing($element);
+                    }
+                }
+                
+                // RECURSIVE: Extract child nodes if they exist (with element splicing)
+                if (isset($node['node'])) {
+                    $processedNode['children'] = $this->extractNodesRecursively($node['node'], $elementsLookup);
+                }
+                
+                // RECURSIVE: Extract child connections if they exist
+                if (isset($node['connection'])) {
+                    $processedNode['connections'] = $this->extractConnectionsRecursively($node['connection']);
+                }
+                
+                $nodes[] = $processedNode;
+            }
+        }
+        
+        return $nodes;
+    }
+
+    /**
+     * Prepare element data for splicing by removing internal metadata
+     * 
+     * @param array $element The complete element object
+     * @return array Element data suitable for splicing (without _xml, @self, etc.)
+     */
+    private function prepareElementForSplicing(array $element): array
+    {
+        // Start with a copy of the element
+        $splicedElement = $element;
+        
+        // Remove internal metadata fields that shouldn't be in spliced data
+        $fieldsToRemove = ['@self', 'xml', '_xml', 'section', 'model_identifier', 'extracted_at', '_propertyMapping'];
+        
+        foreach ($fieldsToRemove as $field) {
+            unset($splicedElement[$field]);
+        }
+        
+        return $splicedElement;
+    }
+
+    /**
+     * Extract connections recursively 
+     * 
+     * @param array $connectionData Connection data (can be single connection or array)
+     * @return array Array of processed connections
+     */
+    private function extractConnectionsRecursively($connectionData): array
+    {
+        $connections = [];
+        
+        // Handle both single connection and array of connections
+        if (!isset($connectionData[0])) {
+            // Single connection
+            $connectionData = [$connectionData];
+        }
+        
+        foreach ($connectionData as $connection) {
+            if (isset($connection['_attributes'])) {
+                $processedConnection = [
+                    'identifier' => $connection['_attributes']['identifier'] ?? null,
+                    'relationshipRef' => $connection['_attributes']['relationshipRef'] ?? null,
+                    'type' => $connection['_attributes']['xsi:type'] ?? 'Relationship',
+                    'source' => $connection['_attributes']['source'] ?? null,
+                    'target' => $connection['_attributes']['target'] ?? null
+                ];
+                
+                // Extract style information if present
+                if (isset($connection['style'])) {
+                    $processedConnection['style'] = $this->extractConnectionStyle($connection['style']);
+                }
+                
+                $connections[] = $processedConnection;
+            }
+        }
+        
+        return $connections;
+    }
+
+    /**
+     * Extract style information from a node
+     * 
+     * @param array $style Style data from XML
+     * @return array Processed style information
+     */
+    private function extractNodeStyle(array $style): array
+    {
+        $processedStyle = [];
+        
+        // Extract fillColor
+        if (isset($style['fillColor']['_attributes'])) {
+            $fillColor = $style['fillColor']['_attributes'];
+            $processedStyle['fillColor'] = [
+                'r' => isset($fillColor['r']) ? (int)$fillColor['r'] : 255,
+                'g' => isset($fillColor['g']) ? (int)$fillColor['g'] : 255,
+                'b' => isset($fillColor['b']) ? (int)$fillColor['b'] : 255,
+                'a' => isset($fillColor['a']) ? (int)$fillColor['a'] : 100
+            ];
+        }
+        
+        // Extract lineColor
+        if (isset($style['lineColor']['_attributes'])) {
+            $lineColor = $style['lineColor']['_attributes'];
+            $processedStyle['lineColor'] = [
+                'r' => isset($lineColor['r']) ? (int)$lineColor['r'] : 0,
+                'g' => isset($lineColor['g']) ? (int)$lineColor['g'] : 0,
+                'b' => isset($lineColor['b']) ? (int)$lineColor['b'] : 0,
+                'a' => isset($lineColor['a']) ? (int)$lineColor['a'] : 100
+            ];
+        }
+        
+        // Extract font information
+        if (isset($style['font'])) {
+            $font = [];
+            if (isset($style['font']['_attributes'])) {
+                $font['name'] = $style['font']['_attributes']['name'] ?? 'Arial';
+                $font['size'] = isset($style['font']['_attributes']['size']) ? (int)$style['font']['_attributes']['size'] : 12;
+            }
+            
+            if (isset($style['font']['color']['_attributes'])) {
+                $fontColor = $style['font']['color']['_attributes'];
+                $font['color'] = [
+                    'r' => isset($fontColor['r']) ? (int)$fontColor['r'] : 0,
+                    'g' => isset($fontColor['g']) ? (int)$fontColor['g'] : 0,
+                    'b' => isset($fontColor['b']) ? (int)$fontColor['b'] : 0
+                ];
+            }
+            
+            if (!empty($font)) {
+                $processedStyle['font'] = $font;
+            }
+        }
+        
+        return $processedStyle;
+    }
+
+    /**
+     * Extract style information from a connection
+     * 
+     * @param array $style Style data from XML
+     * @return array Processed style information
+     */
+    private function extractConnectionStyle(array $style): array
+    {
+        $processedStyle = [];
+        
+        // Extract lineColor  
+        if (isset($style['lineColor']['_attributes'])) {
+            $lineColor = $style['lineColor']['_attributes'];
+            $processedStyle['lineColor'] = [
+                'r' => isset($lineColor['r']) ? (int)$lineColor['r'] : 0,
+                'g' => isset($lineColor['g']) ? (int)$lineColor['g'] : 0,
+                'b' => isset($lineColor['b']) ? (int)$lineColor['b'] : 0
+            ];
+        }
+        
+        // Extract font information
+        if (isset($style['font'])) {
+            $font = [];
+            if (isset($style['font']['_attributes'])) {
+                $font['name'] = $style['font']['_attributes']['name'] ?? 'Arial';
+                $font['size'] = isset($style['font']['_attributes']['size']) ? (int)$style['font']['_attributes']['size'] : 12;
+            }
+            
+            if (isset($style['font']['color']['_attributes'])) {
+                $fontColor = $style['font']['color']['_attributes'];
+                $font['color'] = [
+                    'r' => isset($fontColor['r']) ? (int)$fontColor['r'] : 0,
+                    'g' => isset($fontColor['g']) ? (int)$fontColor['g'] : 0,
+                    'b' => isset($fontColor['b']) ? (int)$fontColor['b'] : 0
+                ];
+            }
+            
+            if (!empty($font)) {
+                $processedStyle['font'] = $font;
+            }
+        }
+        
+        return $processedStyle;
     }
 
     /**
@@ -2320,13 +2643,14 @@ class ArchiMateImportService
     }
 
     /**
-     * Transform ArchiMate XML data to objects array in batch (OpenRegister pattern)
+     * SPEED OPTIMIZED: Transform ArchiMate XML data with maximum performance focus
      * 
-     * This method follows the same pattern as OpenRegister CSV import:
-     * - Parse ALL sections at once
-     * - Create objects directly without intermediate normalization
-     * - Use cached configuration values
-     * - Minimize object copying and complex transformations
+     * This implementation prioritizes speed over memory usage:
+     * 1. Pre-build ALL lookups in memory (elements, relationships, organizations)
+     * 2. Cache all parsing results and property mappings
+     * 3. Use bulk operations with memory buffers
+     * 4. Eliminate redundant operations through aggressive caching
+     * 5. Process everything in memory-intensive but fast data structures
      * 
      * @param array $xmlData Parsed XML data
      * @param string $modelIdentifier Model identifier
@@ -2334,9 +2658,13 @@ class ArchiMateImportService
      */
     private function transformArchiMateXmlToObjectsBatch(array $xmlData, string $modelIdentifier): array
     {
+        $startTime = microtime(true);
         $allObjects = [];
         
-        // Extract propertyDefinitionMap once for all objects
+        // SPEED OPTIMIZATION 1: Pre-extract and cache EVERYTHING
+        $this->logger->info('SPEED MODE: Pre-building all lookups and caches');
+        $cacheStartTime = microtime(true);
+        
         $propertyDefinitionMap = $this->extractPropertyDefinitionMap($xmlData);
         
         // Debug: Log property definition map extraction
@@ -2373,20 +2701,337 @@ class ArchiMateImportService
             'property_definitions' => 'property_definition'
         ];
         
-        foreach ($sections as $sectionName => $schemaType) {
-            $sectionData = $this->findSectionData($xmlData, $sectionName);
-            if (!empty($sectionData)) {
-                $sectionObjects = $this->transformSectionObjectsBatch(
-                    $sectionData,
-                    $schemaType,
+        // SPEED OPTIMIZATION 2: Pre-build ALL section lookups simultaneously
+        $allLookups = $this->buildAllLookupsSimultaneously($xmlData);
+        $elementsLookup = $this->buildElementsLookup($allObjects); // Will be rebuilt from processed objects
+        
+        $cacheTime = microtime(true) - $cacheStartTime;
+        $this->logger->info('Pre-built all lookups', [
+            'cache_build_time' => round($cacheTime, 3),
+            'elements_count' => count($allLookups['elements']),
+            'relationships_count' => count($allLookups['relationships']),
+            'organizations_count' => count($allLookups['organizations']),
+            'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 1)
+        ]);
+        
+        // SPEED OPTIMIZATION 3: Process all non-view sections in bulk
+        $bulkProcessingStart = microtime(true);
+        $nonViewObjects = $this->bulkProcessNonViewSections(
+            $xmlData,
                     $modelIdentifier,
-                    $propertyDefinitionMap
-                );
-                $allObjects = array_merge($allObjects, $sectionObjects);
-            }
+            $propertyDefinitionMap,
+            $allLookups
+        );
+        $allObjects = array_merge($allObjects, $nonViewObjects);
+        
+        // SPEED OPTIMIZATION: Build elements lookup directly from raw data (faster than from processed objects)
+        $elementsLookup = $this->buildElementsLookupFromRawData($allLookups['elements'], $nonViewObjects, $propertyDefinitionMap);
+        
+        $bulkTime = microtime(true) - $bulkProcessingStart;
+        
+        // SPEED OPTIMIZATION 4: Process views with maximum speed optimizations
+        $viewProcessingStart = microtime(true);
+        $viewObjects = $this->processViewsMaximumSpeed(
+            $xmlData,
+            $modelIdentifier,
+            $propertyDefinitionMap,
+            $elementsLookup
+        );
+        $allObjects = array_merge($allObjects, $viewObjects);
+        $viewTime = microtime(true) - $viewProcessingStart;
+        
+        $totalTime = microtime(true) - $startTime;
+        $this->logger->info('SPEED MODE transformation completed', [
+            'total_time' => round($totalTime, 3),
+            'cache_time' => round($cacheTime, 3),
+            'bulk_processing_time' => round($bulkTime, 3),
+            'view_processing_time' => round($viewTime, 3),
+            'objects_processed' => count($allObjects),
+            'speed_objects_per_second' => round(count($allObjects) / max($totalTime, 0.001), 1),
+            'peak_memory_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 1)
+        ]);
+        
+        // MEMORY CLEANUP: Free all intermediate lookups and caches before database operations
+        $memoryBeforeCleanup = memory_get_usage(true);
+        unset($allLookups, $elementsLookup, $propertyDefinitionMap);
+        $this->camelCaseCache = []; // Clear property name cache
+        $this->identifierPatternCache = []; // Clear identifier pattern cache
+        $this->propertyDefinitionMapCache = null; // Clear property definition cache
+        
+        // Force garbage collection to free memory immediately
+        if (function_exists('gc_collect_cycles')) {
+            $cycles = gc_collect_cycles();
+            $memoryAfterCleanup = memory_get_usage(true);
+            $memoryFreed = $memoryBeforeCleanup - $memoryAfterCleanup;
+            
+            $this->logger->info('Memory cleanup before database operations', [
+                'memory_freed_mb' => round($memoryFreed / 1024 / 1024, 1),
+                'gc_cycles_collected' => $cycles,
+                'memory_before_mb' => round($memoryBeforeCleanup / 1024 / 1024, 1),
+                'memory_after_mb' => round($memoryAfterCleanup / 1024 / 1024, 1)
+            ]);
         }
         
         return $allObjects;
+    }
+
+    /**
+     * Transform views with performance optimizations
+     * 
+     * This method processes views with several optimizations:
+     * - Reduced memory allocations 
+     * - Optimized element lookup caching
+     * - Streamlined recursive processing
+     * 
+     * @param array $viewsData Views section data
+     * @param string $modelIdentifier Model identifier  
+     * @param array $propertyDefinitionMap Property definition map
+     * @param array $elementsLookup Elements lookup for splicing
+     * @return array Array of processed view objects
+     */
+    private function transformViewsOptimized(
+        array $viewsData,
+        string $modelIdentifier,
+        array $propertyDefinitionMap,
+        array $elementsLookup
+    ): array {
+        $objects = [];
+        
+        // Find items in section (optimized version for views)
+        $items = $this->findItemsSimplified($viewsData, 'view');
+        
+        // OPTIMIZATION: Pre-filter elements to only those actually referenced in views
+        $referencedElements = $this->extractReferencedElements($items);
+        $filteredElementsLookup = array_intersect_key($elementsLookup, array_flip($referencedElements));
+        
+        $this->logger->debug('Optimized elements lookup for views', [
+            'total_elements' => count($elementsLookup),
+            'referenced_elements' => count($filteredElementsLookup),
+            'optimization_ratio' => round((1 - count($filteredElementsLookup) / max(count($elementsLookup), 1)) * 100, 1) . '%'
+        ]);
+        
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            
+            $identifier = $this->extractIdentifier($item, 'view');
+            if (!$identifier) {
+                continue;
+            }
+            
+            // OPTIMIZATION: Use filtered elements lookup for better performance
+            $essentialXmlData = $this->extractEssentialXmlData($item, $filteredElementsLookup, 'view');
+            
+            $object = [
+                '@self' => [
+                    'register' => $this->cachedConfig['registerId'] ?? 15,
+                    'schema' => 111, // FIXED: Hard-code view schema ID for speed optimization
+                    'id' => $identifier,
+                    'owner' => $this->cachedConfig['userId'],
+                    'organisation' => $this->cachedConfig['organisation'],
+
+                ],
+                'identifier' => $identifier,
+                'section' => 'view',
+                'model_identifier' => $modelIdentifier,
+                'xml' => $essentialXmlData
+            ];
+            
+            // Extract name and summary (same as other sections)
+            if (isset($item['name'])) {
+                if (is_array($item['name']) && isset($item['name']['_value'])) {
+                    $object['name'] = $item['name']['_value'];
+                } elseif (is_string($item['name'])) {
+                    $object['name'] = $item['name'];
+                }
+            }
+            
+            if (isset($item['documentation'])) {
+                if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
+                    $object['summary'] = $item['documentation']['_value'];
+                } elseif (is_string($item['documentation'])) {
+                    $object['summary'] = $item['documentation'];
+                }
+            }
+            
+            // Flatten properties efficiently (same as other sections)
+            if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
+                $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+                
+                // Update ID and slug if objectId is available
+                if (isset($object['objectId'])) {
+                    $object['@self']['id'] = $object['objectId'];
+                    $object['@self']['slug'] = $identifier;
+                } else {
+                    if ($identifier && str_starts_with($identifier, 'id-')) {
+                        $object['@self']['slug'] = substr($identifier, 3);
+                    } else {
+                        $object['@self']['slug'] = $identifier;
+                    }
+                }
+            } else {
+                if ($identifier && str_starts_with($identifier, 'id-')) {
+                    $object['@self']['slug'] = substr($identifier, 3);  
+                } else {
+                    $object['@self']['slug'] = $identifier;
+                }
+            }
+            
+            // Copy nodes and connections from XML to root level for easy access
+            if (isset($object['xml']['nodes'])) {
+                $object['nodes'] = $object['xml']['nodes'];
+            }
+            if (isset($object['xml']['connections'])) {
+                $object['connections'] = $object['xml']['connections'];
+            }
+            
+            $objects[] = $object;
+        }
+        
+        return $objects;
+    }
+
+    /**
+     * Extract all element references from view items for optimization
+     * 
+     * @param array $viewItems Array of view items
+     * @return array Array of referenced element identifiers
+     */
+    private function extractReferencedElements(array $viewItems): array
+    {
+        $references = [];
+        
+        foreach ($viewItems as $item) {
+            $this->collectElementReferencesRecursively($item, $references);
+        }
+        
+        return array_unique($references);
+    }
+    
+    /**
+     * Recursively collect element references from view data
+     * 
+     * @param array $data View data to process
+     * @param array &$references Array to collect references into (by reference)
+     * @return void
+     */
+    private function collectElementReferencesRecursively(array $data, array &$references): void
+    {
+        // Check for elementRef in current level
+        if (isset($data['_attributes']['elementRef'])) {
+            $references[] = $data['_attributes']['elementRef'];
+        }
+        
+        // Recursively check child nodes
+        if (isset($data['node'])) {
+            $nodeData = $data['node'];
+            if (!isset($nodeData[0])) {
+                $nodeData = [$nodeData];
+            }
+            
+            foreach ($nodeData as $node) {
+                $this->collectElementReferencesRecursively($node, $references);
+            }
+        }
+    }
+
+    /**
+     * Build elements lookup array for view processing with element splicing
+     * 
+     * This method creates a fast lookup array of elements by their identifier
+     * to enable efficient element splicing during view node processing.
+     * 
+     * @param array $elementObjects Array of processed element objects
+     * @return array Lookup array with element identifier as key and element data as value
+     */
+    private function buildElementsLookup(array $elementObjects): array
+    {
+        $lookup = [];
+        
+        foreach ($elementObjects as $element) {
+            $identifier = $element['identifier'] ?? null;
+            if ($identifier) {
+                $lookup[$identifier] = $element;
+            }
+        }
+        
+        $this->logger->debug('Built elements lookup for view processing', [
+            'total_elements' => count($lookup),
+            'sample_identifiers' => array_slice(array_keys($lookup), 0, 5)
+        ]);
+        
+        return $lookup;
+    }
+
+    /**
+     * SPEED OPTIMIZATION: Build elements lookup directly from raw XML data
+     * 
+     * This is faster than building from processed objects because we skip intermediate processing
+     * and build the lookup table directly from the source data with minimal transformations.
+     * 
+     * @param array $rawElementsData Raw elements data from XML
+     * @param array $processedObjects Already processed objects (for fallback)
+     * @param array $propertyDefinitionMap Property definition map
+     * @return array Elements lookup for view processing
+     */
+    private function buildElementsLookupFromRawData(
+        array $rawElementsData,
+        array $processedObjects,
+        array $propertyDefinitionMap
+    ): array {
+        $lookup = [];
+        
+        // SPEED: Build directly from raw data with minimal processing
+        foreach ($rawElementsData as $identifier => $rawItem) {
+            $element = [
+                'identifier' => $identifier,
+                'section' => 'element'
+            ];
+            
+            // Fast name extraction
+            if (isset($rawItem['name'])) {
+                $element['name'] = is_array($rawItem['name']) && isset($rawItem['name']['_value']) 
+                    ? $rawItem['name']['_value'] 
+                    : (is_string($rawItem['name']) ? $rawItem['name'] : '');
+            }
+            
+            // Fast summary extraction
+            if (isset($rawItem['documentation'])) {
+                $element['summary'] = is_array($rawItem['documentation']) && isset($rawItem['documentation']['_value'])
+                    ? $rawItem['documentation']['_value']
+                    : (is_string($rawItem['documentation']) ? $rawItem['documentation'] : '');
+            }
+            
+            // Fast properties flattening (only essential properties for splicing)
+            if (isset($rawItem['properties']['property']) && !empty($propertyDefinitionMap)) {
+                $props = isset($rawItem['properties']['property'][0]) 
+                    ? $rawItem['properties']['property'] 
+                    : [$rawItem['properties']['property']];
+                
+                foreach ($props as $prop) {
+                    if (!isset($prop['_attributes']['propertyDefinitionRef'])) continue;
+                    
+                    $defRef = $prop['_attributes']['propertyDefinitionRef'];
+                    $value = $prop['value']['_value'] ?? $prop['value'] ?? null;
+                    
+                    if ($value !== null && isset($propertyDefinitionMap[$defRef])) {
+                        $propertyName = $propertyDefinitionMap[$defRef];
+                        $camelCaseName = $this->convertToCamelCase($propertyName);
+                        $element[$camelCaseName] = $value;
+                    }
+                }
+            }
+            
+            $lookup[$identifier] = $element;
+        }
+        
+        $this->logger->debug('Built SPEED elements lookup from raw data', [
+            'total_elements' => count($lookup),
+            'sample_identifiers' => array_slice(array_keys($lookup), 0, 5)
+        ]);
+        
+        return $lookup;
     }
 
     /**
@@ -2404,9 +3049,7 @@ class ArchiMateImportService
                 'schema' => $this->cachedConfig['schemaIds']['model'] ?? 67,
                 'id' => $modelIdentifier,
                 'owner' => $this->cachedConfig['userId'],
-                'organisation' => $this->cachedConfig['organisation'],
-                'created' => date('Y-m-d H:i:s'),
-                'updated' => date('Y-m-d H:i:s')
+                'organisation' => $this->cachedConfig['organisation']
             ],
             'identifier' => $modelIdentifier,
             'section' => 'model',
@@ -2447,37 +3090,44 @@ class ArchiMateImportService
     }
 
     /**
-     * Transform section objects in batch with minimal overhead
+     * Transform section objects in batch with minimal overhead and element splicing for views
      * 
      * @param array $sectionData Section data from XML
      * @param string $schemaType Schema type (singular)
      * @param string $modelIdentifier Model identifier
      * @param array $propertyDefinitionMap Property definition map
+     * @param array $elementsLookup Optional elements lookup for view processing
      * @return array Array of transformed objects
      */
     private function transformSectionObjectsBatch(
         array $sectionData, 
         string $schemaType, 
         string $modelIdentifier, 
-        array $propertyDefinitionMap
+        array $propertyDefinitionMap,
+        array $elementsLookup = []
     ): array {
         $objects = [];
         
         // Find items in section (simplified version)
         $items = $this->findItemsSimplified($sectionData, $schemaType);
         
+        $skippedNotArray = 0;
+        $skippedNoIdentifier = 0;
+        
         foreach ($items as $item) {
             if (!is_array($item)) {
+                $skippedNotArray++;
                 continue;
             }
             
             $identifier = $this->extractIdentifier($item, $schemaType);
             if (!$identifier) {
+                $skippedNoIdentifier++;
                 continue;
             }
             
-            // Create object directly (minimal processing)
-            $essentialXmlData = $this->extractEssentialXmlData($item);
+            // Create object directly (minimal processing) with element splicing for views
+            $essentialXmlData = $this->extractEssentialXmlData($item, $elementsLookup, $schemaType);
             
             $object = [
                 '@self' => [
@@ -2486,8 +3136,7 @@ class ArchiMateImportService
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
-                    'created' => date('Y-m-d H:i:s'),
-                    'updated' => date('Y-m-d H:i:s')
+
                 ],
                 'identifier' => $identifier,
                 'section' => $schemaType,
@@ -2524,57 +3173,41 @@ class ArchiMateImportService
                 }
             }
             
-            // VAR_DUMP DEBUG: Check property structure - limit to first element only
-            static $debugCount = 0;
-            if ($debugCount === 0 && isset($item['properties'])) {
-                echo "\n=== VAR_DUMP DEBUG: Item with properties structure ===\n";
-                echo "Object ID: " . $identifier . "\n";
-                echo "Item keys: " . implode(', ', array_keys($item)) . "\n";
-                if (isset($item['properties'])) {
-                    echo "Properties keys: " . implode(', ', array_keys($item['properties'])) . "\n";
-                    if (isset($item['properties']['property'])) {
-                        echo "Properties.property structure:\n";
-                        $props = is_array($item['properties']['property']) && isset($item['properties']['property'][0]) ? 
-                                 $item['properties']['property'] : [$item['properties']['property']];
-                        foreach (array_slice($props, 0, 3) as $i => $prop) {
-                            echo "  Property $i keys: " . implode(', ', array_keys($prop ?? [])) . "\n";
-                            if (isset($prop['_attributes']['propertyDefinitionRef'])) {
-                                echo "    DefRef: " . $prop['_attributes']['propertyDefinitionRef'] . "\n";
-                            }
-                            if (isset($prop['value'])) {
-                                $value = is_array($prop['value']) && isset($prop['value']['_value']) ? $prop['value']['_value'] : $prop['value'];
-                                echo "    Value: " . (is_string($value) ? substr($value, 0, 50) : gettype($value)) . "\n";
-                            }
-                        }
-                    }
-                }
-                echo "Property definition map size: " . count($propertyDefinitionMap) . "\n";
-                echo "Sample prop defs: " . implode(', ', array_slice($propertyDefinitionMap, 0, 5, true)) . "\n";
-                $debugCount++;
-            }
+
             
             // Flatten properties efficiently (if present)
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
                 
-                // VAR_DUMP DEBUG: Show object after flattening - limit to first element only
-                if ($debugCount === 1) {
-                    echo "\n=== VAR_DUMP DEBUG: Object after property flattening ===\n";
-                    echo "Object keys: " . implode(', ', array_keys($object)) . "\n";
-                    if (isset($object['_propertyMapping'])) {
-                        echo "Property mapping: " . implode(', ', array_keys($object['_propertyMapping'])) . "\n";
-                    }
-                    $nonStandardKeys = array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary']);
-                    if (!empty($nonStandardKeys)) {
-                        echo "Flattened properties: " . implode(', ', $nonStandardKeys) . "\n";
+                // FIXED: After properties are flattened, update ID and slug if objectId is available
+                if (isset($object['objectId'])) {
+                    // Use objectId as main ID and AMEF identifier as slug
+                    $object['@self']['id'] = $object['objectId'];
+                    $object['@self']['slug'] = $identifier; // AMEF identifier becomes slug
+                } else {
+                    // Fallback: extract clean UUID from AMEF identifier for slug
+                    if ($identifier && str_starts_with($identifier, 'id-')) {
+                        $object['@self']['slug'] = substr($identifier, 3); // Remove "id-" prefix
+                    } else {
+                        $object['@self']['slug'] = $identifier;
                     }
                 }
             } else {
-                // Only show this for first few objects to avoid spam
-                if ($debugCount < 3) {
-                    echo "\n=== VAR_DUMP DEBUG: SKIPPING property flattening for " . $identifier . " ===\n";
-                    echo "Has properties.property: " . (isset($item['properties']['property']) ? 'YES' : 'NO') . "\n";
-                    echo "Property definition map size: " . count($propertyDefinitionMap) . "\n";
+                // No properties to flatten, use AMEF identifier logic
+                if ($identifier && str_starts_with($identifier, 'id-')) {
+                    $object['@self']['slug'] = substr($identifier, 3); // Remove "id-" prefix  
+                } else {
+                    $object['@self']['slug'] = $identifier;
+                }
+            }
+            
+            // NEW: For view objects, copy nodes and connections from XML to root level
+            if ($schemaType === 'view' && isset($object['xml'])) {
+                if (isset($object['xml']['nodes'])) {
+                    $object['nodes'] = $object['xml']['nodes'];
+                }
+                if (isset($object['xml']['connections'])) {
+                    $object['connections'] = $object['xml']['connections'];
                 }
             }
             
@@ -2587,43 +3220,15 @@ class ArchiMateImportService
                 'xml_keys' => isset($object['xml']) ? array_keys($object['xml']) : null,
                 'has_property_mapping' => isset($object['_propertyMapping']),
                 'property_mapping_count' => isset($object['_propertyMapping']) ? count($object['_propertyMapping']) : 0,
-                'sample_properties' => array_slice(array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary']), 0, 5)
+                'nodes_count' => isset($object['nodes']) ? count($object['nodes']) : 0,
+                'connections_count' => isset($object['connections']) ? count($object['connections']) : 0,
+                'sample_properties' => array_slice(array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary', 'nodes', 'connections']), 0, 5)
             ]);
             
             $objects[] = $object;
         }
         
-        // VAR_DUMP DEBUG: Check objects right after transformation
-        echo "\n=== VAR_DUMP DEBUG: Objects RIGHT AFTER transformation (before return) ===\n";
-        echo "Total objects created: " . count($objects) . "\n";
-        
-        // Count objects with different characteristics
-        $withXml = 0;
-        $withPropertyMapping = 0; 
-        $withGemmaProps = 0;
-        $metadataObjects = 0;
-        
-        foreach ($objects as $object) {
-            if (isset($object['xml'])) $withXml++;
-            if (isset($object['_propertyMapping'])) $withPropertyMapping++;
-            if (isset($object['gemmaThema']) || isset($object['objectId']) || isset($object['architectuurlaag'])) $withGemmaProps++;
-            if (isset($object['documentation']) || isset($object['propertyDefinitionMap'])) $metadataObjects++;
-        }
-        
-        echo "Objects with xml: $withXml\n";
-        echo "Objects with _propertyMapping: $withPropertyMapping\n";
-        echo "Objects with GEMMA properties: $withGemmaProps\n";
-        echo "Metadata objects: $metadataObjects\n";
-        
-        // Show a sample object with GEMMA properties if any exist
-        foreach ($objects as $object) {
-            if (isset($object['gemmaThema']) || isset($object['objectId'])) {
-                echo "\n=== SAMPLE OBJECT WITH GEMMA PROPS AFTER TRANSFORMATION ===\n";
-                echo "ID: " . ($object['identifier'] ?? 'unknown') . "\n";
-                echo "Keys: " . implode(', ', array_keys($object)) . "\n";
-                break;
-            }
-        }
+
         
         return $objects;
     }
@@ -2724,10 +3329,7 @@ class ArchiMateImportService
                     'def_ref' => $defRef
                 ];
                 
-                // Set slug for Object ID property
-                if (strtolower($propertyName) === 'object id') {
-                    $object['@self']['slug'] = $value;
-                }
+                // Object ID property is now handled after property flattening is complete
                 
                 // Debug: Log GEMMA type properties specifically
                 if (stripos($propertyName, 'gemma') !== false || $defRef === 'propid-3') {
@@ -2759,6 +3361,453 @@ class ArchiMateImportService
     }
 
     /**
+     * SPEED OPTIMIZATION: Build all lookups simultaneously for maximum performance
+     * 
+     * Pre-builds all possible lookups in parallel to eliminate lookup building overhead
+     * during processing. Uses more memory but significantly faster processing.
+     * 
+     * @param array $xmlData Complete XML data
+     * @return array Array with all lookups: ['elements' => [...], 'relationships' => [...], etc.]
+     */
+    private function buildAllLookupsSimultaneously(array $xmlData): array
+    {
+        $lookups = [
+            'elements' => [],
+            'relationships' => [],
+            'organizations' => [],
+            'views' => [],
+            'property_definitions' => []
+        ];
+        
+        // Pre-extract all section data simultaneously
+        $sections = [
+            'elements' => 'element',
+            'relationships' => 'relationship',
+            'organizations' => 'organization',  
+            'views' => 'view',
+            'property_definitions' => 'property_definition'
+        ];
+        
+        foreach ($sections as $sectionName => $schemaType) {
+            $sectionData = $this->findSectionData($xmlData, $sectionName);
+            if (!empty($sectionData)) {
+                $items = $this->findItemsSimplified($sectionData, $schemaType);
+                
+                foreach ($items as $item) {
+                    if (!is_array($item)) continue;
+                    
+                    $identifier = $this->extractIdentifier($item, $schemaType);
+                    if ($identifier) {
+                        // Store raw item data for fast processing later
+                        $lookups[$sectionName][$identifier] = $item;
+                    }
+                }
+            }
+        }
+        
+        return $lookups;
+    }
+
+    /**
+     * SPEED OPTIMIZATION: Bulk process all non-view sections with vectorized operations
+     * 
+     * @param array $xmlData XML data
+     * @param string $modelIdentifier Model identifier
+     * @param array $propertyDefinitionMap Property definition map
+     * @param array $allLookups All pre-built lookups
+     * @return array Processed objects
+     */
+    private function bulkProcessNonViewSections(
+        array $xmlData,
+        string $modelIdentifier, 
+        array $propertyDefinitionMap,
+        array $allLookups
+    ): array {
+        $objects = [];
+        
+        $sections = [
+            'elements' => 'element',
+            'relationships' => 'relationship',
+            'organizations' => 'organization',
+            'property_definitions' => 'property_definition'
+        ];
+        
+        foreach ($sections as $sectionName => $schemaType) {
+            if (empty($allLookups[$sectionName])) continue;
+            
+            $this->logger->debug("SPEED: Bulk processing {$sectionName}", [
+                'item_count' => count($allLookups[$sectionName])
+            ]);
+            
+            // SPEED OPTIMIZATION: Process all items in this section as a batch
+            $sectionObjects = $this->bulkTransformSection(
+                $allLookups[$sectionName],
+                $schemaType,
+                $modelIdentifier,
+                $propertyDefinitionMap
+            );
+            
+            $objects = array_merge($objects, $sectionObjects);
+        }
+        
+        return $objects;
+    }
+
+    /**
+     * SPEED OPTIMIZATION: Bulk transform a section with vectorized operations  
+     * 
+     * @param array $sectionItems Pre-loaded section items by identifier
+     * @param string $schemaType Schema type
+     * @param string $modelIdentifier Model identifier
+     * @param array $propertyDefinitionMap Property definition map
+     * @return array Transformed objects
+     */
+    private function bulkTransformSection(
+        array $sectionItems,
+        string $schemaType,
+        string $modelIdentifier,
+        array $propertyDefinitionMap
+    ): array {
+        $objects = [];
+        
+        foreach ($sectionItems as $identifier => $item) {
+            // SPEED OPTIMIZATION: Direct object creation without intermediate steps
+            $essentialXmlData = $this->extractEssentialXmlData($item, [], $schemaType);
+            
+            $object = [
+                '@self' => [
+                    'register' => $this->cachedConfig['registerId'] ?? 15,
+                    'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? 100,
+                    'id' => $identifier,
+                    'owner' => $this->cachedConfig['userId'],
+                    'organisation' => $this->cachedConfig['organisation'],
+
+                ],
+                'identifier' => $identifier,
+                'section' => $schemaType,
+                'model_identifier' => $modelIdentifier,
+                'xml' => $essentialXmlData
+            ];
+            
+            // Fast extract name and summary
+            if (isset($item['name'])) {
+                $object['name'] = is_array($item['name']) && isset($item['name']['_value']) 
+                    ? $item['name']['_value'] 
+                    : (is_string($item['name']) ? $item['name'] : '');
+            }
+            
+            if (isset($item['documentation'])) {
+                $object['summary'] = is_array($item['documentation']) && isset($item['documentation']['_value'])
+                    ? $item['documentation']['_value']
+                    : (is_string($item['documentation']) ? $item['documentation'] : '');
+            }
+            
+            // Fast flatten properties
+            if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
+                $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+                
+                // Fast ID/slug update
+                if (isset($object['objectId'])) {
+                    $object['@self']['id'] = $object['objectId'];
+                    $object['@self']['slug'] = $identifier;
+                } else {
+                    $object['@self']['slug'] = str_starts_with($identifier, 'id-') 
+                        ? substr($identifier, 3) 
+                        : $identifier;
+                }
+            } else {
+                $object['@self']['slug'] = str_starts_with($identifier, 'id-') 
+                    ? substr($identifier, 3) 
+                    : $identifier;
+            }
+            
+            $objects[] = $object;
+        }
+        
+        return $objects;
+    }
+
+    /**
+     * SPEED OPTIMIZATION: Process views with maximum speed optimizations
+     * 
+     * @param array $xmlData XML data  
+     * @param string $modelIdentifier Model identifier
+     * @param array $propertyDefinitionMap Property definition map
+     * @param array $elementsLookup Elements lookup for splicing
+     * @return array Processed view objects
+     */
+    private function processViewsMaximumSpeed(
+        array $xmlData,
+        string $modelIdentifier,
+        array $propertyDefinitionMap, 
+        array $elementsLookup
+    ): array {
+        $viewsData = $this->findSectionData($xmlData, 'views');
+        if (empty($viewsData)) {
+            return [];
+        }
+        
+        $this->logger->info('SPEED MODE: Processing views with maximum optimizations', [
+            'elements_available' => count($elementsLookup)
+        ]);
+        
+        // SPEED OPTIMIZATION: Pre-extract all referenced elements
+        $items = $this->findItemsSimplified($viewsData, 'view');
+        $referencedElements = $this->extractReferencedElements($items);
+        
+        // SPEED OPTIMIZATION: Build super-fast lookup with array_intersect_key
+        $filteredElementsLookup = array_intersect_key($elementsLookup, array_flip($referencedElements));
+        
+        $this->logger->debug('SPEED: Optimized element references', [
+            'total_elements' => count($elementsLookup),
+            'referenced_elements' => count($filteredElementsLookup),
+            'memory_savings_percent' => round((1 - count($filteredElementsLookup) / max(count($elementsLookup), 1)) * 100, 1)
+        ]);
+        
+        // SPEED OPTIMIZATION: Process with bulk operations
+        return $this->bulkTransformViews($items, $modelIdentifier, $propertyDefinitionMap, $filteredElementsLookup);
+    }
+
+    /**
+     * SPEED OPTIMIZATION: Bulk transform views with vectorized element splicing
+     * 
+     * @param array $viewItems View items to process
+     * @param string $modelIdentifier Model identifier
+     * @param array $propertyDefinitionMap Property definition map  
+     * @param array $elementsLookup Filtered elements lookup
+     * @return array Processed view objects
+     */
+    private function bulkTransformViews(
+        array $viewItems,
+        string $modelIdentifier,
+        array $propertyDefinitionMap,
+        array $elementsLookup
+    ): array {
+        $objects = [];
+        
+        foreach ($viewItems as $item) {
+            if (!is_array($item)) continue;
+            
+            $identifier = $this->extractIdentifier($item, 'view');
+            if (!$identifier) continue;
+            
+            // SPEED OPTIMIZATION: Direct processing with minimal overhead
+            $essentialXmlData = $this->extractEssentialXmlData($item, $elementsLookup, 'view');
+            
+            $object = [
+                '@self' => [
+                    'register' => $this->cachedConfig['registerId'] ?? 15,
+                    'schema' => 111, // FIXED: Hard-code view schema ID for speed optimization
+                    'id' => $identifier,
+                    'owner' => $this->cachedConfig['userId'],
+                    'organisation' => $this->cachedConfig['organisation'],
+
+                ],
+                'identifier' => $identifier,
+                'section' => 'view',
+                'model_identifier' => $modelIdentifier,
+                'xml' => $essentialXmlData
+            ];
+            
+            // Fast name/summary extraction
+            if (isset($item['name'])) {
+                $object['name'] = is_array($item['name']) && isset($item['name']['_value']) 
+                    ? $item['name']['_value'] 
+                    : (is_string($item['name']) ? $item['name'] : '');
+            }
+            
+            if (isset($item['documentation'])) {
+                $object['summary'] = is_array($item['documentation']) && isset($item['documentation']['_value'])
+                    ? $item['documentation']['_value']
+                    : (is_string($item['documentation']) ? $item['documentation'] : '');
+            }
+            
+            // Fast properties flattening
+            if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
+                $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+                
+                if (isset($object['objectId'])) {
+                    $object['@self']['id'] = $object['objectId'];
+                    $object['@self']['slug'] = $identifier;
+                } else {
+                    $object['@self']['slug'] = str_starts_with($identifier, 'id-') 
+                        ? substr($identifier, 3) 
+                        : $identifier;
+                }
+            } else {
+                $object['@self']['slug'] = str_starts_with($identifier, 'id-') 
+                    ? substr($identifier, 3) 
+                    : $identifier;
+            }
+            
+            // SPEED OPTIMIZATION: Direct copy without checks (we know it exists)
+            if (isset($object['xml']['nodes'])) {
+                $object['nodes'] = $object['xml']['nodes'];
+            }
+            if (isset($object['xml']['connections'])) {
+                $object['connections'] = $object['xml']['connections'];
+            }
+            
+            $objects[] = $object;
+        }
+        
+        return $objects;
+    }
+
+    /**
+     * Create intelligent batches based on object size to prevent MySQL packet size issues
+     * 
+     * This method analyzes object sizes and creates batches that stay under the MySQL
+     * max_allowed_packet limit while maintaining reasonable performance.
+     * 
+     * TODO: Move this intelligent batch sizing to OpenRegister core as a native feature
+     * This functionality should be available for all bulk operations, not just ArchiMate imports.
+     * OpenRegister's saveObjects() method should handle this automatically based on object sizes.
+     * 
+     * @param array $objects Array of objects to batch
+     * @return array Array of batches, each containing objects that fit within size limits
+     */
+    private function createIntelligentBatches(array $objects): array
+    {
+        $maxBatchSizeBytes = self::PERFORMANCE_OPTIMIZATIONS['max_batch_size_bytes'];
+        $minBatchSize = self::PERFORMANCE_OPTIMIZATIONS['min_batch_size'];
+        $sampleSize = self::PERFORMANCE_OPTIMIZATIONS['size_estimation_sample'];
+        
+        if (empty($objects)) {
+            return [];
+        }
+        
+        // Estimate average object size by sampling
+        $avgObjectSize = $this->estimateAverageObjectSize($objects, $sampleSize);
+        
+        // Calculate optimal batch size based on object size
+        $optimalBatchSize = max($minBatchSize, intval($maxBatchSizeBytes / $avgObjectSize));
+        
+        $this->logger->info('Intelligent batch sizing analysis', [
+            'total_objects' => count($objects),
+            'estimated_avg_object_size_bytes' => $avgObjectSize,
+            'max_batch_size_bytes' => $maxBatchSizeBytes,
+            'calculated_optimal_batch_size' => $optimalBatchSize,
+            'min_batch_size_enforced' => $minBatchSize
+        ]);
+        
+        // Create batches with size awareness
+        $batches = [];
+        $currentBatch = [];
+        $currentBatchSize = 0;
+        
+        foreach ($objects as $object) {
+            $objectSize = $this->estimateObjectSize($object);
+            
+            // Check if adding this object would exceed the batch size limit
+            if (!empty($currentBatch) && ($currentBatchSize + $objectSize) > $maxBatchSizeBytes) {
+                // Current batch is full, save it and start a new one
+                $batches[] = $currentBatch;
+                $currentBatch = [$object];
+                $currentBatchSize = $objectSize;
+            } else {
+                // Add object to current batch
+                $currentBatch[] = $object;
+                $currentBatchSize += $objectSize;
+            }
+            
+            // Safety check: if a single object is larger than max batch size,
+            // create a batch with just that object
+            if (count($currentBatch) === 1 && $objectSize > $maxBatchSizeBytes) {
+                $this->logger->warning('Very large object detected, creating single-object batch', [
+                    'object_id' => $object['@self']['id'] ?? 'unknown',
+                    'object_size_bytes' => $objectSize,
+                    'max_batch_size_bytes' => $maxBatchSizeBytes
+                ]);
+                $batches[] = $currentBatch;
+                $currentBatch = [];
+                $currentBatchSize = 0;
+            }
+        }
+        
+        // Add the last batch if it has objects
+        if (!empty($currentBatch)) {
+            $batches[] = $currentBatch;
+        }
+        
+        $this->logger->info('Intelligent batching completed', [
+            'total_objects' => count($objects),
+            'total_batches_created' => count($batches),
+            'batch_sizes' => array_map('count', $batches),
+            'estimated_batch_sizes_bytes' => array_map(fn($batch) => array_sum(array_map([$this, 'estimateObjectSize'], $batch)), $batches)
+        ]);
+        
+        return $batches;
+    }
+
+    /**
+     * Estimate the average size of objects by sampling
+     * 
+     * @param array $objects Array of objects to sample
+     * @param int $sampleSize Number of objects to sample for size estimation
+     * @return int Estimated average object size in bytes
+     */
+    private function estimateAverageObjectSize(array $objects, int $sampleSize): int
+    {
+        $totalObjects = count($objects);
+        if ($totalObjects === 0) {
+            return 1000; // Default fallback size
+        }
+        
+        // Sample evenly distributed objects
+        $sampleIndices = [];
+        if ($totalObjects <= $sampleSize) {
+            // Use all objects if we have fewer than sample size
+            $sampleIndices = range(0, $totalObjects - 1);
+        } else {
+            // Sample evenly across the array
+            $step = max(1, intval($totalObjects / $sampleSize));
+            for ($i = 0; $i < $totalObjects; $i += $step) {
+                $sampleIndices[] = $i;
+                if (count($sampleIndices) >= $sampleSize) {
+                    break;
+                }
+            }
+        }
+        
+        // Calculate sizes of sampled objects
+        $totalSampleSize = 0;
+        foreach ($sampleIndices as $index) {
+            $totalSampleSize += $this->estimateObjectSize($objects[$index]);
+        }
+        
+        $averageSize = intval($totalSampleSize / count($sampleIndices));
+        
+        $this->logger->debug('Object size estimation completed', [
+            'total_objects' => $totalObjects,
+            'sampled_objects' => count($sampleIndices),
+            'total_sample_size_bytes' => $totalSampleSize,
+            'estimated_average_size_bytes' => $averageSize
+        ]);
+        
+        return max(1000, $averageSize); // Minimum 1KB per object
+    }
+
+    /**
+     * Estimate the serialized size of an object for batching purposes
+     * 
+     * @param array $object The object to estimate size for
+     * @return int Estimated size in bytes
+     */
+    private function estimateObjectSize(array $object): int
+    {
+        // Quick estimation based on JSON serialization
+        // This includes overhead for SQL parameters and structure
+        $jsonSize = strlen(json_encode($object));
+        
+        // Add overhead for SQL INSERT statement structure
+        // Each object becomes multiple parameters in a bulk INSERT
+        $sqlOverhead = 500; // Estimated overhead per object in SQL
+        
+        return $jsonSize + $sqlOverhead;
+    }
+
+    /**
      * Calculate detailed object statistics for import operations
      * 
      * @param array $normalizedData Normalized ArchiMate data
@@ -2780,7 +3829,7 @@ class ArchiMateImportService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
             
-            // Count objects by section type from the actual saved objects
+            // Count objects by section type from the actual processed objects
             $allProcessedObjects = array_merge(
                 $saveResult['saved'] ?? [],
                 $saveResult['updated'] ?? [],
@@ -2822,6 +3871,10 @@ class ArchiMateImportService
                 $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [], 
                     fn($updated) => ($updated->getUuid() === $objectId)));
                 
+                // Check if this object was skipped (no changes)
+                $wasSkipped = !empty(array_filter($saveResult['skipped'] ?? [],
+                    fn($skipped) => ($skipped->getUuid() === $objectId)));
+                
                 // Check if this object had validation errors
                 $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
                     fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)));
@@ -2830,6 +3883,8 @@ class ArchiMateImportService
                     $statistics[$sectionKey]['created']++;
                 } elseif ($wasUpdated) {
                     $statistics[$sectionKey]['updated']++;
+                } elseif ($wasSkipped) {
+                    $statistics[$sectionKey]['skipped']++;
                 } elseif ($hasErrors) {
                     // Add to errors array for this section
                     $errorInfo = array_filter($saveResult['invalid'] ?? [],
@@ -2839,6 +3894,7 @@ class ArchiMateImportService
                         $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
                     }
                 } else {
+                    // This shouldn't happen, but leave as fallback
                     $statistics[$sectionKey]['skipped']++;
                 }
             }

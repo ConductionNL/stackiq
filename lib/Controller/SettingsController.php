@@ -1020,6 +1020,12 @@ class SettingsController extends Controller
     public function importArchiMate(): JSONResponse
     {
         try {
+            // Increase memory limit for large imports
+            ini_set('memory_limit', '4096M');
+            $this->logger->info('Memory limit increased for import', [
+                'old_limit' => ini_get('memory_limit'),
+                'new_limit' => '4096M'
+            ]);
             // Get JSON data from request body
             $rawInput = file_get_contents('php://input');
             $data = json_decode($rawInput, true);

@@ -295,11 +295,7 @@ class OrganizationSyncService
             ->andWhere($qb->expr()->eq($qb->createFunction('json_contains(oo.users, json_extract(`o`.`object`, \'$.username\'))'), $qb->createNamedParameter(0)));
 
         $sql = $qb->getSQL();
-//        var_dump($sql);
         $users = $qb->execute()->fetchAll();
-
-//        var_dump(count($users));
-//        var_dump('hello');
         foreach($users as $user) {
             $this->organisatieService->addUsersToOrganization($user['organisation'], [$user['username']]);
         }
