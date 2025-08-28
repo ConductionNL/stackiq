@@ -537,7 +537,6 @@ class OrganizationSyncService
                 'naam' => $objectData['naam'] ?? 'Unknown',
                 'status' => $objectData['status'] ?? 'Unknown'
             ]);
-            error_log('🔍 ENSURING_ORG_ENTITY: ' . $organisatieId);
 
             // Try to find existing organisation entity
             $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
@@ -557,7 +556,6 @@ class OrganizationSyncService
                     'shouldBeActive' => $shouldBeActive,
                     'needsUpdate' => $organisationEntity->getActive() !== $shouldBeActive
                 ]);
-                error_log('📋 EXISTING_ENTITY: ' . $organisatieId . ' -> Entity ID: ' . $organisationEntity->getId() . ' (Active: ' . ($organisationEntity->getActive() ? 'true' : 'false') . ')');
 
                 if ($organisationEntity->getActive() !== $shouldBeActive) {
                     $this->logger->critical('🔄 UPDATING ENTITY STATUS', [
@@ -566,7 +564,6 @@ class OrganizationSyncService
                         'oldActive' => $organisationEntity->getActive(),
                         'newActive' => $shouldBeActive
                     ]);
-                    error_log('🔄 UPDATING_ENTITY_STATUS: ' . $organisatieId . ' from ' . ($organisationEntity->getActive() ? 'active' : 'inactive') . ' to ' . ($shouldBeActive ? 'active' : 'inactive'));
 
                     $wasActive = $organisationEntity->getActive();
                     $organisationEntity->setActive($shouldBeActive);
@@ -600,7 +597,6 @@ class OrganizationSyncService
                     'organisatieId' => $organisatieId,
                     'naam' => $objectData['naam'] ?? 'Unknown'
                 ]);
-                error_log('🆕 CREATING_NEW_ENTITY: ' . $organisatieId . ' (' . ($objectData['naam'] ?? 'Unknown') . ')');
 
                 $organisationEntity = $this->organisatieService->createOrganisationInOpenRegister($objectData);
                 if ($organisationEntity) {
@@ -612,7 +608,6 @@ class OrganizationSyncService
                         'active' => $organisationEntity->getActive(),
                         'title' => $organisationEntity->getTitle()
                     ]);
-                    error_log('🎊 NEW_ENTITY_SUCCESS: ' . $organisatieId . ' -> Entity ID: ' . $organisationEntity->getId());
 
                     // Send registration email for new organization
                     $this->logger->info('[FLOW] Sending organization registration email', [
@@ -633,7 +628,6 @@ class OrganizationSyncService
                         'app' => 'softwarecatalog',
                         'organisatieId' => $organisatieId
                     ]);
-                    error_log('❌ NEW_ENTITY_FAILED: ' . $organisatieId);
                 }
                 return $organisationEntity;
             }
@@ -647,7 +641,6 @@ class OrganizationSyncService
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            error_log('💥 ENSURE_ENTITY_ERROR: ' . $organisatieObject->getId() . ' - ' . $e->getMessage());
             return null;
         }
     }
@@ -1081,8 +1074,7 @@ class OrganizationSyncService
                 'microtime' => microtime(true)
             ]);
             
-            // Also use error_log for immediate visibility
-            error_log('🏢 ORG_PROCESSING_START: ' . $organizationUuid . ' (' . ($objectData['naam'] ?? 'Unknown') . ') at ' . date('Y-m-d H:i:s'));
+
 
             // Process organization entity
             $this->logger->info('[FLOW] Step 1: Creating/updating organisation entity', [
@@ -1103,7 +1095,6 @@ class OrganizationSyncService
                     'entitiesCreated' => $stats['entitiesCreated'],
                     'entitiesUpdated' => $stats['entitiesUpdated']
                 ]);
-                error_log('✅ ORG_ENTITY_SUCCESS: ' . $organizationUuid . ' -> Entity ID: ' . $organisationEntity->getId());
                 
                 // Step 2: Find and process related contactpersonen objects (separate objects, not nested)
                 $this->logger->info('[FLOW] Step 2: Finding related contactpersoon objects', [
@@ -1119,7 +1110,6 @@ class OrganizationSyncService
                     'organizationUuid' => $organizationUuid,
                     'error' => 'Failed to create/update organisation entity'
                 ]);
-                error_log('❌ ORG_ENTITY_FAILED: ' . $organizationUuid);
                 $stats['errors'][] = 'Failed to create/update organisation entity';
             }
             
@@ -1132,7 +1122,6 @@ class OrganizationSyncService
                 'stats' => $stats,
                 'processingTime' => $stats['duration'] . 's'
             ]);
-            error_log('🏁 ORG_PROCESSING_COMPLETE: ' . $organizationUuid . ' in ' . $stats['duration'] . 's - Users: ' . $stats['usersCreated']);
 
             return $stats;
 
@@ -1146,7 +1135,6 @@ class OrganizationSyncService
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            error_log('💥 ORG_PROCESSING_ERROR: ' . $organizationObject->getUuid() . ' - ' . $e->getMessage());
             
             return $stats;
         }
@@ -1180,7 +1168,6 @@ class OrganizationSyncService
                 'organizationId' => $organizationUuid,
                 'contactCount' => count($contactPersons)
             ]);
-            error_log('👥 PROCESSING_NESTED_CONTACTS: ' . $organizationUuid . ' has ' . count($contactPersons) . ' contacts');
             
             // Get configuration for contact person creation
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
@@ -1241,7 +1228,6 @@ class OrganizationSyncService
                 'organizationId' => $organizationUuid,
                 'action' => 'find_related_contacts'
             ]);
-            error_log('🔍 FINDING_RELATED_CONTACTS for org: ' . $organizationUuid);
 
             // Get configuration
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
@@ -1288,7 +1274,6 @@ class OrganizationSyncService
                 'organizationId' => $organizationUuid,
                 'contactCount' => count($relatedContacts)
             ]);
-            error_log('👥 PROCESSING_RELATED_CONTACTS: ' . $organizationUuid . ' has ' . count($relatedContacts) . ' related contacts');
             
             foreach ($relatedContacts as $contactObject) {
                 try {
@@ -1364,7 +1349,6 @@ class OrganizationSyncService
                 'email' => $email,
                 'name' => ($contactData['voornaam'] ?? '') . ' ' . ($contactData['achternaam'] ?? '')
             ]);
-            error_log('📧 CREATING_CONTACT: ' . $email . ' for org ' . $organizationUuid);
             
             // Create the contact person object in OpenRegister
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
@@ -1385,7 +1369,6 @@ class OrganizationSyncService
                     'contactId' => $contactObject->getUuid(),
                     'email' => $email
                 ]);
-                error_log('✅ CONTACT_CREATED: ' . $contactObject->getUuid() . ' (' . $email . ')');
                 
                 // Create user account if username is missing AND organization is active
                 $contactObjectData = $contactObject->getObject();
@@ -1403,7 +1386,6 @@ class OrganizationSyncService
                                 'organizationActive' => true,
                                 'email' => $email
                             ]);
-                            error_log('👤 CREATING_USER: ' . $email . ' (org active)');
                             
                             $user = $this->contactpersonHandler->createUserAccount($contactObject);
                             if ($user) {
@@ -1430,14 +1412,12 @@ class OrganizationSyncService
                                     'email' => $email,
                                     'displayName' => $user->getDisplayName()
                                 ]);
-                                error_log('🎉 USER_CREATED_SUCCESS: ' . $user->getUID() . ' (' . $email . ')');
                             } else {
                                 $this->logger->error('❌ USER ACCOUNT CREATION FAILED', [
                                     'app' => 'softwarecatalog',
                                     'contactId' => $contactObject->getUuid(),
                                     'email' => $email
                                 ]);
-                                error_log('❌ USER_CREATION_FAILED: ' . $email);
                                 $stats['errors'][] = "Failed to create user account for {$email}";
                             }
                         } else {
@@ -1448,7 +1428,6 @@ class OrganizationSyncService
                                 'organizationActive' => $organisationEntity ? $organisationEntity->getActive() : false,
                                 'email' => $email
                             ]);
-                            error_log('⏸️  SKIP_USER_CREATION: ' . $email . ' (org not active)');
                         }
                     } catch (\Exception $e) {
                         // Organization not found in entity table = not active
@@ -1458,7 +1437,6 @@ class OrganizationSyncService
                             'reason' => 'Organization not found in entity table',
                             'email' => $email
                         ]);
-                        error_log('⏸️  SKIP_USER_CREATION: ' . $email . ' (org not in entity table)');
                     }
                 }
             }
