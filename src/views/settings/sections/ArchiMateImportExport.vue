@@ -144,12 +144,12 @@
 										Updated
 									</div>
 								</div>
-								<div class="summary-item skipped">
+								<div class="summary-item unchanged">
 									<div class="summary-number">
-										{{ importResult.statistics.summary.total_objects_skipped }}
+										{{ importResult.statistics.summary.total_objects_unchanged }}
 									</div>
 									<div class="summary-label">
-										Skipped
+										Unchanged
 									</div>
 								</div>
 								<div class="summary-item errors">
@@ -872,7 +872,7 @@ export default {
 	background: var(--color-warning-light);
 }
 
-.summary-item.skipped {
+.summary-item.unchanged {
 	border-color: var(--color-text-lighter);
 	background: var(--color-background-hover);
 }
