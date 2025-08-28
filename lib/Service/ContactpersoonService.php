@@ -108,21 +108,58 @@ class ContactpersoonService
             $user = $userManager->get($username);
 
             if (!$user) {
-                // Create user account
-                $this->logger->info('ContactpersoonService: Creating user account for contactpersoon', [
-                    'contactId' => $contactId,
-                    'username' => $username
-                ]);
+                // Check if organization is active before creating user account
+                $organizationUuid = $contactData['organisation'] ?? $contactData['organisatie'] ?? '';
+                
+                if (!empty($organizationUuid)) {
+                    try {
+                        $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+                        $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
+                        
+                        if ($organisationEntity && $organisationEntity->getActive()) {
+                            // Create user account - organization is active
+                            $this->logger->info('ContactpersoonService: Creating user account for contactpersoon (org is active)', [
+                                'contactId' => $contactId,
+                                'username' => $username,
+                                'organizationUuid' => $organizationUuid,
+                                'organizationActive' => true
+                            ]);
 
-                $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
-                if (!$success) {
-                    throw new \Exception('Failed to create user account');
+                            $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
+                            if (!$success) {
+                                throw new \Exception('Failed to create user account');
+                            }
+
+                            // Link user to organization entity
+                            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $username);
+
+                            $this->logger->info('ContactpersoonService: Successfully created user account', [
+                                'contactId' => $contactId,
+                                'username' => $username
+                            ]);
+                        } else {
+                            $this->logger->info('ContactpersoonService: Skipping user creation - organization not active or not found', [
+                                'contactId' => $contactId,
+                                'organizationUuid' => $organizationUuid,
+                                'organizationFound' => $organisationEntity !== null,
+                                'organizationActive' => $organisationEntity ? $organisationEntity->getActive() : false
+                            ]);
+                            return false;
+                        }
+                    } catch (\Exception $e) {
+                        $this->logger->info('ContactpersoonService: Skipping user creation - organization not found in entity table (not active)', [
+                            'contactId' => $contactId,
+                            'organizationUuid' => $organizationUuid,
+                            'reason' => 'Organization not found in entity table'
+                        ]);
+                        return false;
+                    }
+                } else {
+                    $this->logger->warning('ContactpersoonService: Contactpersoon has no organization reference, skipping user creation', [
+                        'contactId' => $contactId
+                    ]);
+                    return false;
                 }
-
-                $this->logger->info('ContactpersoonService: Successfully created user account', [
-                    'contactId' => $contactId,
-                    'username' => $username
-                ]);
             } else {
                 $this->logger->info('ContactpersoonService: User account already exists', [
                     'contactId' => $contactId,

@@ -23,12 +23,22 @@ use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
+use OCA\SoftwareCatalog\EventListener\TestEventListener;
+
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
+use OCA\OpenRegister\Event\OrganisationCreatedEvent;
+use OCA\OpenRegister\Event\RegisterCreatedEvent;
+use OCA\OpenRegister\Event\RegisterDeletedEvent;
+use OCA\OpenRegister\Event\RegisterUpdatedEvent;
+use OCA\OpenRegister\Event\SchemaCreatedEvent;
+use OCA\OpenRegister\Event\SchemaDeletedEvent;
+use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCP\User\Events\UserLoggedInEvent;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\IUserManager;
@@ -121,6 +131,11 @@ class Application extends App implements IBootstrap
             );
         });
 
+
+
+        // Register TEST event listener for easily triggerable Nextcloud events
+        $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
+        
         // Register event listeners for OpenRegister events
         $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
@@ -128,6 +143,8 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
+
+
 
         // Organization event listeners removed - now using cron job for organization synchronization
         // Contact person event listeners are still active for real-time processing
@@ -191,6 +208,8 @@ class Application extends App implements IBootstrap
                 $container->get(ContactPersonHandler::class),
             );
         });
+
+        // Event listener uses direct service access like OpenCatalogi - no service registration needed
 
         // Register ArchiMate import service
         $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateImportService::class, function ($container) {
@@ -370,5 +389,9 @@ class Application extends App implements IBootstrap
                 'exception' => $e->getMessage()
             ]);
         }
+
+
     }
+
+
 }
