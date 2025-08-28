@@ -1142,11 +1142,11 @@ class ArchiMateImportService
         $allResults = [];
         $processedChunks = 0;
         
-        // Accumulate statistics from all chunks
+        // Accumulate statistics from all chunks (using new format)
         $aggregatedStats = [
             'saved' => [],
             'updated' => [],
-            'skipped' => [],
+            'unchanged' => [],
             'invalid' => []
         ];
         
@@ -1170,16 +1170,18 @@ class ArchiMateImportService
                     events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
                 );
                 
+
+                
                 // Calculate totals received back from this chunk
                 $chunkTotalReceived = count($saveResult['saved'] ?? []) + 
                                     count($saveResult['updated'] ?? []) + 
-                                    count($saveResult['skipped'] ?? []) + 
+                                    count($saveResult['unchanged'] ?? []) + 
                                     count($saveResult['invalid'] ?? []);
                 
                 // Accumulate statistics from this chunk
                 $aggregatedStats['saved'] = array_merge($aggregatedStats['saved'], $saveResult['saved'] ?? []);
                 $aggregatedStats['updated'] = array_merge($aggregatedStats['updated'], $saveResult['updated'] ?? []);
-                $aggregatedStats['skipped'] = array_merge($aggregatedStats['skipped'], $saveResult['skipped'] ?? []);
+                $aggregatedStats['unchanged'] = array_merge($aggregatedStats['unchanged'], $saveResult['unchanged'] ?? []);
                 $aggregatedStats['invalid'] = array_merge($aggregatedStats['invalid'], $saveResult['invalid'] ?? []);
                 
                 $savedObjects = array_merge(
@@ -1200,7 +1202,7 @@ class ArchiMateImportService
                     'objects_lost_in_chunk' => $chunkInputCount - $chunkTotalReceived,
                     'chunk_saved' => count($saveResult['saved'] ?? []),
                     'chunk_updated' => count($saveResult['updated'] ?? []),
-                    'chunk_skipped' => count($saveResult['skipped'] ?? []),
+                    'chunk_unchanged' => count($saveResult['unchanged'] ?? []),
                     'chunk_invalid' => count($saveResult['invalid'] ?? [])
                 ]);
                 
@@ -1221,7 +1223,7 @@ class ArchiMateImportService
         // Store the aggregated result for statistics calculation
         $this->lastSaveResult = $aggregatedStats;
         
-        $totalObjectsProcessed = count($aggregatedStats['saved']) + count($aggregatedStats['updated']) + count($aggregatedStats['skipped']) + count($aggregatedStats['invalid']);
+        $totalObjectsProcessed = count($aggregatedStats['saved']) + count($aggregatedStats['updated']) + count($aggregatedStats['unchanged']) + count($aggregatedStats['invalid']);
         
         $this->logger->info('Optimized batch processing completed', [
             'INPUT_SUMMARY' => [
@@ -1239,7 +1241,7 @@ class ArchiMateImportService
                 'total_chunks_processed' => $totalChunks,
                 'aggregated_saved' => count($aggregatedStats['saved']),
                 'aggregated_updated' => count($aggregatedStats['updated']),
-                'aggregated_skipped' => count($aggregatedStats['skipped']),
+                'aggregated_unchanged' => count($aggregatedStats['unchanged']),
                 'aggregated_invalid' => count($aggregatedStats['invalid'])
             ]
         ]);
@@ -1283,6 +1285,8 @@ class ArchiMateImportService
             events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
         );
 
+
+
         // Store the save result for later access to statistics
         $this->lastSaveResult = $saveResult;
 
@@ -1296,7 +1300,7 @@ class ArchiMateImportService
         $this->logger->info('Objects saved successfully', [
             'saved_count' => count($saveResult['saved'] ?? []),
             'updated_count' => count($saveResult['updated'] ?? []),
-            'skipped_count' => count($saveResult['skipped'] ?? []),
+            'unchanged_count' => count($saveResult['unchanged'] ?? []),
             'invalid_count' => count($saveResult['invalid'] ?? []),
             'error_count' => count($saveResult['errors'] ?? []),
             'total_processed' => $saveResult['statistics']['totalProcessed'] ?? 0
@@ -1313,12 +1317,12 @@ class ArchiMateImportService
             }
         }
 
-        // Log details about skipped objects if any
-        if (!empty($saveResult['skipped'])) {
-            $this->logger->info('Objects skipped during import (no changes detected)', [
-                'skipped_count' => count($saveResult['skipped']),
-                'sample_skipped_ids' => array_slice(
-                    array_map(fn($obj) => $obj->getUuid() ?? 'unknown', $saveResult['skipped']),
+        // Log details about unchanged objects if any
+        if (!empty($saveResult['unchanged'])) {
+            $this->logger->info('Objects unchanged during import (no changes detected)', [
+                'unchanged_count' => count($saveResult['unchanged']),
+                'sample_unchanged_ids' => array_slice(
+                    array_map(fn($obj) => $obj->getUuid() ?? 'unknown', $saveResult['unchanged']),
                     0, 
                     5
                 )
@@ -1712,18 +1716,21 @@ class ArchiMateImportService
                 'total_objects_created' => 0,
                 'total_objects_updated' => 0,
                 'total_objects_deleted' => 0,
-                'total_objects_skipped' => 0,
+                'total_objects_unchanged' => 0,
                 'total_errors' => 0
             ]
         ];
 
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
+            
+
+            
             $statistics['summary'] = [
                 'total_objects_created' => count($saveResult['saved'] ?? []),
                 'total_objects_updated' => count($saveResult['updated'] ?? []),
                 'total_objects_deleted' => 0,
-                'total_objects_skipped' => count($saveResult['skipped'] ?? []),
+                'total_objects_unchanged' => count($saveResult['unchanged'] ?? $saveResult['skipped'] ?? []),
                 'total_errors' => count($saveResult['invalid'] ?? [])
             ];
             
@@ -1731,14 +1738,14 @@ class ArchiMateImportService
             $totalStatisticsCount = array_sum([
                 count($saveResult['saved'] ?? []),
                 count($saveResult['updated'] ?? []),
-                count($saveResult['skipped'] ?? []),
+                count($saveResult['unchanged'] ?? $saveResult['skipped'] ?? []),
                 count($saveResult['invalid'] ?? [])
             ]);
             
             $this->logger->info('Import statistics breakdown', [
                 'created' => count($saveResult['saved'] ?? []),
                 'updated' => count($saveResult['updated'] ?? []),
-                'skipped' => count($saveResult['skipped'] ?? []),
+                'unchanged' => count($saveResult['unchanged'] ?? $saveResult['skipped'] ?? []),
                 'invalid' => count($saveResult['invalid'] ?? []),
                 'total_in_statistics' => $totalStatisticsCount
             ]);
@@ -3821,11 +3828,11 @@ class ArchiMateImportService
     {
         // Initialize statistics structure
         $statistics = [
-            'elements' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'organizations' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'relationships' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'views' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'property_definitions' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []]
+            'elements' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'organizations' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'relationships' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'views' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'property_definitions' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []]
         ];
 
         // If we have access to the actual save results from ObjectService, use those
@@ -3836,7 +3843,7 @@ class ArchiMateImportService
             $allProcessedObjects = array_merge(
                 $saveResult['saved'] ?? [],
                 $saveResult['updated'] ?? [],
-                $saveResult['skipped'] ?? [],
+                $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [],
                 // For invalid objects, extract the original object from the error structure
                 array_map(fn($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
             );
@@ -3874,9 +3881,10 @@ class ArchiMateImportService
                 $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [], 
                     fn($updated) => ($updated->getUuid() === $objectId)));
                 
-                // Check if this object was skipped (no changes)
-                $wasSkipped = !empty(array_filter($saveResult['skipped'] ?? [],
-                    fn($skipped) => ($skipped->getUuid() === $objectId)));
+                // Check if this object was unchanged (no changes)
+                $unchangedObjects = $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [];
+                $wasSkipped = !empty(array_filter($unchangedObjects,
+                    fn($unchanged) => ($unchanged->getUuid() === $objectId)));
                 
                 // Check if this object had validation errors
                 $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],

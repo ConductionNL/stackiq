@@ -909,7 +909,7 @@ class ArchiMateService
         $this->logger->info('Objects saved successfully', [
             'saved_count' => count($saveResult['saved'] ?? []),
             'updated_count' => count($saveResult['updated'] ?? []),
-            'skipped_count' => count($saveResult['skipped'] ?? []),
+            'unchanged_count' => count($saveResult['skipped'] ?? []),
             'invalid_count' => count($saveResult['invalid'] ?? []),
             'error_count' => count($saveResult['errors'] ?? []),
             'total_processed' => $saveResult['statistics']['totalProcessed'] ?? 0
