@@ -195,82 +195,167 @@ class ContactPersonHandler
      */
     public function createUserAccount(object $contactpersoonObject, bool $isFirstContact = false): ?\OCP\IUser
     {
+        $startTime = microtime(true);
+        
         try {
             $objectData = $contactpersoonObject->getObject();
+            $contactId = $contactpersoonObject->getId();
             $email = $objectData['email'] ?? $objectData['e-mailadres'] ?? '';
+            $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+
+            $this->_logger->critical('🔥 USER ACCOUNT CREATION STARTED', [
+                'app' => 'softwarecatalog',
+                'contactId' => $contactId,
+                'email' => $email,
+                'organizationUuid' => $organizationUuid,
+                'isFirstContact' => $isFirstContact,
+                'timestamp' => date('Y-m-d H:i:s'),
+                'microtime' => microtime(true)
+            ]);
+            error_log('🔥 USER_CREATION_START: ' . $email . ' for contact ' . $contactId);
 
             if (empty($email)) {
-                $this->_logger->warning(
-                    'Cannot create user account: no email address provided',
-                    ['contactpersoonId' => $contactpersoonObject->getId()]
-                );
+                $this->_logger->error('❌ USER CREATION FAILED - NO EMAIL', [
+                    'app' => 'softwarecatalog',
+                    'contactpersoonId' => $contactId
+                ]);
+                error_log('❌ USER_CREATION_NO_EMAIL: Contact ' . $contactId);
                 return null;
             }
 
             // Generate username first to check both email and username existence
             $username = $objectData['username'] ?? '';
             if (empty($username)) {
+                $this->_logger->info('[USER] Step 1: Generating username', [
+                    'contactId' => $contactId,
+                    'email' => $email
+                ]);
                 $username = $this->generateUsernameFromContactData($objectData);
-
+                $this->_logger->critical('📝 USERNAME GENERATED', [
+                    'app' => 'softwarecatalog',
+                    'contactId' => $contactId,
+                    'generatedUsername' => $username,
+                    'email' => $email
+                ]);
+                error_log('📝 USERNAME_GENERATED: ' . $username . ' for ' . $email);
             }
 
             // Check if user already exists by email
+            $this->_logger->info('[USER] Step 2: Checking existing user by email', [
+                'email' => $email
+            ]);
             if ($this->_userManager->userExists($email)) {
-                $this->_logger->info(
-                    'User already exists with email',
-                    ['email' => $email, 'contactpersoonId' => $contactpersoonObject->getId()]
-                );
+                $this->_logger->critical('♻️ USER EXISTS BY EMAIL', [
+                    'app' => 'softwarecatalog',
+                    'email' => $email,
+                    'contactpersoonId' => $contactId
+                ]);
+                error_log('♻️ USER_EXISTS_EMAIL: ' . $email);
+                
                 $existingUser = $this->_userManager->get($email);
                 if ($existingUser) {
                     // Store organization UUID for existing user
-                    $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
                     if (!empty($organizationUuid)) {
                         $this->storeUserOrganizationUuid($existingUser, $organizationUuid);
                     }
 
                     // Update groups for existing user
                     $this->assignUserGroups($existingUser, $objectData, $isFirstContact);
+                    
+                    $this->_logger->critical('✅ EXISTING USER UPDATED', [
+                        'app' => 'softwarecatalog',
+                        'username' => $existingUser->getUID(),
+                        'email' => $email,
+                        'organizationUuid' => $organizationUuid
+                    ]);
+                    error_log('✅ EXISTING_USER_UPDATED: ' . $existingUser->getUID() . ' (' . $email . ')');
+                    
                     return $existingUser;
                 }
             }
 
             // Check if user already exists by username
+            $this->_logger->info('[USER] Step 3: Checking existing user by username', [
+                'username' => $username
+            ]);
             $existingUserByUsername = $this->_userManager->get($username);
             if ($existingUserByUsername) {
-                $this->_logger->info(
-                    'User already exists with username',
-                    ['username' => $username, 'contactpersoonId' => $contactpersoonObject->getId()]
-                );
+                $this->_logger->critical('♻️ USER EXISTS BY USERNAME', [
+                    'app' => 'softwarecatalog',
+                    'username' => $username,
+                    'contactpersoonId' => $contactId
+                ]);
+                error_log('♻️ USER_EXISTS_USERNAME: ' . $username);
 
                 // Store organization UUID for existing user
-                $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
                 if (!empty($organizationUuid)) {
                     $this->storeUserOrganizationUuid($existingUserByUsername, $organizationUuid);
                 }
 
                 // Update groups for existing user
                 $this->assignUserGroups($existingUserByUsername, $objectData, $isFirstContact);
+                
+                $this->_logger->critical('✅ EXISTING USER UPDATED BY USERNAME', [
+                    'app' => 'softwarecatalog',
+                    'username' => $username,
+                    'email' => $existingUserByUsername->getEMailAddress(),
+                    'organizationUuid' => $organizationUuid
+                ]);
+                error_log('✅ EXISTING_USER_UPDATED_USERNAME: ' . $username);
+                
                 return $existingUserByUsername;
             }
 
-            // Username already generated above for existence checks
+            // Create new user account
+            $this->_logger->critical('🚀 CREATING NEW USER ACCOUNT', [
+                'app' => 'softwarecatalog',
+                'username' => $username,
+                'email' => $email,
+                'contactId' => $contactId
+            ]);
+            error_log('🚀 CREATING_NEW_USER: ' . $username . ' (' . $email . ')');
 
-            // Create user account
             $user = $this->_userManager->createUser($username, $username);
 
             if ($user) {
+                $this->_logger->critical('🎊 NEW USER ACCOUNT CREATED', [
+                    'app' => 'softwarecatalog',
+                    'username' => $username,
+                    'email' => $email,
+                    'contactId' => $contactId,
+                    'userId' => $user->getUID()
+                ]);
+                error_log('🎊 NEW_USER_CREATED: ' . $user->getUID() . ' (' . $email . ')');
 
                 // Set user details
+                $this->_logger->info('[USER] Step 4: Setting user details', [
+                    'username' => $username
+                ]);
                 $user->setEMailAddress($email);
-                $user->setDisplayName($this->getDisplayNameFromContactData($objectData));
+                $displayName = $this->getDisplayNameFromContactData($objectData);
+                $user->setDisplayName($displayName);
+                
+                $this->_logger->critical('📋 USER DETAILS SET', [
+                    'app' => 'softwarecatalog',
+                    'username' => $username,
+                    'email' => $email,
+                    'displayName' => $displayName
+                ]);
 
                 // Store organization UUID in user config for OpenConnector access
-                $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
                 if (!empty($organizationUuid)) {
+                    $this->_logger->info('[USER] Step 5: Storing organization UUID', [
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid
+                    ]);
                     $this->storeUserOrganizationUuid($user, $organizationUuid);
                 }
 
                 // Set user groups based on roles and organization
+                $this->_logger->info('[USER] Step 6: Assigning user groups', [
+                    'username' => $username,
+                    'isFirstContact' => $isFirstContact
+                ]);
                 $this->assignUserGroups($user, $objectData, $isFirstContact);
 
                 // Update contactpersoon with username
@@ -278,42 +363,52 @@ class ContactPersonHandler
                 $contactpersoonObject->setObject($objectData);
 
                 // Send user creation email
+                $this->_logger->info('[USER] Step 7: Sending user creation email', [
+                    'username' => $username,
+                    'email' => $email
+                ]);
                 $this->sendUserCreationEmail($user, $objectData);
 
-                $this->_logger->info(
-                    'Created user account for contact person',
-                    [
-                        'contactpersoonId' => $contactpersoonObject->getId(),
-                        'username' => $username,
-                        'email' => $email
-                    ]
-                );
+                $creationTime = round(microtime(true) - $startTime, 3);
+                $this->_logger->critical('🎉 USER ACCOUNT CREATION COMPLETED', [
+                    'app' => 'softwarecatalog',
+                    'contactpersoonId' => $contactId,
+                    'username' => $username,
+                    'email' => $email,
+                    'displayName' => $displayName,
+                    'organizationUuid' => $organizationUuid,
+                    'creationTime' => $creationTime . 's'
+                ]);
+                error_log('🎉 USER_CREATION_COMPLETE: ' . $username . ' (' . $email . ') in ' . $creationTime . 's');
 
                 return $user;
             } else {
-                $this->_logger->error(
-                    'DEBUG: User creation returned null (no exception thrown)',
-                    [
-                        'username' => $username,
-                        'email' => $email,
-                        'contactpersoonId' => $contactpersoonObject->getId()
-                    ]
-                );
+                $this->_logger->error('❌ USER CREATION RETURNED NULL', [
+                    'app' => 'softwarecatalog',
+                    'username' => $username,
+                    'email' => $email,
+                    'contactpersoonId' => $contactId,
+                    'note' => 'No exception thrown but createUser returned null'
+                ]);
+                error_log('❌ USER_CREATION_NULL: ' . $username . ' (' . $email . ')');
             }
 
             return null;
 
         } catch (\Exception $e) {
-            $this->_logger->error(
-                'Failed to create user account: ' . $e->getMessage(),
-                [
-                    'contactpersoonId' => $contactpersoonObject->getId(),
-                    'exception' => $e,
-                    'exception_class' => get_class($e),
-                    'exception_code' => $e->getCode(),
-                    'trace' => $e->getTraceAsString()
-                ]
-            );
+            $this->_logger->error('💥 USER CREATION EXCEPTION', [
+                'app' => 'softwarecatalog',
+                'contactpersoonId' => $contactpersoonObject->getId(),
+                'email' => $objectData['email'] ?? 'unknown',
+                'username' => $username ?? 'unknown',
+                'exception' => $e->getMessage(),
+                'exception_class' => get_class($e),
+                'exception_code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            error_log('💥 USER_CREATION_ERROR: ' . ($objectData['email'] ?? 'unknown') . ' - ' . $e->getMessage());
             return null;
         }
     }
@@ -1782,7 +1877,7 @@ class ContactPersonHandler
      *
      * @return void
      */
-    private function addUserToOrganizationEntity(object $contactpersoonObject, string $username): void
+    public function addUserToOrganizationEntity(object $contactpersoonObject, string $username): void
     {
         try {
             $objectData = $contactpersoonObject->getObject();
