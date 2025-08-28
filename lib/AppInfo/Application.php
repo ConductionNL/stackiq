@@ -50,6 +50,7 @@ use OCP\Security\ISecureRandom;
 use Psr\Container\ContainerInterface;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\GebruikSyncService;
 
 /**
  * Main Application class for SoftwareCatalog
@@ -206,6 +207,14 @@ class Application extends App implements IBootstrap
                 $container->get(SettingsService::class),
                 $container->get(IDBConnection::class),
                 $container->get(ContactPersonHandler::class),
+            );
+        });
+
+        // Register gebruik sync service
+        $context->registerService(\OCA\SoftwareCatalog\Service\GebruikSyncService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\GebruikSyncService(
+                $container->get('Psr\Log\LoggerInterface'),
+                $container->get(SettingsService::class)
             );
         });
 

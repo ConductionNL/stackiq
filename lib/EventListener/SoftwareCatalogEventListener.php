@@ -20,6 +20,7 @@ namespace OCA\SoftwareCatalog\EventListener;
 
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\GebruikSyncService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -148,6 +149,7 @@ class SoftwareCatalogEventListener implements IEventListener
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
         $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+        $gebruikSchemaId = $settingsService->getSchemaIdForObjectType('gebruik');
 
         $logger->debug(
             'SoftwareCatalog: Configuration lookup results',
@@ -155,6 +157,7 @@ class SoftwareCatalogEventListener implements IEventListener
                 'organisatieSchemaId' => $organisatieSchemaId,
                 'contactpersoonSchemaId' => $contactpersoonSchemaId,
                 'contactgegevensSchemaId' => $contactgegevensSchemaId,
+                'gebruikSchemaId' => $gebruikSchemaId,
                 'objectSchemaId' => $objectSchemaIdInt
             ]
         );
@@ -211,6 +214,30 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }
 
+        // Check if this is a gebruik object
+        if ($gebruikSchemaId && $objectSchemaIdInt === (int) $gebruikSchemaId) {
+            $logger->info('SoftwareCatalog: Processing gebruik creation', ['objectId' => $objectId]);
+            
+            try {
+                // Process gebruik object with GebruikSyncService
+                $gebruikSyncService = \OC::$server->get(GebruikSyncService::class);
+                $result = $gebruikSyncService->processSpecificGebruik($object);
+                
+                $logger->info('SoftwareCatalog: Successfully processed gebruik creation', [
+                    'objectId' => $objectId,
+                    'processResult' => $result
+                ]);
+            } catch (\Exception $e) {
+                $logger->error('SoftwareCatalog: Failed to process gebruik creation', [
+                    'objectId' => $objectId,
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+            }
+            return;
+        }
+
         // Log unhandled object types
         $logger->debug(
             'SoftwareCatalog: Object creation not handled - not a supported object type',
@@ -221,7 +248,8 @@ class SoftwareCatalogEventListener implements IEventListener
                 'supportedSchemas' => [
                     'organisatie' => $organisatieSchemaId,
                     'contactpersoon' => $contactpersoonSchemaId,
-                    'contactgegevens' => $contactgegevensSchemaId
+                    'contactgegevens' => $contactgegevensSchemaId,
+                    'gebruik' => $gebruikSchemaId
                 ]
             ]
         );
@@ -388,9 +416,51 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }
 
+        // Handle gebruik updates
+        $gebruikSchemaId = $settingsService->getSchemaIdForObjectType('gebruik');
+        $gebruikSchemaIdInt = (int) $gebruikSchemaId;
+        
+        if ($gebruikSchemaId && $objectSchemaIdInt === $gebruikSchemaIdInt) {
+            $logger->info(
+                'SoftwareCatalog: Matched gebruik schema - processing update',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $gebruikSchemaId
+                ]
+            );
+            
+            try {
+                // Process gebruik object with GebruikSyncService
+                $gebruikSyncService = \OC::$server->get(GebruikSyncService::class);
+                $result = $gebruikSyncService->processSpecificGebruik($object);
+                
+                $logger->info(
+                    'SoftwareCatalog: Successfully processed gebruik update',
+                    [
+                        'objectId' => $objectId,
+                        'processResult' => $result,
+                        'timestamp' => date('Y-m-d H:i:s')
+                    ]
+                );
+            } catch (\Exception $e) {
+                $logger->error(
+                    'SoftwareCatalog: Failed to process gebruik update',
+                    [
+                        'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
+                    ]
+                );
+            }
+            return;
+        }
+
         // Log if we don't handle this schema type
         $logger->debug(
-            'SoftwareCatalog: Object update not handled - focusing only on organisatie and contactpersonen',
+            'SoftwareCatalog: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik',
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
@@ -400,7 +470,8 @@ class SoftwareCatalogEventListener implements IEventListener
                 'handledSchemas' => [
                     'organisatie' => $organisatieSchemaId,
                     'contactpersoon' => $contactpersoonSchemaId,
-                    'contactgegevens' => $contactgegevensSchemaId
+                    'contactgegevens' => $contactgegevensSchemaId,
+                    'gebruik' => $gebruikSchemaId
                 ]
             ]
         );
@@ -547,9 +618,39 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }
 
+        // Handle gebruik deletion
+        $gebruikSchemaId = $settingsService->getSchemaIdForObjectType('gebruik');
+        $gebruikSchemaIdInt = (int) $gebruikSchemaId;
+        
+        if ($gebruikSchemaId && $objectSchemaIdInt === $gebruikSchemaIdInt) {
+            $objectData = $object->getObject();
+            
+            $logger->info(
+                'SoftwareCatalog: Matched gebruik schema - processing deletion',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $gebruikSchemaId,
+                    'afnemer' => $objectData['afnemer']['naam'] ?? 'Unknown',
+                    'product' => $objectData['product']['naam'] ?? 'Unknown'
+                ]
+            );
+            
+            // For deletions, we mainly log the event since the object is being removed
+            // No specific cleanup needed for gebruik objects currently
+            $logger->info(
+                'SoftwareCatalog: Gebruik object deleted - no specific cleanup required',
+                [
+                    'objectId' => $objectId,
+                    'timestamp' => date('Y-m-d H:i:s')
+                ]
+            );
+            return;
+        }
+
         // Log if we don't handle this schema type
         $logger->debug(
-            'SoftwareCatalog: Object deletion not handled - focusing only on organisatie and contactpersonen',
+            'SoftwareCatalog: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik',
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
@@ -557,7 +658,8 @@ class SoftwareCatalogEventListener implements IEventListener
                 'handledSchemas' => [
                     'organisatie' => $organisatieSchemaId,
                     'contactpersoon' => $contactpersoonSchemaId,
-                    'contactgegevens' => $contactgegevensSchemaId
+                    'contactgegevens' => $contactgegevensSchemaId,
+                    'gebruik' => $gebruikSchemaId
                 ]
             ]
         );

@@ -2117,6 +2117,17 @@
               "$ref": "#/components/schemas/element"
             }
           },
+          "amefElements": {
+            "description": "Ids van AMEF elementen waarvoor dit product wordt gebruikt",
+            "type": "array",
+            "visible": true,
+            "order": 22,
+            "facetable": false,
+            "title": "Amef elementen",
+            "items": {
+              "type": "string"
+            }
+          },
           "koppelingen": {
             "description": "De koppelingen die gebruikt worden binnen dit productgebruik",
             "type": "array",

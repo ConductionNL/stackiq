@@ -2960,7 +2960,7 @@ class SettingsService
         // Register id
         $normalized['register'] = isset($input['register']) ? (string)$input['register'] : '';
 
-        // Known schema keys to support (18 total)
+        // Known schema keys to support (19 total)
         $schemaKeys = [
             'organisatie_schema',
             'contactpersoon_schema',
@@ -2980,6 +2980,7 @@ class SettingsService
             'module_gebruik_schema',
             'module_versie_schema',
             'sector_schema',
+            'gebruik_schema',
         ];
 
         // Copy any present schema keys; ignore sources/registers
@@ -3168,7 +3169,8 @@ class SettingsService
                     'totalCompliancyObjects' => 0,
                     'totalModuleGebruikObjects' => 0,
                     'totalModuleVersieObjects' => 0,
-                    'totalSectorObjects' => 0
+                    'totalSectorObjects' => 0,
+                    'totalGebruikObjects' => 0
                 ];
             }
 
@@ -3194,7 +3196,8 @@ class SettingsService
                 'compliancy_schema' => 'totalCompliancyObjects',
                 'module_gebruik_schema' => 'totalModuleGebruikObjects',
                 'module_versie_schema' => 'totalModuleVersieObjects',
-                'sector_schema' => 'totalSectorObjects'
+                'sector_schema' => 'totalSectorObjects',
+                'gebruik_schema' => 'totalGebruikObjects'
             ];
 
             $counts = [];
@@ -3252,7 +3255,8 @@ class SettingsService
                 'totalCompliancyObjects' => 0,
                 'totalModuleGebruikObjects' => 0,
                 'totalModuleVersieObjects' => 0,
-                'totalSectorObjects' => 0
+                'totalSectorObjects' => 0,
+                'totalGebruikObjects' => 0
             ];
         }
     }
