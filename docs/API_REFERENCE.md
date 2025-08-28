@@ -299,7 +299,7 @@ try {
     $service->processContactgegevens($object);
 } catch (ProcessingException $e) {
     // Handle processing error
-    error_log('Processing failed: ' . $e->getMessage());
+    $logger->error('Processing failed: ' . $e->getMessage());
 }
 ```
 
@@ -311,7 +311,7 @@ try {
     $schemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
 } catch (ConfigurationException $e) {
     // Handle configuration error
-    error_log('Configuration error: ' . $e->getMessage());
+    $logger->error('Configuration error: ' . $e->getMessage());
 }
 ```
 

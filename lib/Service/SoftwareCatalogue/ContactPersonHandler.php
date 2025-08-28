@@ -212,14 +212,12 @@ class ContactPersonHandler
                 'timestamp' => date('Y-m-d H:i:s'),
                 'microtime' => microtime(true)
             ]);
-            error_log('🔥 USER_CREATION_START: ' . $email . ' for contact ' . $contactId);
 
             if (empty($email)) {
                 $this->_logger->error('❌ USER CREATION FAILED - NO EMAIL', [
                     'app' => 'softwarecatalog',
                     'contactpersoonId' => $contactId
                 ]);
-                error_log('❌ USER_CREATION_NO_EMAIL: Contact ' . $contactId);
                 return null;
             }
 
@@ -237,7 +235,6 @@ class ContactPersonHandler
                     'generatedUsername' => $username,
                     'email' => $email
                 ]);
-                error_log('📝 USERNAME_GENERATED: ' . $username . ' for ' . $email);
             }
 
             // Check if user already exists by email
@@ -250,7 +247,6 @@ class ContactPersonHandler
                     'email' => $email,
                     'contactpersoonId' => $contactId
                 ]);
-                error_log('♻️ USER_EXISTS_EMAIL: ' . $email);
                 
                 $existingUser = $this->_userManager->get($email);
                 if ($existingUser) {
@@ -268,7 +264,6 @@ class ContactPersonHandler
                         'email' => $email,
                         'organizationUuid' => $organizationUuid
                     ]);
-                    error_log('✅ EXISTING_USER_UPDATED: ' . $existingUser->getUID() . ' (' . $email . ')');
                     
                     return $existingUser;
                 }
@@ -285,7 +280,6 @@ class ContactPersonHandler
                     'username' => $username,
                     'contactpersoonId' => $contactId
                 ]);
-                error_log('♻️ USER_EXISTS_USERNAME: ' . $username);
 
                 // Store organization UUID for existing user
                 if (!empty($organizationUuid)) {
@@ -301,7 +295,6 @@ class ContactPersonHandler
                     'email' => $existingUserByUsername->getEMailAddress(),
                     'organizationUuid' => $organizationUuid
                 ]);
-                error_log('✅ EXISTING_USER_UPDATED_USERNAME: ' . $username);
                 
                 return $existingUserByUsername;
             }
@@ -313,7 +306,6 @@ class ContactPersonHandler
                 'email' => $email,
                 'contactId' => $contactId
             ]);
-            error_log('🚀 CREATING_NEW_USER: ' . $username . ' (' . $email . ')');
 
             $user = $this->_userManager->createUser($username, $username);
 
@@ -325,7 +317,6 @@ class ContactPersonHandler
                     'contactId' => $contactId,
                     'userId' => $user->getUID()
                 ]);
-                error_log('🎊 NEW_USER_CREATED: ' . $user->getUID() . ' (' . $email . ')');
 
                 // Set user details
                 $this->_logger->info('[USER] Step 4: Setting user details', [
@@ -379,7 +370,6 @@ class ContactPersonHandler
                     'organizationUuid' => $organizationUuid,
                     'creationTime' => $creationTime . 's'
                 ]);
-                error_log('🎉 USER_CREATION_COMPLETE: ' . $username . ' (' . $email . ') in ' . $creationTime . 's');
 
                 return $user;
             } else {
@@ -390,7 +380,6 @@ class ContactPersonHandler
                     'contactpersoonId' => $contactId,
                     'note' => 'No exception thrown but createUser returned null'
                 ]);
-                error_log('❌ USER_CREATION_NULL: ' . $username . ' (' . $email . ')');
             }
 
             return null;
@@ -408,7 +397,6 @@ class ContactPersonHandler
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            error_log('💥 USER_CREATION_ERROR: ' . ($objectData['email'] ?? 'unknown') . ' - ' . $e->getMessage());
             return null;
         }
     }

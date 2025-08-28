@@ -116,12 +116,11 @@ class OpenRegisterEventsDebugListener implements IEventListener
             'source' => 'OpenRegister',
         ]);
         
-        // Also use error_log for immediate stdout visibility
-        error_log('🔍 SOFTWARECATALOG_OPENREGISTER_DEBUG_LISTENER: ' . $eventType . ' (' . $eventClass . ') at ' . date('Y-m-d H:i:s'));
+
         
         if (!$this->debugEnabled) {
             $this->logger->warning('SoftwareCatalog OpenRegister Debug: Debug disabled, skipping detailed logging');
-            error_log('SOFTWARECATALOG_DEBUG_DISABLED: Debug logging disabled for ' . $eventType);
+
             return;
         }
 

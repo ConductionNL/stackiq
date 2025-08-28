@@ -69,8 +69,7 @@ class TestEventListener implements IEventListener
             'microtime' => microtime(true)
         ]);
 
-        // Also use error_log for immediate visibility in system logs
-        error_log('SOFTWARECATALOG_TEST_LISTENER_TRIGGERED: ' . get_class($event) . ' at ' . date('Y-m-d_H:i:s'));
+
 
         // Handle UserLoggedInEvent specifically
         if ($event instanceof UserLoggedInEvent) {
@@ -84,8 +83,7 @@ class TestEventListener implements IEventListener
                 'eventType' => 'UserLoggedInEvent'
             ]);
 
-            // Additional error_log for easy debugging
-            error_log('SOFTWARECATALOG_USER_LOGIN: User ' . $user->getUID() . ' (' . $user->getDisplayName() . ') logged in at ' . date('Y-m-d_H:i:s'));
+
 
             // Test that we can access Nextcloud services
             try {
