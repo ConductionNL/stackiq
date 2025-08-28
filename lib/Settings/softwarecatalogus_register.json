@@ -2560,8 +2560,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/module",
-            "inversedBy": "koppeling"
+            "$ref": "#/components/schemas/module"
           },
           "buitengemeentelijkVoorziening": {
             "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
@@ -4715,7 +4714,8 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/koppeling"
+              "$ref": "#/components/schemas/koppeling",
+              "inversedBy": "moduleA"
             }
           },
           "compliancy": {
