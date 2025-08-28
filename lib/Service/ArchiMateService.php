@@ -637,7 +637,7 @@ class ArchiMateService
                 'id' => $metadata['identifier'] ?? uniqid('model_'),
                 'owner' => $this->getCurrentUserId(),
                 'organisation' => $this->getCurrentOrganisation(),
-
+                'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $metadata['identifier'] ?? '',
             'section' => 'model',
@@ -671,7 +671,7 @@ class ArchiMateService
                 'id' => $identifier,
                 'owner' => $this->getCurrentUserId(),
                 'organisation' => $this->getCurrentOrganisation(),
-
+                'published' => date('Y-m-d\TH:i:s\Z')
             ]
         ];
         
@@ -1996,7 +1996,7 @@ class ArchiMateService
                 'id' => $modelIdentifier,
                 'owner' => $this->cachedConfig['userId'],
                 'organisation' => $this->cachedConfig['organisation'],
-
+                'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $modelIdentifier,
             'section' => 'model',
@@ -2074,7 +2074,7 @@ class ArchiMateService
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
-
+                    'published' => date('Y-m-d\TH:i:s\Z')
                 ],
                 'identifier' => $identifier,
                 'section' => $schemaType,

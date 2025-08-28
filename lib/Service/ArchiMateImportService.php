@@ -966,7 +966,8 @@ class ArchiMateImportService
                 'schema' => $schemaId,
                 'id' => $metadata['identifier'] ?? uniqid('model_'),
                 'owner' => $this->getCurrentUserId(),
-                'organisation' => $this->getCurrentOrganisation()
+                'organisation' => $this->getCurrentOrganisation(),
+                'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $metadata['identifier'] ?? '',
             'section' => 'model',
@@ -1031,7 +1032,8 @@ class ArchiMateImportService
                 'id' => $objectId, // Now using objectId as main ID
                 'slug' => $slug,   // Now using AMEF identifier as slug
                 'owner' => $this->getCurrentUserId(),
-                'organisation' => $this->getCurrentOrganisation()
+                'organisation' => $this->getCurrentOrganisation(),
+                'published' => date('Y-m-d\TH:i:s\Z')
             ]
         ];
         
@@ -3049,7 +3051,8 @@ class ArchiMateImportService
                 'schema' => $this->cachedConfig['schemaIds']['model'] ?? 67,
                 'id' => $modelIdentifier,
                 'owner' => $this->cachedConfig['userId'],
-                'organisation' => $this->cachedConfig['organisation']
+                'organisation' => $this->cachedConfig['organisation'],
+                'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $modelIdentifier,
             'section' => 'model',
@@ -3136,7 +3139,7 @@ class ArchiMateImportService
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
-
+                    'published' => date('Y-m-d\TH:i:s\Z')
                 ],
                 'identifier' => $identifier,
                 'section' => $schemaType,
@@ -3481,7 +3484,7 @@ class ArchiMateImportService
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
-
+                    'published' => date('Y-m-d\TH:i:s\Z')
                 ],
                 'identifier' => $identifier,
                 'section' => $schemaType,
@@ -3601,7 +3604,7 @@ class ArchiMateImportService
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
-
+                    'published' => date('Y-m-d\TH:i:s\Z')
                 ],
                 'identifier' => $identifier,
                 'section' => 'view',

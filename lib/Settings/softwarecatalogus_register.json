@@ -45,7 +45,6 @@
           "property-definition",
           "relation",
           "view",
-          "extendview",
           "property"
         ],
         "source": "",
@@ -80,13 +79,60 @@
         "created": "2025-05-16T13:11:49+00:00",
         "updated": "2025-05-16T13:38:20+00:00"
       },
+      "elements": {
+        "name": "Elements",
+        "description": "",
+        "reference": "https://vng.accept.commonground.nu/Endpoint-Elements.json",
+        "version": "0.0.1",
+        "endpoint": "elements",
+        "endpointArray": [
+          "elements"
+        ],
+        "endpointRegex": "#^elements$#",
+        "method": "GET",
+        "targetType": "register/schema",
+        "targetId": "vng-gemma/element",
+        "conditions": [],
+        "inputMapping": null,
+        "outputMapping": null,
+        "rules": [],
+        "configurations": [],
+        "slug": "elements",
+        "created": "2025-05-01T14:48:08+00:00",
+        "updated": "2025-05-02T10:37:48+00:00"
+      },
+      "element": {
+        "name": "Element",
+        "description": "",
+        "reference": "https://vng.accept.commonground.nu/Endpoint-Element.json",
+        "version": "0.0.1",
+        "endpoint": "elements/{{id}}",
+        "endpointArray": [
+          "elements",
+          "{{id}}"
+        ],
+        "endpointRegex": "#^elements(/([^/]+))$#",
+        "method": "GET",
+        "targetType": "register/schema",
+        "targetId": "vng-gemma/element",
+        "conditions": [],
+        "inputMapping": null,
+        "outputMapping": null,
+        "rules": [],
+        "configurations": [],
+        "slug": "element",
+        "created": "2025-05-01T14:48:08+00:00",
+        "updated": "2025-05-02T10:37:52+00:00"
+      },
       "views": {
         "name": "Views",
-        "description": "Endpoint voor het ophalen van AMEF views uit de vng-gemma register",
-        "reference": "",
+        "description": "",
+        "reference": "https://vng.accept.commonground.nu/Endpoint-Views.json",
         "version": "0.0.1",
         "endpoint": "views",
-        "endpointArray": ["views"],
+        "endpointArray": [
+          "views"
+        ],
         "endpointRegex": "#^views$#",
         "method": "GET",
         "targetType": "register/schema",
@@ -97,8 +143,31 @@
         "rules": [],
         "configurations": [],
         "slug": "views",
-        "created": "2025-01-17T12:00:00+00:00",
-        "updated": "2025-01-17T12:00:00+00:00"
+        "created": "2025-05-01T14:48:08+00:00",
+        "updated": "2025-05-02T10:39:14+00:00"
+      },
+      "view": {
+        "name": "View",
+        "description": "",
+        "reference": "https://vng.accept.commonground.nu/Endpoint-View.json",
+        "version": "0.0.1",
+        "endpoint": "views/{{id}}",
+        "endpointArray": [
+          "views",
+          "{{id}}"
+        ],
+        "endpointRegex": "#^views(/([^/]+))$#",
+        "method": "GET",
+        "targetType": "register/schema",
+        "targetId": "vng-gemma/view",
+        "conditions": [],
+        "inputMapping": null,
+        "outputMapping": null,
+        "rules": [],
+        "configurations": [],
+        "slug": "view",
+        "created": "2025-05-01T14:48:08+00:00",
+        "updated": "2025-05-02T10:39:24+00:00"
       }
     },
     "schemas": {
@@ -4294,288 +4363,7 @@
         "deleted": null,
         "configuration": null
       },
-      "extendview": {
-        "slug": "extendview",
-        "title": "Extended View",
-        "description": "AMEF Extended View - Vooraf uitgebreide view kopie voor prestatie optimalisatie",
-        "version": "0.0.5",
-        "summary": "",
-        "icon": "EyePlus",
-        "required": [
-          "identifier",
-          "type",
-          "name",
-          "properties",
-          "nodes",
-          "connections"
-        ],
-        "properties": {
-          "identifier": {
-            "description": "De identifier van deze View",
-            "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "id-a6ee6077d3094afa91fc6ea92a9a2a40",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "type": {
-            "description": "De type van deze View",
-            "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "Diagram",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "viewpoint": {
-            "description": "De viewpoint van deze View",
-            "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "Application Structure",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "name": {
-            "description": "De name van deze View",
-            "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "LV01 BGT basisregistratie en SVB view",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "name-lang": {
-            "description": "De name-language van deze View",
-            "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "nl",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "documentation": {
-            "description": "De documentation van deze View",
-            "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "Toont de referentiecomponenten ter ondersteuning van applicatieservices voor publieksdiensten",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "documentation-lang": {
-            "description": "De documentation-language van deze View",
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 2,
-            "example": "nl",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "properties": {
-            "description": "De properties van deze View",
-            "type": "array",
-            "minLength": null,
-            "maxLength": null,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "items": {
-              "cascadeDelete": true,
-              "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json",
-              "type": "object"
-            },
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "nodes": {
-            "description": "De nodes van deze View",
-            "type": "array",
-            "minLength": null,
-            "maxLength": null,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "items": {
-              "cascadeDelete": true,
-              "$ref": "https://vng.accept.commonground.nu/openregister/schemas/View_Node.json",
-              "type": "object"
-            },
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "connections": {
-            "description": "De connections van deze View",
-            "type": "array",
-            "minLength": null,
-            "maxLength": null,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "items": {
-              "cascadeDelete": true,
-              "$ref": "https://vng.accept.commonground.nu/openregister/schemas/View_Connection.json",
-              "type": "object"
-            },
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          }
-        },
-        "archive": [],
-        "source": "",
-        "hardValidation": false,
-        "updated": "2025-05-15T10:54:50+00:00",
-        "created": "2025-05-13T19:49:15+00:00",
-        "maxDepth": 0,
-        "owner": null,
-        "application": null,
-        "organisation": null,
-        "authorization": null,
-        "deleted": null,
-        "configuration": null
-      },
+
       "module": {
         "uri": null,
         "slug": "module",
