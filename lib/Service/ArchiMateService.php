@@ -100,8 +100,11 @@ class ArchiMateService
         'xml_parse_flags' => LIBXML_NOCDATA | LIBXML_NONET,
         'memory_cleanup' => true,
         'parallel_processing' => true,
-        'batch_size' => 1000,     // Large batch size for maximum performance
-        'parallel_batches' => 8   // Process 8 batches concurrently
+        'batch_size' => 1000,     // Default batch size (will be adjusted intelligently)
+        'parallel_batches' => 8,  // Process 8 batches concurrently
+        'max_batch_size_bytes' => 8388608,  // 8 MB - safe under MySQL's 16 MB limit
+        'min_batch_size' => 50,   // Minimum batch size for very large objects
+        'size_estimation_sample' => 10  // Sample size for estimating object sizes
     ];
 
     /**
@@ -634,8 +637,7 @@ class ArchiMateService
                 'id' => $metadata['identifier'] ?? uniqid('model_'),
                 'owner' => $this->getCurrentUserId(),
                 'organisation' => $this->getCurrentOrganisation(),
-                'created' => date('Y-m-d H:i:s'),
-                'updated' => date('Y-m-d H:i:s')
+
             ],
             'identifier' => $metadata['identifier'] ?? '',
             'section' => 'model',
@@ -669,8 +671,7 @@ class ArchiMateService
                 'id' => $identifier,
                 'owner' => $this->getCurrentUserId(),
                 'organisation' => $this->getCurrentOrganisation(),
-                'created' => date('Y-m-d H:i:s'),
-                'updated' => date('Y-m-d H:i:s')
+
             ]
         ];
         
@@ -780,19 +781,28 @@ class ArchiMateService
         $batchSize = self::PERFORMANCE_OPTIMIZATIONS['batch_size'];
         $parallelBatches = self::PERFORMANCE_OPTIMIZATIONS['parallel_batches'];
         
-        // Split objects into chunks
-        $chunks = array_chunk($objects, $batchSize);
+        // INTELLIGENT BATCH SIZING: Create size-aware batches instead of fixed-size chunks
+        $chunks = $this->createIntelligentBatches($objects);
         $totalChunks = count($chunks);
         
-        $this->logger->info('Starting optimized batch processing', [
-            'total_objects' => count($objects),
-            'total_chunks' => $totalChunks,
-            'batch_size' => $batchSize,
-            'parallel_batches' => $parallelBatches
+        $this->logger->info('Starting intelligent batch processing', [
+            'total_objects_to_save' => count($objects),
+            'intelligent_batches_created' => $totalChunks,
+            'batch_sizes' => array_map('count', $chunks),
+            'batching_method' => 'size_aware_intelligent',
+            'mysql_packet_limit_safe' => true
         ]);
 
         $allResults = [];
         $processedChunks = 0;
+        
+        // Accumulate statistics from all chunks
+        $aggregatedStats = [
+            'saved' => [],
+            'updated' => [],
+            'skipped' => [],
+            'invalid' => []
+        ];
         
         // Process chunks sequentially but with larger batch sizes for better performance
         foreach ($chunks as $chunkIndex => $chunk) {
@@ -809,6 +819,12 @@ class ArchiMateService
                     events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
                 );
                 
+                // Accumulate statistics from this chunk
+                $aggregatedStats['saved'] = array_merge($aggregatedStats['saved'], $saveResult['saved'] ?? []);
+                $aggregatedStats['updated'] = array_merge($aggregatedStats['updated'], $saveResult['updated'] ?? []);
+                $aggregatedStats['skipped'] = array_merge($aggregatedStats['skipped'], $saveResult['skipped'] ?? []);
+                $aggregatedStats['invalid'] = array_merge($aggregatedStats['invalid'], $saveResult['invalid'] ?? []);
+                
                 $savedObjects = array_merge(
                     $saveResult['saved'] ?? [],
                     $saveResult['updated'] ?? []
@@ -820,7 +836,11 @@ class ArchiMateService
                 $this->logger->info('Processed chunk', [
                     'processed_chunks' => $processedChunks,
                     'total_chunks' => $totalChunks,
-                    'progress_percent' => round(($processedChunks / $totalChunks) * 100, 1)
+                    'progress_percent' => round(($processedChunks / $totalChunks) * 100, 1),
+                    'chunk_saved' => count($saveResult['saved'] ?? []),
+                    'chunk_updated' => count($saveResult['updated'] ?? []),
+                    'chunk_skipped' => count($saveResult['skipped'] ?? []),
+                    'chunk_invalid' => count($saveResult['invalid'] ?? [])
                 ]);
                 
             } catch (\Exception $e) {
@@ -837,9 +857,16 @@ class ArchiMateService
             }
         }
         
+        // Store the aggregated result for statistics calculation
+        $this->lastSaveResult = $aggregatedStats;
+        
         $this->logger->info('Optimized batch processing completed', [
             'total_objects_processed' => count($allResults),
-            'total_chunks_processed' => $totalChunks
+            'total_chunks_processed' => $totalChunks,
+            'aggregated_saved' => count($aggregatedStats['saved']),
+            'aggregated_updated' => count($aggregatedStats['updated']),
+            'aggregated_skipped' => count($aggregatedStats['skipped']),
+            'aggregated_invalid' => count($aggregatedStats['invalid'])
         ]);
         
         return $allResults;
@@ -897,6 +924,18 @@ class ArchiMateService
                     'type' => $invalidItem['type'] ?? 'ValidationException'
                 ]);
             }
+        }
+
+        // Log details about skipped objects if any
+        if (!empty($saveResult['skipped'])) {
+            $this->logger->info('Objects skipped during import (no changes detected)', [
+                'skipped_count' => count($saveResult['skipped']),
+                'sample_skipped_ids' => array_slice(
+                    array_map(fn($obj) => $obj->getUuid() ?? 'unknown', $saveResult['skipped']),
+                    0, 
+                    5
+                )
+            ]);
         }
 
         // Return the combined saved and updated objects (maintaining backward compatibility)
@@ -1561,6 +1600,155 @@ class ArchiMateService
     }
 
     /**
+     * Create intelligent batches based on object size to prevent MySQL packet size issues
+     * 
+     * This method analyzes object sizes and creates batches that stay under the MySQL
+     * max_allowed_packet limit while maintaining reasonable performance.
+     * 
+     * @param array $objects Array of objects to batch
+     * @return array Array of batches, each containing objects that fit within size limits
+     */
+    private function createIntelligentBatches(array $objects): array
+    {
+        $maxBatchSizeBytes = self::PERFORMANCE_OPTIMIZATIONS['max_batch_size_bytes'];
+        $minBatchSize = self::PERFORMANCE_OPTIMIZATIONS['min_batch_size'];
+        $sampleSize = self::PERFORMANCE_OPTIMIZATIONS['size_estimation_sample'];
+        
+        if (empty($objects)) {
+            return [];
+        }
+        
+        // Estimate average object size by sampling
+        $avgObjectSize = $this->estimateAverageObjectSize($objects, $sampleSize);
+        
+        // Calculate optimal batch size based on object size
+        $optimalBatchSize = max($minBatchSize, intval($maxBatchSizeBytes / $avgObjectSize));
+        
+        $this->logger->info('Intelligent batch sizing analysis', [
+            'total_objects' => count($objects),
+            'estimated_avg_object_size_bytes' => $avgObjectSize,
+            'max_batch_size_bytes' => $maxBatchSizeBytes,
+            'calculated_optimal_batch_size' => $optimalBatchSize,
+            'min_batch_size_enforced' => $minBatchSize
+        ]);
+        
+        // Create batches with size awareness
+        $batches = [];
+        $currentBatch = [];
+        $currentBatchSize = 0;
+        
+        foreach ($objects as $object) {
+            $objectSize = $this->estimateObjectSize($object);
+            
+            // Check if adding this object would exceed the batch size limit
+            if (!empty($currentBatch) && ($currentBatchSize + $objectSize) > $maxBatchSizeBytes) {
+                // Current batch is full, save it and start a new one
+                $batches[] = $currentBatch;
+                $currentBatch = [$object];
+                $currentBatchSize = $objectSize;
+            } else {
+                // Add object to current batch
+                $currentBatch[] = $object;
+                $currentBatchSize += $objectSize;
+            }
+            
+            // Safety check: if a single object is larger than max batch size,
+            // create a batch with just that object
+            if (count($currentBatch) === 1 && $objectSize > $maxBatchSizeBytes) {
+                $this->logger->warning('Very large object detected, creating single-object batch', [
+                    'object_id' => $object['@self']['id'] ?? 'unknown',
+                    'object_size_bytes' => $objectSize,
+                    'max_batch_size_bytes' => $maxBatchSizeBytes
+                ]);
+                $batches[] = $currentBatch;
+                $currentBatch = [];
+                $currentBatchSize = 0;
+            }
+        }
+        
+        // Add the last batch if it has objects
+        if (!empty($currentBatch)) {
+            $batches[] = $currentBatch;
+        }
+        
+        $this->logger->info('Intelligent batching completed', [
+            'total_objects' => count($objects),
+            'total_batches_created' => count($batches),
+            'batch_sizes' => array_map('count', $batches),
+            'estimated_batch_sizes_bytes' => array_map(fn($batch) => array_sum(array_map([$this, 'estimateObjectSize'], $batch)), $batches)
+        ]);
+        
+        return $batches;
+    }
+
+    /**
+     * Estimate the average size of objects by sampling
+     * 
+     * @param array $objects Array of objects to sample
+     * @param int $sampleSize Number of objects to sample for size estimation
+     * @return int Estimated average object size in bytes
+     */
+    private function estimateAverageObjectSize(array $objects, int $sampleSize): int
+    {
+        $totalObjects = count($objects);
+        if ($totalObjects === 0) {
+            return 1000; // Default fallback size
+        }
+        
+        // Sample evenly distributed objects
+        $sampleIndices = [];
+        if ($totalObjects <= $sampleSize) {
+            // Use all objects if we have fewer than sample size
+            $sampleIndices = range(0, $totalObjects - 1);
+        } else {
+            // Sample evenly across the array
+            $step = max(1, intval($totalObjects / $sampleSize));
+            for ($i = 0; $i < $totalObjects; $i += $step) {
+                $sampleIndices[] = $i;
+                if (count($sampleIndices) >= $sampleSize) {
+                    break;
+                }
+            }
+        }
+        
+        // Calculate sizes of sampled objects
+        $totalSampleSize = 0;
+        foreach ($sampleIndices as $index) {
+            $totalSampleSize += $this->estimateObjectSize($objects[$index]);
+        }
+        
+        $averageSize = intval($totalSampleSize / count($sampleIndices));
+        
+        $this->logger->debug('Object size estimation completed', [
+            'total_objects' => $totalObjects,
+            'sampled_objects' => count($sampleIndices),
+            'total_sample_size_bytes' => $totalSampleSize,
+            'estimated_average_size_bytes' => $averageSize
+        ]);
+        
+        return max(1000, $averageSize); // Minimum 1KB per object
+    }
+
+    /**
+     * Estimate the serialized size of an object for batching purposes
+     * 
+     * @param array $object The object to estimate size for
+     * @return int Estimated size in bytes
+     */
+    private function estimateObjectSize(array $object): int
+    {
+        // Quick estimation based on JSON serialization
+        // This includes overhead for SQL parameters and structure
+        $jsonSize = strlen(json_encode($object));
+        
+        // Add overhead for SQL INSERT statement structure
+        // Each object becomes multiple parameters in a bulk INSERT
+        $sqlOverhead = 500; // Estimated overhead per object in SQL
+        
+        return $jsonSize + $sqlOverhead;
+    }
+
+    /**
      * Calculate detailed object statistics for import operations
      * 
      * @param array $normalizedData Normalized ArchiMate data
@@ -1582,7 +1770,7 @@ class ArchiMateService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
             
-            // Count objects by section type from the actual saved objects
+            // Count objects by section type from the actual processed objects
             $allProcessedObjects = array_merge(
                 $saveResult['saved'] ?? [],
                 $saveResult['updated'] ?? [],
@@ -1624,6 +1812,10 @@ class ArchiMateService
                 $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [], 
                     fn($updated) => ($updated->getUuid() === $objectId)));
                 
+                // Check if this object was skipped (no changes)
+                $wasSkipped = !empty(array_filter($saveResult['skipped'] ?? [],
+                    fn($skipped) => ($skipped->getUuid() === $objectId)));
+                
                 // Check if this object had validation errors
                 $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
                     fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)));
@@ -1632,6 +1824,8 @@ class ArchiMateService
                     $statistics[$sectionKey]['created']++;
                 } elseif ($wasUpdated) {
                     $statistics[$sectionKey]['updated']++;
+                } elseif ($wasSkipped) {
+                    $statistics[$sectionKey]['skipped']++;
                 } elseif ($hasErrors) {
                     // Add to errors array for this section
                     $errorInfo = array_filter($saveResult['invalid'] ?? [],
@@ -1641,6 +1835,7 @@ class ArchiMateService
                         $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
                     }
                 } else {
+                    // This shouldn't happen, but leave as fallback
                     $statistics[$sectionKey]['skipped']++;
                 }
             }
@@ -1801,8 +1996,7 @@ class ArchiMateService
                 'id' => $modelIdentifier,
                 'owner' => $this->cachedConfig['userId'],
                 'organisation' => $this->cachedConfig['organisation'],
-                'created' => date('Y-m-d H:i:s'),
-                'updated' => date('Y-m-d H:i:s')
+
             ],
             'identifier' => $modelIdentifier,
             'section' => 'model',
@@ -1880,8 +2074,7 @@ class ArchiMateService
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
-                    'created' => date('Y-m-d H:i:s'),
-                    'updated' => date('Y-m-d H:i:s')
+
                 ],
                 'identifier' => $identifier,
                 'section' => $schemaType,
