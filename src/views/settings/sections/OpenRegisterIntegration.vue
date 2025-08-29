@@ -17,38 +17,18 @@
  -->
 
 <template>
-	<NcSettingsSection
+	<AlwaysVisibleSection
 		name="OpenRegister Integration"
-		description="Configure which schemas to use for organizations, contacts, and users">
-		<!-- Buttons in Title Section -->
-		<template #title>
-			<div class="section-title-with-buttons">
-				<span>OpenRegister Integration</span>
-				<div class="title-buttons">
-					<NcButton
-						class="title-save-button"
-						type="primary"
-						:disabled="loading || saving || !canSave"
-						@click="saveConfiguration">
-						<template #icon>
-							<NcLoadingIcon v-if="saving" :size="32" />
-							<Save v-else :size="20" />
-						</template>
-						Save Configuration
-					</NcButton>
-					<NcButton
-						class="title-refresh-button"
-						type="secondary"
-						:disabled="loading"
-						@click="refreshSettings">
-						<template #icon>
-							<Refresh :size="20" />
-						</template>
-						Refresh
-					</NcButton>
-				</div>
-			</div>
-		</template>
+		description="Configure which schemas to use for organizations, contacts, and users"
+		:loading="loading"
+		loading-text="Loading OpenRegister configuration..."
+		:show-save-button="true"
+		:show-refresh-button="true"
+		:can-save="canSave"
+		:saving="saving"
+		save-button-text="Save Configuration"
+		@save="saveConfiguration"
+		@refresh="refreshSettings">
 		<div v-if="!loading">
 			<!-- Warning if OpenRegister is not installed -->
 			<NcNoteCard v-if="!versionInfo.openRegisterEnabled" type="warning">
@@ -164,93 +144,18 @@
 								<h4>AMEF Schema Configuration</h4>
 								<p>Configure schemas for the AMEF register</p>
 								<div class="schema-configuration-grid">
-									<div class="object-type-section">
+									<div
+										v-for="item in amefItems"
+										:key="item.key"
+										class="object-type-section">
 										<div class="object-type-header">
-											<h5>Organizations Schema</h5>
-											<span class="object-type-description">Schema for organizations in AMEF</span>
+											<h5>{{ item.title }}</h5>
+											<span class="object-type-description">{{ item.description }}</span>
 										</div>
 										<NcSelect
-											v-model="configuration.amef_organization.schema"
+											v-model="configuration[item.key].schema"
 											:options="amefSchemaOptions"
-											input-label="Organizations Schema"
-											:disabled="loading"
-											@change="validateConfiguration" />
-									</div>
-
-									<div class="object-type-section">
-										<div class="object-type-header">
-											<h5>Elements Schema</h5>
-											<span class="object-type-description">Schema for ArchiMate elements</span>
-										</div>
-										<NcSelect
-											v-model="configuration.amef_elements.schema"
-											:options="amefSchemaOptions"
-											input-label="Elements Schema"
-											:disabled="loading"
-											@change="validateConfiguration" />
-									</div>
-
-									<div class="object-type-section">
-										<div class="object-type-header">
-											<h5>Relationships Schema</h5>
-											<span class="object-type-description">Schema for ArchiMate relationships</span>
-										</div>
-										<NcSelect
-											v-model="configuration.amef_relationships.schema"
-											:options="amefSchemaOptions"
-											input-label="Relationships Schema"
-											:disabled="loading"
-											@change="validateConfiguration" />
-									</div>
-
-									<div class="object-type-section">
-										<div class="object-type-header">
-											<h5>Views Schema</h5>
-											<span class="object-type-description">Schema for ArchiMate views</span>
-										</div>
-										<NcSelect
-											v-model="configuration.amef_views.schema"
-											:options="amefSchemaOptions"
-											input-label="Views Schema"
-											:disabled="loading"
-											@change="validateConfiguration" />
-									</div>
-
-									<div class="object-type-section">
-										<div class="object-type-header">
-											<h5>Models Schema</h5>
-											<span class="object-type-description">Schema for ArchiMate models</span>
-										</div>
-										<NcSelect
-											v-model="configuration.amef_models.schema"
-											:options="amefSchemaOptions"
-											input-label="Models Schema"
-											:disabled="loading"
-											@change="validateConfiguration" />
-									</div>
-
-									<div class="object-type-section">
-										<div class="object-type-header">
-											<h5>Properties Schema</h5>
-											<span class="object-type-description">Schema for ArchiMate property definitions</span>
-										</div>
-										<NcSelect
-											v-model="configuration.amef_properties.schema"
-											:options="amefSchemaOptions"
-											input-label="Properties Schema"
-											:disabled="loading"
-											@change="validateConfiguration" />
-									</div>
-
-									<div class="object-type-section">
-										<div class="object-type-header">
-											<h5>Property Definitions Schema</h5>
-											<span class="object-type-description">Schema for ArchiMate property definition objects</span>
-										</div>
-										<NcSelect
-											v-model="configuration.amef_property_definitions.schema"
-											:options="amefSchemaOptions"
-											input-label="Property Definitions Schema"
+											:input-label="item.title"
 											:disabled="loading"
 											@change="validateConfiguration" />
 									</div>
@@ -293,16 +198,7 @@
 				</StandardTabs>
 			</div>
 		</div>
-
-		<!-- Loading State -->
-		<NcLoadingIcon v-else
-			class="loading-icon"
-			:size="32"
-			appearance="dark" />
-		<p v-if="loading" class="loading-text">
-			Loading OpenRegister configuration...
-		</p>
-	</NcSettingsSection>
+	</AlwaysVisibleSection>
 </template>
 
 <script>
@@ -320,9 +216,9 @@
  */
 
 import { settingsStore } from '../../../store/store.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Nextcloud Vue components
-import NcSettingsSection from '@nextcloud/vue/dist/Components/NcSettingsSection.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
@@ -330,23 +226,22 @@ import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 
 // Custom components
 import StandardTabs from '../../../components/StandardTabs.vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Icons
 import Save from 'vue-material-design-icons/ContentSave.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 
 export default {
 	name: 'OpenRegisterIntegration',
 
 	components: {
-		NcSettingsSection,
 		NcSelect,
 		NcButton,
 		NcNoteCard,
 		NcLoadingIcon,
 		StandardTabs,
+		AlwaysVisibleSection,
 		Save,
-		Refresh,
 	},
 
 	/**
@@ -389,24 +284,32 @@ export default {
 		// Dynamic list of all voorzieningen schema config entries
 		voorzieningenItems() {
 			return [
-				{ key: 'voorzieningen_organisatie', title: 'Organisatie Schema', description: 'Schema for organizations' },
-				{ key: 'voorzieningen_contactpersoon', title: 'Contactpersoon Schema', description: 'Schema for contact persons' },
-				{ key: 'voorzieningen_voorziening', title: 'Voorziening Schema', description: 'Schema for provisions' },
-				{ key: 'voorzieningen_voorziening_aanbod', title: 'Voorziening Aanbod Schema', description: 'Schema for provision offers' },
-				{ key: 'voorzieningen_voorziening_versie', title: 'Voorziening Versie Schema', description: 'Schema for provision versions' },
-				{ key: 'voorzieningen_kwetsbaarheid', title: 'Kwetsbaarheid Schema', description: 'Schema for vulnerabilities' },
-				{ key: 'voorzieningen_contract', title: 'Contract Schema', description: 'Schema for contracts' },
-				{ key: 'voorzieningen_standaard', title: 'Standaard Schema', description: 'Schema for standards' },
-				{ key: 'voorzieningen_review', title: 'Review Schema', description: 'Schema for reviews' },
-				{ key: 'voorzieningen_koppeling', title: 'Koppeling Schema', description: 'Schema for links' },
-				{ key: 'voorzieningen_beoordeeling', title: 'Beoordeeling Schema', description: 'Schema for assessments' },
-				{ key: 'voorzieningen_voorziening_module', title: 'Voorziening Module Schema', description: 'Schema for provision modules' },
-				{ key: 'voorzieningen_verklaring', title: 'Verklaring Schema', description: 'Schema for declarations' },
-				{ key: 'voorzieningen_koppeling_gebruik', title: 'Koppeling Gebruik Schema', description: 'Schema for link usage' },
-				{ key: 'voorzieningen_compliancy', title: 'Compliancy Schema', description: 'Schema for compliancy' },
-				{ key: 'voorzieningen_module_gebruik', title: 'Module Gebruik Schema', description: 'Schema for module usage' },
-				{ key: 'voorzieningen_module_versie', title: 'Module Versie Schema', description: 'Schema for module versions' },
-				{ key: 'voorzieningen_sector', title: 'Sector Schema', description: 'Schema for sectors' },
+				{ key: 'voorzieningen_organisatie_schema', title: 'Organisatie Schema', description: 'Schema for organizations' },
+				{ key: 'voorzieningen_contactpersoon_schema', title: 'Contactpersoon Schema', description: 'Schema for contact persons' },
+				{ key: 'voorzieningen_product_schema', title: 'Product Schema', description: 'Schema for products' },
+				{ key: 'voorzieningen_dienst_schema', title: 'Dienst Schema', description: 'Schema for services' },
+				{ key: 'voorzieningen_kwetsbaarheid_schema', title: 'Kwetsbaarheid Schema', description: 'Schema for vulnerabilities' },
+				{ key: 'voorzieningen_gebruik_schema', title: 'Gebruik Schema', description: 'Schema for usage' },
+				{ key: 'voorzieningen_contract_schema', title: 'Contract Schema', description: 'Schema for contracts' },
+				{ key: 'voorzieningen_koppeling_schema', title: 'Koppeling Schema', description: 'Schema for connections/links' },
+				{ key: 'voorzieningen_beoordeeling_schema', title: 'Beoordeeling Schema', description: 'Schema for assessments' },
+				{ key: 'voorzieningen_module_schema', title: 'Module Schema', description: 'Schema for modules' },
+				{ key: 'voorzieningen_compliancy_schema', title: 'Compliancy Schema', description: 'Schema for compliance records' },
+				{ key: 'voorzieningen_moduleVersie_schema', title: 'Module Versie Schema', description: 'Schema for module versions' },
+				{ key: 'voorzieningen_sector_schema', title: 'Sector Schema', description: 'Schema for sectors' },
+			]
+		},
+
+		// Dynamic list of all AMEF schema config entries
+		amefItems() {
+			return [
+				{ key: 'amef_element_schema', title: 'Element Schema', description: 'Schema for ArchiMate elements' },
+				{ key: 'amef_model_schema', title: 'Model Schema', description: 'Schema for ArchiMate models' },
+				{ key: 'amef_organization_schema', title: 'Organization Schema', description: 'Schema for organizations in AMEF' },
+				{ key: 'amef_property_definition_schema', title: 'Property Definition Schema', description: 'Schema for property definitions' },
+				{ key: 'amef_relation_schema', title: 'Relation Schema', description: 'Schema for ArchiMate relationships' },
+				{ key: 'amef_view_schema', title: 'View Schema', description: 'Schema for ArchiMate views' },
+				{ key: 'amef_property_schema', title: 'Property Schema', description: 'Schema for properties' },
 			]
 		},
 
@@ -428,15 +331,28 @@ export default {
 		canSave() {
 			// Check if any register is selected
 			const hasRegisters = this.voorzieningenRegister || this.amefRegister
-			
+
 			// Check if AMEF configuration has been modified
 			const amefConfigModified = this.hasAmefConfigChanges()
-			
+
 			// Check if Voorzieningen configuration has been modified
 			const voorzieningenConfigModified = this.hasVoorzieningenConfigChanges()
-			
+
 			return hasRegisters && (amefConfigModified || voorzieningenConfigModified)
 		},
+	},
+
+	/**
+	 * Component lifecycle - load initial data
+	 */
+	async mounted() {
+		// Load full settings to populate register options and configurations
+		try {
+			await this.store.loadSettings()
+		} catch (error) {
+			console.error('Failed to load OpenRegister settings on mount:', error)
+			showError('Failed to load OpenRegister settings: ' + error.message)
+		}
 	},
 
 	methods: {
@@ -482,13 +398,13 @@ export default {
 			if (!this.amefRegister) return false
 
 			const amefKeys = [
-				'amef_elements',
-				'amef_organization',
-				'amef_relationships',
-				'amef_views',
-				'amef_models',
-				'amef_properties',
-				'amef_property_definitions',
+				'amef_element_schema',
+				'amef_model_schema',
+				'amef_organization_schema',
+				'amef_property_definition_schema',
+				'amef_relation_schema',
+				'amef_view_schema',
+				'amef_property_schema',
 			]
 
 			return amefKeys.some(key => {
@@ -507,24 +423,19 @@ export default {
 			if (!this.voorzieningenRegister) return false
 
 			const voorzieningenKeys = [
-				'voorzieningen_organisatie',
-				'voorzieningen_contactpersoon',
-				'voorzieningen_voorziening',
-				'voorzieningen_voorziening_aanbod',
-				'voorzieningen_voorziening_versie',
-				'voorzieningen_kwetsbaarheid',
-				'voorzieningen_contract',
-				'voorzieningen_standaard',
-				'voorzieningen_review',
-				'voorzieningen_koppeling',
-				'voorzieningen_beoordeeling',
-				'voorzieningen_voorziening_module',
-				'voorzieningen_verklaring',
-				'voorzieningen_koppeling_gebruik',
-				'voorzieningen_compliancy',
-				'voorzieningen_module_gebruik',
-				'voorzieningen_module_versie',
-				'voorzieningen_sector',
+				'voorzieningen_organisatie_schema',
+				'voorzieningen_contactpersoon_schema',
+				'voorzieningen_product_schema',
+				'voorzieningen_dienst_schema',
+				'voorzieningen_kwetsbaarheid_schema',
+				'voorzieningen_gebruik_schema',
+				'voorzieningen_contract_schema',
+				'voorzieningen_koppeling_schema',
+				'voorzieningen_beoordeeling_schema',
+				'voorzieningen_module_schema',
+				'voorzieningen_compliancy_schema',
+				'voorzieningen_moduleVersie_schema',
+				'voorzieningen_sector_schema',
 			]
 
 			return voorzieningenKeys.some(key => {
@@ -543,6 +454,10 @@ export default {
 			this.saving = true
 			try {
 				await this.store.saveConfiguration()
+				showSuccess('OpenRegister configuration saved successfully')
+			} catch (error) {
+				console.error('Failed to save OpenRegister configuration:', error)
+				showError('Failed to save OpenRegister configuration: ' + error.message)
 			} finally {
 				this.saving = false
 			}
@@ -555,11 +470,20 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async refreshSettings() {
-			// Only reload the specific configurations needed for this component
-			await Promise.all([
-				this.store.loadAmefConfig(),
-				this.store.loadVoorzieningenConfig(),
-			])
+			this.loading = true
+			try {
+				// Reload both AMEF and Voorzieningen configurations
+				await Promise.all([
+					this.store.loadAmefConfig(),
+					this.store.loadVoorzieningenConfig(),
+				])
+				showSuccess('OpenRegister configuration refreshed successfully')
+			} catch (error) {
+				console.error('Failed to refresh OpenRegister configuration:', error)
+				showError('Failed to refresh OpenRegister configuration: ' + error.message)
+			} finally {
+				this.loading = false
+			}
 		},
 	},
 }
@@ -654,39 +578,5 @@ export default {
 	font-size: 14px;
 	color: var(--color-text-maxcontrast);
 	text-align: center;
-}
-
-.section-title-with-buttons {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	width: 100%;
-}
-
-.title-buttons {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-}
-
-.title-save-button {
-	margin-left: auto;
-}
-
-.title-refresh-button {
-	margin-left: 8px;
-}
-
-.loading-icon {
-	display: flex;
-	justify-content: center;
-	margin: 40px 0;
-}
-
-.loading-text {
-	text-align: center;
-	color: var(--color-text-lighter);
-	margin-top: 1rem;
-	font-size: 14px;
 }
 </style>

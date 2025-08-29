@@ -79,51 +79,6 @@
         "created": "2025-05-16T13:11:49+00:00",
         "updated": "2025-05-16T13:38:20+00:00"
       },
-      "elements": {
-        "name": "Elements",
-        "description": "",
-        "reference": "https://vng.accept.commonground.nu/Endpoint-Elements.json",
-        "version": "0.0.1",
-        "endpoint": "elements",
-        "endpointArray": [
-          "elements"
-        ],
-        "endpointRegex": "#^elements$#",
-        "method": "GET",
-        "targetType": "register/schema",
-        "targetId": "vng-gemma/element",
-        "conditions": [],
-        "inputMapping": null,
-        "outputMapping": null,
-        "rules": [],
-        "configurations": [],
-        "slug": "elements",
-        "created": "2025-05-01T14:48:08+00:00",
-        "updated": "2025-05-02T10:37:48+00:00"
-      },
-      "element": {
-        "name": "Element",
-        "description": "",
-        "reference": "https://vng.accept.commonground.nu/Endpoint-Element.json",
-        "version": "0.0.1",
-        "endpoint": "elements/{{id}}",
-        "endpointArray": [
-          "elements",
-          "{{id}}"
-        ],
-        "endpointRegex": "#^elements(/([^/]+))$#",
-        "method": "GET",
-        "targetType": "register/schema",
-        "targetId": "vng-gemma/element",
-        "conditions": [],
-        "inputMapping": null,
-        "outputMapping": null,
-        "rules": [],
-        "configurations": [],
-        "slug": "element",
-        "created": "2025-05-01T14:48:08+00:00",
-        "updated": "2025-05-02T10:37:52+00:00"
-      },
       "views": {
         "name": "Views",
         "description": "",
@@ -496,15 +451,18 @@
           },
           "cloudDienstverleningsmodel": {
             "description": "Het cloud dienstverleningsmodel voor het product, suite of monobrand",
-            "type": "string",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["On-premises (self-managed)", "IaaS", "PaaS", "SaaS"]
+            },
             "order": 0,
             "objectConfiguration": {},
             "fileConfiguration": {},
             "oneOf": [],
-            "enum": ["On-premises (self-managed)", "IaaS", "PaaS", "SaaS"],
             "facetable": true,
             "title": "Hosting vorm",
-            "example": "Bijvoorbeeld: SaaS"
+            "example": ["SaaS"]
           },
           "hostingJurisdictie": {
             "description": "De jurisdictie waar de hosting plaatsvindt",
