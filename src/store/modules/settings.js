@@ -27,6 +27,9 @@ export const useSettingsStore = defineStore('settings', {
 		loadingSyncSettings: false,
 		loadingStatistics: false,
 		loadingOpenRegisterConfig: false,
+		loadingRegisters: false,
+		loadingVoorzieningenSchemas: false,
+		loadingAmefSchemas: false,
 		loadingUserGroups: false,
 		loadingEmailConfig: false,
 		loadingArchiMateStatus: false,
@@ -195,6 +198,33 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		isAnyOperationRunning: (state) => {
 			return state.isImportRunning || state.isExportRunning
+		},
+
+		/**
+		 * Check if register dropdowns should show loading state
+		 * @param {object} state - The store state
+		 * @return {boolean} True if registers are loading
+		 */
+		isLoadingRegisters: (state) => {
+			return state.loadingRegisters
+		},
+
+		/**
+		 * Check if voorzieningen schema dropdowns should show loading state
+		 * @param {object} state - The store state
+		 * @return {boolean} True if voorzieningen schemas are loading
+		 */
+		isLoadingVoorzieningenSchemas: (state) => {
+			return state.loadingVoorzieningenSchemas
+		},
+
+		/**
+		 * Check if AMEF schema dropdowns should show loading state
+		 * @param {object} state - The store state
+		 * @return {boolean} True if AMEF schemas are loading
+		 */
+		isLoadingAmefSchemas: (state) => {
+			return state.loadingAmefSchemas
 		},
 
 		/**
@@ -401,6 +431,90 @@ export const useSettingsStore = defineStore('settings', {
 				this.loading = false
 				this.loadingMainSettings = false
 				this.loadingOpenRegisterConfig = false
+			}
+		},
+
+		/**
+		 * Load essential data for OpenRegister configuration dropdowns
+		 * Only loads the data needed for register/schema selection
+		 */
+		async loadOpenRegisterEssentials() {
+			this.clearError()
+
+			try {
+				// Load available registers first (needed for register dropdowns)
+				this.loadingRegisters = true
+				const settingsResponse = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				if (!settingsResponse.ok) {
+					throw new Error(`HTTP ${settingsResponse.status}: ${settingsResponse.statusText}`)
+				}
+				const settingsData = await settingsResponse.json()
+				if (settingsData.success !== false) {
+					this.settings.availableRegisters = settingsData.availableRegisters || []
+					this.versionInfo = settingsData.versionInfo || {}
+					this.initializeConfiguration()
+				}
+				this.loadingRegisters = false
+
+				// Load config data in parallel (don't wait for each other)
+				const configPromises = [
+					this.loadVoorzieningenConfigFocused(),
+					this.loadAmefConfigFocused(),
+				]
+
+				await Promise.allSettled(configPromises)
+
+				// After both configs loaded, populate selections
+				this.populateRegisterSelectionsFromFocused()
+				this.populateSchemaSelectionsFromFocused()
+
+			} catch (error) {
+				console.error('Failed to load OpenRegister essentials:', error)
+				this.setError('Failed to load OpenRegister configuration: ' + error.message)
+			} finally {
+				this.loadingRegisters = false
+			}
+		},
+
+		/**
+		 * Load Voorzieningen configuration with focused loading state
+		 */
+		async loadVoorzieningenConfigFocused() {
+			this.loadingVoorzieningenSchemas = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.voorzieningenRawConfig = data.config
+				}
+			} catch (error) {
+				console.warn('Failed to load voorzieningen config:', error)
+			} finally {
+				this.loadingVoorzieningenSchemas = false
+			}
+		},
+
+		/**
+		 * Load AMEF configuration with focused loading state
+		 */
+		async loadAmefConfigFocused() {
+			this.loadingAmefSchemas = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.amefRawConfig = data.config
+				}
+			} catch (error) {
+				console.warn('Failed to load AMEF config:', error)
+			} finally {
+				this.loadingAmefSchemas = false
 			}
 		},
 
@@ -643,9 +757,9 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load AMEF configuration from focused endpoint
+		 * Used in full settings load - doesn't interfere with focused loading states
 		 */
 		async loadAmefConfig() {
-			this.loadingOpenRegisterConfig = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
 				if (!response.ok) {
@@ -658,16 +772,14 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
-			} finally {
-				this.loadingOpenRegisterConfig = false
 			}
 		},
 
 		/**
 		 * Load Voorzieningen configuration from focused endpoint
+		 * Used in full settings load - doesn't interfere with focused loading states
 		 */
 		async loadVoorzieningenConfig() {
-			this.loadingOpenRegisterConfig = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
 				if (!response.ok) {
@@ -680,8 +792,6 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
-			} finally {
-				this.loadingOpenRegisterConfig = false
 			}
 		},
 

@@ -48,28 +48,24 @@
 					<!-- General Configuration Tab -->
 					<div v-show="activeTab === 'general'" class="tab-panel">
 						<div class="tab-content">
-							<h4>Register Selection</h4>
-							<p>Select the registers to use for your Software Catalog data</p>
 							<div class="register-selection-grid">
 								<div class="register-selection-item">
-									<h5>Voorzieningen Register</h5>
-									<p>Register for organizations, contacts, and users</p>
 									<NcSelect
 										v-model="voorzieningenRegister"
 										:options="registerOptions"
 										input-label="Select Voorzieningen Register"
-										:disabled="loading"
+										:loading="loadingRegisters"
+										:disabled="loadingRegisters"
 										@change="handleVoorzieningenRegisterChange" />
 								</div>
 
 								<div class="register-selection-item">
-									<h5>AMEF Register</h5>
-									<p>Register for ArchiMate elements, relationships, and views</p>
 									<NcSelect
 										v-model="amefRegister"
 										:options="registerOptions"
 										input-label="Select AMEF Register"
-										:disabled="loading"
+										:loading="loadingRegisters"
+										:disabled="loadingRegisters"
 										@change="handleAmefRegisterChange" />
 								</div>
 							</div>
@@ -81,8 +77,6 @@
 						<div class="tab-content">
 							<!-- Voorzieningen Schema Configuration -->
 							<div v-if="voorzieningenRegister && voorzieningenSchemas.length > 0">
-								<h4>Voorzieningen Schema Configuration</h4>
-								<p>Configure schemas for the Voorzieningen register</p>
 								<div class="schema-configuration-grid">
 									<div
 										v-for="item in voorzieningenItems"
@@ -96,30 +90,14 @@
 											v-model="configuration[item.key].schema"
 											:options="voorzieningenSchemaOptions"
 											:input-label="item.title"
-											:disabled="loading"
+											:loading="loadingVoorzieningenSchemas"
+											:disabled="loadingVoorzieningenSchemas"
 											@change="validateConfiguration" />
 									</div>
 								</div>
 							</div>
 
-							<!-- Voorzieningen Configuration Save Button -->
-							<div v-if="voorzieningenRegister && voorzieningenSchemas.length > 0" class="voorzieningen-save-section">
-								<div class="save-button-container">
-									<NcButton
-										type="primary"
-										:disabled="loading || saving || !hasVoorzieningenConfigChanges()"
-										@click="saveConfiguration">
-										<template #icon>
-											<NcLoadingIcon v-if="saving" :size="16" />
-											<Save v-else :size="16" />
-										</template>
-										{{ saving ? 'Saving...' : 'Save Voorzieningen Configuration' }}
-									</NcButton>
-									<p class="save-help-text">
-										Save your Voorzieningen schema configuration to enable organization and contact management.
-									</p>
-								</div>
-							</div>
+
 
 							<!-- Voorzieningen Empty State -->
 							<div v-else-if="voorzieningenRegister && voorzieningenSchemas.length === 0">
@@ -141,8 +119,6 @@
 						<div class="tab-content">
 							<!-- AMEF Schema Configuration -->
 							<div v-if="amefRegister && amefSchemas.length > 0">
-								<h4>AMEF Schema Configuration</h4>
-								<p>Configure schemas for the AMEF register</p>
 								<div class="schema-configuration-grid">
 									<div
 										v-for="item in amefItems"
@@ -156,30 +132,14 @@
 											v-model="configuration[item.key].schema"
 											:options="amefSchemaOptions"
 											:input-label="item.title"
-											:disabled="loading"
+											:loading="loadingAmefSchemas"
+											:disabled="loadingAmefSchemas"
 											@change="validateConfiguration" />
 									</div>
 								</div>
 							</div>
 
-							<!-- AMEF Configuration Save Button -->
-							<div v-if="amefRegister && amefSchemas.length > 0" class="amef-save-section">
-								<div class="save-button-container">
-									<NcButton
-										type="primary"
-										:disabled="loading || saving || !hasAmefConfigChanges()"
-										@click="saveConfiguration">
-										<template #icon>
-											<NcLoadingIcon v-if="saving" :size="16" />
-											<Save v-else :size="16" />
-										</template>
-										{{ saving ? 'Saving...' : 'Save AMEF Configuration' }}
-									</NcButton>
-									<p class="save-help-text">
-										Save your AMEF schema configuration to enable ArchiMate import/export functionality.
-									</p>
-								</div>
-							</div>
+
 
 							<!-- AMEF Empty State -->
 							<div v-else-if="amefRegister && amefSchemas.length === 0">
@@ -273,6 +233,15 @@ export default {
 		loading() {
 			return this.store.loadingOpenRegisterConfig
 		},
+		loadingRegisters() {
+			return this.store.isLoadingRegisters
+		},
+		loadingVoorzieningenSchemas() {
+			return this.store.isLoadingVoorzieningenSchemas
+		},
+		loadingAmefSchemas() {
+			return this.store.isLoadingAmefSchemas
+		},
 		versionInfo() { return this.store.versionInfo },
 		configuration() { return this.store.configuration },
 		registerOptions() { return this.store.registerOptions },
@@ -344,14 +313,15 @@ export default {
 
 	/**
 	 * Component lifecycle - load initial data
+	 * Only loads essential data needed for register/schema dropdowns
 	 */
 	async mounted() {
-		// Load full settings to populate register options and configurations
+		// Load only essential data for OpenRegister configuration dropdowns
 		try {
-			await this.store.loadSettings()
+			await this.store.loadOpenRegisterEssentials()
 		} catch (error) {
-			console.error('Failed to load OpenRegister settings on mount:', error)
-			showError('Failed to load OpenRegister settings: ' + error.message)
+			console.error('Failed to load OpenRegister essentials on mount:', error)
+			showError('Failed to load OpenRegister configuration: ' + error.message)
 		}
 	},
 
@@ -465,24 +435,18 @@ export default {
 
 		/**
 		 * Refresh settings
-		 * Reloads settings from the backend
+		 * Reloads only essential data needed for the dropdowns
 		 *
 		 * @return {Promise<void>}
 		 */
 		async refreshSettings() {
-			this.loading = true
 			try {
-				// Reload both AMEF and Voorzieningen configurations
-				await Promise.all([
-					this.store.loadAmefConfig(),
-					this.store.loadVoorzieningenConfig(),
-				])
+				// Reload essential OpenRegister configuration data
+				await this.store.loadOpenRegisterEssentials()
 				showSuccess('OpenRegister configuration refreshed successfully')
 			} catch (error) {
 				console.error('Failed to refresh OpenRegister configuration:', error)
 				showError('Failed to refresh OpenRegister configuration: ' + error.message)
-			} finally {
-				this.loading = false
 			}
 		},
 	},
@@ -561,22 +525,5 @@ export default {
 	border-top: 1px solid var(--color-border);
 }
 
-.amef-save-section {
-	margin-top: 24px;
-	padding: 20px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	background-color: var(--color-background-hover);
-}
 
-.save-button-container {
-	text-align: center;
-}
-
-.save-help-text {
-	margin: 12px 0 0 0;
-	font-size: 14px;
-	color: var(--color-text-maxcontrast);
-	text-align: center;
-}
 </style>
