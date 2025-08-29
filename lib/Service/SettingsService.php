@@ -162,12 +162,12 @@ class SettingsService
             'amef' => [
                 'name' => 'AMEF',
                 'description' => 'AMEF register for architectural elements',
-                'objectTypes' => ['organization', 'element', 'relationship', 'view', 'model', 'property'] // Complete AMEF object types
+                'objectTypes' => ['organization', 'element', 'relation', 'view', 'model', 'property', 'property-definition'] // Complete AMEF object types
             ],
             'voorzieningen' => [
                 'name' => 'Voorzieningen',
                 'description' => 'Voorzieningen register for software catalog services',
-                'objectTypes' => ['organisatie', 'contactpersoon'] // Voorzieningen uses organisatie and contactpersoon schemas
+                'objectTypes' => ['sector', 'product', 'dienst', 'kwetsbaarheid', 'contactpersoon', 'organisatie', 'gebruik', 'contract', 'koppeling', 'beoordeeling', 'module', 'compliancy', 'moduleVersie'] // All voorzieningen schemas
             ]
         ];
 
@@ -305,7 +305,7 @@ class SettingsService
      * Auto-configures settings specifically after importing the softwarecatalogus_register.json
      *
      * This method looks for the voorzieningen register and automatically configures
-     * the organisatie and contactpersoon schemas, and creates required user groups.
+     * ALL schemas using the new consolidated configuration format, and creates required user groups.
      *
      * @return array The updated configuration
      *
@@ -321,118 +321,52 @@ class SettingsService
                 return [];
             }
 
-            $objectService = $this->getObjectService();
-            $registers = $objectService->getRegisters();
-
-            if (empty($registers)) {
-                $this->logger->info('No registers available for auto-configuration after import');
-                return [];
-            }
-
-            $configuration = [];
+            $this->logger->info('Starting comprehensive auto-configuration after import');
 
             // Step 1: Create required user groups
             $this->logger->info('Creating required user groups');
             $this->createRequiredUserGroups();
             $this->logger->info('User groups created successfully');
 
-            // Look for the voorzieningen register
-            $voorzieningenRegister = null;
-            foreach ($registers as $register) {
-                $registerTitle = strtolower($register['title'] ?? '');
-                $registerSlug = strtolower($register['slug'] ?? '');
-
-                if (stripos($registerTitle, 'voorzieningen') !== false ||
-                    stripos($registerSlug, 'voorzieningen') !== false ||
-                    $registerTitle === 'voorzieningen' ||
-                    $registerSlug === 'voorzieningen') {
-                    $voorzieningenRegister = $register;
-                    break;
-                }
-            }
-
-            if ($voorzieningenRegister === null) {
-                $this->logger->info('No voorzieningen register found for auto-configuration after import');
+            // Step 2: Configure Voorzieningen using the consolidated method
+            $this->logger->info('Running voorzieningen auto-configuration');
+            $voorzieningenResult = $this->configureVoorzieningen();
+            
+            if (!$voorzieningenResult['success']) {
+                $this->logger->warning('Voorzieningen auto-configuration failed', [
+                    'message' => $voorzieningenResult['message'] ?? 'Unknown error'
+                ]);
                 return [];
             }
 
-            $this->logger->info('Found voorzieningen register for auto-configuration', [
-                'register_id' => $voorzieningenRegister['id'],
-                'register_title' => $voorzieningenRegister['title'],
-                'schemas_count' => count($voorzieningenRegister['schemas'] ?? [])
+            $this->logger->info('Voorzieningen auto-configuration completed successfully', [
+                'configured' => $voorzieningenResult['configured'] ?? []
             ]);
 
-            // Configure schemas within the voorzieningen register
-            if (!empty($voorzieningenRegister['schemas'])) {
-                foreach ($voorzieningenRegister['schemas'] as $schema) {
-                    $schemaTitle = strtolower($schema['title'] ?? '');
-                    $schemaSlug = strtolower($schema['slug'] ?? '');
-
-                    // Look for organisatie schema
-                    if (stripos($schemaTitle, 'organisatie') !== false ||
-                        stripos($schemaSlug, 'organisatie') !== false ||
-                        $schemaTitle === 'organisatie' ||
-                        $schemaSlug === 'organisatie') {
-
-                                                                         // Set voorzieningen_organisatie configuration
-                        $configuration['voorzieningen_organisatie_source'] = 'openregister';
-                        $configuration['voorzieningen_organisatie_register'] = (string) $voorzieningenRegister['id'];
-                        $configuration['voorzieningen_organisatie_schema'] = (string) $schema['id'];
-
-                        // Set sync-compatible configuration (OrganizationSyncService expects this key)
-                        $configuration['voorzieningen_register'] = (string) $voorzieningenRegister['id'];
-
-                        // Also set backward compatibility organization configuration
-                        $configuration['organization_source'] = 'openregister';
-                        $configuration['organization_register'] = (string) $voorzieningenRegister['id'];
-                        $configuration['organization_schema'] = (string) $schema['id'];
-
-                        $this->logger->info('Configured organisatie schema', [
-                            'schema_id' => $schema['id'],
-                            'schema_title' => $schema['title']
-                        ]);
-                    }
-                    // Look for contactpersoon schema
-                    else if (stripos($schemaTitle, 'contactpersoon') !== false ||
-                             stripos($schemaSlug, 'contactpersoon') !== false ||
-                             $schemaTitle === 'contactpersoon' ||
-                             $schemaSlug === 'contactpersoon') {
-
-                                                                         // Set voorzieningen_contactpersoon configuration
-                        $configuration['voorzieningen_contactpersoon_source'] = 'openregister';
-                        $configuration['voorzieningen_contactpersoon_register'] = (string) $voorzieningenRegister['id'];
-                        $configuration['voorzieningen_contactpersoon_schema'] = (string) $schema['id'];
-
-                        // Set sync-compatible configuration (OrganizationSyncService expects this key)
-                        $configuration['voorzieningen_register'] = (string) $voorzieningenRegister['id'];
-
-                        // Also set backward compatibility contact configuration
-                        $configuration['contact_source'] = 'openregister';
-                        $configuration['contact_register'] = (string) $voorzieningenRegister['id'];
-                        $configuration['contact_schema'] = (string) $schema['id'];
-
-                        $this->logger->info('Configured contactpersoon schema', [
-                            'schema_id' => $schema['id'],
-                            'schema_title' => $schema['title']
-                        ]);
-                    }
-                }
-            }
-
-            if (empty($configuration)) {
-                $this->logger->info('No matching schemas found in voorzieningen register for auto-configuration');
+            // Step 3: Configure AMEF using the consolidated method
+            $this->logger->info('Running AMEF auto-configuration');
+            $amefResult = $this->configureAmef();
+            
+            if (!$amefResult['success']) {
+                $this->logger->info('AMEF auto-configuration not completed', [
+                    'message' => $amefResult['message'] ?? 'No AMEF register found'
+                ]);
             } else {
-                $this->logger->info('Auto-configuration after import completed successfully', [
-                    'configuration_keys' => array_keys($configuration),
-                    'register_used' => $voorzieningenRegister['title']
+                $this->logger->info('AMEF auto-configuration completed successfully', [
+                    'configured' => $amefResult['configured'] ?? []
                 ]);
             }
 
             // Mark auto-configuration as completed
             $this->config->setValueString($this->_appName, 'auto_config_completed', 'true');
-            $this->logger->info('Auto-configuration marked as completed');
+            $this->logger->info('Comprehensive auto-configuration marked as completed');
 
-            return $configuration;
+            // Return the consolidated configuration result
+            return [
+                'voorzieningen' => $voorzieningenResult,
+                'amef' => $amefResult,
+                'user_groups_created' => true
+            ];
 
         } catch (\Exception $e) {
             throw new \RuntimeException('Failed to auto-configure after import: ' . $e->getMessage());
@@ -2664,10 +2598,8 @@ class SettingsService
             // Find the voorzieningen register by slug OR by presence of expected schema slugs
             $targetRegister = null;
             $expectedSlugs = [
-                'organisatie', 'contactpersoon', 'voorziening', 'voorzieningaanbod', 'voorzieningversie',
-                'kwetsbaarheid', 'contract', 'standaard', 'review', 'koppeling', 'beoordeeling',
-                'voorzieningmodule', 'verklaring', 'koppelinggebruik', 'compliancy', 'modulegebruik',
-                'moduleversie', 'sector'
+                'sector', 'product', 'dienst', 'kwetsbaarheid', 'contactpersoon', 'organisatie',
+                'gebruik', 'contract', 'koppeling', 'beoordeeling', 'module', 'compliancy', 'moduleversie', 'moduleVersie'
             ];
 
             foreach ($registers as $register) {
@@ -2691,35 +2623,72 @@ class SettingsService
                 ];
             }
 
-            // Map schema slugs to configuration keys (singular slug + _schema)
+            // Map schema slugs to configuration keys based on actual register schemas
             $slugToKey = [
                 'organisatie' => 'organisatie_schema',
                 'contactpersoon' => 'contactpersoon_schema',
-                'voorziening' => 'voorziening_schema',
-                'voorzieningaanbod' => 'voorziening_aanbod_schema',
-                'voorzieningversie' => 'voorziening_versie_schema',
+                'product' => 'product_schema',
+                'dienst' => 'dienst_schema',
                 'kwetsbaarheid' => 'kwetsbaarheid_schema',
+                'gebruik' => 'gebruik_schema',
                 'contract' => 'contract_schema',
-                'standaard' => 'standaard_schema',
-                'review' => 'review_schema',
                 'koppeling' => 'koppeling_schema',
                 'beoordeeling' => 'beoordeeling_schema',
-                'voorzieningmodule' => 'voorziening_module_schema',
-                'verklaring' => 'verklaring_schema',
-                'koppelinggebruik' => 'koppeling_gebruik_schema',
+                'module' => 'module_schema',
                 'compliancy' => 'compliancy_schema',
-                'modulegebruik' => 'module_gebruik_schema',
-                'moduleversie' => 'module_versie_schema',
+                'moduleversie' => 'moduleVersie_schema', // Handle both moduleversie and moduleVersie
+                'moduleVersie' => 'moduleVersie_schema',
                 'sector' => 'sector_schema',
             ];
 
             $config = [ 'register' => (string)($targetRegister['id'] ?? '') ];
+            
+            $this->logger->info('DEBUG: About to process schemas', [
+                'register_id' => $targetRegister['id'],
+                'schemas_count' => count($targetRegister['schemas'] ?? []),
+                'slugToKey_map' => $slugToKey
+            ]);
+            
             foreach (($targetRegister['schemas'] ?? []) as $schema) {
-                $schemaSlug = strtolower($schema['slug'] ?? '');
-                if (isset($slugToKey[$schemaSlug])) {
-                    $config[$slugToKey[$schemaSlug]] = (string)$schema['id'];
+                $originalSlug = $schema['slug'] ?? '';
+                $lowercaseSlug = strtolower($originalSlug);
+                
+                $this->logger->info('DEBUG: Processing schema', [
+                    'original_slug' => $originalSlug,
+                    'lowercase_slug' => $lowercaseSlug,
+                    'schema_id' => $schema['id'] ?? 'NO_ID',
+                    'has_mapping_original' => isset($slugToKey[$originalSlug]) ? 'YES' : 'NO',
+                    'has_mapping_lowercase' => isset($slugToKey[$lowercaseSlug]) ? 'YES' : 'NO'
+                ]);
+                
+                $mappingKey = null;
+                $usedSlug = null;
+                
+                // Try original case first, then lowercase
+                if (isset($slugToKey[$originalSlug])) {
+                    $mappingKey = $slugToKey[$originalSlug];
+                    $usedSlug = $originalSlug;
+                } elseif (isset($slugToKey[$lowercaseSlug])) {
+                    $mappingKey = $slugToKey[$lowercaseSlug];
+                    $usedSlug = $lowercaseSlug;
+                }
+                
+                if ($mappingKey !== null) {
+                    $config[$mappingKey] = (string)$schema['id'];
+                    $this->logger->info('DEBUG: Mapped schema successfully', [
+                        'used_slug' => $usedSlug,
+                        'config_key' => $mappingKey,
+                        'schema_id' => $schema['id']
+                    ]);
+                } else {
+                    $this->logger->debug('DEBUG: No mapping found for schema slug', [
+                        'original_slug' => $originalSlug,
+                        'lowercase_slug' => $lowercaseSlug
+                    ]);
                 }
             }
+            
+            $this->logger->info('DEBUG: Final config before persist', ['config' => $config]);
 
             // Persist normalized config
             $this->setVoorzieningenConfig($config);
@@ -2795,16 +2764,17 @@ class SettingsService
                 'relation_schema' => '',
                 'view_schema' => '',
                 'model_schema' => '',
-                'property-definition_schema' => '',
+                'property_definition_schema' => '',
                 'property_schema' => '',
-                'extendview_schema' => '',
             ];
 
             foreach (($targetRegister['schemas'] ?? []) as $schema) {
                 $slug = strtolower($schema['slug'] ?? '');
-                $allowed = ['organization','element','relation','view','model','property','property-definition','extendview'];
+                $allowed = ['organization','element','relation','view','model','property','property-definition'];
                 if (in_array($slug, $allowed, true)) {
-                    $config[$slug . '_schema'] = (string)$schema['id'];
+                    // Handle property-definition schema with underscore in config key
+                    $configKey = $slug === 'property-definition' ? 'property_definition_schema' : $slug . '_schema';
+                    $config[$configKey] = (string)$schema['id'];
                 }
             }
 
@@ -2960,27 +2930,21 @@ class SettingsService
         // Register id
         $normalized['register'] = isset($input['register']) ? (string)$input['register'] : '';
 
-        // Known schema keys to support (19 total)
+        // Known schema keys to support - updated to match actual schemas from register
         $schemaKeys = [
             'organisatie_schema',
             'contactpersoon_schema',
-            'voorziening_schema',
-            'voorziening_aanbod_schema',
-            'voorziening_versie_schema',
+            'product_schema',
+            'dienst_schema',
             'kwetsbaarheid_schema',
+            'gebruik_schema',
             'contract_schema',
-            'standaard_schema',
-            'review_schema',
             'koppeling_schema',
             'beoordeeling_schema',
-            'voorziening_module_schema',
-            'verklaring_schema',
-            'koppeling_gebruik_schema',
+            'module_schema',
             'compliancy_schema',
-            'module_gebruik_schema',
-            'module_versie_schema',
+            'moduleVersie_schema',
             'sector_schema',
-            'gebruik_schema',
         ];
 
         // Copy any present schema keys; ignore sources/registers
@@ -3625,7 +3589,7 @@ class SettingsService
         try {
             // List of old configuration keys to remove
             $oldKeys = [
-                // Voorzieningen keys
+                // Voorzieningen keys - old individual keys
                 'voorzieningen_register',
                 'voorzieningen_organisatie_schema',
                 'voorzieningen_contactpersoon_schema',
@@ -3639,19 +3603,38 @@ class SettingsService
                 'voorzieningen_contactpersoon_register',
                 'voorzieningen_gebruiker_register', // Deprecated - no longer used
                 'voorzieningen_contactgegevens_register', // Deprecated - no longer used
+                
+                // Old Voorzieningen schema keys that no longer exist in register
+                'voorzieningen_voorziening_schema',
+                'voorzieningen_voorziening_aanbod_schema',
+                'voorzieningen_voorziening_versie_schema',
+                'voorzieningen_standaard_schema',
+                'voorzieningen_review_schema',
+                'voorzieningen_voorziening_module_schema',
+                'voorzieningen_verklaring_schema',
+                'voorzieningen_koppeling_gebruik_schema',
+                'voorzieningen_module_gebruik_schema',
+                'voorzieningen_module_versie_schema',
 
-                // AMEF keys
+                // AMEF keys - old individual keys
                 'amef_register_id',
                 'amef_organizations_schema',
                 'amef_elements_schema',
                 'amef_relationships_schema',
                 'amef_views_schema',
+                'amef_models_schema',
+                'amef_properties_schema',
+                'amef_property_definitions_schema',
                 'amef_organization_source',
                 'amef_organization_register',
                 'amef_organization_schema',
                 'amef_elementss_schema',
                 'amef_organizationss_schema',
                 'amef_relationshipss_schema',
+                
+                // AMEF keys with hyphen format (old)
+                'amef_property-definition_schema',
+                'amef_extendview_schema', // No longer in register
 
                 // Email keys
                 'email_enabled',
@@ -4152,7 +4135,7 @@ class SettingsService
                 'relation_schema',
                 'view_schema',
                 'model_schema',
-                'property-definition_schema',
+                'property_definition_schema',
                 'property_schema',
             ];
 
