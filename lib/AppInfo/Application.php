@@ -255,6 +255,18 @@ class Application extends App implements IBootstrap
             );
         });
 
+        // Register View service for ArchiMate views with enrichment capabilities
+        $context->registerService(\OCA\SoftwareCatalog\Service\ViewService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ViewService(
+                $container->get(IAppConfig::class),
+                $container->get('OCP\App\IAppManager'),
+                $container,
+                $container->get('Psr\Log\LoggerInterface'),
+                $container->get(SettingsService::class),
+                $container->get('OCP\IUserSession')
+            );
+        });
+
         // Register progress tracking service
         $context->registerService(\OCA\SoftwareCatalog\Service\ProgressTracker::class, function ($container) {
             return new \OCA\SoftwareCatalog\Service\ProgressTracker(

@@ -2063,16 +2063,14 @@ class ArchiMateImportService
     }
 
     /**
-     * Extract nodes and connections for view objects with full nested hierarchy and element splicing
+     * Extract view nodes and relationships for view objects with proper JSON structure
      * 
-     * This method recursively extracts the complete nested node structure from view XML data.
-     * Each node can contain child nodes, creating a deep hierarchical structure that matches
-     * the original ArchiMate view exactly. Additionally, elements are spliced into nodes
-     * that reference them via elementRef.
+     * This method extracts and transforms nodes and connections from view XML data into
+     * the standardized viewNodes and viewRelationships format used by the frontend.
      * 
      * @param array $item The complete XML item data  
-     * @param array &$essential Essential XML data to add nodes/connections to (by reference)
-     * @param array $elementsLookup Optional lookup array of elements by identifier for splicing
+     * @param array &$essential Essential XML data to add viewNodes/viewRelationships to (by reference)
+     * @param array $elementsLookup Optional lookup array of elements by identifier for enrichment
      * @return void
      */
     private function extractViewNodesAndConnections(array $item, array &$essential, array $elementsLookup = []): void
@@ -2082,19 +2080,165 @@ class ArchiMateImportService
             return;
         }
 
-        // Extract nodes array with full nested hierarchy and element splicing
+        // Extract viewNodes array with proper JSON structure
         if (isset($item['node'])) {
-            $essential['nodes'] = $this->extractNodesRecursively($item['node'], $elementsLookup);
+            $essential['viewNodes'] = $this->extractViewNodesRecursively($item['node'], $elementsLookup);
         }
 
-        // Extract connections array  
+        // Extract viewRelationships array with proper JSON structure
         if (isset($item['connection'])) {
-            $essential['connections'] = $this->extractConnectionsRecursively($item['connection']);
+            $essential['viewRelationships'] = $this->extractViewRelationshipsRecursively($item['connection']);
         }
     }
 
     /**
-     * Recursively extract nested nodes with full hierarchy and element splicing
+     * Extract view nodes with proper JSON structure for frontend consumption
+     * 
+     * This method transforms ArchiMate XML node data into the standardized viewNodes format
+     * expected by the frontend visualization components.
+     * 
+     * @param array $nodeData Node data (can be single node or array of nodes)
+     * @param array $elementsLookup Lookup array of elements by identifier for enrichment
+     * @return array Array of viewNodes with standardized structure
+     */
+    private function extractViewNodesRecursively($nodeData, array $elementsLookup = []): array
+    {
+        $viewNodes = [];
+        
+        // Handle both single node and array of nodes
+        if (!isset($nodeData[0])) {
+            // Single node
+            $nodeData = [$nodeData];
+        }
+        
+        foreach ($nodeData as $node) {
+            if (!isset($node['_attributes'])) {
+                continue;
+            }
+            
+            $nodeId = $node['_attributes']['identifier'] ?? null;
+            $elementRef = $node['_attributes']['elementRef'] ?? null;
+            
+            if (!$nodeId) {
+                continue;
+            }
+            
+            // Create viewNode with standardized structure
+            $viewNode = [
+                'modelNodeId' => $elementRef, // Reference to the ArchiMate element
+                'viewNodeId' => $nodeId, // Unique identifier within this view
+                'x' => isset($node['_attributes']['x']) ? (int)$node['_attributes']['x'] : 0,
+                'y' => isset($node['_attributes']['y']) ? (int)$node['_attributes']['y'] : 0,
+                'width' => isset($node['_attributes']['w']) ? (int)$node['_attributes']['w'] : 100,
+                'height' => isset($node['_attributes']['h']) ? (int)$node['_attributes']['h'] : 50,
+                'parent' => null, // TODO: Handle parent relationships for nested nodes
+                'name' => null,
+                'type' => null,
+                'color' => 'rgb(255, 255, 255)', // Default white background
+                'borderColor' => 'rgb(0, 0, 0)', // Default black border
+                'font' => [
+                    'name' => 'Segoe UI, Arial',
+                    'size' => 12,
+                    'style' => 'normal',
+                    'color' => 'rgb(0, 0, 0)'
+                ],
+                'description' => null,
+                'elementRef' => $elementRef
+            ];
+            
+            // Extract style information if present
+            if (isset($node['style'])) {
+                $this->applyNodeStyle($viewNode, $node['style']);
+            }
+            
+            // Extract label text for Label type nodes
+            if (isset($node['label'])) {
+                if (is_array($node['label']) && isset($node['label']['_value'])) {
+                    $viewNode['name'] = $node['label']['_value'];
+                } elseif (is_string($node['label'])) {
+                    $viewNode['name'] = $node['label'];
+                }
+            }
+            
+            // Enrich with element data if available and elementRef exists
+            if ($elementRef && isset($elementsLookup[$elementRef])) {
+                $element = $elementsLookup[$elementRef];
+                
+                // Use element name if node doesn't have its own label
+                if ($viewNode['name'] === null && isset($element['name'])) {
+                    $viewNode['name'] = $element['name'];
+                }
+                
+                // Set description from element documentation
+                if (isset($element['summary'])) {
+                    $viewNode['description'] = $element['summary'];
+                } elseif (isset($element['documentation'])) {
+                    $viewNode['description'] = $element['documentation'];
+                }
+                
+                // Extract element type from ArchiMate type or GEMMA type
+                if (isset($element['gemmaType'])) {
+                    $gemmaType = $element['gemmaType'];
+                    // Handle case where gemmaType might be an array
+                    if (is_array($gemmaType)) {
+                        $gemmaType = $gemmaType['_value'] ?? $gemmaType[0] ?? 'unknown';
+                    }
+                    $viewNode['type'] = strtolower((string)$gemmaType);
+                } elseif (isset($element['xml']['_attributes']['xsi:type'])) {
+                    $archiType = $element['xml']['_attributes']['xsi:type'];
+                    // Convert ArchiMate type to simplified type (e.g., "archimate:BusinessService" -> "businessservice")
+                    $viewNode['type'] = strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $archiType));
+                }
+                
+                // Add all element properties to view node for full data access
+                $viewNode['elementProperties'] = $this->extractElementProperties($element);
+                
+                // Add specific useful properties directly to the node
+                if (isset($element['objectId'])) {
+                    $viewNode['objectId'] = $element['objectId'];
+                }
+                
+                // Add GEMMA-specific properties if they exist
+                $gemmaProperties = ['gemmaType', 'bivScoreBbn', 'belangrijksteReden', 'beschikbaarheid', 'integriteit', 'vertrouwelijkheid'];
+                foreach ($gemmaProperties as $prop) {
+                    if (isset($element[$prop])) {
+                        $viewNode[$prop] = $element[$prop];
+                    }
+                }
+                
+                // Store element section for reference
+                if (isset($element['section'])) {
+                    $viewNode['elementSection'] = $element['section'];
+                }
+                
+                // Store model identifier for linking
+                if (isset($element['model_identifier'])) {
+                    $viewNode['modelIdentifier'] = $element['model_identifier'];
+                }
+            }
+            
+            // Handle child nodes recursively (flatten hierarchy into single array)
+            if (isset($node['node'])) {
+                $childNodes = $this->extractViewNodesRecursively($node['node'], $elementsLookup);
+                
+                // Set parent reference for child nodes
+                foreach ($childNodes as &$childNode) {
+                    $childNode['parent'] = $nodeId;
+                }
+                unset($childNode);
+                
+                // Add child nodes to the main array
+                $viewNodes = array_merge($viewNodes, $childNodes);
+            }
+            
+            $viewNodes[] = $viewNode;
+        }
+        
+        return $viewNodes;
+    }
+    
+    /**
+     * Recursively extract nested nodes with full hierarchy and element splicing (LEGACY - for backward compatibility)
      * 
      * This method processes nodes and their children recursively to capture the complete
      * nested structure as it appears in the ArchiMate XML. When a node references an element
@@ -2228,7 +2372,237 @@ class ArchiMateImportService
     }
 
     /**
-     * Extract style information from a node
+     * Extract all properties from an element for view node enrichment
+     * 
+     * @param array $element Element data containing properties
+     * @return array Clean array of element properties
+     */
+    private function extractElementProperties(array $element): array
+    {
+        $properties = [];
+        
+        // Extract basic element properties
+        $basicProperties = ['identifier', 'name', 'summary', 'section', 'model_identifier'];
+        foreach ($basicProperties as $prop) {
+            if (isset($element[$prop])) {
+                $properties[$prop] = $element[$prop];
+            }
+        }
+        
+        // Extract all flattened properties (camelCase converted properties)
+        $excludedKeys = ['@self', 'xml', '_propertyMapping', '_slug', '_essential_data'];
+        foreach ($element as $key => $value) {
+            if (!in_array($key, $excludedKeys) && !in_array($key, $basicProperties)) {
+                // Only include non-object values or simple arrays
+                if (is_scalar($value) || (is_array($value) && !$this->isComplexArray($value))) {
+                    $properties[$key] = $value;
+                }
+            }
+        }
+        
+        // Add property mapping for reference if available
+        if (isset($element['_propertyMapping'])) {
+            $properties['_propertyMapping'] = $element['_propertyMapping'];
+        }
+        
+        return $properties;
+    }
+    
+    /**
+     * Check if an array contains complex nested structures
+     * 
+     * @param array $array Array to check
+     * @return bool True if array contains complex nested structures
+     */
+    private function isComplexArray(array $array): bool
+    {
+        foreach ($array as $value) {
+            if (is_array($value) || is_object($value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Apply style information to a viewNode structure
+     * 
+     * @param array &$viewNode ViewNode structure to apply styles to (by reference)
+     * @param array $style Style data from XML
+     * @return void
+     */
+    private function applyNodeStyle(array &$viewNode, array $style): void
+    {
+        // Extract fillColor
+        if (isset($style['fillColor']['_attributes'])) {
+            $fillColor = $style['fillColor']['_attributes'];
+            $r = isset($fillColor['r']) ? (int)$fillColor['r'] : 255;
+            $g = isset($fillColor['g']) ? (int)$fillColor['g'] : 255;
+            $b = isset($fillColor['b']) ? (int)$fillColor['b'] : 255;
+            $viewNode['color'] = "rgb($r, $g, $b)";
+        }
+        
+        // Extract lineColor  
+        if (isset($style['lineColor']['_attributes'])) {
+            $lineColor = $style['lineColor']['_attributes'];
+            $r = isset($lineColor['r']) ? (int)$lineColor['r'] : 0;
+            $g = isset($lineColor['g']) ? (int)$lineColor['g'] : 0;
+            $b = isset($lineColor['b']) ? (int)$lineColor['b'] : 0;
+            $viewNode['borderColor'] = "rgb($r, $g, $b)";
+        }
+        
+        // Extract font information
+        if (isset($style['font'])) {
+            $font = [];
+            if (isset($style['font']['_attributes'])) {
+                $font['name'] = $style['font']['_attributes']['name'] ?? 'Segoe UI, Arial';
+                $font['size'] = isset($style['font']['_attributes']['size']) ? (int)$style['font']['_attributes']['size'] : 12;
+                $font['style'] = 'normal';
+            }
+            
+            if (isset($style['font']['color']['_attributes'])) {
+                $fontColor = $style['font']['color']['_attributes'];
+                $r = isset($fontColor['r']) ? (int)$fontColor['r'] : 0;
+                $g = isset($fontColor['g']) ? (int)$fontColor['g'] : 0;
+                $b = isset($fontColor['b']) ? (int)$fontColor['b'] : 0;
+                $font['color'] = "rgb($r, $g, $b)";
+            }
+            
+            if (!empty($font)) {
+                $viewNode['font'] = array_merge($viewNode['font'], $font);
+            }
+        }
+    }
+    
+    /**
+     * Extract view relationships with proper JSON structure for frontend consumption
+     * 
+     * This method transforms ArchiMate XML connection data into the standardized viewRelationships
+     * format expected by the frontend visualization components.
+     * 
+     * @param array $connectionData Connection data (can be single connection or array)
+     * @return array Array of viewRelationships with standardized structure
+     */
+    private function extractViewRelationshipsRecursively($connectionData): array
+    {
+        $viewRelationships = [];
+        
+        // Handle both single connection and array of connections
+        if (!isset($connectionData[0])) {
+            // Single connection
+            $connectionData = [$connectionData];
+        }
+        
+        foreach ($connectionData as $connection) {
+            if (!isset($connection['_attributes'])) {
+                continue;
+            }
+            
+            $connectionId = $connection['_attributes']['identifier'] ?? null;
+            $relationshipRef = $connection['_attributes']['relationshipRef'] ?? null;
+            $source = $connection['_attributes']['source'] ?? null;
+            $target = $connection['_attributes']['target'] ?? null;
+            
+            if (!$connectionId || !$source || !$target) {
+                continue;
+            }
+            
+            // Create viewRelationship with standardized structure
+            $viewRelationship = [
+                'modelRelationshipId' => $relationshipRef, // Reference to the ArchiMate relationship
+                'sourceId' => $source, // Source node viewNodeId
+                'targetId' => $target, // Target node viewNodeId  
+                'viewRelationshipId' => $connectionId, // Unique identifier within this view
+                'type' => 'association', // Default relationship type
+                'bendpoints' => [], // Array of bend points
+                'label' => [] // Label information
+            ];
+            
+            // Extract relationship type from ArchiMate type if available
+            if (isset($connection['_attributes']['xsi:type'])) {
+                $archiType = $connection['_attributes']['xsi:type'];
+                // Convert ArchiMate type to simplified type (e.g., "archimate:ServingRelationship" -> "serving")
+                $viewRelationship['type'] = strtolower(preg_replace('/^archimate:|relationship$|^[a-z]+:/', '', $archiType));
+            }
+            
+            // Extract bend points if present
+            if (isset($connection['bendpoint'])) {
+                $bendpoints = isset($connection['bendpoint'][0]) ? $connection['bendpoint'] : [$connection['bendpoint']];
+                
+                foreach ($bendpoints as $bendpoint) {
+                    if (isset($bendpoint['_attributes'])) {
+                        $viewRelationship['bendpoints'][] = [
+                            'x' => isset($bendpoint['_attributes']['x']) ? (float)$bendpoint['_attributes']['x'] : 0,
+                            'y' => isset($bendpoint['_attributes']['y']) ? (float)$bendpoint['_attributes']['y'] : 0
+                        ];
+                    }
+                }
+            }
+            
+            // Extract label information if present
+            if (isset($connection['label'])) {
+                $label = [];
+                
+                if (is_array($connection['label']) && isset($connection['label']['_value'])) {
+                    $label['text'] = $connection['label']['_value'];
+                } elseif (is_string($connection['label'])) {
+                    $label['text'] = $connection['label'];
+                }
+                
+                // Extract label markup/style if present
+                if (isset($connection['style'])) {
+                    $label['markup'] = [$this->extractLabelMarkup($connection['style'])];
+                }
+                
+                $viewRelationship['label'] = $label;
+            }
+            
+            $viewRelationships[] = $viewRelationship;
+        }
+        
+        return $viewRelationships;
+    }
+    
+    /**
+     * Extract label markup information from connection style
+     * 
+     * @param array $style Style data from XML
+     * @return array Label markup structure
+     */
+    private function extractLabelMarkup(array $style): array
+    {
+        $markup = [
+            'style' => [
+                'fontSize' => 11,
+                'fontFamily' => 'Segoe UI, Arial',
+                'fontColor' => 'rgba(0, 0, 0, 1)',
+                'fontStyle' => 'normal',
+                'fontWeight' => 'normal'
+            ]
+        ];
+        
+        // Extract font information if present
+        if (isset($style['font'])) {
+            if (isset($style['font']['_attributes'])) {
+                $markup['style']['fontFamily'] = $style['font']['_attributes']['name'] ?? 'Segoe UI, Arial';
+                $markup['style']['fontSize'] = isset($style['font']['_attributes']['size']) ? (int)$style['font']['_attributes']['size'] : 11;
+            }
+            
+            if (isset($style['font']['color']['_attributes'])) {
+                $fontColor = $style['font']['color']['_attributes'];
+                $r = isset($fontColor['r']) ? (int)$fontColor['r'] : 0;
+                $g = isset($fontColor['g']) ? (int)$fontColor['g'] : 0;
+                $b = isset($fontColor['b']) ? (int)$fontColor['b'] : 0;
+                $a = isset($fontColor['a']) ? ((int)$fontColor['a'] / 100) : 1; // Convert percentage to decimal
+                $markup['style']['fontColor'] = "rgba($r, $g, $b, $a)";
+            }
+        }
+        
+        return $markup;
+    }
+    
+    /**
+     * Extract style information from a node (LEGACY - for backward compatibility)
      * 
      * @param array $style Style data from XML
      * @return array Processed style information
@@ -2819,12 +3193,12 @@ class ArchiMateImportService
                 }
             }
             
-            // Copy nodes and connections from XML to root level for easy access
-            if (isset($object['xml']['nodes'])) {
-                $object['nodes'] = $object['xml']['nodes'];
+            // Copy viewNodes and viewRelationships from XML to root level for easy access
+            if (isset($object['xml']['viewNodes'])) {
+                $object['viewNodes'] = $object['xml']['viewNodes'];
             }
-            if (isset($object['xml']['connections'])) {
-                $object['connections'] = $object['xml']['connections'];
+            if (isset($object['xml']['viewRelationships'])) {
+                $object['viewRelationships'] = $object['xml']['viewRelationships'];
             }
             
             $objects[] = $object;
@@ -3143,13 +3517,13 @@ class ArchiMateImportService
                 }
             }
             
-            // NEW: For view objects, copy nodes and connections from XML to root level
+            // NEW: For view objects, copy viewNodes and viewRelationships from XML to root level
             if ($schemaType === 'view' && isset($object['xml'])) {
-                if (isset($object['xml']['nodes'])) {
-                    $object['nodes'] = $object['xml']['nodes'];
+                if (isset($object['xml']['viewNodes'])) {
+                    $object['viewNodes'] = $object['xml']['viewNodes'];
                 }
-                if (isset($object['xml']['connections'])) {
-                    $object['connections'] = $object['xml']['connections'];
+                if (isset($object['xml']['viewRelationships'])) {
+                    $object['viewRelationships'] = $object['xml']['viewRelationships'];
                 }
             }
             
@@ -3162,9 +3536,9 @@ class ArchiMateImportService
                 'xml_keys' => isset($object['xml']) ? array_keys($object['xml']) : null,
                 'has_property_mapping' => isset($object['_propertyMapping']),
                 'property_mapping_count' => isset($object['_propertyMapping']) ? count($object['_propertyMapping']) : 0,
-                'nodes_count' => isset($object['nodes']) ? count($object['nodes']) : 0,
-                'connections_count' => isset($object['connections']) ? count($object['connections']) : 0,
-                'sample_properties' => array_slice(array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary', 'nodes', 'connections']), 0, 5)
+                'viewNodes_count' => isset($object['viewNodes']) ? count($object['viewNodes']) : 0,
+                'viewRelationships_count' => isset($object['viewRelationships']) ? count($object['viewRelationships']) : 0,
+                'sample_properties' => array_slice(array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary', 'viewNodes', 'viewRelationships']), 0, 5)
             ]);
             
             $objects[] = $object;
@@ -3583,11 +3957,11 @@ class ArchiMateImportService
             }
             
             // SPEED OPTIMIZATION: Direct copy without checks (we know it exists)
-            if (isset($object['xml']['nodes'])) {
-                $object['nodes'] = $object['xml']['nodes'];
+            if (isset($object['xml']['viewNodes'])) {
+                $object['viewNodes'] = $object['xml']['viewNodes'];
             }
-            if (isset($object['xml']['connections'])) {
-                $object['connections'] = $object['xml']['connections'];
+            if (isset($object['xml']['viewRelationships'])) {
+                $object['viewRelationships'] = $object['xml']['viewRelationships'];
             }
             
             $objects[] = $object;
