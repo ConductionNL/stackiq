@@ -322,6 +322,10 @@ class ArchiMateImportService
             $totalTime = microtime(true) - $startTime;
             $itemsPerSecond = count($allObjects) / max($totalTime, 0.001);
             
+            // Extract detailed error information from statistics
+            $statistics = $this->calculateOptimizedStatistics($savedObjects);
+            $detailedErrors = $this->extractDetailedErrors($statistics);
+            
             // OPTIMIZED import completed successfully
 
             return [
@@ -354,7 +358,8 @@ class ArchiMateImportService
                         'save_objects_per_second' => round(count($allObjects) / max($saveTime, 0.001), 1)
                     ]
                 ],
-                'statistics' => $this->calculateOptimizedStatistics($savedObjects)
+                'statistics' => $statistics,
+                'detailed_errors' => $detailedErrors
             ];
 
         } catch (\Exception $e) {
@@ -1665,7 +1670,13 @@ class ArchiMateImportService
      */
     private function calculateOptimizedStatistics(array $savedObjects): array
     {
+        // Initialize statistics structure for detailed error extraction
         $statistics = [
+            'elements' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'organizations' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'relationships' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'views' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'property_definitions' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
             'summary' => [
                 'total_objects_created' => 0,
                 'total_objects_updated' => 0,
@@ -1678,41 +1689,96 @@ class ArchiMateImportService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
             
-
+            // Process objects by section type similar to calculateObjectStatistics
+            $allProcessedObjects = array_merge(
+                $saveResult['saved'] ?? [],
+                $saveResult['updated'] ?? [],
+                $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [],
+                // For invalid objects, extract the original object from the error structure
+                array_map(fn($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
+            );
             
-            $statistics['summary'] = [
-                'total_objects_created' => count($saveResult['saved'] ?? []),
-                'total_objects_updated' => count($saveResult['updated'] ?? []),
-                'total_objects_deleted' => 0,
-                'total_objects_unchanged' => count($saveResult['unchanged'] ?? $saveResult['skipped'] ?? []),
-                'total_errors' => count($saveResult['invalid'] ?? [])
-            ];
-            
-            // Log detailed breakdown of results
-            $totalStatisticsCount = array_sum([
-                count($saveResult['saved'] ?? []),
-                count($saveResult['updated'] ?? []),
-                count($saveResult['unchanged'] ?? $saveResult['skipped'] ?? []),
-                count($saveResult['invalid'] ?? [])
-            ]);
-            
-            $this->logger->info('Import statistics breakdown', [
-                'created' => count($saveResult['saved'] ?? []),
-                'updated' => count($saveResult['updated'] ?? []),
-                'unchanged' => count($saveResult['unchanged'] ?? $saveResult['skipped'] ?? []),
-                'invalid' => count($saveResult['invalid'] ?? []),
-                'total_in_statistics' => $totalStatisticsCount
-            ]);
-            
-            // Log discrepancy analysis
-            if ($totalStatisticsCount != 8781) { // Expected objects processed
-                $this->logger->warning('Discrepancy found in object counts', [
-                    'expected_objects_processed' => 8781,
-                    'actual_statistics_total' => $totalStatisticsCount,
-                    'missing_objects' => 8781 - $totalStatisticsCount,
-                    'analysis' => 'Some objects may not be reaching OpenRegister saveObjects'
-                ]);
+            foreach ($allProcessedObjects as $object) {
+                // Convert ObjectEntity to array if needed
+                if (is_object($object) && method_exists($object, 'jsonSerialize')) {
+                    $object = $object->jsonSerialize();
+                }
+                
+                $sectionType = $object['section'] ?? 'elements'; // Default to elements if section not found
+                
+                // Map section types to statistics keys
+                $sectionKey = match($sectionType) {
+                    'elements' => 'elements',
+                    'relationships' => 'relationships', 
+                    'organizations' => 'organizations',
+                    'views' => 'views',
+                    'property_definitions' => 'property_definitions',
+                    default => 'elements' // Default fallback
+                };
+                
+                if (!isset($statistics[$sectionKey])) {
+                    continue; // Skip unknown section types
+                }
+                
+                // Determine if this object was created, updated, or had errors
+                $objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
+                
+                // Check if this object is in the saved (created) list
+                $wasCreated = !empty(array_filter($saveResult['saved'] ?? [], 
+                    fn($saved) => (method_exists($saved, 'getUuid') ? $saved->getUuid() : null) === $objectId));
+                
+                // Check if this object is in the updated list
+                $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [], 
+                    fn($updated) => (method_exists($updated, 'getUuid') ? $updated->getUuid() : null) === $objectId));
+                
+                // Check if this object was skipped (no changes)
+                $unchangedObjects = $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [];
+                $wasSkipped = !empty(array_filter($unchangedObjects,
+                    fn($unchanged) => (method_exists($unchanged, 'getUuid') ? $unchanged->getUuid() : null) === $objectId));
+                
+                // Check if this object had validation errors
+                $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
+                    fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)));
+                
+                if ($wasCreated) {
+                    $statistics[$sectionKey]['created']++;
+                } elseif ($wasUpdated) {
+                    $statistics[$sectionKey]['updated']++;
+                } elseif ($wasSkipped) {
+                    $statistics[$sectionKey]['skipped']++;
+                } elseif ($hasErrors) {
+                    // Add to errors array for this section
+                    $errorInfo = array_filter($saveResult['invalid'] ?? [],
+                        fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId));
+                    
+                    if (!empty($errorInfo)) {
+                        $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                    }
+                } else {
+                    // This shouldn't happen, but leave as fallback
+                    $statistics[$sectionKey]['skipped']++;
+                }
             }
+            
+            // Calculate summary totals from actual statistics
+            $summary = [
+                'total_objects_created' => 0,
+                'total_objects_updated' => 0,
+                'total_objects_deleted' => 0,
+                'total_objects_unchanged' => 0,
+                'total_errors' => 0
+            ];
+
+            foreach ($statistics as $section => $sectionStats) {
+                if ($section !== 'summary') { // Skip summary section itself
+                    $summary['total_objects_created'] += $sectionStats['created'];
+                    $summary['total_objects_updated'] += $sectionStats['updated'];
+                    $summary['total_objects_unchanged'] += $sectionStats['skipped'];
+                    $summary['total_errors'] += count($sectionStats['errors']);
+                }
+            }
+
+            $statistics['summary'] = $summary;
         }
 
         return $statistics;

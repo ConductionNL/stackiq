@@ -798,38 +798,9 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async loadOrganizations() {
-			try {
-				// Get organization objects from OpenRegister
-				// This would need to be implemented based on your organization schema
-				// For now, we'll keep the default Generic option
-				const response = await fetch('/index.php/apps/openregister/api/objects/6/35', {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						'OCS-APIREQUEST': 'true',
-						requesttoken: OC.requestToken,
-					},
-				})
-
-				if (response.ok) {
-					const result = await response.json()
-					const organizations = result.results || []
-
-					// Add organization options
-					const orgOptions = [
-						{ label: 'Generic', value: null },
-						...organizations.map(org => ({
-							label: org.naam || org.title || org.name || 'Unknown Organization',
-							value: org.id,
-						})),
-					]
-
-					this.organizationOptions = orgOptions
-				}
-			} catch (error) {
-				console.warn('Failed to load organizations, using default options:', error)
-				// Keep default options if loading fails
-			}
+			// TODO: Implement organization loading when OpenRegister organization endpoint is available
+			// For now, keep default Generic option to prevent 404 errors
+			console.debug('Organization loading disabled - using default Generic option')
 		},
 	},
 }
