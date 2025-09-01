@@ -110,6 +110,16 @@ class ArchiMateExportService
                 continue;
             }
 
+            // Skip property-like fields that should be handled by specialized property methods
+            // These fields often appear as direct data but should only be in <properties> structure
+            $propertyLikeFields = [
+                'beschikbaarheid', 'integriteit', 'vertrouwelijkheid', 'gemmaType',
+                'objectId', 'bivScoreBbn', 'belangrijksteReden'
+            ];
+            if (in_array($key, $propertyLikeFields, true)) {
+                continue; // Skip these - they should only appear in proper <properties><property> structure
+            }
+
             // Ensure key is always a string for XML tag names
             $tagName = (string) $key;
 
@@ -1007,8 +1017,8 @@ XML;
                 }
             }
         }
-        // Add properties from root fields using propertyDefinitionMap
-        if (!empty($propertyDefinitionMap)) {
+        // Add properties from root fields using propertyDefinitionMap ONLY if no properties were already processed
+        if (!empty($propertyDefinitionMap) && !isset($data['properties'])) {
             $this->addPropertiesFromRootFields($node, $data, $propertyDefinitionMap);
         }
     }
@@ -1092,9 +1102,14 @@ XML;
                 }
             }
             
-            // Also check in _attributes
+            // Also check in _attributes, but avoid duplicate if we already found one
             if (!$propDefRef && isset($property['_attributes']['propertyDefinitionRef'])) {
                 $propDefRef = (string)$property['_attributes']['propertyDefinitionRef'];
+            }
+            
+            // Skip empty namespace prefix attributes (these cause :propertyDefinitionRef errors)
+            if (isset($property['_attributes'][':propertyDefinitionRef'])) {
+                unset($property['_attributes'][':propertyDefinitionRef']);
             }
             
             if ($propDefRef) {

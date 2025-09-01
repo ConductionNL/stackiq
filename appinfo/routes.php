@@ -131,6 +131,14 @@ return [
         ['name' => 'settings#getSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'GET'],
         ['name' => 'settings#updateSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'POST'],
         
+        // ========================================================================
+        // VIEW API ENDPOINTS - ArchiMate Views with Enrichment Support
+        // ========================================================================
+        
+        // View API endpoints for querying and enriching ArchiMate views
+        ['name' => 'view#getAllViews', 'url' => '/api/views', 'verb' => 'GET'],
+        ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
+        ['name' => 'view#getApiDocumentation', 'url' => '/api/views/docs', 'verb' => 'GET'],
 
     ],
 ];
