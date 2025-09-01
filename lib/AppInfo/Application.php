@@ -228,7 +228,8 @@ class Application extends App implements IBootstrap
                 $container->get('OCP\IUserSession'),
                 $container->get('OCP\App\IAppManager'),
                 $container,
-                $container->get('Psr\Log\LoggerInterface')
+                $container->get('Psr\Log\LoggerInterface'),
+                $container->get(SettingsService::class)
             );
         });
 
@@ -248,6 +249,7 @@ class Application extends App implements IBootstrap
                 $container->get('OCP\App\IAppManager'),
                 $container,
                 $container->get('Psr\Log\LoggerInterface'),
+                $container->get(SettingsService::class),
                 $container->get(\OCA\SoftwareCatalog\Service\ArchiMateImportService::class),
                 $container->get(\OCA\SoftwareCatalog\Service\ArchiMateExportService::class)
             );

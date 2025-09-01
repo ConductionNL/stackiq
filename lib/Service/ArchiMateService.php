@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -139,6 +140,7 @@ class ArchiMateService
      * @param IAppManager $appManager App manager service
      * @param ContainerInterface $container PSR-11 container interface
      * @param LoggerInterface $logger Logger service
+     * @param SettingsService $settingsService Settings service for schema and organization configuration
      * @param ArchiMateImportService $importService Import service for XML parsing
      * @param ArchiMateExportService $exportService Export service for XML generation
      */
@@ -149,6 +151,7 @@ class ArchiMateService
         private readonly IAppManager $appManager,
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
+        private readonly SettingsService $settingsService,
         private readonly ArchiMateImportService $importService,
         private readonly ArchiMateExportService $exportService
     ) {
@@ -257,7 +260,7 @@ class ArchiMateService
         $schemaIdMap = [];
 
         foreach ($schemaTypes as $schemaType) {
-            $schemaId = $this->getAmefSchemaIdForType($schemaType);
+            $schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
             if ($schemaId) {
                 $schemaIdMap[$schemaId] = $schemaType;
             }
@@ -626,8 +629,8 @@ class ArchiMateService
     private function createModelObject(array $metadata, string $modelIdentifier): array
     {
         // OPTIMIZATION: Use cached configuration values
-        $registerId = $this->cachedConfig['registerId'] ?? 15;
-        $schemaId = $this->cachedConfig['schemaIds']['model'] ?? 67;
+        $registerId = $this->cachedConfig['registerId'];
+        $schemaId = $this->cachedConfig['schemaIds']['model'];
         
         // Create object with @self structure and metadata at root level (no JSON serialization)
         $object = [
@@ -635,8 +638,6 @@ class ArchiMateService
                 'register' => $registerId,
                 'schema' => $schemaId,
                 'id' => $metadata['identifier'] ?? uniqid('model_'),
-                'owner' => $this->getCurrentUserId(),
-                'organisation' => $this->getCurrentOrganisation(),
                 'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $metadata['identifier'] ?? '',
@@ -660,7 +661,7 @@ class ArchiMateService
     private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
     {
         // OPTIMIZATION: Use cached configuration values
-        $registerId = $this->cachedConfig['registerId'] ?? 15;
+        $registerId = $this->cachedConfig['registerId'];
         $schemaId = $this->cachedConfig['schemaIds'][$section] ?? $this->getSchemaIdForSection($section);
         
         // Create object with @self structure and XML data at root level (no double serialization)
@@ -669,8 +670,6 @@ class ArchiMateService
                 'register' => $registerId,
                 'schema' => $schemaId,
                 'id' => $identifier,
-                'owner' => $this->getCurrentUserId(),
-                'organisation' => $this->getCurrentOrganisation(),
                 'published' => date('Y-m-d\TH:i:s\Z')
             ]
         ];
@@ -732,7 +731,7 @@ class ArchiMateService
         ]);
 
         // OPTIMIZATION: Use cached register ID
-        $registerId = $this->cachedConfig['registerId'] ?? 15;
+        $registerId = $this->cachedConfig['registerId'];
 
         // PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets
         $batchProcessingStartTime = microtime(true);
@@ -980,19 +979,83 @@ class ArchiMateService
             return; // Already cached
         }
 
+        // Get the AMEF register ID from configuration - throw error if missing
+        $amefConfig = $this->settingsService->getAmefConfig();
+        if (!isset($amefConfig['register']) || empty($amefConfig['register'])) {
+            throw new \RuntimeException('AMEF register ID is not configured. Please configure the AMEF register via the admin interface.');
+        }
+        $registerId = (int)$amefConfig['register'];
+        
         $this->cachedConfig = [
-            'userId' => $this->userSession->getUser()?->getUID(),
-            'organisation' => 'default',
-            'registerId' => $this->getAmefRegisterId(),
+            'registerId' => $registerId, // Use AMEF register ID directly
             'schemaIds' => [
-                'model' => $this->getAmefSchemaIdForType('model'),
-                'element' => $this->getAmefSchemaIdForType('element'),
-                'relationship' => $this->getAmefSchemaIdForType('relationship'),
-                'view' => $this->getAmefSchemaIdForType('view'),
-                'organization' => $this->getAmefSchemaIdForType('organization'),
-                'property_definition' => $this->getAmefSchemaIdForType('property_definition')
+                'model' => $this->settingsService->getSchemaIdForObjectType('model'),
+                'element' => $this->settingsService->getSchemaIdForObjectType('element'),
+                'relationship' => $this->settingsService->getSchemaIdForObjectType('relationship'),
+                'view' => $this->settingsService->getSchemaIdForObjectType('view'),
+                'organization' => $this->settingsService->getSchemaIdForObjectType('organization'),
+                'property_definition' => $this->settingsService->getSchemaIdForObjectType('property_definition')
             ]
         ];
+
+        $this->logger->debug('ArchiMateService: Cache initialized', [
+            'registerId' => $this->cachedConfig['registerId'],
+            'schemaIds' => $this->cachedConfig['schemaIds']
+        ]);
+        
+        // Validate that all required schema IDs are configured
+        $this->validateRequiredConfiguration();
+    }
+
+    /**
+     * Validates that all required configuration is present before import
+     *
+     * @throws \RuntimeException If required configuration is missing
+     */
+    private function validateRequiredConfiguration(): void
+    {
+        $missingConfig = [];
+        $requiredSchemaTypes = ['model', 'element', 'relationship', 'view', 'organization', 'property_definition'];
+        
+        // Check register ID
+        if (empty($this->cachedConfig['registerId'])) {
+            $missingConfig[] = 'AMEF Register ID (amef_register)';
+        }
+        
+        // Check all required schema IDs
+        foreach ($requiredSchemaTypes as $schemaType) {
+            $schemaId = $this->cachedConfig['schemaIds'][$schemaType] ?? null;
+            if ($schemaId === null) {
+                $configKey = "amef_{$schemaType}_schema";
+                $missingConfig[] = "Schema ID for {$schemaType} ({$configKey})";
+            }
+        }
+        
+        // If any configuration is missing, throw detailed error
+        if (!empty($missingConfig)) {
+            $this->logger->error('ArchiMateService: Missing required configuration', [
+                'missing_config' => $missingConfig,
+                'current_config' => [
+                    'registerId' => $this->cachedConfig['registerId'],
+                    'schemaIds' => $this->cachedConfig['schemaIds']
+                ]
+            ]);
+            
+            $errorMessage = 'ArchiMate import cannot proceed due to missing configuration:' . "\n\n";
+            $errorMessage .= "Missing configuration:\n";
+            foreach ($missingConfig as $item) {
+                $errorMessage .= "- {$item}\n";
+            }
+            $errorMessage .= "\nPlease configure the AMEF register and all required schema IDs in the SoftwareCatalog settings before importing.";
+            $errorMessage .= "\nYou can use the auto-configuration feature or set them manually via the admin interface.";
+            
+            throw new \RuntimeException($errorMessage);
+        }
+        
+        $this->logger->info('ArchiMateService: Configuration validation passed', [
+            'registerId' => $this->cachedConfig['registerId'],
+            'configuredSchemas' => count(array_filter($this->cachedConfig['schemaIds']))
+        ]);
     }
 
     /**
@@ -1031,25 +1094,7 @@ class ArchiMateService
         }
     }
 
-    /**
-     * Get current user ID from cache
-     * 
-     * @return string|null Current user ID or null if not authenticated
-     */
-    private function getCurrentUserId(): ?string
-    {
-        return $this->cachedConfig['userId'] ?? null;
-    }
 
-    /**
-     * Get current organisation from cache
-     * 
-     * @return string Default organisation
-     */
-    private function getCurrentOrganisation(): string
-    {
-        return $this->cachedConfig['organisation'] ?? 'default';
-    }
 
     /**
      * Get ArchiMate register ID
@@ -1079,15 +1124,31 @@ class ArchiMateService
      */
     private function getSchemaIdForSection(string $section): int
     {
-        $schemaIds = [
-            'elements' => 101,
-            'relationships' => 102,
-            'views' => 103,
-            'organizations' => 104,
-            'property_definitions' => 105
+        // Map section names to object types for SettingsService
+        $objectTypeMapping = [
+            'elements' => 'element',
+            'relationships' => 'relationship',
+            'views' => 'view', 
+            'organizations' => 'organization',
+            'property_definitions' => 'property_definition'
         ];
-
-        return $schemaIds[$section] ?? 100;
+        
+        $objectType = $objectTypeMapping[$section] ?? $section;
+        $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
+        
+        // Fallback to hardcoded values if SettingsService returns null
+        if ($schemaId === null) {
+            $fallbackIds = [
+                'elements' => 101,
+                'relationships' => 102,
+                'views' => 103,
+                'organizations' => 104,
+                'property_definitions' => 105
+            ];
+            throw new \RuntimeException("Schema ID for section '{$section}' is not configured. Please configure all AMEF schema IDs via the admin interface.");
+        }
+        
+        return $schemaId;
     }
 
     /**
@@ -1340,72 +1401,18 @@ class ArchiMateService
     }
 
     /**
-     * Get AMEF schema ID for a specific ArchiMate type
+     * Get AMEF schema ID for a specific ArchiMate type via SettingsService
      *
-     * This method retrieves the schema ID for a given ArchiMate type from the AMEF configuration.
-     * It looks for the schema ID using the pattern '{type}_schema' in the configuration.
+     * This method retrieves the schema ID for a given ArchiMate type from SettingsService.
      *
      * @param string $archiMateType The ArchiMate type (e.g., 'element', 'organization', 'relationship')
      * @return int|null The schema ID for the given type or null if not configured
      */
     private function getAmefSchemaIdForType(string $archiMateType): ?int
     {
-        // Get AMEF configuration
-        $amefConfig = $this->getAmefConfig();
-
-        // Normalize plural → singular and handle the actual config structure
-        $typeMapping = [
-            'elements' => 'element',
-            'organizations' => 'organization',
-            // Accept both 'relationships' (AMEF wording) and UI term 'relation'
-            'relationships' => 'relation',
-            'views' => 'view',
-            'models' => 'model',
-            'properties' => 'property',
-            // Accept both underscored and dashed naming conventions
-            'property_definitions' => 'property-definition'
-        ];
-        $normalizedType = $typeMapping[$archiMateType] ?? $archiMateType;
-
-        // Candidate keys: match the actual config structure
-        $schemaKeyCandidatesByType = [
-            'element' => ['element_schema'],
-            'organization' => ['organization_schema'],
-            'relationship' => ['relation_schema'],
-            'view' => ['view_schema'],
-            'model' => ['model_schema'],
-            'property' => ['property_schema'],
-            'property_definition' => ['property-definition_schema']
-        ];
-
-        $candidates = $schemaKeyCandidatesByType[$normalizedType] ?? [$normalizedType . '_schema'];
-
-        // Try JSON config with the actual keys
-        foreach ($candidates as $key) {
-            if (array_key_exists($key, $amefConfig)) {
-                $raw = $amefConfig[$key];
-                if ($raw !== '' && $raw !== null && is_numeric((string) $raw)) {
-                    $id = (int) $raw;
-                    if ($id > 0) {
-                        return $id;
-                    }
-                }
-            }
-        }
-
-        // Fallback to legacy individual app config keys if not present in JSON
-        foreach ($candidates as $key) {
-            $raw = $this->config->getValueString('softwarecatalog', 'amef_' . $key, '')
-                ?: $this->config->getValueString('softwarecatalog', $key, '');
-            if ($raw !== '' && is_numeric((string) $raw)) {
-                $id = (int) $raw;
-                if ($id > 0) {
-                    return $id;
-                }
-            }
-        }
-
-        return null;
+        // Use SettingsService to get schema ID
+        $schemaId = $this->settingsService->getSchemaIdForObjectType($archiMateType);
+        return $schemaId;
     }
 
     /**
@@ -1501,8 +1508,8 @@ class ArchiMateService
                 return [];
             }
 
-            $registerId = $this->getAmefRegisterId();
-            $schemaId = $this->getAmefSchemaIdForType($schemaType);
+            $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
+            $schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
             
             if (!$registerId || !$schemaId) {
                 $this->logger->error("ArchiMateService: AMEF register or {$schemaType} schema not configured", [
@@ -1991,11 +1998,9 @@ class ArchiMateService
     {
         return [
             '@self' => [
-                'register' => $this->cachedConfig['registerId'] ?? 15,
-                'schema' => $this->cachedConfig['schemaIds']['model'] ?? 67,
+                'register' => $this->cachedConfig['registerId'],
+                'schema' => $this->cachedConfig['schemaIds']['model'],
                 'id' => $modelIdentifier,
-                'owner' => $this->cachedConfig['userId'],
-                'organisation' => $this->cachedConfig['organisation'],
                 'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $modelIdentifier,
@@ -2069,11 +2074,9 @@ class ArchiMateService
             // Create object directly (minimal processing)
             $object = [
                 '@self' => [
-                    'register' => $this->cachedConfig['registerId'] ?? 15,
-                    'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? 100,
+                    'register' => $this->cachedConfig['registerId'],
+                    'schema' => $this->cachedConfig['schemaIds'][$schemaType],
                     'id' => $identifier,
-                    'owner' => $this->cachedConfig['userId'],
-                    'organisation' => $this->cachedConfig['organisation'],
                     'published' => date('Y-m-d\TH:i:s\Z')
                 ],
                 'identifier' => $identifier,
