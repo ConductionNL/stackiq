@@ -449,6 +449,9 @@ class ArchiMateImportService
             $totalObjects = $statistics['summary']['total_objects_created'] + $statistics['summary']['total_objects_updated'];
             $itemsPerSecond = $totalObjects > 0 ? $totalObjects / $totalTime : 0;
             
+            // Extract detailed error information from statistics
+            $detailedErrors = $this->extractDetailedErrors($statistics);
+            
             // Prepare comprehensive result with detailed information
             $result = [
                 'success' => true,
@@ -487,7 +490,8 @@ class ArchiMateImportService
                     'processing_method' => 'synchronous_batch_processing',
                     'batch_size_used' => 100,
                     'dataset_size' => $totalObjects
-                ]
+                ],
+                'detailed_errors' => $detailedErrors
             ];
 
             $this->logger->info('ArchiMate XML import completed successfully', [
@@ -4248,6 +4252,120 @@ class ArchiMateImportService
         $statistics['summary'] = $summary;
 
         return $statistics;
+    }
+
+    /**
+     * Extract detailed error information from import statistics for frontend display
+     * 
+     * @param array $statistics Import statistics containing section-wise error data
+     * @return array Formatted error information for frontend consumption
+     */
+    private function extractDetailedErrors(array $statistics): array
+    {
+        $detailedErrors = [
+            'total_count' => 0,
+            'by_section' => [],
+            'summary' => []
+        ];
+
+        $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
+        
+        foreach ($sections as $section) {
+            if (isset($statistics[$section]['errors']) && !empty($statistics[$section]['errors'])) {
+                $sectionErrors = $statistics[$section]['errors'];
+                $sectionErrorCount = count($sectionErrors);
+                
+                $detailedErrors['total_count'] += $sectionErrorCount;
+                
+                // Group errors by type/message for better presentation
+                $errorGroups = [];
+                foreach ($sectionErrors as $error) {
+                    $errorMessage = is_string($error) ? $error : ($error['message'] ?? 'Unknown error');
+                    $errorType = $this->categorizeError($errorMessage);
+                    
+                    if (!isset($errorGroups[$errorType])) {
+                        $errorGroups[$errorType] = [
+                            'type' => $errorType,
+                            'message' => $errorMessage,
+                            'count' => 0,
+                            'examples' => []
+                        ];
+                    }
+                    
+                    $errorGroups[$errorType]['count']++;
+                    
+                    // Add example object ID if available (limit to 5 examples)
+                    if (count($errorGroups[$errorType]['examples']) < 5) {
+                        if (is_array($error) && isset($error['object_id'])) {
+                            $errorGroups[$errorType]['examples'][] = $error['object_id'];
+                        }
+                    }
+                }
+                
+                $detailedErrors['by_section'][$section] = [
+                    'section_name' => ucfirst(str_replace('_', ' ', $section)),
+                    'total_errors' => $sectionErrorCount,
+                    'error_groups' => array_values($errorGroups)
+                ];
+            }
+        }
+
+        // Create summary of most common errors across all sections
+        $allErrors = [];
+        foreach ($detailedErrors['by_section'] as $sectionData) {
+            foreach ($sectionData['error_groups'] as $errorGroup) {
+                $errorType = $errorGroup['type'];
+                if (!isset($allErrors[$errorType])) {
+                    $allErrors[$errorType] = [
+                        'type' => $errorType,
+                        'message' => $errorGroup['message'],
+                        'total_count' => 0,
+                        'affected_sections' => []
+                    ];
+                }
+                $allErrors[$errorType]['total_count'] += $errorGroup['count'];
+                $allErrors[$errorType]['affected_sections'][] = $sectionData['section_name'];
+            }
+        }
+
+        // Sort by frequency and take top 10
+        uasort($allErrors, fn($a, $b) => $b['total_count'] - $a['total_count']);
+        $detailedErrors['summary'] = array_slice(array_values($allErrors), 0, 10);
+
+        return $detailedErrors;
+    }
+
+    /**
+     * Categorize error types for better grouping and presentation
+     * 
+     * @param string $errorMessage The error message to categorize
+     * @return string Error category/type
+     */
+    private function categorizeError(string $errorMessage): string
+    {
+        $errorMessage = strtolower($errorMessage);
+        
+        // Define error patterns and their categories
+        $errorPatterns = [
+            'validation' => ['validation', 'invalid', 'required', 'missing', 'empty'],
+            'schema' => ['schema', 'structure', 'format', 'type'],
+            'reference' => ['reference', 'identifier', 'not found', 'missing reference'],
+            'property' => ['property', 'attribute', 'field'],
+            'constraint' => ['constraint', 'unique', 'duplicate', 'already exists'],
+            'relationship' => ['relationship', 'source', 'target', 'connection'],
+            'data_type' => ['string', 'integer', 'boolean', 'array', 'object'],
+            'encoding' => ['encoding', 'character', 'utf', 'ascii'],
+        ];
+        
+        foreach ($errorPatterns as $category => $patterns) {
+            foreach ($patterns as $pattern) {
+                if (str_contains($errorMessage, $pattern)) {
+                    return $category;
+                }
+            }
+        }
+        
+        return 'general';
     }
 }
 

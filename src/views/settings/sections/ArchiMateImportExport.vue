@@ -152,12 +152,107 @@
 										Unchanged
 									</div>
 								</div>
-								<div class="summary-item errors">
+								<div class="summary-item errors" :class="{ clickable: importResult.statistics.summary.total_errors > 0 }" @click="showErrorDetails">
 									<div class="summary-number">
 										{{ importResult.statistics.summary.total_errors }}
 									</div>
 									<div class="summary-label">
 										Errors
+									</div>
+									<div v-if="importResult.statistics.summary.total_errors > 0" class="click-hint">
+										Click to view details
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Detailed Errors Modal -->
+						<div v-if="showErrors && importResult?.detailed_errors?.total_count > 0" class="error-details-modal">
+							<div class="error-details-content">
+								<div class="error-details-header">
+									<h5>Import Errors Details</h5>
+									<NcButton
+										type="tertiary-no-background"
+										@click="hideErrorDetails">
+										<template #icon>
+											<Close :size="20" />
+										</template>
+									</NcButton>
+								</div>
+
+								<!-- Error Summary -->
+								<div class="error-summary">
+									<div class="error-stats">
+										<div class="stat-item">
+											<span class="stat-number">{{ importResult.detailed_errors.total_count }}</span>
+											<span class="stat-label">Total Errors</span>
+										</div>
+										<div class="stat-item">
+											<span class="stat-number">{{ Object.keys(importResult.detailed_errors.by_section).length }}</span>
+											<span class="stat-label">Affected Sections</span>
+										</div>
+									</div>
+								</div>
+
+								<!-- Most Common Errors -->
+								<div v-if="importResult.detailed_errors.summary && importResult.detailed_errors.summary.length > 0" class="common-errors-section">
+									<h6>Most Common Issues</h6>
+									<div class="common-errors-list">
+										<div
+											v-for="error in importResult.detailed_errors.summary.slice(0, 5)"
+											:key="error.type"
+											class="common-error-item">
+											<div class="error-type-badge" :class="error.type">
+												{{ formatErrorType(error.type) }}
+											</div>
+											<div class="error-details">
+												<div class="error-message">
+													{{ error.message }}
+												</div>
+												<div class="error-meta">
+													<span class="error-count">{{ error.total_count }} occurrences</span>
+													<span v-if="error.affected_sections && error.affected_sections.length > 0" class="affected-sections">
+														in {{ error.affected_sections.join(', ') }}
+													</span>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Errors by Section -->
+								<div class="errors-by-section">
+									<h6>Errors by Section</h6>
+									<div class="section-errors-list">
+										<div
+											v-for="(sectionData, sectionName) in importResult.detailed_errors.by_section"
+											:key="sectionName"
+											class="section-error-group">
+											<div class="section-header">
+												<h7>{{ sectionData.section_name }}</h7>
+												<span class="section-error-count">{{ sectionData.total_errors }} errors</span>
+											</div>
+											<div class="section-error-details">
+												<div
+													v-for="errorGroup in sectionData.error_groups"
+													:key="errorGroup.type"
+													class="error-group">
+													<div class="error-group-header">
+														<div class="error-type-badge small" :class="errorGroup.type">
+															{{ formatErrorType(errorGroup.type) }}
+														</div>
+														<span class="error-group-count">{{ errorGroup.count }}</span>
+													</div>
+													<div class="error-group-message">
+														{{ errorGroup.message }}
+													</div>
+													<div v-if="errorGroup.examples && errorGroup.examples.length > 0" class="error-examples">
+														<span class="examples-label">Examples:</span>
+														<span class="examples-list">{{ errorGroup.examples.join(', ') }}</span>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -195,7 +290,7 @@
 										</ol>
 									</div>
 								</div>
-								
+
 								<!-- General Error -->
 								<div v-else>
 									<p><strong>Error:</strong> {{ importError.message || 'Unknown error occurred during import' }}</p>
@@ -312,6 +407,7 @@ import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
+import Close from 'vue-material-design-icons/Close.vue'
 
 export default {
 	name: 'ArchiMateImportExport',
@@ -326,6 +422,7 @@ export default {
 		AlertCircle,
 		Download,
 		Refresh,
+		Close,
 	},
 
 	setup() {
@@ -342,6 +439,7 @@ export default {
 			selectedOrganization: null,
 			importResult: null,
 			importError: null,
+			showErrors: false,
 			organizationOptions: [
 				{ label: 'Generic', value: null },
 			],
@@ -584,11 +682,53 @@ export default {
 			this.importError = null
 			this.selectedFile = null
 			this.importing = false
+			this.showErrors = false
 
 			// Reset the file input
 			if (this.$refs.fileInput) {
 				this.$refs.fileInput.value = ''
 			}
+		},
+
+		/**
+		 * Show detailed error information
+		 *
+		 * @return {void}
+		 */
+		showErrorDetails() {
+			if (this.importResult?.statistics?.summary?.total_errors > 0) {
+				this.showErrors = true
+			}
+		},
+
+		/**
+		 * Hide detailed error information
+		 *
+		 * @return {void}
+		 */
+		hideErrorDetails() {
+			this.showErrors = false
+		},
+
+		/**
+		 * Format error type for display
+		 *
+		 * @param {string} errorType - The error type to format
+		 * @return {string} Formatted error type
+		 */
+		formatErrorType(errorType) {
+			const typeMap = {
+				validation: 'Validation',
+				schema: 'Schema',
+				reference: 'Reference',
+				property: 'Property',
+				constraint: 'Constraint',
+				relationship: 'Relationship',
+				data_type: 'Data Type',
+				encoding: 'Encoding',
+				general: 'General',
+			}
+			return typeMap[errorType] || errorType.charAt(0).toUpperCase() + errorType.slice(1)
 		},
 
 		/**
@@ -609,7 +749,7 @@ export default {
 		 */
 		getConfigurationErrorDescription(errorMessage) {
 			if (!errorMessage) return ''
-			
+
 			// Extract the main description before the missing items list
 			const lines = errorMessage.split('\n')
 			const mainLine = lines.find(line => line.includes('cannot proceed'))
@@ -627,17 +767,17 @@ export default {
 		 */
 		getMissingConfigItems(errorMessage) {
 			if (!errorMessage) return []
-			
+
 			const lines = errorMessage.split('\n')
 			const missingItems = []
 			let inMissingSection = false
-			
+
 			for (const line of lines) {
 				if (line.includes('Missing configuration:')) {
 					inMissingSection = true
 					continue
 				}
-				
+
 				if (inMissingSection && line.trim().startsWith('-')) {
 					// Clean up the item text
 					const item = line.replace(/^-\s*/, '').trim()
@@ -647,7 +787,7 @@ export default {
 					break
 				}
 			}
-			
+
 			return missingItems
 		},
 
@@ -1209,6 +1349,358 @@ export default {
 		width: 0.85rem;
 		height: 0.85rem;
 		top: 0.4rem;
+	}
+}
+
+/* Clickable Error Tile Styles */
+.summary-item.clickable {
+	cursor: pointer;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-item.clickable:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.click-hint {
+	font-size: 0.75rem !important;
+	color: var(--color-text-maxcontrast) !important;
+	margin-top: 0.25rem;
+	font-style: italic;
+}
+
+/* Error Details Modal Styles */
+.error-details-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 10000;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 2rem;
+	overflow-y: auto;
+}
+
+.error-details-content {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius-large);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	width: 100%;
+	max-width: 900px;
+	max-height: 90vh;
+	overflow-y: auto;
+	margin-top: 2rem;
+}
+
+.error-details-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1.5rem 2rem;
+	border-bottom: 2px solid var(--color-border);
+	background: var(--color-background-hover);
+	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+}
+
+.error-details-header h5 {
+	margin: 0;
+	font-size: 1.2rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.error-details-header h5::before {
+	content: "⚠️";
+	font-size: 1.3rem;
+}
+
+/* Error Summary Styles */
+.error-summary {
+	padding: 1.5rem 2rem;
+	background: var(--color-error-light);
+	border-bottom: 1px solid var(--color-border);
+}
+
+.error-stats {
+	display: flex;
+	justify-content: center;
+	gap: 3rem;
+}
+
+.stat-item {
+	text-align: center;
+}
+
+.stat-number {
+	display: block;
+	font-size: 2rem;
+	font-weight: 700;
+	color: var(--color-error);
+	margin-bottom: 0.25rem;
+}
+
+.stat-label {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* Common Errors Section */
+.common-errors-section {
+	padding: 1.5rem 2rem;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.common-errors-section h6 {
+	margin: 0 0 1rem 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+	border-bottom: 2px solid var(--color-warning);
+	padding-bottom: 0.5rem;
+}
+
+.common-errors-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.common-error-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 1rem;
+	padding: 1rem;
+	background: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	border-left: 4px solid var(--color-warning);
+}
+
+.error-type-badge {
+	padding: 0.25rem 0.75rem;
+	border-radius: 12px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.error-type-badge.small {
+	padding: 0.2rem 0.5rem;
+	font-size: 0.7rem;
+}
+
+/* Error type colors */
+.error-type-badge.validation { background: #ffebee; color: #c62828; }
+.error-type-badge.schema { background: #e3f2fd; color: #1565c0; }
+.error-type-badge.reference { background: #f3e5f5; color: #7b1fa2; }
+.error-type-badge.property { background: #e8f5e8; color: #2e7d32; }
+.error-type-badge.constraint { background: #fff3e0; color: #ef6c00; }
+.error-type-badge.relationship { background: #fce4ec; color: #ad1457; }
+.error-type-badge.data_type { background: #e0f2f1; color: #00695c; }
+.error-type-badge.encoding { background: #f1f8e9; color: #558b2f; }
+.error-type-badge.general { background: #f5f5f5; color: #424242; }
+
+.error-details {
+	flex: 1;
+	min-width: 0;
+}
+
+.error-message {
+	font-weight: 500;
+	color: var(--color-main-text);
+	margin-bottom: 0.5rem;
+	word-wrap: break-word;
+}
+
+.error-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	font-size: 0.875rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.error-count {
+	font-weight: 600;
+	color: var(--color-error);
+}
+
+.affected-sections {
+	font-style: italic;
+}
+
+/* Errors by Section */
+.errors-by-section {
+	padding: 1.5rem 2rem;
+}
+
+.errors-by-section h6 {
+	margin: 0 0 1rem 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+	border-bottom: 2px solid var(--color-primary);
+	padding-bottom: 0.5rem;
+}
+
+.section-errors-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.section-error-group {
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+}
+
+.section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1rem 1.5rem;
+	background: var(--color-background-hover);
+	border-bottom: 1px solid var(--color-border);
+}
+
+.section-header h7 {
+	margin: 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.section-error-count {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+	padding: 0.25rem 0.5rem;
+	background: var(--color-error-light);
+	border-radius: 10px;
+	border: 1px solid var(--color-error);
+}
+
+.section-error-details {
+	padding: 1rem 1.5rem;
+}
+
+.error-group {
+	margin-bottom: 1rem;
+	padding: 1rem;
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border-dark);
+}
+
+.error-group:last-child {
+	margin-bottom: 0;
+}
+
+.error-group-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.5rem;
+}
+
+.error-group-count {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-error);
+	padding: 0.2rem 0.5rem;
+	background: var(--color-error-light);
+	border-radius: 8px;
+}
+
+.error-group-message {
+	color: var(--color-main-text);
+	margin-bottom: 0.5rem;
+	font-size: 0.9rem;
+	line-height: 1.4;
+}
+
+.error-examples {
+	font-size: 0.8rem;
+	color: var(--color-text-maxcontrast);
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	background: var(--color-background-hover);
+	border-radius: var(--border-radius);
+}
+
+.examples-label {
+	font-weight: 600;
+	margin-right: 0.5rem;
+}
+
+.examples-list {
+	font-family: var(--font-face-monospace, monospace);
+}
+
+/* Responsive Design for Error Details */
+@media (max-width: 768px) {
+	.error-details-modal {
+		padding: 1rem;
+	}
+
+	.error-details-header {
+		padding: 1rem;
+	}
+
+	.error-summary,
+	.common-errors-section,
+	.errors-by-section {
+		padding: 1rem;
+	}
+
+	.error-stats {
+		gap: 2rem;
+	}
+
+	.stat-number {
+		font-size: 1.5rem;
+	}
+
+	.common-error-item {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
+	}
+
+	.section-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+	}
+
+	.error-group-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+
+	.section-error-details {
+		padding: 0.75rem 1rem;
+	}
+
+	.error-meta {
+		flex-direction: column;
+		gap: 0.25rem;
 	}
 }
 </style>
