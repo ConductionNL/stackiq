@@ -62,6 +62,9 @@ return [
         // Health check endpoint
         ['name' => 'settings#health_check', 'url' => '/api/health', 'verb' => 'GET'],
         
+        // Configuration cache management
+        ['name' => 'settings#clear_cache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
+        
         // Force re-initialization endpoint
         ['name' => 'settings#force_reinit', 'url' => '/api/settings/force-reinit', 'verb' => 'POST'],
 

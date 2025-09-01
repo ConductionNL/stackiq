@@ -50,6 +50,20 @@ class SettingsService
     private string $_appName;
 
     /**
+     * Cache for schema IDs by object type to avoid repeated database queries
+     *
+     * @var array<string, int|null>
+     */
+    private array $schemaIdCache = [];
+
+    /**
+     * Cache for register IDs by object type to avoid repeated database queries
+     *
+     * @var array<string, int|null>
+     */
+    private array $registerIdCache = [];
+
+    /**
      * The unique identifier for the OpenRegister application
      *
      * @var string The ID of the OpenRegister app
@@ -382,151 +396,115 @@ class SettingsService
      */
     public function getSchemaIdForObjectType(string $objectType): ?int
     {
-        $startTime = microtime(true);
+        // Check cache first for performance optimization
+        if (array_key_exists($objectType, $this->schemaIdCache)) {
+            $cachedValue = $this->schemaIdCache[$objectType];
+            $this->logger->debug("SettingsService: Schema ID retrieved from cache", [
+                'objectType' => $objectType,
+                'cachedValue' => $cachedValue,
+                'fromCache' => true
+            ]);
+            return $cachedValue;
+        }
 
-        $this->logger->debug("SettingsService: Starting schema ID lookup", [
+        $startTime = microtime(true);
+        $result = null;
+
+        $this->logger->debug("SettingsService: Starting schema ID lookup (cache miss)", [
             'objectType' => $objectType,
             'timestamp' => date('Y-m-d H:i:s')
         ]);
 
         // First try register-specific configuration
-        // Check for AMEF register specific schemas
-        if ($objectType === 'organization') {
-            $this->logger->debug("SettingsService: Checking AMEF organization schema", [
-                'objectType' => $objectType
-            ]);
-
+        // Check for AMEF register specific schemas from JSON config
+        $amefConfig = $this->config->getValueString($this->_appName, 'amef_config', '{}');
+        if (!empty($amefConfig) && $amefConfig !== '{}') {
+            $decodedAmefConfig = json_decode($amefConfig, true);
+            if (is_array($decodedAmefConfig)) {
+                // Map object types to their corresponding AMEF config keys
+                $amefKeyMap = [
+                    'model' => 'model_schema',
+                    'element' => 'element_schema',
+                    'relationship' => 'relation_schema',  // Note: relation vs relationship
+                    'view' => 'view_schema',
+                    'property_definition' => 'property_definition_schema',
+                    'organization' => 'organization_schema'
+                ];
+                
+                $amefKey = $amefKeyMap[$objectType] ?? null;
+                
+                if ($amefKey && isset($decodedAmefConfig[$amefKey])) {
+                    $schemaId = $decodedAmefConfig[$amefKey];
+                    if (!empty($schemaId)) {
+                        $result = (int) $schemaId;
+                        $this->logger->debug("SettingsService: Found schema ID in AMEF JSON config", [
+                            'objectType' => $objectType,
+                            'amefKey' => $amefKey,
+                            'schemaId' => $result
+                        ]);
+                    }
+                }
+            }
+        }
+        
+        // Check for AMEF register specific schemas (legacy individual keys)
+        if ($result === null && $objectType === 'organization') {
             $schemaId = $this->config->getValueString($this->_appName, 'amef_organization_schema', '');
-
-            $this->logger->debug("SettingsService: AMEF organization schema result", [
-                'objectType' => $objectType,
-                'configKey' => 'amef_organization_schema',
-                'rawValue' => $schemaId,
-                'isEmpty' => empty($schemaId)
-            ]);
-
+            
             if (!empty($schemaId)) {
                 $result = (int) $schemaId;
-                $this->logger->info("SettingsService: Found AMEF organization schema", [
-                    'objectType' => $objectType,
-                    'schemaId' => $result,
-                    'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
-                ]);
-                return $result;
-            }
-
-            // Also check voorzieningen register for organization/organisatie
-            $this->logger->debug("SettingsService: Checking voorzieningen organisatie schema for organization", [
-                'objectType' => $objectType
-            ]);
-
-            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
-
-            $this->logger->debug("SettingsService: Voorzieningen organisatie schema result", [
-                'objectType' => $objectType,
-                'configKey' => 'voorzieningen_organisatie_schema',
-                'rawValue' => $schemaId,
-                'isEmpty' => empty($schemaId)
-            ]);
-
-            if (!empty($schemaId)) {
-                $result = (int) $schemaId;
-                $this->logger->info("SettingsService: Found voorzieningen organisatie schema for organization", [
-                    'objectType' => $objectType,
-                    'schemaId' => $result,
-                    'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
-                ]);
-                return $result;
+            } else {
+                // Also check voorzieningen register for organization/organisatie
+                $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+                if (!empty($schemaId)) {
+                    $result = (int) $schemaId;
+                }
             }
         }
 
-        if ($objectType === 'organisatie') {
-            $this->logger->debug("SettingsService: Checking voorzieningen organisatie schema", [
-                'objectType' => $objectType
-            ]);
-
+        if ($objectType === 'organisatie' && $result === null) {
             $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
-
-            $this->logger->debug("SettingsService: Voorzieningen organisatie schema result", [
-                'objectType' => $objectType,
-                'configKey' => 'voorzieningen_organisatie_schema',
-                'rawValue' => $schemaId,
-                'isEmpty' => empty($schemaId)
-            ]);
-
             if (!empty($schemaId)) {
                 $result = (int) $schemaId;
-                $this->logger->info("SettingsService: Found voorzieningen organisatie schema", [
-                    'objectType' => $objectType,
-                    'schemaId' => $result,
-                    'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
-                ]);
-                return $result;
             }
         }
 
-        if ($objectType === 'contactpersoon') {
-            $this->logger->debug("SettingsService: Checking voorzieningen contactpersoon schema", [
-                'objectType' => $objectType
-            ]);
-
+        if ($objectType === 'contactpersoon' && $result === null) {
             $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', '');
-
-            $this->logger->debug("SettingsService: Voorzieningen contactpersoon schema result", [
-                'objectType' => $objectType,
-                'configKey' => 'voorzieningen_contactpersoon_schema',
-                'rawValue' => $schemaId,
-                'isEmpty' => empty($schemaId)
-            ]);
-
             if (!empty($schemaId)) {
                 $result = (int) $schemaId;
-                $this->logger->info("SettingsService: Found voorzieningen contactpersoon schema", [
-                    'objectType' => $objectType,
-                    'schemaId' => $result,
-                    'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
-                ]);
-                return $result;
             }
         }
 
         // Fall back to generic configuration for backward compatibility
-        $this->logger->debug("SettingsService: Checking generic configuration", [
-            'objectType' => $objectType,
-            'configKey' => "{$objectType}_schema"
-        ]);
-
-        $schemaId = $this->config->getValueString($this->_appName, "{$objectType}_schema", '');
-
-        $this->logger->debug("SettingsService: Generic configuration result", [
-            'objectType' => $objectType,
-            'configKey' => "{$objectType}_schema",
-            'rawValue' => $schemaId,
-            'isEmpty' => empty($schemaId)
-        ]);
-
-        if ($schemaId) {
-            $result = (int) $schemaId;
-            $this->logger->info("SettingsService: Found generic schema configuration", [
-                'objectType' => $objectType,
-                'schemaId' => $result,
-                'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
-            ]);
-            return $result;
+        if ($result === null) {
+            $schemaId = $this->config->getValueString($this->_appName, "{$objectType}_schema", '');
+            if (!empty($schemaId)) {
+                $result = (int) $schemaId;
+            }
         }
 
-        $this->logger->warning("SettingsService: No schema ID found for object type", [
-            'objectType' => $objectType,
-            'checkedConfigurations' => [
-                'amef_organization_schema' => ($objectType === 'organization'),
-                'voorzieningen_organisatie_schema' => ($objectType === 'organization' || $objectType === 'organisatie'),
-                'voorzieningen_contactpersoon_schema' => ($objectType === 'contactpersoon'),
-                "{$objectType}_schema" => true
-            ],
-            'lookupTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
-        ]);
+        // Cache the result (even if null) to avoid repeated lookups
+        $this->schemaIdCache[$objectType] = $result;
 
-        return null;
+        $lookupTime = round((microtime(true) - $startTime) * 1000, 2);
+        
+        if ($result !== null) {
+            $this->logger->info("SettingsService: Found schema ID and cached result", [
+                'objectType' => $objectType,
+                'schemaId' => $result,
+                'lookupTime' => $lookupTime . 'ms',
+                'fromCache' => false
+            ]);
+        } else {
+            $this->logger->debug("SettingsService: No schema ID found, cached null result", [
+                'objectType' => $objectType,
+                'lookupTime' => $lookupTime . 'ms',
+                'fromCache' => false
+            ]);
+        }
+
+        return $result;
     }
 
     /**
@@ -538,8 +516,52 @@ class SettingsService
      */
     public function getRegisterIdForObjectType(string $objectType): ?int
     {
+        // Check cache first for performance optimization
+        if (array_key_exists($objectType, $this->registerIdCache)) {
+            $cachedValue = $this->registerIdCache[$objectType];
+            $this->logger->debug("SettingsService: Register ID retrieved from cache", [
+                'objectType' => $objectType,
+                'cachedValue' => $cachedValue,
+                'fromCache' => true
+            ]);
+            return $cachedValue;
+        }
+
+        // Perform the actual lookup
         $registerId = $this->config->getValueString($this->_appName, "{$objectType}_register", '');
-        return $registerId ? (int) $registerId : null;
+        $result = $registerId ? (int) $registerId : null;
+        
+        // Cache the result (even if null) to avoid repeated lookups
+        $this->registerIdCache[$objectType] = $result;
+        
+        $this->logger->debug("SettingsService: Register ID looked up and cached", [
+            'objectType' => $objectType,
+            'result' => $result,
+            'fromCache' => false
+        ]);
+        
+        return $result;
+    }
+
+    /**
+     * Clear cached schema and register IDs
+     * 
+     * This method should be called when configuration changes to ensure
+     * cached values don't become stale.
+     * 
+     * @return void
+     */
+    public function clearConfigurationCache(): void
+    {
+        $this->logger->debug("SettingsService: Clearing configuration cache", [
+            'cached_schema_ids' => count($this->schemaIdCache),
+            'cached_register_ids' => count($this->registerIdCache)
+        ]);
+        
+        $this->schemaIdCache = [];
+        $this->registerIdCache = [];
+        
+        $this->logger->info("SettingsService: Configuration cache cleared");
     }
 
     /**
@@ -2908,6 +2930,9 @@ class SettingsService
      */
     public function setVoorzieningenConfig(array $config): void
     {
+        // Clear cache since voorzieningen config affects schema and register IDs
+        $this->clearConfigurationCache();
+        
         // Persist only normalized structure
         $normalized = $this->normalizeVoorzieningenConfig($config);
         $jsonConfig = json_encode($normalized, JSON_PRETTY_PRINT);
@@ -3018,6 +3043,14 @@ class SettingsService
     {
         $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
         $this->config->setValueString($this->_appName, 'amef_config', $jsonConfig);
+        
+        // Clear configuration cache when AMEF config is updated
+        $this->clearConfigurationCache();
+        
+        $this->logger->debug('SettingsService: AMEF configuration updated and cache cleared', [
+            'config_keys' => array_keys($config),
+            'cache_cleared' => true
+        ]);
     }
 
     /**
@@ -3058,6 +3091,9 @@ class SettingsService
      */
     public function setEmailConfig(array $config): void
     {
+        // Email config doesn't typically affect schema/register IDs, but clear cache for consistency
+        $this->clearConfigurationCache();
+        
         $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
         $this->config->setValueString($this->_appName, 'email_config', $jsonConfig);
     }

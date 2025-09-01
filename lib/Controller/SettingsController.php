@@ -731,6 +731,37 @@ class SettingsController extends Controller
     }
 
     /**
+     * Clear configuration cache to force reload of schema IDs and register IDs.
+     *
+     * @return JSONResponse JSON response containing cache clear results.
+     *
+     * @NoCSRFRequired
+     */
+    public function clearCache(): JSONResponse
+    {
+        try {
+            $this->logger->info('SettingsController: Clearing configuration cache');
+            
+            $this->settingsService->clearConfigurationCache();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Configuration cache cleared successfully'
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsController: Cache clear failed', [
+                'exception' => $e->getMessage()
+            ]);
+            
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Cache clear failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Manually trigger configuration import.
      *
      * @return JSONResponse JSON response containing import results.

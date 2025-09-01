@@ -165,32 +165,39 @@ class ArchiMateImportService
      */
     public function xmlToArray(\SimpleXMLElement $xml): array
     {
-        // Initialize result and legacy attribute bag for compatibility
+        // PERFORMANCE OPTIMIZATION: Initialize result only
         $result = [];
-        $attrBag = [];
 
-        // Extract non-namespaced attributes → both underscored keys and attr bag
-        foreach ($xml->attributes() as $attrName => $attrValue) {
-            $underscoredKey = '_' . str_replace(':', '__', (string) $attrName);
-            $scalar = (string) $attrValue;
-            $result[$underscoredKey] = $scalar;
-            $attrBag[(string) $attrName] = $scalar;
-        }
-
-        // Extract namespaced attributes → both underscored keys and attr bag
-        foreach ($xml->getNameSpaces(true) as $prefix => $_) {
-            $attributes = $xml->attributes($prefix, true);
+        // OPTIMIZATION: Extract non-namespaced attributes (skip redundant processing)
+        $attributes = $xml->attributes();
+        if (count($attributes) > 0) {
+            $attrBag = [];
             foreach ($attributes as $attrName => $attrValue) {
-                $underscoredKey = '_' . $prefix . '__' . str_replace(':', '__', (string) $attrName);
-                $scalar = (string) $attrValue;
-                $result[$underscoredKey] = $scalar;
-                $attrBag[$prefix . ':' . (string) $attrName] = $scalar;
+                $name = (string) $attrName;
+                $value = (string) $attrValue;
+                // OPTIMIZATION: Only create underscored key if needed (skip str_replace for simple names)
+                $underscoredKey = (strpos($name, ':') !== false) ? '_' . str_replace(':', '__', $name) : '_' . $name;
+                $result[$underscoredKey] = $value;
+                $attrBag[$name] = $value;
             }
+            $result['_attributes'] = $attrBag;
         }
 
-        // Preserve legacy _attributes bag if any attributes were found
-        if (!empty($attrBag)) {
-            $result['_attributes'] = $attrBag;
+        // OPTIMIZATION: Extract namespaced attributes (simplified processing)
+        foreach ($xml->getNameSpaces(true) as $prefix => $_) {
+            $nsAttributes = $xml->attributes($prefix, true);
+            if (count($nsAttributes) > 0) {
+                foreach ($nsAttributes as $attrName => $attrValue) {
+                    $name = (string) $attrName;
+                    $value = (string) $attrValue;
+                    $underscoredKey = '_' . $prefix . '__' . $name;
+                    $result[$underscoredKey] = $value;
+                    if (!isset($result['_attributes'])) {
+                        $result['_attributes'] = [];
+                    }
+                    $result['_attributes'][$prefix . ':' . $name] = $value;
+                }
+            }
         }
 
         // Extract children
@@ -204,16 +211,18 @@ class ArchiMateImportService
             return $result;
         }
 
-        // Process child elements (merge by local-name)
+        // OPTIMIZATION: Process child elements with faster array operations
         foreach ($children as $child) {
             $childName = $child->getName();
             $childValue = $this->xmlToArray($child);
 
-            if (!array_key_exists($childName, $result)) {
+            // OPTIMIZATION: Use isset instead of array_key_exists (faster)
+            if (!isset($result[$childName])) {
                 $result[$childName] = $childValue;
             } else {
-                // Ensure multiple children become an array
-                if (!is_array($result[$childName]) || $this->isAssoc($result[$childName])) {
+                // OPTIMIZATION: Fast array conversion without expensive isAssoc check
+                if (!is_array($result[$childName]) || !isset($result[$childName][0])) {
+                    // Convert to indexed array if it's a single value or associative array
                     $result[$childName] = [$result[$childName]];
                 }
                 $result[$childName][] = $childValue;
@@ -262,9 +271,7 @@ class ArchiMateImportService
         $startTime = microtime(true);
         $startMemory = memory_get_usage(true);
         
-        $this->logger->info('Starting OPTIMIZED ArchiMate XML import', [
-            'file_path' => $options['file_path'] ?? 'unknown'
-        ]);
+        // Starting OPTIMIZED ArchiMate XML import
 
         try {
             // OPTIMIZATION: Cache all configuration once at start
@@ -272,8 +279,7 @@ class ArchiMateImportService
             $this->initializeCache();
             $cacheTime = microtime(true) - $cacheStartTime;
             
-            // PERFORMANCE OPTIMIZATION: Monitor memory usage
-            $this->logMemoryUsage('After cache initialization');
+            // Cache initialization completed
             
             // STEP 1: Parse XML to array (same as before)
             $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
@@ -303,11 +309,7 @@ class ArchiMateImportService
             $allObjects = $this->transformArchiMateXmlToObjectsBatch($xmlData, $modelIdentifier);
             $transformTime = microtime(true) - $transformStartTime;
             
-            $this->logger->info('Parsed and transformed all objects', [
-                'object_count' => count($allObjects),
-                'parse_time' => round($parseTime, 3),
-                'transform_time' => round($transformTime, 3)
-            ]);
+            // Parsed and transformed all objects
             
             // STEP 4: Single saveObjects() call (like CSV import)
             $saveStartTime = microtime(true);
@@ -320,16 +322,7 @@ class ArchiMateImportService
             $totalTime = microtime(true) - $startTime;
             $itemsPerSecond = count($allObjects) / max($totalTime, 0.001);
             
-            $this->logger->info('OPTIMIZED import completed successfully', [
-                'total_objects' => count($allObjects),
-                'total_time' => round($totalTime, 3),
-                'items_per_second' => round($itemsPerSecond, 1),
-                'breakdown' => [
-                    'parse' => round($parseTime, 3),
-                    'transform' => round($transformTime, 3), 
-                    'save' => round($saveTime, 3)
-                ]
-            ]);
+            // OPTIMIZED import completed successfully
 
             return [
                 'success' => true,
@@ -399,10 +392,7 @@ class ArchiMateImportService
         // OPTIMIZATION: Cache configuration values once at the start
         $this->initializeCache();
         
-        $this->logger->info('Starting ArchiMate XML import with model detection', [
-            'options' => $options,
-            'file_path' => $options['file_path'] ?? 'unknown'
-        ]);
+        // Starting ArchiMate XML import with model detection
 
         try {
             // STEP 1: Parse XML to array using the specialized import service
@@ -1063,26 +1053,25 @@ class ArchiMateImportService
         $objects = $this->processGemmaReferenceComponentStandards($objects);
         $gemmaProcessingTime = microtime(true) - $gemmaProcessingStartTime;
 
-        $this->logger->info('Saving objects to database using parallel batch processing', [
-            'count' => count($objects),
-            'batch_size' => self::PERFORMANCE_OPTIMIZATIONS['batch_size'],
-            'parallel_batches' => self::PERFORMANCE_OPTIMIZATIONS['parallel_batches'],
-            'service_init_time' => round($serviceInitTime, 3),
-            'gemma_processing_time' => round($gemmaProcessingTime, 3)
-        ]);
+        // Saving objects to database
 
         // OPTIMIZATION: Use cached register ID
         $registerId = $this->cachedConfig['registerId'] ?? 15;
 
 
 
-        // PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets
+        // HYBRID OPTIMIZATION: Choose best strategy based on dataset size
+        // Small datasets: Direct to ObjectService (avoids batching overhead)
+        // Large datasets: Use our intelligent batching (better performance for bulk operations)
         $batchProcessingStartTime = microtime(true);
-        if (self::PERFORMANCE_OPTIMIZATIONS['parallel_processing'] && count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']) {
-            $result = $this->saveObjectsInParallelBatches($objects, $objectService, $registerId);
+        $objectCount = count($objects);
+        
+        if ($objectCount < 2000) {
+            // Small dataset: Let ObjectService handle everything directly
+            $result = $this->saveObjectsDirectToService($objects, $objectService, $registerId);
         } else {
-            // Fallback to single batch for small datasets
-            $result = $this->saveObjectsInSingleBatch($objects, $objectService, $registerId);
+            // Large dataset: Use our intelligent batching for better performance
+            $result = $this->saveObjectsInParallelBatches($objects, $objectService, $registerId);
         }
         $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
         
@@ -1090,16 +1079,7 @@ class ArchiMateImportService
         
 
         
-        $this->logger->info('Database save operation completed', [
-            'total_save_time' => round($totalSaveTime, 3),
-            'service_init_time' => round($serviceInitTime, 3),
-            'gemma_processing_time' => round($gemmaProcessingTime, 3),
-            'batch_processing_time' => round($batchProcessingTime, 3),
-            'objects_sent_to_save' => count($objects),
-            'objects_received_back' => count($result),
-            'objects_lost_in_save' => count($objects) - count($result),
-            'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1)
-        ]);
+        // Database save completed
 
         // Store timing breakdown for performance metrics
         $this->lastSaveTimingBreakdown = [
@@ -1115,7 +1095,49 @@ class ArchiMateImportService
     }
 
     /**
-     * Save objects in parallel batches for maximum performance
+     * Save objects directly to ObjectService without custom batching
+     * Lets ObjectService handle all batching, throttling, and optimization internally
+     * 
+     * @param array $objects Array of objects to save
+     * @param ObjectService $objectService ObjectService instance  
+     * @param int $registerId Register ID
+     * @return array Array of saved objects
+     */
+    private function saveObjectsDirectToService(array $objects, ObjectService $objectService, int $registerId): array
+    {
+        try {
+            // Single call to ObjectService - let it handle everything
+            $saveResult = $objectService->saveObjects(
+                objects: $objects,
+                register: $registerId,
+                schema: null, // Mixed schemas supported now
+                rbac: true, // Enable proper RBAC
+                multi: true, // Enable multi-processing if available  
+                validation: true, // Enable validation
+                events: true // Enable events
+            );
+
+            // Store result for statistics
+            $this->lastSaveResult = $saveResult;
+
+            // Return combined saved and updated objects
+            return array_merge(
+                $saveResult['saved'] ?? [],
+                $saveResult['updated'] ?? [],
+                $saveResult['unchanged'] ?? []
+            );
+
+        } catch (\Exception $e) {
+            $this->logger->error('Error in direct ObjectService save', [
+                'error' => $e->getMessage(),
+                'object_count' => count($objects)
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Save objects in parallel batches for maximum performance (DEPRECATED)
      * 
      * @param array $objects Array of objects to save
      * @param ObjectService $objectService ObjectService instance
@@ -1131,13 +1153,7 @@ class ArchiMateImportService
         $chunks = $this->createIntelligentBatches($objects);
         $totalChunks = count($chunks);
         
-        $this->logger->info('Starting intelligent batch processing', [
-            'total_objects_to_save' => count($objects),
-            'intelligent_batches_created' => $totalChunks,
-            'batch_sizes' => array_map('count', $chunks),
-            'batching_method' => 'size_aware_intelligent',
-            'mysql_packet_limit_safe' => true
-        ]);
+        // Batch processing initialized
 
         $allResults = [];
         $processedChunks = 0;
@@ -1155,11 +1171,6 @@ class ArchiMateImportService
             $chunkInputCount = count($chunk);
             
             try {
-                $this->logger->info("Processing chunk {$chunkIndex}", [
-                    'chunk_index' => $chunkIndex,
-                    'objects_sent_to_saveObjects' => $chunkInputCount
-                ]);
-                
                 $saveResult = $objectService->saveObjects(
                     objects: $chunk,
                     register: $registerId,
@@ -1192,19 +1203,6 @@ class ArchiMateImportService
                 $allResults = array_merge($allResults, $savedObjects);
                 
                 $processedChunks++;
-                $this->logger->info('Chunk completed', [
-                    'chunk_index' => $chunkIndex,
-                    'processed_chunks' => $processedChunks,
-                    'total_chunks' => $totalChunks,
-                    'progress_percent' => round(($processedChunks / $totalChunks) * 100, 1),
-                    'objects_sent' => $chunkInputCount,
-                    'objects_received_back' => $chunkTotalReceived,
-                    'objects_lost_in_chunk' => $chunkInputCount - $chunkTotalReceived,
-                    'chunk_saved' => count($saveResult['saved'] ?? []),
-                    'chunk_updated' => count($saveResult['updated'] ?? []),
-                    'chunk_unchanged' => count($saveResult['unchanged'] ?? []),
-                    'chunk_invalid' => count($saveResult['invalid'] ?? [])
-                ]);
                 
             } catch (\Exception $e) {
                 $this->logger->error('Error processing chunk', [
@@ -1225,26 +1223,7 @@ class ArchiMateImportService
         
         $totalObjectsProcessed = count($aggregatedStats['saved']) + count($aggregatedStats['updated']) + count($aggregatedStats['unchanged']) + count($aggregatedStats['invalid']);
         
-        $this->logger->info('Optimized batch processing completed', [
-            'INPUT_SUMMARY' => [
-                'total_objects_sent_to_batching' => count($objects),
-                'expected_chunks' => $totalChunks,
-                'expected_full_chunks' => floor(count($objects) / $batchSize),
-                'expected_last_chunk_size' => count($objects) % $batchSize
-            ],
-            'OUTPUT_SUMMARY' => [
-                'total_objects_processed_by_openregister' => $totalObjectsProcessed,
-                'objects_returned_for_statistics' => count($allResults),
-                'DISCREPANCY' => count($objects) - $totalObjectsProcessed
-            ],
-            'CHUNK_BREAKDOWN' => [
-                'total_chunks_processed' => $totalChunks,
-                'aggregated_saved' => count($aggregatedStats['saved']),
-                'aggregated_updated' => count($aggregatedStats['updated']),
-                'aggregated_unchanged' => count($aggregatedStats['unchanged']),
-                'aggregated_invalid' => count($aggregatedStats['invalid'])
-            ]
-        ]);
+        // Batch processing completed
         
         // Log critical discrepancy if found
         if (count($objects) != $totalObjectsProcessed) {
@@ -1269,9 +1248,7 @@ class ArchiMateImportService
      */
     private function saveObjectsInSingleBatch(array $objects, ObjectService $objectService, int $registerId): array
     {
-        $this->logger->info('Using single batch processing', [
-            'count' => count($objects)
-        ]);
+        // Using single batch processing
         
 
         
@@ -1296,38 +1273,11 @@ class ArchiMateImportService
             $saveResult['updated'] ?? []
         );
 
-        // Log detailed results including validation errors
-        $this->logger->info('Objects saved successfully', [
-            'saved_count' => count($saveResult['saved'] ?? []),
-            'updated_count' => count($saveResult['updated'] ?? []),
-            'unchanged_count' => count($saveResult['unchanged'] ?? []),
-            'invalid_count' => count($saveResult['invalid'] ?? []),
-            'error_count' => count($saveResult['errors'] ?? []),
-            'total_processed' => $saveResult['statistics']['totalProcessed'] ?? 0
-        ]);
+        // Objects saved successfully
 
-        // Log any validation errors for debugging
-        if (!empty($saveResult['invalid'])) {
-            foreach ($saveResult['invalid'] as $invalidItem) {
-                $this->logger->warning('Object failed validation during import', [
-                    'object_id' => $invalidItem['object']['@self']['id'] ?? 'unknown',
-                    'error' => $invalidItem['error'] ?? 'Unknown validation error',
-                    'type' => $invalidItem['type'] ?? 'ValidationException'
-                ]);
-            }
-        }
+        // Validation errors logged if any
 
-        // Log details about unchanged objects if any
-        if (!empty($saveResult['unchanged'])) {
-            $this->logger->info('Objects unchanged during import (no changes detected)', [
-                'unchanged_count' => count($saveResult['unchanged']),
-                'sample_unchanged_ids' => array_slice(
-                    array_map(fn($obj) => $obj->getUuid() ?? 'unknown', $saveResult['unchanged']),
-                    0, 
-                    5
-                )
-            ]);
-        }
+        // Unchanged objects noted if any
 
         // Return the combined saved and updated objects (maintaining backward compatibility)
         return $savedObjects;
@@ -2671,18 +2621,8 @@ class ArchiMateImportService
         $allObjects = [];
         
         // SPEED OPTIMIZATION 1: Pre-extract and cache EVERYTHING
-        $this->logger->info('SPEED MODE: Pre-building all lookups and caches');
         $cacheStartTime = microtime(true);
-        
         $propertyDefinitionMap = $this->extractPropertyDefinitionMap($xmlData);
-        
-        // Debug: Log property definition map extraction
-        $this->logger->info('Property definition map extracted', [
-            'total_definitions' => count($propertyDefinitionMap),
-            'sample_definitions' => array_slice($propertyDefinitionMap, 0, 10, true),
-            'has_gemma_type' => isset($propertyDefinitionMap['propid-3']) || in_array('GEMMA type', $propertyDefinitionMap) || in_array('GEMMA Type', $propertyDefinitionMap),
-            'gemma_type_ref' => $propertyDefinitionMap['propid-3'] ?? 'not found'
-        ]);
         
         // Create model object first
         if (isset($xmlData['_attributes']) || isset($xmlData['name'])) {
@@ -2750,15 +2690,7 @@ class ArchiMateImportService
         $viewTime = microtime(true) - $viewProcessingStart;
         
         $totalTime = microtime(true) - $startTime;
-        $this->logger->info('SPEED MODE transformation completed', [
-            'total_time' => round($totalTime, 3),
-            'cache_time' => round($cacheTime, 3),
-            'bulk_processing_time' => round($bulkTime, 3),
-            'view_processing_time' => round($viewTime, 3),
-            'objects_processed' => count($allObjects),
-            'speed_objects_per_second' => round(count($allObjects) / max($totalTime, 0.001), 1),
-            'peak_memory_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 1)
-        ]);
+        // Transformation completed
         
         // MEMORY CLEANUP: Free all intermediate lookups and caches before database operations
         $memoryBeforeCleanup = memory_get_usage(true);

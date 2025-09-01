@@ -172,10 +172,37 @@
 								<h4>Import Failed</h4>
 							</div>
 							<div class="error-details">
-								<p><strong>Error:</strong> {{ importError.message || 'Unknown error occurred during import' }}</p>
-								<div v-if="importError.details" class="error-additional">
-									<h5>Additional Details:</h5>
-									<pre>{{ JSON.stringify(importError.details, null, 2) }}</pre>
+								<!-- Configuration Error -->
+								<div v-if="isConfigurationError(importError.message)" class="configuration-error">
+									<p><strong>Configuration Missing:</strong></p>
+									<div class="configuration-issues">
+										<p>{{ getConfigurationErrorDescription(importError.message) }}</p>
+										<div class="missing-items">
+											<ul>
+												<li v-for="item in getMissingConfigItems(importError.message)" :key="item">
+													{{ item }}
+												</li>
+											</ul>
+										</div>
+									</div>
+									<div class="configuration-help">
+										<h5>How to Fix:</h5>
+										<ol>
+											<li>Go to the <strong>Registers</strong> section in these settings</li>
+											<li>Use the <strong>Auto-Configure</strong> button to automatically set up AMEF schemas</li>
+											<li>Or manually configure each schema ID in the register settings</li>
+											<li>Return here to try the import again</li>
+										</ol>
+									</div>
+								</div>
+								
+								<!-- General Error -->
+								<div v-else>
+									<p><strong>Error:</strong> {{ importError.message || 'Unknown error occurred during import' }}</p>
+									<div v-if="importError.details" class="error-additional">
+										<h5>Additional Details:</h5>
+										<pre>{{ JSON.stringify(importError.details, null, 2) }}</pre>
+									</div>
 								</div>
 							</div>
 						</NcNoteCard>
@@ -426,7 +453,7 @@ export default {
 					const result = await response.json()
 
 					if (!result.success) {
-						throw new Error(result.message || 'Import failed')
+						throw new Error(result.error || result.message || 'Import failed')
 					}
 
 					return result
@@ -562,6 +589,66 @@ export default {
 			if (this.$refs.fileInput) {
 				this.$refs.fileInput.value = ''
 			}
+		},
+
+		/**
+		 * Check if error is a configuration error
+		 *
+		 * @param {string} errorMessage - Error message to check
+		 * @return {boolean} True if it's a configuration error
+		 */
+		isConfigurationError(errorMessage) {
+			return errorMessage && errorMessage.includes('missing configuration')
+		},
+
+		/**
+		 * Get configuration error description
+		 *
+		 * @param {string} errorMessage - Full error message
+		 * @return {string} Clean description of the error
+		 */
+		getConfigurationErrorDescription(errorMessage) {
+			if (!errorMessage) return ''
+			
+			// Extract the main description before the missing items list
+			const lines = errorMessage.split('\n')
+			const mainLine = lines.find(line => line.includes('cannot proceed'))
+			if (mainLine) {
+				return mainLine.replace('ArchiMate import ', 'Import ').trim()
+			}
+			return 'Required configuration is missing for ArchiMate import.'
+		},
+
+		/**
+		 * Extract missing configuration items from error message
+		 *
+		 * @param {string} errorMessage - Full error message
+		 * @return {Array} Array of missing configuration items
+		 */
+		getMissingConfigItems(errorMessage) {
+			if (!errorMessage) return []
+			
+			const lines = errorMessage.split('\n')
+			const missingItems = []
+			let inMissingSection = false
+			
+			for (const line of lines) {
+				if (line.includes('Missing configuration:')) {
+					inMissingSection = true
+					continue
+				}
+				
+				if (inMissingSection && line.trim().startsWith('-')) {
+					// Clean up the item text
+					const item = line.replace(/^-\s*/, '').trim()
+					missingItems.push(item)
+				} else if (inMissingSection && !line.trim().startsWith('-') && line.trim() !== '') {
+					// End of missing items list
+					break
+				}
+			}
+			
+			return missingItems
 		},
 
 		/**
@@ -951,6 +1038,110 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+/* Configuration Error Styles */
+.configuration-error {
+	margin-top: 1rem;
+}
+
+.configuration-error p {
+	margin: 0 0 1rem 0;
+	color: var(--color-error-text);
+	font-size: 1rem;
+}
+
+.configuration-issues {
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	background: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	border-left: 4px solid var(--color-warning);
+}
+
+.configuration-issues p {
+	margin: 0 0 1rem 0;
+	color: var(--color-main-text);
+	font-weight: 500;
+}
+
+.missing-items {
+	margin-top: 0.5rem;
+}
+
+.missing-items ul {
+	margin: 0;
+	padding-left: 1.5rem;
+	list-style-type: none;
+}
+
+.missing-items li {
+	position: relative;
+	margin: 0.5rem 0;
+	padding: 0.5rem 0.75rem;
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	color: var(--color-main-text);
+	font-family: var(--font-face, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif);
+	font-size: 0.875rem;
+	border-left: 3px solid var(--color-error);
+}
+
+.missing-items li::before {
+	content: "✗";
+	position: absolute;
+	left: -0.5rem;
+	top: 0.5rem;
+	color: var(--color-error);
+	font-weight: bold;
+	font-size: 0.75rem;
+	background: var(--color-main-background);
+	width: 1rem;
+	height: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	border: 1px solid var(--color-error);
+}
+
+.configuration-help {
+	padding: 1.5rem;
+	background: var(--color-primary-light);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-primary-element-lighter);
+}
+
+.configuration-help h5 {
+	margin: 0 0 1rem 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-primary-element-text);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.configuration-help h5::before {
+	content: "💡";
+	font-size: 1.2rem;
+}
+
+.configuration-help ol {
+	margin: 0;
+	padding-left: 1.5rem;
+	color: var(--color-main-text);
+}
+
+.configuration-help li {
+	margin: 0.75rem 0;
+	line-height: 1.5;
+	font-size: 0.9rem;
+}
+
+.configuration-help strong {
+	color: var(--color-primary-element-text);
+	font-weight: 600;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
 	.metrics-grid {
@@ -983,6 +1174,41 @@ export default {
 
 	.info-item .value {
 		text-align: left;
+	}
+
+	/* Configuration Error Mobile Styles */
+	.configuration-error {
+		margin-top: 0.5rem;
+	}
+
+	.configuration-issues {
+		margin-bottom: 1rem;
+		padding: 0.75rem;
+	}
+
+	.configuration-help {
+		padding: 1rem;
+	}
+
+	.configuration-help h5 {
+		font-size: 0.9rem;
+	}
+
+	.configuration-help li {
+		margin: 0.5rem 0;
+		font-size: 0.85rem;
+	}
+
+	.missing-items li {
+		font-size: 0.8rem;
+		padding: 0.4rem 0.6rem;
+	}
+
+	.missing-items li::before {
+		font-size: 0.7rem;
+		width: 0.85rem;
+		height: 0.85rem;
+		top: 0.4rem;
 	}
 }
 </style>
