@@ -267,7 +267,7 @@ class ArchiMateImportService
         $startMemory = memory_get_usage(true);
         
         // DEBUG: Verify that the optimized import method is being called
-        error_log('GEMMA IMPORT DEBUG: Starting optimized import with ' . json_encode($options));
+        $this->logger->info('GEMMA IMPORT DEBUG: Starting optimized import', $options);
         
         // Starting OPTIMIZED ArchiMate XML import
 
@@ -311,7 +311,9 @@ class ArchiMateImportService
             
             // STEP 4: Single saveObjects() call (like CSV import)
             $saveStartTime = microtime(true);
-            error_log('GEMMA IMPORT DEBUG: About to save ' . count($allObjects) . ' objects to database');
+            $this->logger->info('GEMMA IMPORT DEBUG: About to save objects to database', [
+                'object_count' => count($allObjects)
+            ]);
             $savedObjects = $this->saveObjectsToDatabase($allObjects);
             $saveTime = microtime(true) - $saveStartTime;
             
