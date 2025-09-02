@@ -2170,9 +2170,25 @@ class ArchiMateImportService
      * This method transforms ArchiMate XML node data into the standardized viewNodes format
      * expected by the frontend visualization components.
      * 
+     * **Parent-Child Relationship Handling:**
+     * - Root-level nodes have `parent: null`
+     * - Nested nodes have `parent: parentNodeId` set by the recursive processor
+     * - All nodes are flattened into a single array for efficient storage/querying
+     * - Frontend can reconstruct the hierarchy using parent references
+     * 
+     * **Example Structure:**
+     * ```
+     * [
+     *   { viewNodeId: 'node1', parent: null },           // Root node
+     *   { viewNodeId: 'node2', parent: 'node1' },        // Child of node1  
+     *   { viewNodeId: 'node3', parent: 'node1' },        // Child of node1
+     *   { viewNodeId: 'node4', parent: 'node2' }         // Grandchild (child of node2)
+     * ]
+     * ```
+     * 
      * @param array $nodeData Node data (can be single node or array of nodes)
      * @param array $elementsLookup Lookup array of elements by identifier for enrichment
-     * @return array Array of viewNodes with standardized structure
+     * @return array Array of viewNodes with standardized structure including parent references
      */
     private function extractViewNodesRecursively($nodeData, array $elementsLookup = []): array
     {
@@ -2204,7 +2220,7 @@ class ArchiMateImportService
                 'y' => isset($node['_attributes']['y']) ? (int)$node['_attributes']['y'] : 0,
                 'width' => isset($node['_attributes']['w']) ? (int)$node['_attributes']['w'] : 100,
                 'height' => isset($node['_attributes']['h']) ? (int)$node['_attributes']['h'] : 50,
-                'parent' => null, // TODO: Handle parent relationships for nested nodes
+                'parent' => null, // Will be set to parent nodeId for nested nodes (see recursive processing below)
                 'name' => null,
                 'type' => null,
                 'color' => 'rgb(255, 255, 255)', // Default white background
@@ -2290,17 +2306,18 @@ class ArchiMateImportService
                 }
             }
             
-            // Handle child nodes recursively (flatten hierarchy into single array)
+            // Handle child nodes recursively (flatten hierarchy into single array while preserving parent-child relationships)
             if (isset($node['node'])) {
                 $childNodes = $this->extractViewNodesRecursively($node['node'], $elementsLookup);
                 
-                // Set parent reference for child nodes
+                // IMPORTANT: Set parent reference for all child nodes to maintain hierarchy
+                // This allows the frontend to reconstruct the nested structure
                 foreach ($childNodes as &$childNode) {
-                    $childNode['parent'] = $nodeId;
+                    $childNode['parent'] = $nodeId; // Parent is the current node's ID
                 }
                 unset($childNode);
                 
-                // Add child nodes to the main array
+                // Add child nodes to the main flattened array (maintaining parent references)
                 $viewNodes = array_merge($viewNodes, $childNodes);
             }
             
@@ -2308,6 +2325,29 @@ class ArchiMateImportService
         }
         
         return $viewNodes;
+    }
+    
+    /**
+     * Debug helper: Log parent-child relationships in view nodes
+     * 
+     * @param array $viewNodes Array of view nodes with parent references
+     * @param string $viewId View identifier for logging context
+     * @return void
+     */
+    private function debugViewNodeHierarchy(array $viewNodes, string $viewId): void
+    {
+        $rootNodes = array_filter($viewNodes, fn($node) => $node['parent'] === null);
+        $childNodes = array_filter($viewNodes, fn($node) => $node['parent'] !== null);
+        
+        $this->logger->debug("View node hierarchy for view: {$viewId}", [
+            'total_nodes' => count($viewNodes),
+            'root_nodes' => count($rootNodes),
+            'child_nodes' => count($childNodes),
+            'parent_child_pairs' => array_map(
+                fn($node) => ['child' => $node['viewNodeId'], 'parent' => $node['parent']], 
+                $childNodes
+            )
+        ]);
     }
     
     /**
@@ -3214,7 +3254,7 @@ class ArchiMateImportService
             $object = [
                 '@self' => [
                     'register' => $this->cachedConfig['registerId'] ?? 15,
-                    'schema' => 111, // FIXED: Hard-code view schema ID for speed optimization
+                    'schema' => $this->getSchemaIdForSection('view'),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
@@ -3986,7 +4026,7 @@ class ArchiMateImportService
             $object = [
                 '@self' => [
                     'register' => $this->cachedConfig['registerId'] ?? 15,
-                    'schema' => 111, // FIXED: Hard-code view schema ID for speed optimization
+                    'schema' => $this->getSchemaIdForSection('view'),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
