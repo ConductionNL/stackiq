@@ -133,6 +133,7 @@ class ArchiMateImportService
      * @param IAppManager $appManager App manager service
      * @param ContainerInterface $container PSR-11 container interface
      * @param LoggerInterface $logger Logger service
+     * @param SettingsService $settingsService Settings service for AMEF configuration
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -140,7 +141,8 @@ class ArchiMateImportService
         private readonly IUserSession $userSession,
         private readonly IAppManager $appManager,
         private readonly ContainerInterface $container,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly SettingsService $settingsService
     ) {
     }
 

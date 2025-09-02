@@ -1350,8 +1350,8 @@ class ArchiMateService
      */
     private function getAmefRegisterId(): ?int
     {
-        // Retrieve AMEF configuration
-        $amefConfig = $this->getAmefConfig();
+        // Retrieve AMEF configuration (use SettingsService for consistency)
+        $amefConfig = $this->settingsService->getAmefConfig();
 
         // Try JSON config keys first: support both 'register_id' and 'register'
         $rawRegisterId = $amefConfig['register_id']
