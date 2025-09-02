@@ -427,8 +427,9 @@ class SettingsService
                     'element' => 'element_schema',
                     'relationship' => 'relation_schema',  // Note: relation vs relationship
                     'view' => 'view_schema',
-                    'property_definition' => 'property_definition_schema',
+                    'property_definition' => 'property_definition_schema',  // Property definitions are root-level AMEF objects
                     'organization' => 'organization_schema'
+                    // NOTE: 'property' mapping removed - properties are never root-level AMEF objects, only nested within other elements
                 ];
                 
                 $amefKey = $amefKeyMap[$objectType] ?? null;
@@ -2787,12 +2788,11 @@ class SettingsService
                 'view_schema' => '',
                 'model_schema' => '',
                 'property_definition_schema' => '',
-                'property_schema' => '',
             ];
 
             foreach (($targetRegister['schemas'] ?? []) as $schema) {
                 $slug = strtolower($schema['slug'] ?? '');
-                $allowed = ['organization','element','relation','view','model','property','property-definition'];
+                $allowed = ['organization','element','relation','view','model','property-definition'];
                 if (in_array($slug, $allowed, true)) {
                     // Handle property-definition schema with underscore in config key
                     $configKey = $slug === 'property-definition' ? 'property_definition_schema' : $slug . '_schema';
@@ -3024,8 +3024,7 @@ class SettingsService
                     'elements_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
                     'relationships_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
                     'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', ''),
-                    'models_schema' => $this->config->getValueString($this->_appName, 'amef_models_schema', ''),
-                    'properties_schema' => $this->config->getValueString($this->_appName, 'amef_properties_schema', '')
+                    'models_schema' => $this->config->getValueString($this->_appName, 'amef_models_schema', '')
                 ];
             }
 
@@ -3136,7 +3135,8 @@ class SettingsService
                 'totalElementObjects' => $amefObjectCounts['totalElementObjects'],
                 'totalOrganizationObjects' => $amefObjectCounts['totalOrganizationObjects'],
                 'totalViewObjects' => $amefObjectCounts['totalViewObjects'],
-                'totalRelationshipsObjects' => $amefObjectCounts['totalRelationshipsObjects']
+                'totalRelationshipsObjects' => $amefObjectCounts['totalRelationshipsObjects'],
+                'totalModelObjects' => $amefObjectCounts['totalModelObjects']
             ];
         }
     }
@@ -3281,15 +3281,13 @@ class SettingsService
             $viewObjects = $archiMateService->getViewObjects();
             $relationshipObjects = $archiMateService->getRelationshipObjects();
             $modelObjects = $archiMateService->getModelObjects();
-            $propertyObjects = $archiMateService->getPropertyObjects();
 
             $this->logger->debug('SettingsService: Retrieved AMEF object counts', [
                 'elementObjects' => count($elementObjects),
                 'organizationObjects' => count($organizationObjects),
                 'viewObjects' => count($viewObjects),
                 'relationshipObjects' => count($relationshipObjects),
-                'modelObjects' => count($modelObjects),
-                'propertyObjects' => count($propertyObjects)
+                'modelObjects' => count($modelObjects)
             ]);
 
             return [
@@ -3297,8 +3295,7 @@ class SettingsService
                 'totalOrganizationObjects' => count($organizationObjects),
                 'totalViewObjects' => count($viewObjects),
                 'totalRelationshipsObjects' => count($relationshipObjects),
-                'totalModelObjects' => count($modelObjects),
-                'totalPropertyObjects' => count($propertyObjects)
+                'totalModelObjects' => count($modelObjects)
             ];
 
         } catch (\Exception $e) {
@@ -3313,8 +3310,7 @@ class SettingsService
                 'totalOrganizationObjects' => 0,
                 'totalViewObjects' => 0,
                 'totalRelationshipsObjects' => 0,
-                'totalModelObjects' => 0,
-                'totalPropertyObjects' => 0
+                'totalModelObjects' => 0
             ];
         }
     }
@@ -3549,7 +3545,6 @@ class SettingsService
                 'relationships_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
                 'views_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', ''),
                 'models_schema' => $this->config->getValueString($this->_appName, 'amef_models_schema', ''),
-                'properties_schema' => $this->config->getValueString($this->_appName, 'amef_properties_schema', ''),
                 'organization_source' => $this->config->getValueString($this->_appName, 'amef_organization_source', 'openregister'),
                 'organization_register' => $this->config->getValueString($this->_appName, 'amef_organization_register', ''),
                 'organization_schema' => $this->config->getValueString($this->_appName, 'amef_organization_schema', ''),
@@ -3659,7 +3654,6 @@ class SettingsService
                 'amef_relationships_schema',
                 'amef_views_schema',
                 'amef_models_schema',
-                'amef_properties_schema',
                 'amef_property_definitions_schema',
                 'amef_organization_source',
                 'amef_organization_register',
@@ -3814,8 +3808,7 @@ class SettingsService
                         'totalOrganizationObjects' => 0,
                         'totalViewObjects' => 0,
                         'totalRelationshipsObjects' => 0,
-                        'totalModelObjects' => 0,
-                        'totalPropertyObjects' => 0
+                        'totalModelObjects' => 0
                     ],
                     'configured' => false,
                     'error' => $e->getMessage()
@@ -3842,8 +3835,7 @@ class SettingsService
                         'totalOrganizationObjects' => 0,
                         'totalViewObjects' => 0,
                         'totalRelationshipsObjects' => 0,
-                        'totalModelObjects' => 0,
-                        'totalPropertyObjects' => 0
+                        'totalModelObjects' => 0
                     ],
                     'configured' => false,
                     'error' => $e->getMessage()
@@ -4172,7 +4164,6 @@ class SettingsService
                 'view_schema',
                 'model_schema',
                 'property_definition_schema',
-                'property_schema',
             ];
 
             $validated = [];

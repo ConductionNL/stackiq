@@ -58,7 +58,6 @@ export const useSettingsStore = defineStore('settings', {
 			amef_relation_schema: { schema: null },
 			amef_view_schema: { schema: null },
 			amef_model_schema: { schema: null },
-			amef_property_schema: { schema: null },
 			amef_property_definition_schema: { schema: null },
 			// Voorzieningen register configuration - updated to match current schemas
 			voorzieningen_sector_schema: { schema: null },
@@ -807,7 +806,7 @@ export const useSettingsStore = defineStore('settings', {
 				amef_relation_schema: { schema: null },
 				amef_view_schema: { schema: null },
 				amef_model_schema: { schema: null },
-				amef_property_schema: { schema: null },
+	
 				amef_property_definition_schema: { schema: null },
 				// Voorzieningen register configuration - updated to match current schemas
 				voorzieningen_sector_schema: { schema: null },
@@ -914,12 +913,9 @@ export const useSettingsStore = defineStore('settings', {
 				const opt = findOption((ac.model_schema || ac.models_schema), this.amefSchemaOptions)
 				if (opt) this.configuration.amef_model_schema.schema = opt
 			}
-			if (ac.property_schema || ac.properties_schema) {
-				const opt = findOption((ac.property_schema || ac.properties_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_property_schema.schema = opt
-			}
-			if (ac['property-definition_schema'] || ac.property_definitions_schema) {
-				const opt = findOption((ac['property-definition_schema'] || ac.property_definitions_schema), this.amefSchemaOptions)
+
+			if (ac.property_definition_schema || ac['property-definition_schema'] || ac.property_definitions_schema) {
+				const opt = findOption((ac.property_definition_schema || ac['property-definition_schema'] || ac.property_definitions_schema), this.amefSchemaOptions)
 				if (opt) this.configuration.amef_property_definition_schema.schema = opt
 			}
 		},
@@ -1196,7 +1192,6 @@ export const useSettingsStore = defineStore('settings', {
 					'amef_relation_schema',
 					'amef_view_schema',
 					'amef_model_schema',
-					'amef_property_schema',
 					'amef_property_definition_schema',
 				]
 				// Map UI keys to API keys
@@ -1206,7 +1201,6 @@ export const useSettingsStore = defineStore('settings', {
 					amef_relation_schema: 'relation_schema',
 					amef_view_schema: 'view_schema',
 					amef_model_schema: 'model_schema',
-					amef_property_schema: 'property_schema',
 					amef_property_definition_schema: 'property-definition_schema',
 				}
 				if (this.amefRegister?.value) {
@@ -1715,7 +1709,7 @@ export const useSettingsStore = defineStore('settings', {
 				amef_relation_schema: { schema: null },
 				amef_view_schema: { schema: null },
 				amef_model_schema: { schema: null },
-				amef_property_schema: { schema: null },
+	
 				amef_property_definition_schema: { schema: null },
 				// Voorzieningen register configuration - updated to match current schemas
 				voorzieningen_sector_schema: { schema: null },

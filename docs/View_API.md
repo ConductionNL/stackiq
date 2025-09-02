@@ -327,3 +327,4 @@ if (data.success) {
 ```
 
 This completes the View API implementation with full documentation for querying ArchiMate views with enrichment capabilities.
+

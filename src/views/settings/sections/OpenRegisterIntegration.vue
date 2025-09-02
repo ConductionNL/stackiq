@@ -278,7 +278,7 @@ export default {
 				{ key: 'amef_property_definition_schema', title: 'Property Definition Schema', description: 'Schema for property definitions' },
 				{ key: 'amef_relation_schema', title: 'Relation Schema', description: 'Schema for ArchiMate relationships' },
 				{ key: 'amef_view_schema', title: 'View Schema', description: 'Schema for ArchiMate views' },
-				{ key: 'amef_property_schema', title: 'Property Schema', description: 'Schema for properties' },
+				// NOTE: 'amef_property_schema' removed - properties are never root-level AMEF objects, only nested within other elements
 			]
 		},
 
@@ -374,7 +374,7 @@ export default {
 				'amef_property_definition_schema',
 				'amef_relation_schema',
 				'amef_view_schema',
-				'amef_property_schema',
+				// NOTE: 'amef_property_schema' removed - properties are never root-level AMEF objects
 			]
 
 			return amefKeys.some(key => {
