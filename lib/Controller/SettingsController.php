@@ -1147,11 +1147,14 @@ class SettingsController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Determine appropriate HTTP status code based on error type
+            $statusCode = $this->getHttpStatusForException($e);
+
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Import failed: ' . $e->getMessage(),
                 'error' => $e->getMessage()
-            ], 500);
+            ], $statusCode);
         }
     }
 
@@ -1185,11 +1188,14 @@ class SettingsController extends Controller
 
             // Check if export was successful
             if (!$result['success']) {
+                // Determine appropriate status code based on error message
+                $statusCode = $this->getHttpStatusForErrorMessage($result['error'] ?? 'Export failed');
+                
                 return new JSONResponse([
                     'success' => false,
                     'message' => $result['error'] ?? 'Export failed',
                     'error' => $result['error'] ?? 'EXPORT_FAILED'
-                ], 500);
+                ], $statusCode);
             }
 
             // Return the XML file directly for download
@@ -1230,11 +1236,14 @@ class SettingsController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Determine appropriate HTTP status code based on error type
+            $statusCode = $this->getHttpStatusForException($e);
+
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Export failed: ' . $e->getMessage(),
                 'error' => $e->getMessage()
-            ], 500);
+            ], $statusCode);
         }
     }
 
@@ -2370,6 +2379,61 @@ class SettingsController extends Controller
                 'message' => 'Failed to update user groups config: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Determine appropriate HTTP status code for an exception
+     * 
+     * @param \Exception $e The exception to classify
+     * @return int HTTP status code (400, 404, 422, or 500)
+     */
+    private function getHttpStatusForException(\Exception $e): int
+    {
+        // Check exception type first
+        if ($e instanceof \InvalidArgumentException) {
+            return 400; // Bad Request for invalid arguments/configuration
+        }
+        
+        // Fallback to message-based classification
+        $message = $e->getMessage();
+        return $this->getHttpStatusForErrorMessage($message);
+    }
+
+    /**
+     * Determine appropriate HTTP status code for an error message
+     * 
+     * @param string $message The error message to classify
+     * @return int HTTP status code (400, 404, 422, or 500)
+     */
+    private function getHttpStatusForErrorMessage(string $message): int
+    {
+        $message = strtolower($message);
+        
+        // Configuration errors - 400 Bad Request
+        if (str_contains($message, 'not configured') ||
+            str_contains($message, 'missing configuration') ||
+            str_contains($message, 'invalid configuration')) {
+            return 400;
+        }
+        
+        // File not found errors - 404 Not Found  
+        if (str_contains($message, 'file not found') ||
+            str_contains($message, 'not found') ||
+            str_contains($message, 'missing file')) {
+            return 404;
+        }
+        
+        // Validation errors - 422 Unprocessable Entity
+        if (str_contains($message, 'validation') ||
+            str_contains($message, 'invalid xml') ||
+            str_contains($message, 'parsing error') ||
+            str_contains($message, 'malformed') ||
+            str_contains($message, 'could not be parsed')) {
+            return 422;
+        }
+        
+        // Default to 500 Internal Server Error for unknown issues
+        return 500;
     }
 
 

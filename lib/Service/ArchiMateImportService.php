@@ -1725,16 +1725,16 @@ class ArchiMateImportService
                 
                 // Check if this object is in the saved (created) list
                 $wasCreated = !empty(array_filter($saveResult['saved'] ?? [], 
-                    fn($saved) => (method_exists($saved, 'getUuid') ? $saved->getUuid() : null) === $objectId));
+                    fn($saved) => (is_object($saved) && method_exists($saved, 'getUuid') ? $saved->getUuid() : null) === $objectId));
                 
                 // Check if this object is in the updated list
                 $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [], 
-                    fn($updated) => (method_exists($updated, 'getUuid') ? $updated->getUuid() : null) === $objectId));
+                    fn($updated) => (is_object($updated) && method_exists($updated, 'getUuid') ? $updated->getUuid() : null) === $objectId));
                 
                 // Check if this object was skipped (no changes)
                 $unchangedObjects = $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [];
                 $wasSkipped = !empty(array_filter($unchangedObjects,
-                    fn($unchanged) => (method_exists($unchanged, 'getUuid') ? $unchanged->getUuid() : null) === $objectId));
+                    fn($unchanged) => (is_object($unchanged) && method_exists($unchanged, 'getUuid') ? $unchanged->getUuid() : null) === $objectId));
                 
                 // Check if this object had validation errors
                 $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
