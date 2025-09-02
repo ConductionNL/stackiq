@@ -1049,7 +1049,7 @@
             "description": "Voornaam van de contactpersoon",
             "facetable": false,
             "title": "Voornaam",
-            "order": 11,
+            "order": 1,
             "maxLength": 100,
             "example": "Bijvoorbeeld: Jan"
           },
@@ -1058,7 +1058,7 @@
             "description": "Tussenvoegsel van de contactpersoon",
             "facetable": false,
             "title": "Tussenvoegsel",
-            "order": 9,
+            "order": 2,
             "maxLength": 20,
             "example": "Bijvoorbeeld: van"
           },
@@ -1067,7 +1067,7 @@
             "description": "Achternaam van de contactpersoon",
             "facetable": false,
             "title": "Achternaam",
-            "order": 1,
+            "order": 3,
             "maxLength": 100,
             "example": "Bijvoorbeeld: Jansen"
           },
@@ -1097,7 +1097,7 @@
             "oneOf": [],
             "facetable": false,
             "title": "Functie",
-            "order": 3,
+            "order": 6,
             "example": "Bijvoorbeeld: Beheerder"
           },
           "organisatie": {
@@ -1110,7 +1110,7 @@
             },
             "$ref": "#/components/schemas/organisatie",
             "required": true,
-            "order": 6
+            "order": 0
           },
           "username": {
             "description": "Gebruikersnaam van de contactpersoon",
@@ -1118,7 +1118,7 @@
             "type": "string",
             "visible": true,
             "facetable": false,
-            "order": 10,
+            "order": 0,
             "minLength": null,
             "maxLength": 50,
             "immutable": true,
@@ -1146,7 +1146,7 @@
             "description": "Telefoonnummer van de contactpersoon",
             "facetable": false,
             "title": "Telefoonnummer",
-            "order": 8,
+            "order": 5,
             "example": "Bijvoorbeeld: 06 12345678"
           },
           "isAanspreekpunt": {
@@ -1154,7 +1154,7 @@
             "title": "Is aanspreekpunt",
             "description": "Geeft aan of deze persoon het aanspreekpunt is voor deze organisatie (publiek word gedeeld",
             "facetable": false,
-            "order": 4,
+            "order": 0,
             "example": "Bijvoorbeeld: true"
           },
           "notificaties": {
@@ -1165,7 +1165,7 @@
             "items": {
               "type": "string"
             },
-            "order": 5,
+            "order": 0,
             "example": "Bijvoorbeeld: [\"email\", \"sms\"]"
           },
           "rollen": {
@@ -1174,7 +1174,7 @@
             "type": "array",
             "visible": true,
             "facetable": false,
-            "order": 7,
+            "order": 0,
             "minLength": null,
             "maxLength": null,
             "minimum": null,
@@ -1219,7 +1219,7 @@
             "required": true,
             "visible": true,
             "facetable": false,
-            "order": 2,
+            "order": 4,
             "minLength": null,
             "maxLength": 320,
             "minimum": null,
@@ -4321,7 +4321,6 @@
         "deleted": null,
         "configuration": null
       },
-
       "module": {
         "uri": null,
         "slug": "module",
