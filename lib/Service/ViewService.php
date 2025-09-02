@@ -76,6 +76,9 @@ class ViewService
             // Get all view objects from OpenRegister
             $views = $this->getViewsFromRegister();
             
+            // Transform views to include critical API fields
+            $views = $this->transformViews($views);
+            
                     // Apply enrichments based on options
         if (!empty($options)) {
             $views = $this->enrichViews($views, $options);
@@ -133,6 +136,9 @@ class ViewService
                     'view' => null
                 ];
             }
+            
+            // Transform view to include critical API fields
+            $view = $this->transformView($view);
             
             // Apply enrichments based on options
             if (!empty($options)) {
@@ -1039,5 +1045,184 @@ class ViewService
             ]);
             return null;
         }
+    }
+
+    /**
+     * Transform multiple views to include critical API fields
+     * 
+     * @param array $views Array of view objects
+     * @return array Array of transformed view objects
+     */
+    private function transformViews(array $views): array
+    {
+        $transformedViews = [];
+        
+        foreach ($views as $view) {
+            $transformedViews[] = $this->transformView($view);
+        }
+        
+        return $transformedViews;
+    }
+
+    /**
+     * Transform a single view to include critical API fields
+     * 
+     * @param array $view View object to transform
+     * @return array Transformed view object with critical API fields
+     */
+    private function transformView(array $view): array
+    {
+        $transformedView = $view;
+        
+        // Add view documentation from XML if available
+        if (isset($view['xml']['documentation'])) {
+            $transformedView['documentation'] = $view['xml']['documentation'];
+        }
+        
+        // Transform properties from XML to required API format
+        if (isset($view['xml']['properties']['property']) && is_array($view['xml']['properties']['property'])) {
+            $transformedView['properties'] = $this->transformViewProperties($view['xml']['properties']['property']);
+        }
+        
+        // Transform viewNodes to include critical fields
+        if (isset($view['xml']['viewNodes']) && is_array($view['xml']['viewNodes'])) {
+            $transformedView['viewNodes'] = $this->transformViewNodes($view['xml']['viewNodes']);
+        }
+        
+        // Transform viewRelationships to include critical fields  
+        if (isset($view['xml']['viewRelationships']) && is_array($view['xml']['viewRelationships'])) {
+            $transformedView['viewRelationships'] = $this->transformViewRelationships($view['xml']['viewRelationships']);
+        }
+        
+        return $transformedView;
+    }
+
+    /**
+     * Transform view properties to required API format
+     * 
+     * @param array $properties Array of property objects from XML
+     * @return array Array of transformed properties
+     */
+    private function transformViewProperties(array $properties): array
+    {
+        $transformedProperties = [];
+        
+        foreach ($properties as $property) {
+            $transformedProperty = [
+                'propertyDefinitionRef' => $property['_propertyDefinitionRef'] ?? $property['___propertyDefinitionRef'] ?? null,
+                'value' => $property['value']['_value'] ?? null
+            ];
+            
+            if ($transformedProperty['propertyDefinitionRef'] && $transformedProperty['value']) {
+                $transformedProperties[] = $transformedProperty;
+            }
+        }
+        
+        return $transformedProperties;
+    }
+
+    /**
+     * Transform viewNodes to include critical API fields
+     * 
+     * @param array $viewNodes Array of viewNode objects from XML
+     * @return array Array of transformed viewNodes
+     */
+    private function transformViewNodes(array $viewNodes): array
+    {
+        $transformedNodes = [];
+        
+        foreach ($viewNodes as $node) {
+            $transformedNode = $node; // Keep all existing fields
+            
+            // Add critical API fields
+            $transformedNode['identifier'] = $node['viewNodeId'] ?? null;
+            $transformedNode['documentation'] = $node['description'] ?? null;
+            
+            // Add position with width and height
+            $transformedNode['position'] = [
+                'x' => $node['x'] ?? null,
+                'y' => $node['y'] ?? null,
+                'w' => $node['width'] ?? null,
+                'h' => $node['height'] ?? null
+            ];
+            
+            // Add style information
+            if (isset($node['color']) || isset($node['borderColor']) || isset($node['font'])) {
+                $transformedNode['style'] = [
+                    'fillColor' => $this->parseColor($node['color'] ?? null),
+                    'lineColor' => $this->parseColor($node['borderColor'] ?? null),
+                    'font' => $node['font'] ?? null
+                ];
+            }
+            
+            $transformedNodes[] = $transformedNode;
+        }
+        
+        return $transformedNodes;
+    }
+
+    /**
+     * Transform viewRelationships to include critical API fields
+     * 
+     * @param array $viewRelationships Array of viewRelationship objects from XML
+     * @return array Array of transformed viewRelationships
+     */
+    private function transformViewRelationships(array $viewRelationships): array
+    {
+        $transformedRelationships = [];
+        
+        foreach ($viewRelationships as $relationship) {
+            $transformedRelationship = $relationship; // Keep all existing fields
+            
+            // Add critical API fields
+            $transformedRelationship['identifier'] = $relationship['viewRelationshipId'] ?? null;
+            
+            // Add properties if available (check for relationship properties)
+            if (isset($relationship['properties'])) {
+                $transformedRelationship['properties'] = $relationship['properties'];
+            } else {
+                // Create properties array with relationship name if available
+                $properties = [];
+                if (isset($relationship['label'])) {
+                    $properties[] = [
+                        'propertyDefinitionRef' => 'propid-62',
+                        'value' => $relationship['label']
+                    ];
+                }
+                $transformedRelationship['properties'] = $properties;
+            }
+            
+            // Ensure bendpoints are properly formatted
+            $transformedRelationship['bendpoints'] = $relationship['bendpoints'] ?? [];
+            
+            $transformedRelationships[] = $transformedRelationship;
+        }
+        
+        return $transformedRelationships;
+    }
+
+    /**
+     * Parse color string to extract RGB values
+     * 
+     * @param string|null $colorString Color string in format "rgb(r, g, b)" or null
+     * @return array|null Array with r, g, b, a values or null
+     */
+    private function parseColor(?string $colorString): ?array
+    {
+        if (!$colorString) {
+            return null;
+        }
+        
+        // Handle rgb(r, g, b) format
+        if (preg_match('/rgb\((\d+),\s*(\d+),\s*(\d+)\)/', $colorString, $matches)) {
+            return [
+                'r' => (int)$matches[1],
+                'g' => (int)$matches[2], 
+                'b' => (int)$matches[3],
+                'a' => 100
+            ];
+        }
+        
+        return null;
     }
 }
