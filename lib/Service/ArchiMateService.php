@@ -982,7 +982,7 @@ class ArchiMateService
         // Get the AMEF register ID from configuration - throw error if missing
         $amefConfig = $this->settingsService->getAmefConfig();
         if (!isset($amefConfig['register']) || empty($amefConfig['register'])) {
-            throw new \RuntimeException('AMEF register ID is not configured. Please configure the AMEF register via the admin interface.');
+            throw new \InvalidArgumentException('AMEF register ID is not configured. Please configure the AMEF register via the admin interface.');
         }
         $registerId = (int)$amefConfig['register'];
         

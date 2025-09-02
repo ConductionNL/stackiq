@@ -46,6 +46,11 @@ class ArchiMateExportService
                 // Skip legacy _attributes bag, handle individual underscored keys as attributes
                 $attrKey = substr($key, 1);
                 
+                // Skip malformed attribute keys that would create invalid XML (e.g., __propertyDefinitionRef -> :propertyDefinitionRef)
+                if (str_starts_with($attrKey, '__') || $attrKey === '') {
+                    continue;
+                }
+                
                 // Fix double underscores to colons (e.g., xml__lang -> xml:lang)
                 $attrKey = str_replace('__', ':', $attrKey);
                 
@@ -119,6 +124,11 @@ class ArchiMateExportService
             if (in_array($key, $propertyLikeFields, true)) {
                 continue; // Skip these - they should only appear in proper <properties><property> structure
             }
+            
+            // Special handling for elementProperties and other nested structures - filter out problematic fields
+            if (($key === 'elementProperties' || $key === 'properties' || $key === 'viewNodes') && is_array($value)) {
+                $value = $this->filterProblematicFields($value, $propertyLikeFields);
+            }
 
             // Ensure key is always a string for XML tag names
             $tagName = (string) $key;
@@ -163,6 +173,53 @@ class ArchiMateExportService
             }
         }
         return [null, $key];
+    }
+
+    /**
+     * Recursively filter out problematic fields from nested data structures
+     * 
+     * @param array $data The data structure to filter
+     * @param array $fieldsToRemove List of field names to remove
+     * @return array Filtered data structure
+     */
+    private function filterProblematicFields(array $data, array $fieldsToRemove): array
+    {
+        $filtered = [];
+        
+        foreach ($data as $key => $value) {
+            $shouldSkip = false;
+            
+            // Skip exact matches
+            if (in_array($key, $fieldsToRemove, true)) {
+                $shouldSkip = true;
+            }
+            
+            // Skip fields that start with problematic patterns (e.g., "beschikbaarheid(belangrijksteReden)")
+            foreach ($fieldsToRemove as $fieldPattern) {
+                if (str_starts_with($key, $fieldPattern)) {
+                    $shouldSkip = true;
+                    break;
+                }
+            }
+            
+            // Skip fields with invalid XML tag name characters (parentheses, etc.)
+            if (preg_match('/[(),<>\/\\\]/', $key)) {
+                $shouldSkip = true;
+            }
+            
+            if ($shouldSkip) {
+                continue;
+            }
+            
+            // Recursively filter nested arrays
+            if (is_array($value)) {
+                $filtered[$key] = $this->filterProblematicFields($value, $fieldsToRemove);
+            } else {
+                $filtered[$key] = $value;
+            }
+        }
+        
+        return $filtered;
     }
 
     private function getNamespaceUri(\SimpleXMLElement $xml, string $prefix): string
@@ -1107,9 +1164,19 @@ XML;
                 $propDefRef = (string)$property['_attributes']['propertyDefinitionRef'];
             }
             
-            // Skip empty namespace prefix attributes (these cause :propertyDefinitionRef errors)
+            // Skip and clean up malformed attributes that would create invalid XML
             if (isset($property['_attributes'][':propertyDefinitionRef'])) {
                 unset($property['_attributes'][':propertyDefinitionRef']);
+            }
+            // Also check for other malformed attribute patterns
+            $badAttrs = [];
+            foreach ($property['_attributes'] ?? [] as $attrName => $attrValue) {
+                if (str_starts_with($attrName, ':')) {
+                    $badAttrs[] = $attrName;
+                }
+            }
+            foreach ($badAttrs as $badAttr) {
+                unset($property['_attributes'][$badAttr]);
             }
             
             if ($propDefRef) {
@@ -1400,6 +1467,11 @@ XML;
     private function runQualityAssuranceChecks(string $xmlString, array $sourceData): void
     {
         $this->logger->info('Running Quality Assurance checks on exported XML');
+        
+        // DEBUG: Save XML to file for inspection
+        $debugPath = '/tmp/debug_export.xml';
+        file_put_contents($debugPath, $xmlString);
+        $this->logger->info('DEBUG: Raw XML saved to ' . $debugPath . ' (size: ' . strlen($xmlString) . ' bytes)');
         
         try {
             $xml = new \SimpleXMLElement($xmlString);
