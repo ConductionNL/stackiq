@@ -738,7 +738,11 @@ export default {
 		 * @return {boolean} True if it's a configuration error
 		 */
 		isConfigurationError(errorMessage) {
-			return errorMessage && errorMessage.includes('missing configuration')
+			return errorMessage && (
+				errorMessage.includes('missing configuration')
+				|| errorMessage.includes('is not configured')
+				|| errorMessage.includes('Please configure all AMEF schema IDs')
+			)
 		},
 
 		/**
@@ -750,7 +754,17 @@ export default {
 		getConfigurationErrorDescription(errorMessage) {
 			if (!errorMessage) return ''
 
-			// Extract the main description before the missing items list
+			// Handle new error format from updated validation
+			if (errorMessage.includes('is not configured')) {
+				// Extract schema type from error message
+				const schemaMatch = errorMessage.match(/Schema ID for (\w+) '([^']+)' is not configured/)
+				if (schemaMatch) {
+					return `Missing configuration for ${schemaMatch[1]} schema (${schemaMatch[2]})`
+				}
+				return 'Required AMEF schema configuration is missing.'
+			}
+
+			// Extract the main description before the missing items list (legacy format)
 			const lines = errorMessage.split('\n')
 			const mainLine = lines.find(line => line.includes('cannot proceed'))
 			if (mainLine) {
@@ -768,6 +782,22 @@ export default {
 		getMissingConfigItems(errorMessage) {
 			if (!errorMessage) return []
 
+			// Handle new error format from updated validation
+			if (errorMessage.includes('is not configured')) {
+				const schemaMatch = errorMessage.match(/Schema ID for (\w+) '([^']+)' is not configured/)
+				if (schemaMatch) {
+					return [`${schemaMatch[2]} schema ID (for ${schemaMatch[1]} objects)`]
+				}
+
+				// Check for register ID configuration error
+				if (errorMessage.includes('register ID is not configured')) {
+					return ['AMEF Register ID']
+				}
+
+				return ['AMEF schema configuration']
+			}
+
+			// Handle legacy error format
 			const lines = errorMessage.split('\n')
 			const missingItems = []
 			let inMissingSection = false

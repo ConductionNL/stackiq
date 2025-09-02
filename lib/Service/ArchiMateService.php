@@ -109,16 +109,9 @@ class ArchiMateService
     ];
 
     /**
-     * Default schema IDs for ArchiMate objects
+     * NOTE: Default schema IDs removed - all schema IDs must be configured via AMEF settings.
+     * The system will fail gracefully with clear error messages if configuration is missing.
      */
-    private const DEFAULT_SCHEMA_IDS = [
-        'model' => 100,
-        'element' => 101,
-        'relationship' => 102,
-        'view' => 103,
-        'organization' => 104,
-        'property_definition' => 105
-    ];
 
     /**
      * Storage for the last save operation results
@@ -216,7 +209,7 @@ class ArchiMateService
 
             $registerId = $this->getAmefRegisterId();
             if (!$registerId) {
-                $registerId = 15; // Fallback
+                throw new \RuntimeException('AMEF register ID is not configured. Please configure the AMEF register via the admin interface.');
             }
 
             // Create schema ID mapping for the export service
@@ -995,6 +988,7 @@ class ArchiMateService
                 'view' => $this->settingsService->getSchemaIdForObjectType('view'),
                 'organization' => $this->settingsService->getSchemaIdForObjectType('organization'),
                 'property_definition' => $this->settingsService->getSchemaIdForObjectType('property_definition')
+                // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements
             ]
         ];
 
@@ -1015,7 +1009,7 @@ class ArchiMateService
     private function validateRequiredConfiguration(): void
     {
         $missingConfig = [];
-        $requiredSchemaTypes = ['model', 'element', 'relationship', 'view', 'organization', 'property_definition'];
+        $requiredSchemaTypes = ['model', 'element', 'relationship', 'view', 'organization', 'property'];
         
         // Check register ID
         if (empty($this->cachedConfig['registerId'])) {
@@ -1097,24 +1091,10 @@ class ArchiMateService
 
 
     /**
-     * Get ArchiMate register ID
-     * 
-     * @return int Register ID
+     * NOTE: Removed deprecated methods getArchiMateRegisterId() and getArchiMateModelSchemaId()
+     * that had hardcoded fallbacks. All configuration is now retrieved via SettingsService
+     * through the initializeCache() method and proper AMEF configuration.
      */
-    private function getArchiMateRegisterId(): int
-    {
-        return (int) ($this->config->getValueString('softwarecatalog', 'archimate_register_id', '100'));
-    }
-
-    /**
-     * Get ArchiMate model schema ID
-     * 
-     * @return int Schema ID
-     */
-    private function getArchiMateModelSchemaId(): int
-    {
-        return (int) ($this->config->getValueString('softwarecatalog', 'archimate_model_schema_id', '100'));
-    }
 
     /**
      * Get schema ID for a section
@@ -1136,16 +1116,9 @@ class ArchiMateService
         $objectType = $objectTypeMapping[$section] ?? $section;
         $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
         
-        // Fallback to hardcoded values if SettingsService returns null
+        // Ensure schema ID is configured - no hardcoded fallbacks
         if ($schemaId === null) {
-            $fallbackIds = [
-                'elements' => 101,
-                'relationships' => 102,
-                'views' => 103,
-                'organizations' => 104,
-                'property_definitions' => 105
-            ];
-            throw new \RuntimeException("Schema ID for section '{$section}' is not configured. Please configure all AMEF schema IDs via the admin interface.");
+            throw new \RuntimeException("Schema ID for section '{$section}' is not configured. Please configure all AMEF schema IDs via the admin interface. Expected object type: '{$objectType}'");
         }
         
         return $schemaId;

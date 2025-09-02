@@ -74,16 +74,9 @@ class ArchiMateImportService
     ];
 
     /**
-     * Default schema IDs for ArchiMate objects
+     * NOTE: Default schema IDs removed - all schema IDs must be configured via AMEF settings.
+     * The system will fail gracefully with clear error messages if configuration is missing.
      */
-    private const DEFAULT_SCHEMA_IDS = [
-        'model' => 100,
-        'element' => 101,
-        'relationship' => 102,
-        'view' => 103,
-        'organization' => 104,
-        'property_definition' => 105
-    ];
 
     /**
      * Store last save operation timing breakdown for performance metrics
@@ -1335,6 +1328,7 @@ class ArchiMateImportService
                 'view' => $this->getAmefSchemaIdForType('view'),
                 'organization' => $this->getAmefSchemaIdForType('organization'),
                 'property_definition' => $this->getAmefSchemaIdForType('property_definition')
+                // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements
             ]
         ];
     }
@@ -1488,9 +1482,8 @@ class ArchiMateImportService
             'relationships' => 'relation',
             'views' => 'view',
             'models' => 'model',
-            'properties' => 'property',
-            // Accept both underscored and dashed naming conventions
-            'property_definitions' => 'property-definition'
+            // NOTE: 'properties' mapping removed - properties are never root-level AMEF objects
+            'property_definitions' => 'property_definition'
         ];
         $normalizedType = $typeMapping[$archiMateType] ?? $archiMateType;
 
@@ -1501,8 +1494,8 @@ class ArchiMateImportService
             'relationship' => ['relation_schema'],
             'view' => ['view_schema'],
             'model' => ['model_schema'],
-            'property' => ['property_schema'],
-            'property_definition' => ['property-definition_schema']
+            'property_definition' => ['property_definition_schema']
+            // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements
         ];
 
         $candidates = $schemaKeyCandidatesByType[$normalizedType] ?? [$normalizedType . '_schema'];
@@ -1536,22 +1529,32 @@ class ArchiMateImportService
     }
 
     /**
-     * Get schema ID for a section
+     * Get schema ID for a section using SettingsService (no hardcoded fallbacks)
      * 
      * @param string $section Section name
      * @return int Schema ID
+     * @throws \RuntimeException If schema ID is not configured
      */
     private function getSchemaIdForSection(string $section): int
     {
-        $schemaIds = [
-            'elements' => 101,
-            'relationships' => 102,
-            'views' => 103,
-            'organizations' => 104,
-            'property_definitions' => 105
+        // Map section names to object types for SettingsService
+        $objectTypeMapping = [
+            'elements' => 'element',
+            'relationships' => 'relationship',
+            'views' => 'view', 
+            'organizations' => 'organization',
+            'property_definitions' => 'property_definition'
         ];
-
-        return $schemaIds[$section] ?? 100;
+        
+        $objectType = $objectTypeMapping[$section] ?? $section;
+        $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
+        
+        // Ensure schema ID is configured - no hardcoded fallbacks
+        if ($schemaId === null) {
+            throw new \RuntimeException("Schema ID for section '{$section}' is not configured. Please configure all AMEF schema IDs via the admin interface. Expected object type: '{$objectType}'");
+        }
+        
+        return $schemaId;
     }
 
     /**
@@ -3518,7 +3521,7 @@ class ArchiMateImportService
             $object = [
                 '@self' => [
                     'register' => $this->cachedConfig['registerId'] ?? 15,
-                    'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? 100,
+                    'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? throw new \RuntimeException("Schema ID for '{$schemaType}' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
@@ -3863,7 +3866,7 @@ class ArchiMateImportService
             $object = [
                 '@self' => [
                     'register' => $this->cachedConfig['registerId'] ?? 15,
-                    'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? 100,
+                    'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? throw new \RuntimeException("Schema ID for '{$schemaType}' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
                     'organisation' => $this->cachedConfig['organisation'],
