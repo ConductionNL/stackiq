@@ -8,7 +8,7 @@ The group management system handles three main types of group assignments:
 
 1. **Role-Based Groups** - Groups based on user roles ('beheerder', 'inkoper')
 2. **Organization Groups** - Groups specific to each organization
-3. **Special Groups** - Special groups like 'ambtenaar' for gemeente organizations
+3. **Special Groups** - Special groups like 'ambtenaar' available for manual assignment
 
 ## Role-Based Groups
 
@@ -71,8 +71,8 @@ Users are automatically added to their organization's group based on the 'organi
 
 Organizations with 'type: "gemeente"' trigger special handling:
 
-- Users automatically get added to the 'ambtenaar' group
-- This is in addition to all other group assignments
+- The 'ambtenaar' group is available for manual assignment
+- Users can be manually assigned to or removed from the 'ambtenaar' group
 - The 'ambtenaar' group is created automatically if it doesn't exist
 
 ## Automatic Beheerder Assignment
@@ -140,7 +140,7 @@ When a contactgegevens object is created or updated:
 1. **Username Generation**: Create/validate username from name fields
 2. **Role-Based Groups**: Assign user to groups based on 'roles' property
 3. **Organization Groups**: Add user to organization-specific group
-4. **Special Groups**: Add to 'ambtenaar' if organization is gemeente
+4. **Special Groups**: 'ambtenaar' group available for manual assignment (no automatic assignment)
 5. **Beheerder Check**: Ensure organization has at least one beheerder
 6. **Manager Assignment**: Set up manager relationships
 

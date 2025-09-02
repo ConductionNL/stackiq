@@ -47,7 +47,7 @@ Organization Object (beoordeling: "actief")
     ├── Assign role-based groups (direct mapping)
     ├── Assign organization group (specific to org)
     ├── Assign "Organisaties-beheerder" group (all org contacts)
-    ├── Check organization type → If "Gemeente" → Add to "ambtenaar" group
+    ├── Note: "ambtenaar" group available for manual assignment (no automatic assignment)
     └── Assign default group (software-catalog-users)
 ```
 
@@ -77,7 +77,7 @@ The system supports the following roles:
 - **Functioneel-beheerder** - Functional administration
 - **VNG-raadpleger** - VNG consultation
 - **Organisatie-beheerder** - Organization management
-- **Ambtenaar** - Civil servant (assigned to users from Gemeente organizations)
+- **Ambtenaar** - Civil servant (available for manual assignment, no longer automatically assigned)
 
 ## Group Management
 
@@ -96,7 +96,7 @@ Each role maps to a corresponding group:
 
 - **Organization Groups**: Each organization gets its own group named after the organization
 - **Organisaties-beheerder**: All users created from organization contacts are added to this group
-- **Ambtenaar**: Users from organizations of type "Gemeente" are automatically added to this group
+- **Ambtenaar**: Available for manual assignment to users (no longer automatically assigned based on organization type)
 
 ### Default Groups
 
@@ -109,7 +109,7 @@ The system uses a flexible role-to-group assignment approach:
 
 1. **Direct Role Mapping**: For each role a user has, if there's a corresponding group in the allowed groups list, the user is added to that group
 2. **Organization Contact Group**: All users created from organization contacts are automatically added to the `organisaties-beheerder` group
-3. **Organization Type Groups**: Users from organizations of type "Gemeente" are automatically added to the `ambtenaar` group
+3. **Organization Type Groups**: The `ambtenaar` group is available for manual assignment (automatic assignment based on organization type has been removed)
 4. **Organization Group**: Users are added to their organization's specific group
 5. **Default Group**: All users are added to the `software-catalog-users` group
 
@@ -119,7 +119,7 @@ When a contact person's roles change:
 - **Role Removal**: Users are removed from groups corresponding to roles they no longer have
 - **Role Addition**: Users are added to groups for new roles they receive
 - **Organization Groups**: Users remain in organization-specific groups regardless of role changes
-- **Organization Type Groups**: Users from "Gemeente" organizations remain in the `ambtenaar` group regardless of role changes
+- **Organization Type Groups**: The `ambtenaar` group can be manually assigned and managed like other role-based groups
 
 ## Example Organization Object
 
@@ -144,7 +144,7 @@ When a contact person's roles change:
 
 ## Example: Gemeente Organization
 
-For organizations of type "Gemeente", users get additional group assignments:
+For organizations of type "Gemeente", users can get the following group assignments:
 
 ```json
 {
@@ -170,7 +170,7 @@ For organizations of type "Gemeente", users get additional group assignments:
 - `gebruik-beheerder` (from "manager" role)
 - `gemeente-amsterdam` (organization-specific group)
 - `organisaties-beheerder` (all organization contacts)
-- `ambtenaar` (because organization type is "Gemeente")
+- `ambtenaar` (if manually assigned)
 - `software-catalog-users` (default group)
 
 ## Event Handling

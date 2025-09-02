@@ -480,19 +480,17 @@ class ContactPersonHandler
                     }
                 }
 
-                // Check if organization is of type "Gemeente" and add to "ambtenaar" group
+                // Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations
+                // Users can be manually assigned to 'ambtenaar' group if needed
                 $organizationType = $this->getOrganizationType((string)$organizationId);
-                if (strtolower($organizationType) === 'gemeente') {
-                    $this->addUserToGroup($user, 'ambtenaar', 'gemeente-organization');
-                    $this->_logger->info(
-                        'Added user to ambtenaar group due to Gemeente organization type',
-                        [
-                            'username' => $user->getUID(),
-                            'organizationId' => $organizationId,
-                            'organizationType' => $organizationType
-                        ]
-                    );
-                }
+                $this->_logger->debug(
+                    'Organization type detected (no automatic group assignment)',
+                    [
+                        'username' => $user->getUID(),
+                        'organizationId' => $organizationId,
+                        'organizationType' => $organizationType
+                    ]
+                );
             }
 
             $this->_logger->info(
@@ -625,9 +623,8 @@ class ContactPersonHandler
                 }
             }
 
-            // Ensure organization type-based groups are preserved
-            // (e.g., "ambtenaar" for Gemeente organizations)
-            $this->ensureOrganizationTypeGroups($user);
+            // Note: Organization type-based automatic group assignments have been removed
+            // Groups like "ambtenaar" are now available for manual assignment only
 
         } catch (\Exception $e) {
             $this->_logger->error(
@@ -640,44 +637,7 @@ class ContactPersonHandler
         }
     }
 
-    /**
-     * Ensures organization type-based groups are assigned to the user
-     *
-     * @param \OCP\IUser $user The user to check and update
-     *
-     * @return void
-     */
-    private function ensureOrganizationTypeGroups(\OCP\IUser $user): void
-    {
-        try {
-            // Find the user's organization by looking for their contactpersoon
-            $objectService = $this->_getObjectService();
-            $contactpersoon = $this->findContactpersoonByUsername($user->getUID());
 
-            if ($contactpersoon) {
-                $contactData = $contactpersoon->getObject();
-                $organizationId = $contactData['organisation'] ?? '';
-
-                if (!empty($organizationId)) {
-                    $organizationType = $this->getOrganizationType($organizationId);
-
-                    // If organization is Gemeente, ensure user is in ambtenaar group
-                    if (strtolower($organizationType) === 'gemeente') {
-                        $this->addUserToGroup($user, 'ambtenaar', 'gemeente-organization-preserve');
-                    }
-                }
-            }
-
-        } catch (\Exception $e) {
-            $this->_logger->error(
-                'Failed to ensure organization type groups: ' . $e->getMessage(),
-                [
-                    'username' => $user->getUID(),
-                    'exception' => $e
-                ]
-            );
-        }
-    }
 
     /**
      * Finds contactpersoon object by username

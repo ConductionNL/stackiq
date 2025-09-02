@@ -29,7 +29,7 @@ You may be automatically assigned to several types of groups:
 - Example: 'gemeente_amsterdam' for Gemeente Amsterdam employees
 
 #### Special Groups
-- **ambtenaar** - If you work for a gemeente (municipality)
+- **ambtenaar** - Available for manual assignment (civil servant role)
 
 ### Your Manager
 
@@ -84,7 +84,7 @@ To view your groups and manager:
 The system creates these groups automatically:
 - 'beheerder' - Administrator role
 - 'inkoper' - Purchaser role
-- 'ambtenaar' - Municipality employee role
+- 'ambtenaar' - Civil servant role (manual assignment)
 - Organization-specific groups (e.g., 'gemeente_amsterdam')
 
 **Manual Group Operations:**
