@@ -103,7 +103,7 @@
 						<ul>
 							<li><strong>Role-based assignment:</strong> Users will be automatically assigned to groups based on their roles</li>
 							<li><strong>Permission management:</strong> Groups can be used to control access to different parts of the system</li>
-							<li><strong>Organization structure:</strong> Special groups like 'ambtenaar' are assigned based on organization type</li>
+							<li><strong>Organization structure:</strong> Special groups like 'ambtenaar' are available for manual assignment (no automatic assignment based on organization type)</li>
 						</ul>
 
 						<div class="default-groups-info">
@@ -236,7 +236,7 @@
 				<h4>Generic User Groups</h4>
 				<p>These are general-purpose groups that can be assigned to any user based on their role or function. Common examples include:</p>
 				<ul>
-					<li><strong>ambtenaar</strong> - For government employees</li>
+					<li><strong>ambtenaar</strong> - For government employees (manual assignment only)</li>
 					<li><strong>leverancier</strong> - For suppliers and vendors</li>
 					<li><strong>consultant</strong> - For external consultants</li>
 					<li><strong>beheerder</strong> - For system administrators</li>
@@ -248,13 +248,13 @@
 				<h4>Super User Groups</h4>
 				<p>These groups are reserved for system administrators and platform managers who need access to all system features and data across all organizations.</p>
 
-				<h4>Automatic Assignment</h4>
-				<p>Users are automatically assigned to groups based on:</p>
+				<h4>Group Assignment</h4>
+				<p>Users are assigned to groups based on:</p>
 				<ul>
-					<li>Their role in the organization</li>
-					<li>Whether they are the first contact for an organization</li>
-					<li>Their system-level permissions</li>
-					<li>The type of organization they belong to</li>
+					<li>Their role in the organization (automatic assignment)</li>
+					<li>Whether they are the first contact for an organization (automatic assignment)</li>
+					<li>Their system-level permissions (automatic assignment)</li>
+					<li>Manual assignment by administrators for special groups (e.g. 'ambtenaar')</li>
 				</ul>
 
 				<h4>Best Practices</h4>
@@ -385,7 +385,7 @@ export default {
 		 */
 		getGroupDescription(group) {
 			const descriptions = {
-				ambtenaar: 'Government employee role',
+				ambtenaar: 'Government employee role (manual assignment only)',
 				beheerder: 'Administrator role',
 				gebruiker: 'Standard user role',
 				organisatiebeheerder: 'Organization administrator role',

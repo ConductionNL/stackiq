@@ -199,20 +199,46 @@ class SettingsService
             $openRegisters = $this->getObjectService();
             if ($openRegisters !== null) {
                 $data['openRegisters'] = true;
-                $rawRegisters = $openRegisters->getRegisters();
+                
+                // Add additional error handling for OpenRegister internal errors
+                try {
+                    $rawRegisters = $openRegisters->getRegisters();
 
-                // Filter schemas to remove properties field for cleaner response
-                $data['availableRegisters'] = array_map(function($register) {
-                    if (isset($register['schemas']) && is_array($register['schemas'])) {
-                        $register['schemas'] = array_map(function($schema) {
-                            // Keep only essential schema fields, remove properties
-                            return array_filter($schema, function($key) {
-                                return !in_array($key, ['properties']);
-                            }, ARRAY_FILTER_USE_KEY);
-                        }, $register['schemas']);
-                    }
-                    return $register;
-                }, $rawRegisters);
+                    // Filter schemas to remove properties field for cleaner response
+                    $data['availableRegisters'] = array_map(function($register) {
+                        if (isset($register['schemas']) && is_array($register['schemas'])) {
+                            $register['schemas'] = array_map(function($schema) {
+                                // Keep only essential schema fields, remove properties
+                                return array_filter($schema, function($key) {
+                                    return !in_array($key, ['properties']);
+                                }, ARRAY_FILTER_USE_KEY);
+                            }, $register['schemas']);
+                        }
+                        return $register;
+                    }, $rawRegisters);
+                } catch (\TypeError $e) {
+                    // Handle OpenRegister internal errors (e.g. RegisterMapper parameter issues)
+                    $this->logger->warning(
+                        'OpenRegister internal error - using empty registers list',
+                        [
+                            'exception' => $e->getMessage(),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine()
+                        ]
+                    );
+                    $data['availableRegisters'] = [];
+                } catch (\Exception $e) {
+                    // Handle any other OpenRegister errors
+                    $this->logger->warning(
+                        'OpenRegister getRegisters() failed - using empty registers list',
+                        [
+                            'exception' => $e->getMessage(),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine()
+                        ]
+                    );
+                    $data['availableRegisters'] = [];
+                }
             }
         } catch (\RuntimeException $e) {
             // Service not available, continue with default values
@@ -1115,8 +1141,8 @@ class SettingsService
                 // Plural form for organization contacts
                 'organisaties-beheerder' => 'Organization administrators (plural)',
 
-                // Special groups
-                'ambtenaar' => 'Civil servants from Gemeente organizations',
+                // Special groups (available for manual assignment)
+                'ambtenaar' => 'Civil servants - available for manual assignment (no automatic assignment)',
                 'software-catalog-users' => 'General software catalog users',
 
                 // Super user groups
@@ -1232,8 +1258,8 @@ class SettingsService
                 // Plural form for organization contacts
                 'organisaties-beheerder' => 'Organization administrators (plural)',
 
-                // Special groups
-                'ambtenaar' => 'Civil servants from Gemeente organizations',
+                // Special groups (available for manual assignment)
+                'ambtenaar' => 'Civil servants - available for manual assignment (no automatic assignment)',
                 'software-catalog-users' => 'General software catalog users',
 
                 // Super user groups
@@ -1264,6 +1290,7 @@ class SettingsService
             }
 
             // Update the configuration with the correct role-based groups
+            // Note: 'ambtenaar' is excluded from generic groups since it's no longer automatically assigned
             $this->setGenericUserGroups([
                 'aanbod-beheerder',
                 'gebruik-beheerder',
@@ -1271,7 +1298,6 @@ class SettingsService
                 'functioneel-beheerder',
                 'vng-raadpleger',
                 'organisatie-beheerder',
-                'ambtenaar',
                 'software-catalog-users'
             ]);
 
@@ -2610,7 +2636,20 @@ class SettingsService
                 ];
             }
 
-            $registers = $objectService->getRegisters();
+            try {
+                $registers = $objectService->getRegisters();
+            } catch (\TypeError | \Exception $e) {
+                $this->logger->warning('OpenRegister getRegisters() failed in configureVoorzieningen', [
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+                return [
+                    'success' => false,
+                    'message' => 'Failed to retrieve registers: ' . $e->getMessage(),
+                ];
+            }
+            
             if (empty($registers)) {
                 return [
                     'success' => false,
@@ -2747,7 +2786,20 @@ class SettingsService
                 ];
             }
 
-            $registers = $objectService->getRegisters();
+            try {
+                $registers = $objectService->getRegisters();
+            } catch (\TypeError | \Exception $e) {
+                $this->logger->warning('OpenRegister getRegisters() failed in configureAmef', [
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+                return [
+                    'success' => false,
+                    'message' => 'Failed to retrieve registers: ' . $e->getMessage(),
+                ];
+            }
+            
             if (empty($registers)) {
                 return [
                     'success' => false,
@@ -4171,15 +4223,25 @@ class SettingsService
                 $objectService = $this->getObjectService();
                 if ($objectService !== null) {
                     // Build a set of schema ids for the chosen register
-                    $registers = $objectService->getRegisters();
-                    $schemaIdSet = [];
-                    foreach ($registers as $register) {
-                        if ((string)($register['id'] ?? '') === $targetRegisterId) {
-                            foreach (($register['schemas'] ?? []) as $schema) {
-                                $schemaIdSet[(string)$schema['id']] = true;
+                    try {
+                        $registers = $objectService->getRegisters();
+                        $schemaIdSet = [];
+                        foreach ($registers as $register) {
+                            if ((string)($register['id'] ?? '') === $targetRegisterId) {
+                                foreach (($register['schemas'] ?? []) as $schema) {
+                                    $schemaIdSet[(string)$schema['id']] = true;
+                                }
+                                break;
                             }
-                            break;
                         }
+                    } catch (\TypeError | \Exception $e) {
+                        $this->logger->warning('OpenRegister getRegisters() failed in updateAmefConfig', [
+                            'exception' => $e->getMessage(),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine()
+                        ]);
+                        // Continue with empty schema set which will cause validation to fail gracefully
+                        $schemaIdSet = [];
                     }
 
                     // Validate each provided schema id against the chosen register

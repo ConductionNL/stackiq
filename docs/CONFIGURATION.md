@@ -205,7 +205,7 @@ Groups are automatically created for:
 
 1. **Role-Based Groups**: 'beheerder', 'inkoper'
 2. **Organization Groups**: Based on organization name
-3. **Special Groups**: 'ambtenaar' for gemeente organizations
+3. **Special Groups**: 'ambtenaar' available for manual assignment (no automatic assignment)
 
 ### Group Naming Rules
 
