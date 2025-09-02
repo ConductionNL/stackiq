@@ -948,8 +948,8 @@ class ArchiMateImportService
     private function createModelObject(array $metadata, string $modelIdentifier): array
     {
         // OPTIMIZATION: Use cached configuration values
-        $registerId = $this->cachedConfig['registerId'] ?? 15;
-        $schemaId = $this->cachedConfig['schemaIds']['model'] ?? 67;
+        $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
+        $schemaId = $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException("Schema ID for 'model' not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
         
         // Create object with @self structure and metadata at root level (no JSON serialization)
         $object = [
@@ -982,7 +982,7 @@ class ArchiMateImportService
     private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
     {
         // OPTIMIZATION: Use cached configuration values
-        $registerId = $this->cachedConfig['registerId'] ?? 15;
+        $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
         $schemaId = $this->cachedConfig['schemaIds'][$section] ?? $this->getSchemaIdForSection($section);
         
         // FIXED: Use objectId as main ID and AMEF identifier as slug
@@ -1058,7 +1058,7 @@ class ArchiMateImportService
         // Saving objects to database
 
         // OPTIMIZATION: Use cached register ID
-        $registerId = $this->cachedConfig['registerId'] ?? 15;
+        $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
 
 
 
@@ -3253,7 +3253,7 @@ class ArchiMateImportService
             
             $object = [
                 '@self' => [
-                    'register' => $this->cachedConfig['registerId'] ?? 15,
+                    'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'schema' => $this->getSchemaIdForSection('view'),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
@@ -3473,8 +3473,8 @@ class ArchiMateImportService
     {
         return [
             '@self' => [
-                'register' => $this->cachedConfig['registerId'] ?? 15,
-                'schema' => $this->cachedConfig['schemaIds']['model'] ?? 67,
+                'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
+                'schema' => $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException("Schema ID for 'model' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                 'id' => $modelIdentifier,
                 'owner' => $this->cachedConfig['userId'],
                 'organisation' => $this->cachedConfig['organisation'],
@@ -3560,7 +3560,7 @@ class ArchiMateImportService
             
             $object = [
                 '@self' => [
-                    'register' => $this->cachedConfig['registerId'] ?? 15,
+                    'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? throw new \RuntimeException("Schema ID for '{$schemaType}' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
@@ -3905,7 +3905,7 @@ class ArchiMateImportService
             
             $object = [
                 '@self' => [
-                    'register' => $this->cachedConfig['registerId'] ?? 15,
+                    'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? throw new \RuntimeException("Schema ID for '{$schemaType}' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
@@ -4025,7 +4025,7 @@ class ArchiMateImportService
             
             $object = [
                 '@self' => [
-                    'register' => $this->cachedConfig['registerId'] ?? 15,
+                    'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'schema' => $this->getSchemaIdForSection('view'),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
