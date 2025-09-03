@@ -207,10 +207,10 @@ Handles application initialization:
    ├── Get organization group ID
    └── Add user to organization group
    ↓
-5. Special group assignment (gemeente → ambtenaar)
-   ├── Check organization type
-   ├── Create ambtenaar group if needed
-   └── Add user to ambtenaar group
+5. Group management (manual assignment only)
+   ├── Create required groups if needed
+   ├── 'ambtenaar' group available for manual assignment
+   └── No automatic assignment based on organization type
 ```
 
 ## Synchronization Architecture (NEW)

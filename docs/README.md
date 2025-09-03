@@ -19,7 +19,7 @@ Welcome to the Software Catalog app documentation. This app provides comprehensi
 ### 👥 Advanced Group Management
 - **Role-Based Groups**: Automatic assignment to groups based on user roles (beheerder, inkoper)
 - **Organization Groups**: Each organization gets its own group with automatic member assignment
-- **Special Groups**: Municipality (gemeente) users automatically get 'ambtenaar' group
+- **Special Groups**: The 'ambtenaar' group is available for manual assignment (no longer automatically assigned)
 - **Dynamic Updates**: Group memberships automatically updated when roles change
 
 ### 🏢 Organizational Hierarchy
@@ -115,7 +115,7 @@ Gebruiker Schema: 28
    ├── Creates user: jane.doe
    ├── Assigns to 'beheerder' group
    ├── Assigns to 'gemeente_amsterdam' group
-   ├── Assigns to 'ambtenaar' group (gemeente type)
+   ├── Note: 'ambtenaar' group available for manual assignment
    └── Sets as organization manager (first beheerder)
 
 3. Next User in Same Organization
@@ -223,7 +223,7 @@ Each documentation file provides detailed information for specific audiences:
 - ✅ Role-based group assignment (beheerder, inkoper)
 - ✅ Organization-specific groups
 - ✅ Manager hierarchy management
-- ✅ Special gemeente handling (ambtenaar group)
+- ✅ 'ambtenaar' group available for manual assignment
 - ✅ Multi-register support (AMEF, Voorzieningen, Generic)
 - ✅ Type-safe event processing
 - ✅ Comprehensive error handling

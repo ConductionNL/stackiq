@@ -1039,7 +1039,7 @@
         "slug": "contactpersoon",
         "title": "Contact Persoon",
         "description": "Contactgegevens van een persoon",
-        "version": "0.0.20",
+        "version": "0.0.22",
         "summary": "",
         "icon": "AccountMultiple",
         "required": ["organisatie", "e-mailadres"],
@@ -1097,26 +1097,29 @@
             "oneOf": [],
             "facetable": false,
             "title": "Functie",
-            "order": 6,
+            "order": 4,
             "example": "Bijvoorbeeld: Beheerder"
           },
           "organisatie": {
             "type": "object",
             "title": "Organisatie",
             "description": "De organisatie waartoe deze contactpersoon behoort",
+            "visible": false,
+            "hideOnCollection": true,
             "facetable": false,
             "objectConfiguration": {
               "handling": "related-object"
             },
             "$ref": "#/components/schemas/organisatie",
             "required": true,
-            "order": 0
+            "order": 9
           },
           "username": {
             "description": "Gebruikersnaam van de contactpersoon",
             "title": "Gebruikersnaam",
             "type": "string",
-            "visible": true,
+            "visible": false,
+            "hideOnCollection": true,
             "facetable": false,
             "order": 0,
             "minLength": null,
@@ -1154,7 +1157,8 @@
             "title": "Is aanspreekpunt",
             "description": "Geeft aan of deze persoon het aanspreekpunt is voor deze organisatie (publiek word gedeeld",
             "facetable": false,
-            "order": 0,
+            "hideOnCollection": true,
+            "order": 8,
             "example": "Bijvoorbeeld: true"
           },
           "notificaties": {
@@ -1162,11 +1166,17 @@
             "title": "Notificaties",
             "description": "Lijst van notificaties voor deze contactpersoon",
             "facetable": false,
+            "hideOnCollection": true,
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Nieuw in organisatie",
+                "Nieuw buiten de organisatie",
+                "Gewijzigd in de organisatie"
+              ]
             },
-            "order": 0,
-            "example": "Bijvoorbeeld: [\"email\", \"sms\"]"
+            "order": 11,
+            "example": "Bijvoorbeeld: ['Nieuw in organisatie', 'Gewijzigd in de organisatie']"
           },
           "rollen": {
             "description": "De rollen die deze contactpersoon heeft",
@@ -1219,7 +1229,7 @@
             "required": true,
             "visible": true,
             "facetable": false,
-            "order": 4,
+            "order": 6,
             "minLength": null,
             "maxLength": 320,
             "minimum": null,
@@ -4801,6 +4811,6 @@
     "id": 14,
     "title": "Software Catalog Register",
     "description": "Merged register containing both AMEF and Voorzieningen schemas and configurations",
-    "version": "1.0.1"
+    "version": "1.0.2"
   }
 }

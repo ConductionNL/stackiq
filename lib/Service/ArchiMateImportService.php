@@ -266,6 +266,9 @@ class ArchiMateImportService
         $startTime = microtime(true);
         $startMemory = memory_get_usage(true);
         
+        // DEBUG: Verify that the optimized import method is being called
+        $this->logger->info('GEMMA IMPORT DEBUG: Starting optimized import', $options);
+        
         // Starting OPTIMIZED ArchiMate XML import
 
         try {
@@ -308,6 +311,9 @@ class ArchiMateImportService
             
             // STEP 4: Single saveObjects() call (like CSV import)
             $saveStartTime = microtime(true);
+            $this->logger->info('GEMMA IMPORT DEBUG: About to save objects to database', [
+                'object_count' => count($allObjects)
+            ]);
             $savedObjects = $this->saveObjectsToDatabase($allObjects);
             $saveTime = microtime(true) - $saveStartTime;
             
@@ -1045,6 +1051,18 @@ class ArchiMateImportService
     {
         $saveStartTime = microtime(true);
         
+        // DEBUG: Log basic object info before sending to ObjectService
+        $this->logger->info('saveObjectsToDatabase DEBUG', [
+            'total_objects_to_save' => count($objects),
+            'first_object_sample' => !empty($objects) ? [
+                'id' => $objects[0]['@self']['id'] ?? 'no-id',
+                'register' => $objects[0]['@self']['register'] ?? 'no-register',
+                'schema' => $objects[0]['@self']['schema'] ?? 'no-schema',
+                'section' => $objects[0]['section'] ?? 'no-section'
+            ] : null,
+            'object_sections' => array_count_values(array_column($objects, 'section'))
+        ]);
+        
         $serviceInitStartTime = microtime(true);
         $objectService = $this->getObjectService();
         if (!$objectService) {
@@ -1123,6 +1141,21 @@ class ArchiMateImportService
 
             // Store result for statistics
             $this->lastSaveResult = $saveResult;
+            
+            // DEBUG: Log ObjectService save result to understand skipping behavior
+            $this->logger->info('ObjectService save result DEBUG', [
+                'total_objects_sent' => count($objects),
+                'saved_count' => count($saveResult['saved'] ?? []),
+                'updated_count' => count($saveResult['updated'] ?? []),
+                'unchanged_count' => count($saveResult['unchanged'] ?? []),
+                'skipped_count' => count($saveResult['skipped'] ?? []),
+                'invalid_count' => count($saveResult['invalid'] ?? []),
+                'result_keys' => array_keys($saveResult),
+                'first_unchanged_sample' => isset($saveResult['unchanged'][0]) ? [
+                    'id' => $saveResult['unchanged'][0]->getUuid(),
+                    'object_type' => get_class($saveResult['unchanged'][0])
+                ] : null
+            ]);
 
             // Return combined saved and updated objects
             return array_merge(
@@ -2224,7 +2257,7 @@ class ArchiMateImportService
                 'height' => isset($node['_attributes']['h']) ? (int)$node['_attributes']['h'] : 50,
                 'parent' => null, // Will be set to parent nodeId for nested nodes (see recursive processing below)
                 'name' => null,
-                'type' => null,
+                'type' => $this->extractNodeType($node), // Extract type directly from node XML
                 'color' => 'rgb(255, 255, 255)', // Default white background
                 'borderColor' => 'rgb(0, 0, 0)', // Default black border
                 'font' => [
@@ -2267,18 +2300,20 @@ class ArchiMateImportService
                     $viewNode['description'] = $element['documentation'];
                 }
                 
-                // Extract element type from ArchiMate type or GEMMA type
-                if (isset($element['gemmaType'])) {
-                    $gemmaType = $element['gemmaType'];
-                    // Handle case where gemmaType might be an array
-                    if (is_array($gemmaType)) {
-                        $gemmaType = $gemmaType['_value'] ?? $gemmaType[0] ?? 'unknown';
+                // Enhance type with element data if node type wasn't fully extracted
+                if ($viewNode['type'] === null || $viewNode['type'] === 'element') {
+                    if (isset($element['gemmaType'])) {
+                        $gemmaType = $element['gemmaType'];
+                        // Handle case where gemmaType might be an array
+                        if (is_array($gemmaType)) {
+                            $gemmaType = $gemmaType['_value'] ?? $gemmaType[0] ?? 'unknown';
+                        }
+                        $viewNode['type'] = strtolower((string)$gemmaType);
+                    } elseif (isset($element['xml']['_attributes']['xsi:type'])) {
+                        $archiType = $element['xml']['_attributes']['xsi:type'];
+                        // Convert ArchiMate type to simplified type (e.g., "archimate:BusinessService" -> "businessservice")
+                        $viewNode['type'] = strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $archiType));
                     }
-                    $viewNode['type'] = strtolower((string)$gemmaType);
-                } elseif (isset($element['xml']['_attributes']['xsi:type'])) {
-                    $archiType = $element['xml']['_attributes']['xsi:type'];
-                    // Convert ArchiMate type to simplified type (e.g., "archimate:BusinessService" -> "businessservice")
-                    $viewNode['type'] = strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $archiType));
                 }
                 
                 // Add all element properties to view node for full data access
@@ -2628,17 +2663,10 @@ class ArchiMateImportService
                 'sourceId' => $source, // Source node viewNodeId
                 'targetId' => $target, // Target node viewNodeId  
                 'viewRelationshipId' => $connectionId, // Unique identifier within this view
-                'type' => 'association', // Default relationship type
+                'type' => $this->extractConnectionType($connection), // Extract type directly from connection XML
                 'bendpoints' => [], // Array of bend points
                 'label' => [] // Label information
             ];
-            
-            // Extract relationship type from ArchiMate type if available
-            if (isset($connection['_attributes']['xsi:type'])) {
-                $archiType = $connection['_attributes']['xsi:type'];
-                // Convert ArchiMate type to simplified type (e.g., "archimate:ServingRelationship" -> "serving")
-                $viewRelationship['type'] = strtolower(preg_replace('/^archimate:|relationship$|^[a-z]+:/', '', $archiType));
-            }
             
             // Extract bend points if present
             if (isset($connection['bendpoint'])) {
@@ -2714,6 +2742,83 @@ class ArchiMateImportService
         }
         
         return $markup;
+    }
+
+    /**
+     * Extract node type directly from node XML attributes
+     * 
+     * @param array $node Node data from XML
+     * @return string|null Node type extracted from XML or null if not found
+     */
+    private function extractNodeType(array $node): ?string
+    {
+        // Priority 1: Check xsi:type attribute (most specific)
+        if (isset($node['_attributes']['xsi:type'])) {
+            $xsiType = $node['_attributes']['xsi:type'];
+            
+            // Handle different xsi:type formats
+            if ($xsiType === 'Label') {
+                return 'label';
+            } elseif ($xsiType === 'Element') {
+                return 'element';
+            } elseif (str_contains($xsiType, ':')) {
+                // Handle namespaced types like "archimate:BusinessService" 
+                return strtolower(preg_replace('/^[a-z]+:/', '', $xsiType));
+            } else {
+                return strtolower($xsiType);
+            }
+        }
+        
+        // Priority 2: Check if this is a Label node (has label content)
+        if (isset($node['label'])) {
+            return 'label';
+        }
+        
+        // Priority 3: Check if this has an elementRef (it's an Element node)
+        if (isset($node['_attributes']['elementRef'])) {
+            return 'element';
+        }
+        
+        // Fallback: Return null to allow element lookup to fill in the type
+        return null;
+    }
+
+    /**
+     * Extract connection type directly from connection XML attributes
+     * 
+     * @param array $connection Connection data from XML
+     * @return string Connection type extracted from XML or default 'association'
+     */
+    private function extractConnectionType(array $connection): string
+    {
+        // Priority 1: Check xsi:type attribute (most specific)
+        if (isset($connection['_attributes']['xsi:type'])) {
+            $xsiType = $connection['_attributes']['xsi:type'];
+            
+            // Handle different connection type formats
+            if (str_contains($xsiType, 'Relationship')) {
+                // Remove "Relationship" suffix and namespace prefix
+                // e.g., "archimate:ServingRelationship" -> "serving"
+                $type = preg_replace('/^[a-z]+:/', '', $xsiType); // Remove namespace
+                $type = preg_replace('/relationship$/i', '', $type); // Remove "Relationship" suffix
+                return strtolower($type);
+            } elseif (str_contains($xsiType, ':')) {
+                // Handle other namespaced types
+                return strtolower(preg_replace('/^[a-z]+:/', '', $xsiType));
+            } else {
+                return strtolower($xsiType);
+            }
+        }
+        
+        // Priority 2: Check if this has a relationshipRef (use that to determine type if possible)
+        if (isset($connection['_attributes']['relationshipRef'])) {
+            // We have a relationship reference, but we can't determine the type from just the ID
+            // Return generic 'relationship' type
+            return 'relationship';
+        }
+        
+        // Fallback: Default association type
+        return 'association';
     }
     
     /**
