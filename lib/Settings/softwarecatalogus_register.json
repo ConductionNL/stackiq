@@ -1037,7 +1037,7 @@
       "contactpersoon": {
         "uri": null,
         "slug": "contactpersoon",
-        "title": "Contact Persoon",
+        "title": "Contactpersoon",
         "description": "Contactgegevens van een persoon",
         "version": "0.0.22",
         "summary": "",
@@ -1213,9 +1213,7 @@
             "enum": [
               "Aanbod-beheerder",
               "Gebruik-beheerder",
-              "Gebruik-raadpleger",
               "Functioneel-beheerder",
-              "VNG-raadpleger",
               "Organisatie-beheerder"
             ],
             "example": "Bijvoorbeeld: [\"Aanbod-beheerder\", \"Functioneel-beheerder\"]"
@@ -1704,7 +1702,8 @@
             "title": "Status",
             "type": "string",
             "default": "concept",
-            "visible": true,
+            "visible": false,
+            "hideOnCollection": true,
             "facetable": false,
             "order": 17,
             "minLength": null,
@@ -1733,7 +1732,8 @@
             "description": "Type samenwerking van de organisatie",
             "title": "Samenwerkingstype",
             "type": "string",
-            "visible": true,
+            "visible": false,
+            "hideOnCollection": true,
             "facetable": true,
             "order": 14,
             "minLength": null,
