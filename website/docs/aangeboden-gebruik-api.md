@@ -246,3 +246,5 @@ The AangebodenGebruik API relies on the following configuration:
 - Ensure OpenRegister app is installed and enabled  
 - Verify AMEF configuration in SoftwareCatalog settings
 - Check that register_id and schema IDs are correctly configured
+
+

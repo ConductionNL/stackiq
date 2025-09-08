@@ -68,3 +68,5 @@ echo "Expected behaviors:"
 echo "- Afnemer endpoint: Returns gebruiks where active org is the consumer"
 echo "- Deelnemers endpoint: Returns gebruiks where active org is a participant"  
 echo "- Set @self endpoint: Only works if active org is the afnemer"
+
+

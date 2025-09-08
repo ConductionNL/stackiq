@@ -627,7 +627,8 @@
           "objectDescriptionField": "beschrijvingLang",
           "objectImageField": "logo",
           "allowFiles": true,
-          "allowedTags": ["DPIA", "Handleiding"]
+          "allowedTags": ["DPIA", "Handleiding"],
+          "autoPublish": true
         }
       },
       "dienst": {
@@ -882,7 +883,8 @@
             "ISO-27001",
             "ISO-16075",
             "Verklaring van toepasselijkheid"
-          ]
+          ],
+          "autoPublish": true
         }
       },
       "kwetsbaarheid": {
@@ -1318,7 +1320,8 @@
         "deleted": null,
         "configuration": {
           "objectNameField": "achternaam",
-          "objectDescriptionField": "functie"
+          "objectDescriptionField": "functie",
+          "autoPublish": true
         }
       },
       "organisatie": {
@@ -1869,7 +1872,8 @@
             "BRL-certificaten",
             "CE-markering documenten",
             "Aanbestedingsdocumentatie"
-          ]
+          ],
+          "autoPublish": true
         }
       },
       "gebruik": {
@@ -2704,7 +2708,8 @@
         "deleted": null,
         "configuration": {
           "objectNameField": "type",
-          "objectDescriptionField": "beschrijvingKort"
+          "objectDescriptionField": "beschrijvingKort",
+          "autoPublish": true
         }
       },
       "beoordeeling": {
@@ -4603,7 +4608,8 @@
           "objectDescriptionField": "beschrijvingLang",
           "objectImageField": "logo",
           "allowFiles": true,
-          "allowedTags": ["Documentatie", "Handleiding", "Technische specificatie"]
+          "allowedTags": ["Documentatie", "Handleiding", "Technische specificatie"],
+          "autoPublish": true
         }
       },
       "compliancy": {
@@ -4679,7 +4685,8 @@
           "objectSummaryField": "standaardversie",
           "objectDescriptionField": "module",
           "allowFiles": true,
-          "allowedTags": ["testraport"]
+          "allowedTags": ["testraport"],
+          "autoPublish": true
         }
       },
       "moduleVersie": {
@@ -4800,7 +4807,8 @@
         "configuration": {
           "objectNameField": "versie",
           "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang"
+          "objectDescriptionField": "beschrijvingLang",
+          "autoPublish": true
         }
       }
     },
