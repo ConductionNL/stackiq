@@ -534,6 +534,11 @@ class OrganizationSyncService
                 'status' => $objectData['status'] ?? 'Unknown'
             ]);
 
+            // Get configuration for object updates
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $register = $voorzieningenConfig['register'] ?? '';
+            $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+
             // Try to find existing organisation entity
             $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
 
@@ -584,6 +589,9 @@ class OrganizationSyncService
                     }
                 }
 
+                // Update organisatie object owner to organisation entity UUID
+                $this->updateOrganisatieObjectOwner($organisatieObject, $organisationEntity, $register, $organizationSchema);
+
                 return $organisationEntity;
                 
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
@@ -619,6 +627,9 @@ class OrganizationSyncService
                             'organisatieId' => $organisatieId
                         ]);
                     }
+
+                    // Update organisatie object owner to organisation entity UUID
+                    $this->updateOrganisatieObjectOwner($organisatieObject, $organisationEntity, $register, $organizationSchema);
                 } else {
                     $this->logger->error('❌ ORGANISATION ENTITY CREATION FAILED', [
                         'app' => 'softwarecatalog',
@@ -1401,6 +1412,9 @@ class OrganizationSyncService
                                 // Add user to organization entity in database
                                 $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
                                 
+                                // Update contactpersoon object owner to user UID
+                                $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
+                                
                                 $this->logger->critical('🎉 USER ACCOUNT CREATED SUCCESS', [
                                     'app' => 'softwarecatalog',
                                     'contactId' => $contactObject->getUuid(),
@@ -1520,6 +1534,9 @@ class OrganizationSyncService
 
                         // Add user to organization entity in database
                         $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
+
+                        // Update contactpersoon object owner to user UID
+                        $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
 
                         $stats['usersCreated']++;
                     } else {
@@ -1817,6 +1834,129 @@ class OrganizationSyncService
                 'timeWindow' => $minutesBack,
                 'message' => 'Error getting sync status: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Updates the organisatie object's @self metadata to set owner to the organisation entity UUID
+     *
+     * @param object $organisatieObject The organisatie object to update
+     * @param object $organisationEntity The organisation entity
+     * @param string $register The register ID
+     * @param string $organizationSchema The organization schema ID
+     * @return void
+     */
+    private function updateOrganisatieObjectOwner(object $organisatieObject, object $organisationEntity, string $register, string $organizationSchema): void
+    {
+        try {
+            $organisatieId = $organisatieObject->getUuid();
+            $organisationEntityUuid = $organisationEntity->getUuid();
+            
+            $this->logger->info('OrganizationSyncService: Updating organisatie object owner', [
+                'organisatieId' => $organisatieId,
+                'organisationEntityUuid' => $organisationEntityUuid,
+                'register' => $register,
+                'schema' => $organizationSchema
+            ]);
+
+            // Get the current object data
+            $currentObject = $organisatieObject->getObject();
+            
+            // Get current @self metadata or create new
+            $selfMetadata = $currentObject['@self'] ?? [];
+            
+            // Update the owner field to the organisation entity UUID
+            $selfMetadata['owner'] = $organisationEntityUuid;
+            
+            // Update the object with the new @self metadata
+            $currentObject['@self'] = $selfMetadata;
+            $organisatieObject->setObject($currentObject);
+            
+            // Save the updated object using ObjectService
+            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService->saveObject(
+                object: $organisatieObject,
+                register: $register,
+                schema: $organizationSchema,
+                rbac: false,
+                multi: false
+            );
+            
+            $this->logger->info('OrganizationSyncService: Successfully updated organisatie object owner', [
+                'organisatieId' => $organisatieId,
+                'organisationEntityUuid' => $organisationEntityUuid,
+                'ownerSet' => $selfMetadata['owner']
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('OrganizationSyncService: Failed to update organisatie object owner', [
+                'organisatieId' => $organisatieObject->getUuid(),
+                'organisationEntityUuid' => $organisationEntity->getUuid(),
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+        }
+    }
+
+    /**
+     * Updates the contactpersoon object's @self metadata to set owner to the user UID
+     *
+     * @param object $contactObject The contactpersoon object to update
+     * @param string $userUID The user UID to set as owner
+     * @param string $register The register ID
+     * @param string $contactSchema The contact schema ID
+     * @return void
+     */
+    private function updateContactpersoonObjectOwner(object $contactObject, string $userUID, string $register, string $contactSchema): void
+    {
+        try {
+            $contactId = $contactObject->getUuid();
+            
+            $this->logger->info('OrganizationSyncService: Updating contactpersoon object owner', [
+                'contactId' => $contactId,
+                'userUID' => $userUID,
+                'register' => $register,
+                'schema' => $contactSchema
+            ]);
+
+            // Get the current object data
+            $currentObject = $contactObject->getObject();
+            
+            // Get current @self metadata or create new
+            $selfMetadata = $currentObject['@self'] ?? [];
+            
+            // Update the owner field to the user UID
+            $selfMetadata['owner'] = $userUID;
+            
+            // Update the object with the new @self metadata
+            $currentObject['@self'] = $selfMetadata;
+            $contactObject->setObject($currentObject);
+            
+            // Save the updated object using ObjectService
+            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService->saveObject(
+                object: $contactObject,
+                register: $register,
+                schema: $contactSchema,
+                rbac: false,
+                multi: false
+            );
+            
+            $this->logger->info('OrganizationSyncService: Successfully updated contactpersoon object owner', [
+                'contactId' => $contactId,
+                'userUID' => $userUID,
+                'ownerSet' => $selfMetadata['owner']
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('OrganizationSyncService: Failed to update contactpersoon object owner', [
+                'contactId' => $contactObject->getUuid(),
+                'userUID' => $userUID,
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
         }
     }
 }

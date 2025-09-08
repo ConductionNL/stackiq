@@ -140,5 +140,15 @@ return [
         ['name' => 'view#getApiDocumentation', 'url' => '/api/views/docs', 'verb' => 'GET'],
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
+        // ========================================================================
+        // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks
+        // ========================================================================
+        
+        // AangebodenGebruik API endpoints for filtering gebruiks by organization involvement
+        ['name' => 'aangebodenGebruik#getGebruiksWhereAfnemer', 'url' => '/api/aangeboden-gebruik/afnemer', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getGebruiksWhereDeelnemers', 'url' => '/api/aangeboden-gebruik/deelnemers', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#setGebruikSelfToActiveOrg', 'url' => '/api/aangeboden-gebruik/{gebruikId}/set-self', 'verb' => 'PUT'],
+        ['name' => 'aangebodenGebruik#getApiDocumentation', 'url' => '/api/aangeboden-gebruik/docs', 'verb' => 'GET'],
+
     ],
 ];
