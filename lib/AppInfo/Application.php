@@ -229,7 +229,8 @@ class Application extends App implements IBootstrap
                 $container->get('OCP\App\IAppManager'),
                 $container,
                 $container->get('Psr\Log\LoggerInterface'),
-                $container->get(SettingsService::class)
+                $container->get(SettingsService::class),
+                $container->get(\OCA\OpenRegister\Service\OrganisationService::class)
             );
         });
 

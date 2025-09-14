@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\OrganisationService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -142,7 +143,8 @@ class ArchiMateImportService
         private readonly IAppManager $appManager,
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
-        private readonly SettingsService $settingsService
+        private readonly SettingsService $settingsService,
+        private readonly OrganisationService $organisationService
     ) {
     }
 
@@ -268,6 +270,7 @@ class ArchiMateImportService
         
         // DEBUG: Verify that the optimized import method is being called
         $this->logger->info('GEMMA IMPORT DEBUG: Starting optimized import', $options);
+        
         
         // Starting OPTIMIZED ArchiMate XML import
 
@@ -1063,6 +1066,7 @@ class ArchiMateImportService
             'object_sections' => array_count_values(array_column($objects, 'section'))
         ]);
         
+        
         $serviceInitStartTime = microtime(true);
         $objectService = $this->getObjectService();
         if (!$objectService) {
@@ -1415,13 +1419,26 @@ class ArchiMateImportService
     }
 
     /**
-     * Get current organisation from cache
+     * Get current organisation UUID from OrganisationService
      * 
-     * @return string Default organisation
+     * @return string Organisation UUID
      */
     private function getCurrentOrganisation(): string
     {
-        return $this->cachedConfig['organisation'] ?? 'default';
+        try {
+            $this->logger->info('Getting default organisation from OrganisationService');
+            $defaultOrganisation = $this->organisationService->ensureDefaultOrganisation();
+            $uuid = $defaultOrganisation->getUuid();
+            
+            
+            $this->logger->info('Got default organisation UUID: ' . $uuid);
+            return $uuid;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get default organisation: ' . $e->getMessage());
+            $this->logger->error('Exception trace: ' . $e->getTraceAsString());
+            // Fallback to cached value or 'default' string
+            return $this->cachedConfig['organisation'] ?? 'default';
+        }
     }
 
     /**
@@ -3364,7 +3381,7 @@ class ArchiMateImportService
                     'schema' => $this->getSchemaIdForSection('view'),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
-                    'organisation' => $this->cachedConfig['organisation'],
+                    'organisation' => $this->getCurrentOrganisation(),
 
                 ],
                 'identifier' => $identifier,
@@ -3578,13 +3595,15 @@ class ArchiMateImportService
      */
     private function createModelObjectDirect(array $metadata, string $modelIdentifier): array
     {
+        $organisation = $this->getCurrentOrganisation();
+        
         return [
             '@self' => [
                 'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                 'schema' => $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException("Schema ID for 'model' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                 'id' => $modelIdentifier,
                 'owner' => $this->cachedConfig['userId'],
-                'organisation' => $this->cachedConfig['organisation'],
+                'organisation' => $organisation,  // Use the method instead of cached value
                 'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $modelIdentifier,
@@ -3671,7 +3690,7 @@ class ArchiMateImportService
                     'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? throw new \RuntimeException("Schema ID for '{$schemaType}' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
-                    'organisation' => $this->cachedConfig['organisation'],
+                    'organisation' => $this->getCurrentOrganisation(),
                     'published' => date('Y-m-d\TH:i:s\Z')
                 ],
                 'identifier' => $identifier,
@@ -4016,7 +4035,7 @@ class ArchiMateImportService
                     'schema' => $this->cachedConfig['schemaIds'][$schemaType] ?? throw new \RuntimeException("Schema ID for '{$schemaType}' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
-                    'organisation' => $this->cachedConfig['organisation'],
+                    'organisation' => $this->getCurrentOrganisation(),
                     'published' => date('Y-m-d\TH:i:s\Z')
                 ],
                 'identifier' => $identifier,
@@ -4136,7 +4155,7 @@ class ArchiMateImportService
                     'schema' => $this->getSchemaIdForSection('view'),
                     'id' => $identifier,
                     'owner' => $this->cachedConfig['userId'],
-                    'organisation' => $this->cachedConfig['organisation'],
+                    'organisation' => $this->getCurrentOrganisation(),
                     'published' => date('Y-m-d\TH:i:s\Z')
                 ],
                 'identifier' => $identifier,
