@@ -73,6 +73,7 @@ class SettingsController extends Controller
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
+        $this->_appName = $appName;
 
     }//end __construct()
 
@@ -228,6 +229,137 @@ class SettingsController extends Controller
 
     }//end create()
 
+    /**
+     * Get general configuration settings
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse General configuration
+     */
+    public function getGeneralConfig(): JSONResponse
+    {
+        try {
+            $config = [
+                'catalogLocation' => $this->settingsService->getCatalogLocation(),
+            ];
+            
+            return new JSONResponse([
+                'success' => true,
+                'config' => $config
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get general config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get general config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update general configuration settings
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateGeneralConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            
+            if (isset($data['catalogLocation'])) {
+                $this->settingsService->setCatalogLocation($data['catalogLocation']);
+            }
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'General configuration updated successfully',
+                'config' => [
+                    'catalogLocation' => $this->settingsService->getCatalogLocation(),
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update general config', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update general config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get organization synchronization configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Sync configuration
+     */
+    public function getSyncConfig(): JSONResponse
+    {
+        try {
+            $config = [
+                'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+            ];
+            
+            return new JSONResponse([
+                'success' => true,
+                'config' => $config
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get sync config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get sync config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update organization synchronization configuration
+     *
+     * @NoCSRFRequired
+     * 
+     * @return JSONResponse Update result
+     */
+    public function updateSyncConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            
+            if (isset($data['syncTimeWindow'])) {
+                $this->config->setValueString($this->_appName, 'syncTimeWindow', (string) $data['syncTimeWindow']);
+            }
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Sync configuration updated successfully',
+                'config' => [
+                    'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update sync config', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update sync config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Load the settings from the publication_register.json file.
@@ -457,16 +589,83 @@ class SettingsController extends Controller
      */
     public function performSync(int $minutesBack = 0): JSONResponse
     {
-        $result = $this->organizationSyncService->performManualSync($minutesBack);
-        
-        if ($result['success']) {
-            return new JSONResponse($result);
-        } else {
-            return new JSONResponse($result, 500);
+        try {
+            // For full sync (minutesBack = 0), use optimized batch processing to handle large datasets
+            if ($minutesBack === 0) {
+                $result = $this->organizationSyncService->performOptimizedManualSync(
+                    maxRounds: 15,   // Up to 15 rounds of processing
+                    batchSize: 75    // 75 items per batch for good performance
+                );
+                
+                return new JSONResponse([
+                    'success' => true,
+                    'results' => $result,
+                    'message' => 'Optimized synchronization completed successfully',
+                    'isOptimized' => true
+                ]);
+            } else {
+                // For incremental sync, use the original method
+                $result = $this->organizationSyncService->performManualSync($minutesBack);
+                
+                if ($result['success']) {
+                    return new JSONResponse($result);
+                } else {
+                    return new JSONResponse($result, 500);
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Manual sync failed', [
+                'minutesBack' => $minutesBack,
+                'exception' => $e->getMessage()
+            ]);
+            
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Synchronization failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
-
+    /**
+     * Heartbeat endpoint to keep connections alive during long-running operations
+     *
+     * This endpoint prevents 504 gateway timeouts by responding to periodic
+     * keep-alive requests sent during lengthy operations like sync or export.
+     *
+     * @return JSONResponse JSON response confirming heartbeat received
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function heartbeat(): JSONResponse
+    {
+        try {
+            $timestamp = $this->request->getParam('timestamp', time() * 1000);
+            
+            $this->logger->debug('Heartbeat received', [
+                'timestamp' => $timestamp,
+                'server_time' => time() * 1000
+            ]);
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Heartbeat received',
+                'timestamp' => $timestamp,
+                'server_time' => time() * 1000
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Heartbeat error: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Heartbeat failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Get version information for the app and configuration.
@@ -526,6 +725,37 @@ class SettingsController extends Controller
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Reset failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear configuration cache to force reload of schema IDs and register IDs.
+     *
+     * @return JSONResponse JSON response containing cache clear results.
+     *
+     * @NoCSRFRequired
+     */
+    public function clearCache(): JSONResponse
+    {
+        try {
+            $this->logger->info('SettingsController: Clearing configuration cache');
+            
+            $this->settingsService->clearConfigurationCache();
+            
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Configuration cache cleared successfully'
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsController: Cache clear failed', [
+                'exception' => $e->getMessage()
+            ]);
+            
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Cache clear failed: ' . $e->getMessage(),
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -821,6 +1051,12 @@ class SettingsController extends Controller
     public function importArchiMate(): JSONResponse
     {
         try {
+            // Increase memory limit for large imports
+            ini_set('memory_limit', '4096M');
+            $this->logger->info('Memory limit increased for import', [
+                'old_limit' => ini_get('memory_limit'),
+                'new_limit' => '4096M'
+            ]);
             // Get JSON data from request body
             $rawInput = file_get_contents('php://input');
             $data = json_decode($rawInput, true);
@@ -893,8 +1129,15 @@ class SettingsController extends Controller
                 ], 400);
             }
 
-            // Call the ArchiMate service with file data instead of File object
-            $result = $this->archiMateService->importArchiMateFileFromPath($options);
+            // OPTIMIZATION: Use optimized method if available or if explicitly requested
+            $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
+            if ($useOptimized && method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized')) {
+                $this->logger->info('Using OPTIMIZED ArchiMate import method');
+                $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
+            } else {
+                $this->logger->info('Using STANDARD ArchiMate import method');
+                $result = $this->archiMateService->importArchiMateFileFromPath($options);
+            }
 
             return new JSONResponse($result);
 
@@ -904,11 +1147,14 @@ class SettingsController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Determine appropriate HTTP status code based on error type
+            $statusCode = $this->getHttpStatusForException($e);
+
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Import failed: ' . $e->getMessage(),
                 'error' => $e->getMessage()
-            ], 500);
+            ], $statusCode);
         }
     }
 
@@ -942,11 +1188,14 @@ class SettingsController extends Controller
 
             // Check if export was successful
             if (!$result['success']) {
+                // Determine appropriate status code based on error message
+                $statusCode = $this->getHttpStatusForErrorMessage($result['error'] ?? 'Export failed');
+                
                 return new JSONResponse([
                     'success' => false,
                     'message' => $result['error'] ?? 'Export failed',
                     'error' => $result['error'] ?? 'EXPORT_FAILED'
-                ], 500);
+                ], $statusCode);
             }
 
             // Return the XML file directly for download
@@ -987,11 +1236,14 @@ class SettingsController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Determine appropriate HTTP status code based on error type
+            $statusCode = $this->getHttpStatusForException($e);
+
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Export failed: ' . $e->getMessage(),
                 'error' => $e->getMessage()
-            ], 500);
+            ], $statusCode);
         }
     }
 
@@ -2128,6 +2380,63 @@ class SettingsController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Determine appropriate HTTP status code for an exception
+     * 
+     * @param \Exception $e The exception to classify
+     * @return int HTTP status code (400, 404, 422, or 500)
+     */
+    private function getHttpStatusForException(\Exception $e): int
+    {
+        // Check exception type first
+        if ($e instanceof \InvalidArgumentException) {
+            return 400; // Bad Request for invalid arguments/configuration
+        }
+        
+        // Fallback to message-based classification
+        $message = $e->getMessage();
+        return $this->getHttpStatusForErrorMessage($message);
+    }
+
+    /**
+     * Determine appropriate HTTP status code for an error message
+     * 
+     * @param string $message The error message to classify
+     * @return int HTTP status code (400, 404, 422, or 500)
+     */
+    private function getHttpStatusForErrorMessage(string $message): int
+    {
+        $message = strtolower($message);
+        
+        // Configuration errors - 400 Bad Request
+        if (str_contains($message, 'not configured') ||
+            str_contains($message, 'missing configuration') ||
+            str_contains($message, 'invalid configuration')) {
+            return 400;
+        }
+        
+        // File not found errors - 404 Not Found  
+        if (str_contains($message, 'file not found') ||
+            str_contains($message, 'not found') ||
+            str_contains($message, 'missing file')) {
+            return 404;
+        }
+        
+        // Validation errors - 422 Unprocessable Entity
+        if (str_contains($message, 'validation') ||
+            str_contains($message, 'invalid xml') ||
+            str_contains($message, 'parsing error') ||
+            str_contains($message, 'malformed') ||
+            str_contains($message, 'could not be parsed')) {
+            return 422;
+        }
+        
+        // Default to 500 Internal Server Error for unknown issues
+        return 500;
+    }
+
+
 
 }//end class
 

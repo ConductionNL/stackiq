@@ -23,6 +23,18 @@ export const useSettingsStore = defineStore('settings', {
 		importing: false,
 		exporting: false,
 		loadingVersionInfo: false,
+		loadingGeneralSettings: false,
+		loadingSyncSettings: false,
+		loadingStatistics: false,
+		loadingOpenRegisterConfig: false,
+		loadingRegisters: false,
+		loadingVoorzieningenSchemas: false,
+		loadingAmefSchemas: false,
+		loadingUserGroups: false,
+		loadingEmailConfig: false,
+		loadingArchiMateStatus: false,
+		loadingObjectCounts: false,
+		loadingMainSettings: false,
 
 		// Settings data
 		settings: {
@@ -40,34 +52,27 @@ export const useSettingsStore = defineStore('settings', {
 
 		// Configuration
 		configuration: {
-			// AMEF register configuration
-			amef_elements: { schema: null },
-			amef_organization: { schema: null },
-			amef_relationships: { schema: null },
-			amef_views: { schema: null },
-			amef_models: { schema: null },
-			amef_properties: { schema: null },
-			amef_property_definitions: { schema: null },
-			// Voorzieningen register configuration
-			voorzieningen_organisatie: { schema: null },
-			voorzieningen_contactpersoon: { schema: null },
-			// Extended schemas
-			voorzieningen_voorziening: { schema: null },
-			voorzieningen_voorziening_aanbod: { schema: null },
-			voorzieningen_voorziening_versie: { schema: null },
-			voorzieningen_kwetsbaarheid: { schema: null },
-			voorzieningen_contract: { schema: null },
-			voorzieningen_standaard: { schema: null },
-			voorzieningen_review: { schema: null },
-			voorzieningen_koppeling: { schema: null },
-			voorzieningen_beoordeeling: { schema: null },
-			voorzieningen_voorziening_module: { schema: null },
-			voorzieningen_verklaring: { schema: null },
-			voorzieningen_koppeling_gebruik: { schema: null },
-			voorzieningen_compliancy: { schema: null },
-			voorzieningen_module_gebruik: { schema: null },
-			voorzieningen_module_versie: { schema: null },
-			voorzieningen_sector: { schema: null },
+			// AMEF register configuration - updated to match current schemas
+			amef_element_schema: { schema: null },
+			amef_organization_schema: { schema: null },
+			amef_relation_schema: { schema: null },
+			amef_view_schema: { schema: null },
+			amef_model_schema: { schema: null },
+			amef_property_definition_schema: { schema: null },
+			// Voorzieningen register configuration - updated to match current schemas
+			voorzieningen_sector_schema: { schema: null },
+			voorzieningen_product_schema: { schema: null },
+			voorzieningen_dienst_schema: { schema: null },
+			voorzieningen_kwetsbaarheid_schema: { schema: null },
+			voorzieningen_contactpersoon_schema: { schema: null },
+			voorzieningen_organisatie_schema: { schema: null },
+			voorzieningen_gebruik_schema: { schema: null },
+			voorzieningen_contract_schema: { schema: null },
+			voorzieningen_koppeling_schema: { schema: null },
+			voorzieningen_beoordeeling_schema: { schema: null },
+			voorzieningen_module_schema: { schema: null },
+			voorzieningen_compliancy_schema: { schema: null },
+			voorzieningen_moduleVersie_schema: { schema: null },
 		},
 
 		// ArchiMate status and operations
@@ -195,6 +200,33 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
+		 * Check if register dropdowns should show loading state
+		 * @param {object} state - The store state
+		 * @return {boolean} True if registers are loading
+		 */
+		isLoadingRegisters: (state) => {
+			return state.loadingRegisters
+		},
+
+		/**
+		 * Check if voorzieningen schema dropdowns should show loading state
+		 * @param {object} state - The store state
+		 * @return {boolean} True if voorzieningen schemas are loading
+		 */
+		isLoadingVoorzieningenSchemas: (state) => {
+			return state.loadingVoorzieningenSchemas
+		},
+
+		/**
+		 * Check if AMEF schema dropdowns should show loading state
+		 * @param {object} state - The store state
+		 * @return {boolean} True if AMEF schemas are loading
+		 */
+		isLoadingAmefSchemas: (state) => {
+			return state.loadingAmefSchemas
+		},
+
+		/**
 		 * Get formatted statistics for display
 		 * @param {object} state - The store state
 		 * @return {Array} Array of formatted statistics rows
@@ -306,7 +338,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * @return {Promise<void>}
 		 */
 		async loadStatistics() {
-			this.loadingStats = true
+			this.loadingStatistics = true
 
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
@@ -337,7 +369,7 @@ export const useSettingsStore = defineStore('settings', {
 				console.error('Failed to load statistics:', error)
 				this.setError('Failed to load statistics: ' + error.message)
 			} finally {
-				this.loadingStats = false
+				this.loadingStatistics = false
 			}
 		},
 
@@ -350,7 +382,8 @@ export const useSettingsStore = defineStore('settings', {
 				return
 			}
 			this.loading = true
-			this.loadingVersionInfo = true
+			this.loadingMainSettings = true
+			this.loadingOpenRegisterConfig = true
 			this.clearError()
 
 			try {
@@ -363,13 +396,15 @@ export const useSettingsStore = defineStore('settings', {
 				if (data.success !== false) {
 					// Basic app settings
 					this.settings.availableRegisters = data.availableRegisters || []
+					this.settings.catalogLocation = data.catalogLocation || ''
+					this.settings.syncTimeWindow = data.syncTimeWindow || 10
 					this.versionInfo = data.versionInfo || {}
 					this.isFullyConfigured = data.isFullyConfigured || false
 					this.configurationStatus = data.configurationStatus || {}
 					// Initialize base configuration containers
 					this.initializeConfiguration()
-					// Load focused data from separate endpoints in parallel
-					await Promise.all([
+					// Load focused data from separate endpoints in parallel (don't wait for them)
+					Promise.all([
 						this.loadVersionInfo(),
 						this.loadArchiMateStatus(),
 						this.loadObjectCounts(),
@@ -377,10 +412,15 @@ export const useSettingsStore = defineStore('settings', {
 						this.loadUserGroupsConfig(),
 						this.loadAmefConfig(),
 						this.loadVoorzieningenConfig(),
-					])
-					// After focused loads, map register selections and schema choices from their configs
-					this.populateRegisterSelectionsFromFocused()
-					this.populateSchemaSelectionsFromFocused()
+						this.loadGeneralConfig(),
+						this.loadSyncConfig(),
+					]).then(() => {
+						// After focused loads, map register selections and schema choices from their configs
+						this.populateRegisterSelectionsFromFocused()
+						this.populateSchemaSelectionsFromFocused()
+					}).catch(error => {
+						console.error('Some focused endpoints failed to load:', error)
+					})
 				} else {
 					this.setError(data.error || 'Failed to load settings')
 				}
@@ -388,7 +428,180 @@ export const useSettingsStore = defineStore('settings', {
 				this.setError('Failed to load settings: ' + error.message)
 			} finally {
 				this.loading = false
-				this.loadingVersionInfo = false
+				this.loadingMainSettings = false
+				this.loadingOpenRegisterConfig = false
+			}
+		},
+
+		/**
+		 * Load essential data for OpenRegister configuration dropdowns
+		 * Only loads the data needed for register/schema selection
+		 */
+		async loadOpenRegisterEssentials() {
+			this.clearError()
+
+			try {
+				// Load available registers first (needed for register dropdowns)
+				this.loadingRegisters = true
+				const settingsResponse = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				if (!settingsResponse.ok) {
+					throw new Error(`HTTP ${settingsResponse.status}: ${settingsResponse.statusText}`)
+				}
+				const settingsData = await settingsResponse.json()
+				if (settingsData.success !== false) {
+					this.settings.availableRegisters = settingsData.availableRegisters || []
+					this.versionInfo = settingsData.versionInfo || {}
+					this.initializeConfiguration()
+				}
+				this.loadingRegisters = false
+
+				// Load config data in parallel (don't wait for each other)
+				const configPromises = [
+					this.loadVoorzieningenConfigFocused(),
+					this.loadAmefConfigFocused(),
+				]
+
+				await Promise.allSettled(configPromises)
+
+				// After both configs loaded, populate selections
+				this.populateRegisterSelectionsFromFocused()
+				this.populateSchemaSelectionsFromFocused()
+
+			} catch (error) {
+				console.error('Failed to load OpenRegister essentials:', error)
+				this.setError('Failed to load OpenRegister configuration: ' + error.message)
+			} finally {
+				this.loadingRegisters = false
+			}
+		},
+
+		/**
+		 * Load Voorzieningen configuration with focused loading state
+		 */
+		async loadVoorzieningenConfigFocused() {
+			this.loadingVoorzieningenSchemas = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.voorzieningenRawConfig = data.config
+				}
+			} catch (error) {
+				console.warn('Failed to load voorzieningen config:', error)
+			} finally {
+				this.loadingVoorzieningenSchemas = false
+			}
+		},
+
+		/**
+		 * Load AMEF configuration with focused loading state
+		 */
+		async loadAmefConfigFocused() {
+			this.loadingAmefSchemas = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.amefRawConfig = data.config
+				}
+			} catch (error) {
+				console.warn('Failed to load AMEF config:', error)
+			} finally {
+				this.loadingAmefSchemas = false
+			}
+		},
+
+		/**
+		 * Update catalog location setting
+		 *
+		 * @param {string} catalogLocation - The new catalog location URL
+		 * @return {Promise<void>}
+		 */
+		async updateCatalogLocation(catalogLocation) {
+			try {
+				this.settings.catalogLocation = catalogLocation
+			} catch (error) {
+				console.error('Failed to update catalog location in store:', error)
+				throw error
+			}
+		},
+
+		/**
+		 * Update sync time window setting
+		 *
+		 * @param {number} syncTimeWindow - The new sync time window value
+		 * @return {Promise<void>}
+		 */
+		async updateSyncTimeWindow(syncTimeWindow) {
+			try {
+				this.settings.syncTimeWindow = syncTimeWindow
+			} catch (error) {
+				console.error('Failed to update sync time window in store:', error)
+				throw error
+			}
+		},
+
+		/**
+		 * Load general configuration from focused endpoint
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadGeneralConfig() {
+			this.loadingGeneralSettings = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/general/config', {
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.settings.catalogLocation = data.config.catalogLocation || ''
+				}
+			} catch (error) {
+				console.error('Failed to load general config:', error)
+			} finally {
+				this.loadingGeneralSettings = false
+			}
+		},
+
+		/**
+		 * Load organization synchronization configuration from focused endpoint
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadSyncConfig() {
+			this.loadingSyncSettings = true
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync/config', {
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const data = await response.json()
+				if (data.success && data.config) {
+					this.settings.syncTimeWindow = parseInt(data.config.syncTimeWindow) || 10
+				}
+			} catch (error) {
+				console.error('Failed to load sync config:', error)
+			} finally {
+				this.loadingSyncSettings = false
 			}
 		},
 
@@ -396,6 +609,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load version information from focused endpoint
 		 */
 		async loadVersionInfo() {
+			this.loadingVersionInfo = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
 				if (!response.ok) {
@@ -407,6 +621,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingVersionInfo = false
 			}
 		},
 
@@ -414,6 +630,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load ArchiMate status from focused endpoint
 		 */
 		async loadArchiMateStatus() {
+			this.loadingArchiMateStatus = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
 				if (!response.ok) {
@@ -430,6 +647,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingArchiMateStatus = false
 			}
 		},
 
@@ -437,6 +656,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load object counts from focused endpoint
 		 */
 		async loadObjectCounts() {
+			this.loadingObjectCounts = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
 				if (!response.ok) {
@@ -454,6 +674,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingObjectCounts = false
 			}
 		},
 
@@ -461,6 +683,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load email configuration from focused endpoint
 		 */
 		async loadEmailConfig() {
+			this.loadingEmailConfig = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/email/config')
 				if (!response.ok) {
@@ -473,6 +696,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingEmailConfig = false
 			}
 		},
 
@@ -480,6 +705,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load user groups configuration from focused endpoint
 		 */
 		async loadUserGroupsConfig() {
+			this.loadingUserGroups = true
 			try {
 				const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
 				if (!response.ok) {
@@ -500,6 +726,8 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			} catch (error) {
 				// ignore
+			} finally {
+				this.loadingUserGroups = false
 			}
 		},
 
@@ -528,6 +756,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load AMEF configuration from focused endpoint
+		 * Used in full settings load - doesn't interfere with focused loading states
 		 */
 		async loadAmefConfig() {
 			try {
@@ -547,6 +776,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load Voorzieningen configuration from focused endpoint
+		 * Used in full settings load - doesn't interfere with focused loading states
 		 */
 		async loadVoorzieningenConfig() {
 			try {
@@ -570,33 +800,28 @@ export const useSettingsStore = defineStore('settings', {
 		initializeConfiguration() {
 			// Initialize register-specific configuration
 			this.configuration = {
-				// AMEF register configuration
-				amef_elements: { schema: null },
-				amef_organization: { schema: null },
-				amef_relationships: { schema: null },
-				amef_views: { schema: null },
-				amef_models: { schema: null },
-				amef_properties: { schema: null },
-				amef_property_definitions: { schema: null },
-				// Voorzieningen register configuration
-				voorzieningen_organisatie: { schema: null },
-				voorzieningen_contactpersoon: { schema: null },
-				voorzieningen_voorziening: { schema: null },
-				voorzieningen_voorziening_aanbod: { schema: null },
-				voorzieningen_voorziening_versie: { schema: null },
-				voorzieningen_kwetsbaarheid: { schema: null },
-				voorzieningen_contract: { schema: null },
-				voorzieningen_standaard: { schema: null },
-				voorzieningen_review: { schema: null },
-				voorzieningen_koppeling: { schema: null },
-				voorzieningen_beoordeeling: { schema: null },
-				voorzieningen_voorziening_module: { schema: null },
-				voorzieningen_verklaring: { schema: null },
-				voorzieningen_koppeling_gebruik: { schema: null },
-				voorzieningen_compliancy: { schema: null },
-				voorzieningen_module_gebruik: { schema: null },
-				voorzieningen_module_versie: { schema: null },
-				voorzieningen_sector: { schema: null },
+				// AMEF register configuration - updated to match current schemas
+				amef_element_schema: { schema: null },
+				amef_organization_schema: { schema: null },
+				amef_relation_schema: { schema: null },
+				amef_view_schema: { schema: null },
+				amef_model_schema: { schema: null },
+	
+				amef_property_definition_schema: { schema: null },
+				// Voorzieningen register configuration - updated to match current schemas
+				voorzieningen_sector_schema: { schema: null },
+				voorzieningen_product_schema: { schema: null },
+				voorzieningen_dienst_schema: { schema: null },
+				voorzieningen_kwetsbaarheid_schema: { schema: null },
+				voorzieningen_contactpersoon_schema: { schema: null },
+				voorzieningen_organisatie_schema: { schema: null },
+				voorzieningen_gebruik_schema: { schema: null },
+				voorzieningen_contract_schema: { schema: null },
+				voorzieningen_koppeling_schema: { schema: null },
+				voorzieningen_beoordeeling_schema: { schema: null },
+				voorzieningen_module_schema: { schema: null },
+				voorzieningen_compliancy_schema: { schema: null },
+				voorzieningen_moduleVersie_schema: { schema: null },
 			}
 		},
 
@@ -640,27 +865,22 @@ export const useSettingsStore = defineStore('settings', {
 				return options.find(o => o && o.value && o.value.toString() === id) || null
 			}
 
-			// Voorzieningen schemas
+			// Voorzieningen schemas - updated mapping to match current schema structure
 			const vc = this.voorzieningenRawConfig || {}
 			const vMap = [
-				['organisatie_schema', 'voorzieningen_organisatie'],
-				['contactpersoon_schema', 'voorzieningen_contactpersoon'],
-				['voorziening_schema', 'voorzieningen_voorziening'],
-				['voorziening_aanbod_schema', 'voorzieningen_voorziening_aanbod'],
-				['voorziening_versie_schema', 'voorzieningen_voorziening_versie'],
-				['kwetsbaarheid_schema', 'voorzieningen_kwetsbaarheid'],
-				['contract_schema', 'voorzieningen_contract'],
-				['standaard_schema', 'voorzieningen_standaard'],
-				['review_schema', 'voorzieningen_review'],
-				['koppeling_schema', 'voorzieningen_koppeling'],
-				['beoordeeling_schema', 'voorzieningen_beoordeeling'],
-				['voorziening_module_schema', 'voorzieningen_voorziening_module'],
-				['verklaring_schema', 'voorzieningen_verklaring'],
-				['koppeling_gebruik_schema', 'voorzieningen_koppeling_gebruik'],
-				['compliancy_schema', 'voorzieningen_compliancy'],
-				['module_gebruik_schema', 'voorzieningen_module_gebruik'],
-				['module_versie_schema', 'voorzieningen_module_versie'],
-				['sector_schema', 'voorzieningen_sector'],
+				['sector_schema', 'voorzieningen_sector_schema'],
+				['product_schema', 'voorzieningen_product_schema'],
+				['dienst_schema', 'voorzieningen_dienst_schema'],
+				['kwetsbaarheid_schema', 'voorzieningen_kwetsbaarheid_schema'],
+				['contactpersoon_schema', 'voorzieningen_contactpersoon_schema'],
+				['organisatie_schema', 'voorzieningen_organisatie_schema'],
+				['gebruik_schema', 'voorzieningen_gebruik_schema'],
+				['contract_schema', 'voorzieningen_contract_schema'],
+				['koppeling_schema', 'voorzieningen_koppeling_schema'],
+				['beoordeeling_schema', 'voorzieningen_beoordeeling_schema'],
+				['module_schema', 'voorzieningen_module_schema'],
+				['compliancy_schema', 'voorzieningen_compliancy_schema'],
+				['moduleVersie_schema', 'voorzieningen_moduleVersie_schema'],
 			]
 			vMap.forEach(([cfgKey, uiKey]) => {
 				if (vc[cfgKey]) {
@@ -671,35 +891,32 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			})
 
-			// AMEF schemas (singular keys)
+			// AMEF schemas - updated to match new key structure
 			const ac = this.amefRawConfig || {}
 			if (ac.organization_schema || ac.organizations_schema) {
 				const opt = findOption((ac.organization_schema || ac.organizations_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_organization.schema = opt
+				if (opt) this.configuration.amef_organization_schema.schema = opt
 			}
 			if (ac.element_schema || ac.elements_schema) {
 				const opt = findOption((ac.element_schema || ac.elements_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_elements.schema = opt
+				if (opt) this.configuration.amef_element_schema.schema = opt
 			}
 			if (ac.relation_schema || ac.relationships_schema) {
 				const opt = findOption((ac.relation_schema || ac.relationships_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_relationships.schema = opt
+				if (opt) this.configuration.amef_relation_schema.schema = opt
 			}
 			if (ac.view_schema || ac.views_schema) {
 				const opt = findOption((ac.view_schema || ac.views_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_views.schema = opt
+				if (opt) this.configuration.amef_view_schema.schema = opt
 			}
 			if (ac.model_schema || ac.models_schema) {
 				const opt = findOption((ac.model_schema || ac.models_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_models.schema = opt
+				if (opt) this.configuration.amef_model_schema.schema = opt
 			}
-			if (ac.property_schema || ac.properties_schema) {
-				const opt = findOption((ac.property_schema || ac.properties_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_properties.schema = opt
-			}
-			if (ac['property-definition_schema'] || ac.property_definitions_schema) {
-				const opt = findOption((ac['property-definition_schema'] || ac.property_definitions_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_property_definitions.schema = opt
+
+			if (ac.property_definition_schema || ac['property-definition_schema'] || ac.property_definitions_schema) {
+				const opt = findOption((ac.property_definition_schema || ac['property-definition_schema'] || ac.property_definitions_schema), this.amefSchemaOptions)
+				if (opt) this.configuration.amef_property_definition_schema.schema = opt
 			}
 		},
 
@@ -970,23 +1187,21 @@ export const useSettingsStore = defineStore('settings', {
 				// Save AMEF configuration (clean payload)
 				const amefConfig = {}
 				const amefKeys = [
-					'amef_elements',
-					'amef_organization',
-					'amef_relationships',
-					'amef_views',
-					'amef_models',
-					'amef_properties',
-					'amef_property_definitions',
+					'amef_element_schema',
+					'amef_organization_schema',
+					'amef_relation_schema',
+					'amef_view_schema',
+					'amef_model_schema',
+					'amef_property_definition_schema',
 				]
 				// Map UI keys to API keys
 				const amefMap = {
-					amef_organization: 'organization_schema',
-					amef_elements: 'element_schema',
-					amef_relationships: 'relation_schema',
-					amef_views: 'view_schema',
-					amef_models: 'model_schema',
-					amef_properties: 'property_schema',
-					amef_property_definitions: 'property-definition_schema',
+					amef_organization_schema: 'organization_schema',
+					amef_element_schema: 'element_schema',
+					amef_relation_schema: 'relation_schema',
+					amef_view_schema: 'view_schema',
+					amef_model_schema: 'model_schema',
+					amef_property_definition_schema: 'property-definition_schema',
 				}
 				if (this.amefRegister?.value) {
 					amefConfig.register = this.amefRegister.value
@@ -1014,45 +1229,35 @@ export const useSettingsStore = defineStore('settings', {
 				// Save Voorzieningen configuration (clean payload)
 				const voorzieningenConfig = {}
 				const voorzieningenKeys = [
-					'voorzieningen_organisatie',
-					'voorzieningen_contactpersoon',
-					'voorzieningen_voorziening',
-					'voorzieningen_voorziening_aanbod',
-					'voorzieningen_voorziening_versie',
-					'voorzieningen_kwetsbaarheid',
-					'voorzieningen_contract',
-					'voorzieningen_standaard',
-					'voorzieningen_review',
-					'voorzieningen_koppeling',
-					'voorzieningen_beoordeeling',
-					'voorzieningen_voorziening_module',
-					'voorzieningen_verklaring',
-					'voorzieningen_koppeling_gebruik',
-					'voorzieningen_compliancy',
-					'voorzieningen_module_gebruik',
-					'voorzieningen_module_versie',
-					'voorzieningen_sector',
+					'voorzieningen_sector_schema',
+					'voorzieningen_product_schema',
+					'voorzieningen_dienst_schema',
+					'voorzieningen_kwetsbaarheid_schema',
+					'voorzieningen_contactpersoon_schema',
+					'voorzieningen_organisatie_schema',
+					'voorzieningen_gebruik_schema',
+					'voorzieningen_contract_schema',
+					'voorzieningen_koppeling_schema',
+					'voorzieningen_beoordeeling_schema',
+					'voorzieningen_module_schema',
+					'voorzieningen_compliancy_schema',
+					'voorzieningen_moduleVersie_schema',
 				]
 				// Map UI keys to API keys
 				const vzMap = {
-					voorzieningen_organisatie: 'organisatie_schema',
-					voorzieningen_contactpersoon: 'contactpersoon_schema',
-					voorzieningen_voorziening: 'voorziening_schema',
-					voorzieningen_voorziening_aanbod: 'voorziening_aanbod_schema',
-					voorzieningen_voorziening_versie: 'voorziening_versie_schema',
-					voorzieningen_kwetsbaarheid: 'kwetsbaarheid_schema',
-					voorzieningen_contract: 'contract_schema',
-					voorzieningen_standaard: 'standaard_schema',
-					voorzieningen_review: 'review_schema',
-					voorzieningen_koppeling: 'koppeling_schema',
-					voorzieningen_beoordeeling: 'beoordeeling_schema',
-					voorzieningen_voorziening_module: 'voorziening_module_schema',
-					voorzieningen_verklaring: 'verklaring_schema',
-					voorzieningen_koppeling_gebruik: 'koppeling_gebruik_schema',
-					voorzieningen_compliancy: 'compliancy_schema',
-					voorzieningen_module_gebruik: 'module_gebruik_schema',
-					voorzieningen_module_versie: 'module_versie_schema',
-					voorzieningen_sector: 'sector_schema',
+					voorzieningen_sector_schema: 'sector_schema',
+					voorzieningen_product_schema: 'product_schema',
+					voorzieningen_dienst_schema: 'dienst_schema',
+					voorzieningen_kwetsbaarheid_schema: 'kwetsbaarheid_schema',
+					voorzieningen_contactpersoon_schema: 'contactpersoon_schema',
+					voorzieningen_organisatie_schema: 'organisatie_schema',
+					voorzieningen_gebruik_schema: 'gebruik_schema',
+					voorzieningen_contract_schema: 'contract_schema',
+					voorzieningen_koppeling_schema: 'koppeling_schema',
+					voorzieningen_beoordeeling_schema: 'beoordeeling_schema',
+					voorzieningen_module_schema: 'module_schema',
+					voorzieningen_compliancy_schema: 'compliancy_schema',
+					voorzieningen_moduleVersie_schema: 'moduleVersie_schema',
 				}
 				if (this.voorzieningenRegister?.value) {
 					voorzieningenConfig.register = this.voorzieningenRegister.value
@@ -1110,6 +1315,40 @@ export const useSettingsStore = defineStore('settings', {
 						}),
 					)
 				}
+
+				// Save general settings (catalog location)
+				if (this.settings.catalogLocation !== undefined) {
+					savePromises.push(
+						fetch('/index.php/apps/softwarecatalog/api/settings/general/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify({
+								catalogLocation: this.settings.catalogLocation,
+							}),
+						}),
+					)
+				}
+
+				// Save organization synchronization settings
+				if (this.settings.syncTimeWindow !== undefined) {
+					savePromises.push(
+						fetch('/index.php/apps/softwarecatalog/api/settings/sync/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify({
+								syncTimeWindow: this.settings.syncTimeWindow,
+							}),
+						}),
+					)
+				}
+
+
 
 				// Execute all save operations
 				if (savePromises.length > 0) {
@@ -1464,34 +1703,28 @@ export const useSettingsStore = defineStore('settings', {
 			this.voorzieningenSchemas = []
 			this.amefSchemas = []
 			this.configuration = {
-				// AMEF register configuration
-				amef_elements: { schema: null },
-				amef_organization: { schema: null },
-				amef_relationships: { schema: null },
-				amef_views: { schema: null },
-				amef_models: { schema: null },
-				amef_properties: { schema: null },
-				amef_property_definitions: { schema: null },
-				// Voorzieningen register configuration
-				voorzieningen_organisatie: { schema: null },
-				voorzieningen_contactpersoon: { schema: null },
-				// Extended schemas
-				voorzieningen_voorziening: { schema: null },
-				voorzieningen_voorziening_aanbod: { schema: null },
-				voorzieningen_voorziening_versie: { schema: null },
-				voorzieningen_kwetsbaarheid: { schema: null },
-				voorzieningen_contract: { schema: null },
-				voorzieningen_standaard: { schema: null },
-				voorzieningen_review: { schema: null },
-				voorzieningen_koppeling: { schema: null },
-				voorzieningen_beoordeeling: { schema: null },
-				voorzieningen_voorziening_module: { schema: null },
-				voorzieningen_verklaring: { schema: null },
-				voorzieningen_koppeling_gebruik: { schema: null },
-				voorzieningen_compliancy: { schema: null },
-				voorzieningen_module_gebruik: { schema: null },
-				voorzieningen_module_versie: { schema: null },
-				voorzieningen_sector: { schema: null },
+				// AMEF register configuration - updated to match current schemas
+				amef_element_schema: { schema: null },
+				amef_organization_schema: { schema: null },
+				amef_relation_schema: { schema: null },
+				amef_view_schema: { schema: null },
+				amef_model_schema: { schema: null },
+	
+				amef_property_definition_schema: { schema: null },
+				// Voorzieningen register configuration - updated to match current schemas
+				voorzieningen_sector_schema: { schema: null },
+				voorzieningen_product_schema: { schema: null },
+				voorzieningen_dienst_schema: { schema: null },
+				voorzieningen_kwetsbaarheid_schema: { schema: null },
+				voorzieningen_contactpersoon_schema: { schema: null },
+				voorzieningen_organisatie_schema: { schema: null },
+				voorzieningen_gebruik_schema: { schema: null },
+				voorzieningen_contract_schema: { schema: null },
+				voorzieningen_koppeling_schema: { schema: null },
+				voorzieningen_beoordeeling_schema: { schema: null },
+				voorzieningen_module_schema: { schema: null },
+				voorzieningen_compliancy_schema: { schema: null },
+				voorzieningen_moduleVersie_schema: { schema: null },
 			}
 			this.archimateStatus = {
 				import: {},

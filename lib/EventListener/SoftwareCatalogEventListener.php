@@ -20,6 +20,7 @@ namespace OCA\SoftwareCatalog\EventListener;
 
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\GebruikSyncService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -66,21 +67,45 @@ class SoftwareCatalogEventListener implements IEventListener
      */
     public function handle(Event $event): void
     {
-        // All processing is now handled by the cron-based OrganizationSyncService
-        // This prevents race conditions, infinite loops, and ensures consistent processing
-        
         try {
             $logger = \OC::$server->get(LoggerInterface::class);
-            $logger->debug('SoftwareCatalog: Event processing disabled - using cron-based sync', [
+            $contactpersoonService = \OC::$server->get(ContactpersoonService::class);
+            $settingsService = \OC::$server->get(SettingsService::class);
+            
+            $logger->debug('SoftwareCatalog: Processing event', [
                 'eventType' => get_class($event),
-                'message' => 'All processing is handled by OrganizationSyncService cron job to avoid race conditions'
+                'timestamp' => date('Y-m-d H:i:s')
             ]);
+            
+            if ($event instanceof ObjectCreatedEvent) {
+                $this->handleObjectCreated($event, $contactpersoonService, $settingsService, $logger);
+            } elseif ($event instanceof ObjectUpdatedEvent) {
+                $this->handleObjectUpdated($event, $contactpersoonService, $settingsService, $logger);
+            } elseif ($event instanceof ObjectDeletedEvent) {
+                $this->handleObjectDeleted($event, $contactpersoonService, $settingsService, $logger);
+            } elseif ($event instanceof ObjectLockedEvent || $event instanceof ObjectUnlockedEvent || $event instanceof ObjectRevertedEvent) {
+                $logger->debug('SoftwareCatalog: Ignoring object lifecycle event', [
+                    'eventType' => get_class($event)
+                ]);
+            } else {
+                $logger->debug('SoftwareCatalog: Unknown event type ignored', [
+                    'eventType' => get_class($event)
+                ]);
+            }
         } catch (\Exception $e) {
-            // Silently fail - logging is not critical
+            try {
+                $logger = \OC::$server->get(LoggerInterface::class);
+                $logger->error('SoftwareCatalog: Error in event handler', [
+                    'eventType' => get_class($event),
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            } catch (\Exception $logException) {
+                // Silently fail if logging fails - better than breaking the event system
+            }
         }
-        
-        // Early return - no processing
-        return;
     }
 
 
@@ -124,6 +149,7 @@ class SoftwareCatalogEventListener implements IEventListener
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
         $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
+        $gebruikSchemaId = $settingsService->getSchemaIdForObjectType('gebruik');
 
         $logger->debug(
             'SoftwareCatalog: Configuration lookup results',
@@ -131,13 +157,46 @@ class SoftwareCatalogEventListener implements IEventListener
                 'organisatieSchemaId' => $organisatieSchemaId,
                 'contactpersoonSchemaId' => $contactpersoonSchemaId,
                 'contactgegevensSchemaId' => $contactgegevensSchemaId,
+                'gebruikSchemaId' => $gebruikSchemaId,
                 'objectSchemaId' => $objectSchemaIdInt
             ]
         );
 
-        // Organization processing is now handled by cron job - skip organization events
+        // Check if this is an organization object
         if ($organisatieSchemaId && $objectSchemaIdInt === (int) $organisatieSchemaId) {
-            $logger->debug('SoftwareCatalog: Skipping organization creation - handled by cron job', ['objectId' => $objectId]);
+            $objectData = $object->getObject();
+            $status = strtolower($objectData['status'] ?? '');
+            
+            // Only process active organizations
+            if (in_array($status, ['actief', 'active'])) {
+                $logger->info('SoftwareCatalog: Processing active organization creation', [
+                    'objectId' => $objectId,
+                    'status' => $status
+                ]);
+                
+                try {
+                    // Process organization with OrganizationSyncService
+                    $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+                    $result = $organizationSyncService->processSpecificOrganization($object);
+                    
+                    $logger->info('SoftwareCatalog: Successfully processed organization creation', [
+                        'objectId' => $objectId,
+                        'processResult' => $result
+                    ]);
+                } catch (\Exception $e) {
+                    $logger->error('SoftwareCatalog: Failed to process organization creation', [
+                        'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                }
+            } else {
+                $logger->debug('SoftwareCatalog: Skipping non-active organization creation', [
+                    'objectId' => $objectId,
+                    'status' => $status
+                ]);
+            }
             return;
         }
 
@@ -155,6 +214,30 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }
 
+        // Check if this is a gebruik object
+        if ($gebruikSchemaId && $objectSchemaIdInt === (int) $gebruikSchemaId) {
+            $logger->info('SoftwareCatalog: Processing gebruik creation', ['objectId' => $objectId]);
+            
+            try {
+                // Process gebruik object with GebruikSyncService
+                $gebruikSyncService = \OC::$server->get(GebruikSyncService::class);
+                $result = $gebruikSyncService->processSpecificGebruik($object);
+                
+                $logger->info('SoftwareCatalog: Successfully processed gebruik creation', [
+                    'objectId' => $objectId,
+                    'processResult' => $result
+                ]);
+            } catch (\Exception $e) {
+                $logger->error('SoftwareCatalog: Failed to process gebruik creation', [
+                    'objectId' => $objectId,
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+            }
+            return;
+        }
+
         // Log unhandled object types
         $logger->debug(
             'SoftwareCatalog: Object creation not handled - not a supported object type',
@@ -165,7 +248,8 @@ class SoftwareCatalogEventListener implements IEventListener
                 'supportedSchemas' => [
                     'organisatie' => $organisatieSchemaId,
                     'contactpersoon' => $contactpersoonSchemaId,
-                    'contactgegevens' => $contactgegevensSchemaId
+                    'contactgegevens' => $contactgegevensSchemaId,
+                    'gebruik' => $gebruikSchemaId
                 ]
             ]
         );
@@ -210,19 +294,46 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
         
-        // Organization updates are now handled by cron job - skip organization events
+        // Check if this is an organization update
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
         
         if ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt) {
-            $logger->info(
-                'SoftwareCatalog: Skipping organisatie update - handled by cron job',
-                [
+            $objectData = $object->getObject();
+            $status = strtolower($objectData['status'] ?? '');
+            
+            // Only process active organizations
+            if (in_array($status, ['actief', 'active'])) {
+                $logger->info('SoftwareCatalog: Processing active organization update', [
                     'objectId' => $objectId,
-                    'schemaId' => $objectSchemaId,
-                    'configuredSchemaId' => $organisatieSchemaId
-                ]
-            );
+                    'status' => $status,
+                    'schemaId' => $objectSchemaId
+                ]);
+                
+                try {
+                    // Process organization with OrganizationSyncService
+                    $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+                    $result = $organizationSyncService->processSpecificOrganization($object);
+                    
+                    $logger->info('SoftwareCatalog: Successfully processed organization update', [
+                        'objectId' => $objectId,
+                        'processResult' => $result
+                    ]);
+                } catch (\Exception $e) {
+                    $logger->error('SoftwareCatalog: Failed to process organization update', [
+                        'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                }
+            } else {
+                $logger->debug('SoftwareCatalog: Skipping non-active organization update', [
+                    'objectId' => $objectId,
+                    'status' => $status,
+                    'schemaId' => $objectSchemaId
+                ]);
+            }
             return;
         }
         
@@ -305,9 +416,51 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }
 
+        // Handle gebruik updates
+        $gebruikSchemaId = $settingsService->getSchemaIdForObjectType('gebruik');
+        $gebruikSchemaIdInt = (int) $gebruikSchemaId;
+        
+        if ($gebruikSchemaId && $objectSchemaIdInt === $gebruikSchemaIdInt) {
+            $logger->info(
+                'SoftwareCatalog: Matched gebruik schema - processing update',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $gebruikSchemaId
+                ]
+            );
+            
+            try {
+                // Process gebruik object with GebruikSyncService
+                $gebruikSyncService = \OC::$server->get(GebruikSyncService::class);
+                $result = $gebruikSyncService->processSpecificGebruik($object);
+                
+                $logger->info(
+                    'SoftwareCatalog: Successfully processed gebruik update',
+                    [
+                        'objectId' => $objectId,
+                        'processResult' => $result,
+                        'timestamp' => date('Y-m-d H:i:s')
+                    ]
+                );
+            } catch (\Exception $e) {
+                $logger->error(
+                    'SoftwareCatalog: Failed to process gebruik update',
+                    [
+                        'objectId' => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
+                    ]
+                );
+            }
+            return;
+        }
+
         // Log if we don't handle this schema type
         $logger->debug(
-            'SoftwareCatalog: Object update not handled - focusing only on organisatie and contactpersonen',
+            'SoftwareCatalog: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik',
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
@@ -317,7 +470,8 @@ class SoftwareCatalogEventListener implements IEventListener
                 'handledSchemas' => [
                     'organisatie' => $organisatieSchemaId,
                     'contactpersoon' => $contactpersoonSchemaId,
-                    'contactgegevens' => $contactgegevensSchemaId
+                    'contactgegevens' => $contactgegevensSchemaId,
+                    'gebruik' => $gebruikSchemaId
                 ]
             ]
         );
@@ -354,13 +508,35 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
         
-        // Organization deletion is now handled by cron job - skip organization events
+        // Check if this is an organization deletion
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
         $objectSchemaIdInt = (int) $objectSchemaId;
         
         if ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt) {
-            $logger->info('SoftwareCatalog: Skipping organization deletion - handled by cron job', ['objectId' => $objectId]);
+            $logger->info('SoftwareCatalog: Processing organization deletion', ['objectId' => $objectId]);
+            
+            try {
+                // For deletions, we may need to handle cleanup regardless of status
+                // The OrganizationSyncService can determine what cleanup is needed
+                $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+                
+                // Note: processSpecificOrganization may handle cleanup for deleted organizations
+                // The service can check if the organization exists and handle accordingly
+                $result = $organizationSyncService->processSpecificOrganization($object);
+                
+                $logger->info('SoftwareCatalog: Successfully processed organization deletion', [
+                    'objectId' => $objectId,
+                    'processResult' => $result
+                ]);
+            } catch (\Exception $e) {
+                $logger->error('SoftwareCatalog: Failed to process organization deletion', [
+                    'objectId' => $objectId,
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+            }
             return;
         }
         
@@ -442,9 +618,39 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }
 
+        // Handle gebruik deletion
+        $gebruikSchemaId = $settingsService->getSchemaIdForObjectType('gebruik');
+        $gebruikSchemaIdInt = (int) $gebruikSchemaId;
+        
+        if ($gebruikSchemaId && $objectSchemaIdInt === $gebruikSchemaIdInt) {
+            $objectData = $object->getObject();
+            
+            $logger->info(
+                'SoftwareCatalog: Matched gebruik schema - processing deletion',
+                [
+                    'objectId' => $objectId,
+                    'schemaId' => $objectSchemaId,
+                    'configuredSchemaId' => $gebruikSchemaId,
+                    'afnemer' => $objectData['afnemer']['naam'] ?? 'Unknown',
+                    'product' => $objectData['product']['naam'] ?? 'Unknown'
+                ]
+            );
+            
+            // For deletions, we mainly log the event since the object is being removed
+            // No specific cleanup needed for gebruik objects currently
+            $logger->info(
+                'SoftwareCatalog: Gebruik object deleted - no specific cleanup required',
+                [
+                    'objectId' => $objectId,
+                    'timestamp' => date('Y-m-d H:i:s')
+                ]
+            );
+            return;
+        }
+
         // Log if we don't handle this schema type
         $logger->debug(
-            'SoftwareCatalog: Object deletion not handled - focusing only on organisatie and contactpersonen',
+            'SoftwareCatalog: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik',
             [
                 'objectId' => $objectId,
                 'schemaId' => $objectSchemaId,
@@ -452,7 +658,8 @@ class SoftwareCatalogEventListener implements IEventListener
                 'handledSchemas' => [
                     'organisatie' => $organisatieSchemaId,
                     'contactpersoon' => $contactpersoonSchemaId,
-                    'contactgegevens' => $contactgegevensSchemaId
+                    'contactgegevens' => $contactgegevensSchemaId,
+                    'gebruik' => $gebruikSchemaId
                 ]
             ]
         );

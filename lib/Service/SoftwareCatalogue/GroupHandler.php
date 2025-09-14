@@ -306,8 +306,9 @@ class GroupHandler
                         ]
                     );
                 } elseif (!$hasRole && $inGroup) {
-                    // Remove user from group (except for special groups)
-                    if (!in_array($groupName, ['software-catalog-users', 'ambtenaar'])) {
+                    // Remove user from group (except for system groups)
+                    // Note: Removed 'ambtenaar' from protected groups since it's no longer automatically assigned
+                    if (!in_array($groupName, ['software-catalog-users'])) {
                         $group->removeUser($user);
                         $this->_logger->info(
                             'Removed user from role-based group',
@@ -428,19 +429,17 @@ class GroupHandler
                     $actualUuid = $orgData['id'] ?? $organizationUuid;
                     $orgType = strtolower($orgData['type'] ?? $orgData['soort'] ?? '');
                     
+                    // Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations
+                    // The 'ambtenaar' group can still be created if needed, but users are not automatically assigned
                     if ($orgType === 'gemeente') {
-                        $ambtenaarGroup = $this->createGroupIfNotExists('ambtenaar');
-                        
-                        if ($ambtenaarGroup && !$ambtenaarGroup->inGroup($user)) {
-                            $ambtenaarGroup->addUser($user);
-                            $this->_logger->info(
-                                'Added user to ambtenaar group (gemeente)',
-                                [
-                                    'username' => $user->getUID(),
-                                    'organizationUuid' => $actualUuid
-                                ]
-                            );
-                        }
+                        $this->_logger->debug(
+                            'User from gemeente organization (no automatic ambtenaar group assignment)',
+                            [
+                                'username' => $user->getUID(),
+                                'organizationUuid' => $actualUuid,
+                                'organizationType' => $orgType
+                            ]
+                        );
                     }
                 }
             } catch (\Exception $e) {

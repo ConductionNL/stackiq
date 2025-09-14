@@ -136,7 +136,7 @@ export default defineComponent({
 		},
 
 		loadingStats() {
-			return this.settingsStore.loadingStats
+			return this.settingsStore.loadingStatistics
 		},
 
 		error() {

@@ -108,21 +108,61 @@ class ContactpersoonService
             $user = $userManager->get($username);
 
             if (!$user) {
-                // Create user account
-                $this->logger->info('ContactpersoonService: Creating user account for contactpersoon', [
-                    'contactId' => $contactId,
-                    'username' => $username
-                ]);
+                // Check if organization is active before creating user account
+                $organizationUuid = $contactData['organisation'] ?? $contactData['organisatie'] ?? '';
+                
+                if (!empty($organizationUuid)) {
+                    try {
+                        $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+                        $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
+                        
+                        if ($organisationEntity && $organisationEntity->getActive()) {
+                            // Create user account - organization is active
+                            $this->logger->info('ContactpersoonService: Creating user account for contactpersoon (org is active)', [
+                                'contactId' => $contactId,
+                                'username' => $username,
+                                'organizationUuid' => $organizationUuid,
+                                'organizationActive' => true
+                            ]);
 
-                $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
-                if (!$success) {
-                    throw new \Exception('Failed to create user account');
+                            $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
+                            if (!$success) {
+                                throw new \Exception('Failed to create user account');
+                            }
+
+                            // Link user to organization entity
+                            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $username);
+
+                            // Update contactpersoon object owner to user UID
+                            $this->updateContactpersoonObjectOwner($contactpersoonObject, $username);
+
+                            $this->logger->info('ContactpersoonService: Successfully created user account', [
+                                'contactId' => $contactId,
+                                'username' => $username
+                            ]);
+                        } else {
+                            $this->logger->info('ContactpersoonService: Skipping user creation - organization not active or not found', [
+                                'contactId' => $contactId,
+                                'organizationUuid' => $organizationUuid,
+                                'organizationFound' => $organisationEntity !== null,
+                                'organizationActive' => $organisationEntity ? $organisationEntity->getActive() : false
+                            ]);
+                            return false;
+                        }
+                    } catch (\Exception $e) {
+                        $this->logger->info('ContactpersoonService: Skipping user creation - organization not found in entity table (not active)', [
+                            'contactId' => $contactId,
+                            'organizationUuid' => $organizationUuid,
+                            'reason' => 'Organization not found in entity table'
+                        ]);
+                        return false;
+                    }
+                } else {
+                    $this->logger->warning('ContactpersoonService: Contactpersoon has no organization reference, skipping user creation', [
+                        'contactId' => $contactId
+                    ]);
+                    return false;
                 }
-
-                $this->logger->info('ContactpersoonService: Successfully created user account', [
-                    'contactId' => $contactId,
-                    'username' => $username
-                ]);
             } else {
                 $this->logger->info('ContactpersoonService: User account already exists', [
                     'contactId' => $contactId,
@@ -427,6 +467,79 @@ class ContactpersoonService
                 'error' => $e->getMessage()
             ]);
             return [];
+        }
+    }
+
+    /**
+     * Updates the contactpersoon object's @self metadata to set owner to the user UID
+     *
+     * @param object $contactObject The contactpersoon object to update
+     * @param string $userUID The user UID to set as owner
+     * @return void
+     */
+    private function updateContactpersoonObjectOwner(object $contactObject, string $userUID): void
+    {
+        try {
+            $contactId = $contactObject->getUuid();
+            
+            // Get configuration for register and schema
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $register = $voorzieningenConfig['register'] ?? '';
+            $contactSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
+            
+            if (empty($register) || empty($contactSchema)) {
+                $this->logger->warning('ContactpersoonService: Cannot update object owner - missing configuration', [
+                    'contactId' => $contactId,
+                    'register' => $register,
+                    'contactSchema' => $contactSchema
+                ]);
+                return;
+            }
+            
+            $this->logger->info('ContactpersoonService: Updating contactpersoon object owner', [
+                'contactId' => $contactId,
+                'userUID' => $userUID,
+                'register' => $register,
+                'schema' => $contactSchema
+            ]);
+
+            // Get the current object data
+            $currentObject = $contactObject->getObject();
+            
+            // Get current @self metadata or create new
+            $selfMetadata = $currentObject['@self'] ?? [];
+            
+            // Update the owner field to the user UID
+            $selfMetadata['owner'] = $userUID;
+            
+            // Update the object with the new @self metadata
+            $currentObject['@self'] = $selfMetadata;
+            $contactObject->setObject($currentObject);
+            
+            // Save the updated object using ObjectService
+            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService->saveObject(
+                object: $contactObject,
+                register: $register,
+                schema: $contactSchema,
+                rbac: false,
+                multi: false
+            );
+            
+            $this->logger->info('ContactpersoonService: Successfully updated contactpersoon object owner', [
+                'contactId' => $contactId,
+                'userUID' => $userUID,
+                'ownerSet' => $selfMetadata['owner']
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersoonService: Failed to update contactpersoon object owner', [
+                'contactId' => $contactObject->getUuid(),
+                'userUID' => $userUID,
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
         }
     }
 } 

@@ -45,7 +45,7 @@ To install the Software Catalogus app, follow these steps:
 ### 👥 Advanced Group Management
 - **Role-Based Groups**: Automatic assignment to groups based on user roles (beheerder, inkoper)
 - **Organization Groups**: Each organization gets its own group with automatic member assignment
-- **Special Groups**: Municipality (gemeente) users automatically get 'ambtenaar' group
+- **Special Groups**: The 'ambtenaar' group is available for manual assignment (no longer automatically assigned)
 - **Dynamic Updates**: Group memberships automatically updated when roles change
 
 ### 🏢 Organizational Hierarchy

@@ -22,7 +22,7 @@ echo "============================\n\n";
 // Configuration
 $baseUrl = 'http://localhost/index.php/apps/softwarecatalog/api/archimate';
 $auth = 'admin:admin';
-$testFile = '/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml';
+$testFile = '/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_smaller.xml';
 
 // Target object focus (optional) e.g. --object=<archimate-id>. If omitted, no single-object focus is performed.
 $targetObjectId = null;
@@ -159,8 +159,11 @@ try {
     // Step 2: Import GEMMA_release.xml
     echo "2️⃣ IMPORTING GEMMA_RELEASE.XML\n";
     echo "-------------------------------\n";
-    $importData = json_encode(['file_path' => $testFile]);
-    $importResult = executeCurl("$baseUrl/import", 'POST', $importData);
+    
+    // Use multipart file upload instead of JSON file_path
+    $uploadCmd = "curl -s -u $auth -X POST \"$baseUrl/import\" -F \"archiMateFile=@$testFile\" -F \"replaceExisting=true\"";
+    $importResponse = shell_exec($uploadCmd);
+    $importResult = json_decode($importResponse, true);
     
     if (!$importResult || !($importResult['success'] ?? false)) {
         throw new Exception("Import failed: " . json_encode($importResult));

@@ -16,22 +16,28 @@ import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 </script>
 
 <template>
-	<GenericObjectTable
-		object-type="organisatie"
-		object-type-plural="organisaties"
-		:title="t('softwarecatalog', 'Organisaties')"
-		:description="t('softwarecatalog', 'Manage your organisaties and their configurations')"
-		:empty-icon="OfficeBuildingOutline"
-		:card-icon="OfficeBuildingOutline"
-		:properties="organisatieProperties"
-		:object-actions="organisatieObjectActions"
-		:mass-actions="organisatieMassActions"
-		:actions="organisatieActions"
-		:add-action="addOrganisatieAction"
-		:help-url="'https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties'"
-		card-display-mode="description"
-		:custom-card-component="OrganisatieCard"
-		@mounted="onMounted" />
+	<div class="organisatieIndex">
+		<GenericObjectTable
+			object-type="organisatie"
+			object-type-plural="organisaties"
+			:title="t('softwarecatalog', 'Organisaties')"
+			:description="t('softwarecatalog', 'Manage your organisaties and their configurations')"
+			:empty-icon="OfficeBuildingOutline"
+			:card-icon="OfficeBuildingOutline"
+			:properties="organisatieProperties"
+			:object-actions="organisatieObjectActions"
+			:mass-actions="organisatieMassActions"
+			:actions="organisatieActions"
+			:add-action="addOrganisatieAction"
+			:help-url="'https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties'"
+			card-display-mode="description"
+			:custom-card-component="OrganisatieCard"
+			:filters="organisatieFilters"
+			:search-query="searchQuery"
+			:on-search-input="onSearchInput"
+			:clear-search="clearSearch"
+			@mounted="onMounted" />
+	</div>
 </template>
 
 <script>
@@ -47,15 +53,24 @@ import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import PublishIcon from 'vue-material-design-icons/Publish.vue'
 import PublishOffIcon from 'vue-material-design-icons/PublishOff.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
+import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 
 export default {
 	name: 'OrganisatieIndex',
 	components: {
 		GenericObjectTable,
+		// eslint-disable-next-line vue/no-unused-components
 		OrganisatieCard,
 	},
 	data() {
 		return {
+			// Current filter values
+			currentFilters: {
+				status: 'all',
+				type: 'all',
+			},
 			organisatieProperties: [
 				{
 					id: 'naam',
@@ -139,15 +154,50 @@ export default {
 					},
 				},
 				{
+					id: 'goToOrganisation',
+					label: 'Go to organisation',
+					icon: OpenInNew,
+					handler: (organisatie) => {
+						this.goToOrganisation(organisatie)
+					},
+				},
+				{
+					id: 'activeren',
+					label: 'Activeren',
+					icon: CheckCircle,
+					condition: (organisatie) => organisatie.status?.toLowerCase() === 'concept' || organisatie.status?.toLowerCase() === 'deactief',
+					handler: (organisatie) => {
+						objectStore.setActiveObject('organisatie', organisatie)
+						navigationStore.setDialog('changeOrganisatieStatus', {
+							objectType: 'organisatie',
+							dialogTitle: 'Organisatie Activeren',
+							newStatus: 'Actief',
+							action: 'activeren',
+						})
+					},
+				},
+				{
+					id: 'deactiveren',
+					label: 'Deactiveren',
+					icon: CloseCircle,
+					condition: (organisatie) => organisatie.status?.toLowerCase() === 'actief',
+					handler: (organisatie) => {
+						objectStore.setActiveObject('organisatie', organisatie)
+						navigationStore.setDialog('changeOrganisatieStatus', {
+							objectType: 'organisatie',
+							dialogTitle: 'Organisatie Deactiveren',
+							newStatus: 'Deactief',
+							action: 'deactiveren',
+						})
+					},
+				},
+				{
 					id: 'delete',
 					label: 'Delete',
 					icon: TrashCanOutline,
 					handler: (organisatie) => {
 						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setDialog('deleteObject', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie',
-						})
+						navigationStore.setModal('deleteObject')
 					},
 				},
 			],
@@ -215,6 +265,32 @@ export default {
 					},
 				},
 			],
+			organisatieFilters: [
+				{
+					key: 'status',
+					label: 'Status',
+					options: [
+						{ value: 'all', label: 'Alle statussen' },
+						{ value: 'Actief', label: 'Actief' },
+						{ value: 'Concept', label: 'Concept' },
+					],
+					onChange: (value) => this.onFilterChange('status', value),
+				},
+				{
+					key: 'type',
+					label: 'Type',
+					options: [
+						{ value: 'all', label: 'Alle types' },
+						{ value: 'Gemeente', label: 'Gemeente' },
+						{ value: 'Leverancier', label: 'Leverancier' },
+						{ value: 'Samenwerking', label: 'Samenwerking' },
+						{ value: 'Community', label: 'Community' },
+					],
+					onChange: (value) => this.onFilterChange('type', value),
+				},
+			],
+			searchQuery: '',
+			searchDebounceTimeout: null,
 			addOrganisatieAction: {
 				id: 'add',
 				label: 'Add Organisatie',
@@ -240,14 +316,190 @@ export default {
 					await objectStore.fetchSettings()
 				}
 
-				// Fetch organisaties collection
-				console.info('Fetching organisaties...')
-				await objectStore.fetchCollection('organisatie')
+				// Fetch organisaties collection with contactpersonen extended
+				console.info('Fetching organisaties with contactpersonen...')
+				await objectStore.fetchCollection('organisatie', {
+					_extend: '@self.schema,contactpersonen',
+					_limit: 20,
+					_page: 1
+				})
 			} catch (error) {
 				console.error('Error initializing OrganisatieIndex:', error)
 				// Show error to user if needed
 			}
 		},
+
+		/**
+		 * Handle search input with debouncing
+		 * @param {string} value - The search input value
+		 * @return {void}
+		 */
+		onSearchInput(value) {
+			this.searchQuery = value
+
+			// Clear existing timeout
+			if (this.searchDebounceTimeout) {
+				clearTimeout(this.searchDebounceTimeout)
+			}
+
+			// Set new timeout for 1.5 seconds
+			this.searchDebounceTimeout = setTimeout(() => {
+				this.performSearch()
+			}, 1500)
+		},
+
+		/**
+		 * Perform the actual search with API call
+		 * @return {Promise<void>}
+		 */
+		async performSearch() {
+			try {
+				console.info('Performing search with query:', this.searchQuery)
+
+				// Use the unified filter method that includes current filters
+				await this.fetchOrganisatiesWithFilters()
+			} catch (error) {
+				console.error('Error performing search:', error)
+			}
+		},
+
+		/**
+		 * Clear the search query and reset results
+		 * @return {Promise<void>}
+		 */
+		async clearSearch() {
+			this.searchQuery = ''
+
+			// Clear any pending timeout
+			if (this.searchDebounceTimeout) {
+				clearTimeout(this.searchDebounceTimeout)
+			}
+
+			// Fetch all organisaties without search filter but with contactpersonen extended
+			await this.fetchOrganisatiesWithFilters()
+		},
+
+		/**
+		 * Handle filter changes and refetch data
+		 * @param {string} filterKey - The filter key (status or type)
+		 * @param {string} filterValue - The new filter value
+		 * @return {Promise<void>}
+		 */
+		async onFilterChange(filterKey, filterValue) {
+			console.info('Filter changed:', { filterKey, filterValue })
+
+			// Update the current filter
+			this.currentFilters[filterKey] = filterValue
+
+			// Reset to first page when filters change
+			await this.fetchOrganisatiesWithFilters()
+		},
+
+		/**
+		 * Fetch organisaties with current filters and search
+		 * @return {Promise<void>}
+		 */
+		async fetchOrganisatiesWithFilters() {
+			try {
+				console.info('Fetching organisaties with filters:', this.currentFilters)
+
+				const searchParams = {
+					_extend: '@self.schema,contactpersonen',
+					_page: 1, // Reset to first page
+				}
+
+				// Add search query if present
+				if (this.searchQuery.trim()) {
+					searchParams._search = this.searchQuery.trim()
+				}
+
+				// Add status filter if not 'all'
+				if (this.currentFilters.status !== 'all') {
+					searchParams.status = this.currentFilters.status
+				}
+
+				// Add type filter if not 'all'
+				if (this.currentFilters.type !== 'all') {
+					searchParams.type = this.currentFilters.type
+				}
+
+				console.info('Final search params:', searchParams)
+
+				// Fetch organisaties with all parameters
+				await objectStore.fetchCollection('organisatie', searchParams)
+			} catch (error) {
+				console.error('Error fetching organisaties with filters:', error)
+			}
+		},
+
+		/**
+		 * Navigate to external organisation catalog
+		 * @param {object} organisatie - The organisation object
+		 * @return {void}
+		 */
+		async goToOrganisation(organisatie) {
+			try {
+				// Get the catalog location from settings
+				const catalogLocation = objectStore.settings?.catalogLocation
+
+				if (!catalogLocation) {
+					console.warn('No catalog location configured')
+					// Fallback: could show a notification to user
+					return
+				}
+
+				// Get the organisation UUID/ID
+				const organisatieId = organisatie.id || organisatie.uuid
+
+				if (!organisatieId) {
+					console.warn('Organisation has no valid ID')
+					return
+				}
+
+				// First, set the active organisation in OpenRegister via Nextcloud endpoint
+				const setActiveUrl = `${window.location.origin}/index.php/apps/openregister/api/organizations/${organisatieId}/set-active`
+
+				try {
+					await fetch(setActiveUrl, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+					})
+					console.info('Active organisation set successfully')
+				} catch (error) {
+					console.warn('Failed to set active organisation:', error)
+					// Continue anyway - the catalog might still work
+				}
+
+				// Build the target URL: catalogLocation + '/beheer'
+				const targetUrl = catalogLocation.endsWith('/')
+					? `${catalogLocation}beheer`
+					: `${catalogLocation}/beheer`
+
+				// Navigate to the external catalog
+				window.open(targetUrl, '_blank')
+
+			} catch (error) {
+				console.error('Error navigating to organisation:', error)
+			}
+		},
+	},
+
+	/**
+	 * Component cleanup - clear timeouts
+	 * @return {void}
+	 */
+	beforeDestroy() {
+		if (this.searchDebounceTimeout) {
+			clearTimeout(this.searchDebounceTimeout)
+		}
 	},
 }
 </script>
+
+<style scoped>
+.organisatieIndex {
+	padding: 16px;
+}
+</style>

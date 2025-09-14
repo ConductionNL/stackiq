@@ -36,6 +36,9 @@ return [
         // Organization synchronization routes
         ['name' => 'settings#getSyncStatus', 'url' => '/api/settings/sync-status', 'verb' => 'GET'],
         ['name' => 'settings#performSync', 'url' => '/api/settings/sync', 'verb' => 'POST'],
+        
+        // Heartbeat route for keeping connections alive during long operations
+        ['name' => 'settings#heartbeat', 'url' => '/api/heartbeat', 'verb' => 'POST'],
 
         // Version and import management routes
         ['name' => 'settings#getVersionInfo', 'url' => '/api/settings/version', 'verb' => 'GET'],
@@ -58,6 +61,9 @@ return [
         
         // Health check endpoint
         ['name' => 'settings#health_check', 'url' => '/api/health', 'verb' => 'GET'],
+        
+        // Configuration cache management
+        ['name' => 'settings#clear_cache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
         
         // Force re-initialization endpoint
         ['name' => 'settings#force_reinit', 'url' => '/api/settings/force-reinit', 'verb' => 'POST'],
@@ -116,5 +122,33 @@ return [
         // User Groups focused endpoints
         ['name' => 'settings#getUserGroupsConfig', 'url' => '/api/user-groups/config', 'verb' => 'GET'],
         ['name' => 'settings#updateUserGroupsConfig', 'url' => '/api/user-groups/config', 'verb' => 'POST'],
+        
+        // General Settings focused endpoints
+        ['name' => 'settings#getGeneralConfig', 'url' => '/api/settings/general/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateGeneralConfig', 'url' => '/api/settings/general/config', 'verb' => 'POST'],
+        
+        // Organization Synchronization focused endpoints
+        ['name' => 'settings#getSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'POST'],
+        
+        // ========================================================================
+        // VIEW API ENDPOINTS - ArchiMate Views with Enrichment Support
+        // ========================================================================
+        
+        // View API endpoints for querying and enriching ArchiMate views
+        ['name' => 'view#getAllViews', 'url' => '/api/views', 'verb' => 'GET'],
+        ['name' => 'view#getApiDocumentation', 'url' => '/api/views/docs', 'verb' => 'GET'],
+        ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
+
+        // ========================================================================
+        // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks
+        // ========================================================================
+        
+        // AangebodenGebruik API endpoints for filtering gebruiks by organization involvement
+        ['name' => 'aangebodenGebruik#getGebruiksWhereAfnemer', 'url' => '/api/aangeboden-gebruik/afnemer', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getGebruiksWhereDeelnemers', 'url' => '/api/aangeboden-gebruik/deelnemers', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#setGebruikSelfToActiveOrg', 'url' => '/api/aangeboden-gebruik/{gebruikId}/set-self', 'verb' => 'PUT'],
+        ['name' => 'aangebodenGebruik#getApiDocumentation', 'url' => '/api/aangeboden-gebruik/docs', 'verb' => 'GET'],
+
     ],
 ];

@@ -240,5 +240,77 @@ export default {
 </script>
 
 <style scoped>
-/* All pagination styles are in main.css - no component-specific styles needed */
+/* Pagination Styles */
+.viewPagination {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 24px;
+	padding: 16px;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.viewPaginationInfo {
+	display: flex;
+	align-items: center;
+	color: var(--color-text-lighter);
+	font-size: 14px;
+}
+
+.viewPaginationNav {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.viewPaginationNumbers {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.viewPaginationEllipsis {
+	padding: 6px 8px;
+	color: var(--color-text-lighter);
+}
+
+.viewPaginationPageSize {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.viewPaginationPageSize label {
+	font-size: 14px;
+	color: var(--color-text-lighter);
+	white-space: nowrap;
+}
+
+.pagination-page-size-select {
+	min-width: 80px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.viewPagination {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 12px;
+	}
+	
+	.viewPaginationNav {
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	
+	.viewPaginationNumbers {
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+}
 </style>

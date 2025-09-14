@@ -36,6 +36,21 @@ import { objectStore, navigationStore } from '../store/store.js'
 					</span>
 				</div>
 				<div class="viewActions">
+					<!-- Search Field -->
+					<div v-if="searchQuery !== undefined" class="viewSearch">
+						<NcTextField
+							:value="searchQuery"
+							:placeholder="t('opencatalogi', 'Search...')"
+							trailing-button-icon="close"
+							:show-trailing-button="searchQuery && searchQuery.length > 0"
+							@trailing-button-click="handleClearSearch"
+							@update:value="handleSearchInput">
+							<template #icon>
+								<Magnify :size="16" />
+							</template>
+						</NcTextField>
+					</div>
+
 					<!-- Mass Actions Dropdown -->
 					<NcActions
 						v-if="massActions && massActions.length > 0"
@@ -58,6 +73,20 @@ import { objectStore, navigationStore } from '../store/store.js'
 							{{ action.label }}
 						</NcActionButton>
 					</NcActions>
+
+					<!-- Filters -->
+					<div v-if="filters.length > 0" class="viewFilters">
+						<div v-for="filter in filters" :key="filter.key" class="filterItem">
+							<label :for="`filter-${filter.key}`" class="filterLabel">{{ filter.label }}:</label>
+							<NcSelect
+								:id="`filter-${filter.key}`"
+								class="filterSelect"
+								:value="getActiveFilterOption(filter)"
+								:options="filter.options"
+								:clearable="false"
+								@option:selected="setFilter(filter.key, $event)" />
+						</div>
+					</div>
 
 					<!-- View Mode Switch -->
 					<div class="viewModeSwitchContainer">
@@ -157,103 +186,108 @@ import { objectStore, navigationStore } from '../store/store.js'
 				<template v-if="viewMode === 'cards'">
 					<div class="cardGrid">
 						<!-- Custom Card Component -->
-						<component v-if="customCardComponent"
-							v-for="item in paginatedObjects"
-							:key="getObjectId(item)"
-							:is="customCardComponent"
-							:item="item"
-							:object-actions="objectActions"
-							:card-icon="cardIcon" />
+						<template v-if="customCardComponent">
+							<component :is="customCardComponent"
+								v-for="item in paginatedObjects"
+								:key="getObjectId(item)"
+								:item="item"
+								:object-actions="objectActions"
+								:card-icon="cardIcon" />
+						</template>
 
 						<!-- Default Generic Cards -->
-						<div v-else v-for="item in paginatedObjects" :key="getObjectId(item)" class="card">
-							<div class="cardHeader">
-								<h2 v-tooltip.bottom="getObjectSummary(item)">
-									<component :is="cardIcon" :size="20" />
-									{{ getObjectTitle(item) }}
-								</h2>
-								<NcActions :primary="true" menu-name="Actions">
-									<template #icon>
-										<DotsHorizontal :size="20" />
-									</template>
-									<NcActionButton
-										v-for="action in objectActions"
-										:key="action.id"
-										close-after-click
-										:disabled="action.condition && !action.condition(item)"
-										@click="executeObjectAction(action, item)">
+						<template v-else>
+							<div v-for="item in paginatedObjects"
+								:key="getObjectId(item)"
+								class="card">
+								<div class="cardHeader">
+									<h2 v-tooltip.bottom="getObjectSummary(item)">
+										<component :is="cardIcon" :size="20" />
+										{{ getObjectTitle(item) }}
+									</h2>
+									<NcActions :primary="true" menu-name="Actions">
 										<template #icon>
-											<component :is="action.icon" :size="20" />
+											<DotsHorizontal :size="20" />
 										</template>
-										{{ action.label }}
-									</NcActionButton>
-								</NcActions>
-							</div>
-							<!-- Card Content -->
-							<div v-if="cardDisplayMode === 'description'" class="cardDescription">
-								<p v-if="getObjectSummary(item)" class="summaryText">
-									{{ getObjectSummary(item) }}
-								</p>
-								<p v-else class="noSummaryText">
-									{{ t('opencatalogi', 'No description available') }}
-								</p>
-
-								<!-- Show key properties in a compact format -->
-								<div v-if="getKeyProperties(item).length > 0" class="keyProperties">
-									<span v-for="property in getKeyProperties(item)"
-										:key="property.key"
-										class="keyProperty">
-										<strong>{{ property.label }}:</strong> {{ property.value }}
-									</span>
+										<NcActionButton
+											v-for="action in objectActions"
+											v-if="!action.condition || action.condition(item)"
+											:key="action.id"
+											close-after-click
+											@click="executeObjectAction(action, item)">
+											<template #icon>
+												<component :is="action.icon" :size="20" />
+											</template>
+											{{ action.label }}
+										</NcActionButton>
+									</NcActions>
 								</div>
-							</div>
-
-							<div v-else-if="cardDisplayMode === 'properties'" class="cardProperties">
-								<!-- Card Statistics Table -->
-								<table class="statisticsTable">
-									<thead>
-										<tr>
-											<th>{{ t('opencatalogi', 'Property') }}</th>
-											<th>{{ t('opencatalogi', 'Value') }}</th>
-											<th>{{ t('opencatalogi', 'Status') }}</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr v-for="property in getCardProperties(item)" :key="property.key">
-											<td>{{ property.label }}</td>
-											<td class="truncatedText">
-												{{ property.value }}
-											</td>
-											<td>{{ property.status }}</td>
-										</tr>
-									</tbody>
-								</table>
-							</div>
-
-							<div v-else-if="cardDisplayMode === 'mixed'" class="cardMixed">
-								<!-- Description first -->
-								<div class="cardDescription">
+								<!-- Card Content -->
+								<div v-if="cardDisplayMode === 'description'" class="cardDescription">
 									<p v-if="getObjectSummary(item)" class="summaryText">
 										{{ getObjectSummary(item) }}
 									</p>
 									<p v-else class="noSummaryText">
 										{{ t('opencatalogi', 'No description available') }}
 									</p>
+
+									<!-- Show key properties in a compact format -->
+									<div v-if="getKeyProperties(item).length > 0" class="keyProperties">
+										<span v-for="property in getKeyProperties(item)"
+											:key="property.key"
+											class="keyProperty">
+											<strong>{{ property.label }}:</strong> {{ property.value }}
+										</span>
+									</div>
 								</div>
 
-								<!-- Compact properties table -->
-								<table v-if="getCardProperties(item).length > 0" class="statisticsTable compact">
-									<tbody>
-										<tr v-for="property in getCardProperties(item).slice(0, 3)" :key="property.key">
-											<td><strong>{{ property.label }}</strong></td>
-											<td class="truncatedText">
-												{{ property.value }}
-											</td>
-										</tr>
-									</tbody>
-								</table>
+								<div v-else-if="cardDisplayMode === 'properties'" class="cardProperties">
+									<!-- Card Statistics Table -->
+									<table class="statisticsTable">
+										<thead>
+											<tr>
+												<th>{{ t('opencatalogi', 'Property') }}</th>
+												<th>{{ t('opencatalogi', 'Value') }}</th>
+												<th>{{ t('opencatalogi', 'Status') }}</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr v-for="property in getCardProperties(item)" :key="property.key">
+												<td>{{ property.label }}</td>
+												<td class="truncatedText">
+													{{ property.value }}
+												</td>
+												<td>{{ property.status }}</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+
+								<div v-else-if="cardDisplayMode === 'mixed'" class="cardMixed">
+									<!-- Description first -->
+									<div class="cardDescription">
+										<p v-if="getObjectSummary(item)" class="summaryText">
+											{{ getObjectSummary(item) }}
+										</p>
+										<p v-else class="noSummaryText">
+											{{ t('opencatalogi', 'No description available') }}
+										</p>
+									</div>
+
+									<!-- Compact properties table -->
+									<table v-if="getCardProperties(item).length > 0" class="statisticsTable compact">
+										<tbody>
+											<tr v-for="property in getCardProperties(item).slice(0, 3)" :key="property.key">
+												<td><strong>{{ property.label }}</strong></td>
+												<td class="truncatedText">
+													{{ property.value }}
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
 							</div>
-						</div>
+						</template>
 					</div>
 				</template>
 				<template v-else>
@@ -309,9 +343,9 @@ import { objectStore, navigationStore } from '../store/store.js'
 											<NcActions class="actionsButton">
 												<NcActionButton
 													v-for="action in objectActions"
+													v-if="!action.condition || action.condition(item)"
 													:key="action.id"
 													close-after-click
-													:disabled="action.condition && !action.condition(item)"
 													@click="executeObjectAction(action, item)">
 													<template #icon>
 														<component :is="action.icon" :size="20" />
@@ -370,9 +404,9 @@ import { objectStore, navigationStore } from '../store/store.js'
 										<NcActions class="actionsButton">
 											<NcActionButton
 												v-for="action in objectActions"
+												v-if="!action.condition || action.condition(item)"
 												:key="action.id"
 												close-after-click
-												:disabled="action.condition && !action.condition(item)"
 												@click="executeObjectAction(action, item)">
 												<template #icon>
 													<component :is="action.icon" :size="20" />
@@ -412,12 +446,15 @@ import {
 	NcActionCaption,
 	NcCheckboxRadioSwitch,
 	NcButton,
+	NcSelect,
+	NcTextField,
 } from '@nextcloud/vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
 import FormatColumns from 'vue-material-design-icons/FormatColumns.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 
 import PaginationComponent from './PaginationComponent.vue'
 
@@ -433,10 +470,13 @@ export default {
 		NcActionCaption,
 		NcCheckboxRadioSwitch,
 		NcButton,
+		NcSelect,
+		NcTextField,
 		VueDraggable,
 		DotsHorizontal,
 		FormatListChecks,
 		FormatColumns,
+		Magnify,
 		PaginationComponent,
 	},
 
@@ -582,25 +622,97 @@ export default {
 			type: [String, Object],
 			default: null,
 		},
+		/**
+		 * Available filters for this object type
+		 */
+		filters: {
+			type: Array,
+			default: () => [],
+		},
+		/**
+		 * Search query for filtering objects
+		 */
+		searchQuery: {
+			type: String,
+			default: '',
+		},
+		/**
+		 * Search query change handler
+		 */
+		onSearchInput: {
+			type: Function,
+			default: null,
+		},
+		/**
+		 * Clear search handler
+		 */
+		clearSearch: {
+			type: Function,
+			default: null,
+		},
 	},
 
 	data() {
 		return {
 			viewMode: 'cards',
 			localSelectedObjects: [],
+			activeFilters: {},
 		}
 	},
 
 	computed: {
 		filteredObjects() {
-			return objectStore.getCollection(this.objectType)?.results || []
+			let objects = objectStore.getCollection(this.objectType)?.results || []
+
+			// Apply active filters
+			Object.keys(this.activeFilters).forEach(filterKey => {
+				const filterValue = this.activeFilters[filterKey]
+				if (filterValue && filterValue !== 'all') {
+					objects = objects.filter(obj => obj[filterKey] === filterValue)
+				}
+			})
+
+			// Apply search query
+			if (this.searchQuery && this.searchQuery.trim()) {
+				const searchTerm = this.searchQuery.toLowerCase().trim()
+				objects = objects.filter(obj => {
+					const objTitle = this.getObjectTitle(obj).toLowerCase()
+					const objSummary = this.getObjectSummary(obj).toLowerCase()
+					return objTitle.includes(searchTerm) || objSummary.includes(searchTerm)
+				})
+			}
+
+			return objects
 		},
 		currentPagination() {
 			const pagination = objectStore.getPagination(this.objectType)
+			console.info(`GenericObjectTable: Pagination for ${this.objectType}:`, {
+				pagination,
+				filteredObjectsLength: this.filteredObjects.length,
+			})
 			return pagination
 		},
 		paginatedObjects() {
-			return this.filteredObjects
+			// Check if we should use server-side pagination
+			// Server-side pagination is when we have proper pagination metadata AND
+			// the total from server matches the actual results length (indicating server handled pagination)
+			const hasServerPagination = this.currentPagination?.page && 
+				this.currentPagination?.limit && 
+				this.currentPagination?.total &&
+				this.filteredObjects.length <= this.currentPagination.limit
+
+			if (hasServerPagination) {
+				// Server has already paginated the results
+				return this.filteredObjects
+			}
+			
+			// Client-side pagination - split the full result set into pages
+			const pageSize = this.currentPagination?.limit || 20
+			const currentPage = this.currentPagination?.page || 1
+			const startIndex = (currentPage - 1) * pageSize
+			const endIndex = startIndex + pageSize
+			
+			return this.filteredObjects.slice(startIndex, endIndex)
 		},
 		selectedObjects() {
 			// Use store-managed selected objects if available, otherwise use local state
@@ -673,6 +785,14 @@ export default {
 
 	mounted() {
 		console.info(`GenericObjectTable mounted for ${this.objectType}, fetching objects...`)
+		
+		// Initialize active filters with default values
+		if (this.filters && this.filters.length > 0) {
+			this.filters.forEach(filter => {
+				this.$set(this.activeFilters, filter.key, 'all')
+			})
+		}
+		
 		this.refreshObjects()
 		// Initialize column filters
 		objectStore.initializeColumnFilters()
@@ -854,7 +974,12 @@ export default {
 			if (this.paginationFunction) {
 				this.paginationFunction(page, this.currentPagination.limit || 20)
 			} else {
-				objectStore.fetchCollection(this.objectType, { _page: page, _limit: this.currentPagination.limit || 20 })
+				const params = { _page: page, _limit: this.currentPagination.limit || 20 }
+				// For organisatie, always include contactpersonen extend
+				if (this.objectType === 'organisatie') {
+					params._extend = '@self.schema,contactpersonen'
+				}
+				objectStore.fetchCollection(this.objectType, params)
 			}
 		},
 
@@ -863,7 +988,37 @@ export default {
 			if (this.paginationFunction) {
 				this.paginationFunction(1, pageSize)
 			} else {
-				objectStore.fetchCollection(this.objectType, { _page: 1, _limit: pageSize })
+				const params = { _page: 1, _limit: pageSize }
+				// For organisatie, always include contactpersonen extend
+				if (this.objectType === 'organisatie') {
+					params._extend = '@self.schema,contactpersonen'
+				}
+				objectStore.fetchCollection(this.objectType, params)
+			}
+		},
+
+		/**
+		 * Get the active filter option for a given filter
+		 * @param {object} filter - The filter configuration
+		 * @return {object} The currently active filter option
+		 */
+		getActiveFilterOption(filter) {
+			const activeValue = this.activeFilters[filter.key] || 'all'
+			return filter.options.find(option => option.value === activeValue) || filter.options[0]
+		},
+
+		/**
+		 * Set a filter value
+		 * @param {string} filterKey - The filter key
+		 * @param {object} option - The selected filter option
+		 */
+		setFilter(filterKey, option) {
+			this.$set(this.activeFilters, filterKey, option.value)
+			
+			// Call the onChange handler if it exists for this filter
+			const filter = this.filters.find(f => f.key === filterKey)
+			if (filter && filter.onChange) {
+				filter.onChange(option.value)
 			}
 		},
 
@@ -871,14 +1026,44 @@ export default {
 			if (this.refreshFunction) {
 				this.refreshFunction()
 			} else {
-				objectStore.fetchCollection(this.objectType)
+				// For organisatie, always include contactpersonen extend
+				const extendParams = this.objectType === 'organisatie' 
+					? { _extend: '@self.schema,contactpersonen' }
+					: {}
+				objectStore.fetchCollection(this.objectType, extendParams)
 			}
 			// Clear selection after refresh
 			objectStore.setSelectedObjects([])
+			
+			// Reset filters to default values
+			if (this.filters && this.filters.length > 0) {
+				this.filters.forEach(filter => {
+					this.$set(this.activeFilters, filter.key, 'all')
+				})
+			}
 		},
 
 		openLink(url, type = '') {
 			window.open(url, type)
+		},
+
+		/**
+		 * Handle search input
+		 * @param {string} value - The search input value
+		 */
+		handleSearchInput(value) {
+			if (this.onSearchInput) {
+				this.onSearchInput(value)
+			}
+		},
+
+		/**
+		 * Handle clear search
+		 */
+		handleClearSearch() {
+			if (this.clearSearch) {
+				this.clearSearch()
+			}
 		},
 	},
 }
@@ -921,6 +1106,7 @@ export default {
 	align-items: center;
 	margin-bottom: 20px;
 	gap: 16px;
+	flex-wrap: wrap;
 }
 
 .viewInfo {
@@ -1052,6 +1238,90 @@ export default {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+/* Filter Styles */
+.viewFilters {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.viewSearch {
+	min-width: 200px;
+}
+
+.filterItem {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.filterLabel {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--color-text-lighter);
+	white-space: nowrap;
+}
+
+.filterSelect {
+	min-width: 120px;
+}
+
+/* Pagination Styles */
+.viewPagination {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 24px;
+	padding: 16px;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.viewPaginationInfo {
+	display: flex;
+	align-items: center;
+	color: var(--color-text-lighter);
+	font-size: 14px;
+}
+
+.viewPaginationNav {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.viewPaginationNumbers {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.viewPaginationEllipsis {
+	padding: 6px 8px;
+	color: var(--color-text-lighter);
+}
+
+.viewPaginationPageSize {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.viewPaginationPageSize label {
+	font-size: 14px;
+	color: var(--color-text-lighter);
+	white-space: nowrap;
+}
+
+.pagination-page-size-select {
+	min-width: 80px;
 }
 
 .viewTableContainer {

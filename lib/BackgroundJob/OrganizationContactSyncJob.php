@@ -26,7 +26,8 @@ use OCP\BackgroundJob\TimedJob;
  * Background job for comprehensive organization and contact person synchronization
  * 
  * This job runs every 5 minutes to ensure data consistency between SoftwareCatalog objects
- * and OpenRegister entities. All business logic is delegated to the OrganizationSyncService.
+ * and OpenRegister entities using full sync (all organizations). All business logic is 
+ * delegated to the OrganizationSyncService.
  * 
  * @category BackgroundJob
  * @package  OCA\SoftwareCatalog\BackgroundJob

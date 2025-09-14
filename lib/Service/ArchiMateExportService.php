@@ -46,6 +46,11 @@ class ArchiMateExportService
                 // Skip legacy _attributes bag, handle individual underscored keys as attributes
                 $attrKey = substr($key, 1);
                 
+                // Skip malformed attribute keys that would create invalid XML (e.g., __propertyDefinitionRef -> :propertyDefinitionRef)
+                if (str_starts_with($attrKey, '__') || $attrKey === '') {
+                    continue;
+                }
+                
                 // Fix double underscores to colons (e.g., xml__lang -> xml:lang)
                 $attrKey = str_replace('__', ':', $attrKey);
                 
@@ -110,6 +115,21 @@ class ArchiMateExportService
                 continue;
             }
 
+            // Skip property-like fields that should be handled by specialized property methods
+            // These fields often appear as direct data but should only be in <properties> structure
+            $propertyLikeFields = [
+                'beschikbaarheid', 'integriteit', 'vertrouwelijkheid', 'gemmaType',
+                'objectId', 'bivScoreBbn', 'belangrijksteReden'
+            ];
+            if (in_array($key, $propertyLikeFields, true)) {
+                continue; // Skip these - they should only appear in proper <properties><property> structure
+            }
+            
+            // Special handling for elementProperties and other nested structures - filter out problematic fields
+            if (($key === 'elementProperties' || $key === 'properties' || $key === 'viewNodes') && is_array($value)) {
+                $value = $this->filterProblematicFields($value, $propertyLikeFields);
+            }
+
             // Ensure key is always a string for XML tag names
             $tagName = (string) $key;
 
@@ -153,6 +173,53 @@ class ArchiMateExportService
             }
         }
         return [null, $key];
+    }
+
+    /**
+     * Recursively filter out problematic fields from nested data structures
+     * 
+     * @param array $data The data structure to filter
+     * @param array $fieldsToRemove List of field names to remove
+     * @return array Filtered data structure
+     */
+    private function filterProblematicFields(array $data, array $fieldsToRemove): array
+    {
+        $filtered = [];
+        
+        foreach ($data as $key => $value) {
+            $shouldSkip = false;
+            
+            // Skip exact matches
+            if (in_array($key, $fieldsToRemove, true)) {
+                $shouldSkip = true;
+            }
+            
+            // Skip fields that start with problematic patterns (e.g., "beschikbaarheid(belangrijksteReden)")
+            foreach ($fieldsToRemove as $fieldPattern) {
+                if (str_starts_with($key, $fieldPattern)) {
+                    $shouldSkip = true;
+                    break;
+                }
+            }
+            
+            // Skip fields with invalid XML tag name characters (parentheses, etc.)
+            if (preg_match('/[(),<>\/\\\]/', $key)) {
+                $shouldSkip = true;
+            }
+            
+            if ($shouldSkip) {
+                continue;
+            }
+            
+            // Recursively filter nested arrays
+            if (is_array($value)) {
+                $filtered[$key] = $this->filterProblematicFields($value, $fieldsToRemove);
+            } else {
+                $filtered[$key] = $value;
+            }
+        }
+        
+        return $filtered;
     }
 
     private function getNamespaceUri(\SimpleXMLElement $xml, string $prefix): string
@@ -244,12 +311,14 @@ XML;
      */
     public function addViewsToXml(\SimpleXMLElement $xml, array $views): void
     {
-        echo "ADDVIEWSTOXML CALLED WITH " . count($views) . " VIEWS\n";
-        var_dump(array_keys($views));
+        $this->logger->debug('Adding views to XML', [
+            'view_count' => count($views),
+            'view_keys' => array_keys($views)
+        ]);
         
         if (empty($views)) {
-            echo "NO VIEWS TO PROCESS\n";
-            die();
+            $this->logger->warning('No views to process');
+            return;
         }
 
         $folder = $xml->addChild('folder');
@@ -281,25 +350,25 @@ XML;
         $viewData = $this->extractViewData($view);
         
         if (!$viewData) {
-            echo "NO VALID VIEW DATA FOUND\n";
-            var_dump(['view_keys' => array_keys($view), 'view' => $view]);
-            die();
+            $this->logger->warning('No valid view data found', [
+                'view_keys' => array_keys($view),
+                'view_structure' => $view
+            ]);
+            return;
         }
 
         // DEBUG: Check if this is our target view with nodes
         if (isset($viewData['_identifier']) && $viewData['_identifier'] === 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af') {
-            echo "FOUND TARGET VIEW WITH ID: id-1c197dc3-71e5-40dc-8f5d-a96e983b41af\n";
-            echo "Raw view input:\n";
-            var_dump($view);
-            echo "\nExtracted viewData:\n";
-            var_dump($viewData);
-            echo "\nNode data check:\n";
-            var_dump([
-                'has_node' => isset($viewData['node']),
-                'node_count' => is_array($viewData['node'] ?? null) ? count($viewData['node']) : 0,
-                'node_sample' => isset($viewData['node'][0]) ? $viewData['node'][0] : 'NO FIRST NODE'
+            $this->logger->debug('Found target view with specific ID', [
+                'identifier' => $viewData['_identifier'],
+                'raw_view' => $view,
+                'extracted_view_data' => $viewData,
+                'node_analysis' => [
+                    'has_node' => isset($viewData['node']),
+                    'node_count' => is_array($viewData['node'] ?? null) ? count($viewData['node']) : 0,
+                    'node_sample' => isset($viewData['node'][0]) ? $viewData['node'][0] : 'NO FIRST NODE'
+                ]
             ]);
-            die();
         }
 
         $this->logger->debug('Processing view with custom logic', [
@@ -563,6 +632,7 @@ XML;
 
         // Create base XML structure with model metadata
         $modelMetadata = $this->extractModelMetadata($objects);
+        $propertyDefinitionMap = $modelMetadata['propertyDefinitionMap'] ?? [];
         $xml = $this->createCleanArchiMateXml($modelMetadata);
         
         // Add model name and properties if available
@@ -596,9 +666,25 @@ XML;
         $validSections = ['elements', 'relationships', 'views', 'organizations', 'property_definitions'];
         $sectionCounts = [];
         
+        // Map singular section names to plural for XML generation
+        $sectionMapping = [
+            'element' => 'elements',
+            'relationship' => 'relationships',
+            'view' => 'views',
+            'organization' => 'organizations',
+            'property_definition' => 'property_definitions'
+        ];
+        
         foreach ($validSections as $sectionName) {
-            if (isset($objectsBySection[$sectionName]) && !empty($objectsBySection[$sectionName])) {
-                $sectionObjects = $objectsBySection[$sectionName];
+            // Check both singular and plural section names
+            $sectionObjects = [];
+            foreach ($objectsBySection as $dbSection => $objects) {
+                if (isset($sectionMapping[$dbSection]) && $sectionMapping[$dbSection] === $sectionName) {
+                    $sectionObjects = array_merge($sectionObjects, $objects);
+                }
+            }
+            
+            if (!empty($sectionObjects)) {
                 $sectionCounts[$sectionName] = count($sectionObjects);
                 
                 // Create section folder
@@ -606,7 +692,7 @@ XML;
                 
                 // Add all objects in this section
                 foreach ($sectionObjects as $object) {
-                    $this->addObjectDirectlyToXml($sectionFolder, $object, $sectionName);
+                    $this->addObjectDirectlyToXmlWithProperties($sectionFolder, $object, $sectionName, $propertyDefinitionMap);
                 }
                 
                 $this->logger->debug("Generated XML section: {$sectionName}", [
@@ -653,32 +739,25 @@ XML;
     }
 
     /**
-     * Add object directly to XML without intermediate conversions
-     * 
-     * Now works with the flattened object structure where XML data is at root level
+     * Add object directly to XML with properties from root fields
      */
-    private function addObjectDirectlyToXml(\SimpleXMLElement $folder, array $object, string $sectionName): void
+    private function addObjectDirectlyToXmlWithProperties(\SimpleXMLElement $folder, array $object, string $sectionName, array $propertyDefinitionMap): void
     {
         $tagName = match($sectionName) {
             'organizations' => 'item',
             'property_definitions' => 'propertyDefinition',
             'views' => 'view',
             'relationships' => 'relationship',
+            'elements' => 'element',
             default => 'element'
         };
-
         $objectNode = $folder->addChild($tagName);
-        
-        // Create clean XML data by filtering out metadata and duplicate fields
-        $xmlData = $this->cleanObjectDataForXml($object);
-        
+        $xmlData = $this->cleanObjectDataForXml($object, $propertyDefinitionMap);
         if (is_array($xmlData) && !empty($xmlData)) {
-            // Use specialized handling for views to ensure nodes are processed correctly
             if ($sectionName === 'views') {
                 $this->addViewDataToXmlNode($objectNode, $xmlData);
             } else {
-                // Pass section information to help with attribute handling
-                $this->addCleanDataToXmlNode($objectNode, $xmlData, $sectionName);
+                $this->addCleanDataToXmlNode($objectNode, $xmlData, $sectionName, $propertyDefinitionMap);
             }
         }
     }
@@ -855,7 +934,7 @@ XML;
     /**
      * Clean object data for XML export - remove metadata and duplicate attributes
      */
-    private function cleanObjectDataForXml(array $object): array
+    private function cleanObjectDataForXml(array $object, array $propertyDefinitionMap = []): array
     {
         // Remove our metadata fields
         $cleanData = $object;
@@ -885,37 +964,34 @@ XML;
             unset($cleanData[$field]);
         }
         
+        // Remove flattened properties that will be reconstructed separately
+        if (!empty($propertyDefinitionMap)) {
+            foreach ($propertyDefinitionMap as $propRef => $propName) {
+                unset($cleanData[$propName]);
+            }
+        }
+        
         return $cleanData;
     }
 
     /**
      * Add clean data to XML node with proper ArchiMate structure
      */
-    private function addCleanDataToXmlNode(\SimpleXMLElement $node, array $data, ?string $sectionName = null): void
+    private function addCleanDataToXmlNode(\SimpleXMLElement $node, array $data, ?string $sectionName = null, array $propertyDefinitionMap = []): void
     {
         // Extract attributes from various possible locations
         $attributes = [];
-        
-        // 1. Direct keys at root level
         if (isset($data['identifier'])) {
             $attributes['identifier'] = (string)$data['identifier'];
         }
-        
-        // 2. From _attributes array (if it exists)
         if (isset($data['_attributes']) && is_array($data['_attributes'])) {
             foreach ($data['_attributes'] as $attrKey => $attrValue) {
-                // Clean up attribute keys (remove colons, etc.)
                 $cleanKey = str_replace(':', '', $attrKey);
-                
-                // Check if this is a property definition to handle 'type' attribute correctly
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
-                
                 if ($cleanKey === 'type') {
                     if ($isPropertyDefinition) {
-                        // For property definitions, 'type' should remain as 'type' attribute
                         $attributes['type'] = (string)$attrValue;
                     } else {
-                        // For other elements, 'type' becomes 'xsi:type'
                         $attributes['xsi:type'] = (string)$attrValue;
                     }
                 } elseif (in_array($cleanKey, ['identifier', 'source', 'target', 'accessType'])) {
@@ -923,37 +999,25 @@ XML;
                 }
             }
         }
-        
-        // 3. Look for xsi:type in various forms (including double underscore from import service)
         foreach (['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type', '_type'] as $typeKey) {
             if (isset($data[$typeKey])) {
-                // Check if this is a property definition to handle type attributes correctly
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
-                
                 if ($typeKey === '_type' && $isPropertyDefinition && !isset($attributes['type'])) {
-                    // For property definitions, _type becomes 'type' attribute
                     $attributes['type'] = (string)$data[$typeKey];
                     break;
                 } elseif (in_array($typeKey, ['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type']) && !isset($attributes['xsi:type'])) {
-                    // For other elements, these become 'xsi:type' attribute
                     $attributes['xsi:type'] = (string)$data[$typeKey];
                     break;
                 }
             }
         }
-        
-        // 4. Look for other attributes in various forms  
         foreach (['source', 'target', 'accessType', 'type'] as $attrName) {
             if (isset($data[$attrName]) && !isset($attributes[$attrName])) {
-                // Check if this is a property definition to handle 'type' attribute correctly
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
-                
                 if ($attrName === 'type') {
                     if ($isPropertyDefinition) {
-                        // For property definitions, 'type' should remain as 'type' attribute
                         $attributes['type'] = (string)$data[$attrName];
                     } elseif (!isset($attributes['xsi:type'])) {
-                        // For other elements, 'type' becomes 'xsi:type' if not already set
                         $attributes['xsi:type'] = (string)$data[$attrName];
                     }
                 } else {
@@ -961,8 +1025,6 @@ XML;
                 }
             }
         }
-        
-        // Add all found attributes to the XML node
         foreach ($attributes as $attrName => $attrValue) {
             if ($attrName === 'xsi:type') {
                 $node->addAttribute('xsi:type', $attrValue, 'http://www.w3.org/2001/XMLSchema-instance');
@@ -970,20 +1032,16 @@ XML;
                 $node->addAttribute($attrName, $attrValue);
             }
         }
-
         // Handle child elements
         foreach ($data as $key => $value) {
-            // Skip attributes and metadata fields
             if (in_array($key, ['identifier', 'xsi:type', 'xsi_type', '_xsi:type', '_type', 'source', 'target', 'accessType', 'type', '_attributes'])) {
-                continue; // Already handled as attributes
+                continue;
             }
-
             if ($key === 'name' && is_array($value)) {
                 $nameNode = $node->addChild('name');
                 if (isset($value['_value'])) {
                     $nameNode[0] = (string)$value['_value'];
                 }
-                // Handle xml:lang in various forms (including double underscore from import service)
                 foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                     if (isset($value[$langKey])) {
                         $nameNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
@@ -995,7 +1053,6 @@ XML;
                 if (isset($value['_value'])) {
                     $docNode[0] = (string)$value['_value'];
                 }
-                // Handle xml:lang in various forms (including double underscore from import service)
                 foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                     if (isset($value[$langKey])) {
                         $docNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
@@ -1009,13 +1066,49 @@ XML;
                 if (isset($value['_value'])) {
                     $valueNode[0] = (string)$value['_value'];
                 }
-                // Handle xml:lang in various forms (including double underscore from import service)
                 foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                     if (isset($value[$langKey])) {
                         $valueNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
                         break;
                     }
                 }
+            }
+        }
+        // Add properties from root fields using propertyDefinitionMap ONLY if no properties were already processed
+        if (!empty($propertyDefinitionMap) && !isset($data['properties'])) {
+            $this->addPropertiesFromRootFields($node, $data, $propertyDefinitionMap);
+        }
+    }
+
+    /**
+     * Add properties to XML node using propertyDefinitionMap from model
+     *
+     * @param \SimpleXMLElement $node XML node to add properties to
+     * @param array $object The object with root-level properties
+     * @param array $propertyDefinitionMap Map of property name => propertyDefinitionRef
+     */
+    private function addPropertiesFromRootFields(
+        \SimpleXMLElement $node,
+        array $object,
+        array $propertyDefinitionMap
+    ): void {
+        // Find all root-level fields that match a propertyDefinitionMap entry
+        $properties = [];
+        foreach ($propertyDefinitionMap as $propRef => $propName) {
+            if (isset($object[$propName])) {
+                $properties[] = [
+                    'propertyDefinitionRef' => $propRef,
+                    'value' => $object[$propName],
+                ];
+            }
+        }
+        if (!empty($properties)) {
+            $propertiesNode = $node->addChild('properties');
+            foreach ($properties as $property) {
+                $propertyNode = $propertiesNode->addChild('property');
+                $propertyNode->addAttribute('propertyDefinitionRef', $property['propertyDefinitionRef']);
+                $valueNode = $propertyNode->addChild('value');
+                $valueNode[0] = (string)$property['value'];
             }
         }
     }
@@ -1066,9 +1159,24 @@ XML;
                 }
             }
             
-            // Also check in _attributes
+            // Also check in _attributes, but avoid duplicate if we already found one
             if (!$propDefRef && isset($property['_attributes']['propertyDefinitionRef'])) {
                 $propDefRef = (string)$property['_attributes']['propertyDefinitionRef'];
+            }
+            
+            // Skip and clean up malformed attributes that would create invalid XML
+            if (isset($property['_attributes'][':propertyDefinitionRef'])) {
+                unset($property['_attributes'][':propertyDefinitionRef']);
+            }
+            // Also check for other malformed attribute patterns
+            $badAttrs = [];
+            foreach ($property['_attributes'] ?? [] as $attrName => $attrValue) {
+                if (str_starts_with($attrName, ':')) {
+                    $badAttrs[] = $attrName;
+                }
+            }
+            foreach ($badAttrs as $badAttr) {
+                unset($property['_attributes'][$badAttr]);
             }
             
             if ($propDefRef) {
@@ -1359,6 +1467,11 @@ XML;
     private function runQualityAssuranceChecks(string $xmlString, array $sourceData): void
     {
         $this->logger->info('Running Quality Assurance checks on exported XML');
+        
+        // DEBUG: Save XML to file for inspection
+        $debugPath = '/tmp/debug_export.xml';
+        file_put_contents($debugPath, $xmlString);
+        $this->logger->info('DEBUG: Raw XML saved to ' . $debugPath . ' (size: ' . strlen($xmlString) . ' bytes)');
         
         try {
             $xml = new \SimpleXMLElement($xmlString);
