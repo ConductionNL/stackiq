@@ -436,6 +436,8 @@ class SettingsService
         $startTime = microtime(true);
         $result = null;
 
+        $voorzieningenConfig = $this->getVoorzieningenConfig();
+
         $this->logger->debug("SettingsService: Starting schema ID lookup (cache miss)", [
             'objectType' => $objectType,
             'timestamp' => date('Y-m-d H:i:s')
@@ -482,7 +484,7 @@ class SettingsService
                 $result = (int) $schemaId;
             } else {
                 // Also check voorzieningen register for organization/organisatie
-                $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+                $schemaId = $voorzieningenConfig['organisatie_schema'];
                 if (!empty($schemaId)) {
                     $result = (int) $schemaId;
                 }
@@ -490,14 +492,14 @@ class SettingsService
         }
 
         if ($objectType === 'organisatie' && $result === null) {
-            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_schema', '');
+            $schemaId = $voorzieningenConfig['organisatie_schema'];
             if (!empty($schemaId)) {
                 $result = (int) $schemaId;
             }
         }
 
         if ($objectType === 'contactpersoon' && $result === null) {
-            $schemaId = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_schema', '');
+            $schemaId = $voorzieningenConfig['contactpersoon_schema'];
             if (!empty($schemaId)) {
                 $result = (int) $schemaId;
             }

@@ -307,7 +307,8 @@ class ContactPersonHandler
                 'contactId' => $contactId
             ]);
 
-            $user = $this->_userManager->createUser($username, $username);
+            $randomPw = $this->_secureRandom->generate(length: 12);
+            $user = $this->_userManager->createUser(uid: $username, password: $randomPw);
 
             if ($user) {
                 $this->_logger->critical('🎊 NEW USER ACCOUNT CREATED', [
