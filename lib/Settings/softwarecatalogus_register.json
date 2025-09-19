@@ -1153,15 +1153,6 @@
             "order": 5,
             "example": "Bijvoorbeeld: 06 12345678"
           },
-          "isAanspreekpunt": {
-            "type": "boolean",
-            "title": "Is aanspreekpunt",
-            "description": "Geeft aan of deze persoon het aanspreekpunt is voor deze organisatie (publiek word gedeeld",
-            "facetable": false,
-            "hideOnCollection": true,
-            "order": 8,
-            "example": "Bijvoorbeeld: true"
-          },
           "notificaties": {
             "type": "array",
             "title": "Notificaties",
