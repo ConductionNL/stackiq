@@ -469,7 +469,7 @@
             "objectConfiguration": {},
             "fileConfiguration": {},
             "oneOf": [],
-            "facetable": true,
+            "facetable": false,
             "title": "Hosting vorm",
             "example": ["SaaS"]
           },
@@ -479,7 +479,7 @@
             "visible": true,
             "order": 0,
             "enum": ["NL", "EU", "US", "Elders"],
-            "facetable": true,
+            "facetable": false,
             "title": "In welk land wordt de data opgeslagen?",
             "example": "Bijvoorbeeld: NL"
           },
@@ -489,7 +489,7 @@
             "visible": true,
             "order": 0,
             "enum": ["NL", "EU", "US", "Elders"],
-            "facetable": true,
+            "facetable": false,
             "title": "Waar wordt de applicatie gehost?",
             "example": "Bijvoorbeeld: NL"
           },
@@ -961,7 +961,7 @@
             "pattern": "^CVE-\\d{4}-\\d{4,}$",
             "visible": true,
             "order": 4,
-            "facetable": true,
+            "facetable": false,
             "title": "CVE Code",
             "maxLength": 20,
             "example": "Bijvoorbeeld: CVE-2021-44228"
@@ -973,7 +973,7 @@
             "maximum": 10.0,
             "visible": true,
             "order": 5,
-            "facetable": true,
+            "facetable": false,
             "title": "CVSS Score",
             "example": "Bijvoorbeeld: 9.8"
           },
@@ -1755,7 +1755,7 @@
             "type": "string",
             "visible": false,
             "hideOnCollection": true,
-            "facetable": true,
+            "facetable": false,
             "order": 14,
             "minLength": null,
             "maxLength": null,
@@ -2636,6 +2636,7 @@
             "type": "string",
             "order": 8,
             "title": "Gegevensuitwisseling Richting",
+            "facetable": false,
             "enum": ["AnaarB", "BnaarA", "bi-directioneel"]
           },
           "moduleA": {
@@ -2792,7 +2793,7 @@
             "maximum": 10,
             "visible": true,
             "required": true,
-            "facetable": true,
+            "facetable": false,
             "title": "Waardering",
             "order": 4
           },
