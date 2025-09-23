@@ -9,17 +9,27 @@ try {
     echo "Starting OrganizationContactSyncJob test...\n";
     
     // Get services from container
-    $jobList = \OC::$server->get('OCP\BackgroundJob\IJobList');
-    $timeFactory = \OC::$server->get('OCP\AppFramework\Utility\ITimeFactory');
-    $softwareCatalogueService = \OC::$server->get('OCA\SoftwareCatalog\Service\SoftwareCatalogueService');
-    $config = \OC::$server->get('OCP\IConfig');
-    $logger = \OC::$server->get('Psr\Log\LoggerInterface');
+    $jobList              = \OC::$server->get('OCP\BackgroundJob\IJobList');
+    $timeFactory          = \OC::$server->get('OCP\AppFramework\Utility\ITimeFactory');
+    $organisatieService   = \OC::$server->get(\OCA\SoftwareCatalog\Service\OrganisatieService::class);
+    $contactpersoonService= \OC::$server->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class);
+    $emailService         = \OC::$server->get(\OCA\SoftwareCatalog\Service\SymfonyEmailService::class);
+    $config               = \OC::$server->get('OCP\IAppConfig');
+    $logger               = \OC::$server->get(\Psr\Log\LoggerInterface::class);
+    $settingsService      = \OC::$server->get(\OCA\SoftwareCatalog\Service\SettingsService::class);
+    $db                   = \OC::$server->get(\OCP\IDBConnection::class);
+    $contactPersonHandler = \OC::$server->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler::class);
     
     // Create OrganizationSyncService
     $organizationSyncService = new \OCA\SoftwareCatalog\Service\OrganizationSyncService(
-        $softwareCatalogueService,
-        $config,
-        $logger
+        organisatieService:   $organisatieService,
+        contactpersoonService:$contactpersoonService,
+        emailService:         $emailService,
+        config:               $config,
+        logger:               $logger,
+        settingsService:      $settingsService,
+        db:                   $db,
+        contactpersonHandler: $contactPersonHandler,
     );
     
     // Create job instance
@@ -31,7 +41,7 @@ try {
     echo "Job instance created, executing...\n";
     
     // Execute the job
-    $job->execute($jobList, null);
+    $job->run($jobList, null);
     
     echo "Job executed successfully!\n";
     

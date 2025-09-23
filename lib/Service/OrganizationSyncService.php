@@ -610,7 +610,7 @@ class OrganizationSyncService
                         'organisatieId' => $organisatieId,
                         'entityId' => $organisationEntity->getId(),
                         'active' => $organisationEntity->getActive(),
-                        'title' => $organisationEntity->getTitle()
+                        'name' => $organisationEntity->getName()
                     ]);
 
                     // Send registration email for new organization
