@@ -187,6 +187,10 @@ class ArchiMateExportService
         $filtered = [];
         
         foreach ($data as $key => $value) {
+            if (is_string($key) === false) {
+                continue;
+            }
+
             $shouldSkip = false;
             
             // Skip exact matches
