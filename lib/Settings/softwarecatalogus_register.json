@@ -332,7 +332,7 @@
         "slug": "product",
         "title": "Product",
         "description": "Een product, suite of monobrand",
-        "version": "0.0.84",
+        "version": "0.0.85",
         "summary": "",
         "icon": "ApplicationCog",
         "required": ["naam", "beschrijvingKort"],
@@ -361,6 +361,9 @@
               "allowedMimeTypes": [],
               "location": "",
               "maxSize": 0
+            },
+            "table": {
+              "default": true
             },
             "oneOf": [],
             "facetable": false,
@@ -404,7 +407,10 @@
             "facetable": false,
             "maxLength": 255,
             "order": 3,
-            "example": "Bijvoorbeeld: Een korte samenvatting van het product"
+            "example": "Bijvoorbeeld: Een korte samenvatting van het product",
+            "table": {
+              "default": true
+            }
           },
           "website": {
             "description": "Website van het product",
@@ -421,6 +427,9 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
+            "table": {
+              "default": true
+            },
             "$ref": "",
             "objectConfiguration": {
               "handling": "nested-object",
@@ -493,6 +502,9 @@
             "objectConfiguration": {},
             "fileConfiguration": {},
             "oneOf": [],
+            "table": {
+              "default": true
+            },
             "facetable": false,
             "title": "Logo",
             "example": "https://voorbeeld.nl/logo.png"
@@ -503,6 +515,9 @@
             "visible": true,
             "order": 2,
             "facetable": false,
+            "table": {
+              "default": true
+            },
             "title": "Aanbieder",
             "objectConfiguration": {
               "handling": "related-object"
@@ -636,7 +651,7 @@
         "slug": "dienst",
         "title": "Dienst",
         "description": "Een specifiek aanbod van een dienst op een of meerdere producten door een leverancier",
-        "version": "0.0.40",
+        "version": "0.0.41",
         "summary": "",
         "icon": "Handshake",
         "required": ["naam", "producten", "aanbieder"],
@@ -655,6 +670,9 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
+            "table": {
+              "default": true
+            },
             "$ref": "",
             "objectConfiguration": {
               "handling": "nested-object",
@@ -677,6 +695,9 @@
             "title": "Samenvatting",
             "facetable": false,
             "maxLength": 255,
+            "table": {
+              "default": true
+            },
             "order": 5,
             "example": "Bijvoorbeeld: Korte beschrijving van de dienst"
           },
@@ -743,6 +764,9 @@
             "visible": true,
             "order": 3,
             "facetable": false,
+            "table": {
+              "default": true
+            },
             "title": "Aanbieder",
             "objectConfiguration": {
               "handling": "related-object"
@@ -754,6 +778,9 @@
             "type": "string",
             "visible": true,
             "order": 4,
+            "table": {
+              "default": true
+            },
             "facetable": true,
             "title": "Soort dienst",
             "enum": [
@@ -1152,15 +1179,6 @@
             "title": "Telefoonnummer",
             "order": 5,
             "example": "Bijvoorbeeld: 06 12345678"
-          },
-          "isAanspreekpunt": {
-            "type": "boolean",
-            "title": "Is aanspreekpunt",
-            "description": "Geeft aan of deze persoon het aanspreekpunt is voor deze organisatie (publiek word gedeeld",
-            "facetable": false,
-            "hideOnCollection": true,
-            "order": 8,
-            "example": "Bijvoorbeeld: true"
           },
           "notificaties": {
             "type": "array",
@@ -2520,7 +2538,7 @@
         "slug": "koppeling",
         "title": "Koppeling",
         "description": "Schema voor koppelingen tussen modules en systemen. Er moet óf ModuleB óf buitengemeentelijkVoorziening gevuld zijn.",
-        "version": "0.0.4",
+        "version": "0.0.5",
         "summary": "",
         "icon": "Link",
         "required": [],
@@ -2530,11 +2548,17 @@
             "type": "string",
             "order": 1,
             "title": "Naam",
+            "table": {
+              "default": true
+            },
             "example": "Bijvoorbeeld: API Koppeling"
           },
           "beschrijvingKort": {
             "description": "Korte beschrijving van de koppeling",
             "type": "string",
+            "table": {
+              "default": true
+            },
             "order": 5,
             "title": "Samenvatting",
             "example": "Bijvoorbeeld: Korte beschrijving van de koppeling"
@@ -2568,6 +2592,9 @@
             "type": "string",
             "order": 3,
             "title": "Status",
+            "table": {
+              "default": true
+            },
             "enum": [
               "in ontwikkeling",
               "in gebruik",
@@ -2615,6 +2642,9 @@
             "description": "De module waarvan de gegevens uitgewisseld worden",
             "type": "object",
             "order": 9,
+            "table": {
+              "default": true
+            },
             "title": "Module A",
             "objectConfiguration": {
               "handling": "related-object"
@@ -2626,6 +2656,9 @@
             "description": "De module waarnaar de gegevens uitgewisseld worden",
             "type": "object",
             "order": 10,
+            "table": {
+              "default": true
+            },
             "title": "Module B",
             "objectConfiguration": {
               "handling": "related-object"
@@ -2673,6 +2706,9 @@
             "type": "object",
             "visible": true,
             "order": 14,
+            "table": {
+              "default": true
+            },
             "facetable": false,
             "title": "Aanbieder",
             "objectConfiguration": {
@@ -4341,7 +4377,7 @@
         "slug": "module",
         "title": "Module",
         "description": "Een module is een onderdeel van een product (voorziening)",
-        "version": "0.0.4",
+        "version": "0.0.5",
         "summary": "",
         "icon": "Package",
         "required": ["naam", "product", "beschrijvingKort"],
@@ -4353,7 +4389,10 @@
             "order": 1,
             "facetable": false,
             "required": true,
-            "maxLength": 200
+            "maxLength": 200,
+            "table": {
+              "default": true
+            }
           },
           "beschrijvingKort": {
             "type": "string",
@@ -4361,7 +4400,10 @@
             "title": "Korte omschrijving",
             "order": 2,
             "facetable": false,
-            "maxLength": 255
+            "maxLength": 255,
+            "table": {
+              "default": true
+            }
           },
           "beschrijvingLang": {
             "type": "string",
@@ -4382,6 +4424,9 @@
             "minimum": null,
             "maximum": null,
             "multipleOf": null,
+            "table": {
+              "default": true
+            },
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
