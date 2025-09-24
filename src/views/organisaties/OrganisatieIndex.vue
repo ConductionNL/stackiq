@@ -13,6 +13,7 @@
 <script setup>
 import { navigationStore, objectStore } from '../../store/store.js'
 import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
+import AddContactpersoonModal from '../../components/AddContactpersoonModal.vue'
 </script>
 
 <template>
@@ -37,6 +38,13 @@ import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 			:on-search-input="onSearchInput"
 			:clear-search="clearSearch"
 			@mounted="onMounted" />
+
+		<!-- Add Contactpersoon Modal -->
+		<AddContactpersoonModal
+			:show="showAddContactpersoonModal"
+			:organisation="selectedOrganisationForContact"
+			@close="closeAddContactpersoonModal"
+			@contactpersoon-added="onContactpersoonAdded" />
 	</div>
 </template>
 
@@ -56,6 +64,7 @@ import PublishOffIcon from 'vue-material-design-icons/PublishOff.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
+import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 
 export default {
 	name: 'OrganisatieIndex',
@@ -63,6 +72,8 @@ export default {
 		GenericObjectTable,
 		// eslint-disable-next-line vue/no-unused-components
 		OrganisatieCard,
+		// eslint-disable-next-line vue/no-unused-components
+		AddContactpersoonModal,
 	},
 	data() {
 		return {
@@ -71,6 +82,9 @@ export default {
 				status: 'all',
 				type: 'all',
 			},
+			// Add Contactpersoon Modal
+			showAddContactpersoonModal: false,
+			selectedOrganisationForContact: null,
 			organisatieProperties: [
 				{
 					id: 'naam',
@@ -159,6 +173,14 @@ export default {
 					icon: OpenInNew,
 					handler: (organisatie) => {
 						this.goToOrganisation(organisatie)
+					},
+				},
+				{
+					id: 'addContactpersoon',
+					label: 'Contactpersoon toevoegen',
+					icon: AccountMultiple,
+					handler: (organisatie) => {
+						this.addContactpersoon(organisatie)
 					},
 				},
 				{
@@ -430,6 +452,35 @@ export default {
 			} catch (error) {
 				console.error('Error fetching organisaties with filters:', error)
 			}
+		},
+
+		/**
+		 * Add contactpersoon to organisation
+		 * @param {object} organisatie - The organisation object
+		 * @return {void}
+		 */
+		addContactpersoon(organisatie) {
+			this.selectedOrganisationForContact = organisatie
+			this.showAddContactpersoonModal = true
+		},
+
+		/**
+		 * Close add contactpersoon modal
+		 * @return {void}
+		 */
+		closeAddContactpersoonModal() {
+			this.showAddContactpersoonModal = false
+			this.selectedOrganisationForContact = null
+		},
+
+		/**
+		 * Handle contactpersoon added event
+		 * @param {object} contactpersoon - The added contactpersoon
+		 * @return {void}
+		 */
+		onContactpersoonAdded(contactpersoon) {
+			console.info('Contactpersoon added:', contactpersoon)
+			// The modal already refreshes the data, so we don't need to do anything here
 		},
 
 		/**

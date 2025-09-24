@@ -91,15 +91,9 @@ class GroupHandler
         $groupsJson = $this->_appConfig->getValueString(self::APP_NAME, 'generic_user_groups', '');
         
         if (empty($groupsJson)) {
-            // Return updated default groups if no configuration exists
+            // Return only truly generic groups as default (not role-specific)
+            // Role-specific groups are now assigned based on organization type
             return [
-                'Aanbod-beheerder',
-                'Gebruik-beheerder', 
-                'Gebruik-raadpleger',
-                'Functioneel-beheerder',
-                'VNG-raadpleger',
-                'Organisatie-beheerder',
-                'Ambtenaar',
                 'software-catalog-users'
             ];
         }

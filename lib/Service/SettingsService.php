@@ -959,10 +959,9 @@ class SettingsService
         $groupsJson = $this->config->getValueString($this->_appName, 'generic_user_groups', '');
 
         if (empty($groupsJson)) {
-            // Return default groups if no configuration exists
+            // Return only truly generic groups as default (not role-specific)
+            // Role-specific groups are now assigned based on organization type
             return [
-                'beheerder',
-                'inkoper',
                 'software-catalog-users'
             ];
         }
@@ -1174,13 +1173,9 @@ class SettingsService
 
             $result['total'] = count($requiredGroups);
 
-            // Update the configuration with the correct role-based groups
+            // Update the configuration with only truly generic groups (not role-specific)
+            // Role-specific groups are now assigned based on organization type
             $this->setGenericUserGroups([
-                'aanbod-beheerder',
-                'gebruik-beheerder',
-                'gebruik-raadpleger',
-                'functioneel-beheerder',
-                'organisatie-beheerder',
                 'software-catalog-users'
             ]);
 
@@ -1291,15 +1286,9 @@ class SettingsService
                 }
             }
 
-            // Update the configuration with the correct role-based groups
-            // Note: 'ambtenaar' is excluded from generic groups since it's no longer automatically assigned
+            // Update the configuration with only truly generic groups (not role-specific)
+            // Role-specific groups are now assigned based on organization type, not as generic groups
             $this->setGenericUserGroups([
-                'aanbod-beheerder',
-                'gebruik-beheerder',
-                'gebruik-raadpleger',
-                'functioneel-beheerder',
-                'vng-raadpleger',
-                'organisatie-beheerder',
                 'software-catalog-users'
             ]);
 

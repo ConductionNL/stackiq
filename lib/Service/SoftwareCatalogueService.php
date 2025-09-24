@@ -343,8 +343,14 @@ class SoftwareCatalogueService
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
-        // Delegate to group handler
-        $this->_groupHandler->updateUserGroups($contactpersoonObject, $username);
+        // Use the new organization type-based logic instead of old role-based logic
+        $user = $this->_userManager->get($username);
+        if ($user) {
+            $contactData = $contactpersoonObject->getObject();
+            $this->_contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
+        } else {
+            $this->_logger->warning('User not found for group update', ['username' => $username]);
+        }
     }
 
     /**
@@ -1104,10 +1110,11 @@ class SoftwareCatalogueService
                 if (!empty($username)) {
                     $user = $this->_container->get(\OCP\IUserManager::class)->get($username);
                     if ($user) {
-                        // Use GroupHandler to update groups based on roles (removes generic groups, adds role-specific groups)
-                        $this->_groupHandler->updateUserGroups($contactpersoonObject, $username);
+                        // Use new organization type-based logic instead of old role-based logic
+                        $contactData = $contactpersoonObject->getObject();
+                        $this->_contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
                         
-                        $this->_logger->info('SoftwareCatalogueService: Role-based group updates completed', [
+                        $this->_logger->info('SoftwareCatalogueService: Organization type-based group updates completed', [
                             'username' => $username,
                             'objectId' => $objectId,
                             'newRoles' => $newRoles

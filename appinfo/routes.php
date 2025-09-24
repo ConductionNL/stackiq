@@ -131,6 +131,14 @@ return [
         ['name' => 'settings#getSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'GET'],
         ['name' => 'settings#updateSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'POST'],
         
+        // Contactpersonen Management endpoints
+        ['name' => 'contactpersonen#getContactpersonen', 'url' => '/api/contactpersonen/organisation/{organisationId}', 'verb' => 'GET'],
+        ['name' => 'contactpersonen#convertToUser', 'url' => '/api/contactpersonen/{contactpersoonId}/convert-to-user', 'verb' => 'POST'],
+        ['name' => 'contactpersonen#changePassword', 'url' => '/api/contactpersonen/change-password', 'verb' => 'POST'],
+        ['name' => 'contactpersonen#updateUserGroups', 'url' => '/api/contactpersonen/update-groups', 'verb' => 'POST'],
+        ['name' => 'contactpersonen#getUserInfo', 'url' => '/api/contactpersonen/{contactpersoonId}/user-info', 'verb' => 'GET'],
+        ['name' => 'contactpersonen#getAvailableGroups', 'url' => '/api/contactpersonen/available-groups', 'verb' => 'GET'],
+        
         // ========================================================================
         // VIEW API ENDPOINTS - ArchiMate Views with Enrichment Support
         // ========================================================================

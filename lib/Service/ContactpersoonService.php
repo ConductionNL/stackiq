@@ -213,7 +213,14 @@ class ContactpersoonService
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
-        $this->groupHandler->updateUserGroups($contactpersoonObject, $username);
+        // Use the new organization type-based logic instead of old role-based logic
+        $user = $this->userManager->get($username);
+        if ($user) {
+            $contactData = $contactpersoonObject->getObject();
+            $this->contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
+        } else {
+            $this->logger->warning('User not found for group update', ['username' => $username]);
+        }
     }
 
     /**
