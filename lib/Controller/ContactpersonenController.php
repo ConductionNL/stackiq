@@ -236,8 +236,23 @@ class ContactpersonenController extends Controller
                 ], 500);
             }
 
-            // Update the contactpersoon object with the username
+            // Ensure groups are assigned based on organization type
+            // This is a safety check in case the createUserAccount didn't assign groups properly
             $contactData = $contactpersoonObject->getObject();
+            $organizationId = $contactData['organisatie'] ?? $contactData['organisation'] ?? '';
+            
+            if (!empty($organizationId)) {
+                $this->logger->info('ContactpersonenController: Ensuring groups are assigned based on organization type', [
+                    'contactpersoonId' => $contactpersoonId,
+                    'username' => $user->getUID(),
+                    'organizationId' => $organizationId
+                ]);
+                
+                // Call the ContactPersonHandler to update groups based on contact data
+                $this->contactPersonHandler->updateUserGroupsFromContactData($user->getUID(), $contactData);
+            }
+
+            // Update the contactpersoon object with the username
             $contactData['username'] = $user->getUID();
             $contactpersoonObject->setObject($contactData);
 
