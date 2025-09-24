@@ -823,7 +823,7 @@ export const useObjectStore = defineStore('object', {
 					...params,
 					_extend: params._extend || params.extend || '@self.schema',
 					// Force database queries for organizations to bypass any index caching
-					...(type === 'organisatie' && !params._source
+					...((type === 'organisatie' || type === 'contactpersoon' || type === 'moduleVersie') && !params._source
 						? { _source: 'database' }
 						: {}),
 				}
