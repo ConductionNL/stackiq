@@ -111,77 +111,9 @@
 
 			<!-- Contactpersonen View -->
 			<div v-else-if="currentView === 'contactpersonen'" class="contactpersonenView">
-				<div class="contactpersonenHeader">
-					<h3>{{ t('softwarecatalog', 'Contactpersonen') }}</h3>
-					<span class="contactCount">{{ getContactpersonenCount() }} contactpersonen</span>
-				</div>
-
-				<!-- Contactpersonen Table -->
-				<div class="contactpersonenTable">
-					<table class="contactTable">
-						<thead>
-							<tr>
-								<th>{{ t('softwarecatalog', 'Naam') }}</th>
-								<th>{{ t('softwarecatalog', 'Functie') }}</th>
-								<th>{{ t('softwarecatalog', 'E-mail') }}</th>
-								<th>{{ t('softwarecatalog', 'Telefoon') }}</th>
-								<th>{{ t('softwarecatalog', 'Aanspreekpunt') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="contact in getContactpersonen()" :key="getContactId(contact)" class="contactRow">
-								<td class="contactName">
-									<div class="contactNameCell">
-										<AccountMultiple :size="16" />
-										{{ getContactName(contact) }}
-									</div>
-								</td>
-								<td>{{ getContactFunctie(contact) || '-' }}</td>
-								<td>
-									<a v-if="getContactEmail(contact)" :href="`mailto:${getContactEmail(contact)}`" class="contactLink">
-										{{ getContactEmail(contact) }}
-									</a>
-									<span v-else>-</span>
-								</td>
-								<td>{{ getContactPhone(contact) || '-' }}</td>
-								<td>
-									<span v-if="getContactIsAanspreekpunt(contact)" class="aanspreekpuntBadge">
-										{{ t('softwarecatalog', 'Ja') }}
-									</span>
-									<span v-else>-</span>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-
-				<!-- Fallback List View for Small Screens -->
-				<div class="contactpersonenList">
-					<div v-for="contact in getContactpersonen()" :key="getContactId(contact)" class="contactItem">
-						<div class="contactHeader">
-							<AccountMultiple :size="16" />
-							<span class="contactName">
-								{{ getContactName(contact) }}
-							</span>
-						</div>
-						<div class="contactDetails">
-							<div v-if="getContactFunctie(contact)" class="contactDetail">
-								<span class="contactLabel">{{ t('softwarecatalog', 'Functie') }}:</span>
-								{{ getContactFunctie(contact) }}
-							</div>
-							<div v-if="getContactEmail(contact)" class="contactDetail">
-								<Email :size="14" />
-								<a :href="`mailto:${getContactEmail(contact)}`">
-									{{ getContactEmail(contact) }}
-								</a>
-							</div>
-							<div v-if="getContactPhone(contact)" class="contactDetail">
-								<Phone :size="14" />
-								{{ getContactPhone(contact) }}
-							</div>
-						</div>
-					</div>
-				</div>
+				<ContactpersonenList 
+					:organisation-id="item.id || item.uuid" 
+					:organisation-data="item" />
 
 				<!-- Toggle Button Row in Contactpersonen View -->
 				<div class="contactCountRow">
@@ -214,6 +146,7 @@ import Email from 'vue-material-design-icons/Email.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import Certificate from 'vue-material-design-icons/Certificate.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
+import ContactpersonenList from '../ContactpersonenList.vue'
 
 export default {
 	name: 'OrganisatieCard',
@@ -227,6 +160,7 @@ export default {
 		Phone,
 		Certificate,
 		AccountMultiple,
+		ContactpersonenList,
 	},
 	props: {
 		/**
@@ -322,89 +256,11 @@ export default {
 		},
 
 		/**
-		 * Get the name for a contact person
-		 * @param {object} contact - The contact person object
-		 * @return {string} The contact person's name
-		 */
-		getContactName(contact) {
-			// Handle different data structures
-			if (contact?.voornaam && contact?.achternaam) {
-				return `${contact.voornaam} ${contact.achternaam}`
-			}
-			if (contact?.naam) {
-				return contact.naam
-			}
-			if (contact?.name) {
-				return contact.name
-			}
-			if (contact?.['@self']?.name) {
-				return contact['@self'].name
-			}
-			if (contact?.['@self']?.voornaam && contact?.['@self']?.achternaam) {
-				return `${contact['@self'].voornaam} ${contact['@self'].achternaam}`
-			}
-			return 'Onbekende contactpersoon'
-		},
-
-		/**
 		 * Get the contactpersonen count
 		 * @return {number} The number of contactpersons
 		 */
 		getContactpersonenCount() {
 			return this.item.contactpersonen?.length || 0
-		},
-
-		/**
-		 * Get the contactpersonen data
-		 * @return {Array} The contactpersonen array
-		 */
-		getContactpersonen() {
-			return this.item.contactpersonen || []
-		},
-
-		/**
-		 * Get the ID for a contact person
-		 * @param {object} contact - The contact person object
-		 * @return {string} The contact person's ID
-		 */
-		getContactId(contact) {
-			return contact.id || contact.uuid || 'unknown'
-		},
-
-		/**
-		 * Get the functie for a contact person
-		 * @param {object} contact - The contact person object
-		 * @return {string} The contact person's functie
-		 */
-		getContactFunctie(contact) {
-			return contact?.functie || contact?.['@self']?.functie
-		},
-
-		/**
-		 * Get the email for a contact person
-		 * @param {object} contact - The contact person object
-		 * @return {string} The contact person's email
-		 */
-		getContactEmail(contact) {
-			return contact?.['e-mailadres'] || contact?.['@self']?.['e-mailadres']
-		},
-
-		/**
-		 * Get the phone number for a contact person
-		 * @param {object} contact - The contact person object
-		 * @return {string} The contact person's phone number
-		 */
-		getContactPhone(contact) {
-			return contact?.telefoonnummer || contact?.['@self']?.telefoonnummer
-		},
-
-		/**
-		 * Check if contact person is aanspreekpunt
-		 * @param {object} contact - The contact person object
-		 * @return {boolean} Whether the contact person is aanspreekpunt
-		 */
-		getContactIsAanspreekpunt(contact) {
-			return contact?.isAanspreekpunt || contact?.['@self']?.isAanspreekpunt || false
 		},
 
 		/**
@@ -609,117 +465,5 @@ export default {
 	color: var(--color-main-text);
 }
 
-.contactpersonenList {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-}
-
-.contactItem {
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-	padding: 12px;
-	background: var(--color-main-background);
-}
-
-.contactHeader {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-bottom: 8px;
-}
-
-.contactName {
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--color-main-text);
-}
-
-.contactDetails {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
-
-.contactDetail {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	font-size: 13px;
-	color: var(--color-main-text);
-}
-
-.contactLabel {
-	font-weight: 600;
-	color: var(--color-text-lighter);
-}
-
-/* Contactpersonen Table Styles */
-.contactpersonenTable {
-	margin-bottom: 16px;
-}
-
-.contactTable {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: 13px;
-}
-
-.contactTable th {
-	background: var(--color-background-dark);
-	color: var(--color-text-lighter);
-	font-weight: 600;
-	text-align: left;
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.contactTable td {
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border-light);
-	vertical-align: top;
-}
-
-.contactRow:hover {
-	background: var(--color-background-dark);
-}
-
-.contactNameCell {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	font-weight: 600;
-}
-
-.contactLink {
-	color: var(--color-primary);
-	text-decoration: none;
-}
-
-.contactLink:hover {
-	text-decoration: underline;
-}
-
-.aanspreekpuntBadge {
-	background: var(--color-primary-light);
-	color: var(--color-primary-element-text);
-	padding: 2px 6px;
-	border-radius: var(--border-radius-pill);
-	font-size: 11px;
-	font-weight: 600;
-}
-
-/* Hide table on small screens, show list */
-@media (max-width: 768px) {
-	.contactpersonenTable {
-		display: none;
-	}
-}
-
-@media (min-width: 769px) {
-	.contactpersonenList {
-		display: none;
-	}
-}
 
 </style>

@@ -1852,7 +1852,7 @@ class OrganizationSyncService
             $organisatieId = $organisatieObject->getUuid();
             $organisationEntityUuid = $organisationEntity->getUuid();
 
-            $this->logger->info('OrganizationSyncService: Updating organisatie object owner', [
+            $this->logger->info('OrganizationSyncService: Updating organisatie object owner and organisation', [
                 'organisatieId' => $organisatieId,
                 'organisationEntityUuid' => $organisationEntityUuid,
                 'register' => $register,
@@ -1865,13 +1865,23 @@ class OrganizationSyncService
             // Get current @self metadata or create new
             $selfMetadata = $currentObject['@self'] ?? [];
 
+            // Check if both owner and organisation are already set correctly
+            $ownerAlreadySet = ($selfMetadata['owner'] ?? null) === $organisationEntityUuid;
+            $organisationAlreadySet = ($currentObject['organisation'] ?? null) === $organisationEntityUuid;
 
-            // Update the owner field to the organisation entity UUID
-            if($selfMetadata['owner'] === $organisationEntityUuid) {
+            if ($ownerAlreadySet && $organisationAlreadySet) {
+                $this->logger->debug('OrganizationSyncService: Owner and organisation already set correctly, skipping update', [
+                    'organisatieId' => $organisatieId,
+                    'organisationEntityUuid' => $organisationEntityUuid
+                ]);
                 return;
             }
 
+            // Update the owner field in @self metadata to the organisation entity UUID
             $selfMetadata['owner'] = $organisationEntityUuid;
+
+            // Update the organisation property to the organisation entity UUID (so organisation owns itself)
+            $currentObject['organisation'] = $organisationEntityUuid;
 
             // Update the object with the new @self metadata
             $currentObject['@self'] = $selfMetadata;
@@ -1887,14 +1897,15 @@ class OrganizationSyncService
                 multi: false
             );
 
-            $this->logger->info('OrganizationSyncService: Successfully updated organisatie object owner', [
+            $this->logger->info('OrganizationSyncService: Successfully updated organisatie object owner and organisation', [
                 'organisatieId' => $organisatieId,
                 'organisationEntityUuid' => $organisationEntityUuid,
-                'ownerSet' => $selfMetadata['owner']
+                'ownerSet' => $selfMetadata['owner'],
+                'organisationSet' => $currentObject['organisation']
             ]);
 
         } catch (\Exception $e) {
-            $this->logger->error('OrganizationSyncService: Failed to update organisatie object owner', [
+            $this->logger->error('OrganizationSyncService: Failed to update organisatie object owner and organisation', [
                 'organisatieId' => $organisatieObject->getUuid(),
                 'organisationEntityUuid' => $organisationEntity->getUuid(),
                 'exception' => $e->getMessage(),

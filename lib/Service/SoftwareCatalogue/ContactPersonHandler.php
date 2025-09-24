@@ -403,10 +403,11 @@ class ContactPersonHandler
     }
 
     /**
-     * Assigns user groups based on roles and organization
+     * Assigns user groups based on organization type and roles
      *
      * @param \OCP\IUser $user The user to assign groups to
      * @param array $objectData The contact person data
+     * @param bool $isFirstContact Whether this is the first contact for the organization
      *
      * @return void
      */
@@ -424,17 +425,46 @@ class ContactPersonHandler
             // Get the settings service to access group configurations
             $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 
-            // Add user to ALL generic user groups (as requested)
-            $genericGroups = $settingsService->getGenericUserGroups();
-            foreach ($genericGroups as $groupName) {
-                $this->addUserToGroup($user, $groupName, 'generic-user-group');
+            // Add user to only truly generic groups (not role-specific groups)
+            $trulyGenericGroups = ['software-catalog-users']; // Only non-role-specific groups
+            foreach ($trulyGenericGroups as $groupName) {
+                $this->addUserToGroupWithCheck($user, $groupName, 'generic-user-group');
             }
 
             // Add user to organization admin groups if this is the first contact
             if ($isFirstContact) {
                 $organizationAdminGroups = $settingsService->getOrganizationAdminGroups();
                 foreach ($organizationAdminGroups as $groupName) {
-                    $this->addUserToGroup($user, $groupName, 'organization-admin');
+                    $this->addUserToGroupWithCheck($user, $groupName, 'organization-admin');
+                }
+            }
+
+            // Assign role based on organization type instead of configuration
+            if (!empty($organizationId)) {
+                $organizationType = $this->getOrganizationType((string)$organizationId);
+                $roleGroup = $this->getRoleGroupByOrganizationType($organizationType);
+                
+                if (!empty($roleGroup)) {
+                    $this->addUserToGroupWithCheck($user, $roleGroup, 'organization-type-role');
+                    
+                    $this->_logger->info(
+                        'Assigned role based on organization type',
+                        [
+                            'username' => $user->getUID(),
+                            'organizationId' => $organizationId,
+                            'organizationType' => $organizationType,
+                            'assignedRole' => $roleGroup
+                        ]
+                    );
+                } else {
+                    $this->_logger->warning(
+                        'No role mapping found for organization type',
+                        [
+                            'username' => $user->getUID(),
+                            'organizationId' => $organizationId,
+                            'organizationType' => $organizationType
+                        ]
+                    );
                 }
             }
 
@@ -481,26 +511,16 @@ class ContactPersonHandler
                     }
                 }
 
-                // Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations
-                // Users can be manually assigned to 'ambtenaar' group if needed
-                $organizationType = $this->getOrganizationType((string)$organizationId);
-                $this->_logger->debug(
-                    'Organization type detected (no automatic group assignment)',
-                    [
-                        'username' => $user->getUID(),
-                        'organizationId' => $organizationId,
-                        'organizationType' => $organizationType
-                    ]
-                );
             }
 
             $this->_logger->info(
-                'Successfully assigned user groups',
+                'Successfully assigned user groups based on organization type',
                 [
                     'username' => $user->getUID(),
-                    'genericGroups' => $genericGroups,
+                    'genericGroups' => $trulyGenericGroups,
                     'isFirstContact' => $isFirstContact,
-                    'organizationAdminGroups' => $isFirstContact ? ($organizationAdminGroups ?? []) : []
+                    'organizationAdminGroups' => $isFirstContact ? ($organizationAdminGroups ?? []) : [],
+                    'organizationId' => $organizationId
                 ]
             );
 
@@ -581,55 +601,181 @@ class ContactPersonHandler
     }
 
     /**
-     * Updates user groups when roles change (handles role removal)
+     * Adds a user to a group only if the group exists, does not create new groups
      *
-     * @param \OCP\IUser $user The user to update
-     * @param array $newRoles The new roles
-     * @param array $oldRoles The old roles (optional)
+     * @param \OCP\IUser $user The user to add to the group
+     * @param string $groupName The name of the group
+     * @param string $type The type of group assignment for logging
      *
      * @return void
      */
-    public function updateUserGroupsFromRoles(\OCP\IUser $user, array $newRoles, array $oldRoles = []): void
+    private function addUserToGroupWithCheck(\OCP\IUser $user, string $groupName, string $type): void
     {
         try {
-            $allowedGroups = $this->getAllowedRoleGroups();
+            $group = $this->_groupManager->get($groupName);
+            
+            if (!$group) {
+                $this->_logger->warning(
+                    'Group does not exist, skipping user assignment',
+                    [
+                        'username' => $user->getUID(),
+                        'groupName' => $groupName,
+                        'type' => $type
+                    ]
+                );
+                return;
+            }
 
-            // Remove user from groups for roles they no longer have
-            if (!empty($oldRoles)) {
-                $removedRoles = array_diff($oldRoles, $newRoles);
-                foreach ($removedRoles as $removedRole) {
-                    if (in_array($removedRole, array_keys($allowedGroups))) {
-                        $groupName = $allowedGroups[$removedRole];
-                        $group = $this->_groupManager->get($groupName);
-                        if ($group && $group->inGroup($user)) {
-                            $group->removeUser($user);
-                            $this->_logger->info(
-                                'Removed user from group after role removal',
-                                [
-                                    'username' => $user->getUID(),
-                                    'groupName' => $groupName,
-                                    'removedRole' => $removedRole
-                                ]
-                            );
-                        }
+            if (!$group->inGroup($user)) {
+                $group->addUser($user);
+                $this->_logger->info(
+                    'Added user to existing group',
+                    [
+                        'username' => $user->getUID(),
+                        'groupName' => $groupName,
+                        'type' => $type
+                    ]
+                );
+            } else {
+                $this->_logger->debug(
+                    'User already in group',
+                    [
+                        'username' => $user->getUID(),
+                        'groupName' => $groupName,
+                        'type' => $type
+                    ]
+                );
+            }
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to add user to group with check: ' . $e->getMessage(),
+                [
+                    'username' => $user->getUID(),
+                    'groupName' => $groupName,
+                    'type' => $type,
+                    'exception' => $e
+                ]
+            );
+        }
+    }
+
+    /**
+     * Updates user groups when contact person data changes
+     * Note: Role assignment is now based on organization type, not individual roles
+     *
+     * @param \OCP\IUser $user The user to update
+     * @param array $contactData The updated contact person data
+     *
+     * @return void
+     */
+    public function updateUserGroupsFromContactData(\OCP\IUser $user, array $contactData): void
+    {
+        try {
+            $organizationId = $contactData['organisation'] ?? $contactData['organisatie'] ?? '';
+            
+            if (empty($organizationId)) {
+                $this->_logger->warning(
+                    'No organization ID found for user group update',
+                    ['username' => $user->getUID()]
+                );
+                return;
+            }
+
+            // Get organization type and determine role group
+            $organizationType = $this->getOrganizationType((string)$organizationId);
+            $newRoleGroup = $this->getRoleGroupByOrganizationType($organizationType);
+            
+            if (empty($newRoleGroup)) {
+                $this->_logger->warning(
+                    'No role group mapping found for organization type during update',
+                    [
+                        'username' => $user->getUID(),
+                        'organizationId' => $organizationId,
+                        'organizationType' => $organizationType
+                    ]
+                );
+                return;
+            }
+
+            // Remove user from old organization type role groups
+            $allPossibleRoleGroups = ['gebruik-beheerder', 'aanbod-beheerder'];
+            foreach ($allPossibleRoleGroups as $roleGroup) {
+                if ($roleGroup !== $newRoleGroup) {
+                    $group = $this->_groupManager->get($roleGroup);
+                    if ($group && $group->inGroup($user)) {
+                        $group->removeUser($user);
+                        $this->_logger->info(
+                            'Removed user from old organization type role group',
+                            [
+                                'username' => $user->getUID(),
+                                'groupName' => $roleGroup,
+                                'reason' => 'organization type changed'
+                            ]
+                        );
                     }
                 }
             }
 
-            // Add user to groups for new roles
-            foreach ($newRoles as $role) {
-                if (in_array($role, array_keys($allowedGroups))) {
-                    $groupName = $allowedGroups[$role];
-                    $this->addUserToGroup($user, $groupName, 'role-update');
-                }
-            }
+            // Add user to new role group if it exists
+            $this->addUserToGroupWithCheck($user, $newRoleGroup, 'organization-type-role-update');
 
-            // Note: Organization type-based automatic group assignments have been removed
-            // Groups like "ambtenaar" are now available for manual assignment only
+            $this->_logger->info(
+                'Updated user groups based on organization type',
+                [
+                    'username' => $user->getUID(),
+                    'organizationId' => $organizationId,
+                    'organizationType' => $organizationType,
+                    'assignedRole' => $newRoleGroup
+                ]
+            );
 
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to update user groups from roles: ' . $e->getMessage(),
+                'Failed to update user groups from contact data: ' . $e->getMessage(),
+                [
+                    'username' => $user->getUID(),
+                    'exception' => $e
+                ]
+            );
+        }
+    }
+
+    /**
+     * Legacy method for backward compatibility - now redirects to organization type-based logic
+     *
+     * @param \OCP\IUser $user The user to update
+     * @param array $newRoles The new roles (ignored - kept for compatibility)
+     * @param array $oldRoles The old roles (ignored - kept for compatibility)
+     *
+     * @return void
+     * @deprecated Use updateUserGroupsFromContactData instead
+     */
+    public function updateUserGroupsFromRoles(\OCP\IUser $user, array $newRoles, array $oldRoles = []): void
+    {
+        $this->_logger->info(
+            'updateUserGroupsFromRoles is deprecated - role assignment now based on organization type',
+            [
+                'username' => $user->getUID(),
+                'newRoles' => $newRoles,
+                'oldRoles' => $oldRoles
+            ]
+        );
+        
+        // For backward compatibility, try to find the user's contact data and update based on organization type
+        try {
+            $contactObject = $this->findContactpersoonByUsername($user->getUID());
+            if ($contactObject) {
+                $contactData = $contactObject->getObject();
+                $this->updateUserGroupsFromContactData($user, $contactData);
+            } else {
+                $this->_logger->warning(
+                    'Could not find contact person data for user - cannot update groups',
+                    ['username' => $user->getUID()]
+                );
+            }
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to update user groups via legacy method: ' . $e->getMessage(),
                 [
                     'username' => $user->getUID(),
                     'exception' => $e
@@ -1166,24 +1312,29 @@ class ContactPersonHandler
             // Get the organization object to find its type
             $objectService = $this->_getObjectService();
 
-            // Get register and schema IDs dynamically from configuration
-            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-            $registerId = $settingsService->getVoorzieningenRegisterId();
-            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+            $this->_logger->info('Getting organization type', [
+                'organizationId' => $organizationId
+            ]);
 
-            if (!$registerId || !$organisatieSchemaId) {
-                $this->_logger->warning('Register or schema ID not configured for organisatie');
-                return '';
-            }
-
-            // Try to find by UUID first, then by database ID if needed
-            $organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisatieSchemaId);
+            // Try to find by UUID using the same method as other parts of the code
+            $organizationObject = $objectService->findByUuid($organizationId);
 
             if ($organizationObject) {
                 $organizationData = $organizationObject->getObject();
-                return strtolower($organizationData['type'] ?? '');
+                $organizationType = $organizationData['type'] ?? '';
+                
+                $this->_logger->info('Found organization type', [
+                    'organizationId' => $organizationId,
+                    'type' => $organizationType,
+                    'normalizedType' => strtolower($organizationType)
+                ]);
+                
+                return $organizationType; // Don't convert to lowercase here, let getRoleGroupByOrganizationType handle it
             }
 
+            $this->_logger->warning('Organization not found', [
+                'organizationId' => $organizationId
+            ]);
             return '';
 
         } catch (\Exception $e) {
@@ -1191,11 +1342,40 @@ class ContactPersonHandler
                 'Failed to get organization type: ' . $e->getMessage(),
                 [
                     'organizationId' => $organizationId,
-                    'exception' => $e
+                    'exception' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
                 ]
             );
             return '';
         }
+    }
+
+    /**
+     * Maps organization type to role group based on business rules
+     *
+     * @param string $organizationType The organization type (case-insensitive)
+     *
+     * @return string The role group name or empty string if no mapping exists
+     */
+    private function getRoleGroupByOrganizationType(string $organizationType): string
+    {
+        // Normalize the organization type to lowercase for comparison
+        $normalizedType = strtolower(trim($organizationType));
+        
+        // Define the mapping based on requirements:
+        // "Gemeente" -> "gebruik-beheerder"
+        // "Leverancier" -> "aanbod-beheerder"
+        // "Samenwerking" -> "gebruik-beheerder"
+        // "Community" -> "aanbod-beheerder"
+        $typeToRoleMapping = [
+            'gemeente' => 'gebruik-beheerder',
+            'leverancier' => 'aanbod-beheerder',
+            'samenwerking' => 'gebruik-beheerder',
+            'community' => 'aanbod-beheerder'
+        ];
+
+        return $typeToRoleMapping[$normalizedType] ?? '';
     }
 
     /**
@@ -1532,24 +1712,29 @@ class ContactPersonHandler
                 $oldRoles = [$oldRoles];
             }
 
-            // Check if roles have changed
-            if ($newRoles !== $oldRoles) {
+            // Check if roles or organization have changed (organization type determines role assignment)
+            $oldOrganization = $oldData['organisation'] ?? $oldData['organisatie'] ?? '';
+            $newOrganization = $newData['organisation'] ?? $newData['organisatie'] ?? '';
+            
+            if ($newRoles !== $oldRoles || $oldOrganization !== $newOrganization) {
                 $username = $newData['username'] ?? '';
                 if (!empty($username)) {
                     $user = $this->_userManager->get($username);
                     if ($user) {
                         $this->_logger->info(
-                            'Roles changed for contactpersoon, updating user groups',
+                            'Contact person data changed, updating user groups based on organization type',
                             [
                                 'contactpersoonId' => $contactpersoonObject->getId(),
                                 'username' => $username,
                                 'oldRoles' => $oldRoles,
-                                'newRoles' => $newRoles
+                                'newRoles' => $newRoles,
+                                'oldOrganization' => $oldOrganization,
+                                'newOrganization' => $newOrganization
                             ]
                         );
 
-                        // Update user groups based on role changes
-                        $this->updateUserGroupsFromRoles($user, $newRoles, $oldRoles);
+                        // Update user groups based on organization type (roles are now ignored)
+                        $this->updateUserGroupsFromContactData($user, $newData);
                     }
                 }
             }

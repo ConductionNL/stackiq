@@ -5,11 +5,13 @@ import { useNavigationStore } from './modules/navigation.js'
 import { useObjectStore } from './modules/object.js'
 import { useCatalogStore } from './modules/catalog.js'
 import { useSettingsStore } from './modules/settings.js'
+import { useOrganisatieStore } from './modules/organisatie.js'
 
 const navigationStore = useNavigationStore(pinia)
 const objectStore = useObjectStore(pinia)
 const catalogStore = useCatalogStore(pinia)
 const settingsStore = useSettingsStore(pinia)
+const organisatieStore = useOrganisatieStore(pinia)
 
 export {
 	// generic
@@ -17,4 +19,5 @@ export {
 	objectStore,
 	catalogStore,
 	settingsStore,
+	organisatieStore,
 }

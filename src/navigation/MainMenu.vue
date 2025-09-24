@@ -168,19 +168,6 @@ export default {
 			// or are in our list of important schemas
 			const alwaysIncludeSchemas = [
 				'organisatie',
-				'contactpersoon',
-				'voorziening',
-				'contract',
-				'standaard',
-				'review',
-				'compliancy',
-				'moduleversie',
-				'voorzieningaanbod',
-				'voorzieningmodule',
-				'kwetsbaarheid',
-				'beoordeeling',
-				'verklaring',
-				'koppeling',
 			]
 
 			// Include if it's in our always-include list or if it has a configuration with icon
@@ -216,23 +203,6 @@ export default {
 			// Convert schema slug to plural form for route names
 			const pluralMap = {
 				organisatie: 'organisaties',
-				contactpersoon: 'contactpersonen',
-				voorziening: 'voorzieningen',
-				voorzieningaanbod: 'voorzieningaanbods',
-				voorzieningversie: 'voorzieningversies',
-				voorzieningmodule: 'voorzieningmodules',
-				contract: 'contracten',
-				standaard: 'standaarden',
-				review: 'reviews',
-				compliancy: 'compliancies',
-				moduleversie: 'moduleversies',
-				kwetsbaarheid: 'kwetsbaarheden',
-				beoordeeling: 'beoordelingen',
-				verklaring: 'verklaringen',
-				koppeling: 'koppelingen',
-				koppelinggebruik: 'koppelinggebruiks',
-				modulegebruik: 'modulegebruiks',
-				property: 'properties',
 			}
 			return pluralMap[schema.slug] || `${schema.slug}s`
 		},
@@ -246,22 +216,6 @@ export default {
 			// Define the order of menu items based on importance
 			const orderMap = {
 				organisatie: 1,
-				contactpersoon: 2,
-				voorziening: 3,
-				voorzieningaanbod: 4,
-				voorzieningmodule: 5,
-				moduleversie: 6,
-				contract: 7,
-				standaard: 8,
-				compliancy: 9,
-				review: 10,
-				kwetsbaarheid: 11,
-				beoordeeling: 12,
-				verklaring: 13,
-				koppeling: 14,
-				koppelinggebruik: 15,
-				modulegebruik: 16,
-				property: 17,
 			}
 			return orderMap[schema.slug] || 999
 		},
@@ -286,22 +240,6 @@ export default {
 			// Fallback to predefined icon mapping based on schema slug
 			const iconMap = {
 				organisatie: 'OfficeBuildingOutline',
-				contactpersoon: 'AccountMultiple',
-				voorziening: 'ApplicationCog',
-				voorzieningaanbod: 'ApplicationCog',
-				voorzieningmodule: 'ViewModule',
-				moduleversie: 'ViewModule',
-				contract: 'FileDocumentEdit',
-				standaard: 'FileDocumentCheck',
-				compliancy: 'CheckCircle',
-				review: 'Star',
-				kwetsbaarheid: 'CheckCircle',
-				beoordeeling: 'Star',
-				verklaring: 'FileDocumentCheck',
-				koppeling: 'ViewModule',
-				koppelinggebruik: 'ViewModule',
-				modulegebruik: 'ViewModule',
-				property: 'ApplicationCog',
 			}
 
 			const iconName = iconMap[schema.slug] || 'OfficeBuildingOutline'
