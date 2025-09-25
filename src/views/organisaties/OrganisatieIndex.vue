@@ -14,6 +14,7 @@
 import { navigationStore, objectStore } from '../../store/store.js'
 import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 import AddContactpersoonModal from '../../components/AddContactpersoonModal.vue'
+import OrganisationModal from '../../modals/OrganisationModal.vue'
 </script>
 
 <template>
@@ -45,6 +46,13 @@ import AddContactpersoonModal from '../../components/AddContactpersoonModal.vue'
 			:organisation="selectedOrganisationForContact"
 			@close="closeAddContactpersoonModal"
 			@contactpersoon-added="onContactpersoonAdded" />
+
+		<!-- Organisation Management Modal -->
+		<OrganisationModal
+			:show="showOrganisationModal"
+			:organisation="selectedOrganisation"
+			:mode="organisationModalMode"
+			@close="closeOrganisationModal" />
 	</div>
 </template>
 
@@ -74,6 +82,8 @@ export default {
 		OrganisatieCard,
 		// eslint-disable-next-line vue/no-unused-components
 		AddContactpersoonModal,
+		// eslint-disable-next-line vue/no-unused-components
+		OrganisationModal,
 	},
 	data() {
 		return {
@@ -85,6 +95,10 @@ export default {
 			// Add Contactpersoon Modal
 			showAddContactpersoonModal: false,
 			selectedOrganisationForContact: null,
+			// Organisation Modal
+			showOrganisationModal: false,
+			selectedOrganisation: null,
+			organisationModalMode: 'create', // 'create', 'edit', 'copy'
 			organisatieProperties: [
 				{
 					id: 'naam',
@@ -142,8 +156,8 @@ export default {
 					label: 'View',
 					icon: Eye,
 					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('viewOrganisatie')
+						const publicationUrl = `https://www.softwarecatalogus.nl/publicatie/${organisatie.id}`
+						window.open(publicationUrl, '_blank')
 					},
 				},
 				{
@@ -151,8 +165,7 @@ export default {
 					label: 'Edit',
 					icon: Pencil,
 					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('organisatie')
+						this.editOrganisation(organisatie)
 					},
 				},
 				{
@@ -160,17 +173,14 @@ export default {
 					label: 'Copy',
 					icon: ContentCopy,
 					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setDialog('copyObject', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie',
-						})
+						this.copyOrganisation(organisatie)
 					},
 				},
 				{
 					id: 'goToOrganisation',
 					label: 'Go to organisation',
 					icon: OpenInNew,
+					condition: (organisatie) => organisatie.website && organisatie.website.trim().length > 0,
 					handler: (organisatie) => {
 						this.goToOrganisation(organisatie)
 					},
@@ -265,8 +275,7 @@ export default {
 					icon: Plus,
 					primary: true,
 					handler: () => {
-						objectStore.clearActiveObject('organisatie')
-						navigationStore.setModal('organisatie')
+						this.createOrganisation()
 					},
 				},
 				{
@@ -318,8 +327,7 @@ export default {
 				label: 'Add Organisatie',
 				icon: Plus,
 				handler: () => {
-					objectStore.clearActiveObject('organisatie')
-					navigationStore.setModal('organisatie')
+					this.createOrganisation()
 				},
 			},
 		}
@@ -484,56 +492,47 @@ export default {
 		},
 
 		/**
-		 * Navigate to external organisation catalog
+		 * Navigate to organisation website
 		 * @param {object} organisatie - The organisation object
 		 * @return {void}
 		 */
-		async goToOrganisation(organisatie) {
-			try {
-				// Get the catalog location from settings
-				const catalogLocation = objectStore.settings?.catalogLocation
-
-				if (!catalogLocation) {
-					console.warn('No catalog location configured')
-					// Fallback: could show a notification to user
-					return
-				}
-
-				// Get the organisation UUID/ID
-				const organisatieId = organisatie.id || organisatie.uuid
-
-				if (!organisatieId) {
-					console.warn('Organisation has no valid ID')
-					return
-				}
-
-				// First, set the active organisation in OpenRegister via Nextcloud endpoint
-				const setActiveUrl = `${window.location.origin}/index.php/apps/openregister/api/organizations/${organisatieId}/set-active`
-
-				try {
-					await fetch(setActiveUrl, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					})
-					console.info('Active organisation set successfully')
-				} catch (error) {
-					console.warn('Failed to set active organisation:', error)
-					// Continue anyway - the catalog might still work
-				}
-
-				// Build the target URL: catalogLocation + '/beheer'
-				const targetUrl = catalogLocation.endsWith('/')
-					? `${catalogLocation}beheer`
-					: `${catalogLocation}/beheer`
-
-				// Navigate to the external catalog
-				window.open(targetUrl, '_blank')
-
-			} catch (error) {
-				console.error('Error navigating to organisation:', error)
+		goToOrganisation(organisatie) {
+			if (!organisatie.website) {
+				console.warn('Organisation has no website')
+				return
 			}
+
+			let websiteUrl = organisatie.website.trim()
+			
+			// Add protocol if missing
+			if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+				websiteUrl = 'https://' + websiteUrl
+			}
+
+			// Open website in new tab
+			window.open(websiteUrl, '_blank')
+		},
+
+		// Organisation Modal Methods
+		createOrganisation() {
+			this.selectedOrganisation = null
+			this.organisationModalMode = 'create'
+			this.showOrganisationModal = true
+		},
+		editOrganisation(organisation) {
+			this.selectedOrganisation = organisation
+			this.organisationModalMode = 'edit'
+			this.showOrganisationModal = true
+		},
+		copyOrganisation(organisation) {
+			this.selectedOrganisation = organisation
+			this.organisationModalMode = 'copy'
+			this.showOrganisationModal = true
+		},
+		closeOrganisationModal() {
+			this.showOrganisationModal = false
+			this.selectedOrganisation = null
+			this.organisationModalMode = 'create'
 		},
 	},
 

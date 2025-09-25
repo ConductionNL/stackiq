@@ -132,12 +132,44 @@ Component for displaying and managing contactpersonen with user actions
 						@update:value="newPassword = $event" />
 				</div>
 
+				<!-- Password Requirements -->
+				<div class="password-requirements">
+					<h4>{{ t('softwarecatalog', 'Password Requirements:') }}</h4>
+					<ul class="requirements-list">
+						<li :class="{ 'requirement-met': passwordValidation.minLength }">
+							<CheckCircle v-if="passwordValidation.minLength" :size="16" class="check-icon" />
+							<CloseCircle v-else :size="16" class="close-icon" />
+							{{ t('softwarecatalog', 'At least 8 characters') }}
+						</li>
+						<li :class="{ 'requirement-met': passwordValidation.hasUppercase }">
+							<CheckCircle v-if="passwordValidation.hasUppercase" :size="16" class="check-icon" />
+							<CloseCircle v-else :size="16" class="close-icon" />
+							{{ t('softwarecatalog', 'At least one uppercase letter') }}
+						</li>
+						<li :class="{ 'requirement-met': passwordValidation.hasLowercase }">
+							<CheckCircle v-if="passwordValidation.hasLowercase" :size="16" class="check-icon" />
+							<CloseCircle v-else :size="16" class="close-icon" />
+							{{ t('softwarecatalog', 'At least one lowercase letter') }}
+						</li>
+						<li :class="{ 'requirement-met': passwordValidation.hasNumber }">
+							<CheckCircle v-if="passwordValidation.hasNumber" :size="16" class="check-icon" />
+							<CloseCircle v-else :size="16" class="close-icon" />
+							{{ t('softwarecatalog', 'At least one number') }}
+						</li>
+						<li :class="{ 'requirement-met': passwordValidation.hasSpecialChar }">
+							<CheckCircle v-if="passwordValidation.hasSpecialChar" :size="16" class="check-icon" />
+							<CloseCircle v-else :size="16" class="close-icon" />
+							{{ t('softwarecatalog', 'At least one special character (!@#$%^&*)') }}
+						</li>
+					</ul>
+				</div>
+
 				<div class="dialog-actions">
 					<NcButton type="secondary" @click="closePasswordDialog">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
 					<NcButton type="primary" 
-						:disabled="passwordLoading || !newPassword || newPassword.length < 8"
+						:disabled="passwordLoading || !isPasswordValid"
 						@click="savePassword">
 						<template #icon>
 							<NcLoadingIcon v-if="passwordLoading" :size="20" />
@@ -206,6 +238,8 @@ import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import Key from 'vue-material-design-icons/Key.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
 
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
 import { showSuccess, showError } from '@nextcloud/dialogs'
@@ -227,7 +261,9 @@ export default {
 		AccountMultiple,
 		AccountPlus,
 		AccountGroup,
-		Key
+		Key,
+		CheckCircle,
+		CloseCircle
 	},
 
 	props: {
@@ -276,6 +312,21 @@ export default {
 
 		availableGroups() {
 			return this.organisatieStore.getAvailableGroups
+		},
+
+		// Password validation computed properties
+		passwordValidation() {
+			return {
+				minLength: this.newPassword.length >= 8,
+				hasUppercase: /[A-Z]/.test(this.newPassword),
+				hasLowercase: /[a-z]/.test(this.newPassword),
+				hasNumber: /\d/.test(this.newPassword),
+				hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(this.newPassword)
+			}
+		},
+
+		isPasswordValid() {
+			return Object.values(this.passwordValidation).every(requirement => requirement)
 		}
 	},
 
@@ -640,5 +691,49 @@ export default {
 .compact-input :deep(.input-field__input) {
 	padding: 8px 12px;
 	font-size: 14px;
+}
+
+/* Password Requirements Styles */
+.password-requirements {
+	margin: 16px 0;
+	padding: 12px;
+	background: var(--color-background-dark);
+	border-radius: 6px;
+	border: 1px solid var(--color-border);
+}
+
+.password-requirements h4 {
+	margin: 0 0 8px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--color-text-dark);
+}
+
+.requirements-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.requirements-list li {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 0;
+	font-size: 13px;
+	color: var(--color-text-lighter);
+	transition: color 0.2s ease;
+}
+
+.requirements-list li.requirement-met {
+	color: var(--color-success);
+}
+
+.check-icon {
+	color: var(--color-success);
+}
+
+.close-icon {
+	color: var(--color-error);
 }
 </style>

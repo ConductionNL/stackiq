@@ -133,22 +133,22 @@ export default {
 					status: newStatus,
 				}
 
-				// If activating the organisation, set the organisation property to its own UUID
+				// If activating the organisation, set the @self metadata to own itself
 				// This ensures the organisation owns itself immediately upon activation
 				if (newStatus.toLowerCase() === 'actief') {
 					const organisatieUuid = organisatie.id || organisatie.uuid || organisatie['@self']?.id
-					updateData.organisation = organisatieUuid
 					
-					// Also set the owner in @self metadata to the organisation's own UUID
+					// Set the owner and organisation in @self metadata to the organisation's own UUID
 					if (!updateData['@self']) {
 						updateData['@self'] = { ...organisatie['@self'] }
 					}
 					updateData['@self'].owner = organisatieUuid
+					updateData['@self'].organisation = organisatieUuid
 					
-					console.info('Setting organisation and owner properties to own UUID during activation:', {
+					console.info('Setting @self owner and organisation properties to own UUID during activation:', {
 						organisatieId: organisatieUuid,
-						organisationProperty: updateData.organisation,
-						ownerProperty: updateData['@self'].owner
+						ownerProperty: updateData['@self'].owner,
+						selfOrganisationProperty: updateData['@self'].organisation
 					})
 				}
 
