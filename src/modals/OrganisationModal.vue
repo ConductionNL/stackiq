@@ -263,6 +263,40 @@ export default {
 		closeModal() {
 			this.$emit('close')
 		},
+		/**
+		 * Get only the changed properties between original and current form data
+		 * @return {object} Object containing only the changed properties
+		 */
+		getChangedProperties() {
+			if (!this.isEditMode) {
+				// For create/copy mode, return all form data
+				return this.formData
+			}
+
+			const changes = {}
+			const originalData = this.organisation
+
+			// Compare each form field with original data
+			Object.keys(this.formData).forEach(key => {
+				const formValue = this.formData[key]
+				const originalValue = originalData[key]
+
+				// Handle different types of comparisons
+				if (Array.isArray(formValue) && Array.isArray(originalValue)) {
+					// Compare arrays (for deelnemers, contactpersonen, etc.)
+					if (JSON.stringify(formValue) !== JSON.stringify(originalValue)) {
+						changes[key] = formValue
+					}
+				} else if (formValue !== originalValue) {
+					// Simple value comparison
+					changes[key] = formValue
+				}
+			})
+
+			console.info('Detected changes:', changes)
+			return changes
+		},
+
 		async saveOrganisation() {
 			if (!this.isFormValid) {
 				showError(this.t('softwarecatalog', 'Please fill in all required fields'))
@@ -278,15 +312,21 @@ export default {
 				let result
 
 				if (this.isEditMode) {
-					// Update existing organisation - preserve @self metadata
-					const updateData = {
-						...this.formData,
-						'@self': this.organisation['@self'] || {}
+					// Get only the changed properties for PATCH request
+					const changes = this.getChangedProperties()
+					
+					if (Object.keys(changes).length === 0) {
+						// No changes detected
+						this.successMessage = this.t('softwarecatalog', 'No changes to save')
+						this.success = true
+						setTimeout(() => {
+							this.closeModal()
+						}, 1500)
+						return
 					}
-					result = await objectStore.saveObject(updateData, {
-						register: schemaConfig.register,
-						schema: schemaConfig.schema
-					})
+
+					// Update existing organisation using PATCH - only send changed properties
+					result = await objectStore.patchObject('organisatie', this.organisation.id, changes)
 					this.successMessage = this.t('softwarecatalog', 'Organisation updated successfully')
 				} else {
 					// Create new organisation (both create and copy modes)

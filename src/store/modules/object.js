@@ -1225,7 +1225,7 @@ export const useObjectStore = defineStore('object', {
 		},
 
 		/**
-		 * Update existing object
+		 * Update existing object (full replacement)
 		 * @param {string} type - Object type
 		 * @param {string} id - Object ID
 		 * @param {object} data - Updated object data
@@ -1267,6 +1267,57 @@ export const useObjectStore = defineStore('object', {
 				return updatedObject
 			} catch (error) {
 				console.error(`Error updating ${type} object:`, error)
+				this.setError(`${type}_${id}`, error.message)
+				this.setState(type, { success: false, error: error.message })
+				throw error
+			} finally {
+				this.setLoading(`${type}_${id}`, false)
+			}
+		},
+
+		/**
+		 * Patch existing object (partial update)
+		 * @param {string} type - Object type
+		 * @param {string} id - Object ID
+		 * @param {object} changes - Object with only the changed properties
+		 * @return {Promise<object>}
+		 */
+		async patchObject(type, id, changes) {
+			this.setLoading(`${type}_${id}`, true)
+			this.setError(`${type}_${id}`, null)
+			this.setState(type, { success: null, error: null })
+
+			try {
+				// Ensure settings are loaded first
+				if (!this.settings) {
+					await this.fetchSettings()
+				}
+
+				const response = await fetch(this._constructApiUrl(type, id), {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(changes),
+				})
+				if (!response.ok) throw new Error(`Failed to patch ${type} object`)
+
+				const updatedObject = await response.json()
+				if (!this.objects[type]) this.objects[type] = {}
+				this.objects[type][id] = updatedObject
+
+				// Refresh the collection to ensure it's up to date
+				await this.fetchCollection(type)
+
+				// If this is the active object, update it
+				if (this.activeObjects[type]?.id === id) {
+					this.activeObjects[type] = updatedObject
+				}
+
+				// Set success state
+				this.setState(type, { success: true, error: null })
+
+				return updatedObject
+			} catch (error) {
+				console.error(`Error patching ${type} object:`, error)
 				this.setError(`${type}_${id}`, error.message)
 				this.setState(type, { success: false, error: error.message })
 				throw error
