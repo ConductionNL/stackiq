@@ -2,13 +2,26 @@
 	<div class="dashboard">
 		<!-- Header -->
 		<div class="dashboardHeader">
-			<h1 class="dashboardTitle">
-				<ViewDashboard :size="32" />
-				{{ t('softwarecatalog', 'Dashboard') }}
-			</h1>
-			<p class="dashboardDescription">
-				{{ t('softwarecatalog', 'Overview of your software catalog and configurations') }}
-			</p>
+			<div class="headerWithActions">
+				<div class="headerContent">
+					<h1 class="dashboardTitle">
+						<ViewDashboard :size="32" />
+						{{ t('softwarecatalog', 'Dashboard') }}
+					</h1>
+					<p class="dashboardDescription">
+						{{ t('softwarecatalog', 'Overview of your software catalog and configurations') }}
+					</p>
+				</div>
+				<div class="headerActions">
+					<NcButton type="secondary" @click="refreshAllData">
+						<template #icon>
+							<NcLoadingIcon v-if="loading" :size="20" />
+							<Refresh v-else :size="20" />
+						</template>
+						{{ t('softwarecatalog', 'Refresh') }}
+					</NcButton>
+				</div>
+			</div>
 		</div>
 
 		<div v-if="!loading" class="dashboardContent">
@@ -88,24 +101,6 @@
 				</div>
 			</div>
 
-			<!-- Quick Actions -->
-			<div class="quickActions">
-				<h2 class="sectionTitle">
-					{{ t('softwarecatalog', 'Quick Actions') }}
-				</h2>
-				<div class="quickActionsGrid">
-					<NcButton
-						v-for="action in quickActions"
-						:key="action.key"
-						type="secondary"
-						@click="action.handler">
-						<template #icon>
-							<component :is="action.icon" :size="20" />
-						</template>
-						{{ action.label }}
-					</NcButton>
-				</div>
-			</div>
 		</div>
 
 		<!-- Loading State -->
@@ -228,35 +223,6 @@ export default {
 
 
 
-		/**
-		 * Get quick actions for the dashboard
-		 * @return {Array} Array of quick actions
-		 */
-		quickActions() {
-			return [
-				{
-					key: 'refresh_data',
-					label: 'Refresh All Data',
-					icon: Refresh,
-					handler: this.refreshAllData,
-				},
-				{
-					key: 'add_organisation',
-					label: 'Add Organisation',
-					icon: Plus,
-					handler: () => navigationStore.setSelected('organisaties'),
-				},
-				{
-					key: 'configure',
-					label: 'Settings',
-					icon: Cog,
-					handler: () => {
-						const settingsUrl = `${window.location.protocol}//${window.location.host}/index.php/settings/admin/softwarecatalog`
-						window.open(settingsUrl, '_blank')
-					},
-				},
-			]
-		},
 
 
 	},
@@ -534,10 +500,22 @@ export default {
 	color: var(--color-text-lighter);
 }
 
-.quickActionsGrid {
+/* Header with Actions Styles */
+.headerWithActions {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 16px;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+}
+
+.headerContent {
+	flex: 1;
+}
+
+.headerActions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
 }
 
 .dashboardLoading {
@@ -632,6 +610,16 @@ export default {
 @media (max-width: 768px) {
 	.statisticsTablesRow {
 		grid-template-columns: 1fr;
+	}
+
+	.headerWithActions {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
+	}
+
+	.headerActions {
+		align-self: stretch;
 	}
 }
 
