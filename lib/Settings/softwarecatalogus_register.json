@@ -726,7 +726,7 @@
           "status": {
             "description": "De status van dit aanbod",
             "type": "string",
-            "default": "concept",
+            "default": "Concept",
             "example": "Bijvoorbeeld: concept"
           },
           "contactpersoon": {
@@ -1722,7 +1722,7 @@
             "description": "Geeft aan of de VNG de organisatie positief beoordeeld heeft voor toegang tot de Softwarecatalogus",
             "title": "Status",
             "type": "string",
-            "default": "concept",
+            "default": "Concept",
             "visible": false,
             "hideOnCollection": true,
             "facetable": false,
@@ -2087,7 +2087,7 @@
           "status": {
             "description": "De status van het gebruik",
             "type": "string",
-            "default": "concept",
+            "default": "Concept",
             "required": true,
             "visible": true,
             "order": 17,
