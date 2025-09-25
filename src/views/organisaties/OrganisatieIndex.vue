@@ -180,6 +180,7 @@ export default {
 					id: 'goToOrganisation',
 					label: 'Go to organisation',
 					icon: OpenInNew,
+					condition: (organisatie) => organisatie.website && organisatie.website.trim().length > 0,
 					handler: (organisatie) => {
 						this.goToOrganisation(organisatie)
 					},
@@ -491,56 +492,25 @@ export default {
 		},
 
 		/**
-		 * Navigate to external organisation catalog
+		 * Navigate to organisation website
 		 * @param {object} organisatie - The organisation object
 		 * @return {void}
 		 */
-		async goToOrganisation(organisatie) {
-			try {
-				// Get the catalog location from settings
-				const catalogLocation = objectStore.settings?.catalogLocation
-
-				if (!catalogLocation) {
-					console.warn('No catalog location configured')
-					// Fallback: could show a notification to user
-					return
-				}
-
-				// Get the organisation UUID/ID
-				const organisatieId = organisatie.id || organisatie.uuid
-
-				if (!organisatieId) {
-					console.warn('Organisation has no valid ID')
-					return
-				}
-
-				// First, set the active organisation in OpenRegister via Nextcloud endpoint
-				const setActiveUrl = `${window.location.origin}/index.php/apps/openregister/api/organizations/${organisatieId}/set-active`
-
-				try {
-					await fetch(setActiveUrl, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					})
-					console.info('Active organisation set successfully')
-				} catch (error) {
-					console.warn('Failed to set active organisation:', error)
-					// Continue anyway - the catalog might still work
-				}
-
-				// Build the target URL: catalogLocation + '/beheer'
-				const targetUrl = catalogLocation.endsWith('/')
-					? `${catalogLocation}beheer`
-					: `${catalogLocation}/beheer`
-
-				// Navigate to the external catalog
-				window.open(targetUrl, '_blank')
-
-			} catch (error) {
-				console.error('Error navigating to organisation:', error)
+		goToOrganisation(organisatie) {
+			if (!organisatie.website) {
+				console.warn('Organisation has no website')
+				return
 			}
+
+			let websiteUrl = organisatie.website.trim()
+			
+			// Add protocol if missing
+			if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+				websiteUrl = 'https://' + websiteUrl
+			}
+
+			// Open website in new tab
+			window.open(websiteUrl, '_blank')
 		},
 
 		// Organisation Modal Methods

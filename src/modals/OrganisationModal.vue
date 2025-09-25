@@ -81,13 +81,6 @@
 							@update:value="formData.links = $event" />
 					</div>
 
-					<div class="form-row">
-						<NcTextField
-							:value="formData.rol"
-							:label="t('softwarecatalog', 'Role')"
-							:placeholder="t('softwarecatalog', 'Organisation role or function')"
-							@update:value="formData.rol = $event" />
-					</div>
 				</div>
 
 				<!-- Success Message -->
@@ -164,7 +157,6 @@ export default {
 				oin: '',
 				cbs: '',
 				links: '',
-				rol: '',
 				status: 'Concept',
 				deelnemers: [],
 				contactpersonen: [],
@@ -229,7 +221,6 @@ export default {
 				oin: '',
 				cbs: '',
 				links: '',
-				rol: '',
 				status: 'Concept',
 				deelnemers: [],
 				contactpersonen: [],
@@ -253,7 +244,6 @@ export default {
 				oin: this.organisation.oin || '',
 				cbs: this.organisation.cbs || '',
 				links: this.organisation.links || '',
-				rol: this.organisation.rol || '',
 				status: this.organisation.status || 'Concept',
 				deelnemers: this.organisation.deelnemers || [],
 				contactpersonen: this.isCopyMode ? [] : (this.organisation.contactpersonen || []),
@@ -281,19 +271,27 @@ export default {
 			this.success = false
 
 			try {
+				// Get schema configuration for organisatie
+				const schemaConfig = objectStore.getSchemaConfig('organisatie')
 				let result
-				
+
 				if (this.isEditMode) {
-					// Update existing organisation
+					// Update existing organisation - preserve @self metadata
 					const updateData = {
 						...this.formData,
-						id: this.organisation.id,
+						'@self': this.organisation['@self'] || {}
 					}
-					result = await objectStore.saveObject('organisatie', updateData)
+					result = await objectStore.saveObject(updateData, {
+						register: schemaConfig.register,
+						schema: schemaConfig.schema
+					})
 					this.successMessage = this.t('softwarecatalog', 'Organisation updated successfully')
 				} else {
 					// Create new organisation (both create and copy modes)
-					result = await objectStore.saveObject('organisatie', this.formData)
+					result = await objectStore.saveObject(this.formData, {
+						register: schemaConfig.register,
+						schema: schemaConfig.schema
+					})
 					this.successMessage = this.t('softwarecatalog', 'Organisation created successfully')
 				}
 
