@@ -14,6 +14,7 @@
 import { navigationStore, objectStore } from '../../store/store.js'
 import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 import AddContactpersoonModal from '../../components/AddContactpersoonModal.vue'
+import OrganisationModal from '../../modals/OrganisationModal.vue'
 </script>
 
 <template>
@@ -45,6 +46,13 @@ import AddContactpersoonModal from '../../components/AddContactpersoonModal.vue'
 			:organisation="selectedOrganisationForContact"
 			@close="closeAddContactpersoonModal"
 			@contactpersoon-added="onContactpersoonAdded" />
+
+		<!-- Organisation Management Modal -->
+		<OrganisationModal
+			:show="showOrganisationModal"
+			:organisation="selectedOrganisation"
+			:mode="organisationModalMode"
+			@close="closeOrganisationModal" />
 	</div>
 </template>
 
@@ -74,6 +82,8 @@ export default {
 		OrganisatieCard,
 		// eslint-disable-next-line vue/no-unused-components
 		AddContactpersoonModal,
+		// eslint-disable-next-line vue/no-unused-components
+		OrganisationModal,
 	},
 	data() {
 		return {
@@ -85,6 +95,10 @@ export default {
 			// Add Contactpersoon Modal
 			showAddContactpersoonModal: false,
 			selectedOrganisationForContact: null,
+			// Organisation Modal
+			showOrganisationModal: false,
+			selectedOrganisation: null,
+			organisationModalMode: 'create', // 'create', 'edit', 'copy'
 			organisatieProperties: [
 				{
 					id: 'naam',
@@ -142,8 +156,8 @@ export default {
 					label: 'View',
 					icon: Eye,
 					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('viewOrganisatie')
+						const publicationUrl = `https://www.softwarecatalogus.nl/publicatie/${organisatie.id}`
+						window.open(publicationUrl, '_blank')
 					},
 				},
 				{
@@ -151,8 +165,7 @@ export default {
 					label: 'Edit',
 					icon: Pencil,
 					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setModal('organisatie')
+						this.editOrganisation(organisatie)
 					},
 				},
 				{
@@ -160,11 +173,7 @@ export default {
 					label: 'Copy',
 					icon: ContentCopy,
 					handler: (organisatie) => {
-						objectStore.setActiveObject('organisatie', organisatie)
-						navigationStore.setDialog('copyObject', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisatie',
-						})
+						this.copyOrganisation(organisatie)
 					},
 				},
 				{
@@ -265,8 +274,7 @@ export default {
 					icon: Plus,
 					primary: true,
 					handler: () => {
-						objectStore.clearActiveObject('organisatie')
-						navigationStore.setModal('organisatie')
+						this.createOrganisation()
 					},
 				},
 				{
@@ -318,8 +326,7 @@ export default {
 				label: 'Add Organisatie',
 				icon: Plus,
 				handler: () => {
-					objectStore.clearActiveObject('organisatie')
-					navigationStore.setModal('organisatie')
+					this.createOrganisation()
 				},
 			},
 		}
@@ -534,6 +541,28 @@ export default {
 			} catch (error) {
 				console.error('Error navigating to organisation:', error)
 			}
+		},
+
+		// Organisation Modal Methods
+		createOrganisation() {
+			this.selectedOrganisation = null
+			this.organisationModalMode = 'create'
+			this.showOrganisationModal = true
+		},
+		editOrganisation(organisation) {
+			this.selectedOrganisation = organisation
+			this.organisationModalMode = 'edit'
+			this.showOrganisationModal = true
+		},
+		copyOrganisation(organisation) {
+			this.selectedOrganisation = organisation
+			this.organisationModalMode = 'copy'
+			this.showOrganisationModal = true
+		},
+		closeOrganisationModal() {
+			this.showOrganisationModal = false
+			this.selectedOrganisation = null
+			this.organisationModalMode = 'create'
 		},
 	},
 
