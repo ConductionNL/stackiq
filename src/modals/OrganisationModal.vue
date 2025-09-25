@@ -1,6 +1,7 @@
 <template>
 	<NcModal v-if="show" 
 		:name="modalTitle"
+		:title="modalTitle"
 		size="normal"
 		@close="closeModal">
 		<div class="organisation-modal">
@@ -87,7 +88,7 @@
 				<div v-if="success" class="success-message">
 					<CheckCircle :size="24" class="success-icon" />
 					<p>{{ successMessage }}</p>
-					<p class="auto-close-message">{{ t('softwarecatalog', 'This dialog will close automatically in 3 seconds...') }}</p>
+					<p class="auto-close-message">{{ t('softwarecatalog', 'This dialog will close automatically in {seconds} seconds...', { seconds: countdown }) }}</p>
 				</div>
 
 				<div class="form-actions">
@@ -165,11 +166,13 @@ export default {
 			loading: false,
 			success: false,
 			successMessage: '',
+			countdown: 3,
+			countdownInterval: null,
 			organisationTypes: [
-				{ id: 'Gemeente', label: 'Gemeente' },
-				{ id: 'Leverancier', label: 'Leverancier' },
-				{ id: 'Samenwerking', label: 'Samenwerking' },
-				{ id: 'Community', label: 'Community' },
+				{ value: 'Gemeente', label: 'Gemeente' },
+				{ value: 'Leverancier', label: 'Leverancier' },
+				{ value: 'Samenwerking', label: 'Samenwerking' },
+				{ value: 'Community', label: 'Community' },
 			],
 		}
 	},
@@ -229,6 +232,11 @@ export default {
 			this.loading = false
 			this.success = false
 			this.successMessage = ''
+			this.countdown = 3
+			if (this.countdownInterval) {
+				clearInterval(this.countdownInterval)
+				this.countdownInterval = null
+			}
 		},
 		loadOrganisationData() {
 			if (!this.organisation) return
@@ -251,12 +259,12 @@ export default {
 
 			// Set selected type
 			if (this.formData.type) {
-				this.selectedType = this.organisationTypes.find(type => type.id === this.formData.type)
+				this.selectedType = this.organisationTypes.find(type => type.value === this.formData.type)
 			}
 		},
 		handleTypeChange(selectedOption) {
 			this.selectedType = selectedOption
-			this.formData.type = selectedOption ? selectedOption.id : ''
+			this.formData.type = selectedOption ? selectedOption.value : ''
 		},
 		closeModal() {
 			this.$emit('close')
@@ -305,10 +313,15 @@ export default {
 					_page: 1
 				})
 				
-				// Auto-close modal after 3 seconds
-				setTimeout(() => {
-					this.closeModal()
-				}, 3000)
+				// Start countdown timer
+				this.countdown = 3
+				this.countdownInterval = setInterval(() => {
+					this.countdown--
+					if (this.countdown <= 0) {
+						clearInterval(this.countdownInterval)
+						this.closeModal()
+					}
+				}, 1000)
 
 			} catch (error) {
 				console.error('Error saving organisation:', error)
@@ -317,6 +330,12 @@ export default {
 				this.loading = false
 			}
 		},
+	},
+	beforeUnmount() {
+		// Clean up countdown interval
+		if (this.countdownInterval) {
+			clearInterval(this.countdownInterval)
+		}
 	},
 }
 </script>
