@@ -27,13 +27,14 @@
 
 					<div class="form-row">
 						<NcSelect
-							:value="selectedType"
+							v-model="selectedType"
 							:options="organisationTypes"
 							:input-label="t('softwarecatalog', 'Type')"
 							:placeholder="t('softwarecatalog', 'Select organisation type')"
 							label="label"
 							track-by="value"
-							@update:value="handleTypeChange" />
+							:clearable="false"
+							@input="handleTypeChange" />
 					</div>
 
 					<div class="form-row">
@@ -77,13 +78,6 @@
 							@update:value="formData.cbs = $event" />
 					</div>
 
-					<div class="form-row">
-						<NcTextField
-							:value="formData.links"
-							:label="t('softwarecatalog', 'Links')"
-							:placeholder="t('softwarecatalog', 'Additional links')"
-							@update:value="formData.links = $event" />
-					</div>
 
 				</div>
 
@@ -160,7 +154,6 @@ export default {
 				telefoonnummer: '',
 				oin: '',
 				cbs: '',
-				links: '',
 				status: 'Concept',
 				deelnemers: [],
 				contactpersonen: [],
@@ -226,7 +219,6 @@ export default {
 				telefoonnummer: '',
 				oin: '',
 				cbs: '',
-				links: '',
 				status: 'Concept',
 				deelnemers: [],
 				contactpersonen: [],
@@ -254,7 +246,6 @@ export default {
 				telefoonnummer: this.organisation.telefoonnummer || '',
 				oin: this.organisation.oin || '',
 				cbs: this.organisation.cbs || '',
-				links: this.organisation.links || '',
 				status: this.organisation.status || 'Concept',
 				deelnemers: this.organisation.deelnemers || [],
 				contactpersonen: this.isCopyMode ? [] : (this.organisation.contactpersonen || []),
@@ -266,7 +257,7 @@ export default {
 			}
 		},
 		handleTypeChange(selectedOption) {
-			this.selectedType = selectedOption
+			console.log('Type changed:', selectedOption)
 			this.formData.type = selectedOption ? selectedOption.value : ''
 		},
 		closeModal() {
