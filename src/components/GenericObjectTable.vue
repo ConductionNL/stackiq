@@ -668,7 +668,14 @@ export default {
 			Object.keys(this.activeFilters).forEach(filterKey => {
 				const filterValue = this.activeFilters[filterKey]
 				if (filterValue && filterValue !== 'all') {
-					objects = objects.filter(obj => obj[filterKey] === filterValue)
+					// Use case-insensitive comparison for string values
+					objects = objects.filter(obj => {
+						const objValue = obj[filterKey]
+						if (typeof objValue === 'string' && typeof filterValue === 'string') {
+							return objValue.toLowerCase() === filterValue.toLowerCase()
+						}
+						return objValue === filterValue
+					})
 				}
 			})
 
