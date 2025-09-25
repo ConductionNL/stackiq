@@ -662,18 +662,13 @@ export default {
 
 	computed: {
 		filteredObjects() {
+			// Trust the API response - no frontend filtering needed
+			// The API handles all filtering based on query parameters
 			let objects = objectStore.getCollection(this.objectType)?.results || []
 
-			// Apply active filters
-			Object.keys(this.activeFilters).forEach(filterKey => {
-				const filterValue = this.activeFilters[filterKey]
-				if (filterValue && filterValue !== 'all') {
-					objects = objects.filter(obj => obj[filterKey] === filterValue)
-				}
-			})
-
-			// Apply search query
-			if (this.searchQuery && this.searchQuery.trim()) {
+			// Only apply search query if it's not handled by the API
+			// (This is kept for backward compatibility with components that don't use API search)
+			if (this.searchQuery && this.searchQuery.trim() && !this.onSearchInput) {
 				const searchTerm = this.searchQuery.toLowerCase().trim()
 				objects = objects.filter(obj => {
 					const objTitle = this.getObjectTitle(obj).toLowerCase()

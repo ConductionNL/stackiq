@@ -10,7 +10,7 @@ The organization update process is triggered when an organization object is crea
 
 ### 1. Organization Status Check
 
-Organizations are only processed when their `beoordeling` field is set to "actief" (or "Actief"). Organizations with status "concept" are ignored.
+Organizations are only processed when their `beoordeling` field is set to "actief" (or "Actief"). Organizations with status "Concept" are ignored.
 
 ### 2. Organization Group Creation
 

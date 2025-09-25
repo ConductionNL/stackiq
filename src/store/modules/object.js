@@ -785,16 +785,26 @@ export const useObjectStore = defineStore('object', {
 			const queryParams = new URLSearchParams({
 				_limit: params._limit || 20,
 				_page: params._page || 1,
-				_extend: params._extend || params.extend || '@self.schema',
 				...params,
 			})
+
+			// Handle _extend parameter - convert comma-separated string to multiple _extend[] parameters
+			const extendValue = params._extend || params.extend || '@self.schema'
+			if (extendValue) {
+				// Split comma-separated extends into individual parameters
+				const extendParts = extendValue.split(',').map(part => part.trim())
+				extendParts.forEach(part => {
+					queryParams.append('_extend[]', part)
+				})
+			}
 
 			// Remove schema and register from query params as they're now in the URL
 			// Keep _source parameter as it controls database vs index queries
 			queryParams.delete('_schema')
 			queryParams.delete('_register')
-			// Remove the old extend parameter to avoid duplication
+			// Remove the old extend parameters to avoid duplication
 			queryParams.delete('extend')
+			queryParams.delete('_extend')
 
 			return `${url}?${queryParams}`
 		},
