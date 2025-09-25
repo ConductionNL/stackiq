@@ -5,6 +5,7 @@
 		size="normal"
 		@close="closeModal">
 		<div class="organisation-modal">
+			<h2 class="modal-title">{{ modalTitle }}</h2>
 			<form @submit.prevent="saveOrganisation">
 				<div class="form-grid">
 					<div class="form-row">
@@ -28,8 +29,10 @@
 						<NcSelect
 							:value="selectedType"
 							:options="organisationTypes"
-							:label="t('softwarecatalog', 'Type')"
+							:input-label="t('softwarecatalog', 'Type')"
 							:placeholder="t('softwarecatalog', 'Select organisation type')"
+							label="label"
+							track-by="value"
 							@update:value="handleTypeChange" />
 					</div>
 
@@ -345,6 +348,14 @@ export default {
 	padding: 20px;
 	max-width: 600px;
 	margin: 0 auto;
+}
+
+.modal-title {
+	margin: 0 0 20px 0;
+	font-size: 24px;
+	font-weight: 600;
+	color: var(--color-text-dark);
+	text-align: center;
 }
 
 .form-grid {
