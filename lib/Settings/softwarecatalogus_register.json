@@ -4,7 +4,7 @@
             "voorzieningen": {
                 "slug": "voorzieningen",
                 "title": "Voorzieningen",
-                "version": "1.0.8",
+                "version": "1.0.9",
                 "description": "Register voor voorzieningen uit de softwarecatalogus",
                 "schemas": [
                     "sector",
@@ -36,7 +36,7 @@
             "vng-gemma": {
                 "slug": "vng-gemma",
                 "title": "AMEF",
-                "version": "0.0.4",
+                "version": "0.0.5",
                 "description": "Register voor AMEF (ArchiMate Model Exchange Format) modellen en architectuur elementen",
                 "schemas": [
                     "element",
@@ -236,7 +236,7 @@
                 },
                 "deleted": null,
                 "configuration": null,
-                "searchable": false
+                "searchable": true
             },
             "sector": {
                 "uri": null,
@@ -3186,7 +3186,7 @@
                     "objectNameField": "name",
                     "objectSummaryField": "summary"
                 },
-                "searchable": false
+                "searchable": true
             },
             "view": {
                 "slug": "view",
@@ -3469,7 +3469,7 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": null,
-                "searchable": false
+                "searchable": true
             },
             "model": {
                 "slug": "model",
@@ -3893,7 +3893,7 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": null,
-                "searchable": false
+                "searchable": true
             },
             "organization": {
                 "slug": "organization",
@@ -4065,7 +4065,7 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": null,
-                "searchable": false
+                "searchable": true
             },
             "property-definition": {
                 "slug": "property-definition",
@@ -4188,7 +4188,7 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": null,
-                "searchable": false
+                "searchable": true
             },
             "relation": {
                 "slug": "relation",
@@ -4486,7 +4486,7 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": null,
-                "searchable": false
+                "searchable": true
             },
             "module": {
                 "uri": null,
@@ -4999,6 +4999,6 @@
         "id": 14,
         "title": "Software Catalog Register",
         "description": "Merged register containing both AMEF and Voorzieningen schemas and configurations",
-        "version": "1.0.3"
+        "version": "1.0.4"
     }
 }
