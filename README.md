@@ -10,6 +10,8 @@ The **Software Catalogus** is a Nextcloud app that provides a powerful framework
 
 - 🔄 **Synchronize Software Data**: Automatically synchronize your software data across multiple catalogs.
 - 📡 **Automatic Publication**: Publish and update software catalog information seamlessly.
+- 🏢 **Organization Management**: Enhanced organization synchronization and management capabilities.
+- 📊 **API Integration**: Comprehensive API for aangeboden gebruik and organization workflows.
 - 🆓 **Open Source**: Licensed under the [EUPL](https://opensource.org/licenses/EUPL).
 
 ## Requirements
