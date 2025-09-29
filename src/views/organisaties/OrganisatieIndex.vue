@@ -197,7 +197,7 @@ export default {
 					id: 'activeren',
 					label: 'Activeren',
 					icon: CheckCircle,
-					condition: (organisatie) => organisatie.status?.toLowerCase() === 'concept' || organisatie.status?.toLowerCase() === 'deactief',
+					condition: (organisatie) => organisatie.status === 'Concept' || organisatie.status === 'Deactief',
 					handler: (organisatie) => {
 						objectStore.setActiveObject('organisatie', organisatie)
 						navigationStore.setDialog('changeOrganisatieStatus', {

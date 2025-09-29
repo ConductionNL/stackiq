@@ -90,9 +90,12 @@ class AangebodenGebruikService
             if (!$currentOrg) {
                 $this->logger->warning('No current organization available for afnemer filtering');
                 return [
-                    'success' => true,
-                    'gebruiks' => [],
-                    'count' => 0,
+                    'results' => [],
+                    'total' => 0,
+                    'page' => 1,
+                    'pages' => 0,
+                    'limit' => 20,
+                    'offset' => 0,
                     'message' => 'No current organization available'
                 ];
             }
@@ -100,56 +103,46 @@ class AangebodenGebruikService
             // Get configuration for gebruiks register/schema
             $gebruiksConfig = $this->getGebruiksConfiguration();
             
-            $allGebruiks = [];
-            
-            // Search each configured schema for gebruiks where org is afnemer
-            foreach ($gebruiksConfig['schemas'] as $schemaId) {
-                if (!$schemaId) continue;
-                
-                try {
-                    // Build query for afnemer filtering with RBAC enabled
-                    $query = [
-                        '@self' => [
-                            'register' => $gebruiksConfig['register_id'],
-                            'schema' => $schemaId,
-                            'organisation' => $currentOrg // Standard RBAC filtering
-                        ]
-                    ];
-                    
-                    // Add additional filters from options
-                    $query = $this->addQueryFilters($query, $options);
-                    
-                    // Execute search with RBAC enabled (default behavior)
-                    $gebruikItems = $objectService->searchObjects($query);
-                    
-                    // Process and add to results
-                    foreach ($gebruikItems as $gebruik) {
-                        $gebruik['_filter_type'] = 'afnemer';
-                        $gebruik['_schema_id'] = $schemaId;
-                        $allGebruiks[] = $gebruik;
-                    }
-                    
-                    $this->logger->debug('Retrieved afnemer gebruiks from schema', [
-                        'schema_id' => $schemaId,
-                        'count' => count($gebruikItems),
-                        'organisation' => $currentOrg
-                    ]);
-                    
-                } catch (Exception $e) {
-                    $this->logger->warning('Failed to get afnemer gebruiks from schema', [
-                        'schema_id' => $schemaId,
-                        'error' => $e->getMessage()
-                    ]);
-                }
+            // Use the first schema for now (can be extended for multi-schema support)
+            $schemaId = $gebruiksConfig['schemas'][0] ?? null;
+            if (!$schemaId) {
+                throw new Exception('No gebruik schema configured');
             }
-
-            return [
-                'success' => true,
-                'gebruiks' => $allGebruiks,
-                'count' => count($allGebruiks),
-                'filter_type' => 'afnemer',
-                'organisation' => $currentOrg
+            
+            // Build query for afnemer filtering - search for objects where current org is afnemer
+            // Note: We don't filter by organisation in @self since the objects are owned by leveranciers
+            $query = [
+                '@self' => [
+                    'register' => $gebruiksConfig['register_id'],
+                    'schema' => $schemaId
+                ],
+                'afnemer' => $currentOrg // Filter by afnemer field instead of ownership
             ];
+            
+            // Add additional filters from options (pagination, etc.)
+            $query = $this->addQueryFilters($query, $options);
+            
+            $this->logger->debug('AangebodenGebruikService: Executing search query', [
+                'query' => $query,
+                'schema_id' => $schemaId,
+                'current_org' => $currentOrg
+            ]);
+            
+            // Execute search with RBAC and multitenancy disabled to find cross-organisation objects
+            // Return the searchObjectsPaginated result directly - it's already properly formatted
+            $searchResult = $objectService->searchObjectsPaginated(
+                query: $query,
+                rbac: false,  // Disable RBAC to find cross-organisation objects
+                multi: false  // Disable multitenancy to find objects from other organisations
+            );
+            
+            $this->logger->debug('AangebodenGebruikService: Search completed', [
+                'total' => $searchResult['total'] ?? 0,
+                'results_count' => count($searchResult['results'] ?? []),
+                'organisation' => $currentOrg
+            ]);
+            
+            return $searchResult;
 
         } catch (Exception $e) {
             $this->logger->error('Failed to get afnemer gebruiks', [
@@ -158,10 +151,187 @@ class AangebodenGebruikService
             ]);
 
             return [
-                'success' => false,
-                'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage(),
-                'gebruiks' => [],
-                'count' => 0
+                'results' => [],
+                'total' => 0,
+                'page' => 1,
+                'pages' => 0,
+                'limit' => 20,
+                'offset' => 0,
+                'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get all gebruiks objects (ignoring RBAC and multitenancy) - restricted to ambtenaar group
+     * 
+     * This method retrieves all gebruiks objects regardless of ownership or organization,
+     * bypassing normal RBAC and multitenancy restrictions. Access is restricted to users
+     * with the "ambtenaar" group.
+     * 
+     * @param array $options Additional query options (limit, offset, filters, etc.)
+     * @return array searchObjectsPaginated result with all gebruiks
+     * @throws Exception When OpenRegister service is not available
+     */
+    public function getAllGebruiksForAmbtenaar(array $options = []): array
+    {
+        $this->logger->info('Getting all gebruiks objects for ambtenaar (ignoring RBAC/multitenancy)', [
+            'options' => $options
+        ]);
+
+        try {
+            // Get ObjectService from OpenRegister
+            $objectService = $this->getObjectService();
+            
+            // Get configuration for gebruiks register/schema
+            $gebruiksConfig = $this->getGebruiksConfiguration();
+            
+            // Use the first schema for now (can be extended for multi-schema support)
+            $schemaId = $gebruiksConfig['schemas'][0] ?? null;
+            if (!$schemaId) {
+                throw new Exception('No gebruik schema configured');
+            }
+            
+            // Build query for all gebruiks - no organization filtering
+            $query = [
+                '@self' => [
+                    'register' => $gebruiksConfig['register_id'],
+                    'schema' => $schemaId
+                ]
+            ];
+            
+            // Add additional filters from options (pagination, search, etc.)
+            $query = $this->addQueryFilters($query, $options);
+            
+            $this->logger->debug('AangebodenGebruikService: Executing ambtenaar search query', [
+                'query' => $query,
+                'schema_id' => $schemaId
+            ]);
+            
+            // Execute search with RBAC and multitenancy disabled to get ALL objects
+            $searchResult = $objectService->searchObjectsPaginated(
+                query: $query,
+                rbac: false,  // Disable RBAC to access all objects
+                multi: false  // Disable multitenancy to access objects from all organisations
+            );
+            
+            $this->logger->debug('AangebodenGebruikService: Ambtenaar search completed', [
+                'total' => $searchResult['total'] ?? 0,
+                'results_count' => count($searchResult['results'] ?? [])
+            ]);
+            
+            return $searchResult;
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to get all gebruiks for ambtenaar', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'results' => [],
+                'total' => 0,
+                'page' => 1,
+                'pages' => 0,
+                'limit' => 20,
+                'offset' => 0,
+                'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get a single gebruiks object by ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group
+     * 
+     * This method retrieves a specific gebruiks object by its ID, bypassing normal RBAC 
+     * and multitenancy restrictions. Access is restricted to users with the "ambtenaar" group.
+     * 
+     * @param string $gebruikId The ID of the gebruik object to retrieve
+     * @param array $options Additional query options (extend, fields, etc.)
+     * @return array searchObjectsPaginated result with single gebruik or error
+     * @throws Exception When OpenRegister service is not available
+     */
+    public function getSingleGebruikForAmbtenaar(string $gebruikId, array $options = []): array
+    {
+        $this->logger->info('Getting single gebruik object for ambtenaar (ignoring RBAC/multitenancy)', [
+            'gebruik_id' => $gebruikId,
+            'options' => $options
+        ]);
+
+        try {
+            // Validate input
+            if (empty($gebruikId)) {
+                return [
+                    'results' => [],
+                    'total' => 0,
+                    'page' => 1,
+                    'pages' => 0,
+                    'limit' => 20,
+                    'offset' => 0,
+                    'error' => 'Gebruik ID is required'
+                ];
+            }
+
+            // Get ObjectService from OpenRegister
+            $objectService = $this->getObjectService();
+            
+            // Get configuration for gebruiks register/schema
+            $gebruiksConfig = $this->getGebruiksConfiguration();
+            
+            // Use the first schema for now (can be extended for multi-schema support)
+            $schemaId = $gebruiksConfig['schemas'][0] ?? null;
+            if (!$schemaId) {
+                throw new Exception('No gebruik schema configured');
+            }
+            
+            // Build query for specific gebruik by ID
+            $query = [
+                '@self' => [
+                    'register' => $gebruiksConfig['register_id'],
+                    'schema' => $schemaId,
+                    'id' => $gebruikId
+                ]
+            ];
+            
+            // Add additional filters from options (extend, fields, etc.)
+            $query = $this->addQueryFilters($query, $options);
+            
+            $this->logger->debug('AangebodenGebruikService: Executing single gebruik query for ambtenaar', [
+                'query' => $query,
+                'schema_id' => $schemaId,
+                'gebruik_id' => $gebruikId
+            ]);
+            
+            // Execute search with RBAC and multitenancy disabled to access any object
+            $searchResult = $objectService->searchObjectsPaginated(
+                query: $query,
+                rbac: false,  // Disable RBAC to access any object
+                multi: false  // Disable multitenancy to access objects from any organisation
+            );
+            
+            $this->logger->debug('AangebodenGebruikService: Single gebruik search completed', [
+                'total' => $searchResult['total'] ?? 0,
+                'results_count' => count($searchResult['results'] ?? []),
+                'gebruik_id' => $gebruikId
+            ]);
+            
+            return $searchResult;
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to get single gebruik for ambtenaar', [
+                'gebruik_id' => $gebruikId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'results' => [],
+                'total' => 0,
+                'page' => 1,
+                'pages' => 0,
+                'limit' => 20,
+                'offset' => 0,
+                'error' => 'Failed to retrieve gebruik: ' . $e->getMessage()
             ];
         }
     }
@@ -308,8 +478,22 @@ class AangebodenGebruikService
                 ];
             }
 
-            // Get the existing gebruik object
-            $existingGebruik = $objectService->getObject($gebruikId);
+            // Get the existing gebruik object with RBAC and multitenancy disabled
+            // since the object might be owned by a different organisation (leverancier)
+            try {
+                $existingGebruik = $objectService->find(
+                    id: $gebruikId,
+                    rbac: false,  // Disable RBAC to access cross-organisation objects
+                    multi: false  // Disable multitenancy to access objects from other organisations
+                );
+            } catch (Exception $e) {
+                $this->logger->warning('Failed to find gebruik object', [
+                    'gebruik_id' => $gebruikId,
+                    'error' => $e->getMessage()
+                ]);
+                $existingGebruik = null;
+            }
+            
             if (!$existingGebruik) {
                 return [
                     'success' => false,
@@ -348,9 +532,18 @@ class AangebodenGebruikService
             $selfData['organisation'] = $currentOrg;
             $gebruikData['@self'] = $selfData;
 
-            // Save the updated object
+            // Save the updated object with RBAC and multitenancy disabled
+            // since we're updating an object that was originally created by another organisation
             $existingGebruik->setObject($gebruikData);
-            $updatedGebruik = $objectService->saveObject($existingGebruik);
+            $gebruiksConfig = $this->getGebruiksConfiguration();
+            $updatedGebruik = $objectService->saveObject(
+                object: $existingGebruik,
+                register: $gebruiksConfig['register_id'],  // Provide register context
+                schema: $gebruiksConfig['schemas'][0],     // Provide schema context
+                uuid: $gebruikId,                          // Provide UUID for update
+                rbac: false,  // Disable RBAC to allow cross-organisation updates
+                multi: false  // Disable multitenancy to allow updates from different organisations
+            );
 
             $this->logger->info('Successfully updated gebruik @self property', [
                 'gebruik_id' => $gebruikId,
@@ -392,16 +585,22 @@ class AangebodenGebruikService
             return null;
         }
         
-        // Get user's organization from configuration or session
-        // This follows the same pattern as ViewService
-        $userOrg = $this->config->getUserValue(
-            $user->getUID(), 
-            'softwarecatalog', 
-            'organisation', 
-            null
-        );
-        
-        return $userOrg;
+        try {
+            // Get the OpenRegister OrganisationService to get the active organisation
+            $organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
+            $activeOrg = $organisationService->getActiveOrganisation();
+            
+            if ($activeOrg) {
+                return $activeOrg->getUuid();
+            }
+            
+            return null;
+        } catch (Exception $e) {
+            $this->logger->error('Failed to get current organisation from OpenRegister', [
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -430,12 +629,35 @@ class AangebodenGebruikService
      */
     private function getGebruiksConfiguration(): array
     {
-        // Get AMEF configuration which includes gebruiks schemas
-        $amefConfig = $this->settingsService->getAmefConfig();
+        // Try to get voorzieningen configuration from SettingsService
+        try {
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            
+            $this->logger->debug('Retrieved voorzieningen configuration', [
+                'config' => $voorzieningenConfig
+            ]);
+            
+            $registerId = $voorzieningenConfig['register'] ?? null;
+            $gebruikSchema = $voorzieningenConfig['gebruik_schema'] ?? null;
+            
+            // If configuration is available, use it
+            if ($registerId && $gebruikSchema) {
+                return [
+                    'register_id' => $registerId,
+                    'schemas' => [$gebruikSchema]
+                ];
+            }
+        } catch (Exception $e) {
+            $this->logger->warning('Failed to get voorzieningen configuration from SettingsService', [
+                'error' => $e->getMessage()
+            ]);
+        }
         
+        // Fallback to hardcoded values for testing
+        $this->logger->info('Using hardcoded voorzieningen configuration as fallback');
         return [
-            'register_id' => $amefConfig['register_id'] ?? null,
-            'schemas' => $amefConfig['gebruik_schemas'] ?? []
+            'register_id' => 1, // voorzieningen register
+            'schemas' => [8]    // gebruik schema
         ];
     }
 
@@ -461,6 +683,11 @@ class AangebodenGebruikService
             $baseQuery['@offset'] = (int)$options['offset'];
         }
         
+        // Add source parameter if specified (for forcing database access)
+        if (isset($options['_source']) && !empty($options['_source'])) {
+            $baseQuery['_source'] = $options['_source'];
+        }
+        
         // Add status filter if specified
         if (isset($options['status']) && !empty($options['status'])) {
             $baseQuery['status'] = $options['status'];
@@ -481,6 +708,169 @@ class AangebodenGebruikService
         }
         
         return $baseQuery;
+    }
+
+    /**
+     * Delete (deny) a gebruik object with security validation
+     * 
+     * This method allows deleting a gebruik object, but only if the active organization
+     * is the afnemer (consumer) for that gebruik. This implements the "deny" workflow
+     * where a gemeente can reject a suggestion from a leverancier.
+     * 
+     * Security: Since we disable RBAC to access cross-organisation objects, we must
+     * implement our own security checks to ensure only the afnemer can delete.
+     * 
+     * @param string $gebruikId The UUID of the gebruik object to delete
+     * @param array $options Additional options for the operation
+     * @return array Result array with success status and details
+     */
+    public function deleteGebruikAsAfnemer(string $gebruikId, array $options = []): array
+    {
+        $this->logger->info('Deleting gebruik object as afnemer', [
+            'gebruik_id' => $gebruikId,
+            'options' => $options
+        ]);
+
+        try {
+            // Validate input
+            if (empty($gebruikId)) {
+                return [
+                    'success' => false,
+                    'error' => 'Gebruik ID is required',
+                    'deleted' => false
+                ];
+            }
+
+            // Get ObjectService from OpenRegister
+            $objectService = $this->getObjectService();
+            
+            // Get current organization
+            $currentOrg = $this->getCurrentOrganisation();
+            if (!$currentOrg) {
+                return [
+                    'success' => false,
+                    'error' => 'No current organization available',
+                    'deleted' => false
+                ];
+            }
+
+            // Get the existing gebruik object with RBAC and multitenancy disabled
+            // since the object might be owned by a different organisation (leverancier)
+            // Use searchObjectsPaginated since it works better for cross-organisation access
+            $gebruiksConfig = $this->getGebruiksConfiguration();
+            $searchQuery = [
+                '@self' => [
+                    'register' => $gebruiksConfig['register_id'],
+                    'schema' => $gebruiksConfig['schemas'][0],
+                    'id' => $gebruikId
+                ]
+            ];
+            
+            try {
+                $searchResult = $objectService->searchObjectsPaginated(
+                    query: $searchQuery,
+                    rbac: false,  // Disable RBAC to access cross-organisation objects
+                    multi: false  // Disable multitenancy to access objects from other organisations
+                );
+                
+                $existingGebruik = null;
+                $gebruikData = null;
+                
+                if (isset($searchResult['results']) && count($searchResult['results']) > 0) {
+                    $gebruikData = $searchResult['results'][0];
+                    $this->logger->debug('Found gebruik object for deletion', [
+                        'gebruik_id' => $gebruikId,
+                        'afnemer' => $gebruikData['afnemer'] ?? 'unknown'
+                    ]);
+                }
+            } catch (Exception $e) {
+                $this->logger->warning('Failed to find gebruik object for deletion', [
+                    'gebruik_id' => $gebruikId,
+                    'error' => $e->getMessage()
+                ]);
+                $gebruikData = null;
+            }
+            
+            if (!$gebruikData) {
+                return [
+                    'success' => false,
+                    'error' => 'Gebruik object not found',
+                    'deleted' => false
+                ];
+            }
+
+            // SECURITY CHECK: Verify that the active organization is the afnemer
+            // This is critical since we're bypassing RBAC
+            $afnemerInfo = $gebruikData['afnemer'] ?? null;
+            
+            // Check various ways the afnemer might be stored (UUID, object, or string)
+            $afnemerId = null;
+            if (is_array($afnemerInfo) && isset($afnemerInfo['id'])) {
+                $afnemerId = $afnemerInfo['id'];
+            } elseif (is_string($afnemerInfo)) {
+                $afnemerId = $afnemerInfo;
+            }
+
+            if (!$afnemerId || $afnemerId !== $currentOrg) {
+                $this->logger->warning('Unauthorized delete attempt - user is not afnemer', [
+                    'gebruik_id' => $gebruikId,
+                    'current_org' => $currentOrg,
+                    'afnemer_in_object' => $afnemerInfo,
+                    'resolved_afnemer_id' => $afnemerId
+                ]);
+                
+                return [
+                    'success' => false,
+                    'error' => 'Operation not allowed: active organization is not the afnemer',
+                    'deleted' => false,
+                    'debug' => [
+                        'afnemer_in_object' => $afnemerInfo,
+                        'resolved_afnemer_id' => $afnemerId,
+                        'current_org' => $currentOrg
+                    ]
+                ];
+            }
+
+            // Delete the object with RBAC and multitenancy disabled
+            // We need to disable these since the object might be owned by another organisation
+            // First set the register and schema context
+            $objectService->setRegister($gebruiksConfig['register_id']);
+            $objectService->setSchema($gebruiksConfig['schemas'][0]);
+            
+            $deleteResult = $objectService->deleteObject(
+                uuid: $gebruikId,
+                rbac: false,  // Disable RBAC to allow cross-organisation deletion
+                multi: false  // Disable multitenancy to allow deletion from different organisations
+            );
+
+            $this->logger->info('Successfully deleted gebruik object', [
+                'gebruik_id' => $gebruikId,
+                'organisation' => $currentOrg,
+                'afnemer_verified' => $afnemerId,
+                'delete_result' => $deleteResult
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Gebruik object deleted successfully',
+                'deleted' => true,
+                'gebruik_id' => $gebruikId,
+                'organisation' => $currentOrg
+            ];
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to delete gebruik object', [
+                'gebruik_id' => $gebruikId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Failed to delete gebruik: ' . $e->getMessage(),
+                'deleted' => false
+            ];
+        }
     }
 }
 

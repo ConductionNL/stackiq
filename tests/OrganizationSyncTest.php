@@ -128,7 +128,7 @@ class OrganizationSyncTest extends TestCase
             ],
             [
                 'input' => ['beoordeling' => 'unknown'],
-                'expected' => 'concept'
+                'expected' => 'Concept'
             ]
         ];
         

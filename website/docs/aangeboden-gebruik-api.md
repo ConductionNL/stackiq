@@ -125,7 +125,41 @@ These endpoints require user authentication and use standard Nextcloud RBAC (Rol
 }
 ```
 
-### 4. Get API Documentation
+### 4. Deny a Suggestion (Delete)
+
+**Endpoint:** 'DELETE /api/aangeboden-gebruik/{gebruikId}/deny'
+
+**Description:** Denies a gebruik suggestion by deleting the object completely. Only allowed if the active organization is the afnemer for the object.
+
+**Parameters:**
+- 'gebruikId' (path, required): The UUID of the gebruik object to deny
+
+**Success Response (200):**
+```json
+{
+  'success': true,
+  'message': 'Gebruik object deleted successfully',
+  'deleted': true,
+  'gebruik_id': 'usage-uuid-123',
+  'organisation': 'gemeente-uuid'
+}
+```
+
+**Error Response (403 Forbidden):**
+```json
+{
+  'success': false,
+  'error': 'Operation not allowed: active organization is not the afnemer',
+  'deleted': false,
+  'debug': {
+    'afnemer_in_object': 'other-org-uuid',
+    'resolved_afnemer_id': 'other-org-uuid',
+    'current_org': 'gemeente-uuid'
+  }
+}
+```
+
+### 5. Get API Documentation
 
 **Endpoint:** 'GET /api/aangeboden-gebruik/docs'
 
@@ -178,6 +212,13 @@ curl -X PUT 'http://localhost/index.php/apps/softwarecatalog/api/aangeboden-gebr
   -u admin:admin
 ```
 
+### Deny Gebruik Suggestion
+```bash
+curl -X DELETE 'http://localhost/index.php/apps/softwarecatalog/api/aangeboden-gebruik/usage-uuid-123/deny' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin
+```
+
 ## Docker Testing Commands
 
 When testing in the Docker environment, use the docker-compose exec command:
@@ -206,13 +247,169 @@ docker-compose exec nextcloud curl -X PUT 'http://localhost/index.php/apps/softw
 
 Replace 'USAGE_UUID' with an actual usage object UUID from your system.
 
+## Leverancier-Gemeente Workflow
+
+The AangebodenGebruik API supports a specific workflow where leveranciers (suppliers) can register gebruik objects for gemeenten (municipalities), and gemeenten can then claim or deny these suggestions.
+
+### Workflow Overview
+
+1. **Leverancier Creates Suggestion**: A leverancier creates a gebruik object with the afnemer set to a gemeente (different from their own organisation)
+2. **Cross-Organisation Access**: The gemeente can access this suggestion even though they didn't create it
+3. **Claim or Deny**: The gemeente can either claim the suggestion (set @self.organisation to themselves) or deny it (delete the object)
+
+### Step-by-Step Process
+
+#### Step 1: Leverancier Creates Gebruik Suggestion
+
+The leverancier creates a gebruik object using the standard OpenRegister API, setting the afnemer to the target gemeente:
+
+```bash
+# Switch to leverancier organisation
+curl -X POST 'http://localhost/index.php/apps/openregister/api/organisations/LEVERANCIER_UUID/set-active' \
+  -u admin:admin
+
+# Create gebruik suggestion for gemeente
+curl -X POST 'http://localhost/index.php/apps/openregister/api/objects/1/8' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin \
+  -d '{
+    "afnemer": "GEMEENTE_UUID",
+    "product": "PRODUCT_UUID", 
+    "status": "voorgesteld",
+    "beschrijving": "Leverancier suggests this product usage for the gemeente"
+  }'
+```
+
+#### Step 2: Gemeente Discovers Suggestions
+
+The gemeente switches to their organisation context and uses the AangebodenGebruik API to find suggestions:
+
+```bash
+# Switch to gemeente organisation  
+curl -X POST 'http://localhost/index.php/apps/openregister/api/organisations/GEMEENTE_UUID/set-active' \
+  -u admin:admin
+
+# Find gebruik suggestions where gemeente is afnemer
+curl -X GET 'http://localhost/index.php/apps/softwarecatalog/api/aangeboden-gebruik/afnemer' \
+  -u admin:admin
+```
+
+#### Step 3: Gemeente Claims Suggestion
+
+If the gemeente wants to accept the suggestion, they claim it by setting the @self.organisation property:
+
+```bash
+curl -X PUT 'http://localhost/index.php/apps/softwarecatalog/api/aangeboden-gebruik/GEBRUIK_UUID/set-self' \
+  -u admin:admin
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Gebruik @self property updated successfully",
+  "gebruik": {
+    "id": "GEBRUIK_UUID",
+    "afnemer": "GEMEENTE_UUID",
+    "product": "PRODUCT_UUID",
+    "status": "voorgesteld"
+  },
+  "updated_fields": ["@self.organisation"]
+}
+```
+
+#### Step 4: Gemeente Denies Suggestion (Alternative)
+
+If the gemeente wants to reject the suggestion, they can delete it after claiming:
+
+```bash
+# First claim the object (required for deletion permissions)
+curl -X PUT 'http://localhost/index.php/apps/softwarecatalog/api/aangeboden-gebruik/GEBRUIK_UUID/set-self' \
+  -u admin:admin
+
+# Then delete to deny the suggestion
+curl -X DELETE 'http://localhost/index.php/apps/openregister/api/objects/1/8/GEBRUIK_UUID' \
+  -u admin:admin
+```
+
+### Technical Implementation Details
+
+#### Multitenancy and RBAC Handling
+
+The AangebodenGebruik API uses OpenRegister's built-in RBAC and multitenancy controls:
+
+- **Finding Objects**: Uses `objectService->find()` with `rbac=false, multi=false` to access cross-organisation objects
+- **Saving Objects**: Uses `objectService->saveObject()` with `rbac=false, multi=false` to allow cross-organisation updates
+- **Permission Verification**: Validates that the active organisation is the afnemer before allowing claim operations
+
+#### Security Model
+
+1. **Creation**: Leveranciers can create gebruik objects with any afnemer (no restriction)
+2. **Discovery**: Gemeenten can only see gebruik objects where they are the afnemer
+3. **Claiming**: Only the afnemer organisation can claim a gebruik suggestion
+4. **Deletion**: Only after claiming can the gemeente delete the object (to deny the suggestion)
+
+### Example Complete Workflow
+
+```bash
+# === LEVERANCIER SIDE ===
+# Create leverancier organisation
+curl -X POST 'http://localhost/index.php/apps/openregister/api/organisations' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin \
+  -d '{"name": "Leverancier BV", "description": "Test supplier organisation"}'
+
+# Create gemeente organisation  
+curl -X POST 'http://localhost/index.php/apps/openregister/api/organisations' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin \
+  -d '{"name": "Gemeente Amsterdam", "description": "Test municipality organisation"}'
+
+# Switch to leverancier
+curl -X POST 'http://localhost/index.php/apps/openregister/api/organisations/LEVERANCIER_UUID/set-active' \
+  -u admin:admin
+
+# Create gebruik suggestion
+curl -X POST 'http://localhost/index.php/apps/openregister/api/objects/1/8' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin \
+  -d '{
+    "afnemer": "GEMEENTE_UUID",
+    "product": "EXISTING_PRODUCT_UUID",
+    "status": "voorgesteld", 
+    "beschrijving": "We suggest this software solution for your municipality"
+  }'
+
+# === GEMEENTE SIDE ===
+# Switch to gemeente
+curl -X POST 'http://localhost/index.php/apps/openregister/api/organisations/GEMEENTE_UUID/set-active' \
+  -u admin:admin
+
+# Check active organisation
+curl -X GET 'http://localhost/index.php/apps/openregister/api/organisations/active' \
+  -u admin:admin
+
+# Find suggestions
+curl -X GET 'http://localhost/index.php/apps/softwarecatalog/api/aangeboden-gebruik/afnemer' \
+  -u admin:admin
+
+# Claim suggestion
+curl -X PUT 'http://localhost/index.php/apps/softwarecatalog/api/aangeboden-gebruik/GEBRUIK_UUID/set-self' \
+  -u admin:admin
+
+# OR deny suggestion (delete after claiming)
+curl -X DELETE 'http://localhost/index.php/apps/openregister/api/objects/1/8/GEBRUIK_UUID' \
+  -u admin:admin
+```
+
 ## Configuration Requirements
 
 The AangebodenGebruik API relies on the following configuration:
 
 1. **OpenRegister App**: Must be installed and available
-2. **AMEF Configuration**: Must be configured with proper register_id and gebruik_schemas
+2. **Voorzieningen Configuration**: Must be configured with proper register_id and gebruik_schema
 3. **User Organization**: Active user must have an organization associated with their account
+4. **Multi-Organisation Setup**: Both leverancier and gemeente organisations must exist and users must be able to switch between them
 
 ## Technical Implementation
 

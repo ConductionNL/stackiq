@@ -4502,4 +4502,256 @@ class SettingsService
         $this->config->setValueString($this->_appName, 'catalog_location', $location);
     }
 
+    /**
+     * High-performance sync of OpenRegister organisations to voorzieningen register
+     *
+     * Optimized for large-scale operations (1000+ organisations) using bulk operations.
+     * Uses OpenRegister's ultraFastBulkSave for maximum performance.
+     *
+     * @param array $options Configuration options:
+     *                      - batch_size: Number of organisations per batch (default: 500)
+     *                      - dry_run: Only check what would be created (default: false)
+     *
+     * @return array Sync results with performance metrics
+     */
+    public function syncOrganisationsToVoorzieningenOptimized(array $options = []): array
+    {
+        $startTime = microtime(true);
+        $batchSize = $options['batch_size'] ?? 500;
+        $isDryRun = $options['dry_run'] ?? false;
+        
+        try {
+            $this->logger->info('Starting optimized organisation sync', [
+                'batch_size' => $batchSize,
+                'dry_run' => $isDryRun
+            ]);
+
+            // 1. Validate prerequisites
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
+                return ['success' => false, 'message' => 'OpenRegister service not available'];
+            }
+
+            $voorzieningenConfig = $this->getVoorzieningenConfig();
+            if (empty($voorzieningenConfig['register']) || empty($voorzieningenConfig['organisatie_schema'])) {
+                return ['success' => false, 'message' => 'Voorzieningen register or organisatie schema not configured'];
+            }
+
+            $this->logger->debug('Prerequisites validated', [
+                'register_id' => $voorzieningenConfig['register'],
+                'organisatie_schema_id' => $voorzieningenConfig['organisatie_schema']
+            ]);
+
+            // 2. BULK FETCH: Get all organisations in one query
+            $organisationMapper = $this->container->get(\OCA\OpenRegister\Db\OrganisationMapper::class);
+            $allOrganisations = $organisationMapper->findAllWithUserCount();
+            
+            $this->logger->info('Retrieved organisations from OpenRegister', [
+                'total_organisations' => count($allOrganisations)
+            ]);
+
+            // 3. BULK FETCH: Get existing organisaties in one query  
+            $existingOrganisaties = $objectService->searchObjectsPaginated(
+                query: [
+                    '@self' => [
+                        'register' => $voorzieningenConfig['register'],
+                        'schema' => $voorzieningenConfig['organisatie_schema']
+                    ],
+                    '_limit' => 10000 // Get all existing
+                ],
+                rbac: false,
+                multi: false
+            );
+
+            $this->logger->info('Retrieved existing organisaties from voorzieningen register', [
+                'existing_count' => count($existingOrganisaties['results'] ?? [])
+            ]);
+
+            // 4. MEMORY-EFFICIENT: Build lookup set for existing UUIDs
+            // Now we can compare by UUID since we force UUIDs to match OpenRegister organisation UUIDs
+            $existingUuids = array_flip(array_map(function($org) {
+                return $org['@self']['id'] ?? '';
+            }, $existingOrganisaties['results'] ?? []));
+
+            $this->logger->debug('Deduplication analysis', [
+                'existing_uuids_count' => count($existingUuids),
+                'existing_uuids_sample' => array_slice(array_keys($existingUuids), 0, 3),
+                'total_openregister_orgs' => count($allOrganisations)
+            ]);
+
+            // 5. BATCH PREPARATION: Filter and prepare objects for bulk creation
+            $organisationsToCreate = [];
+            $skippedCount = 0;
+            foreach ($allOrganisations as $organisation) {
+                $orgUuid = $organisation->getUuid();
+                
+                // DEBUG: Log first few comparisons
+                if (count($organisationsToCreate) < 3) {
+                    $this->logger->debug('UUID comparison debug', [
+                        'openregister_uuid' => $orgUuid,
+                        'exists_in_voorzieningen' => isset($existingUuids[$orgUuid]),
+                        'organisation_name' => $organisation->getName()
+                    ]);
+                }
+                
+                // Skip if already exists (compare by UUID now that we force UUIDs)
+                if (isset($existingUuids[$orgUuid])) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                // Prepare organisatie data with forced UUID
+                $organisationsToCreate[] = [
+                    'id' => $orgUuid,  // Force the UUID to match OpenRegister organisation UUID
+                    '@self' => [
+                        'id' => $orgUuid,  // Also set in @self section for consistency
+                        'uuid' => $orgUuid
+                    ],
+                    'naam' => $organisation->getName(),
+                    'beschrijving' => $organisation->getDescription() ?? '',
+                    'type' => $this->determineOrganisationType($organisation),
+                    'status' => $organisation->getActive() ? 'Actief' : 'Inactief',
+                    'website' => '',
+                    'e-mailadres' => null,
+                    'telefoonnummer' => null,
+                    'oin' => '',
+                    'cbs' => '',
+                    'deelnemers' => [],
+                    'contactpersonen' => [],
+                ];
+            }
+
+            $results = [
+                'total_organisations' => count($allOrganisations),
+                'existing_count' => count($existingUuids),
+                'to_create_count' => count($organisationsToCreate),
+                'created_count' => 0,
+                'failed_count' => 0,
+                'batches_processed' => 0,
+                'performance' => []
+            ];
+
+            $this->logger->info('Organisation analysis completed', [
+                'total' => $results['total_organisations'],
+                'existing' => $results['existing_count'],
+                'to_create' => $results['to_create_count'],
+                'skipped_count' => $skippedCount,
+                'deduplication_working' => $skippedCount > 0
+            ]);
+
+            if ($isDryRun) {
+                $results['message'] = "DRY RUN: Would create {$results['to_create_count']} organisations";
+                return ['success' => true, 'results' => $results];
+            }
+
+            if (empty($organisationsToCreate)) {
+                $results['message'] = 'All organisations already exist in voorzieningen register';
+                return ['success' => true, 'results' => $results];
+            }
+
+            // 6. ULTRA-FAST BULK PROCESSING: Process in optimized batches
+            $objectService->setRegister($voorzieningenConfig['register']);
+            $objectService->setSchema($voorzieningenConfig['organisatie_schema']);
+
+            $batches = array_chunk($organisationsToCreate, $batchSize);
+            
+            foreach ($batches as $batchIndex => $batch) {
+                $batchStartTime = microtime(true);
+                
+                try {
+                    $this->logger->debug('Processing batch', [
+                        'batch' => $batchIndex + 1,
+                        'total_batches' => count($batches),
+                        'objects_in_batch' => count($batch)
+                    ]);
+
+                    // BULK OPERATION: Create entire batch in single operation
+                    $bulkResult = $objectService->saveObjects(
+                        objects: $batch,
+                        register: $voorzieningenConfig['register'],
+                        schema: $voorzieningenConfig['organisatie_schema'],
+                        rbac: false,
+                        multi: false,
+                        validation: false, // Skip validation for performance
+                        events: false      // Skip events for performance
+                    );
+
+                    $batchTime = microtime(true) - $batchStartTime;
+                    $objectsPerSecond = count($batch) / $batchTime;
+
+                    $results['created_count'] += $bulkResult['statistics']['saved'] ?? 0;
+                    $results['failed_count'] += $bulkResult['statistics']['errors'] ?? 0;
+                    $results['batches_processed']++;
+                    
+                    $results['performance'][] = [
+                        'batch' => $batchIndex + 1,
+                        'objects' => count($batch),
+                        'time_seconds' => round($batchTime, 3),
+                        'objects_per_second' => round($objectsPerSecond, 0)
+                    ];
+
+                    $this->logger->info("Bulk organisation sync batch completed", [
+                        'batch' => $batchIndex + 1,
+                        'total_batches' => count($batches),
+                        'objects_in_batch' => count($batch),
+                        'objects_per_second' => round($objectsPerSecond, 0)
+                    ]);
+
+                } catch (\Exception $e) {
+                    $results['failed_count'] += count($batch);
+                    $this->logger->error("Bulk organisation sync batch failed", [
+                        'batch' => $batchIndex + 1,
+                        'error' => $e->getMessage(),
+                        'objects_in_batch' => count($batch)
+                    ]);
+                }
+            }
+
+            $totalTime = microtime(true) - $startTime;
+            $overallPerformance = $results['created_count'] > 0 ? $results['created_count'] / $totalTime : 0;
+
+            return [
+                'success' => true,
+                'message' => "Sync completed: {$results['created_count']} created, {$results['existing_count']} existing, {$results['failed_count']} failed",
+                'results' => array_merge($results, [
+                    'total_time_seconds' => round($totalTime, 3),
+                    'overall_objects_per_second' => round($overallPerformance, 0),
+                    'estimated_improvement' => $overallPerformance > 10 ? round($overallPerformance / 10, 1) . 'x faster than individual operations' : 'baseline'
+                ])
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('Organisation sync failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Organisation sync failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Determine organisation type based on organisation properties
+     *
+     * @param \OCA\OpenRegister\Db\Organisation $organisation The organisation entity
+     * @return string The organisation type
+     */
+    private function determineOrganisationType(\OCA\OpenRegister\Db\Organisation $organisation): string
+    {
+        $name = strtolower($organisation->getName());
+        
+        if (strpos($name, 'gemeente') !== false) {
+            return 'Gemeente';
+        } elseif (strpos($name, 'provincie') !== false) {
+            return 'Provincie';
+        } elseif (strpos($name, 'ministerie') !== false) {
+            return 'Ministerie';
+        } else {
+            return 'Leverancier'; // Default
+        }
+    }
+
 }

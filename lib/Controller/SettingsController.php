@@ -2436,6 +2436,54 @@ class SettingsController extends Controller
         return 500;
     }
 
+    /**
+     * Sync OpenRegister organisations to voorzieningen register
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse The sync results
+     */
+    public function syncOrganisations(): JSONResponse
+    {
+        try {
+            $this->logger->info('SettingsController: Starting organisation sync via API');
+
+            // Get request parameters
+            $requestBody = $this->request->getParams();
+            $options = [
+                'batch_size' => (int)($requestBody['batch_size'] ?? 500),
+                'dry_run' => filter_var($requestBody['dry_run'] ?? false, FILTER_VALIDATE_BOOLEAN)
+            ];
+
+            $this->logger->debug('SettingsController: Sync options', $options);
+
+            // Call the settings service method
+            $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
+
+            $statusCode = $result['success'] ? 200 : 500;
+
+            $this->logger->info('SettingsController: Organisation sync completed', [
+                'success' => $result['success'],
+                'message' => $result['message'] ?? 'No message'
+            ]);
+
+            return new JSONResponse($result, $statusCode);
+
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsController: Organisation sync failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Organisation sync failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 
 }//end class

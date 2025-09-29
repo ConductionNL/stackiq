@@ -88,19 +88,19 @@ class AangebodenGebruikController extends Controller
         ]);
 
         try {
-            // Parse query parameters for filtering options
-            $options = $this->parseQueryOptions();
+            // Parse query parameters for filtering options (force database source)
+            $options = $this->parseQueryOptionsWithDatabaseSource();
             
             // Get gebruiks from service where org is afnemer
             $result = $this->aangebodenGebruikService->getGebruiksWhereAfnemer($options);
             
-            // Determine appropriate HTTP status code
-            $statusCode = $result['success'] ? 200 : 500;
+            // Determine HTTP status code based on whether there's an error
+            $statusCode = isset($result['error']) ? 500 : 200;
             
             $this->logger->info('API: Afnemer gebruiks request completed', [
-                'success' => $result['success'],
-                'gebruiks_count' => $result['count'] ?? 0,
-                'organisation' => $result['organisation'] ?? 'unknown'
+                'total' => $result['total'] ?? 0,
+                'results_count' => count($result['results'] ?? []),
+                'has_error' => isset($result['error'])
             ]);
             
             return new JSONResponse($result, $statusCode);
@@ -112,11 +112,205 @@ class AangebodenGebruikController extends Controller
             ]);
 
             return new JSONResponse([
-                'success' => false,
-                'error' => 'Internal server error: ' . $e->getMessage(),
-                'gebruiks' => [],
-                'count' => 0
+                'results' => [],
+                'total' => 0,
+                'page' => 1,
+                'pages' => 0,
+                'limit' => 20,
+                'offset' => 0,
+                'error' => 'Internal server error: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Get all gebruiks objects (ignoring RBAC and multitenancy) - restricted to ambtenaar group
+     *
+     * This endpoint returns all gebruiks objects regardless of ownership or organization,
+     * bypassing normal RBAC and multitenancy restrictions. Access is restricted to users
+     * with the "ambtenaar" group.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse All gebruiks objects in standard searchObjectsPaginated format
+     */
+    public function getAllGebruiksForAmbtenaar(): JSONResponse
+    {
+        $this->logger->info('API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)', [
+            'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
+            'method' => 'GET',
+            'query_params' => $this->request->getParams()
+        ]);
+
+        try {
+            // Check if user is in admin or ambtenaar group
+            if (!$this->isUserInGroup('admin') && !$this->isUserInGroup('ambtenaar')) {
+                $this->logger->warning('API: Access denied - user not in admin or ambtenaar group', [
+                    'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
+                    'user' => $this->userId
+                ]);
+                
+                return new JSONResponse([
+                    'results' => [],
+                    'total' => 0,
+                    'page' => 1,
+                    'pages' => 0,
+                    'limit' => 20,
+                    'offset' => 0,
+                    'error' => 'Access denied: admin or ambtenaar group required'
+                ], 403);
+            }
+
+            // Parse query parameters for filtering options (force database source)
+            $options = $this->parseQueryOptionsWithDatabaseSource();
+            
+            // Get all gebruiks from service (ignoring RBAC/multitenancy)
+            $result = $this->aangebodenGebruikService->getAllGebruiksForAmbtenaar($options);
+            
+            // Determine HTTP status code based on whether there's an error
+            $statusCode = isset($result['error']) ? 500 : 200;
+            
+            $this->logger->info('API: Ambtenaar all gebruiks request completed', [
+                'total' => $result['total'] ?? 0,
+                'results_count' => count($result['results'] ?? []),
+                'has_error' => isset($result['error'])
+            ]);
+            
+            return new JSONResponse($result, $statusCode);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('API: Failed to get all gebruiks for ambtenaar', [
+                'error' => $e->getMessage(),
+                'endpoint' => '/api/aangeboden-gebruik/ambtenaar'
+            ]);
+            
+            return new JSONResponse([
+                'results' => [],
+                'total' => 0,
+                'page' => 1,
+                'pages' => 0,
+                'limit' => 20,
+                'offset' => 0,
+                'error' => 'Internal server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get a single gebruiks object by ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group
+     *
+     * This endpoint returns a specific gebruiks object by its ID, bypassing normal RBAC 
+     * and multitenancy restrictions. Access is restricted to users with the "ambtenaar" group.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @param string $gebruikId The ID of the gebruik object to retrieve
+     * @return JSONResponse Single gebruik object in standard searchObjectsPaginated format
+     */
+    public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse
+    {
+        $this->logger->info('API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)', [
+            'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
+            'method' => 'GET',
+            'gebruik_id' => $gebruikId,
+            'query_params' => $this->request->getParams()
+        ]);
+
+        try {
+            // Check if user is in admin or ambtenaar group
+            if (!$this->isUserInGroup('admin') && !$this->isUserInGroup('ambtenaar')) {
+                $this->logger->warning('API: Access denied - user not in admin or ambtenaar group', [
+                    'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
+                    'gebruik_id' => $gebruikId,
+                    'user' => $this->userId
+                ]);
+                
+                return new JSONResponse([
+                    'results' => [],
+                    'total' => 0,
+                    'page' => 1,
+                    'pages' => 0,
+                    'limit' => 20,
+                    'offset' => 0,
+                    'error' => 'Access denied: admin or ambtenaar group required'
+                ], 403);
+            }
+
+            // Parse query parameters for filtering options (force database source)
+            $options = $this->parseQueryOptionsWithDatabaseSource();
+            
+            // Get single gebruik from service (ignoring RBAC/multitenancy)
+            $result = $this->aangebodenGebruikService->getSingleGebruikForAmbtenaar($gebruikId, $options);
+            
+            // Determine HTTP status code based on whether there's an error
+            $statusCode = isset($result['error']) ? 500 : 200;
+            
+            $this->logger->info('API: Ambtenaar single gebruik request completed', [
+                'gebruik_id' => $gebruikId,
+                'total' => $result['total'] ?? 0,
+                'results_count' => count($result['results'] ?? []),
+                'has_error' => isset($result['error'])
+            ]);
+            
+            return new JSONResponse($result, $statusCode);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('API: Failed to get single gebruik for ambtenaar', [
+                'gebruik_id' => $gebruikId,
+                'error' => $e->getMessage(),
+                'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}'
+            ]);
+            
+            return new JSONResponse([
+                'results' => [],
+                'total' => 0,
+                'page' => 1,
+                'pages' => 0,
+                'limit' => 20,
+                'offset' => 0,
+                'error' => 'Internal server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check if the current user is in a specific group
+     *
+     * @param string $groupName The name of the group to check
+     * @return bool True if user is in the group, false otherwise
+     */
+    private function isUserInGroup(string $groupName): bool
+    {
+        try {
+            if (!$this->userId) {
+                return false;
+            }
+
+            $userManager = \OC::$server->getUserManager();
+            $groupManager = \OC::$server->getGroupManager();
+            
+            $user = $userManager->get($this->userId);
+            if (!$user) {
+                return false;
+            }
+
+            $group = $groupManager->get($groupName);
+            if (!$group) {
+                $this->logger->warning('Group does not exist', ['group' => $groupName]);
+                return false;
+            }
+
+            return $group->inGroup($user);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to check user group membership', [
+                'user' => $this->userId,
+                'group' => $groupName,
+                'error' => $e->getMessage()
+            ]);
+            return false;
         }
     }
 
@@ -249,6 +443,83 @@ class AangebodenGebruikController extends Controller
                 'success' => false,
                 'error' => 'Internal server error: ' . $e->getMessage(),
                 'gebruik' => null
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete (deny) a gebruik object as afnemer
+     * 
+     * API Endpoint: DELETE /api/aangeboden-gebruik/{gebruikId}/deny
+     * 
+     * This endpoint allows deleting a specific gebruik object, but only if the active 
+     * organization is the afnemer (consumer) for that gebruik. This implements the 
+     * "deny" workflow where a gemeente can reject a suggestion from a leverancier.
+     * 
+     * Security: Implements custom security checks since RBAC is disabled to access
+     * cross-organisation objects. Only the afnemer can delete the object.
+     * 
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @PublicPage
+     * 
+     * @param string $gebruikId The UUID of the gebruik object to delete
+     * @return JSONResponse JSON response with success status and deletion details
+     */
+    public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
+    {
+        $this->logger->info('API: Deleting gebruik object as afnemer', [
+            'endpoint' => "/api/aangeboden-gebruik/{$gebruikId}/deny",
+            'method' => 'DELETE',
+            'gebruik_id' => $gebruikId
+        ]);
+
+        try {
+            // Validate input
+            if (empty($gebruikId)) {
+                return new JSONResponse([
+                    'success' => false,
+                    'error' => 'Gebruik ID is required',
+                    'deleted' => false
+                ], 400);
+            }
+
+            // Parse any additional options from request body
+            $options = [];
+            $requestBody = $this->request->getParams();
+            if (!empty($requestBody)) {
+                $options = array_filter($requestBody, function($key) {
+                    return !in_array($key, ['gebruikId']); // Exclude path parameters
+                }, ARRAY_FILTER_USE_KEY);
+            }
+            
+            // Delete gebruik object via service
+            $result = $this->aangebodenGebruikService->deleteGebruikAsAfnemer($gebruikId, $options);
+            
+            // Determine appropriate HTTP status code
+            $statusCode = $result['success'] ? 200 : ($result['error'] === 'Gebruik object not found' ? 404 : 
+                         ($result['error'] === 'Operation not allowed: active organization is not the afnemer' ? 403 : 500));
+            
+            $this->logger->info('API: Delete gebruik as afnemer request completed', [
+                'gebruik_id' => $gebruikId,
+                'success' => $result['success'],
+                'deleted' => $result['deleted'] ?? false,
+                'status_code' => $statusCode
+            ]);
+            
+            return new JSONResponse($result, $statusCode);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('API: Failed to delete gebruik as afnemer', [
+                'gebruik_id' => $gebruikId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'error' => 'Internal server error: ' . $e->getMessage(),
+                'deleted' => false
             ], 500);
         }
     }
@@ -439,6 +710,24 @@ class AangebodenGebruikController extends Controller
         ];
 
         return new JSONResponse($documentation, 200);
+    }
+
+    /**
+     * Parse query parameters into options array for service methods with forced database source
+     *
+     * This method is specifically for custom endpoints that need to bypass caching
+     * and force direct database access for real-time data consistency.
+     *
+     * @return array Parsed options including pagination, filters, and forced database source
+     */
+    private function parseQueryOptionsWithDatabaseSource(): array
+    {
+        $options = $this->parseQueryOptions();
+        
+        // Force database source for all custom endpoints to ensure real-time data
+        $options['_source'] = 'database';
+        
+        return $options;
     }
 
     /**

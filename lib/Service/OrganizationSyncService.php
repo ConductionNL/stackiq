@@ -149,7 +149,7 @@ class OrganizationSyncService
                 $qb->expr()->neq('o2.active', $qb->createFunction('(LOWER(json_unquote(json_extract(o.object, \'$.status\'))) = \'actief\')')),
                 $qb->expr()->isNull('o2.uuid')
             ))
-            ->andWhere($qb->expr()->neq($qb->createFunction('LOWER(json_unquote(json_extract(o.object, \'$.status\')))'), $qb->createNamedParameter('concept')))
+            ->andWhere($qb->expr()->neq($qb->createFunction('LOWER(json_unquote(json_extract(o.object, \'$.status\')))'), $qb->createNamedParameter('Concept')))
             ->orderBy('o.updated', 'ASC')  // Process oldest first for consistency
             ->setMaxResults($batchSize);  // Limit batch size
 
