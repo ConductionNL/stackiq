@@ -184,6 +184,87 @@
 					</NcNoteCard>
 				</div>
 
+				<!-- Organisation Sync to Voorzieningen Section -->
+				<div class="organisation-voorzieningen-sync">
+					<h4>Sync Organisations to Voorzieningen Register</h4>
+					<p>Synchronize OpenRegister organisations to the voorzieningen register as organisatie objects.</p>
+					
+					<div class="voorzieningen-sync-controls">
+						<div class="sync-options">
+							<div class="option-group">
+								<label>
+									<input 
+										v-model="orgSyncOptions.dryRun" 
+										type="checkbox"
+										:disabled="performingOrgSync">
+									Dry Run (preview only)
+								</label>
+							</div>
+							<div class="option-group">
+								<label for="batch-size">Batch Size:</label>
+								<input 
+									id="batch-size"
+									v-model.number="orgSyncOptions.batchSize" 
+									type="number" 
+									min="1" 
+									max="1000"
+									:disabled="performingOrgSync">
+							</div>
+						</div>
+						
+						<div class="sync-actions">
+							<NcButton
+								type="primary"
+								:disabled="loading || performingOrgSync"
+								@click="performOrganisationSync">
+								<template #icon>
+									<NcLoadingIcon v-if="performingOrgSync" :size="20" />
+									<Sync v-else :size="20" />
+								</template>
+								{{ orgSyncOptions.dryRun ? 'Preview Sync' : 'Sync Organisations' }}
+							</NcButton>
+						</div>
+					</div>
+
+					<div v-if="orgSyncResult" class="sync-result">
+						<NcNoteCard :type="orgSyncResult.success ? 'success' : 'error'">
+							<template #icon>
+								<CheckCircle v-if="orgSyncResult.success" :size="20" />
+								<Alert v-else :size="20" />
+							</template>
+							<div class="sync-result-content">
+								<strong>{{ orgSyncResult.message }}</strong>
+								<div v-if="orgSyncResult.results" class="sync-statistics">
+									<h5>Organisation Sync Results:</h5>
+									<ul>
+										<li>Total organisations: {{ orgSyncResult.results.total_organisations }}</li>
+										<li>Already existing: {{ orgSyncResult.results.existing_count }}</li>
+										<li v-if="!orgSyncOptions.dryRun">Created: {{ orgSyncResult.results.created_count }}</li>
+										<li v-if="orgSyncOptions.dryRun">Would create: {{ orgSyncResult.results.to_create_count }}</li>
+										<li v-if="orgSyncResult.results.failed_count > 0">Failed: {{ orgSyncResult.results.failed_count }}</li>
+										<li v-if="orgSyncResult.results.total_time_seconds">Duration: {{ orgSyncResult.results.total_time_seconds }}s</li>
+										<li v-if="orgSyncResult.results.overall_objects_per_second">Performance: {{ orgSyncResult.results.overall_objects_per_second }} orgs/sec</li>
+									</ul>
+									<div v-if="orgSyncResult.results.performance && orgSyncResult.results.performance.length > 0" class="batch-performance">
+										<h5>Batch Performance:</h5>
+										<ul>
+											<li v-for="batch in orgSyncResult.results.performance" :key="batch.batch">
+												Batch {{ batch.batch }}: {{ batch.objects }} objects in {{ batch.time_seconds }}s ({{ batch.objects_per_second }} orgs/sec)
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</NcNoteCard>
+					</div>
+
+					<div class="voorzieningen-sync-info">
+						<p><strong>What this does:</strong> This sync ensures that all organisations from OpenRegister exist as organisatie objects in the voorzieningen register. This is needed for cross-organisation workflows like leverancier-gemeente gebruik suggestions.</p>
+						<p><strong>Performance:</strong> Uses bulk operations for optimal performance with large numbers of organisations (1000+).</p>
+						<p><strong>Safety:</strong> Only creates missing organisations - existing ones are skipped. Use dry run to preview changes.</p>
+					</div>
+				</div>
+
 				<div class="sync-info">
 					<h4>About Synchronization</h4>
 					<p>The synchronization process ensures that:</p>
@@ -323,6 +404,13 @@ export default {
 				{ value: 720, label: '12 hours' },
 				{ value: 1440, label: '24 hours' },
 			],
+			// Organisation sync to voorzieningen
+			performingOrgSync: false,
+			orgSyncResult: null,
+			orgSyncOptions: {
+				dryRun: true,
+				batchSize: 500,
+			},
 		}
 	},
 
@@ -596,6 +684,53 @@ export default {
 			if (count < 100) return 'processing-medium'
 			return 'processing-high'
 		},
+
+		/**
+		 * Perform organisation sync to voorzieningen register
+		 *
+		 * @return {Promise<void>}
+		 */
+		async performOrganisationSync() {
+			this.performingOrgSync = true
+			this.orgSyncResult = null
+
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync/organisations', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+					body: JSON.stringify({
+						dry_run: this.orgSyncOptions.dryRun,
+						batch_size: this.orgSyncOptions.batchSize,
+					}),
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const result = await response.json()
+				this.orgSyncResult = result
+
+				if (result.success) {
+					const actionText = this.orgSyncOptions.dryRun ? 'Organisation sync preview completed' : 'Organisation sync completed successfully'
+					showSuccess(actionText)
+				} else {
+					throw new Error(result.message || 'Organisation sync failed')
+				}
+			} catch (error) {
+				console.error('Failed to perform organisation sync:', error)
+				this.orgSyncResult = {
+					success: false,
+					message: 'Failed to perform organisation sync: ' + error.message,
+				}
+				showError('Failed to perform organisation sync: ' + error.message)
+			} finally {
+				this.performingOrgSync = false
+			}
+		},
 	},
 }
 </script>
@@ -802,5 +937,104 @@ export default {
 	display: flex;
 	justify-content: center;
 	margin: 40px 0;
+}
+
+/* Organisation Sync to Voorzieningen Styles */
+.organisation-voorzieningen-sync {
+	margin-bottom: 24px;
+	padding: 16px;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+}
+
+.organisation-voorzieningen-sync h4 {
+	margin: 0 0 8px 0;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.organisation-voorzieningen-sync > p {
+	margin: 0 0 16px 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.voorzieningen-sync-controls {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+	margin-bottom: 16px;
+}
+
+.sync-options {
+	flex: 1;
+	display: flex;
+	gap: 16px;
+	align-items: center;
+}
+
+.option-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.option-group label {
+	font-weight: 500;
+	color: var(--color-main-text);
+	white-space: nowrap;
+}
+
+.option-group input[type="checkbox"] {
+	margin-right: 8px;
+}
+
+.option-group input[type="number"] {
+	width: 80px;
+	padding: 4px 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+}
+
+.voorzieningen-sync-info {
+	margin-top: 16px;
+	padding: 12px;
+	background-color: var(--color-background-dark);
+	border-radius: var(--border-radius);
+	font-size: 14px;
+}
+
+.voorzieningen-sync-info p {
+	margin: 0 0 8px 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.voorzieningen-sync-info p:last-child {
+	margin-bottom: 0;
+}
+
+.batch-performance {
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid var(--color-border);
+}
+
+.batch-performance h5 {
+	margin: 0 0 8px 0;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.batch-performance ul {
+	margin: 0;
+	padding-left: 20px;
+}
+
+.batch-performance li {
+	margin-bottom: 4px;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
 }
 </style>

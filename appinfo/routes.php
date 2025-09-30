@@ -130,6 +130,7 @@ return [
         // Organization Synchronization focused endpoints
         ['name' => 'settings#getSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'GET'],
         ['name' => 'settings#updateSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'POST'],
+        ['name' => 'settings#syncOrganisations', 'url' => '/api/settings/sync/organisations', 'verb' => 'POST'],
         
         // Contactpersonen Management endpoints
         ['name' => 'contactpersonen#getContactpersonen', 'url' => '/api/contactpersonen/organisation/{organisationId}', 'verb' => 'GET'],
@@ -155,7 +156,10 @@ return [
         // AangebodenGebruik API endpoints for filtering gebruiks by organization involvement
         ['name' => 'aangebodenGebruik#getGebruiksWhereAfnemer', 'url' => '/api/aangeboden-gebruik/afnemer', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#getGebruiksWhereDeelnemers', 'url' => '/api/aangeboden-gebruik/deelnemers', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getAllGebruiksForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getSingleGebruikForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#setGebruikSelfToActiveOrg', 'url' => '/api/aangeboden-gebruik/{gebruikId}/set-self', 'verb' => 'PUT'],
+        ['name' => 'aangebodenGebruik#deleteGebruikAsAfnemer', 'url' => '/api/aangeboden-gebruik/{gebruikId}/deny', 'verb' => 'DELETE'],
         ['name' => 'aangebodenGebruik#getApiDocumentation', 'url' => '/api/aangeboden-gebruik/docs', 'verb' => 'GET'],
 
     ],
