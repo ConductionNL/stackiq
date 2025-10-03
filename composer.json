@@ -40,7 +40,6 @@
 		"twig/twig": "^3.8"
 	},
 	"require-dev": {
-		"nextcloud/ocp": "dev-stable29",
 		"phpunit/phpunit": "^10.5",
 		"roave/security-advisories": "dev-latest"
 	},

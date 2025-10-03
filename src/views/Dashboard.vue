@@ -6,10 +6,10 @@
 				<div class="headerContent">
 					<h1 class="dashboardTitle">
 						<ViewDashboard :size="32" />
-						{{ t('softwarecatalog', 'Dashboard') }}
+						Dashboard
 					</h1>
 					<p class="dashboardDescription">
-						{{ t('softwarecatalog', 'Overview of your software catalog and configurations') }}
+						Overzicht van uw softwarecatalogus en configuraties
 					</p>
 				</div>
 				<div class="headerActions">
@@ -18,31 +18,51 @@
 							<NcLoadingIcon v-if="loading" :size="20" />
 							<Refresh v-else :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Refresh') }}
+						Vernieuwen
 					</NcButton>
 				</div>
 			</div>
 		</div>
 
 		<div v-if="!loading" class="dashboardContent">
+			<!-- Info Box -->
+			<NcNoteCard type="info" class="infoBox">
+				<div class="infoBoxContent">
+					<h3 class="infoBoxTitle">Beheer van Organisaties</h3>
+					<p class="infoBoxText">
+						Organisaties kunnen worden geaccepteerd en beheerd via de organisaties pagina. Het aanmaken en bewerken van gebruikers gaat ook via de organisatie pagina, omdat deze onderdeel zijn van organisaties.
+					</p>
+					<div class="infoBoxActions">
+						<NcButton
+							type="primary"
+							@click="navigateToOrganizations">
+							<template #icon>
+								<OfficeBuildingOutline :size="16" />
+							</template>
+							Ga naar Organisaties
+						</NcButton>
+					</div>
+				</div>
+			</NcNoteCard>
+
 			<!-- Object Statistics Tables -->
 			<div class="objectStatistics">
-				<h2 class="sectionTitle">{{ t('softwarecatalog', 'Object Statistics') }}</h2>
-				<p class="sectionDescription">{{ t('softwarecatalog', 'Overview of objects stored in configured registers') }}</p>
+				<h2 class="sectionTitle">Object Statistieken</h2>
+				<p class="sectionDescription">Overzicht van objecten opgeslagen in geconfigureerde registers</p>
 				
 				<div class="statisticsTablesRow">
 					<!-- First Table -->
 					<div class="statisticsTableContainer">
 						<div class="statisticsTableHeader">
-							<span class="lastUpdated">{{ t('softwarecatalog', 'Last updated: {date}', { date: formatDate(new Date()) }) }}</span>
+							<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
 						</div>
 						
 						<table class="objectStatisticsTable">
 							<thead>
 								<tr>
-									<th>{{ t('softwarecatalog', 'Object Type') }}</th>
-									<th class="countHeader">{{ t('softwarecatalog', 'Count') }}</th>
-									<th class="manageHeader">{{ t('softwarecatalog', 'Manage') }}</th>
+									<th>Object Type</th>
+									<th class="countHeader">Aantal</th>
+									<th class="manageHeader">Beheren</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -51,14 +71,19 @@
 									<td class="countCell">{{ stat.count.toLocaleString() }}</td>
 									<td class="manageCell">
 										<NcButton
+											v-if="stat.slug === 'organisatie'"
 											size="small"
 											type="tertiary"
 											@click="navigateToObjectType(stat.slug)">
 											<template #icon>
 												<component :is="getIconForObjectType(stat.slug)" :size="16" />
 											</template>
-											Manage
+											Beheren
 										</NcButton>
+										<span v-else class="disabledManage">
+											<component :is="getIconForObjectType(stat.slug)" :size="16" />
+											<span class="strikethrough">Beheren</span>
+										</span>
 									</td>
 								</tr>
 							</tbody>
@@ -68,15 +93,15 @@
 					<!-- Second Table -->
 					<div class="statisticsTableContainer">
 						<div class="statisticsTableHeader">
-							<span class="lastUpdated">{{ t('softwarecatalog', 'Last updated: {date}', { date: formatDate(new Date()) }) }}</span>
+							<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
 						</div>
 						
 						<table class="objectStatisticsTable">
 							<thead>
 								<tr>
-									<th>{{ t('softwarecatalog', 'Object Type') }}</th>
-									<th class="countHeader">{{ t('softwarecatalog', 'Count') }}</th>
-									<th class="manageHeader">{{ t('softwarecatalog', 'Manage') }}</th>
+									<th>Object Type</th>
+									<th class="countHeader">Aantal</th>
+									<th class="manageHeader">Beheren</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -85,14 +110,19 @@
 									<td class="countCell">{{ stat.count.toLocaleString() }}</td>
 									<td class="manageCell">
 										<NcButton
+											v-if="stat.slug === 'organisatie'"
 											size="small"
 											type="tertiary"
 											@click="navigateToObjectType(stat.slug)">
 											<template #icon>
 												<component :is="getIconForObjectType(stat.slug)" :size="16" />
 											</template>
-											Manage
+											Beheren
 										</NcButton>
+										<span v-else class="disabledManage">
+											<component :is="getIconForObjectType(stat.slug)" :size="16" />
+											<span class="strikethrough">Beheren</span>
+										</span>
 									</td>
 								</tr>
 							</tbody>
@@ -106,13 +136,13 @@
 		<!-- Loading State -->
 		<div v-else class="dashboardLoading">
 			<NcLoadingIcon :size="64" />
-			<p>{{ t('softwarecatalog', 'Loading dashboard...') }}</p>
+			<p>Dashboard laden...</p>
 		</div>
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { objectStore, navigationStore } from '../store/store.js'
 
 // Icons
@@ -143,6 +173,7 @@ export default {
 	components: {
 		NcButton,
 		NcLoadingIcon,
+		NcNoteCard,
 		// Icons
 		ViewDashboard,
 		OfficeBuildingOutline,
@@ -343,6 +374,14 @@ export default {
 		},
 
 		/**
+		 * Navigate to organizations page
+		 * @return {void}
+		 */
+		navigateToOrganizations() {
+			navigationStore.setSelected('organisaties')
+		},
+
+		/**
 		 * Navigate to configuration page - opens admin settings in new tab
 		 * @param {string} route - Route to navigate to (legacy parameter)
 		 * @return {void}
@@ -458,6 +497,35 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 32px;
+}
+
+/* Info Box Styles */
+.infoBox {
+	margin-bottom: 24px;
+}
+
+.infoBoxContent {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.infoBoxTitle {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.infoBoxText {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.infoBoxActions {
+	display: flex;
+	justify-content: flex-start;
+	margin-top: 8px;
 }
 
 /* Removed old statistics card styles - replaced with table */
@@ -605,6 +673,18 @@ export default {
 
 .manageCell {
 	text-align: right;
+}
+
+.disabledManage {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--color-text-lighter);
+	opacity: 0.6;
+}
+
+.strikethrough {
+	text-decoration: line-through;
 }
 
 @media (max-width: 768px) {
