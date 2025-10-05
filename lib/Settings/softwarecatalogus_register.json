@@ -133,7 +133,7 @@
                 "slug": "property",
                 "title": "Property",
                 "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
-                "version": "0.0.6",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Tag",
                 "required": [
@@ -146,6 +146,7 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 200,
+                        "facetable": false,
                         "title": "Naam"
                     },
                     "type": {
@@ -157,12 +158,14 @@
                             "boolean",
                             "date"
                         ],
+                        "facetable": false,
                         "title": "Type"
                     },
                     "value": {
                         "description": "Waarde van de eigenschap",
                         "type": "string",
                         "maxLength": 1000,
+                        "facetable": false,
                         "title": "Waarde"
                     },
                     "lang": {
@@ -170,6 +173,7 @@
                         "type": "string",
                         "minLength": 2,
                         "maxLength": 2,
+                        "facetable": false,
                         "title": "Taal"
                     }
                 },
@@ -235,7 +239,9 @@
                     ]
                 },
                 "deleted": null,
-                "configuration": null,
+                "configuration": {
+                    "autoPublish": false
+                },
                 "searchable": true
             },
             "sector": {
@@ -243,7 +249,7 @@
                 "slug": "sector",
                 "title": "Sector",
                 "description": "Schema voor sectoren binnen de softwarecatalogus",
-                "version": "0.0.7",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Domain",
                 "required": [
@@ -337,7 +343,8 @@
                 "deleted": null,
                 "configuration": {
                     "objectNameField": "naam",
-                    "objectDescriptionField": "beschrijving"
+                    "objectDescriptionField": "beschrijving",
+                    "autoPublish": false
                 },
                 "searchable": true
             },
@@ -346,7 +353,7 @@
                 "slug": "product",
                 "title": "Product",
                 "description": "Een product, suite of monobrand",
-                "version": "0.0.87",
+                "version": "0.0.89",
                 "summary": "",
                 "icon": "ApplicationCog",
                 "required": [
@@ -491,7 +498,7 @@
                         "objectConfiguration": [],
                         "fileConfiguration": [],
                         "oneOf": [],
-                        "facetable": false,
+                        "facetable": true,
                         "title": "Hosting vorm",
                         "example": [
                             "SaaS"
@@ -508,7 +515,7 @@
                             "US",
                             "Elders"
                         ],
-                        "facetable": false,
+                        "facetable": true,
                         "title": "In welk land wordt de data opgeslagen?",
                         "example": "Bijvoorbeeld: NL"
                     },
@@ -523,7 +530,7 @@
                             "US",
                             "Elders"
                         ],
-                        "facetable": false,
+                        "facetable": true,
                         "title": "Waar wordt de applicatie gehost?",
                         "example": "Bijvoorbeeld: NL"
                     },
@@ -689,7 +696,7 @@
                 "slug": "dienst",
                 "title": "Dienst",
                 "description": "Een specifiek aanbod van een dienst op een of meerdere producten door een leverancier",
-                "version": "0.0.43",
+                "version": "0.0.44",
                 "summary": "",
                 "icon": "Handshake",
                 "required": [
@@ -962,7 +969,7 @@
                 "slug": "kwetsbaarheid",
                 "title": "Kwetsbaarheid",
                 "description": "Schema voor kwetsbaarheden",
-                "version": "1.0.16",
+                "version": "1.0.17",
                 "summary": "",
                 "icon": "ShieldAlert",
                 "required": [
@@ -1107,7 +1114,8 @@
                 "configuration": {
                     "objectNameField": "naam",
                     "objectSummaryField": "beschrijvingKort",
-                    "objectDescriptionField": "beschrijvingLang"
+                    "objectDescriptionField": "beschrijvingLang",
+                    "autoPublish": false
                 },
                 "searchable": true
             },
@@ -1398,7 +1406,7 @@
                 "slug": "organisatie",
                 "title": "Organisatie",
                 "description": "Een organisatie die voorzieningen aanbiedt",
-                "version": "0.0.96",
+                "version": "0.0.98",
                 "summary": "",
                 "icon": "OfficeBuildingOutline",
                 "required": [
@@ -1819,7 +1827,7 @@
                         "type": "string",
                         "visible": false,
                         "hideOnCollection": true,
-                        "facetable": false,
+                        "facetable": true,
                         "order": 14,
                         "minLength": null,
                         "maxLength": null,
@@ -1955,7 +1963,7 @@
                         "CE-markering documenten",
                         "Aanbestedingsdocumentatie"
                     ],
-                    "autoPublish": true
+                    "autoPublish": false
                 },
                 "searchable": true
             },
@@ -2376,7 +2384,8 @@
                         "DPIA",
                         "Contract",
                         "Verwerkingsovereenkomst"
-                    ]
+                    ],
+                    "autoPublish": false
                 },
                 "searchable": true
             },
@@ -2385,7 +2394,7 @@
                 "slug": "contract",
                 "title": "Contract",
                 "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik",
-                "version": "0.0.9",
+                "version": "0.0.10",
                 "summary": "",
                 "icon": "FileDocumentEdit",
                 "required": [
@@ -2616,7 +2625,8 @@
                 "deleted": null,
                 "configuration": {
                     "objectNameField": "contractNummer",
-                    "objectDescriptionField": "contractType"
+                    "objectDescriptionField": "contractType",
+                    "autoPublish": false
                 },
                 "searchable": true
             },
@@ -2625,7 +2635,7 @@
                 "slug": "koppeling",
                 "title": "Koppeling",
                 "description": "Schema voor koppelingen tussen modules en systemen. Er moet \u00f3f ModuleB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
-                "version": "0.0.7",
+                "version": "0.0.10",
                 "summary": "",
                 "icon": "Link",
                 "required": [],
@@ -2634,6 +2644,7 @@
                         "description": "Naam van de koppeling",
                         "type": "string",
                         "order": 1,
+                        "facetable": false,
                         "title": "Naam",
                         "table": {
                             "default": true
@@ -2647,6 +2658,7 @@
                             "default": true
                         },
                         "order": 5,
+                        "facetable": false,
                         "title": "Samenvatting",
                         "example": "Bijvoorbeeld: Korte beschrijving van de koppeling"
                     },
@@ -2655,6 +2667,7 @@
                         "type": "string",
                         "format": "markdown",
                         "order": 6,
+                        "facetable": false,
                         "title": "Beschrijving",
                         "example": "Bijvoorbeeld: Uitgebreide beschrijving van de koppeling"
                     },
@@ -2662,6 +2675,7 @@
                         "description": "Het type koppeling, bijvoorbeeld 'bestandsoverdracht', 'digikoppeling', of 'api'.",
                         "type": "string",
                         "order": 1,
+                        "facetable": false,
                         "title": "Type",
                         "enum": [
                             "n.v.t.",
@@ -2678,6 +2692,7 @@
                         "description": "De status van de koppeling",
                         "type": "string",
                         "order": 3,
+                        "facetable": false,
                         "title": "Status",
                         "table": {
                             "default": true
@@ -2694,6 +2709,7 @@
                         "type": "string",
                         "format": "date",
                         "order": 4,
+                        "facetable": false,
                         "title": "Datum In Ontwikkeling",
                         "example": "Bijvoorbeeld: 2025-01-01"
                     },
@@ -2702,6 +2718,7 @@
                         "type": "string",
                         "format": "date",
                         "order": 5,
+                        "facetable": false,
                         "title": "Datum In Gebruik"
                     },
                     "datumEindeOndersteuning": {
@@ -2709,6 +2726,7 @@
                         "type": "string",
                         "format": "date",
                         "order": 6,
+                        "facetable": false,
                         "title": "Datum Einde Ondersteuning"
                     },
                     "datumTeruggetrokken": {
@@ -2716,6 +2734,7 @@
                         "type": "string",
                         "format": "date",
                         "order": 7,
+                        "facetable": false,
                         "title": "Datum Teruggetrokken"
                     },
                     "gegevensuitwisselingRichting": {
@@ -2734,6 +2753,7 @@
                         "description": "De module waarvan de gegevens uitgewisseld worden",
                         "type": "object",
                         "order": 9,
+                        "facetable": false,
                         "table": {
                             "default": true
                         },
@@ -2748,6 +2768,7 @@
                         "description": "De module waarnaar de gegevens uitgewisseld worden",
                         "type": "object",
                         "order": 10,
+                        "facetable": false,
                         "table": {
                             "default": true
                         },
@@ -2761,6 +2782,7 @@
                         "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
                         "type": "object",
                         "order": 11,
+                        "facetable": false,
                         "title": "Buitengemeentelijke Voorziening",
                         "objectConfiguration": {
                             "handling": "related-object",
@@ -2772,6 +2794,7 @@
                         "description": "Standaardversies die door deze koppeling ge\u00efmplementeerd worden",
                         "type": "array",
                         "order": 12,
+                        "facetable": false,
                         "title": "Standaard Versies",
                         "items": {
                             "type": "object",
@@ -2786,6 +2809,7 @@
                         "description": "Intermediaire module die wordt gebruikt voor de realisatie van deze koppeling",
                         "type": "object",
                         "order": 13,
+                        "facetable": false,
                         "title": "Gerealiseerd Met Intermediair Module",
                         "objectConfiguration": {
                             "handling": "related-object"
@@ -2837,7 +2861,7 @@
                 "configuration": {
                     "objectNameField": "type",
                     "objectDescriptionField": "beschrijvingKort",
-                    "autoPublish": true
+                    "autoPublish": false
                 },
                 "searchable": true
             },
@@ -2846,7 +2870,7 @@
                 "slug": "beoordeeling",
                 "title": "Beoordeeling",
                 "description": "Schema voor beoordelingen en waarderingen van producten, modules en diensten",
-                "version": "0.0.14",
+                "version": "0.0.15",
                 "summary": "",
                 "icon": "Star",
                 "required": [
@@ -2981,7 +3005,8 @@
                 "configuration": {
                     "objectNameField": "naam",
                     "objectSummaryField": "beschrijvingKort",
-                    "objectDescriptionField": "beschrijvingLang"
+                    "objectDescriptionField": "beschrijvingLang",
+                    "autoPublish": false
                 },
                 "searchable": true
             },
@@ -2989,7 +3014,7 @@
                 "slug": "element",
                 "title": "Element",
                 "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
-                "version": "0.0.5",
+                "version": "0.0.7",
                 "summary": "",
                 "icon": "Cube",
                 "required": [
@@ -3068,7 +3093,8 @@
                             "location": "",
                             "maxSize": 0
                         },
-                        "oneOf": []
+                        "oneOf": [],
+                        "facetable": false
                     },
                     "name-lang": {
                         "description": "De name-language van dit Element",
@@ -3092,7 +3118,8 @@
                             "location": "",
                             "maxSize": 0
                         },
-                        "oneOf": []
+                        "oneOf": [],
+                        "facetable": false
                     },
                     "documentation": {
                         "description": "De documentation van dit Element",
@@ -3116,7 +3143,8 @@
                             "location": "",
                             "maxSize": 0
                         },
-                        "oneOf": []
+                        "oneOf": [],
+                        "facetable": false
                     },
                     "documentation-lang": {
                         "description": "De documentation-language van dit Element",
@@ -3140,7 +3168,8 @@
                             "location": "",
                             "maxSize": 0
                         },
-                        "oneOf": []
+                        "oneOf": [],
+                        "facetable": false
                     },
                     "properties": {
                         "description": "De properties van dit Element",
@@ -3168,7 +3197,8 @@
                             "location": "",
                             "maxSize": 0
                         },
-                        "oneOf": []
+                        "oneOf": [],
+                        "facetable": false
                     }
                 },
                 "archive": [],
@@ -3184,7 +3214,8 @@
                 "deleted": null,
                 "configuration": {
                     "objectNameField": "name",
-                    "objectSummaryField": "summary"
+                    "objectSummaryField": "summary",
+                    "autoPublish": false
                 },
                 "searchable": true
             },
@@ -3192,7 +3223,7 @@
                 "slug": "view",
                 "title": "View",
                 "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
-                "version": "0.0.5",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Eye",
                 "required": [
@@ -3298,7 +3329,8 @@
                             "location": "",
                             "maxSize": 0
                         },
-                        "oneOf": []
+                        "oneOf": [],
+                        "facetable": false
                     },
                     "name-lang": {
                         "description": "De name-language van deze View",
@@ -3468,14 +3500,16 @@
                 "organisation": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null,
+                "configuration": {
+                    "autoPublish": false
+                },
                 "searchable": true
             },
             "model": {
                 "slug": "model",
                 "title": "Model",
                 "description": "AMEF Model - Volledig ArchiMate model met alle elementen, relaties en views",
-                "version": "0.0.41",
+                "version": "0.0.42",
                 "summary": "",
                 "icon": "Database",
                 "required": [
@@ -3892,14 +3926,16 @@
                 "organisation": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null,
+                "configuration": {
+                    "autoPublish": false
+                },
                 "searchable": true
             },
             "organization": {
                 "slug": "organization",
                 "title": "Organization",
                 "description": "AMEF Organization - Organisatie structuren uit het ArchiMate model",
-                "version": "0.0.5",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Building",
                 "required": [],
@@ -4064,14 +4100,16 @@
                 "organisation": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null,
+                "configuration": {
+                    "autoPublish": false
+                },
                 "searchable": true
             },
             "property-definition": {
                 "slug": "property-definition",
                 "title": "Property Definition",
                 "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
-                "version": "0.0.5",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Settings",
                 "required": [
@@ -4187,14 +4225,16 @@
                 "organisation": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null,
+                "configuration": {
+                    "autoPublish": false
+                },
                 "searchable": true
             },
             "relation": {
                 "slug": "relation",
                 "title": "Relation",
                 "description": "AMEF Relation - Relaties tussen architectuur elementen uit het ArchiMate model",
-                "version": "0.0.5",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "ArrowRight",
                 "required": [
@@ -4485,7 +4525,9 @@
                 "organisation": null,
                 "authorization": null,
                 "deleted": null,
-                "configuration": null,
+                "configuration": {
+                    "autoPublish": false
+                },
                 "searchable": true
             },
             "module": {
@@ -4493,7 +4535,7 @@
                 "slug": "module",
                 "title": "Module",
                 "description": "Een module is een onderdeel van een product (voorziening)",
-                "version": "0.0.7",
+                "version": "0.0.10",
                 "summary": "",
                 "icon": "Package",
                 "required": [
@@ -4559,7 +4601,7 @@
                         "objectConfiguration": [],
                         "fileConfiguration": [],
                         "oneOf": [],
-                        "facetable": false,
+                        "facetable": true,
                         "title": "Licentievorm"
                     },
                     "licentie": {
@@ -4793,7 +4835,7 @@
                 "slug": "compliancy",
                 "title": "Compliancy",
                 "description": "Schema voor compliancy en standaard ondersteuning",
-                "version": "0.0.6",
+                "version": "0.0.7",
                 "summary": "",
                 "icon": "CheckCircle",
                 "required": [],
@@ -4804,7 +4846,7 @@
                         "order": 1,
                         "title": "Standaard Versie",
                         "visible": true,
-                        "facetable": false,
+                        "facetable": true,
                         "objectConfiguration": {
                             "handling": "related-object",
                             "queryParams": "gemmaType=standaardversie"
