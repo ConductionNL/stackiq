@@ -224,6 +224,24 @@ export default {
 					},
 				},
 				{
+					id: 'publish',
+					label: 'Publiceren',
+					icon: PublishIcon,
+					condition: (organisatie) => !organisatie['@self']?.published,
+					handler: (organisatie) => {
+						this.publishOrganisatie(organisatie)
+					},
+				},
+				{
+					id: 'depublish',
+					label: 'Depubliceren',
+					icon: PublishOffIcon,
+					condition: (organisatie) => organisatie['@self']?.published,
+					handler: (organisatie) => {
+						this.depublishOrganisatie(organisatie)
+					},
+				},
+				{
 					id: 'delete',
 					label: 'Delete',
 					icon: TrashCanOutline,
@@ -349,7 +367,7 @@ export default {
 				// Fetch organisaties collection with contactpersonen extended
 				console.info('Fetching organisaties with contactpersonen...')
 				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,contactpersonen',
+					_extend: '@self.schema,@self.register,contactpersonen',
 					_limit: 20,
 					_page: 1
 				})
@@ -533,6 +551,50 @@ export default {
 			this.showOrganisationModal = false
 			this.selectedOrganisation = null
 			this.organisationModalMode = 'create'
+		},
+
+		/**
+		 * Publish an organisation
+		 * @param {object} organisatie - The organisation to publish
+		 * @return {Promise<void>}
+		 */
+		async publishOrganisatie(organisatie) {
+			try {
+				console.log('Publishing organisatie:', organisatie)
+				console.log('Organisatie @self:', organisatie['@self'])
+				console.log('Organisatie id:', organisatie.id)
+				console.log('Organisatie register:', organisatie['@self']?.register)
+				console.log('Organisatie schema:', organisatie['@self']?.schema)
+				
+				await objectStore.publishObject(organisatie)
+				// Refresh the organisation list to show updated status
+				await objectStore.fetchCollection('organisatie', {
+					_extend: '@self.schema,@self.register,contactpersonen',
+					_limit: 20,
+					_page: 1
+				})
+			} catch (error) {
+				console.error('Failed to publish organisation:', error)
+			}
+		},
+
+		/**
+		 * Depublish an organisation
+		 * @param {object} organisatie - The organisation to depublish
+		 * @return {Promise<void>}
+		 */
+		async depublishOrganisatie(organisatie) {
+			try {
+				await objectStore.depublishObject(organisatie)
+				// Refresh the organisation list to show updated status
+				await objectStore.fetchCollection('organisatie', {
+					_extend: '@self.schema,@self.register,contactpersonen',
+					_limit: 20,
+					_page: 1
+				})
+			} catch (error) {
+				console.error('Failed to depublish organisation:', error)
+			}
 		},
 	},
 
