@@ -790,4 +790,112 @@ class ContactpersoonService
             ]);
         }
     }
+
+    /**
+     * Enable user account for a contactpersoon
+     * @param string $contactpersoonId
+     * @throws \Exception
+     */
+    public function enableUserForContactpersoon(string $contactpersoonId): void
+    {
+        try {
+            $this->logger->info('ContactpersoonService: Enabling user for contactpersoon', [
+                'contactpersoonId' => $contactpersoonId
+            ]);
+
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                throw new \Exception('ObjectService not available');
+            }
+
+            $contactObject = $objectService->findByUuid($contactpersoonId);
+            if (!$contactObject) {
+                throw new \Exception('Contactpersoon not found');
+            }
+
+            $contactData = $contactObject->getObject();
+            $username = $contactData['username'] ?? null;
+
+            if (!$username) {
+                throw new \Exception('No username found for contactpersoon');
+            }
+
+            $userManager = \OC::$server->get('OCP\IUserManager');
+            $user = $userManager->get($username);
+
+            if (!$user) {
+                throw new \Exception('User not found in Nextcloud');
+            }
+
+            // Enable the user
+            $user->setEnabled(true);
+
+            $this->logger->info('ContactpersoonService: User enabled successfully', [
+                'contactpersoonId' => $contactpersoonId,
+                'username' => $username
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersoonService: Failed to enable user for contactpersoon', [
+                'contactpersoonId' => $contactpersoonId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Disable user account for a contactpersoon
+     * @param string $contactpersoonId
+     * @throws \Exception
+     */
+    public function disableUserForContactpersoon(string $contactpersoonId): void
+    {
+        try {
+            $this->logger->info('ContactpersoonService: Disabling user for contactpersoon', [
+                'contactpersoonId' => $contactpersoonId
+            ]);
+
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                throw new \Exception('ObjectService not available');
+            }
+
+            $contactObject = $objectService->findByUuid($contactpersoonId);
+            if (!$contactObject) {
+                throw new \Exception('Contactpersoon not found');
+            }
+
+            $contactData = $contactObject->getObject();
+            $username = $contactData['username'] ?? null;
+
+            if (!$username) {
+                throw new \Exception('No username found for contactpersoon');
+            }
+
+            $userManager = \OC::$server->get('OCP\IUserManager');
+            $user = $userManager->get($username);
+
+            if (!$user) {
+                throw new \Exception('User not found in Nextcloud');
+            }
+
+            // Disable the user
+            $user->setEnabled(false);
+
+            $this->logger->info('ContactpersoonService: User disabled successfully', [
+                'contactpersoonId' => $contactpersoonId,
+                'username' => $username
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersoonService: Failed to disable user for contactpersoon', [
+                'contactpersoonId' => $contactpersoonId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
 } 

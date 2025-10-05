@@ -503,15 +503,18 @@ export default {
 				if (userInfo) {
 					console.log(`Updating contactpersoon ${contactpersoonId} with user info:`, userInfo)
 					
-					// Update user object
-					if (contactpersoon.user) {
-						contactpersoon.user.hasUser = userInfo.hasUser
-						contactpersoon.user.username = userInfo.username
-						contactpersoon.user.groups = userInfo.groups || []
-						contactpersoon.user.disabled = !userInfo.enabled  // Map enabled to disabled
-						contactpersoon.user.displayName = userInfo.displayName
-						contactpersoon.user.lastLogin = userInfo.lastLogin
+					// Ensure user object exists
+					if (!contactpersoon.user) {
+						contactpersoon.user = {}
 					}
+					
+					// Update user object
+					contactpersoon.user.hasUser = userInfo.hasUser
+					contactpersoon.user.username = userInfo.username
+					contactpersoon.user.groups = userInfo.groups || []
+					contactpersoon.user.disabled = !userInfo.enabled  // Map enabled to disabled
+					contactpersoon.user.displayName = userInfo.displayName
+					contactpersoon.user.lastLogin = userInfo.lastLogin
 					
 					// Update data object for consistency
 					if (contactpersoon.data) {
