@@ -8,6 +8,7 @@
  * @license AGPL-3.0-or-later
  * @version 1.0.0
  * @link https://github.com/opencatalogi/softwarecatalog
+ * Updated: Fixed AlertTriangle import to use Alert icon
  */
 
 <template>
@@ -15,6 +16,11 @@
 		<div class="cardHeader">
 			<h2 v-tooltip.bottom="getOrganisatieSummary(item)">
 				<component :is="cardIcon" :size="20" />
+				<Alert 
+					v-if="!isOrganisatiePublished(item)"
+					v-tooltip="'Organisatie is niet gepubliceerd'"
+					class="unpublished-warning-icon"
+					:size="20" />
 				{{ getOrganisatieTitle(item) }}
 			</h2>
 			<div class="cardHeaderActions">
@@ -112,6 +118,7 @@
 			<!-- Contactpersonen View -->
 			<div v-else-if="currentView === 'contactpersonen'" class="contactpersonenView">
 				<ContactpersonenList 
+					ref="contactpersonenList"
 					:organisation-id="item.id || item.uuid" 
 					:organisation-data="item" />
 
@@ -146,6 +153,7 @@ import Email from 'vue-material-design-icons/Email.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import Certificate from 'vue-material-design-icons/Certificate.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
+import Alert from 'vue-material-design-icons/Alert.vue'
 import ContactpersonenList from '../ContactpersonenList.vue'
 
 export default {
@@ -160,6 +168,7 @@ export default {
 		Phone,
 		Certificate,
 		AccountMultiple,
+		Alert,
 		ContactpersonenList,
 	},
 	props: {
@@ -190,6 +199,32 @@ export default {
 			currentView: 'organisatie', // 'organisatie' or 'contactpersonen'
 		}
 	},
+
+	watch: {
+		/**
+		 * Watch for changes in currentView and refresh user data when switching to contactpersonen
+		 */
+		currentView: {
+			handler: async function(newView, oldView) {
+				// Only trigger when actually switching TO contactpersonen view from a different view
+				if (newView === 'contactpersonen' && oldView && oldView !== 'contactpersonen') {
+					console.log('Switched to contactpersonen view, loading user info and groups...')
+					// Use nextTick to ensure the component is fully rendered
+					await this.$nextTick()
+					if (this.$refs.contactpersonenList && this.$refs.contactpersonenList.loadUserInfoAndGroups) {
+						// Add a small delay to prevent rapid successive calls
+						setTimeout(async () => {
+							if (this.$refs.contactpersonenList && this.$refs.contactpersonenList.loadUserInfoAndGroups) {
+								await this.$refs.contactpersonenList.loadUserInfoAndGroups()
+							}
+						}, 100)
+					}
+				}
+			},
+			immediate: false
+		}
+	},
+
 	methods: {
 		/**
 		 * Get the display title for the organisation
@@ -251,8 +286,12 @@ export default {
 		/**
 		 * Toggle between organisation and contactpersonen views
 		 */
-		toggleView() {
-			this.currentView = this.currentView === 'organisatie' ? 'contactpersonen' : 'organisatie'
+		async toggleView() {
+			const newView = this.currentView === 'organisatie' ? 'contactpersonen' : 'organisatie'
+			this.currentView = newView
+			
+			// Note: The watch handler will handle refreshing user data when switching to contactpersonen view
+			// No need to duplicate the logic here
 		},
 
 		/**
@@ -283,6 +322,15 @@ export default {
 			}
 			
 			return 'Geen adres beschikbaar'
+		},
+
+		/**
+		 * Check if the organisation is published
+		 * @param {object} item - The organisation item
+		 * @return {boolean} True if published and not depublished, false otherwise
+		 */
+		isOrganisatiePublished(item) {
+			return !!(item?.['@self']?.published && !item?.['@self']?.depublished)
 		},
 	},
 }
@@ -318,6 +366,11 @@ export default {
 	flex: 1;
 	min-width: 0;
 	color: var(--color-main-text);
+}
+
+.unpublished-warning-icon {
+	color: #ff9800;
+	margin-right: 4px;
 }
 
 .cardHeaderActions {
