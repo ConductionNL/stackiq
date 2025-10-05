@@ -280,6 +280,81 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		},
 
 		/**
+		 * Get bulk user info for multiple contact persons
+		 * @param {Array} contactpersoonIds - Array of contact person IDs
+		 * @return {Promise<Object>} Object with user info keyed by contact person ID
+		 */
+		async getBulkUserInfo(contactpersoonIds) {
+			try {
+				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/bulk-user-info')
+
+				const response = await fetch(url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken
+					},
+					body: JSON.stringify({
+						contactpersoonIds: contactpersoonIds
+					})
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`)
+				}
+
+				const data = await response.json()
+
+				if (data.success) {
+					console.log('Successfully fetched bulk user info:', data)
+					return data.userInfo || {}
+				} else {
+					throw new Error(data.message || 'Failed to fetch bulk user info')
+				}
+			} catch (error) {
+				console.error('Error fetching bulk user info:', error)
+				this.error = error.message
+				return {}
+			}
+		},
+
+		/**
+		 * Fetch contact persons with user details for an organization
+		 * @param {string} organizationUuid - The organization UUID
+		 * @return {Promise<Array>} Array of contact persons with user details
+		 */
+		async fetchContactPersonsWithUserDetails(organizationUuid) {
+			try {
+				const url = generateUrl(`/apps/softwarecatalog/api/contactpersonen/organisation/${organizationUuid}/with-user-details`)
+
+				const response = await fetch(url, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken
+					}
+				})
+
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`)
+				}
+
+				const data = await response.json()
+
+				if (data.success) {
+					console.log('Successfully fetched contact persons with user details:', data)
+					return data.data || []
+				} else {
+					throw new Error(data.message || 'Failed to fetch contact persons with user details')
+				}
+			} catch (error) {
+				console.error('Error fetching contact persons with user details:', error)
+				this.error = error.message
+				return []
+			}
+		},
+
+		/**
 		 * Fetch available groups for user assignment (fallback method)
 		 * @return {Promise<void>}
 		 */
@@ -325,6 +400,90 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 */
 		clearContactpersonen() {
 			this.contactpersonen = []
+		},
+
+		/**
+		 * Disable a user account
+		 * @param {string} contactpersoonId - The contactpersoon UUID to disable
+		 * @return {Promise<void>}
+		 */
+		async disableUser(contactpersoonId) {
+			try {
+				const response = await fetch(`/index.php/apps/softwarecatalog/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/disable`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				})
+
+				if (!response.ok) {
+					const errorData = await response.json()
+					throw new Error(errorData.message || 'Failed to disable user')
+				}
+			} catch (error) {
+				console.error('Error disabling user:', error)
+				throw error
+			}
+		},
+
+		/**
+		 * Enable a user account
+		 * @param {string} contactpersoonId - The contactpersoon UUID to enable
+		 * @return {Promise<void>}
+		 */
+		async enableUser(contactpersoonId) {
+			try {
+				const response = await fetch(`/index.php/apps/softwarecatalog/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/enable`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				})
+
+				if (!response.ok) {
+					const errorData = await response.json()
+					throw new Error(errorData.message || 'Failed to enable user')
+				}
+			} catch (error) {
+				console.error('Error enabling user:', error)
+				throw error
+			}
+		},
+
+		/**
+		 * Get user info for multiple contactpersonen in one request
+		 * @param {Array<string>} contactpersoonIds - Array of contactpersoon UUIDs
+		 * @return {Promise<Object>} Bulk user info object keyed by contactpersoon ID
+		 */
+		async getBulkUserInfo(contactpersoonIds) {
+			try {
+				console.log('Store: Getting bulk user info for IDs:', contactpersoonIds)
+				
+				const response = await fetch('/index.php/apps/softwarecatalog/api/contactpersonen/bulk-user-info', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						contactpersoonIds: contactpersoonIds
+					})
+				})
+
+				console.log('Store: Bulk user info response status:', response.status)
+
+				if (!response.ok) {
+					const errorData = await response.json()
+					console.error('Store: Bulk user info error response:', errorData)
+					throw new Error(errorData.message || 'Failed to get bulk user info')
+				}
+
+				const data = await response.json()
+				console.log('Store: Bulk user info success response:', data)
+				return data.userInfo || {}
+			} catch (error) {
+				console.error('Store: Error getting bulk user info:', error)
+				throw error
+			}
 		}
 	}
 })

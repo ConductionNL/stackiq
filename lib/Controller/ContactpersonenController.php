@@ -6,6 +6,7 @@ namespace OCA\SoftwareCatalog\Controller;
 
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -74,12 +75,18 @@ class ContactpersonenController extends Controller
     private LoggerInterface $logger;
 
     /**
+     * Contactpersoon service for business logic
+     */
+    private ContactpersoonService $contactpersoonService;
+
+    /**
      * Constructor
      *
      * @param string                $appName              The app name
      * @param IRequest              $request              The request object
      * @param SettingsService       $settingsService      Settings service
      * @param ContactPersonHandler  $contactPersonHandler Contact person handler
+     * @param ContactpersoonService $contactpersoonService Contactpersoon service
      * @param IUserManager          $userManager          User manager
      * @param IGroupManager         $groupManager         Group manager
      * @param ISecureRandom         $secureRandom         Secure random generator
@@ -90,6 +97,7 @@ class ContactpersonenController extends Controller
         IRequest $request,
         SettingsService $settingsService,
         ContactPersonHandler $contactPersonHandler,
+        ContactpersoonService $contactpersoonService,
         IUserManager $userManager,
         IGroupManager $groupManager,
         ISecureRandom $secureRandom,
@@ -98,6 +106,7 @@ class ContactpersonenController extends Controller
         parent::__construct($appName, $request);
         $this->settingsService = $settingsService;
         $this->contactPersonHandler = $contactPersonHandler;
+        $this->contactpersoonService = $contactpersoonService;
         $this->userManager = $userManager;
         $this->groupManager = $groupManager;
         $this->secureRandom = $secureRandom;
@@ -139,7 +148,8 @@ class ContactpersonenController extends Controller
                 $userInfo = [
                     'hasUser' => !empty($username),
                     'username' => $username,
-                    'groups' => []
+                    'groups' => [],
+                    'disabled' => false
                 ];
 
                 if (!empty($username)) {
@@ -149,6 +159,9 @@ class ContactpersonenController extends Controller
                         $userInfo['groups'] = array_map(function($group) {
                             return $group->getGID();
                         }, $userGroups);
+                        
+                        // Get the disabled status from Nextcloud
+                        $userInfo['disabled'] = !$user->isEnabled();
                     }
                 }
 
@@ -249,7 +262,7 @@ class ContactpersonenController extends Controller
                 ]);
                 
                 // Call the ContactPersonHandler to update groups based on contact data
-                $this->contactPersonHandler->updateUserGroupsFromContactData($user->getUID(), $contactData);
+                $this->contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
             }
 
             // Update the contactpersoon object with the username
@@ -464,6 +477,76 @@ class ContactpersonenController extends Controller
     }
 
     /**
+     * Get contact persons for an organization with user details
+     *
+     * Returns all contact persons linked to a specific organization,
+     * with their corresponding Nextcloud user details spliced in.
+     *
+     * @param string $organizationUuid The organization UUID
+     * @return JSONResponse JSON response containing contact persons with user details
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): JSONResponse
+    {
+        try {
+            $this->logger->info('ContactpersonenController: Getting contact persons with user details for organization', [
+                'organizationUuid' => $organizationUuid
+            ]);
+
+            // Validate organization UUID
+            if (empty($organizationUuid)) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Organization UUID is required'
+                ], 400);
+            }
+
+            // Get contact persons with user details using the service
+            $contactPersons = $this->contactpersoonService->getContactPersonsWithUserDetailsForOrganization($organizationUuid);
+
+            // Convert objects to arrays for JSON response
+            $contactPersonsData = [];
+            foreach ($contactPersons as $contactPerson) {
+                $contactPersonsData[] = [
+                    'id' => $contactPerson->getId(),
+                    'uuid' => $contactPerson->getUuid(),
+                    'object' => $contactPerson->getObject(),
+                    'register' => $contactPerson->getRegister(),
+                    'schema' => $contactPerson->getSchema(),
+                    'created' => $contactPerson->getCreated(),
+                    'modified' => $contactPerson->getModified()
+                ];
+            }
+
+            $this->logger->info('ContactpersonenController: Successfully retrieved contact persons with user details', [
+                'organizationUuid' => $organizationUuid,
+                'contactPersonCount' => count($contactPersonsData)
+            ]);
+
+            return new JSONResponse([
+                'success' => true,
+                'data' => $contactPersonsData,
+                'count' => count($contactPersonsData),
+                'organizationUuid' => $organizationUuid
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersonenController: Failed to get contact persons with user details for organization', [
+                'organizationUuid' => $organizationUuid,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get contact persons with user details: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get user information and available groups for a specific contactpersoon
      *
      * Returns user information including current groups and available groups
@@ -501,10 +584,11 @@ class ContactpersonenController extends Controller
             $userInfo = [
                 'hasUser' => !empty($username),
                 'username' => $username,
-                'groups' => []
+                'groups' => [],
+                'disabled' => false
             ];
 
-            // If user exists, get their current groups
+            // If user exists, get their current groups and disabled status
             if (!empty($username)) {
                 $user = $this->userManager->get($username);
                 if ($user) {
@@ -517,6 +601,9 @@ class ContactpersonenController extends Controller
                             $userInfo['groups'][] = $groupId;
                         }
                     }
+                    
+                    // Get the disabled status from Nextcloud
+                    $userInfo['disabled'] = !$user->isEnabled();
                 }
             }
 
@@ -620,6 +707,128 @@ class ContactpersonenController extends Controller
             return new JSONResponse([
                 'success' => false,
                 'message' => 'Failed to retrieve available groups: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Disable a user account
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param string $contactpersoonId
+     * @return JSONResponse
+     */
+    public function disableUser(string $contactpersoonId): JSONResponse {
+        try {
+            // Delegate to service
+            $this->contactpersoonService->disableUserForContactpersoon($contactpersoonId);
+            
+            $this->logger->info('User account disabled', [
+                'contactpersoonId' => $contactpersoonId,
+                'disabled_by' => $this->userId
+            ]);
+            return new JSONResponse(['success' => true, 'message' => 'User account disabled successfully']);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to disable user account', [
+                'contactpersoonId' => $contactpersoonId,
+                'error' => $e->getMessage()
+            ]);
+            return new JSONResponse(['success' => false, 'message' => 'Failed to disable user account: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Enable a user account
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @param string $contactpersoonId
+     * @return JSONResponse
+     */
+    public function enableUser(string $contactpersoonId): JSONResponse {
+        try {
+            // Delegate to service
+            $this->contactpersoonService->enableUserForContactpersoon($contactpersoonId);
+            
+            $this->logger->info('User account enabled', [
+                'contactpersoonId' => $contactpersoonId,
+                'enabled_by' => $this->userId
+            ]);
+            return new JSONResponse(['success' => true, 'message' => 'User account enabled successfully']);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to enable user account', [
+                'contactpersoonId' => $contactpersoonId,
+                'error' => $e->getMessage()
+            ]);
+            return new JSONResponse(['success' => false, 'message' => 'Failed to enable user account: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Test endpoint to debug bulk user info
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @return JSONResponse
+     */
+    public function testBulkUserInfo(): JSONResponse {
+        try {
+            $this->logger->info('testBulkUserInfo called', [
+                'objectService' => $this->objectService ? 'available' : 'null',
+                'userManager' => $this->userManager ? 'available' : 'null',
+                'groupManager' => $this->groupManager ? 'available' : 'null'
+            ]);
+
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Test endpoint working',
+                'services' => [
+                    'objectService' => $this->objectService ? 'available' : 'null',
+                    'userManager' => $this->userManager ? 'available' : 'null',
+                    'groupManager' => $this->groupManager ? 'available' : 'null'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Test endpoint error', ['error' => $e->getMessage()]);
+            return new JSONResponse(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get user info for multiple contactpersonen in one request
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @return JSONResponse
+     */
+    public function getBulkUserInfo(): JSONResponse {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $contactpersoonIds = $input['contactpersoonIds'] ?? [];
+
+            $this->logger->info('Controller: getBulkUserInfo called', [
+                'input' => $input,
+                'contactpersoonIds' => $contactpersoonIds
+            ]);
+
+            if (empty($contactpersoonIds) || !is_array($contactpersoonIds)) {
+                return new JSONResponse(['success' => false, 'message' => 'No contactpersoon IDs provided'], 400);
+            }
+
+            // Delegate to service
+            $bulkUserInfo = $this->contactpersoonService->getBulkUserInfo($contactpersoonIds);
+
+            return new JSONResponse([
+                'success' => true,
+                'userInfo' => $bulkUserInfo
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Controller: Failed to get bulk user info', [
+                'error' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get bulk user info: ' . $e->getMessage()
             ], 500);
         }
     }
