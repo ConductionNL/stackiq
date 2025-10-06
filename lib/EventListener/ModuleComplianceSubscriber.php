@@ -29,10 +29,10 @@ use Psr\Container\ContainerInterface;
 
 /**
  * Event subscriber for handling module compliance updates.
- * 
+ *
  * This subscriber listens for module object updates and automatically
  * synchronizes the 'standaarden' property based on linked compliance objects.
- * 
+ *
  * @category EventListener
  * @package  OCA\SoftwareCatalog\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
@@ -81,14 +81,14 @@ class ModuleComplianceSubscriber implements IEventListener
         } else {
             return;
         }
-        
+
         $objectId = $object->getId();
         $objectSchemaId = $object->getSchema();
 
         // Get module schema ID from configuration
         $settingsService = $this->container->get(SettingsService::class);
         $moduleSchemaId = $settingsService->getSchemaIdForObjectType('module');
-        
+
         if (!$moduleSchemaId) {
             $logger->debug('ModuleComplianceSubscriber: Module schema not configured, skipping', [
                 'objectId' => $objectId,

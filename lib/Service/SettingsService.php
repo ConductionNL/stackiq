@@ -199,7 +199,7 @@ class SettingsService
             $openRegisters = $this->getObjectService();
             if ($openRegisters !== null) {
                 $data['openRegisters'] = true;
-                
+
                 // Add additional error handling for OpenRegister internal errors
                 try {
                     $rawRegisters = $openRegisters->getRegisters();
@@ -371,7 +371,7 @@ class SettingsService
             // Step 2: Configure Voorzieningen using the consolidated method
             $this->logger->info('Running voorzieningen auto-configuration');
             $voorzieningenResult = $this->configureVoorzieningen();
-            
+
             if (!$voorzieningenResult['success']) {
                 $this->logger->warning('Voorzieningen auto-configuration failed', [
                     'message' => $voorzieningenResult['message'] ?? 'Unknown error'
@@ -386,7 +386,7 @@ class SettingsService
             // Step 3: Configure AMEF using the consolidated method
             $this->logger->info('Running AMEF auto-configuration');
             $amefResult = $this->configureAmef();
-            
+
             if (!$amefResult['success']) {
                 $this->logger->info('AMEF auto-configuration not completed', [
                     'message' => $amefResult['message'] ?? 'No AMEF register found'
@@ -459,9 +459,9 @@ class SettingsService
                     'organization' => 'organization_schema'
                     // NOTE: 'property' mapping removed - properties are never root-level AMEF objects, only nested within other elements
                 ];
-                
+
                 $amefKey = $amefKeyMap[$objectType] ?? null;
-                
+
                 if ($amefKey && isset($decodedAmefConfig[$amefKey])) {
                     $schemaId = $decodedAmefConfig[$amefKey];
                     if (!empty($schemaId)) {
@@ -475,11 +475,20 @@ class SettingsService
                 }
             }
         }
-        
+
+        $voorzieningenKeyMap = [
+            'module' => 'module_schema',
+            'compliancy' => 'compliancy_schema',
+        ];
+
+        if($result === null && $voorzieningenConfig[$voorzieningenKeyMap[$objectType]] !== null) {
+            $result = (int) $voorzieningenConfig[$voorzieningenKeyMap[$objectType]];
+        }
+
         // Check for AMEF register specific schemas (legacy individual keys)
         if ($result === null && $objectType === 'organization') {
             $schemaId = $this->config->getValueString($this->_appName, 'amef_organization_schema', '');
-            
+
             if (!empty($schemaId)) {
                 $result = (int) $schemaId;
             } else {
@@ -517,7 +526,7 @@ class SettingsService
         $this->schemaIdCache[$objectType] = $result;
 
         $lookupTime = round((microtime(true) - $startTime) * 1000, 2);
-        
+
         if ($result !== null) {
             $this->logger->info("SettingsService: Found schema ID and cached result", [
                 'objectType' => $objectType,
@@ -559,25 +568,25 @@ class SettingsService
         // Perform the actual lookup
         $registerId = $this->config->getValueString($this->_appName, "{$objectType}_register", '');
         $result = $registerId ? (int) $registerId : null;
-        
+
         // Cache the result (even if null) to avoid repeated lookups
         $this->registerIdCache[$objectType] = $result;
-        
+
         $this->logger->debug("SettingsService: Register ID looked up and cached", [
             'objectType' => $objectType,
             'result' => $result,
             'fromCache' => false
         ]);
-        
+
         return $result;
     }
 
     /**
      * Clear cached schema and register IDs
-     * 
+     *
      * This method should be called when configuration changes to ensure
      * cached values don't become stale.
-     * 
+     *
      * @return void
      */
     public function clearConfigurationCache(): void
@@ -586,10 +595,10 @@ class SettingsService
             'cached_schema_ids' => count($this->schemaIdCache),
             'cached_register_ids' => count($this->registerIdCache)
         ]);
-        
+
         $this->schemaIdCache = [];
         $this->registerIdCache = [];
-        
+
         $this->logger->info("SettingsService: Configuration cache cleared");
     }
 
@@ -898,7 +907,7 @@ class SettingsService
 
                         // Get the current app version dynamically
                         $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
-                        
+
                         // Log the import attempt for debugging
                         $this->logger->info('SettingsService: Attempting to import softwarecatalogus_register.json', [
                             'force' => $force,
@@ -906,7 +915,7 @@ class SettingsService
                             'current_version' => $currentAppVersion,
                             'data_size' => strlen(json_encode($softwareCatalogSettings))
                         ]);
-                        
+
                         $importResult = $configurationService->importFromJson(
                             data: $softwareCatalogSettings,
                             owner: null,
@@ -914,11 +923,11 @@ class SettingsService
                             version: $currentAppVersion,
                             force: $force
                         );
-                        
+
                         $this->logger->info('SettingsService: Import completed successfully', [
                             'import_result' => $importResult
                         ]);
-                        
+
                         $results['softwarecatalog_imported'] = true;
                         $results['import_result'] = $importResult;
                     } catch (\Exception $e) {
@@ -929,7 +938,7 @@ class SettingsService
                             'force_flag' => $force,
                             'app_id' => \OCA\SoftwareCatalog\AppInfo\Application::APP_ID
                         ]);
-                        
+
                         // In force mode, we want to surface import errors more prominently
                         if ($force) {
                             throw new \RuntimeException('Force import failed: ' . $e->getMessage(), 0, $e);
@@ -2640,7 +2649,7 @@ class SettingsService
                     'message' => 'Failed to retrieve registers: ' . $e->getMessage(),
                 ];
             }
-            
+
             if (empty($registers)) {
                 return [
                     'success' => false,
@@ -2695,17 +2704,17 @@ class SettingsService
             ];
 
             $config = [ 'register' => (string)($targetRegister['id'] ?? '') ];
-            
+
             $this->logger->info('DEBUG: About to process schemas', [
                 'register_id' => $targetRegister['id'],
                 'schemas_count' => count($targetRegister['schemas'] ?? []),
                 'slugToKey_map' => $slugToKey
             ]);
-            
+
             foreach (($targetRegister['schemas'] ?? []) as $schema) {
                 $originalSlug = $schema['slug'] ?? '';
                 $lowercaseSlug = strtolower($originalSlug);
-                
+
                 $this->logger->info('DEBUG: Processing schema', [
                     'original_slug' => $originalSlug,
                     'lowercase_slug' => $lowercaseSlug,
@@ -2713,10 +2722,10 @@ class SettingsService
                     'has_mapping_original' => isset($slugToKey[$originalSlug]) ? 'YES' : 'NO',
                     'has_mapping_lowercase' => isset($slugToKey[$lowercaseSlug]) ? 'YES' : 'NO'
                 ]);
-                
+
                 $mappingKey = null;
                 $usedSlug = null;
-                
+
                 // Try original case first, then lowercase
                 if (isset($slugToKey[$originalSlug])) {
                     $mappingKey = $slugToKey[$originalSlug];
@@ -2725,7 +2734,7 @@ class SettingsService
                     $mappingKey = $slugToKey[$lowercaseSlug];
                     $usedSlug = $lowercaseSlug;
                 }
-                
+
                 if ($mappingKey !== null) {
                     $config[$mappingKey] = (string)$schema['id'];
                     $this->logger->info('DEBUG: Mapped schema successfully', [
@@ -2740,7 +2749,7 @@ class SettingsService
                     ]);
                 }
             }
-            
+
             $this->logger->info('DEBUG: Final config before persist', ['config' => $config]);
 
             // Persist normalized config
@@ -2790,7 +2799,7 @@ class SettingsService
                     'message' => 'Failed to retrieve registers: ' . $e->getMessage(),
                 ];
             }
-            
+
             if (empty($registers)) {
                 return [
                     'success' => false,
@@ -2975,7 +2984,7 @@ class SettingsService
     {
         // Clear cache since voorzieningen config affects schema and register IDs
         $this->clearConfigurationCache();
-        
+
         // Persist only normalized structure
         $normalized = $this->normalizeVoorzieningenConfig($config);
         $jsonConfig = json_encode($normalized, JSON_PRETTY_PRINT);
@@ -3085,10 +3094,10 @@ class SettingsService
     {
         $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
         $this->config->setValueString($this->_appName, 'amef_config', $jsonConfig);
-        
+
         // Clear configuration cache when AMEF config is updated
         $this->clearConfigurationCache();
-        
+
         $this->logger->debug('SettingsService: AMEF configuration updated and cache cleared', [
             'config_keys' => array_keys($config),
             'cache_cleared' => true
@@ -3135,7 +3144,7 @@ class SettingsService
     {
         // Email config doesn't typically affect schema/register IDs, but clear cache for consistency
         $this->clearConfigurationCache();
-        
+
         $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
         $this->config->setValueString($this->_appName, 'email_config', $jsonConfig);
     }
@@ -3677,7 +3686,7 @@ class SettingsService
                 'voorzieningen_contactpersoon_register',
                 'voorzieningen_gebruiker_register', // Deprecated - no longer used
                 'voorzieningen_contactgegevens_register', // Deprecated - no longer used
-                
+
                 // Old Voorzieningen schema keys that no longer exist in register
                 'voorzieningen_voorziening_schema',
                 'voorzieningen_voorziening_aanbod_schema',
@@ -3704,7 +3713,7 @@ class SettingsService
                 'amef_elementss_schema',
                 'amef_organizationss_schema',
                 'amef_relationshipss_schema',
-                
+
                 // AMEF keys with hyphen format (old)
                 'amef_property-definition_schema',
                 'amef_extendview_schema', // No longer in register
@@ -4519,7 +4528,7 @@ class SettingsService
         $startTime = microtime(true);
         $batchSize = $options['batch_size'] ?? 500;
         $isDryRun = $options['dry_run'] ?? false;
-        
+
         try {
             $this->logger->info('Starting optimized organisation sync', [
                 'batch_size' => $batchSize,
@@ -4545,12 +4554,12 @@ class SettingsService
             // 2. BULK FETCH: Get all organisations in one query
             $organisationMapper = $this->container->get(\OCA\OpenRegister\Db\OrganisationMapper::class);
             $allOrganisations = $organisationMapper->findAllWithUserCount();
-            
+
             $this->logger->info('Retrieved organisations from OpenRegister', [
                 'total_organisations' => count($allOrganisations)
             ]);
 
-            // 3. BULK FETCH: Get existing organisaties in one query  
+            // 3. BULK FETCH: Get existing organisaties in one query
             $existingOrganisaties = $objectService->searchObjectsPaginated(
                 query: [
                     '@self' => [
@@ -4584,7 +4593,7 @@ class SettingsService
             $skippedCount = 0;
             foreach ($allOrganisations as $organisation) {
                 $orgUuid = $organisation->getUuid();
-                
+
                 // DEBUG: Log first few comparisons
                 if (count($organisationsToCreate) < 3) {
                     $this->logger->debug('UUID comparison debug', [
@@ -4593,7 +4602,7 @@ class SettingsService
                         'organisation_name' => $organisation->getName()
                     ]);
                 }
-                
+
                 // Skip if already exists (compare by UUID now that we force UUIDs)
                 if (isset($existingUuids[$orgUuid])) {
                     $skippedCount++;
@@ -4654,10 +4663,10 @@ class SettingsService
             $objectService->setSchema($voorzieningenConfig['organisatie_schema']);
 
             $batches = array_chunk($organisationsToCreate, $batchSize);
-            
+
             foreach ($batches as $batchIndex => $batch) {
                 $batchStartTime = microtime(true);
-                
+
                 try {
                     $this->logger->debug('Processing batch', [
                         'batch' => $batchIndex + 1,
@@ -4682,7 +4691,7 @@ class SettingsService
                     $results['created_count'] += $bulkResult['statistics']['saved'] ?? 0;
                     $results['failed_count'] += $bulkResult['statistics']['errors'] ?? 0;
                     $results['batches_processed']++;
-                    
+
                     $results['performance'][] = [
                         'batch' => $batchIndex + 1,
                         'objects' => count($batch),
@@ -4742,7 +4751,7 @@ class SettingsService
     private function determineOrganisationType(\OCA\OpenRegister\Db\Organisation $organisation): string
     {
         $name = strtolower($organisation->getName());
-        
+
         if (strpos($name, 'gemeente') !== false) {
             return 'Gemeente';
         } elseif (strpos($name, 'provincie') !== false) {

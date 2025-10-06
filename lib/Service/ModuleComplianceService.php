@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use Psr\Container\ContainerInterface;
@@ -25,10 +26,10 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for handling module compliance logic.
- * 
+ *
  * This service handles the automatic synchronization of module 'standaarden'
  * property based on linked compliance objects and their standaardversie references.
- * 
+ *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
@@ -65,7 +66,7 @@ class ModuleComplianceService
     {
         $startTime = microtime(true);
         $moduleId = $moduleObject->getId();
-        
+
         $this->logger->info('ModuleComplianceService: Starting module compliance update handling', [
             'moduleId' => $moduleId,
             'timestamp' => date('Y-m-d H:i:s')
@@ -80,8 +81,7 @@ class ModuleComplianceService
 
             // Get module data
             $moduleData = $moduleObject->getObject();
-            $moduleUuid = $moduleData['uuid'] ?? null;
-            
+            $moduleUuid = $moduleData['id'] ?? null;
             if (!$moduleUuid) {
                 $this->logger->warning('ModuleComplianceService: Module object has no UUID', [
                     'moduleId' => $moduleId
@@ -96,7 +96,7 @@ class ModuleComplianceService
 
             // Get compliance objects linked to this module
             $complianceObjects = $this->getComplianceObjectsForModule($moduleUuid);
-            
+
             $this->logger->debug('ModuleComplianceService: Found compliance objects', [
                 'moduleId' => $moduleId,
                 'moduleUuid' => $moduleUuid,
@@ -105,7 +105,7 @@ class ModuleComplianceService
 
             // Extract standaardversie UUIDs from compliance objects
             $standaardversieUuids = $this->extractStandaardversieUuids($complianceObjects);
-            
+
             $this->logger->debug('ModuleComplianceService: Extracted standaardversie UUIDs', [
                 'moduleId' => $moduleId,
                 'moduleUuid' => $moduleUuid,
@@ -115,7 +115,7 @@ class ModuleComplianceService
 
             // Get current standaarden from module
             $currentStandaarden = $moduleData['standaarden'] ?? [];
-            
+
             // Ensure currentStandaarden is an array
             if (!is_array($currentStandaarden)) {
                 $currentStandaarden = [];
@@ -139,7 +139,7 @@ class ModuleComplianceService
 
                 // Update the module with new standaarden
                 $this->updateModuleStandaarden($moduleObject, $standaardversieUuids);
-                
+
                 $this->logger->info('ModuleComplianceService: Successfully updated module standaarden', [
                     'moduleId' => $moduleId,
                     'moduleUuid' => $moduleUuid,
@@ -154,7 +154,7 @@ class ModuleComplianceService
 
             $endTime = microtime(true);
             $executionTime = round(($endTime - $startTime) * 1000, 2);
-            
+
             $this->logger->info('ModuleComplianceService: Completed module compliance update handling', [
                 'moduleId' => $moduleId,
                 'moduleUuid' => $moduleUuid,
@@ -188,7 +188,7 @@ class ModuleComplianceService
         try {
             // Get compliance schema ID from configuration
             $complianceSchemaId = $this->settingsService->getSchemaIdForObjectType('compliancy');
-            
+
             if (!$complianceSchemaId) {
                 $this->logger->warning('ModuleComplianceService: Compliance schema not configured', [
                     'moduleUuid' => $moduleUuid
@@ -244,7 +244,7 @@ class ModuleComplianceService
         foreach ($complianceObjects as $complianceObject) {
             $complianceData = $complianceObject->getObject();
             $standaardversie = $complianceData['standaardversie'] ?? null;
-            
+
             if ($standaardversie) {
                 // Handle both string UUID and object with UUID property
                 if (is_string($standaardversie)) {
@@ -282,7 +282,7 @@ class ModuleComplianceService
         // Sort both arrays to ignore order
         sort($array1);
         sort($array2);
-        
+
         return $array1 !== $array2;
     }
 
@@ -296,7 +296,7 @@ class ModuleComplianceService
      *
      * @throws \Exception If update fails
      */
-    private function updateModuleStandaarden(object $moduleObject, array $standaardversieUuids): void
+    private function updateModuleStandaarden(ObjectEntity $moduleObject, array $standaardversieUuids): void
     {
         try {
             // Get object service
@@ -307,17 +307,17 @@ class ModuleComplianceService
 
             // Get current module data
             $moduleData = $moduleObject->getObject();
-            
+
             // Update standaarden property
             $moduleData['standaarden'] = $standaardversieUuids;
-            
+
+            $moduleObject->setObject($moduleData);
+
             // Save the updated module
             $objectService->saveObject(
-                object: $moduleData,
-                extend: [],
-                register: null,
-                schema: $moduleObject->getSchema(),
-                uuid: $moduleObject->getUuid()
+                object: $moduleObject,
+                register: $moduleObject->getRegister(),
+                schema: $moduleObject->getSchema()
             );
 
             $this->logger->info('ModuleComplianceService: Updated module standaarden', [
