@@ -4553,7 +4553,7 @@
                 "slug": "module",
                 "title": "Module",
                 "description": "Een module is een onderdeel van een product (voorziening)",
-                "version": "0.0.10",
+                "version": "0.0.11",
                 "summary": "",
                 "icon": "Package",
                 "required": [
@@ -4753,6 +4753,18 @@
                                 "handling": "related-object"
                             },
                             "$ref": "#/components/schemas/compliancy"
+                        }
+                    },
+                    "standaarden": {
+                        "description": "Een array van id's van standaarden die deze module implementeert",
+                        "type": "array",
+                        "visible": true,
+                        "order": 23,
+                        "facetable": true,
+                        "title": "Standaarden",
+                        "hideOnForm": true,
+                        "items": {
+                            "type": "string"
                         }
                     },
                     "moduleVersies": {

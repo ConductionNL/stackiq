@@ -24,6 +24,7 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
 use OCA\SoftwareCatalog\EventListener\TestEventListener;
+use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -145,6 +146,10 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
 
+        // Register module compliance subscriber for module updates
+        $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
+
 
 
         // Organization event listeners removed - now using cron job for organization synchronization
@@ -219,6 +224,15 @@ class Application extends App implements IBootstrap
         });
 
         // Event listener uses direct service access like OpenCatalogi - no service registration needed
+
+        // Register module compliance service
+        $context->registerService(\OCA\SoftwareCatalog\Service\ModuleComplianceService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ModuleComplianceService(
+                $container,
+                $container->get(SettingsService::class),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
 
         // Register ArchiMate import service
         $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateImportService::class, function ($container) {
