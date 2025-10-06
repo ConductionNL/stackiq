@@ -54,9 +54,13 @@ Component for displaying and managing contactpersonen with user actions
 							{{ contactpersoon.data.email || contactpersoon.data['e-mailadres'] || '-' }}
 						</td>
 						<td class="status-cell">
-							<span v-if="contactpersoon.user.hasUser" 
+							<span v-if="contactpersoon.user.hasUser && !contactpersoon.user.disabled" 
 								class="status-chip status-success">
 								{{ t('softwarecatalog', 'User') }}
+							</span>
+							<span v-else-if="contactpersoon.user.hasUser && contactpersoon.user.disabled" 
+								class="status-chip status-warning">
+								{{ t('softwarecatalog', 'Disabled') }}
 							</span>
 							<span v-else 
 								class="status-chip status-tertiary">
@@ -106,6 +110,26 @@ Component for displaying and managing contactpersonen with user actions
 										<AccountGroup :size="20" />
 									</template>
 									{{ t('softwarecatalog', 'Manage Groups') }}
+								</NcActionButton>
+
+								<!-- Disable User Action -->
+								<NcActionButton v-if="contactpersoon.user.hasUser && !contactpersoon.user.disabled"
+									:close-after-click="true"
+									@click="disableUser(contactpersoon)">
+									<template #icon>
+										<CloseCircle :size="20" />
+									</template>
+									{{ t('softwarecatalog', 'Disable User') }}
+								</NcActionButton>
+
+								<!-- Enable User Action -->
+								<NcActionButton v-if="contactpersoon.user.hasUser && contactpersoon.user.disabled"
+									:close-after-click="true"
+									@click="enableUser(contactpersoon)">
+									<template #icon>
+										<CheckCircle :size="20" />
+									</template>
+									{{ t('softwarecatalog', 'Enable User') }}
 								</NcActionButton>
 							</NcActions>
 						</td>
@@ -285,7 +309,10 @@ export default {
 			selectedGroups: [],
 			groupsLoading: false,
 			newPassword: '',
-			passwordLoading: false
+			passwordLoading: false,
+			userStatusRefreshInProgress: false,
+			userStatusRefreshTimeout: null,
+			userInfoLoaded: false
 		}
 	},
 
@@ -332,7 +359,20 @@ export default {
 
 	async mounted() {
 		await this.loadData()
+		// Load user info and groups to get status information
+		await this.loadUserInfoAndGroups()
 	},
+
+	beforeDestroy() {
+		// Clean up timeout to prevent memory leaks
+		if (this.userStatusRefreshTimeout) {
+			clearTimeout(this.userStatusRefreshTimeout)
+		}
+	},
+
+
+	// Watchers removed to prevent infinite loops
+	// User info and groups will be loaded only when explicitly requested
 
 	methods: {
 		async loadData() {
@@ -360,17 +400,148 @@ export default {
 				const data = contactpersoon.data || contactpersoon
 				const hasUser = !!(data.username)
 				
+				// Debug logging to understand the data structure
+				console.log('Processing contactpersoon:', {
+					contactId,
+					data,
+					hasUser,
+					userFromAPI: contactpersoon.user,
+					usernameFromData: data.username,
+					disabledFromAPI: contactpersoon.user?.disabled,
+					disabledFromData: data.disabled
+				})
+				
 				return {
 					id: contactId,
 					data: data,
 					user: {
 						hasUser: hasUser,
 						username: data.username || '',
-						groups: data.groups || []
+						groups: data.groups || [],
+						disabled: contactpersoon.user?.disabled || data.disabled || false // Use user.disabled from API, fallback to data.disabled
 					},
 					loading: contactpersoon.loading || false // Include loading state from organisation data
 				}
 			})
+		},
+
+		/**
+		 * Load user info and available groups in parallel
+		 */
+		async loadUserInfoAndGroups() {
+			// Prevent multiple simultaneous calls
+			if (this.userStatusRefreshInProgress) {
+				console.log('User info loading already in progress, skipping...')
+				return
+			}
+
+			// Prevent multiple calls per session
+			if (this.userInfoLoaded) {
+				console.log('User info already loaded in this session, skipping...')
+				return
+			}
+
+			if (!this.organisationData || !this.organisationData.contactpersonen) {
+				console.log('No organisation data available for user info loading')
+				return
+			}
+			
+			this.userStatusRefreshInProgress = true
+			
+			try {
+				console.log('Starting SINGLE parallel loading of user info and available groups')
+				
+				// Get all contact person IDs, filter out empty ones
+				const contactpersoonIds = this.organisationData.contactpersonen
+					.map(cp => cp.id || cp.uuid)
+					.filter(id => id && id.trim() !== '')
+				
+				console.log('Loading user info for contactpersons:', contactpersoonIds.length)
+				console.log('Contactpersoon IDs:', contactpersoonIds)
+				
+				// Load available groups and bulk user info in parallel - but only once
+				const promises = [
+					this.organisatieStore.fetchAvailableGroups()
+				]
+				
+				// Only add bulk user info request if we have contactpersonen
+				if (contactpersoonIds.length > 0) {
+					promises.push(this.organisatieStore.getBulkUserInfo(contactpersoonIds))
+				} else {
+					promises.push(Promise.resolve({}))
+				}
+				
+				const [availableGroups, bulkUserInfo] = await Promise.all(promises)
+				
+				console.log('Received bulk user info:', bulkUserInfo)
+				
+				// Update contactpersonen with user info
+				if (bulkUserInfo && Object.keys(bulkUserInfo).length > 0) {
+					this.updateContactpersonenWithUserInfo(bulkUserInfo)
+				}
+				
+				console.log('Completed SINGLE parallel loading of user info and available groups')
+				this.userInfoLoaded = true
+			} catch (error) {
+				console.error('Error loading user info and groups:', error)
+			} finally {
+				this.userStatusRefreshInProgress = false
+			}
+		},
+
+		/**
+		 * Update contactpersonen with bulk user info
+		 * @param {Object} bulkUserInfo - User info object keyed by contactpersoon ID
+		 */
+		updateContactpersonenWithUserInfo(bulkUserInfo) {
+			if (!this.organisationData.contactpersonen) return
+			
+			this.organisationData.contactpersonen.forEach((contactpersoon, index) => {
+				const contactpersoonId = contactpersoon.id || contactpersoon.uuid
+				const userInfo = bulkUserInfo[contactpersoonId]
+				
+				if (userInfo) {
+					console.log(`Updating contactpersoon ${contactpersoonId} with user info:`, userInfo)
+					
+					// Ensure user object exists
+					if (!contactpersoon.user) {
+						contactpersoon.user = {}
+					}
+					
+					// Update user object
+					contactpersoon.user.hasUser = userInfo.hasUser
+					contactpersoon.user.username = userInfo.username
+					contactpersoon.user.groups = userInfo.groups || []
+					contactpersoon.user.disabled = !userInfo.enabled  // Map enabled to disabled
+					contactpersoon.user.displayName = userInfo.displayName
+					contactpersoon.user.lastLogin = userInfo.lastLogin
+					
+					// Update data object for consistency
+					if (contactpersoon.data) {
+						contactpersoon.data.disabled = !userInfo.enabled  // Map enabled to disabled
+					}
+					
+					// Force reactivity update
+					this.$set(this.organisationData.contactpersonen, index, contactpersoon)
+				}
+			})
+		},
+
+		/**
+		 * Refresh user statuses from Nextcloud for all contact persons
+		 * @deprecated Use loadUserInfoAndGroups() instead for better performance
+		 */
+		async refreshUserStatuses() {
+			console.log('refreshUserStatuses called - redirecting to loadUserInfoAndGroups')
+			await this.loadUserInfoAndGroups()
+		},
+
+		/**
+		 * Public method to refresh user statuses - can be called from parent component
+		 */
+		async refreshUserData() {
+			console.log('Public refreshUserData called')
+			await this.loadUserInfoAndGroups()
 		},
 
 		getContactpersoonName(contactpersoon) {
@@ -388,18 +559,30 @@ export default {
 		},
 
 		async convertToUser(contactpersoon) {
+			console.log('convertToUser called with:', contactpersoon)
+			console.log('organisationData.contactpersonen:', this.organisationData.contactpersonen)
+			
 			// Find the contactpersoon in the organisation data and set loading state
 			const contactIndex = this.organisationData.contactpersonen.findIndex(cp => 
 				(cp.id || cp.uuid) === contactpersoon.id
 			)
+			
+			console.log('Found contactpersoon at index:', contactIndex)
 			
 			if (contactIndex === -1) {
 				showError(this.t('softwarecatalog', 'Contactpersoon not found in organisation data'))
 				return
 			}
 			
-			// Set loading state on the specific contactpersoon
-			this.$set(this.organisationData.contactpersonen[contactIndex], 'loading', true)
+			// Set loading state on the specific contactpersoon - ensure it's an object first
+			const contactObject = this.organisationData.contactpersonen[contactIndex]
+			if (typeof contactObject === 'object' && contactObject !== null) {
+				this.$set(contactObject, 'loading', true)
+			} else {
+				console.error('Contactpersoon is not an object:', contactObject)
+				showError(this.t('softwarecatalog', 'Invalid contactpersoon data structure'))
+				return
+			}
 			
 			try {
 				const result = await this.organisatieStore.convertToUser(contactpersoon.id)
@@ -430,13 +613,20 @@ export default {
 					this.organisationData.contactpersonen.splice(contactIndex, 1, updatedContactpersoon)
 				}
 				
+				// Refresh user info for all contactpersonen to ensure the newly created user shows correct status
+				console.log('Refreshing user info after successful conversion...')
+				await this.refreshUserData()
+				
 				showSuccess(this.t('softwarecatalog', 'User account created successfully'))
 			} catch (error) {
 				console.error('Error in convertToUser:', error)
 				showError(this.t('softwarecatalog', 'Failed to create user account: {error}', { error: error.message }))
 				
-				// Clear loading state on error
-				this.$set(this.organisationData.contactpersonen[contactIndex], 'loading', false)
+				// Clear loading state on error - ensure it's an object first
+				const contactObject = this.organisationData.contactpersonen[contactIndex]
+				if (typeof contactObject === 'object' && contactObject !== null) {
+					this.$set(contactObject, 'loading', false)
+				}
 			}
 		},
 
@@ -484,8 +674,7 @@ export default {
 				console.error('Error fetching user info for groups dialog:', error)
 				// Fallback to existing groups
 				this.selectedGroups = [...contactpersoon.user.groups]
-				// Still fetch available groups as fallback
-				await this.organisatieStore.fetchAvailableGroups()
+				// Note: Available groups should already be loaded from loadUserInfoAndGroups()
 			}
 		},
 
@@ -525,6 +714,70 @@ export default {
 				showError(this.t('softwarecatalog', 'Failed to update user groups: {error}', { error: error.message }))
 			} finally {
 				this.groupsLoading = false
+			}
+		},
+
+		/**
+		 * Disable a user account
+		 * @param {object} contactpersoon - The contact person object
+		 */
+		async disableUser(contactpersoon) {
+			try {
+				await this.organisatieStore.disableUser(contactpersoon.id)
+				showSuccess(this.t('softwarecatalog', 'User disabled successfully'))
+				
+				// Update the local contactpersoon data to reflect disabled status
+				this.updateContactpersoonStatus(contactpersoon.id, true)
+			} catch (error) {
+				showError(this.t('softwarecatalog', 'Failed to disable user: {error}', { error: error.message }))
+			}
+		},
+
+		/**
+		 * Enable a user account
+		 * @param {object} contactpersoon - The contact person object
+		 */
+		async enableUser(contactpersoon) {
+			try {
+				await this.organisatieStore.enableUser(contactpersoon.id)
+				showSuccess(this.t('softwarecatalog', 'User enabled successfully'))
+				
+				// Update the local contactpersoon data to reflect enabled status
+				this.updateContactpersoonStatus(contactpersoon.id, false)
+			} catch (error) {
+				showError(this.t('softwarecatalog', 'Failed to enable user: {error}', { error: error.message }))
+			}
+		},
+
+		/**
+		 * Update the disabled status of a contactpersoon in the local data
+		 * @param {string} contactpersoonId - The ID of the contact person
+		 * @param {boolean} disabled - Whether the user is disabled
+		 */
+		updateContactpersoonStatus(contactpersoonId, disabled) {
+			// Find and update the contactpersoon in the organisation data
+			if (this.organisationData.contactpersonen) {
+				const contactIndex = this.organisationData.contactpersonen.findIndex(cp => 
+					(cp.id || cp.uuid) === contactpersoonId
+				)
+				
+				if (contactIndex !== -1) {
+					// Update the disabled status in both user and data objects
+					const contactpersoon = this.organisationData.contactpersonen[contactIndex]
+					
+					// Update in the user object (primary source)
+					if (contactpersoon.user) {
+						contactpersoon.user.disabled = disabled
+					}
+					
+					// Also update in data object for consistency
+					if (contactpersoon.data) {
+						contactpersoon.data.disabled = disabled
+					}
+					
+					// Force reactivity update
+					this.$set(this.organisationData.contactpersonen, contactIndex, contactpersoon)
+				}
 			}
 		}
 	}
@@ -616,6 +869,12 @@ export default {
 	background-color: #f8f9fa;
 	color: #6c757d;
 	border: 1px solid #dee2e6;
+}
+
+.status-warning {
+	background-color: #fff3cd;
+	color: #856404;
+	border: 1px solid #ffeaa7;
 }
 
 .group-chip {

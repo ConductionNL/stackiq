@@ -462,11 +462,16 @@ class ContactpersoonService
             return [];
         }
             
-            return $objectService->findAll(
-                ['organisation' => $organizationUuid],
-                (int) $register,
-                (int) $contactSchema
-            );
+            // Build query for searchObjects method
+            $query = [
+                '@self' => [
+                    'register' => (int) $register,
+                    'schema' => (int) $contactSchema
+                ],
+                'organisation' => $organizationUuid
+            ];
+            
+            return $objectService->searchObjects($query);
 
         } catch (\Exception $e) {
             $this->logger->error('ContactpersoonService: Failed to get contact persons for organization', [
@@ -474,6 +479,242 @@ class ContactpersoonService
                 'error' => $e->getMessage()
             ]);
             return [];
+        }
+    }
+
+    /**
+     * Gets all contact persons for an organization with user details spliced in
+     *
+     * This method retrieves contact person objects linked to a specific organization
+     * and enhances each contact person with their corresponding user details from Nextcloud.
+     *
+     * @param string $organizationUuid The organization UUID to get contact persons for
+     * 
+     * @return array Array of contact person objects with user details spliced in
+     * 
+     * @throws \Exception If contact person retrieval fails
+     */
+    public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): array
+    {
+        try {
+            $this->logger->info('ContactpersoonService: Getting contact persons with user details for organization', [
+                'organizationUuid' => $organizationUuid
+            ]);
+
+            // Get contact persons for the organization
+            $contactPersons = $this->getContactPersonsForOrganization($organizationUuid);
+            
+            if (empty($contactPersons)) {
+                $this->logger->info('ContactpersoonService: No contact persons found for organization', [
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return [];
+            }
+
+            $this->logger->info('ContactpersoonService: Found contact persons, fetching user details', [
+                'organizationUuid' => $organizationUuid,
+                'contactPersonCount' => count($contactPersons)
+            ]);
+
+            // Get user manager to fetch user details
+            $userManager = \OC::$server->get('OCP\IUserManager');
+            $enhancedContactPersons = [];
+
+            // Loop through each contact person and fetch user details
+            foreach ($contactPersons as $contactPerson) {
+                try {
+                    $contactData = $contactPerson->getObject();
+                    $username = $contactData['username'] ?? null;
+                    
+                    // Initialize user details as null
+                    $userDetails = null;
+                    
+                    // If username exists, fetch user details
+                    if ($username) {
+                        $user = $userManager->get($username);
+                        if ($user) {
+                            $userDetails = [
+                                'uid' => $user->getUID(),
+                                'email' => $user->getEMailAddress(),
+                                'displayName' => $user->getDisplayName(),
+                                'enabled' => $user->isEnabled(),
+                                'lastLogin' => $user->getLastLogin(),
+                                'backend' => $user->getBackendClassName(),
+                                'home' => $user->getHome(),
+                                'avatarImage' => $user->getAvatarImage(64)->data(),
+                                'quota' => $user->getQuota(),
+                                'freeQuota' => $user->getFreeQuota()
+                            ];
+                            
+                            $this->logger->debug('ContactpersoonService: Fetched user details', [
+                                'contactPersonId' => $contactPerson->getId(),
+                                'username' => $username,
+                                'userEnabled' => $user->isEnabled()
+                            ]);
+                        } else {
+                            $this->logger->warning('ContactpersoonService: User not found for username', [
+                                'contactPersonId' => $contactPerson->getId(),
+                                'username' => $username
+                            ]);
+                        }
+                    } else {
+                        $this->logger->debug('ContactpersoonService: No username found for contact person', [
+                            'contactPersonId' => $contactPerson->getId()
+                        ]);
+                    }
+
+                    // Create enhanced contact person object with user details spliced in
+                    $enhancedContactData = $contactData;
+                    $enhancedContactData['userDetails'] = $userDetails;
+                    
+                    // Create a new object with the enhanced data
+                    $enhancedContactPerson = clone $contactPerson;
+                    $enhancedContactPerson->setObject($enhancedContactData);
+                    
+                    $enhancedContactPersons[] = $enhancedContactPerson;
+                    
+                } catch (\Exception $e) {
+                    $this->logger->error('ContactpersoonService: Failed to process contact person', [
+                        'contactPersonId' => $contactPerson->getId(),
+                        'organizationUuid' => $organizationUuid,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Still add the contact person without user details
+                    $enhancedContactPersons[] = $contactPerson;
+                }
+            }
+
+            $this->logger->info('ContactpersoonService: Successfully enhanced contact persons with user details', [
+                'organizationUuid' => $organizationUuid,
+                'totalContactPersons' => count($enhancedContactPersons),
+                'contactPersonsWithUserDetails' => count(array_filter($enhancedContactPersons, function($cp) {
+                    $data = $cp->getObject();
+                    return $data['userDetails'] !== null;
+                }))
+            ]);
+
+            return $enhancedContactPersons;
+
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersoonService: Failed to get contact persons with user details for organization', [
+                'organizationUuid' => $organizationUuid,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Gets bulk user information for multiple contact persons
+     *
+     * This method retrieves user information for multiple contact persons in a single operation,
+     * which is more efficient than individual calls.
+     *
+     * @param array $contactpersoonIds Array of contact person IDs/UUIDs
+     * 
+     * @return array Array of user information keyed by contact person ID
+     * 
+     * @throws \Exception If bulk user info retrieval fails
+     */
+    public function getBulkUserInfo(array $contactpersoonIds): array
+    {
+        try {
+            $this->logger->info('ContactpersoonService: Getting bulk user info', [
+                'contactpersoonCount' => count($contactpersoonIds)
+            ]);
+
+            $bulkUserInfo = [];
+            $userManager = \OC::$server->get('OCP\IUserManager');
+
+            foreach ($contactpersoonIds as $contactpersoonId) {
+                try {
+                    // Get contactpersoon from OpenRegister
+                    $objectService = $this->getObjectService();
+                    if (!$objectService) {
+                        $this->logger->warning('ContactpersoonService: ObjectService not available for bulk user info', [
+                            'contactpersoonId' => $contactpersoonId
+                        ]);
+                        continue;
+                    }
+
+                    // Find the contactpersoon object
+                    $contactObject = $objectService->findByUuid($contactpersoonId);
+                    
+                    if (!$contactObject) {
+                        $this->logger->warning('ContactpersoonService: Contactpersoon not found for bulk user info', [
+                            'contactpersoonId' => $contactpersoonId
+                        ]);
+                        $bulkUserInfo[$contactpersoonId] = [
+                            'hasUser' => false,
+                            'username' => null,
+                            'groups' => []
+                        ];
+                        continue;
+                    }
+
+                    $contactData = $contactObject->getObject();
+                    $username = $contactData['username'] ?? null;
+                    
+                    $userInfo = [
+                        'hasUser' => !empty($username),
+                        'username' => $username,
+                        'groups' => []
+                    ];
+
+                    // If user exists, get their current groups
+                    if ($username) {
+                        $user = $userManager->get($username);
+                        if ($user) {
+                            $groupManager = \OC::$server->get('OCP\IGroupManager');
+                            $userGroups = $groupManager->getUserGroups($user);
+                            $userInfo['groups'] = array_keys($userGroups);
+                            $userInfo['enabled'] = $user->isEnabled();
+                            $userInfo['displayName'] = $user->getDisplayName();
+                            $userInfo['lastLogin'] = $user->getLastLogin();
+                        } else {
+                            $this->logger->warning('ContactpersoonService: User not found for bulk user info', [
+                                'contactpersoonId' => $contactpersoonId,
+                                'username' => $username
+                            ]);
+                        }
+                    }
+
+                    $bulkUserInfo[$contactpersoonId] = $userInfo;
+
+                } catch (\Exception $e) {
+                    $this->logger->error('ContactpersoonService: Failed to get user info for contactpersoon in bulk operation', [
+                        'contactpersoonId' => $contactpersoonId,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Add error entry for this contactpersoon
+                    $bulkUserInfo[$contactpersoonId] = [
+                        'hasUser' => false,
+                        'username' => null,
+                        'groups' => [],
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            $this->logger->info('ContactpersoonService: Successfully retrieved bulk user info', [
+                'totalContactpersonen' => count($contactpersoonIds),
+                'successfulRetrievals' => count(array_filter($bulkUserInfo, function($info) {
+                    return !isset($info['error']);
+                }))
+            ]);
+
+            return $bulkUserInfo;
+
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersoonService: Failed to get bulk user info', [
+                'contactpersoonIds' => $contactpersoonIds,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
     }
 
@@ -547,6 +788,114 @@ class ContactpersoonService
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
+        }
+    }
+
+    /**
+     * Enable user account for a contactpersoon
+     * @param string $contactpersoonId
+     * @throws \Exception
+     */
+    public function enableUserForContactpersoon(string $contactpersoonId): void
+    {
+        try {
+            $this->logger->info('ContactpersoonService: Enabling user for contactpersoon', [
+                'contactpersoonId' => $contactpersoonId
+            ]);
+
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                throw new \Exception('ObjectService not available');
+            }
+
+            $contactObject = $objectService->findByUuid($contactpersoonId);
+            if (!$contactObject) {
+                throw new \Exception('Contactpersoon not found');
+            }
+
+            $contactData = $contactObject->getObject();
+            $username = $contactData['username'] ?? null;
+
+            if (!$username) {
+                throw new \Exception('No username found for contactpersoon');
+            }
+
+            $userManager = \OC::$server->get('OCP\IUserManager');
+            $user = $userManager->get($username);
+
+            if (!$user) {
+                throw new \Exception('User not found in Nextcloud');
+            }
+
+            // Enable the user
+            $user->setEnabled(true);
+
+            $this->logger->info('ContactpersoonService: User enabled successfully', [
+                'contactpersoonId' => $contactpersoonId,
+                'username' => $username
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersoonService: Failed to enable user for contactpersoon', [
+                'contactpersoonId' => $contactpersoonId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Disable user account for a contactpersoon
+     * @param string $contactpersoonId
+     * @throws \Exception
+     */
+    public function disableUserForContactpersoon(string $contactpersoonId): void
+    {
+        try {
+            $this->logger->info('ContactpersoonService: Disabling user for contactpersoon', [
+                'contactpersoonId' => $contactpersoonId
+            ]);
+
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                throw new \Exception('ObjectService not available');
+            }
+
+            $contactObject = $objectService->findByUuid($contactpersoonId);
+            if (!$contactObject) {
+                throw new \Exception('Contactpersoon not found');
+            }
+
+            $contactData = $contactObject->getObject();
+            $username = $contactData['username'] ?? null;
+
+            if (!$username) {
+                throw new \Exception('No username found for contactpersoon');
+            }
+
+            $userManager = \OC::$server->get('OCP\IUserManager');
+            $user = $userManager->get($username);
+
+            if (!$user) {
+                throw new \Exception('User not found in Nextcloud');
+            }
+
+            // Disable the user
+            $user->setEnabled(false);
+
+            $this->logger->info('ContactpersoonService: User disabled successfully', [
+                'contactpersoonId' => $contactpersoonId,
+                'username' => $username
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersoonService: Failed to disable user for contactpersoon', [
+                'contactpersoonId' => $contactpersoonId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
     }
 } 

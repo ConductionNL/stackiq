@@ -134,11 +134,16 @@ return [
         
         // Contactpersonen Management endpoints
         ['name' => 'contactpersonen#getContactpersonen', 'url' => '/api/contactpersonen/organisation/{organisationId}', 'verb' => 'GET'],
+        ['name' => 'contactpersonen#getContactPersonsWithUserDetailsForOrganization', 'url' => '/api/contactpersonen/organisation/{organizationUuid}/with-user-details', 'verb' => 'GET'],
         ['name' => 'contactpersonen#convertToUser', 'url' => '/api/contactpersonen/{contactpersoonId}/convert-to-user', 'verb' => 'POST'],
         ['name' => 'contactpersonen#changePassword', 'url' => '/api/contactpersonen/change-password', 'verb' => 'POST'],
         ['name' => 'contactpersonen#updateUserGroups', 'url' => '/api/contactpersonen/update-groups', 'verb' => 'POST'],
         ['name' => 'contactpersonen#getUserInfo', 'url' => '/api/contactpersonen/{contactpersoonId}/user-info', 'verb' => 'GET'],
+        ['name' => 'contactpersonen#testBulkUserInfo', 'url' => '/api/contactpersonen/test-bulk-user-info', 'verb' => 'GET'],
+        ['name' => 'contactpersonen#getBulkUserInfo', 'url' => '/api/contactpersonen/bulk-user-info', 'verb' => 'POST'],
         ['name' => 'contactpersonen#getAvailableGroups', 'url' => '/api/contactpersonen/available-groups', 'verb' => 'GET'],
+        ['name' => 'contactpersonen#disableUser', 'url' => '/api/contactpersonen/{contactpersoonId}/disable', 'verb' => 'POST'],
+        ['name' => 'contactpersonen#enableUser', 'url' => '/api/contactpersonen/{contactpersoonId}/enable', 'verb' => 'POST'],
         
         // ========================================================================
         // VIEW API ENDPOINTS - ArchiMate Views with Enrichment Support
