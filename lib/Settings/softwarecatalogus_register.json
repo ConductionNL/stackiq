@@ -2260,7 +2260,7 @@
                         "type": "array",
                         "visible": true,
                         "order": 22,
-                        "facetable": false,
+                        "facetable": true,
                         "title": "Referentiecomponenten",
                         "items": {
                             "type": "object",
@@ -3199,6 +3199,24 @@
                         },
                         "oneOf": [],
                         "facetable": false
+                    },
+                    "gemmaType": {
+                        "description": "Het gemma type van dit Element",
+                        "type": "string",
+                        "facetable": false,
+                        "order": 10
+                    },
+                    "gemmaThema": {
+                        "description": "Het gemma thema van dit Element",
+                        "type": "string",
+                        "facetable": false,
+                        "order": 10
+                    },
+                    "gemmaUrl": {
+                        "description": "De gemma url van dit Element",
+                        "type": "string",
+                        "facetable": false,
+                        "order": 10
                     }
                 },
                 "archive": [],
