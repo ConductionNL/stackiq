@@ -559,18 +559,30 @@ export default {
 		},
 
 		async convertToUser(contactpersoon) {
+			console.log('convertToUser called with:', contactpersoon)
+			console.log('organisationData.contactpersonen:', this.organisationData.contactpersonen)
+			
 			// Find the contactpersoon in the organisation data and set loading state
 			const contactIndex = this.organisationData.contactpersonen.findIndex(cp => 
 				(cp.id || cp.uuid) === contactpersoon.id
 			)
+			
+			console.log('Found contactpersoon at index:', contactIndex)
 			
 			if (contactIndex === -1) {
 				showError(this.t('softwarecatalog', 'Contactpersoon not found in organisation data'))
 				return
 			}
 			
-			// Set loading state on the specific contactpersoon
-			this.$set(this.organisationData.contactpersonen[contactIndex], 'loading', true)
+			// Set loading state on the specific contactpersoon - ensure it's an object first
+			const contactObject = this.organisationData.contactpersonen[contactIndex]
+			if (typeof contactObject === 'object' && contactObject !== null) {
+				this.$set(contactObject, 'loading', true)
+			} else {
+				console.error('Contactpersoon is not an object:', contactObject)
+				showError(this.t('softwarecatalog', 'Invalid contactpersoon data structure'))
+				return
+			}
 			
 			try {
 				const result = await this.organisatieStore.convertToUser(contactpersoon.id)
@@ -601,13 +613,20 @@ export default {
 					this.organisationData.contactpersonen.splice(contactIndex, 1, updatedContactpersoon)
 				}
 				
+				// Refresh user info for all contactpersonen to ensure the newly created user shows correct status
+				console.log('Refreshing user info after successful conversion...')
+				await this.refreshUserData()
+				
 				showSuccess(this.t('softwarecatalog', 'User account created successfully'))
 			} catch (error) {
 				console.error('Error in convertToUser:', error)
 				showError(this.t('softwarecatalog', 'Failed to create user account: {error}', { error: error.message }))
 				
-				// Clear loading state on error
-				this.$set(this.organisationData.contactpersonen[contactIndex], 'loading', false)
+				// Clear loading state on error - ensure it's an object first
+				const contactObject = this.organisationData.contactpersonen[contactIndex]
+				if (typeof contactObject === 'object' && contactObject !== null) {
+					this.$set(contactObject, 'loading', false)
+				}
 			}
 		},
 
