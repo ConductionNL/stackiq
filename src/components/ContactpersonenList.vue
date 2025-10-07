@@ -163,7 +163,7 @@ Component for displaying and managing contactpersonen with user actions
 						<li :class="{ 'requirement-met': passwordValidation.minLength }">
 							<CheckCircle v-if="passwordValidation.minLength" :size="16" class="check-icon" />
 							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t('softwarecatalog', 'At least 8 characters') }}
+							{{ t('softwarecatalog', 'At least 10 characters') }}
 						</li>
 						<li :class="{ 'requirement-met': passwordValidation.hasUppercase }">
 							<CheckCircle v-if="passwordValidation.hasUppercase" :size="16" class="check-icon" />
@@ -344,7 +344,7 @@ export default {
 		// Password validation computed properties
 		passwordValidation() {
 			return {
-				minLength: this.newPassword.length >= 8,
+				minLength: this.newPassword.length >= 10,
 				hasUppercase: /[A-Z]/.test(this.newPassword),
 				hasLowercase: /[a-z]/.test(this.newPassword),
 				hasNumber: /\d/.test(this.newPassword),
@@ -644,8 +644,8 @@ export default {
 		},
 
 		async savePassword() {
-			if (!this.newPassword || this.newPassword.length < 8) {
-				showError(this.t('softwarecatalog', 'Password must be at least 8 characters long'))
+			if (!this.newPassword || this.newPassword.length < 10) {
+				showError(this.t('softwarecatalog', 'Password must be at least 10 characters long'))
 				return
 			}
 

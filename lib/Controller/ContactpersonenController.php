@@ -346,10 +346,10 @@ class ContactpersonenController extends Controller
             }
 
             // Validate password (basic validation)
-            if (strlen($newPassword) < 8) {
+            if (strlen($newPassword) < 10) {
                 return new JSONResponse([
                     'success' => false,
-                    'message' => 'Password must be at least 8 characters long'
+                    'message' => 'Password must be at least 10 characters long'
                 ], 400);
             }
 
