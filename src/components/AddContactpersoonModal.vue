@@ -162,7 +162,9 @@ export default {
 					organisatie: this.organisation.id || this.organisation.uuid,
 					'@self': {
 						created: new Date().toISOString(),
-						updated: new Date().toISOString()
+						updated: new Date().toISOString(),
+						// Set the organisation metadata to link the contact person to the organization
+						organisation: this.organisation.id || this.organisation.uuid
 					}
 				}
 

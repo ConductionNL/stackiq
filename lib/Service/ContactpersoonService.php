@@ -760,6 +760,22 @@ class ContactpersoonService
             // Update the owner field to the user UID
             $selfMetadata['owner'] = $userUID;
             
+            // Set the organisation field in @self metadata to the organization UUID
+            // This ensures the contact person is properly linked to their organization
+            $organizationUuid = $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '';
+            if (!empty($organizationUuid)) {
+                $selfMetadata['organisation'] = $organizationUuid;
+                $this->logger->info('ContactpersoonService: Setting @self.organisation metadata', [
+                    'contactId' => $contactId,
+                    'organizationUuid' => $organizationUuid
+                ]);
+            } else {
+                $this->logger->warning('ContactpersoonService: No organization UUID found for contact person', [
+                    'contactId' => $contactId,
+                    'contactData' => $currentObject
+                ]);
+            }
+            
             // Update the object with the new @self metadata
             $currentObject['@self'] = $selfMetadata;
             $contactObject->setObject($currentObject);
@@ -774,10 +790,11 @@ class ContactpersoonService
                 multi: false
             );
             
-            $this->logger->info('ContactpersoonService: Successfully updated contactpersoon object owner', [
+            $this->logger->info('ContactpersoonService: Successfully updated contactpersoon object owner and organisation', [
                 'contactId' => $contactId,
                 'userUID' => $userUID,
-                'ownerSet' => $selfMetadata['owner']
+                'ownerSet' => $selfMetadata['owner'],
+                'organisationSet' => $selfMetadata['organisation'] ?? 'not set'
             ]);
             
         } catch (\Exception $e) {
