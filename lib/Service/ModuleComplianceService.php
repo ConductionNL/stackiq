@@ -94,8 +94,15 @@ class ModuleComplianceService
                 'moduleUuid' => $moduleUuid
             ]);
 
-            // Get compliance objects linked to this module
-            $complianceObjects = $this->getComplianceObjectsForModule($moduleUuid);
+            if ($moduleData['compliancy'] !== [] && is_array($moduleData['compliancy'])) {
+                $complianceObjects = array_filter($moduleData['compliancy'], function($item) {
+                    return is_array($item) === true;
+                });
+            }
+            if($complianceObjects === []) {
+                $complianceObjects = $this->getComplianceObjectsForModule($moduleUuid);
+            }
+
 
             $this->logger->debug('ModuleComplianceService: Found compliance objects', [
                 'moduleId' => $moduleId,
@@ -242,7 +249,11 @@ class ModuleComplianceService
         $standaardversieUuids = [];
 
         foreach ($complianceObjects as $complianceObject) {
-            $complianceData = $complianceObject->getObject();
+            if ($complianceObject instanceof ObjectEntity === true) {
+                $complianceData = $complianceObject->getObject();
+            } else {
+                $complianceData = $complianceObject;
+            }
             $standaardversie = $complianceData['standaardversie'] ?? null;
 
             if ($standaardversie) {
