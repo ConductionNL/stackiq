@@ -35,6 +35,7 @@
 							<th>Object Type</th>
 							<th>Count</th>
 							<th>Status</th>
+							<th>Actions</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -54,6 +55,19 @@
 									:class="stat.configured ? 'status-configured' : 'status-not-configured'">
 									{{ stat.configured ? 'Configured' : 'Not Configured' }}
 								</span>
+							</td>
+							<td class="actions-cell">
+								<!-- Show sync button only for Compliancy objects -->
+								<NcButton
+									v-if="stat.type === 'Compliancy' && stat.configured"
+									:disabled="bulkSyncLoading"
+									class="sync-button"
+									@click="showBulkSyncDialog">
+									<template #icon>
+										<SyncIcon :size="16" />
+									</template>
+									{{ bulkSyncLoading ? 'Syncing...' : 'Sync Standards' }}
+								</NcButton>
 							</td>
 						</tr>
 					</tbody>
@@ -81,6 +95,81 @@
 				<p>{{ error }}</p>
 			</NcNoteCard>
 		</div>
+
+		<!-- Bulk Sync Dialog -->
+		<NcModal v-if="showSyncDialog" @close="closeBulkSyncDialog">
+			<div class="bulk-sync-dialog">
+				<div class="modal-header">
+					<h2>Bulk Sync Module Standards</h2>
+				</div>
+				
+				<div class="modal-content">
+					<!-- Preview Section -->
+					<div v-if="!syncCompleted" class="preview-section">
+						<h3>What will happen:</h3>
+						<ul class="preview-list">
+							<li>Scan all {{ complianceCount }} compliance objects</li>
+							<li>Extract standaardversie references from each compliance object</li>
+							<li>Find the corresponding module for each compliance object</li>
+							<li>Update module standaarden arrays with extracted standaardversie IDs</li>
+							<li>Save modules only if changes are needed</li>
+						</ul>
+						
+						<div class="loading-section" v-if="bulkSyncLoading">
+							<NcLoadingIcon :size="24" />
+							<p>Processing compliance objects...</p>
+							<div class="progress-info">
+								<p>Processed: {{ syncProgress.processed }} / {{ syncProgress.total }}</p>
+								<p>Modules updated: {{ syncProgress.modulesUpdated }}</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Results Section -->
+					<div v-if="syncCompleted" class="results-section">
+						<h3>Sync Results:</h3>
+						<div class="results-stats">
+							<div class="stat-item">
+								<span class="stat-label">Compliance objects processed:</span>
+								<span class="stat-value">{{ syncResults.totalProcessed }}</span>
+							</div>
+							<div class="stat-item">
+								<span class="stat-label">Modules found:</span>
+								<span class="stat-value">{{ syncResults.modulesFound }}</span>
+							</div>
+							<div class="stat-item">
+								<span class="stat-label">Modules updated:</span>
+								<span class="stat-value">{{ syncResults.modulesUpdated }}</span>
+							</div>
+							<div class="stat-item">
+								<span class="stat-label">Standards added:</span>
+								<span class="stat-value">{{ syncResults.standardsAdded }}</span>
+							</div>
+						</div>
+						
+						<div v-if="syncResults.errors.length > 0" class="errors-section">
+							<h4>Errors:</h4>
+							<ul class="error-list">
+								<li v-for="error in syncResults.errors" :key="error">{{ error }}</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<div class="modal-actions">
+					<NcButton
+						v-if="!syncCompleted"
+						:disabled="bulkSyncLoading"
+						@click="startBulkSync"
+						type="primary">
+						{{ bulkSyncLoading ? 'Syncing...' : 'Start Sync' }}
+					</NcButton>
+					<NcButton @click="closeBulkSyncDialog">
+						{{ syncCompleted ? 'Close' : 'Cancel' }}
+					</NcButton>
+				</div>
+			</div>
+		</NcModal>
 	</NcSettingsSection>
 </template>
 
@@ -92,10 +181,12 @@ import {
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
+	NcModal,
 } from '@nextcloud/vue'
 import { useSettingsStore } from '../../../store/modules/settings.js'
 import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
 import ChartLineIcon from 'vue-material-design-icons/ChartLine.vue'
+import SyncIcon from 'vue-material-design-icons/Sync.vue'
 
 /**
  * Statistics Overview component
@@ -114,8 +205,35 @@ export default defineComponent({
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
+		NcModal,
 		RefreshIcon,
 		ChartLineIcon,
+		SyncIcon,
+	},
+
+	data() {
+		return {
+			// Bulk sync dialog state
+			showSyncDialog: false,
+			bulkSyncLoading: false,
+			syncCompleted: false,
+			
+			// Sync progress tracking
+			syncProgress: {
+				processed: 0,
+				total: 0,
+				modulesUpdated: 0,
+			},
+			
+			// Sync results
+			syncResults: {
+				totalProcessed: 0,
+				modulesFound: 0,
+				modulesUpdated: 0,
+				standardsAdded: 0,
+				errors: [],
+			},
+		}
 	},
 
 	setup() {
@@ -141,6 +259,12 @@ export default defineComponent({
 
 		error() {
 			return this.settingsStore.error
+		},
+
+		// Get compliance count for the dialog
+		complianceCount() {
+			const complianceStat = this.formattedStatistics.find(stat => stat.type === 'Compliancy')
+			return complianceStat ? complianceStat.count : 0
 		},
 	},
 
@@ -176,6 +300,91 @@ export default defineComponent({
 			if (!timestamp) return 'Unknown'
 			const date = new Date(timestamp * 1000)
 			return date.toLocaleString()
+		},
+
+		/**
+		 * Show the bulk sync dialog
+		 */
+		showBulkSyncDialog() {
+			this.showSyncDialog = true
+			this.syncCompleted = false
+			this.resetSyncState()
+		},
+
+		/**
+		 * Close the bulk sync dialog
+		 */
+		closeBulkSyncDialog() {
+			this.showSyncDialog = false
+			this.syncCompleted = false
+			this.bulkSyncLoading = false
+			this.resetSyncState()
+		},
+
+		/**
+		 * Reset sync state
+		 */
+		resetSyncState() {
+			this.syncProgress = {
+				processed: 0,
+				total: 0,
+				modulesUpdated: 0,
+			}
+			this.syncResults = {
+				totalProcessed: 0,
+				modulesFound: 0,
+				modulesUpdated: 0,
+				standardsAdded: 0,
+				errors: [],
+			}
+		},
+
+		/**
+		 * Start the bulk sync process
+		 */
+		async startBulkSync() {
+			this.bulkSyncLoading = true
+			this.syncProgress.total = this.complianceCount
+			
+			try {
+				// Call the backend API to perform bulk sync
+				const response = await this.performBulkSync()
+				
+				// Update results
+				this.syncResults = response.data
+				this.syncCompleted = true
+				
+				// Refresh statistics to show updated counts
+				await this.refreshStatistics()
+				
+			} catch (error) {
+				console.error('Bulk sync failed:', error)
+				this.syncResults.errors.push(`Sync failed: ${error.message}`)
+				this.syncCompleted = true
+			} finally {
+				this.bulkSyncLoading = false
+			}
+		},
+
+		/**
+		 * Perform the bulk sync API call
+		 * @return {Promise} API response
+		 */
+		async performBulkSync() {
+			const response = await fetch('/index.php/apps/softwarecatalog/api/bulk-sync-standards', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-Requested-With': 'XMLHttpRequest',
+				},
+				body: JSON.stringify({}),
+			})
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`)
+			}
+			
+			return await response.json()
 		},
 	},
 })
@@ -282,6 +491,15 @@ export default defineComponent({
 	color: var(--color-warning-text);
 }
 
+.actions-cell {
+	text-align: center;
+}
+
+.sync-button {
+	font-size: 0.9em;
+	padding: 6px 12px;
+}
+
 .loading-container {
 	display: flex;
 	flex-direction: column;
@@ -310,5 +528,122 @@ export default defineComponent({
 	.statistics-table table {
 		min-width: 500px;
 	}
+}
+
+/* Bulk Sync Dialog Styles */
+.bulk-sync-dialog {
+	width: 600px;
+	max-width: 90vw;
+}
+
+.modal-header {
+	padding: 20px 20px 0 20px;
+	border-bottom: 1px solid var(--color-border);
+	margin-bottom: 20px;
+}
+
+.modal-header h2 {
+	margin: 0 0 20px 0;
+	color: var(--color-text);
+}
+
+.modal-content {
+	padding: 0 20px;
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+.preview-section h3,
+.results-section h3 {
+	margin-top: 0;
+	color: var(--color-text);
+}
+
+.preview-list {
+	margin: 12px 0;
+	padding-left: 20px;
+}
+
+.preview-list li {
+	margin-bottom: 8px;
+	color: var(--color-text-lighter);
+}
+
+.loading-section {
+	text-align: center;
+	padding: 20px 0;
+}
+
+.loading-section p {
+	margin: 12px 0;
+	color: var(--color-text-lighter);
+}
+
+.progress-info {
+	margin-top: 16px;
+	padding: 12px;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius);
+}
+
+.progress-info p {
+	margin: 4px 0;
+	font-family: monospace;
+	font-size: 0.9em;
+}
+
+.results-stats {
+	margin: 16px 0;
+}
+
+.stat-item {
+	display: flex;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--color-border-dark);
+}
+
+.stat-item:last-child {
+	border-bottom: none;
+}
+
+.stat-label {
+	color: var(--color-text-lighter);
+}
+
+.stat-value {
+	font-weight: 600;
+	color: var(--color-text);
+}
+
+.errors-section {
+	margin-top: 20px;
+	padding: 16px;
+	background-color: var(--color-error-light);
+	border-radius: var(--border-radius);
+}
+
+.errors-section h4 {
+	margin: 0 0 12px 0;
+	color: var(--color-error);
+}
+
+.error-list {
+	margin: 0;
+	padding-left: 20px;
+}
+
+.error-list li {
+	color: var(--color-error);
+	margin-bottom: 4px;
+}
+
+.modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	padding: 20px;
+	border-top: 1px solid var(--color-border);
+	margin-top: 20px;
 }
 </style>

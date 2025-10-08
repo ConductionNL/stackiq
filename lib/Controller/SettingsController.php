@@ -2508,7 +2508,48 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Bulk sync module standards from all compliance objects
+     *
+     * @return JSONResponse Response containing sync results
+     * @NoCSRFRequired
+     */
+    public function bulkSyncStandards(): JSONResponse
+    {
+        try {
+            $this->logger->info('SettingsController: Starting bulk sync of module standards');
 
+            // Get the ModuleComplianceService from the container
+            $moduleComplianceService = $this->container->get(\OCA\SoftwareCatalog\Service\ModuleComplianceService::class);
+            
+            // Perform the bulk sync
+            $results = $moduleComplianceService->bulkSyncModuleStandards();
+
+            $this->logger->info('SettingsController: Bulk sync completed successfully', [
+                'results' => $results
+            ]);
+
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'Bulk sync completed successfully',
+                'data' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('SettingsController: Bulk sync failed', [
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Bulk sync failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], $this->getHttpStatusForException($e));
+        }
+    }
 
 }//end class
 

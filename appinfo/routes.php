@@ -167,5 +167,12 @@ return [
         ['name' => 'aangebodenGebruik#deleteGebruikAsAfnemer', 'url' => '/api/aangeboden-gebruik/{gebruikId}/deny', 'verb' => 'DELETE'],
         ['name' => 'aangebodenGebruik#getApiDocumentation', 'url' => '/api/aangeboden-gebruik/docs', 'verb' => 'GET'],
 
+        // ========================================================================
+        // MODULE COMPLIANCE MANAGEMENT API ENDPOINTS
+        // ========================================================================
+        
+        // Bulk sync module standards from compliance objects
+        ['name' => 'settings#bulkSyncStandards', 'url' => '/api/bulk-sync-standards', 'verb' => 'POST'],
+
     ],
 ];
