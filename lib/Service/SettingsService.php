@@ -3242,7 +3242,7 @@ class SettingsService
                 'review_schema' => 'totalReviewObjects',
                 'koppeling_schema' => 'totalKoppelingObjects',
                 'beoordeeling_schema' => 'totalBeoordeelingObjects',
-                'voorziening_module_schema' => 'totalVoorzieningModuleObjects',
+                'module_schema' => 'totalVoorzieningModuleObjects',
                 'verklaring_schema' => 'totalVerklaringObjects',
                 'koppeling_gebruik_schema' => 'totalKoppelingGebruikObjects',
                 'compliancy_schema' => 'totalCompliancyObjects',
