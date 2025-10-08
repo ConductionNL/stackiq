@@ -539,11 +539,12 @@ export default {
 				// Wrap the import operation with heartbeat to prevent 504 timeouts
 				const result = await withHeartbeat(async () => {
 					// Make the API call
+					// Note: Do not set Content-Type header for FormData - let browser set it with boundary
+					// Also remove OCS-APIREQUEST for file uploads as it interferes with multipart form data
 					const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
 						method: 'POST',
 						headers: {
-							'OCS-APIREQUEST': 'true',
-							requesttoken: OC.requestToken,
+							'X-Requested-With': 'XMLHttpRequest',
 						},
 						body: formData,
 					})

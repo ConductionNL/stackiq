@@ -1061,13 +1061,19 @@ class SettingsController extends Controller
             $rawInput = file_get_contents('php://input');
             $data = json_decode($rawInput, true);
             
-            // Debug logging
+            // Enhanced debug logging
             $this->logger->info('ArchiMate import request received', [
                 'rawInput' => $rawInput,
                 'decodedData' => $data,
                 'jsonError' => json_last_error_msg(),
                 'contentType' => $this->request->getHeader('Content-Type'),
-                'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false
+                'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
+                'requestMethod' => $this->request->getMethod(),
+                'userAgent' => $this->request->getHeader('User-Agent'),
+                'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
+                '_FILES' => $_FILES,
+                '_POST' => $_POST,
+                'requestParams' => $this->request->getParams()
             ]);
             
             // Check if a file was uploaded (traditional file upload)
@@ -1076,11 +1082,16 @@ class SettingsController extends Controller
             // Also check $_FILES directly as fallback
             $filesArray = $_FILES['archiMateFile'] ?? null;
             
-            $this->logger->info('File upload detection', [
+            $this->logger->info('File upload detection detailed', [
                 'uploadedFiles' => $uploadedFiles,
                 'filesArray' => $filesArray,
                 'requestMethod' => $this->request->getMethod(),
-                'contentType' => $this->request->getHeader('Content-Type')
+                'contentType' => $this->request->getHeader('Content-Type'),
+                'hasUploadedFiles' => !empty($uploadedFiles),
+                'hasFilesArray' => !empty($filesArray),
+                'uploadedFilesType' => gettype($uploadedFiles),
+                'filesArrayType' => gettype($filesArray),
+                'allFilesKeys' => array_keys($_FILES ?? [])
             ]);
             
             if ($uploadedFiles || $filesArray) {
@@ -1115,17 +1126,30 @@ class SettingsController extends Controller
                 
                 $this->logger->info('JSON payload detected', ['options' => $options]);
             } else {
-                $this->logger->error('No file uploaded or file path provided', [
+                $this->logger->error('No file uploaded or file path provided - DETAILED DEBUG', [
                     'uploadedFiles' => $uploadedFiles,
                     'filesArray' => $filesArray,
                     'data' => $data,
-                    'rawInput' => $rawInput
+                    'rawInput' => $rawInput,
+                    'contentType' => $this->request->getHeader('Content-Type'),
+                    'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
+                    'requestMethod' => $this->request->getMethod(),
+                    '_FILES_DEBUG' => $_FILES,
+                    '_POST_DEBUG' => $_POST,
+                    'requestParams' => $this->request->getParams(),
+                    'userAgent' => $this->request->getHeader('User-Agent'),
+                    'xRequestedWith' => $this->request->getHeader('X-Requested-With')
                 ]);
                 
                 return new JSONResponse([
                     'success' => false,
                     'message' => 'No ArchiMate file uploaded or file path provided',
-                    'error' => 'NO_FILE_UPLOADED_OR_PATH'
+                    'error' => 'NO_FILE_UPLOADED_OR_PATH',
+                    'debug' => [
+                        'contentType' => $this->request->getHeader('Content-Type'),
+                        'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
+                        'filesKeys' => array_keys($_FILES ?? [])
+                    ]
                 ], 400);
             }
 

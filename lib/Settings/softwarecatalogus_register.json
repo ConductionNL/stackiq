@@ -3014,7 +3014,7 @@
                 "slug": "element",
                 "title": "Element",
                 "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
-                "version": "0.0.7",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Cube",
                 "required": [
@@ -3233,7 +3233,8 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectSummaryField": "summary",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "searchable": true
                 },
                 "searchable": true
             },
@@ -4553,7 +4554,7 @@
                 "slug": "module",
                 "title": "Module",
                 "description": "Een module is een onderdeel van een product (voorziening)",
-                "version": "0.0.11",
+                "version": "0.0.113",
                 "summary": "",
                 "icon": "Package",
                 "required": [
@@ -4663,7 +4664,8 @@
                                 "queryParams": "gemmaType=referentiecomponent&_extend=aanbevolenStandaarden,verplichteStandaarden"
                             },
                             "$ref": "#/components/schemas/element"
-                        }
+                        },
+                        "hideOnForm": true
                     },
                     "type": {
                         "description": "Het type module zoals geregistreerd in de catalogus",
@@ -4756,12 +4758,24 @@
                         }
                     },
                     "standaarden": {
-                        "description": "Een array van id's van standaarden die deze module implementeert",
+                        "description": "Een array van amef id's van standaarden die deze module implementeert",
                         "type": "array",
                         "visible": true,
                         "order": 23,
                         "facetable": true,
-                        "title": "Standaarden",
+                        "title": "Standaarden AMEF",
+                        "hideOnForm": true,
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "standaardenGemma": {
+                        "description": "Een array van gemma id's van standaarden die deze module implementeert",
+                        "type": "array",
+                        "visible": true,
+                        "order": 23,
+                        "facetable": true,
+                        "title": "Standaarden Gemaa",
                         "hideOnForm": true,
                         "items": {
                             "type": "string"
@@ -4856,7 +4870,8 @@
                         "Handleiding",
                         "Technische specificatie"
                     ],
-                    "autoPublish": true
+                    "autoPublish": true,
+                    "searchable": true
                 },
                 "searchable": true
             },
@@ -4865,7 +4880,7 @@
                 "slug": "compliancy",
                 "title": "Compliancy",
                 "description": "Schema voor compliancy en standaard ondersteuning",
-                "version": "0.0.7",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "CheckCircle",
                 "required": [],
@@ -4882,6 +4897,14 @@
                             "queryParams": "gemmaType=standaardversie"
                         },
                         "$ref": "#/components/schemas/element"
+                    },
+                    "standaardGemma": {
+                        "description": "Het gemma id van de standaardversie die door deze compliance wordt ondersteund",
+                        "type": "string",
+                        "order": 1,
+                        "title": "Standaard Gemaa",
+                        "visible": true,
+                        "facetable": true
                     },
                     "module": {
                         "description": "De module waarvan de compliance wordt geregistreerd",
