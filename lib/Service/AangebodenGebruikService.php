@@ -203,16 +203,22 @@ class AangebodenGebruikService
             // Add additional filters from options (pagination, search, etc.)
             $query = $this->addQueryFilters($query, $options);
             
+            // Force use of database source (not index/SOLR) like PublicationsController
+            $query['_source'] = 'database';
+            
             $this->logger->debug('AangebodenGebruikService: Executing ambtenaar search query', [
                 'query' => $query,
                 'schema_id' => $schemaId
             ]);
             
             // Execute search with RBAC and multitenancy disabled to get ALL objects
+            // Use database source and include unpublished objects
             $searchResult = $objectService->searchObjectsPaginated(
                 query: $query,
                 rbac: false,  // Disable RBAC to access all objects
-                multi: false  // Disable multitenancy to access objects from all organisations
+                multi: false, // Disable multitenancy to access objects from all organisations
+                published: false,  // Include unpublished objects
+                deleted: false     // Exclude deleted objects
             );
             
             $this->logger->debug('AangebodenGebruikService: Ambtenaar search completed', [
@@ -241,26 +247,27 @@ class AangebodenGebruikService
     }
 
     /**
-     * Get a single gebruiks object by ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group
+     * Get all gebruiks objects belonging to a specific product ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group
      * 
-     * This method retrieves a specific gebruiks object by its ID, bypassing normal RBAC 
-     * and multitenancy restrictions. Access is restricted to users with the "ambtenaar" group.
+     * This method retrieves all gebruiks objects that belong to the specified product ID, 
+     * bypassing normal RBAC and multitenancy restrictions. Access is restricted to users 
+     * with the "ambtenaar" group.
      * 
-     * @param string $gebruikId The ID of the gebruik object to retrieve
+     * @param string $productId The ID of the product to get gebruiks for
      * @param array $options Additional query options (extend, fields, etc.)
-     * @return array searchObjectsPaginated result with single gebruik or error
+     * @return array searchObjectsPaginated result with all gebruiks for the product
      * @throws Exception When OpenRegister service is not available
      */
-    public function getSingleGebruikForAmbtenaar(string $gebruikId, array $options = []): array
+    public function getSingleGebruikForAmbtenaar(string $productId, array $options = []): array
     {
-        $this->logger->info('Getting single gebruik object for ambtenaar (ignoring RBAC/multitenancy)', [
-            'gebruik_id' => $gebruikId,
+        $this->logger->info('Getting all gebruiks for product ID for ambtenaar (ignoring RBAC/multitenancy)', [
+            'product_id' => $productId,
             'options' => $options
         ]);
 
         try {
             // Validate input
-            if (empty($gebruikId)) {
+            if (empty($productId)) {
                 return [
                     'results' => [],
                     'total' => 0,
@@ -268,7 +275,7 @@ class AangebodenGebruikService
                     'pages' => 0,
                     'limit' => 20,
                     'offset' => 0,
-                    'error' => 'Gebruik ID is required'
+                    'error' => 'Product ID is required'
                 ];
             }
 
@@ -284,42 +291,49 @@ class AangebodenGebruikService
                 throw new Exception('No gebruik schema configured');
             }
             
-            // Build query for specific gebruik by ID
+            // Build query for all gebruiks that reference the specified UUID in their relations
+            // Follow the same pattern as PublicationsController.php used() method
             $query = [
                 '@self' => [
                     'register' => $gebruiksConfig['register_id'],
-                    'schema' => $schemaId,
-                    'id' => $gebruikId
+                    'schema' => $schemaId
                 ]
             ];
             
             // Add additional filters from options (extend, fields, etc.)
             $query = $this->addQueryFilters($query, $options);
             
-            $this->logger->debug('AangebodenGebruikService: Executing single gebruik query for ambtenaar', [
+            // Force use of database source (not index/SOLR) like PublicationsController
+            $query['_source'] = 'database';
+            
+            $this->logger->debug('AangebodenGebruikService: Executing uses-based query for ambtenaar', [
                 'query' => $query,
                 'schema_id' => $schemaId,
-                'gebruik_id' => $gebruikId
+                'uses_uuid' => $productId
             ]);
             
-            // Execute search with RBAC and multitenancy disabled to access any object
+            // Execute search following PublicationsController.php used() method pattern
+            // Use database source and uses parameter for relationship filtering
             $searchResult = $objectService->searchObjectsPaginated(
                 query: $query,
                 rbac: false,  // Disable RBAC to access any object
-                multi: false  // Disable multitenancy to access objects from any organisation
+                multi: false, // Disable multitenancy to access objects from any organisation
+                published: false,  // Include unpublished objects
+                deleted: false,    // Exclude deleted objects
+                uses: $productId   // Find objects that have this UUID in their relations array
             );
             
-            $this->logger->debug('AangebodenGebruikService: Single gebruik search completed', [
+            $this->logger->debug('AangebodenGebruikService: Uses-based query completed', [
                 'total' => $searchResult['total'] ?? 0,
                 'results_count' => count($searchResult['results'] ?? []),
-                'gebruik_id' => $gebruikId
+                'uses_uuid' => $productId
             ]);
             
             return $searchResult;
 
         } catch (Exception $e) {
-            $this->logger->error('Failed to get single gebruik for ambtenaar', [
-                'gebruik_id' => $gebruikId,
+            $this->logger->error('Failed to get gebruiks by uses relationship', [
+                'uses_uuid' => $productId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -653,12 +667,14 @@ class AangebodenGebruikService
             ]);
         }
         
-        // Fallback to hardcoded values for testing
-        $this->logger->info('Using hardcoded voorzieningen configuration as fallback');
-        return [
-            'register_id' => 1, // voorzieningen register
-            'schemas' => [8]    // gebruik schema
-        ];
+        // No hardcoded fallback - configuration must be properly set
+        $this->logger->error('Failed to get voorzieningen configuration - no fallback provided', [
+            'registerId' => $registerId ?? 'null',
+            'gebruikSchema' => $gebruikSchema ?? 'null',
+            'voorzieningenConfig' => $voorzieningenConfig ?? 'null'
+        ]);
+        
+        throw new Exception('Voorzieningen configuration not found. Please configure the schemas in the admin panel.');
     }
 
     /**
