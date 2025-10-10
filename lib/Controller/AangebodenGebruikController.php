@@ -23,6 +23,7 @@ namespace OCA\SoftwareCatalog\Controller;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
 use Psr\Log\LoggerInterface;
 
@@ -48,12 +49,14 @@ class AangebodenGebruikController extends Controller
      * 
      * @param string $appName The name of the app
      * @param IRequest $request The HTTP request object
+     * @param IUserSession $userSession The user session service for getting the current user
      * @param AangebodenGebruikService $aangebodenGebruikService The business logic service
      * @param LoggerInterface $logger The logger service for debugging and error reporting
      */
     public function __construct(
         string $appName,
         IRequest $request,
+        private readonly IUserSession $userSession,
         private readonly AangebodenGebruikService $aangebodenGebruikService,
         private readonly LoggerInterface $logger
     ) {
@@ -89,7 +92,8 @@ class AangebodenGebruikController extends Controller
 
         try {
             // Parse query parameters for filtering options (force database source)
-            $options = $this->parseQueryOptionsWithDatabaseSource();
+            // Don't include product filter for "get all" endpoint
+            $options = $this->parseQueryOptions();
             
             // Get gebruiks from service where org is afnemer
             $result = $this->aangebodenGebruikService->getGebruiksWhereAfnemer($options);
@@ -146,9 +150,13 @@ class AangebodenGebruikController extends Controller
         try {
             // Check if user is in admin or ambtenaar group
             if (!$this->isUserInGroup('admin') && !$this->isUserInGroup('ambtenaar')) {
+                // Get user ID for logging (may be null if not authenticated)
+                $user = $this->userSession->getUser();
+                $userId = $user ? $user->getUID() : 'null';
+                
                 $this->logger->warning('API: Access denied - user not in admin or ambtenaar group', [
                     'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
-                    'user' => $this->userId
+                    'user' => $userId
                 ]);
                 
                 return new JSONResponse([
@@ -163,7 +171,8 @@ class AangebodenGebruikController extends Controller
             }
 
             // Parse query parameters for filtering options (force database source)
-            $options = $this->parseQueryOptionsWithDatabaseSource();
+            // Don't include product filter for "get all" endpoint
+            $options = $this->parseQueryOptions();
             
             // Get all gebruiks from service (ignoring RBAC/multitenancy)
             $result = $this->aangebodenGebruikService->getAllGebruiksForAmbtenaar($options);
@@ -221,10 +230,14 @@ class AangebodenGebruikController extends Controller
         try {
             // Check if user is in admin or ambtenaar group
             if (!$this->isUserInGroup('admin') && !$this->isUserInGroup('ambtenaar')) {
+                // Get user ID for logging (may be null if not authenticated)
+                $user = $this->userSession->getUser();
+                $userId = $user ? $user->getUID() : 'null';
+                
                 $this->logger->warning('API: Access denied - user not in admin or ambtenaar group', [
                     'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
                     'gebruik_id' => $gebruikId,
-                    'user' => $this->userId
+                    'user' => $userId
                 ]);
                 
                 return new JSONResponse([
@@ -239,7 +252,8 @@ class AangebodenGebruikController extends Controller
             }
 
             // Parse query parameters for filtering options (force database source)
-            $options = $this->parseQueryOptionsWithDatabaseSource();
+            // Don't include product filter - we use uses parameter instead
+            $options = $this->parseQueryOptions();
             
             // Get single gebruik from service (ignoring RBAC/multitenancy)
             $result = $this->aangebodenGebruikService->getSingleGebruikForAmbtenaar($gebruikId, $options);
@@ -284,29 +298,36 @@ class AangebodenGebruikController extends Controller
     private function isUserInGroup(string $groupName): bool
     {
         try {
-            if (!$this->userId) {
+            // Get the current user from the session
+            $user = $this->userSession->getUser();
+            if (!$user) {
+                $this->logger->debug('No user in session for group check', [
+                    'group' => $groupName
+                ]);
                 return false;
             }
 
-            $userManager = \OC::$server->getUserManager();
+            $userId = $user->getUID();
             $groupManager = \OC::$server->getGroupManager();
             
-            $user = $userManager->get($this->userId);
-            if (!$user) {
-                return false;
-            }
-
             $group = $groupManager->get($groupName);
             if (!$group) {
                 $this->logger->warning('Group does not exist', ['group' => $groupName]);
                 return false;
             }
 
-            return $group->inGroup($user);
+            $isInGroup = $group->inGroup($user);
+            
+            $this->logger->debug('User group membership check', [
+                'user' => $userId,
+                'group' => $groupName,
+                'isMember' => $isInGroup
+            ]);
+
+            return $isInGroup;
             
         } catch (\Exception $e) {
             $this->logger->error('Failed to check user group membership', [
-                'user' => $this->userId,
                 'group' => $groupName,
                 'error' => $e->getMessage()
             ]);
@@ -343,7 +364,8 @@ class AangebodenGebruikController extends Controller
 
         try {
             // Parse query parameters for filtering options
-            $options = $this->parseQueryOptions();
+            // Don't include product filter for deelnemers endpoint
+            $options = $this->parseQueryOptions(false);
             
             // Get gebruiks from service where org is in deelnemers
             $result = $this->aangebodenGebruikService->getGebruiksWhereDeelnemers($options);
@@ -712,31 +734,14 @@ class AangebodenGebruikController extends Controller
         return new JSONResponse($documentation, 200);
     }
 
-    /**
-     * Parse query parameters into options array for service methods with forced database source
-     *
-     * This method is specifically for custom endpoints that need to bypass caching
-     * and force direct database access for real-time data consistency.
-     *
-     * @return array Parsed options including pagination, filters, and forced database source
-     */
-    private function parseQueryOptionsWithDatabaseSource(): array
-    {
-        $options = $this->parseQueryOptions();
-        
-        // Force database source for all custom endpoints to ensure real-time data
-        $options['_source'] = 'database';
-        
-        return $options;
-    }
 
     /**
      * Parse query parameters into options array
      * 
      * This method extracts and validates query parameters for filtering,
-     * pagination, and other options.
+     * pagination, and other options. Always forces database source for real-time data.
      * 
-     * @return array Parsed options array
+     * @return array Parsed options array with database source
      */
     private function parseQueryOptions(): array
     {
@@ -759,11 +764,6 @@ class AangebodenGebruikController extends Controller
             $options['status'] = trim($status);
         }
         
-        $product = $this->request->getParam('product');
-        if ($product !== null && !empty(trim($product))) {
-            $options['product'] = trim($product);
-        }
-        
         $startDate = $this->request->getParam('startDate');
         if ($startDate !== null && !empty(trim($startDate))) {
             $options['startDate'] = trim($startDate);
@@ -774,12 +774,14 @@ class AangebodenGebruikController extends Controller
             $options['endDate'] = trim($endDate);
         }
         
+        // Force database source for all custom endpoints to ensure real-time data
+        $options['_source'] = 'database';
+        
         $this->logger->debug('Parsed query options for AangebodenGebruik', [
             'raw_params' => [
                 'limit' => $limit,
                 'offset' => $offset,
                 'status' => $status,
-                'product' => $product,
                 'startDate' => $startDate,
                 'endDate' => $endDate
             ],
