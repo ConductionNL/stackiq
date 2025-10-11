@@ -79,6 +79,7 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     * @PublicPage
      * 
      * @return JSONResponse JSON response with gebruiks array where org is afnemer
      */
@@ -136,6 +137,7 @@ class AangebodenGebruikController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @PublicPage
      *
      * @return JSONResponse All gebruiks objects in standard searchObjectsPaginated format
      */
@@ -154,20 +156,20 @@ class AangebodenGebruikController extends Controller
                 $user = $this->userSession->getUser();
                 $userId = $user ? $user->getUID() : 'null';
                 
-                $this->logger->warning('API: Access denied - user not in admin or ambtenaar group', [
+                $this->logger->info('API: Returning empty results - user not in admin or ambtenaar group', [
                     'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
                     'user' => $userId
                 ]);
                 
+                // Return empty results with 200 status (not an error)
                 return new JSONResponse([
                     'results' => [],
                     'total' => 0,
                     'page' => 1,
-                    'pages' => 0,
+                    'pages' => 1,
                     'limit' => 20,
-                    'offset' => 0,
-                    'error' => 'Access denied: admin or ambtenaar group required'
-                ], 403);
+                    'offset' => 0
+                ], 200);
             }
 
             // Parse query parameters for filtering options (force database source)
@@ -214,6 +216,8 @@ class AangebodenGebruikController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @PublicPage
+     * @PublicPage
      *
      * @param string $gebruikId The ID of the gebruik object to retrieve
      * @return JSONResponse Single gebruik object in standard searchObjectsPaginated format
@@ -234,21 +238,21 @@ class AangebodenGebruikController extends Controller
                 $user = $this->userSession->getUser();
                 $userId = $user ? $user->getUID() : 'null';
                 
-                $this->logger->warning('API: Access denied - user not in admin or ambtenaar group', [
+                $this->logger->info('API: Returning empty results - user not in admin or ambtenaar group', [
                     'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
                     'gebruik_id' => $gebruikId,
                     'user' => $userId
                 ]);
                 
+                // Return empty results with 200 status (not an error)
                 return new JSONResponse([
                     'results' => [],
                     'total' => 0,
                     'page' => 1,
-                    'pages' => 0,
+                    'pages' => 1,
                     'limit' => 20,
-                    'offset' => 0,
-                    'error' => 'Access denied: admin or ambtenaar group required'
-                ], 403);
+                    'offset' => 0
+                ], 200);
             }
 
             // Parse query parameters for filtering options (force database source)
@@ -351,6 +355,7 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     * @PublicPage
      * 
      * @return JSONResponse JSON response with gebruiks array where org is in deelnemers
      */
@@ -407,6 +412,7 @@ class AangebodenGebruikController extends Controller
      * 
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @PublicPage
      * @PublicPage
      * 
      * @param string $gebruikId The UUID of the gebruik object to update
@@ -484,6 +490,7 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     * @PublicPage
      * 
      * @param string $gebruikId The UUID of the gebruik object to delete
      * @return JSONResponse JSON response with success status and deletion details
@@ -553,6 +560,7 @@ class AangebodenGebruikController extends Controller
      * 
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @PublicPage
      * @PublicPage
      * 
      * @return JSONResponse JSON response with API documentation

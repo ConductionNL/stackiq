@@ -119,28 +119,119 @@ class AangebodenGebruikService
                 'afnemer' => $currentOrg // Filter by afnemer field instead of ownership
             ];
             
-            // Add additional filters from options (pagination, etc.)
-            $query = $this->addQueryFilters($query, $options);
+            // Store original pagination parameters
+            $requestedLimit = $options['_limit'] ?? 20;
+            $requestedPage = $options['_page'] ?? 1;
+            
+            // Calculate offset from page or use explicit offset
+            if (isset($options['_offset'])) {
+                $requestedOffset = $options['_offset'];
+            } else {
+                // Calculate offset from page number
+                $requestedOffset = ($requestedPage - 1) * $requestedLimit;
+            }
+            
+            // Fetch a large batch for filtering (since we filter post-fetch)
+            // We need to fetch more than requested because some will be filtered out
+            $fetchOptions = $options;
+            $fetchOptions['_limit'] = 1000;  // Fetch a large batch
+            $fetchOptions['_offset'] = 0;    // Always start from beginning for now
+            unset($fetchOptions['_page']);   // Remove page parameter
+            
+            // Add additional filters from options (search, extend, etc.)
+            $query = $this->addQueryFilters($query, $fetchOptions);
             
             $this->logger->debug('AangebodenGebruikService: Executing search query', [
                 'query' => $query,
                 'schema_id' => $schemaId,
-                'current_org' => $currentOrg
+                'current_org' => $currentOrg,
+                'fetch_limit' => 1000,
+                'requested_limit' => $requestedLimit,
+                'requested_offset' => $requestedOffset
             ]);
             
             // Execute search with RBAC and multitenancy disabled to find cross-organisation objects
-            // Return the searchObjectsPaginated result directly - it's already properly formatted
+            // Fetch a large batch that we'll filter and paginate afterward
             $searchResult = $objectService->searchObjectsPaginated(
                 query: $query,
                 rbac: false,  // Disable RBAC to find cross-organisation objects
                 multi: false  // Disable multitenancy to find objects from other organisations
             );
             
-            $this->logger->debug('AangebodenGebruikService: Search completed', [
+            $this->logger->debug('AangebodenGebruikService: Search completed before filtering', [
                 'total' => $searchResult['total'] ?? 0,
                 'results_count' => count($searchResult['results'] ?? []),
                 'organisation' => $currentOrg
             ]);
+            
+            // Filter out objects where the active organization is already the owner
+            // Only return objects that are offered TO this org but not yet owned BY this org
+            $filteredResults = [];
+            foreach ($searchResult['results'] ?? [] as $result) {
+                // Convert ObjectEntity to array if needed
+                $resultData = is_array($result) ? $result : $result->getObject();
+                $selfOrg = $resultData['@self']['organisation'] ?? null;
+                
+                // Only include if the current org is NOT already the owner
+                if ($selfOrg !== $currentOrg) {
+                    $filteredResults[] = $result;
+                }
+            }
+            
+            $this->logger->debug('AangebodenGebruikService: Filtering completed', [
+                'original_count' => count($searchResult['results'] ?? []),
+                'filtered_count' => count($filteredResults),
+                'removed_count' => (count($searchResult['results'] ?? []) - count($filteredResults))
+            ]);
+            
+            // Apply pagination to filtered results
+            $totalFiltered = count($filteredResults);
+            $paginatedResults = array_slice($filteredResults, $requestedOffset, $requestedLimit);
+            
+            // Calculate pagination metadata
+            $totalPages = $requestedLimit > 0 
+                ? (int) ceil($totalFiltered / $requestedLimit) 
+                : 1;
+            $currentPage = $requestedOffset > 0 
+                ? (int) floor($requestedOffset / $requestedLimit) + 1 
+                : $requestedPage;
+            
+            // Build next/previous links
+            $nextLink = null;
+            $prevLink = null;
+            if ($currentPage < $totalPages) {
+                $nextPage = $currentPage + 1;
+                $nextLink = "/index.php/apps/softwarecatalog/api/aangeboden-gebruik/afnemer?_limit={$requestedLimit}&_source=database&page={$nextPage}";
+            }
+            if ($currentPage > 1) {
+                $prevPage = $currentPage - 1;
+                $prevLink = "/index.php/apps/softwarecatalog/api/aangeboden-gebruik/afnemer?_limit={$requestedLimit}&_source=database&page={$prevPage}";
+            }
+            
+            $this->logger->debug('AangebodenGebruikService: Pagination applied', [
+                'total_filtered' => $totalFiltered,
+                'requested_limit' => $requestedLimit,
+                'requested_offset' => $requestedOffset,
+                'current_page' => $currentPage,
+                'total_pages' => $totalPages,
+                'returned_count' => count($paginatedResults)
+            ]);
+            
+            // Update the result with paginated filtered data
+            $searchResult['results'] = $paginatedResults;
+            $searchResult['total'] = $totalFiltered;
+            $searchResult['pages'] = $totalPages;
+            $searchResult['page'] = $currentPage;
+            $searchResult['limit'] = $requestedLimit;
+            $searchResult['offset'] = $requestedOffset;
+            if ($nextLink) {
+                $searchResult['next'] = $nextLink;
+            } else {
+                unset($searchResult['next']);
+            }
+            if ($prevLink) {
+                $searchResult['previous'] = $prevLink;
+            }
             
             return $searchResult;
 
@@ -772,32 +863,23 @@ class AangebodenGebruikService
 
             // Get the existing gebruik object with RBAC and multitenancy disabled
             // since the object might be owned by a different organisation (leverancier)
-            // Use searchObjectsPaginated since it works better for cross-organisation access
             $gebruiksConfig = $this->getGebruiksConfiguration();
-            $searchQuery = [
-                '@self' => [
-                    'register' => $gebruiksConfig['register_id'],
-                    'schema' => $gebruiksConfig['schemas'][0],
-                    'id' => $gebruikId
-                ]
-            ];
             
             try {
-                $searchResult = $objectService->searchObjectsPaginated(
-                    query: $searchQuery,
+                $existingGebruik = $objectService->find(
+                    id: $gebruikId,
                     rbac: false,  // Disable RBAC to access cross-organisation objects
                     multi: false  // Disable multitenancy to access objects from other organisations
                 );
                 
-                $existingGebruik = null;
-                $gebruikData = null;
-                
-                if (isset($searchResult['results']) && count($searchResult['results']) > 0) {
-                    $gebruikData = $searchResult['results'][0];
+                if ($existingGebruik) {
+                    $gebruikData = $existingGebruik->getObject();
                     $this->logger->debug('Found gebruik object for deletion', [
                         'gebruik_id' => $gebruikId,
                         'afnemer' => $gebruikData['afnemer'] ?? 'unknown'
                     ]);
+                } else {
+                    $gebruikData = null;
                 }
             } catch (Exception $e) {
                 $this->logger->warning('Failed to find gebruik object for deletion', [
