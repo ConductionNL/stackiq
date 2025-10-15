@@ -974,6 +974,8 @@ class ContactPersonHandler
      *
      * This method stores the organization UUID in the user's 'core' namespace
      * configuration, making it accessible to other apps like OpenConnector.
+     * It also sets the user's active organisation in OpenRegister so they're
+     * automatically logged into the correct organisation.
      *
      * @param IUser $user The user object
      * @param string|int $organizationUuid The organization UUID (can be string or int)
@@ -987,6 +989,7 @@ class ContactPersonHandler
                 // Convert to string to ensure consistent storage
                 $organizationUuidStr = (string)$organizationUuid;
 
+                // Store in core config for OpenConnector access
                 $this->config->setUserValue(
                     $user->getUID(),
                     'core',
@@ -994,14 +997,33 @@ class ContactPersonHandler
                     $organizationUuidStr
                 );
 
-                $this->_logger->info(
-                    'Stored organization UUID in user config',
-                    [
-                        'username' => $user->getUID(),
-                        'organizationUuid' => $organizationUuidStr,
-                        'organizationUuid_type' => gettype($organizationUuid)
-                    ]
-                );
+                // Also set as active organisation in OpenRegister
+                try {
+                    $this->config->setUserValue(
+                        $user->getUID(),
+                        'openregister',
+                        'active_organisation',
+                        $organizationUuidStr
+                    );
+
+                    $this->_logger->info(
+                        'Stored organization UUID in user config and set as active organisation',
+                        [
+                            'username' => $user->getUID(),
+                            'organizationUuid' => $organizationUuidStr,
+                            'organizationUuid_type' => gettype($organizationUuid)
+                        ]
+                    );
+                } catch (\Exception $e) {
+                    $this->_logger->warning(
+                        'Failed to set active organisation in OpenRegister config, but core config was successful',
+                        [
+                            'username' => $user->getUID(),
+                            'organizationUuid' => $organizationUuidStr,
+                            'error' => $e->getMessage()
+                        ]
+                    );
+                }
             }
         } catch (\Exception $e) {
             $this->_logger->error(
@@ -2006,6 +2028,10 @@ class ContactPersonHandler
     /**
      * Adds a user to the organization entity (OpenRegister entity, not object)
      *
+     * This method ensures that an organization entity exists in OpenRegister's database
+     * before adding the user to it. If the entity doesn't exist, it will be created
+     * from the organization object data.
+     *
      * @param object $contactpersoonObject The contactpersoon object
      * @param string $username The username to add
      *
@@ -2033,30 +2059,46 @@ class ContactPersonHandler
 
             try {
                 $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
-                $organisation = $organisationMapper->findByUuid($organizationUuid);
-
-                if ($organisation) {
-                    $currentUsers = $organisation->getUsers() ?? [];
-                    if (!in_array($username, $currentUsers)) {
-                        $currentUsers[] = $username;
-                        $organisation->setUsers($currentUsers);
-                        $organisationMapper->save($organisation);
-
-                        $this->_logger->info('ContactPersonHandler: Successfully added user to organization entity', [
-                            'objectId' => $contactpersoonObject->getId(),
-                            'username' => $username,
-                            'organizationUuid' => $organizationUuid,
-                            'totalUsers' => count($currentUsers)
-                        ]);
-                    } else {
-                        $this->_logger->info('ContactPersonHandler: User already in organization entity', [
-                            'objectId' => $contactpersoonObject->getId(),
-                            'username' => $username,
+                
+                // Try to find the organisation entity
+                try {
+                    $organisation = $organisationMapper->findByUuid($organizationUuid);
+                    
+                    $this->_logger->info('ContactPersonHandler: Found existing organization entity', [
+                        'organizationUuid' => $organizationUuid,
+                        'organizationName' => $organisation->getName()
+                    ]);
+                } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                    // Organization entity doesn't exist, create it from the object data
+                    $this->_logger->info('ContactPersonHandler: Organization entity not found, creating it', [
+                        'organizationUuid' => $organizationUuid
+                    ]);
+                    
+                    $organisation = $this->ensureOrganizationEntity($organizationUuid);
+                    
+                    if (!$organisation) {
+                        $this->_logger->error('ContactPersonHandler: Failed to create organization entity', [
                             'organizationUuid' => $organizationUuid
                         ]);
+                        return;
                     }
+                }
+
+                // Add user to the organisation entity
+                $currentUsers = $organisation->getUsers() ?? [];
+                if (!in_array($username, $currentUsers)) {
+                    $currentUsers[] = $username;
+                    $organisation->setUsers($currentUsers);
+                    $organisationMapper->update($organisation);
+
+                    $this->_logger->info('ContactPersonHandler: Successfully added user to organization entity', [
+                        'objectId' => $contactpersoonObject->getId(),
+                        'username' => $username,
+                        'organizationUuid' => $organizationUuid,
+                        'totalUsers' => count($currentUsers)
+                    ]);
                 } else {
-                    $this->_logger->warning('ContactPersonHandler: Organization entity not found', [
+                    $this->_logger->info('ContactPersonHandler: User already in organization entity', [
                         'objectId' => $contactpersoonObject->getId(),
                         'username' => $username,
                         'organizationUuid' => $organizationUuid
@@ -2067,7 +2109,8 @@ class ContactPersonHandler
                     'objectId' => $contactpersoonObject->getId(),
                     'username' => $username,
                     'organizationUuid' => $organizationUuid,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
                 ]);
             }
         } catch (\Exception $e) {
@@ -2076,6 +2119,74 @@ class ContactPersonHandler
                 'username' => $username,
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Ensures an organization entity exists in OpenRegister
+     *
+     * If the organization entity doesn't exist, this method creates it from
+     * the organization object data in the voorzieningen register.
+     *
+     * @param string $organizationUuid The organization UUID
+     *
+     * @return \OCA\OpenRegister\Db\Organisation|null The organization entity or null on failure
+     */
+    private function ensureOrganizationEntity(string $organizationUuid): ?\OCA\OpenRegister\Db\Organisation
+    {
+        try {
+            // Get the organization object from OpenRegister
+            $objectService = $this->_getObjectService();
+            
+            // Find the organization object by UUID
+            $organizationObject = $objectService->findByUuid($organizationUuid);
+            
+            if (!$organizationObject) {
+                $this->_logger->error('ContactPersonHandler: Organization object not found in OpenRegister', [
+                    'organizationUuid' => $organizationUuid
+                ]);
+                return null;
+            }
+            
+            $organizationData = $organizationObject->getObject();
+            
+            // Get organization name and description
+            $organizationName = $organizationData['naam'] ?? $organizationData['name'] ?? 'Unknown Organization';
+            $organizationDescription = $organizationData['beschrijving'] ?? $organizationData['beschrijvingLang'] ?? $organizationData['description'] ?? '';
+            
+            $this->_logger->info('ContactPersonHandler: Creating organization entity from object data', [
+                'organizationUuid' => $organizationUuid,
+                'organizationName' => $organizationName
+            ]);
+            
+            // Create the organization entity using OrganisationService
+            $organisationService = $this->_container->get('OCA\\OpenRegister\\Service\\OrganisationService');
+            
+            // Create organisation with specific UUID, without adding current user (as we're in admin context)
+            $organisation = $organisationService->createOrganisationWithUuid(
+                $organizationName,
+                $organizationDescription,
+                $organizationUuid,
+                false  // Don't add current user (admin) to this organisation
+            );
+            
+            $this->_logger->info('ContactPersonHandler: Successfully created organization entity', [
+                'organizationUuid' => $organizationUuid,
+                'organizationName' => $organizationName,
+                'organizationId' => $organisation->getId()
+            ]);
+            
+            return $organisation;
+            
+        } catch (\Exception $e) {
+            $this->_logger->error('ContactPersonHandler: Failed to ensure organization entity', [
+                'organizationUuid' => $organizationUuid,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
         }
     }
 
