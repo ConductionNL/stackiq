@@ -825,6 +825,7 @@
                     "type": {
                         "description": "Het type dienst dat wordt aangeboden",
                         "type": "string",
+                        "required": true,
                         "visible": true,
                         "order": 4,
                         "table": {
@@ -4941,6 +4942,15 @@
                             ],
                             "maxSize": 10485760
                         }
+                    },
+                    "url": {
+                        "description": "URL naar het bewijs van de compliance",
+                        "type": "string",
+                        "format": "url",
+                        "order": 1,
+                        "title": "URL",
+                        "visible": true,
+                        "facetable": true
                     }
                 },
                 "archive": [],
