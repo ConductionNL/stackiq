@@ -4950,7 +4950,7 @@
                         "order": 1,
                         "title": "URL",
                         "visible": true,
-                        "facetable": true
+                        "facetable": false
                     }
                 },
                 "archive": [],
