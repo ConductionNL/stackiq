@@ -240,30 +240,69 @@ class ModuleComplianceService
     private function extractStandaardversieUuids(array $complianceObjects): array
     {
         $standaardversieUuids = [];
+        $tracking = [
+            'withStandaardversie' => 0,
+            'withoutStandaardversie' => 0,
+            'stringType' => 0,
+            'arrayType' => 0,
+            'objectType' => 0,
+            'invalidType' => 0,
+        ];
 
         foreach ($complianceObjects as $complianceObject) {
             $complianceData = $complianceObject->getObject();
             $standaardversie = $complianceData['standaardversie'] ?? null;
             
             if ($standaardversie) {
+                $tracking['withStandaardversie']++;
+                
                 // Handle both string UUID and object with UUID property
                 if (is_string($standaardversie)) {
+                    $tracking['stringType']++;
                     $standaardversieUuids[] = $standaardversie;
+                    $this->logger->debug('ModuleComplianceService: Found string standaardversie', [
+                        'complianceId' => $complianceObject->getId(),
+                        'standaardversie' => $standaardversie
+                    ]);
                 } elseif (is_array($standaardversie) && isset($standaardversie['uuid'])) {
+                    $tracking['arrayType']++;
                     $standaardversieUuids[] = $standaardversie['uuid'];
+                    $this->logger->debug('ModuleComplianceService: Found array standaardversie', [
+                        'complianceId' => $complianceObject->getId(),
+                        'standaardversie' => $standaardversie['uuid']
+                    ]);
                 } elseif (is_object($standaardversie) && isset($standaardversie->uuid)) {
+                    $tracking['objectType']++;
                     $standaardversieUuids[] = $standaardversie->uuid;
+                    $this->logger->debug('ModuleComplianceService: Found object standaardversie', [
+                        'complianceId' => $complianceObject->getId(),
+                        'standaardversie' => $standaardversie->uuid
+                    ]);
+                } else {
+                    $tracking['invalidType']++;
+                    $this->logger->warning('ModuleComplianceService: Invalid standaardversie type', [
+                        'complianceId' => $complianceObject->getId(),
+                        'type' => gettype($standaardversie),
+                        'value' => is_array($standaardversie) ? json_encode($standaardversie) : (string)$standaardversie
+                    ]);
                 }
+            } else {
+                $tracking['withoutStandaardversie']++;
+                $this->logger->debug('ModuleComplianceService: Compliance object missing standaardversie', [
+                    'complianceId' => $complianceObject->getId(),
+                    'complianceUuid' => $complianceData['uuid'] ?? 'unknown'
+                ]);
             }
         }
 
         // Remove duplicates and empty values
         $standaardversieUuids = array_unique(array_filter($standaardversieUuids));
 
-        $this->logger->debug('ModuleComplianceService: Extracted standaardversie UUIDs', [
+        $this->logger->info('ModuleComplianceService: Extracted standaardversie UUIDs', [
             'complianceCount' => count($complianceObjects),
-            'standaardversieUuids' => $standaardversieUuids,
-            'uniqueCount' => count($standaardversieUuids)
+            'tracking' => $tracking,
+            'uniqueStandaardversieUuids' => count($standaardversieUuids),
+            'standaardversieUuids' => $standaardversieUuids
         ]);
 
         return $standaardversieUuids;
@@ -356,10 +395,22 @@ class ModuleComplianceService
         
         $results = [
             'totalProcessed' => 0,
+            'complianceMissingModule' => 0,
+            'complianceMissingStandaardversie' => 0,
             'modulesFound' => 0,
+            'modulesNotFound' => 0,
+            'modulesWithNoStandards' => 0,
+            'modulesAlreadyUpToDate' => 0,
             'modulesUpdated' => 0,
             'standardsAdded' => 0,
             'errors' => [],
+            'samples' => [
+                'complianceWithStandaardversie' => [],
+                'complianceWithoutStandaardversie' => [],
+                'modulesUpdated' => [],
+                'modulesSkipped' => [],
+            ],
+            'modules' => [], // Full list of all processed modules
         ];
 
         try {
@@ -390,13 +441,36 @@ class ModuleComplianceService
 
             $results['totalProcessed'] = count($complianceObjects);
 
-            // Group compliance objects by module UUID
+            // Group compliance objects by module UUID and track samples
             $complianceByModule = [];
+            $sampleCount = 0;
+            
             foreach ($complianceObjects as $complianceObject) {
                 $complianceData = $complianceObject->getObject();
                 $moduleUuid = $complianceData['module'] ?? null;
+                $standaardversie = $complianceData['standaardversie'] ?? null;
+                
+                // Track compliance objects with/without standaardversie (first 5 samples)
+                if ($sampleCount < 5) {
+                    if ($standaardversie) {
+                        $results['samples']['complianceWithStandaardversie'][] = [
+                            'id' => $complianceObject->getId(),
+                            'uuid' => $complianceData['uuid'] ?? 'unknown',
+                            'module' => $moduleUuid,
+                            'standaardversie' => $standaardversie,
+                        ];
+                    } else {
+                        $results['samples']['complianceWithoutStandaardversie'][] = [
+                            'id' => $complianceObject->getId(),
+                            'uuid' => $complianceData['uuid'] ?? 'unknown',
+                            'module' => $moduleUuid,
+                        ];
+                    }
+                    $sampleCount++;
+                }
                 
                 if (!$moduleUuid) {
+                    $results['complianceMissingModule']++;
                     $results['errors'][] = 'Compliance object has no module reference: ' . $complianceObject->getId();
                     continue;
                 }
@@ -427,19 +501,59 @@ class ModuleComplianceService
                     // Find the module object
                     $moduleObject = $objectService->find($moduleUuid);
                     if (!$moduleObject) {
+                        $results['modulesNotFound']++;
                         $results['errors'][] = 'Module not found for UUID: ' . $moduleUuid;
+                        
+                        // Add to full modules list
+                        $results['modules'][] = [
+                            'uuid' => $moduleUuid,
+                            'name' => 'Not Found',
+                            'status' => 'error',
+                            'reason' => 'Module not found in database',
+                            'complianceCount' => count($moduleComplianceObjects),
+                            'currentStandaarden' => [],
+                            'newStandaarden' => [],
+                            'standardsCount' => 0,
+                        ];
                         continue;
                     }
+
+                    // Get module data for tracking
+                    $moduleData = $moduleObject->getObject();
+                    $moduleName = $moduleData['name'] ?? $moduleData['title'] ?? 'Unknown';
 
                     // Extract standaardversie UUIDs from compliance objects
                     $standaardversieUuids = $this->extractStandaardversieUuids($moduleComplianceObjects);
                     
                     if (empty($standaardversieUuids)) {
-                        continue; // No standards to sync
+                        $results['modulesWithNoStandards']++;
+                        $results['complianceMissingStandaardversie'] += count($moduleComplianceObjects);
+                        
+                        // Add to full modules list
+                        $results['modules'][] = [
+                            'uuid' => $moduleUuid,
+                            'name' => $moduleName,
+                            'status' => 'skipped',
+                            'reason' => 'No standaardversie found',
+                            'complianceCount' => count($moduleComplianceObjects),
+                            'currentStandaarden' => [],
+                            'newStandaarden' => [],
+                            'standardsCount' => 0,
+                        ];
+                        
+                        // Add to samples (first 5)
+                        if (count($results['samples']['modulesSkipped']) < 5) {
+                            $results['samples']['modulesSkipped'][] = [
+                                'uuid' => $moduleUuid,
+                                'name' => $moduleName,
+                                'reason' => 'No standaardversie found in ' . count($moduleComplianceObjects) . ' compliance object(s)',
+                                'complianceCount' => count($moduleComplianceObjects),
+                            ];
+                        }
+                        continue;
                     }
 
                     // Get current standaarden from module
-                    $moduleData = $moduleObject->getObject();
                     $currentStandaarden = $moduleData['standaarden'] ?? [];
                     
                     // Ensure currentStandaarden is an array
@@ -455,11 +569,61 @@ class ModuleComplianceService
                         $results['modulesUpdated']++;
                         $results['standardsAdded'] += count($standaardversieUuids);
                         
+                        // Add to full modules list
+                        $results['modules'][] = [
+                            'uuid' => $moduleUuid,
+                            'name' => $moduleName,
+                            'status' => 'updated',
+                            'reason' => 'Standards updated',
+                            'complianceCount' => count($moduleComplianceObjects),
+                            'currentStandaarden' => $currentStandaarden,
+                            'newStandaarden' => $standaardversieUuids,
+                            'standardsCount' => count($standaardversieUuids),
+                        ];
+                        
+                        // Add to samples (first 5)
+                        if (count($results['samples']['modulesUpdated']) < 5) {
+                            $results['samples']['modulesUpdated'][] = [
+                                'uuid' => $moduleUuid,
+                                'name' => $moduleName,
+                                'oldStandaarden' => $currentStandaarden,
+                                'newStandaarden' => $standaardversieUuids,
+                                'complianceCount' => count($moduleComplianceObjects),
+                            ];
+                        }
+                        
                         $this->logger->info('ModuleComplianceService: Updated module in bulk sync', [
                             'moduleUuid' => $moduleUuid,
+                            'moduleName' => $moduleName,
                             'standaarden' => $standaardversieUuids,
                             'count' => count($standaardversieUuids)
                         ]);
+                    } else {
+                        $results['modulesAlreadyUpToDate']++;
+                        
+                        // Add to full modules list
+                        $results['modules'][] = [
+                            'uuid' => $moduleUuid,
+                            'name' => $moduleName,
+                            'status' => 'up-to-date',
+                            'reason' => 'Already up-to-date',
+                            'complianceCount' => count($moduleComplianceObjects),
+                            'currentStandaarden' => $currentStandaarden,
+                            'newStandaarden' => $standaardversieUuids,
+                            'standardsCount' => count($currentStandaarden),
+                        ];
+                        
+                        // Add to samples (first 5)
+                        if (count($results['samples']['modulesSkipped']) < 5) {
+                            $results['samples']['modulesSkipped'][] = [
+                                'uuid' => $moduleUuid,
+                                'name' => $moduleName,
+                                'reason' => 'Already up-to-date',
+                                'currentStandaarden' => $currentStandaarden,
+                                'extractedStandaarden' => $standaardversieUuids,
+                                'complianceCount' => count($moduleComplianceObjects),
+                            ];
+                        }
                     }
 
                 } catch (\Exception $e) {
