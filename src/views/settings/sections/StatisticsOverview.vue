@@ -139,11 +139,58 @@
 							</div>
 							<div class="stat-item">
 								<span class="stat-label">Modules updated:</span>
-								<span class="stat-value">{{ syncResults.modulesUpdated }}</span>
+								<span class="stat-value success-value">{{ syncResults.modulesUpdated }}</span>
+							</div>
+							<div class="stat-item">
+								<span class="stat-label">Modules already up-to-date:</span>
+								<span class="stat-value">{{ syncResults.modulesAlreadyUpToDate || 0 }}</span>
+							</div>
+							<div class="stat-item">
+								<span class="stat-label">Modules with no standards:</span>
+								<span class="stat-value warning-value">{{ syncResults.modulesWithNoStandards || 0 }}</span>
 							</div>
 							<div class="stat-item">
 								<span class="stat-label">Standards added:</span>
 								<span class="stat-value">{{ syncResults.standardsAdded }}</span>
+							</div>
+						</div>
+
+						<!-- Modules Table -->
+						<div v-if="syncResults.modules && syncResults.modules.length > 0" class="modules-table-section">
+							<h4>Processed Modules ({{ syncResults.modules.length }}):</h4>
+							<div class="modules-table-container">
+								<table class="modules-table">
+									<thead>
+										<tr>
+											<th>Module Name</th>
+											<th>Status</th>
+											<th>Reason</th>
+											<th>Compliance Count</th>
+											<th>Standards Count</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr 
+											v-for="module in syncResults.modules" 
+											:key="module.uuid"
+											:class="'status-' + module.status">
+											<td class="module-name">
+												{{ module.name }}
+												<span class="module-uuid">{{ module.uuid }}</span>
+											</td>
+											<td class="module-status">
+												<span 
+													class="status-badge"
+													:class="'badge-' + module.status">
+													{{ module.status }}
+												</span>
+											</td>
+											<td class="module-reason">{{ module.reason }}</td>
+											<td class="module-count">{{ module.complianceCount }}</td>
+											<td class="module-count">{{ module.standardsCount }}</td>
+										</tr>
+									</tbody>
+								</table>
 							</div>
 						</div>
 						
@@ -532,8 +579,8 @@ export default defineComponent({
 
 /* Bulk Sync Dialog Styles */
 .bulk-sync-dialog {
-	width: 600px;
-	max-width: 90vw;
+	width: 900px;
+	max-width: 95vw;
 }
 
 .modal-header {
@@ -616,6 +663,14 @@ export default defineComponent({
 	color: var(--color-text);
 }
 
+.stat-value.success-value {
+	color: var(--color-success);
+}
+
+.stat-value.warning-value {
+	color: var(--color-warning);
+}
+
 .errors-section {
 	margin-top: 20px;
 	padding: 16px;
@@ -645,5 +700,130 @@ export default defineComponent({
 	padding: 20px;
 	border-top: 1px solid var(--color-border);
 	margin-top: 20px;
+}
+
+/* Modules Table Styles */
+.modules-table-section {
+	margin-top: 24px;
+}
+
+.modules-table-section h4 {
+	margin: 0 0 12px 0;
+	color: var(--color-text);
+}
+
+.modules-table-container {
+	max-height: 400px;
+	overflow-y: auto;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
+
+.modules-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9em;
+}
+
+.modules-table thead {
+	position: sticky;
+	top: 0;
+	background-color: var(--color-background-hover);
+	z-index: 1;
+}
+
+.modules-table th {
+	padding: 10px 12px;
+	text-align: left;
+	font-weight: 600;
+	border-bottom: 2px solid var(--color-border);
+	white-space: nowrap;
+}
+
+.modules-table td {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--color-border-dark);
+}
+
+.modules-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.modules-table tbody tr:hover {
+	background-color: var(--color-background-hover);
+}
+
+/* Row coloring by status */
+.modules-table tbody tr.status-updated {
+	background-color: rgba(70, 180, 70, 0.05);
+}
+
+.modules-table tbody tr.status-skipped {
+	background-color: rgba(255, 180, 0, 0.05);
+}
+
+.modules-table tbody tr.status-error {
+	background-color: rgba(255, 50, 50, 0.05);
+}
+
+/* Module name cell */
+.module-name {
+	max-width: 200px;
+	font-weight: 500;
+}
+
+.module-uuid {
+	display: block;
+	font-size: 0.85em;
+	color: var(--color-text-lighter);
+	font-family: monospace;
+	margin-top: 4px;
+}
+
+/* Status badges */
+.module-status {
+	text-align: center;
+}
+
+.modules-table .status-badge {
+	display: inline-block;
+	padding: 3px 8px;
+	border-radius: 12px;
+	font-size: 0.8em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.badge-updated {
+	background-color: var(--color-success);
+	color: white;
+}
+
+.badge-up-to-date {
+	background-color: var(--color-primary-element);
+	color: white;
+}
+
+.badge-skipped {
+	background-color: var(--color-warning);
+	color: white;
+}
+
+.badge-error {
+	background-color: var(--color-error);
+	color: white;
+}
+
+/* Module reason and counts */
+.module-reason {
+	color: var(--color-text-lighter);
+	max-width: 250px;
+}
+
+.module-count {
+	text-align: center;
+	font-family: monospace;
+	font-weight: 600;
 }
 </style>

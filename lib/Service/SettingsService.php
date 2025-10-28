@@ -300,8 +300,22 @@ class SettingsService
         try {
             // Update each setting in the configuration
             foreach ($data as $key => $value) {
-                // Ensure value is converted to string as required by setValueString
-                $stringValue = is_string($value) ? $value : (string) $value;
+                // Skip empty keys
+                if (empty($key)) {
+                    $this->logger->warning('Skipping empty key in updateSettings', [
+                        'value' => $value
+                    ]);
+                    continue;
+                }
+
+                // Handle arrays and objects by converting to JSON
+                if (is_array($value) || is_object($value)) {
+                    $stringValue = json_encode($value);
+                } else {
+                    // Ensure value is converted to string as required by setValueString
+                    $stringValue = is_string($value) ? $value : (string) $value;
+                }
+                
                 $this->config->setValueString($this->_appName, $key, $stringValue);
                 // Retrieve the updated value to confirm the change
                 $data[$key] = $this->config->getValueString($this->_appName, $key);
@@ -481,8 +495,12 @@ class SettingsService
             'compliancy' => 'compliancy_schema',
         ];
 
-        if($result === null && $voorzieningenConfig[$voorzieningenKeyMap[$objectType]] !== null) {
-            $result = (int) $voorzieningenConfig[$voorzieningenKeyMap[$objectType]];
+        // Only check voorzieningen config if object type exists in the key map
+        if ($result === null && isset($voorzieningenKeyMap[$objectType])) {
+            $voorzieningenKey = $voorzieningenKeyMap[$objectType];
+            if (isset($voorzieningenConfig[$voorzieningenKey]) && $voorzieningenConfig[$voorzieningenKey] !== null) {
+                $result = (int) $voorzieningenConfig[$voorzieningenKey];
+            }
         }
 
         // Check for AMEF register specific schemas (legacy individual keys)
