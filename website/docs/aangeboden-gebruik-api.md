@@ -2,15 +2,18 @@
 
 ## Overview
 
-The AangebodenGebruik API provides endpoints to manage gebruiks (usage) objects where the active organization is involved either as an afnemer (consumer) or in the deelnemers (participants) list. This API allows organizations to:
+The AangebodenGebruik API provides endpoints to manage gebruiks (usage) and koppelingen (connections) objects where the active organization is involved either as an afnemer (consumer) or in the deelnemers (participants) list. This API allows organizations to:
 
 1. Retrieve gebruiks objects where they are the afnemer
 2. Retrieve gebruiks objects where they are listed in deelnemers
 3. Update the '@self' property of a gebruik to claim ownership (only if they are the afnemer)
+4. **NEW:** Retrieve koppelingen and gebruiks with extended access control (for ambtenaar users and organization owners)
 
 ## Base URL
 
-All endpoints are prefixed with '/api/aangeboden-gebruik'
+All endpoints are prefixed with:
+- '/api/aangeboden-gebruik' (original endpoints)
+- '/api/koppelingen-gebruik/{uuid}' (UUID-specific extended access endpoint)
 
 ## Authentication
 
@@ -165,6 +168,62 @@ These endpoints require user authentication and use standard Nextcloud RBAC (Rol
 
 **Description:** Returns comprehensive API documentation including all endpoints, parameters, and examples.
 
+---
+
+## Extended Access Endpoint (Koppelingen-Gebruik)
+
+The koppelingen-gebruik endpoint provides UUID-specific extended access to both gebruiks and koppelingen objects with enhanced authorization rules. This endpoint is designed for:
+
+1. **Ambtenaar users**: Can see all objects related to any UUID, optionally filtered by organization
+2. **Application/Module/Organisation owners**: Can see all usage (koppelingen and gebruiks) related to entities their organization owns
+
+### 6. Get Koppelingen and Gebruiks for Specific UUID
+
+**Endpoint:** 'GET /api/koppelingen-gebruik/{uuid}'
+
+**Description:** Returns koppelingen and gebruiks objects related to a specific organisation, application, or module UUID. The endpoint intelligently handles three types of UUIDs:
+
+1. **Organisation UUID**: Returns all gebruiks and koppelingen owned by that organisation
+2. **Application/Product UUID**: Returns all gebruiks and koppelingen that reference that application (regardless of which organisation created them)
+3. **Module UUID**: Returns all gebruiks and koppelingen that reference that module (regardless of which organisation created them)
+
+**Access Rules:**
+- Users with 'ambtenaar' or 'admin' group: Can access any UUID
+- Users whose organization owns the specified application/module: Can access all related usage
+- Other users: Will receive empty results
+
+**Path Parameters:**
+- 'uuid' (string, required): The UUID of the application or module
+
+**Query Parameters:**
+- 'organisation' (string, optional): Filter by organization UUID (only works for ambtenaar users)
+- 'limit' (integer, optional): Maximum number of results to return (default: 20)
+- 'offset' (integer, optional): Number of results to skip for pagination (default: 0)
+
+**Response Example:**
+```json
+{
+  'results': [
+    {
+      'id': 'uuid-123',
+      'type': 'gebruik',
+      '@self': {
+        'organisation': 'org-uuid',
+        'register': 'register-id',
+        'schema': 'schema-id'
+      },
+      'afnemer': 'org-uuid',
+      'product': 'application-uuid'
+    }
+  ],
+  'total': 1,
+  'page': 1,
+  'pages': 1,
+  'limit': 20,
+  'offset': 0
+}
+```
+
 ## Error Handling
 
 The API uses standard HTTP status codes:
@@ -188,6 +247,23 @@ The API uses standard HTTP status codes:
 ### @self Update Permission
 - Verifies that the active organization is the afnemer before allowing updates
 - Prevents unauthorized modification of gebruik ownership
+
+### Extended Access Control (Koppelingen-Gebruik)
+The koppelingen-gebruik endpoints implement a multi-level access control system:
+
+**Level 1 - Ambtenaar Access:**
+- Users with 'ambtenaar' or 'admin' group membership can access all objects
+- Can optionally filter by organization UUID to inspect specific municipalities
+- Bypasses RBAC and multitenancy restrictions completely
+
+**Level 2 - Application Owner Access:**
+- Organizations that own applications or modules can see ALL usage of those applications
+- This includes gebruiks and koppelingen created by other organizations
+- Enables vendors/suppliers to monitor adoption of their products across municipalities
+
+**Level 3 - Regular Users:**
+- Users without ambtenaar privileges and whose organization doesn't own any applications receive empty results
+- Ensures data privacy for organizations that don't have elevated permissions
 
 ## Usage Examples
 
@@ -219,6 +295,20 @@ curl -X DELETE 'http://localhost/index.php/apps/softwarecatalog/api/aangeboden-g
   -u admin:admin
 ```
 
+### Get Koppelingen and Gebruiks for Specific Organisation
+```bash
+curl -X GET 'http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/org-uuid-123' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin
+```
+
+### Get Koppelingen and Gebruiks for Specific Application
+```bash
+curl -X GET 'http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/app-uuid-123' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin
+```
+
 ## Docker Testing Commands
 
 When testing in the Docker environment, use the docker-compose exec command:
@@ -245,7 +335,28 @@ docker-compose exec nextcloud curl -X PUT 'http://localhost/index.php/apps/softw
   -u admin:admin
 ```
 
-Replace 'USAGE_UUID' with an actual usage object UUID from your system.
+### Test Koppelingen-Gebruik Endpoint (By Organisation UUID)
+```bash
+docker-compose exec nextcloud curl -X GET 'http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/ORG_UUID' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin
+```
+
+### Test Koppelingen-Gebruik Endpoint (By Module UUID)
+```bash
+docker-compose exec nextcloud curl -X GET 'http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/MODULE_UUID' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin
+```
+
+### Test Koppelingen-Gebruik Endpoint (By Application UUID)
+```bash
+docker-compose exec nextcloud curl -X GET 'http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/APP_UUID' \
+  -H 'Content-Type: application/json' \
+  -u admin:admin
+```
+
+Replace 'USAGE_UUID', 'ORG_UUID', 'MODULE_UUID', and 'APP_UUID' with actual UUIDs from your system.
 
 ## Leverancier-Gemeente Workflow
 
@@ -407,9 +518,19 @@ curl -X DELETE 'http://localhost/index.php/apps/openregister/api/objects/1/8/GEB
 The AangebodenGebruik API relies on the following configuration:
 
 1. **OpenRegister App**: Must be installed and available
-2. **Voorzieningen Configuration**: Must be configured with proper register_id and gebruik_schema
+2. **Voorzieningen Configuration**: Must be configured with proper register_id, gebruik_schema, and koppeling_schema
 3. **User Organization**: Active user must have an organization associated with their account
 4. **Multi-Organisation Setup**: Both leverancier and gemeente organisations must exist and users must be able to switch between them
+5. **User Groups**: For extended access endpoints, users must be in 'ambtenaar' or 'admin' group, or their organization must own applications/modules
+
+### Configuration Setup
+
+The Voorzieningen configuration in the settings should include:
+- 'register': The register ID (e.g., 'voorzieningen')
+- 'gebruik_schema': The schema ID for gebruik objects
+- 'koppeling_schema': The schema ID for koppeling objects
+- 'product_schema': The schema ID for product/application objects (for ownership checks)
+- 'module_schema': The schema ID for module objects (for ownership checks)
 
 ## Technical Implementation
 
@@ -426,22 +547,193 @@ The AangebodenGebruik API relies on the following configuration:
 3. Service queries OpenRegister with appropriate filters (RBAC enabled/disabled)
 4. Results are processed and returned via controller
 
+## Testing
+
+### Integration Tests
+
+The SoftwareCatalog app includes comprehensive integration tests for the Koppelingen-Gebruik API endpoints. These tests verify:
+
+- API endpoint responses and status codes
+- Pagination and query parameters
+- Access control for ambtenaar users and organization owners
+- Filtering by organization
+- Search and sorting functionality
+- Response format consistency
+
+#### Running Integration Tests
+
+**Prerequisites:**
+1. Nextcloud container must be running
+2. SoftwareCatalog app must be enabled
+3. OpenRegister app must be enabled and configured
+4. Test user 'admin' with password 'admin' must exist
+5. Voorzieningen register and schemas must be configured
+
+**Install Test Dependencies:**
+
+```bash
+cd apps-extra/softwarecatalog
+composer install --dev
+```
+
+This will install Guzzle HTTP client (required for API testing) along with PHPUnit.
+
+**Run All Tests:**
+
+```bash
+# Run all tests (unit + integration)
+composer test:unit
+
+# Or use phpunit directly
+vendor/bin/phpunit
+```
+
+**Run Only Integration Tests:**
+
+```bash
+vendor/bin/phpunit --testsuite "Integration Tests"
+```
+
+**Run Specific Test:**
+
+```bash
+vendor/bin/phpunit tests/Integration/KoppelingenGebruikIntegrationTest.php
+```
+
+**Run with Verbose Output:**
+
+```bash
+vendor/bin/phpunit --testsuite "Integration Tests" --verbose
+```
+
+#### Test Coverage
+
+The integration tests cover the following scenarios with **3 test organisations** (A, B, C):
+
+**Test Organisations:**
+- **Org A**: Product Owner (owns products/modules, can see all usage including cross-org)
+- **Org B**: Product Consumer (uses products but doesn't own them)
+- **Org C**: Isolated (not involved with any products - control group)
+
+**Total Test Count:** 9 comprehensive integration tests
+
+1. **Basic Functionality:**
+   - GET /api/koppelingen-gebruik/{uuid} returns 200 OK
+   - Response contains required pagination fields
+   - Both gebruiks and koppelingen are returned
+   - Works with organisation, module, and product UUIDs
+
+2. **Pagination:**
+   - '_limit' parameter limits results correctly
+   - '_offset' parameter skips results correctly
+   - '_page' parameter works for page-based navigation
+
+3. **Access Control (3-Organisation Matrix):**
+   - Organisation UUID filtering (A, B, C isolation)
+   - Product/Module owner cross-organisation access
+   - Ambtenaar sees all organisations
+   - Organisation filter works for ambtenaar users
+   - Non-owners cannot access product usage
+   - Isolated organisation (C) remains separate
+
+4. **Query Parameters:**
+   - Sorting by different fields ('_sort', '_order')
+   - Full-text search ('_search')
+   - Filtering by organization (ambtenaar only)
+
+5. **Error Handling:**
+   - Invalid UUID returns empty results
+   - Missing configuration is handled gracefully
+
+**Detailed Documentation:**
+- `tests/Integration/TEST_MATRIX.md` - Complete test matrix
+- `tests/Integration/THREE_ORG_TEST_SUMMARY.md` - Implementation details
+
+#### Testing in Docker Container
+
+If running tests from within the Nextcloud container:
+
+```bash
+# Enter the container
+docker exec -it master-nextcloud-1 bash
+
+# Navigate to app directory
+cd /var/www/html/apps-extra/softwarecatalog
+
+# Run tests as www-data user
+sudo -u www-data vendor/bin/phpunit --testsuite "Integration Tests"
+```
+
+#### Manual API Testing
+
+You can also test the API endpoints manually using curl from within the Nextcloud container:
+
+```bash
+# Test with organisation UUID
+docker exec -u 33 master-nextcloud-1 curl -s -u 'admin:admin' \
+  -H "Content-Type: application/json" \
+  "http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{org-uuid}"
+
+# Test with product/application UUID
+docker exec -u 33 master-nextcloud-1 curl -s -u 'admin:admin' \
+  -H "Content-Type: application/json" \
+  "http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{product-uuid}"
+
+# Test with module UUID
+docker exec -u 33 master-nextcloud-1 curl -s -u 'admin:admin' \
+  -H "Content-Type: application/json" \
+  "http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{module-uuid}"
+
+# Test with pagination
+docker exec -u 33 master-nextcloud-1 curl -s -u 'admin:admin' \
+  -H "Content-Type: application/json" \
+  "http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{uuid}?_limit=10&_page=1"
+
+# Test with organization filter (ambtenaar only)
+docker exec -u 33 master-nextcloud-1 curl -s -u 'admin:admin' \
+  -H "Content-Type: application/json" \
+  "http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{uuid}?organisation={org-uuid}"
+```
+
+#### Newman/Postman Tests
+
+For automated API testing with Newman:
+
+1. Export Postman collection for the endpoints
+2. Run Newman tests against the Docker container:
+
+```bash
+newman run collection.json \
+  --environment environment.json \
+  --reporters cli,json
+```
+
+See the main project documentation for more details on Newman testing workflows.
+
 ## Troubleshooting
 
 ### Common Issues
 
 **No results returned**: 
 - Verify that the active user has an organization configured
-- Check that gebruiks objects exist with proper afnemer or deelnemers relationships
-- Ensure AMEF configuration includes valid gebruik_schemas
+- Check that gebruiks/koppelingen objects exist with proper afnemer or deelnemers relationships
+- Ensure Voorzieningen configuration includes valid gebruik_schema and koppeling_schema
+- For koppelingen-gebruik endpoints: Check user group membership or application ownership
 
 **Permission denied on @self update**:
 - Verify that the active organization is the afnemer for the specific gebruik
 - Check that the gebruik object exists and is accessible
 
+**Empty results from koppelingen-gebruik endpoints**:
+- Verify user is in 'ambtenaar' or 'admin' group if expecting full access
+- Check if user's organization owns any applications/modules in the system
+- Ensure koppeling_schema, product_schema, and module_schema are configured in Voorzieningen settings
+- Verify that applications/modules have proper @self.organisation set to the user's organization
+
 **Configuration errors**:
 - Ensure OpenRegister app is installed and enabled  
-- Verify AMEF configuration in SoftwareCatalog settings
-- Check that register_id and schema IDs are correctly configured
+- Verify Voorzieningen configuration in SoftwareCatalog settings
+- Check that register_id and all required schema IDs are correctly configured
+- Use the '/api/aangeboden-gebruik/docs' endpoint to verify configuration is loaded correctly
 
 
