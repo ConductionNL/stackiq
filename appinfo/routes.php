@@ -161,11 +161,17 @@ return [
         // AangebodenGebruik API endpoints for filtering gebruiks by organization involvement
         ['name' => 'aangebodenGebruik#getGebruiksWhereAfnemer', 'url' => '/api/aangeboden-gebruik/afnemer', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#getGebruiksWhereDeelnemers', 'url' => '/api/aangeboden-gebruik/deelnemers', 'verb' => 'GET'],
-        ['name' => 'aangebodenGebruik#getAllGebruiksForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar', 'verb' => 'GET'],
-        ['name' => 'aangebodenGebruik#getSingleGebruikForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#setGebruikSelfToActiveOrg', 'url' => '/api/aangeboden-gebruik/{gebruikId}/set-self', 'verb' => 'PUT'],
         ['name' => 'aangebodenGebruik#deleteGebruikAsAfnemer', 'url' => '/api/aangeboden-gebruik/{gebruikId}/deny', 'verb' => 'DELETE'],
         ['name' => 'aangebodenGebruik#getApiDocumentation', 'url' => '/api/aangeboden-gebruik/docs', 'verb' => 'GET'],
+        
+        // ========================================================================
+        // KOPPELINGEN-GEBRUIK API ENDPOINT - UUID-Specific Access for Gebruiks and Koppelingen
+        // ========================================================================
+        
+        // Koppelingen-Gebruik API endpoint for UUID-specific access to gebruiks and koppelingen
+        // Supports filtering by organisation UUID, module UUID, or application/product UUID
+        ['name' => 'aangebodenGebruik#getKoppelingenGebruikByUuid', 'url' => '/api/koppelingen-gebruik/{uuid}', 'verb' => 'GET'],
 
         // ========================================================================
         // MODULE COMPLIANCE MANAGEMENT API ENDPOINTS

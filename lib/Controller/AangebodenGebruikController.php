@@ -129,12 +129,87 @@ class AangebodenGebruikController extends Controller
     }
 
     /**
+     * Get koppelingen and gebruiks for a specific application/module UUID
+     *
+     * This endpoint returns both koppelingen and gebruiks related to a specific application/module.
+     * Access rules:
+     * - Users with "ambtenaar" group can see all related objects
+     * - Users whose organization owns the application/module can see all related usage
+     * - Supports filtering by organization UUID via query parameter for ambtenaar users
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @PublicPage
+     *
+     * @param string $uuid The UUID of the application/module
+     * @return JSONResponse Koppelingen and gebruiks objects for the specified UUID
+     */
+    public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse
+    {
+        $this->logger->info('API: Getting koppelingen and gebruiks for specific UUID', [
+            'endpoint' => '/api/koppelingen-gebruik/{uuid}',
+            'method' => 'GET',
+            'uuid' => $uuid,
+            'query_params' => $this->request->getParams()
+        ]);
+
+        try {
+            // Check if user is in admin or ambtenaar group
+            $isAmbtenaar = $this->isUserInGroup('admin') || $this->isUserInGroup('ambtenaar');
+            
+            // Get organization filter if provided (only for ambtenaar users)
+            $organisationFilter = $this->request->getParam('organisation');
+            
+            // Parse query parameters for filtering options
+            $options = $this->parseQueryOptions();
+            
+            // Add organization filter if provided and user is ambtenaar
+            if ($isAmbtenaar && $organisationFilter) {
+                $options['organisation'] = $organisationFilter;
+            }
+            
+            // Get koppelingen and gebruiks for UUID from service
+            $result = $this->aangebodenGebruikService->getKoppelingenGebruikByUuid($uuid, $options, $isAmbtenaar);
+            
+            // Determine HTTP status code based on whether there's an error
+            $statusCode = isset($result['error']) ? 500 : 200;
+            
+            $this->logger->info('API: Koppelingen-gebruik by UUID request completed', [
+                'uuid' => $uuid,
+                'total' => $result['total'] ?? 0,
+                'results_count' => count($result['results'] ?? []),
+                'has_error' => isset($result['error'])
+            ]);
+            
+            return new JSONResponse($result, $statusCode);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('API: Failed to get koppelingen-gebruik by UUID', [
+                'uuid' => $uuid,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'results' => [],
+                'total' => 0,
+                'page' => 1,
+                'pages' => 0,
+                'limit' => 20,
+                'offset' => 0,
+                'error' => 'Internal server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get all gebruiks objects (ignoring RBAC and multitenancy) - restricted to ambtenaar group
      *
      * This endpoint returns all gebruiks objects regardless of ownership or organization,
      * bypassing normal RBAC and multitenancy restrictions. Access is restricted to users
      * with the "ambtenaar" group.
      *
+     * @deprecated Use getKoppelingenGebruik() instead
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
@@ -568,8 +643,8 @@ class AangebodenGebruikController extends Controller
     public function getApiDocumentation(): JSONResponse
     {
         $documentation = [
-            'api_version' => '1.0.0',
-            'description' => 'SoftwareCatalog AangebodenGebruik API - Manage gebruiks objects where active organization is involved',
+            'api_version' => '2.0.0',
+            'description' => 'SoftwareCatalog AangebodenGebruik API - Manage gebruiks and koppelingen objects with extended access control',
             'base_url' => '/api/aangeboden-gebruik',
             'endpoints' => [
                 [
@@ -724,12 +799,114 @@ class AangebodenGebruikController extends Controller
                     'description' => 'Get this API documentation',
                     'parameters' => [],
                     'response_example' => '(this response)'
+                ],
+                [
+                    'method' => 'GET',
+                    'path' => '/api/koppelingen-gebruik',
+                    'description' => 'Get all koppelingen and gebruiks objects with extended access control. Access rules: Users with ambtenaar group can see all objects (optionally filtered by organization). Users whose organization owns an application/module can see all related usage.',
+                    'parameters' => [
+                        [
+                            'name' => 'organisation',
+                            'type' => 'string',
+                            'required' => false,
+                            'description' => 'Filter by organization UUID (only for ambtenaar users)'
+                        ],
+                        [
+                            'name' => 'limit',
+                            'type' => 'integer',
+                            'required' => false,
+                            'description' => 'Maximum number of results to return'
+                        ],
+                        [
+                            'name' => 'offset',
+                            'type' => 'integer',
+                            'required' => false,
+                            'description' => 'Number of results to skip for pagination'
+                        ]
+                    ],
+                    'response_example' => [
+                        'results' => [
+                            [
+                                'id' => 'uuid-123',
+                                'type' => 'gebruik',
+                                '@self' => [
+                                    'organisation' => 'org-uuid',
+                                    'register' => 'register-id',
+                                    'schema' => 'schema-id'
+                                ]
+                            ],
+                            [
+                                'id' => 'uuid-456',
+                                'type' => 'koppeling',
+                                '@self' => [
+                                    'organisation' => 'org-uuid',
+                                    'register' => 'register-id',
+                                    'schema' => 'schema-id'
+                                ]
+                            ]
+                        ],
+                        'total' => 2,
+                        'page' => 1,
+                        'pages' => 1,
+                        'limit' => 20,
+                        'offset' => 0
+                    ]
+                ],
+                [
+                    'method' => 'GET',
+                    'path' => '/api/koppelingen-gebruik/{uuid}',
+                    'description' => 'Get koppelingen and gebruiks for a specific application/module UUID. Access rules: Users with ambtenaar group can see all related objects. Users whose organization owns the application/module can see all related usage.',
+                    'parameters' => [
+                        [
+                            'name' => 'uuid',
+                            'type' => 'string',
+                            'required' => true,
+                            'description' => 'The UUID of the application/module (in URL path)'
+                        ],
+                        [
+                            'name' => 'organisation',
+                            'type' => 'string',
+                            'required' => false,
+                            'description' => 'Filter by organization UUID (only for ambtenaar users)'
+                        ],
+                        [
+                            'name' => 'limit',
+                            'type' => 'integer',
+                            'required' => false,
+                            'description' => 'Maximum number of results to return'
+                        ],
+                        [
+                            'name' => 'offset',
+                            'type' => 'integer',
+                            'required' => false,
+                            'description' => 'Number of results to skip for pagination'
+                        ]
+                    ],
+                    'response_example' => [
+                        'results' => [
+                            [
+                                'id' => 'uuid-123',
+                                'type' => 'gebruik',
+                                '@self' => [
+                                    'organisation' => 'org-uuid',
+                                    'register' => 'register-id',
+                                    'schema' => 'schema-id'
+                                ]
+                            ]
+                        ],
+                        'total' => 1,
+                        'page' => 1,
+                        'pages' => 1,
+                        'limit' => 20,
+                        'offset' => 0
+                    ]
                 ]
             ],
             'security' => [
                 'afnemer_filtering' => 'Uses standard RBAC filtering based on organization association',
                 'deelnemers_filtering' => 'Uses RBAC-disabled search to find participation records',
-                'self_update_permission' => 'Only allowed if active organization is the afnemer for the specific gebruik'
+                'self_update_permission' => 'Only allowed if active organization is the afnemer for the specific gebruik',
+                'koppelingen_gebruik_access' => 'Extended access: ambtenaar users can see all objects (optionally filtered by organization), organization owners can see usage of their applications/modules'
             ],
             'error_codes' => [
                 400 => 'Bad Request - Invalid parameters or missing required fields',
@@ -755,15 +932,22 @@ class AangebodenGebruikController extends Controller
     {
         $options = [];
         
-        // Parse pagination parameters
-        $limit = $this->request->getParam('limit');
+        // Parse pagination parameters (with and without underscore for compatibility)
+        $limit = $this->request->getParam('_limit') ?? $this->request->getParam('limit');
         if ($limit !== null && is_numeric($limit)) {
-            $options['limit'] = (int)$limit;
+            $options['_limit'] = (int)$limit;
+            $options['limit'] = (int)$limit; // Keep both for compatibility
         }
         
-        $offset = $this->request->getParam('offset');
+        $offset = $this->request->getParam('_offset') ?? $this->request->getParam('offset');
         if ($offset !== null && is_numeric($offset)) {
-            $options['offset'] = (int)$offset;
+            $options['_offset'] = (int)$offset;
+            $options['offset'] = (int)$offset; // Keep both for compatibility
+        }
+        
+        $page = $this->request->getParam('_page') ?? $this->request->getParam('page');
+        if ($page !== null && is_numeric($page)) {
+            $options['_page'] = (int)$page;
         }
         
         // Parse filter parameters
