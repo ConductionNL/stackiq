@@ -4,7 +4,7 @@
             "voorzieningen": {
                 "slug": "voorzieningen",
                 "title": "Voorzieningen",
-                "version": "2.0.1",
+                "version": "2.0.0",
                 "description": "Register voor voorzieningen uit de softwarecatalogus",
                 "schemas": [
                     "sector",
@@ -134,7 +134,7 @@
                 "slug": "property",
                 "title": "Property",
                 "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
-                "version": "0.0.9",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Tag",
                 "required": [
@@ -250,7 +250,7 @@
                 "slug": "sector",
                 "title": "Sector",
                 "description": "Schema voor sectoren binnen de softwarecatalogus",
-                "version": "0.0.9",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Domain",
                 "required": [
@@ -354,7 +354,7 @@
                 "slug": "suite",
                 "title": "Suite",
                 "description": "Een suite is een verzameling van modules die samen een product vormen",
-                "version": "0.1.1",
+                "version": "0.1.0",
                 "summary": "",
                 "icon": "PackageVariant",
                 "required": [
@@ -534,7 +534,7 @@
                 "slug": "component",
                 "title": "Component",
                 "description": "Een component is een logische groepering van modules",
-                "version": "0.1.1",
+                "version": "0.1.0",
                 "summary": "",
                 "icon": "ViewModule",
                 "required": [
@@ -714,7 +714,7 @@
                 "slug": "dienst",
                 "title": "Dienst",
                 "description": "Een specifiek aanbod van een dienst op een of meerdere modules door een leverancier",
-                "version": "0.1.1",
+                "version": "0.1.0",
                 "summary": "",
                 "icon": "Handshake",
                 "required": [
@@ -971,7 +971,7 @@
                 "slug": "kwetsbaarheid",
                 "title": "Kwetsbaarheid",
                 "description": "Schema voor kwetsbaarheden",
-                "version": "1.0.18",
+                "version": "1.0.17",
                 "summary": "",
                 "icon": "ShieldAlert",
                 "required": [
@@ -1126,7 +1126,7 @@
                 "slug": "contactpersoon",
                 "title": "Contactpersoon",
                 "description": "Contactgegevens van een persoon",
-                "version": "0.0.25",
+                "version": "0.0.24",
                 "summary": "",
                 "icon": "AccountMultiple",
                 "required": [
@@ -1408,7 +1408,7 @@
                 "slug": "organisatie",
                 "title": "Organisatie",
                 "description": "Een organisatie die voorzieningen aanbiedt",
-                "version": "0.0.99",
+                "version": "0.0.98",
                 "summary": "",
                 "icon": "OfficeBuildingOutline",
                 "required": [
@@ -1974,7 +1974,7 @@
                 "slug": "gebruik",
                 "title": "Gebruik",
                 "description": "Het gebruik van modules, diensten en koppelingen door afnemers",
-                "version": "1.1.1",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "Usage",
                 "required": [
@@ -2383,7 +2383,7 @@
                 "slug": "contract",
                 "title": "Contract",
                 "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik",
-                "version": "0.0.11",
+                "version": "0.0.10",
                 "summary": "",
                 "icon": "FileDocumentEdit",
                 "required": [
@@ -2624,7 +2624,7 @@
                 "slug": "koppeling",
                 "title": "Koppeling",
                 "description": "Schema voor koppelingen tussen modules en systemen. Er moet \u00f3f ModuleB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
-                "version": "0.0.11",
+                "version": "0.0.10",
                 "summary": "",
                 "icon": "Link",
                 "required": [],
@@ -2859,7 +2859,7 @@
                 "slug": "beoordeeling",
                 "title": "Beoordeeling",
                 "description": "Schema voor beoordelingen en waarderingen van modules en diensten",
-                "version": "0.1.1",
+                "version": "0.1.0",
                 "summary": "",
                 "icon": "Star",
                 "required": [
@@ -2989,7 +2989,7 @@
                 "slug": "element",
                 "title": "Element",
                 "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
-                "version": "0.0.9",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Cube",
                 "required": [
@@ -3160,7 +3160,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json/19",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3218,7 +3218,7 @@
                 "slug": "view",
                 "title": "View",
                 "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Eye",
                 "required": [
@@ -3413,7 +3413,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3441,6 +3441,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/View_Node.json",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3468,6 +3469,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/View_Connection.json",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3503,7 +3505,7 @@
                 "slug": "model",
                 "title": "Model",
                 "description": "AMEF Model - Volledig ArchiMate model met alle elementen, relaties en views",
-                "version": "0.0.43",
+                "version": "0.0.42",
                 "summary": "",
                 "icon": "Database",
                 "required": [
@@ -3753,7 +3755,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json/19",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3781,7 +3783,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/element",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Element.json/10",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3809,7 +3811,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/relation",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Relation.json/13",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3837,7 +3839,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/organization",
+                            "$ref": "gebruiker",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3865,7 +3867,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property-definition",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Property_Definition.json/15",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3893,7 +3895,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/view",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/View.json/11",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3929,7 +3931,7 @@
                 "slug": "organization",
                 "title": "Organization",
                 "description": "AMEF Organization - Organisatie structuren uit het ArchiMate model",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Building",
                 "required": [],
@@ -4067,7 +4069,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/organization",
+                            "$ref": "gebruiker",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -4103,7 +4105,7 @@
                 "slug": "property-definition",
                 "title": "Property Definition",
                 "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Settings",
                 "required": [
@@ -4229,7 +4231,7 @@
                 "slug": "relation",
                 "title": "Relation",
                 "description": "AMEF Relation - Relaties tussen architectuur elementen uit het ArchiMate model",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "ArrowRight",
                 "required": [
@@ -4494,7 +4496,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json/19",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -4531,7 +4533,7 @@
                 "slug": "module",
                 "title": "Module",
                 "description": "Een module is een softwarecomponent (applicatie of systeemsoftware)",
-                "version": "0.1.1",
+                "version": "0.1.0",
                 "summary": "",
                 "icon": "Package",
                 "required": [
@@ -4970,7 +4972,7 @@
                 "slug": "compliancy",
                 "title": "Compliancy",
                 "description": "Schema voor compliancy en standaard ondersteuning",
-                "version": "0.0.9",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "CheckCircle",
                 "required": [],
@@ -5067,7 +5069,7 @@
                 "slug": "moduleVersie",
                 "title": "Module Versie",
                 "description": "Schema voor module versies",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "ViewModule",
                 "required": [],
@@ -5193,6 +5195,6 @@
         "id": 14,
         "title": "Software Catalog Register",
         "description": "Register containing AMEF and Voorzieningen schemas - Product schema has been merged into Module, with new Suite and Component schemas added",
-        "version": "2.0.1"
+        "version": "2.0.0"
     }
 }
