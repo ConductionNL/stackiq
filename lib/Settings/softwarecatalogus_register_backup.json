@@ -4,13 +4,11 @@
             "voorzieningen": {
                 "slug": "voorzieningen",
                 "title": "Voorzieningen",
-                "version": "2.0.1",
+                "version": "1.0.9",
                 "description": "Register voor voorzieningen uit de softwarecatalogus",
                 "schemas": [
                     "sector",
-                    "suite",
-                    "component",
-                    "module",
+                    "product",
                     "dienst",
                     "kwetsbaarheid",
                     "contactpersoon",
@@ -19,6 +17,7 @@
                     "contract",
                     "koppeling",
                     "beoordeeling",
+                    "module",
                     "compliancy",
                     "moduleVersie"
                 ],
@@ -134,7 +133,7 @@
                 "slug": "property",
                 "title": "Property",
                 "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
-                "version": "0.0.9",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Tag",
                 "required": [
@@ -250,7 +249,7 @@
                 "slug": "sector",
                 "title": "Sector",
                 "description": "Schema voor sectoren binnen de softwarecatalogus",
-                "version": "0.0.9",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Domain",
                 "required": [
@@ -349,278 +348,228 @@
                 },
                 "searchable": true
             },
-            "suite": {
+            "product": {
                 "uri": null,
-                "slug": "suite",
-                "title": "Suite",
-                "description": "Een suite is een verzameling van modules die samen een product vormen",
-                "version": "0.1.1",
+                "slug": "product",
+                "title": "Product",
+                "description": "Een product, suite of monobrand",
+                "version": "0.0.89",
                 "summary": "",
-                "icon": "PackageVariant",
+                "icon": "ApplicationCog",
                 "required": [
                     "naam",
                     "beschrijvingKort"
                 ],
                 "properties": {
                     "naam": {
-                        "description": "Naam van de suite",
+                        "description": "Naam van het product,suite of monobrand",
                         "type": "string",
                         "required": true,
                         "visible": true,
                         "order": 1,
+                        "minLength": null,
                         "maxLength": 200,
-                        "facetable": false,
-                        "title": "Naam",
+                        "minimum": null,
+                        "maximum": null,
+                        "multipleOf": null,
+                        "minItems": null,
+                        "maxItems": null,
+                        "inversedBy": "",
+                        "$ref": "",
+                        "objectConfiguration": {
+                            "handling": "nested-object",
+                            "schema": ""
+                        },
+                        "fileConfiguration": {
+                            "handling": "ignore",
+                            "allowedMimeTypes": [],
+                            "location": "",
+                            "maxSize": 0
+                        },
                         "table": {
                             "default": true
                         },
-                        "example": "Bijvoorbeeld: VNG Suite"
+                        "oneOf": [],
+                        "facetable": false,
+                        "title": "Naam",
+                        "example": "Voorbeeld: VNG Product Suite"
+                    },
+                    "beschrijvingLang": {
+                        "description": "Beschrijving van het product, suite of monobrand voor op de detailpagina",
+                        "type": "string",
+                        "format": "markdown",
+                        "visible": true,
+                        "order": 5,
+                        "minLength": null,
+                        "maxLength": 5000,
+                        "minimum": null,
+                        "maximum": null,
+                        "multipleOf": null,
+                        "minItems": null,
+                        "maxItems": null,
+                        "inversedBy": "",
+                        "$ref": "",
+                        "objectConfiguration": {
+                            "handling": "nested-object",
+                            "schema": ""
+                        },
+                        "fileConfiguration": {
+                            "handling": "ignore",
+                            "allowedMimeTypes": [],
+                            "location": "",
+                            "maxSize": 0
+                        },
+                        "oneOf": [],
+                        "facetable": false,
+                        "title": "Uitgebreide omschrijving",
+                        "example": "Bijvoorbeeld: Een uitgebreide beschrijving van het product met alle functionaliteiten en kenmerken"
                     },
                     "beschrijvingKort": {
                         "type": "string",
                         "title": "Korte omschrijving",
-                        "description": "Korte beschrijving van de suite",
+                        "description": "Korte beschrijving van het product, suite of monobrand voor in de weergave in tabellen en zoekresultaten",
                         "facetable": false,
                         "maxLength": 255,
-                        "order": 2,
-                        "table": {
-                            "default": true
-                        },
-                        "example": "Bijvoorbeeld: Een korte samenvatting van de suite"
-                    },
-                    "beschrijvingLang": {
-                        "description": "Uitgebreide beschrijving van de suite",
-                        "type": "string",
-                        "format": "markdown",
-                        "visible": true,
                         "order": 3,
-                        "maxLength": 5000,
-                        "facetable": false,
-                        "title": "Uitgebreide omschrijving",
-                        "example": "Bijvoorbeeld: Een uitgebreide beschrijving van de suite met alle functionaliteiten"
-                    },
-                    "logo": {
-                        "description": "URL naar het logo van de suite",
-                        "type": "string",
-                        "format": "url",
-                        "visible": true,
-                        "order": 4,
-                        "maxLength": 500,
-                        "facetable": false,
+                        "example": "Bijvoorbeeld: Een korte samenvatting van het product",
                         "table": {
                             "default": true
-                        },
-                        "title": "Logo",
-                        "example": "https://voorbeeld.nl/logo.png"
-                    },
-                    "website": {
-                        "description": "Website van de suite",
-                        "type": "string",
-                        "format": "url",
-                        "visible": true,
-                        "order": 5,
-                        "maxLength": 500,
-                        "facetable": false,
-                        "title": "Website",
-                        "example": "https://voorbeeld.nl/suite"
-                    },
-                    "contactpersoon": {
-                        "description": "Contactpersoon voor de suite",
-                        "type": "object",
-                        "visible": true,
-                        "order": 6,
-                        "facetable": false,
-                        "title": "Contact",
-                        "objectConfiguration": {
-                            "handling": "related-object"
-                        },
-                        "$ref": "#/components/schemas/contactpersoon"
-                    },
-                    "applicaties": {
-                        "description": "De modules (applicaties) die onderdeel zijn van deze suite",
-                        "type": "array",
-                        "visible": true,
-                        "order": 7,
-                        "facetable": false,
-                        "title": "Applicaties",
-                        "items": {
-                            "type": "object",
-                            "objectConfiguration": {
-                                "handling": "related-object"
-                            },
-                            "$ref": "#/components/schemas/module"
                         }
-                    }
-                },
-                "archive": [],
-                "source": "internal",
-                "hardValidation": false,
-                "immutable": false,
-                "updated": "2025-11-04T12:00:00+00:00",
-                "created": "2025-11-04T12:00:00+00:00",
-                "maxDepth": 0,
-                "owner": "system",
-                "application": null,
-                "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-                "groups": null,
-                "authorization": {
-                    "create": [
-                        "vng-raadpleger",
-                        "software-catalog-users",
-                        "software-catalog-admins",
-                        "organisaties-beheerder",
-                        "organisatie-beheerder",
-                        "gebruik-raadpleger",
-                        "gebruik-beheerder",
-                        "functioneel-beheerder",
-                        "ambtenaar",
-                        "aanbod-beheerder"
-                    ],
-                    "read": [
-                        "public",
-                        "aanbod-beheerder",
-                        "ambtenaar",
-                        "functioneel-beheerder",
-                        "gebruik-beheerder",
-                        "vng-raadpleger",
-                        "software-catalog-users",
-                        "software-catalog-admins",
-                        "organisatie-beheerder",
-                        "organisaties-beheerder",
-                        "gebruik-raadpleger"
-                    ],
-                    "update": [
-                        "aanbod-beheerder",
-                        "ambtenaar",
-                        "functioneel-beheerder",
-                        "gebruik-beheerder",
-                        "gebruik-raadpleger",
-                        "organisatie-beheerder",
-                        "organisaties-beheerder",
-                        "software-catalog-admins",
-                        "software-catalog-users",
-                        "vng-raadpleger"
-                    ],
-                    "delete": [
-                        "aanbod-beheerder",
-                        "vng-raadpleger",
-                        "software-catalog-users",
-                        "software-catalog-admins",
-                        "organisaties-beheerder",
-                        "organisatie-beheerder",
-                        "gebruik-raadpleger",
-                        "gebruik-beheerder",
-                        "functioneel-beheerder",
-                        "ambtenaar"
-                    ]
-                },
-                "deleted": null,
-                "configuration": {
-                    "objectNameField": "naam",
-                    "objectSummaryField": "beschrijvingKort",
-                    "objectDescriptionField": "beschrijvingLang",
-                    "objectImageField": "logo",
-                    "allowFiles": true,
-                    "allowedTags": [
-                        "DPIA",
-                        "Handleiding"
-                    ],
-                    "autoPublish": true
-                },
-                "searchable": true
-            },
-            "component": {
-                "uri": null,
-                "slug": "component",
-                "title": "Component",
-                "description": "Een component is een logische groepering van modules",
-                "version": "0.1.1",
-                "summary": "",
-                "icon": "ViewModule",
-                "required": [
-                    "naam",
-                    "beschrijvingKort"
-                ],
-                "properties": {
-                    "naam": {
-                        "description": "Naam van het component",
+                    },
+                    "website": {
+                        "description": "Website van het product",
                         "type": "string",
+                        "format": "url",
                         "required": true,
                         "visible": true,
                         "order": 1,
-                        "maxLength": 200,
-                        "facetable": false,
-                        "title": "Naam",
-                        "table": {
-                            "default": true
-                        },
-                        "example": "Bijvoorbeeld: Zaaksysteem Component"
-                    },
-                    "beschrijvingKort": {
-                        "type": "string",
-                        "title": "Korte omschrijving",
-                        "description": "Korte beschrijving van het component",
-                        "facetable": false,
-                        "maxLength": 255,
-                        "order": 2,
-                        "table": {
-                            "default": true
-                        },
-                        "example": "Bijvoorbeeld: Een korte samenvatting van het component"
-                    },
-                    "beschrijvingLang": {
-                        "description": "Uitgebreide beschrijving van het component",
-                        "type": "string",
-                        "format": "markdown",
-                        "visible": true,
-                        "order": 3,
-                        "maxLength": 5000,
-                        "facetable": false,
-                        "title": "Uitgebreide omschrijving",
-                        "example": "Bijvoorbeeld: Een uitgebreide beschrijving van het component"
-                    },
-                    "logo": {
-                        "description": "URL naar het logo van het component",
-                        "type": "string",
-                        "format": "url",
-                        "visible": true,
-                        "order": 4,
+                        "minLength": null,
                         "maxLength": 500,
-                        "facetable": false,
+                        "minimum": null,
+                        "maximum": null,
+                        "multipleOf": null,
+                        "minItems": null,
+                        "maxItems": null,
+                        "inversedBy": "",
                         "table": {
                             "default": true
                         },
-                        "title": "Logo",
-                        "example": "https://voorbeeld.nl/logo.png"
-                    },
-                    "website": {
-                        "description": "Website van het component",
-                        "type": "string",
-                        "format": "url",
-                        "visible": true,
-                        "order": 5,
-                        "maxLength": 500,
+                        "$ref": "",
+                        "objectConfiguration": {
+                            "handling": "nested-object",
+                            "schema": ""
+                        },
+                        "fileConfiguration": {
+                            "handling": "ignore",
+                            "allowedMimeTypes": [],
+                            "location": "",
+                            "maxSize": 0
+                        },
+                        "oneOf": [],
                         "facetable": false,
                         "title": "Website",
-                        "example": "https://voorbeeld.nl/component"
+                        "example": "https://voorbeeld.nl/product"
                     },
                     "contactpersoon": {
-                        "description": "Contactpersoon voor het component",
+                        "description": "Contactpersoon voor het product, suite of monobrand",
                         "type": "object",
                         "visible": true,
-                        "order": 6,
+                        "order": 0,
                         "facetable": false,
                         "title": "Contact",
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
                         "$ref": "#/components/schemas/contactpersoon"
+                    },
+                    "cloudDienstverleningsmodel": {
+                        "description": "Het cloud dienstverleningsmodel voor het product, suite of monobrand",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "On-premises (self-managed)",
+                                "IaaS",
+                                "PaaS",
+                                "SaaS"
+                            ]
+                        },
+                        "order": 0,
+                        "objectConfiguration": [],
+                        "fileConfiguration": [],
+                        "oneOf": [],
+                        "facetable": true,
+                        "title": "Hosting vorm",
+                        "example": [
+                            "SaaS"
+                        ]
+                    },
+                    "hostingJurisdictie": {
+                        "description": "De jurisdictie waar de hosting plaatsvindt",
+                        "type": "string",
+                        "visible": true,
+                        "order": 0,
+                        "enum": [
+                            "NL",
+                            "EU",
+                            "US",
+                            "Elders"
+                        ],
+                        "facetable": true,
+                        "title": "In welk land wordt de data opgeslagen?",
+                        "example": "Bijvoorbeeld: NL"
+                    },
+                    "hostingLocatie": {
+                        "description": "De locatie waar de hosting plaatsvindt",
+                        "type": "string",
+                        "visible": true,
+                        "order": 0,
+                        "enum": [
+                            "NL",
+                            "EU",
+                            "US",
+                            "Elders"
+                        ],
+                        "facetable": true,
+                        "title": "Waar wordt de applicatie gehost?",
+                        "example": "Bijvoorbeeld: NL"
+                    },
+                    "logo": {
+                        "description": "URL naar het logo van het product, suite of monobrand",
+                        "type": "string",
+                        "format": "url",
+                        "visible": true,
+                        "order": 4,
+                        "objectConfiguration": [],
+                        "fileConfiguration": [],
+                        "oneOf": [],
+                        "table": {
+                            "default": true
+                        },
+                        "facetable": false,
+                        "title": "Logo",
+                        "example": "https://voorbeeld.nl/logo.png"
+                    },
+                    "aanbieder": {
+                        "description": "De aanbieder van het product, suite of monobrand",
+                        "type": "object",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "table": {
+                            "default": true
+                        },
+                        "title": "Aanbieder",
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
+                        "$ref": "#/components/schemas/organisatie"
                     },
                     "modules": {
-                        "description": "De modules die onderdeel zijn van dit component",
+                        "description": "De applicaties en systeemsoftware die onderdeel zijn van dit product, suite of monobrand",
                         "type": "array",
                         "visible": true,
-                        "order": 7,
+                        "order": 12,
                         "facetable": false,
                         "title": "Modules",
                         "items": {
@@ -628,7 +577,40 @@
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module"
+                            "$ref": "#/components/schemas/module",
+                            "inversedBy": "product"
+                        }
+                    },
+                    "omvat": {
+                        "description": "Andere producten, suites of monobrands die onderdeel zijn van dit product",
+                        "type": "array",
+                        "visible": true,
+                        "order": 13,
+                        "facetable": false,
+                        "title": "Omvat",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/product",
+                            "inversedBy": "onderdeelVan"
+                        }
+                    },
+                    "onderdeelVan": {
+                        "description": "Producten, suites of monobrands waarvan dit product, suite of monobrand onderdeel is",
+                        "type": "array",
+                        "visible": true,
+                        "order": 14,
+                        "facetable": false,
+                        "title": "Onderdeel van",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/product",
+                            "inversedBy": "omvat"
                         }
                     }
                 },
@@ -636,10 +618,10 @@
                 "source": "internal",
                 "hardValidation": false,
                 "immutable": false,
-                "updated": "2025-11-04T12:00:00+00:00",
-                "created": "2025-11-04T12:00:00+00:00",
+                "updated": "2025-07-29T09:35:54+00:00",
+                "created": "2025-05-09T12:14:18+00:00",
                 "maxDepth": 0,
-                "owner": "system",
+                "owner": "1",
                 "application": null,
                 "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
                 "groups": null,
@@ -713,12 +695,13 @@
                 "uri": null,
                 "slug": "dienst",
                 "title": "Dienst",
-                "description": "Een specifiek aanbod van een dienst op een of meerdere modules door een leverancier",
-                "version": "0.1.1",
+                "description": "Een specifiek aanbod van een dienst op een of meerdere producten door een leverancier",
+                "version": "0.0.44",
                 "summary": "",
                 "icon": "Handshake",
                 "required": [
                     "naam",
+                    "producten",
                     "aanbieder"
                 ],
                 "properties": {
@@ -807,20 +790,20 @@
                         },
                         "$ref": "#/components/schemas/contactpersoon"
                     },
-                    "modules": {
-                        "description": "Welke modules worden via de dienst aangeboden",
+                    "producten": {
+                        "description": "Welke producten worden via de dienst aangeboden",
                         "type": "array",
+                        "required": true,
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Modules",
+                        "title": "Producten",
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module",
-                            "inversedBy": "diensten"
+                            "$ref": "#/components/schemas/product"
                         }
                     },
                     "aanbieder": {
@@ -869,6 +852,22 @@
                         "facetable": false,
                         "title": "Logo",
                         "example": "https://dienst.voorbeeld.nl/logo.png"
+                    },
+                    "modules": {
+                        "description": "De modules die onderdeel zijn van deze dienst",
+                        "type": "array",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Modules",
+                        "items": {
+                            "type": "object",
+                            "objectConfiguration": {
+                                "handling": "related-object"
+                            },
+                            "$ref": "#/components/schemas/module",
+                            "inversedBy": "dienst"
+                        }
                     },
                     "koppelingen": {
                         "description": "Koppelingen die gebruikt worden door deze dienst",
@@ -971,7 +970,7 @@
                 "slug": "kwetsbaarheid",
                 "title": "Kwetsbaarheid",
                 "description": "Schema voor kwetsbaarheden",
-                "version": "1.0.18",
+                "version": "1.0.17",
                 "summary": "",
                 "icon": "ShieldAlert",
                 "required": [
@@ -1126,7 +1125,7 @@
                 "slug": "contactpersoon",
                 "title": "Contactpersoon",
                 "description": "Contactgegevens van een persoon",
-                "version": "0.0.25",
+                "version": "0.0.24",
                 "summary": "",
                 "icon": "AccountMultiple",
                 "required": [
@@ -1408,7 +1407,7 @@
                 "slug": "organisatie",
                 "title": "Organisatie",
                 "description": "Een organisatie die voorzieningen aanbiedt",
-                "version": "0.0.99",
+                "version": "0.0.98",
                 "summary": "",
                 "icon": "OfficeBuildingOutline",
                 "required": [
@@ -1973,19 +1972,20 @@
                 "uri": null,
                 "slug": "gebruik",
                 "title": "Gebruik",
-                "description": "Het gebruik van modules, diensten en koppelingen door afnemers",
-                "version": "1.1.1",
+                "description": "Het gebruik van producten, modules, diensten en koppelingen door afnemers",
+                "version": "1.0.5",
                 "summary": "",
                 "icon": "Usage",
                 "required": [
                     "afnemer",
+                    "product",
                     "status"
                 ],
                 "properties": {
                     "afnemer": {
                         "type": "object",
                         "title": "Afnemer",
-                        "description": "De organisatie die afnemer is van de module",
+                        "description": "De organisatie die afnemer is van het product",
                         "facetable": false,
                         "objectConfiguration": {
                             "handling": "related-object"
@@ -1994,9 +1994,21 @@
                         "required": true,
                         "order": 11
                     },
+                    "product": {
+                        "type": "object",
+                        "title": "Product",
+                        "description": "Het product dat gebruikt wordt",
+                        "facetable": false,
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
+                        "$ref": "#/components/schemas/product",
+                        "required": true,
+                        "order": 19
+                    },
                     "contactpersoon": {
                         "type": "object",
-                        "description": "De contactpersoon voor dit gebruik",
+                        "description": "De contactpersoon voor dit productgebruik",
                         "facetable": false,
                         "objectConfiguration": {
                             "handling": "related-object"
@@ -2367,7 +2379,7 @@
                 "deleted": null,
                 "configuration": {
                     "objectNameField": "afnemer",
-                    "objectDescriptionField": "module",
+                    "objectDescriptionField": "product",
                     "allowFiles": true,
                     "allowedTags": [
                         "DPIA",
@@ -2383,7 +2395,7 @@
                 "slug": "contract",
                 "title": "Contract",
                 "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik",
-                "version": "0.0.11",
+                "version": "0.0.10",
                 "summary": "",
                 "icon": "FileDocumentEdit",
                 "required": [
@@ -2624,7 +2636,7 @@
                 "slug": "koppeling",
                 "title": "Koppeling",
                 "description": "Schema voor koppelingen tussen modules en systemen. Er moet \u00f3f ModuleB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
-                "version": "0.0.11",
+                "version": "0.0.10",
                 "summary": "",
                 "icon": "Link",
                 "required": [],
@@ -2756,29 +2768,16 @@
                     "moduleB": {
                         "description": "De module waarnaar de gegevens uitgewisseld worden",
                         "type": "object",
-                        "items": {
-                            "oneOf": [
-                                {
-                                    "objectConfiguration": {
-                                        "handling": "related-object"
-                                    },
-                                    "$ref": "#/components/schemas/module"
-                                },
-                                {
-                                    "objectConfiguration": {
-                                        "handling": "related-object"
-                                    },
-                                    "$ref": "#/components/schemas/element"
-                                }
-                            ]
-                        },
                         "order": 10,
                         "facetable": false,
                         "table": {
                             "default": true
                         },
-                        "title": "Module B"
-                      
+                        "title": "Module B",
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
+                        "$ref": "#/components/schemas/module"
                     },
                     "buitengemeentelijkVoorziening": {
                         "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
@@ -2871,13 +2870,14 @@
                 "uri": null,
                 "slug": "beoordeeling",
                 "title": "Beoordeeling",
-                "description": "Schema voor beoordelingen en waarderingen van modules en diensten",
-                "version": "0.1.1",
+                "description": "Schema voor beoordelingen en waarderingen van producten, modules en diensten",
+                "version": "0.0.15",
                 "summary": "",
                 "icon": "Star",
                 "required": [
                     "naam",
-                    "waardering"
+                    "waardering",
+                    "product"
                 ],
                 "properties": {
                     "naam": {
@@ -2917,6 +2917,19 @@
                         "facetable": false,
                         "title": "Waardering",
                         "order": 4
+                    },
+                    "product": {
+                        "description": "Het product dat beoordeeld wordt",
+                        "type": "object",
+                        "visible": true,
+                        "required": true,
+                        "facetable": false,
+                        "title": "Product",
+                        "order": 5,
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
+                        "$ref": "#/components/schemas/product"
                     },
                     "modules": {
                         "description": "Optioneel: specifieke modules die beoordeeld worden",
@@ -3002,7 +3015,7 @@
                 "slug": "element",
                 "title": "Element",
                 "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
-                "version": "0.0.9",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "Cube",
                 "required": [
@@ -3173,7 +3186,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json/19",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3231,7 +3244,7 @@
                 "slug": "view",
                 "title": "View",
                 "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Eye",
                 "required": [
@@ -3426,7 +3439,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3454,6 +3467,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/View_Node.json",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3481,6 +3495,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/View_Connection.json",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3516,7 +3531,7 @@
                 "slug": "model",
                 "title": "Model",
                 "description": "AMEF Model - Volledig ArchiMate model met alle elementen, relaties en views",
-                "version": "0.0.43",
+                "version": "0.0.42",
                 "summary": "",
                 "icon": "Database",
                 "required": [
@@ -3766,7 +3781,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json/19",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3794,7 +3809,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/element",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Element.json/10",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3822,7 +3837,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/relation",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Relation.json/13",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3850,7 +3865,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/organization",
+                            "$ref": "gebruiker",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3878,7 +3893,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property-definition",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Property_Definition.json/15",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3906,7 +3921,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/view",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/View.json/11",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -3942,7 +3957,7 @@
                 "slug": "organization",
                 "title": "Organization",
                 "description": "AMEF Organization - Organisatie structuren uit het ArchiMate model",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Building",
                 "required": [],
@@ -4080,7 +4095,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/organization",
+                            "$ref": "gebruiker",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -4116,7 +4131,7 @@
                 "slug": "property-definition",
                 "title": "Property Definition",
                 "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "Settings",
                 "required": [
@@ -4242,7 +4257,7 @@
                 "slug": "relation",
                 "title": "Relation",
                 "description": "AMEF Relation - Relaties tussen architectuur elementen uit het ArchiMate model",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "ArrowRight",
                 "required": [
@@ -4507,7 +4522,7 @@
                         "$ref": "",
                         "items": {
                             "cascadeDelete": true,
-                            "$ref": "#/components/schemas/property",
+                            "$ref": "https://vng.accept.commonground.nu/openregister/schemas/Model_Property.json/19",
                             "type": "object"
                         },
                         "objectConfiguration": {
@@ -4543,12 +4558,13 @@
                 "uri": null,
                 "slug": "module",
                 "title": "Module",
-                "description": "Een module is een softwarecomponent (applicatie of systeemsoftware)",
-                "version": "0.1.1",
+                "description": "Een module is een onderdeel van een product (voorziening)",
+                "version": "0.0.113",
                 "summary": "",
                 "icon": "Package",
                 "required": [
                     "naam",
+                    "product",
                     "beschrijvingKort"
                 ],
                 "properties": {
@@ -4562,8 +4578,7 @@
                         "maxLength": 200,
                         "table": {
                             "default": true
-                        },
-                        "example": "Bijvoorbeeld: VNG Module Suite"
+                        }
                     },
                     "beschrijvingKort": {
                         "type": "string",
@@ -4574,111 +4589,16 @@
                         "maxLength": 255,
                         "table": {
                             "default": true
-                        },
-                        "example": "Bijvoorbeeld: Een korte samenvatting van de module"
+                        }
                     },
                     "beschrijvingLang": {
                         "type": "string",
                         "description": "Uitgebreide beschrijving van de module",
                         "title": "Beschrijving",
-                "order": 3,
+                        "order": 3,
                         "facetable": false,
                         "format": "markdown",
-                        "maxLength": 5000,
-                        "example": "Bijvoorbeeld: Een uitgebreide beschrijving van de module met alle functionaliteiten en kenmerken"
-                    },
-                    "website": {
-                        "description": "Website van de module",
-                        "type": "string",
-                        "format": "url",
-                        "visible": true,
-                        "order": 4,
-                        "maxLength": 500,
-                        "table": {
-                            "default": true
-                        },
-                        "facetable": false,
-                        "title": "Website",
-                        "example": "https://voorbeeld.nl/module"
-                    },
-                    "contactpersoon": {
-                        "description": "Contactpersoon voor de module",
-                        "type": "object",
-                        "visible": true,
-                        "order": 5,
-                        "facetable": false,
-                        "title": "Contact",
-                        "objectConfiguration": {
-                            "handling": "related-object"
-                        },
-                        "$ref": "#/components/schemas/contactpersoon"
-                    },
-                    "cloudDienstverleningsmodel": {
-                        "description": "Het cloud dienstverleningsmodel voor de module",
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "On-premises (self-managed)",
-                                "IaaS",
-                                "PaaS",
-                                "SaaS"
-                            ]
-                        },
-                        "order": 6,
-                        "objectConfiguration": [],
-                        "fileConfiguration": [],
-                        "oneOf": [],
-                        "facetable": true,
-                        "title": "Hosting vorm",
-                        "example": [
-                            "SaaS"
-                        ]
-                    },
-                    "hostingJurisdictie": {
-                        "description": "De jurisdictie waar de hosting plaatsvindt",
-                        "type": "string",
-                        "visible": true,
-                        "order": 7,
-                        "enum": [
-                            "NL",
-                            "EU",
-                            "US",
-                            "Elders"
-                        ],
-                        "facetable": true,
-                        "title": "In welk land wordt de data opgeslagen?",
-                        "example": "Bijvoorbeeld: NL"
-                    },
-                    "hostingLocatie": {
-                        "description": "De locatie waar de hosting plaatsvindt",
-                        "type": "string",
-                        "visible": true,
-                        "order": 8,
-                        "enum": [
-                            "NL",
-                            "EU",
-                            "US",
-                            "Elders"
-                        ],
-                        "facetable": true,
-                        "title": "Waar wordt de applicatie gehost?",
-                        "example": "Bijvoorbeeld: NL"
-                    },
-                    "aanbieder": {
-                        "description": "De aanbieder van de module",
-                        "type": "object",
-                        "visible": true,
-                        "order": 9,
-                        "facetable": false,
-                        "table": {
-                            "default": true
-                        },
-                        "title": "Aanbieder",
-                        "objectConfiguration": {
-                            "handling": "related-object"
-                        },
-                        "$ref": "#/components/schemas/organisatie"
+                        "maxLength": 5000
                     },
                     "licentietype": {
                         "description": "Het type licentie van de voorziening (open source of closed source)",
@@ -4773,48 +4693,30 @@
                         "order": 18,
                         "facetable": false,
                         "title": "Logo",
-                        "maxLength": 500,
-                        "table": {
-                            "default": true
-                        }
+                        "maxLength": 500
                     },
-                    "omvat": {
-                        "description": "Andere modules die onderdeel zijn van deze module",
+                    "producten": {
+                        "description": "De producten waarvan deze module onderdeel is",
                         "type": "array",
                         "visible": true,
                         "order": 19,
                         "facetable": false,
-                        "title": "Omvat",
+                        "title": "Producten",
+                        "hideOnForm": true,
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module",
-                            "inversedBy": "onderdeelVan"
-                        }
-                    },
-                    "onderdeelVan": {
-                        "description": "Modules waarvan deze module onderdeel is",
-                        "type": "array",
-                        "visible": true,
-                        "order": 20,
-                        "facetable": false,
-                        "title": "Onderdeel van",
-                        "items": {
-                            "type": "object",
-                            "objectConfiguration": {
-                                "handling": "related-object"
-                            },
-                            "$ref": "#/components/schemas/module",
-                            "inversedBy": "omvat"
+                            "$ref": "#/components/schemas/product",
+                            "inversedBy": "modules"
                         }
                     },
                     "diensten": {
                         "description": "De diensten waarvan deze module onderdeel is",
                         "type": "array",
                         "visible": true,
-                        "order": 21,
+                        "order": 20,
                         "facetable": false,
                         "title": "Diensten",
                         "hideOnForm": true,
@@ -4831,7 +4733,7 @@
                         "description": "De koppelingen waarbij deze module betrokken is",
                         "type": "array",
                         "visible": true,
-                        "order": 22,
+                        "order": 21,
                         "facetable": false,
                         "title": "Koppelingen",
                         "hideOnForm": true,
@@ -4848,7 +4750,7 @@
                         "description": "De standaarden waar deze module aan voldoet (compliance registraties)",
                         "type": "array",
                         "visible": true,
-                        "order": 23,
+                        "order": 22,
                         "facetable": false,
                         "title": "Compliance",
                         "hideOnForm": true,
@@ -4864,7 +4766,7 @@
                         "description": "Een array van amef id's van standaarden die deze module implementeert",
                         "type": "array",
                         "visible": true,
-                        "order": 24,
+                        "order": 23,
                         "facetable": true,
                         "title": "Standaarden AMEF",
                         "hideOnForm": true,
@@ -4876,9 +4778,9 @@
                         "description": "Een array van gemma id's van standaarden die deze module implementeert",
                         "type": "array",
                         "visible": true,
-                        "order": 25,
+                        "order": 23,
                         "facetable": true,
-                        "title": "Standaarden Gemma",
+                        "title": "Standaarden Gemaa",
                         "hideOnForm": true,
                         "items": {
                             "type": "string"
@@ -4888,7 +4790,7 @@
                         "description": "De versies van deze module",
                         "type": "array",
                         "visible": true,
-                        "order": 26,
+                        "order": 23,
                         "facetable": false,
                         "title": "Module Versies",
                         "hideOnForm": true,
@@ -4904,7 +4806,7 @@
                         "description": "Het gebruik van deze module",
                         "type": "array",
                         "visible": true,
-                        "order": 27,
+                        "order": 24,
                         "facetable": false,
                         "title": "Gebruik",
                         "hideOnForm": true,
@@ -4920,7 +4822,7 @@
                         "description": "De beoordelingen van deze module",
                         "type": "array",
                         "visible": true,
-                        "order": 28,
+                        "order": 25,
                         "facetable": false,
                         "title": "Beoordelingen",
                         "hideOnForm": true,
@@ -4936,7 +4838,7 @@
                         "description": "De kwetsbaarheden die deze module treffen",
                         "type": "array",
                         "visible": true,
-                        "order": 29,
+                        "order": 26,
                         "facetable": false,
                         "title": "Kwetsbaarheden",
                         "hideOnForm": true,
@@ -4983,7 +4885,7 @@
                 "slug": "compliancy",
                 "title": "Compliancy",
                 "description": "Schema voor compliancy en standaard ondersteuning",
-                "version": "0.0.9",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "CheckCircle",
                 "required": [],
@@ -5080,7 +4982,7 @@
                 "slug": "moduleVersie",
                 "title": "Module Versie",
                 "description": "Schema voor module versies",
-                "version": "0.0.7",
+                "version": "0.0.6",
                 "summary": "",
                 "icon": "ViewModule",
                 "required": [],
@@ -5205,7 +5107,7 @@
     "info": {
         "id": 14,
         "title": "Software Catalog Register",
-        "description": "Register containing AMEF and Voorzieningen schemas - Product schema has been merged into Module, with new Suite and Component schemas added",
-        "version": "2.0.1"
+        "description": "Merged register containing both AMEF and Voorzieningen schemas and configurations",
+        "version": "1.0.4"
     }
 }
