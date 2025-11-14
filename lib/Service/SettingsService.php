@@ -934,10 +934,10 @@ class SettingsService
                             'data_size' => strlen(json_encode($softwareCatalogSettings))
                         ]);
 
-                        $importResult = $configurationService->importFromJson(
-                            data: $softwareCatalogSettings,
-                            owner: null,
+                        // Use importFromApp which handles Configuration entity creation automatically
+                        $importResult = $configurationService->importFromApp(
                             appId: \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
+                            data: $softwareCatalogSettings,
                             version: $currentAppVersion,
                             force: $force
                         );

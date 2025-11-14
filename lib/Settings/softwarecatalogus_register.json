@@ -1,4 +1,22 @@
 {
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Software Catalog Register",
+        "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for modules, services, organizations, and compliance tracking.",
+        "version": "2.0.1"
+    },
+    "x-openregister": {
+        "type": "application",
+        "app": "softwarecatalog",
+        "sourceType": "github",
+        "sourceUrl": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register.json",
+        "openregister": "^v0.2.10",
+        "github": {
+            "repo": "ConductionNL/opencatalogi",
+            "branch": "master",
+            "path": "apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register.json"
+        }
+    },
     "components": {
         "registers": {
             "voorzieningen": {
@@ -5187,12 +5205,5 @@
             }
         },
         "objects": []
-    },
-    "openapi": "3.0.0",
-    "info": {
-        "id": 14,
-        "title": "Software Catalog Register",
-        "description": "Register containing AMEF and Voorzieningen schemas - Product schema has been merged into Module, with new Suite and Component schemas added",
-        "version": "2.0.1"
     }
 }
