@@ -2774,16 +2774,29 @@
                     "moduleB": {
                         "description": "De module waarnaar de gegevens uitgewisseld worden",
                         "type": "object",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "objectConfiguration": {
+                                        "handling": "related-object"
+                                    },
+                                    "$ref": "#/components/schemas/module"
+                                },
+                                {
+                                    "objectConfiguration": {
+                                        "handling": "related-object"
+                                    },
+                                    "$ref": "#/components/schemas/element"
+                                }
+                            ]
+                        },
                         "order": 10,
                         "facetable": false,
                         "table": {
                             "default": true
                         },
-                        "title": "Module B",
-                        "objectConfiguration": {
-                            "handling": "related-object"
-                        },
-                        "$ref": "#/components/schemas/module"
+                        "title": "Module B"
+                      
                     },
                     "buitengemeentelijkVoorziening": {
                         "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
