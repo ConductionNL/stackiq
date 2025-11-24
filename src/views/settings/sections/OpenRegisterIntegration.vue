@@ -255,7 +255,7 @@ export default {
 			return [
 				{ key: 'voorzieningen_organisatie_schema', title: 'Organisatie Schema', description: 'Schema for organizations' },
 				{ key: 'voorzieningen_contactpersoon_schema', title: 'Contactpersoon Schema', description: 'Schema for contact persons' },
-				{ key: 'voorzieningen_product_schema', title: 'Product Schema', description: 'Schema for products' },
+				{ key: 'voorzieningen_suite_schema', title: 'Suite Schema', description: 'Schema for suites' },
 				{ key: 'voorzieningen_dienst_schema', title: 'Dienst Schema', description: 'Schema for services' },
 				{ key: 'voorzieningen_kwetsbaarheid_schema', title: 'Kwetsbaarheid Schema', description: 'Schema for vulnerabilities' },
 				{ key: 'voorzieningen_gebruik_schema', title: 'Gebruik Schema', description: 'Schema for usage' },
@@ -395,7 +395,7 @@ export default {
 			const voorzieningenKeys = [
 				'voorzieningen_organisatie_schema',
 				'voorzieningen_contactpersoon_schema',
-				'voorzieningen_product_schema',
+				'voorzieningen_suite_schema',
 				'voorzieningen_dienst_schema',
 				'voorzieningen_kwetsbaarheid_schema',
 				'voorzieningen_gebruik_schema',

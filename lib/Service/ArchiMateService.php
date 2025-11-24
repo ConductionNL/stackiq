@@ -1481,13 +1481,29 @@ class ArchiMateService
                 return [];
             }
 
-            $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
+            // AMEF object types use a single register ID, not per-type register IDs
+            // Check if this is an AMEF object type
+            $amefObjectTypes = ['model', 'element', 'relationship', 'view', 'property_definition', 'organization', 'property'];
+            $isAmefType = in_array($schemaType, $amefObjectTypes, true);
+            
+            // Use AMEF register ID for AMEF types, otherwise use per-type register ID
+            if ($isAmefType) {
+                $registerId = $this->getAmefRegisterId();
+            } else {
+                $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
+            }
+            
             $schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
             
             if (!$registerId || !$schemaId) {
-                $this->logger->error("ArchiMateService: AMEF register or {$schemaType} schema not configured", [
+                $errorMessage = $isAmefType 
+                    ? "ArchiMateService: AMEF register or {$schemaType} schema not configured"
+                    : "ArchiMateService: Register or {$schemaType} schema not configured";
+                $this->logger->error($errorMessage, [
                     'registerId' => $registerId,
-                    'schemaId' => $schemaId
+                    'schemaId' => $schemaId,
+                    'isAmefType' => $isAmefType,
+                    'schemaType' => $schemaType
                 ]);
                 return [];
             }

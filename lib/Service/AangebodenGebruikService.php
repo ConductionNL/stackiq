@@ -263,7 +263,7 @@ class AangebodenGebruikService
      * 
      * The UUID can be:
      * - An organisation UUID: returns all gebruiks/koppelingen for that organisation
-     * - An application/product UUID: returns all gebruiks/koppelingen that reference that product
+     * - An application/suite UUID: returns all gebruiks/koppelingen that reference that suite
      * - A module UUID: returns all gebruiks/koppelingen that reference that module
      * 
      * @param string $uuid The UUID of the organisation, application, or module
@@ -371,7 +371,7 @@ class AangebodenGebruikService
                 ]);
             }
             
-            // Handle organisation UUID filtering differently from product/module UUIDs
+            // Handle organisation UUID filtering differently from suite/module UUIDs
             if ($isOrganisationUuid) {
                 // For organisation UUIDs, filter by @self.organisation
                 $searchQuery['@self']['organisation'] = $uuid;
@@ -398,13 +398,13 @@ class AangebodenGebruikService
                     deleted: false
                 );
             } else {
-                // For product/module UUIDs, use 'uses' parameter to filter by relations
+                // For suite/module UUIDs, use 'uses' parameter to filter by relations
                 // Add organization filter if provided
                 if ($organisationFilter) {
                     $searchQuery['@self']['organisation'] = $organisationFilter;
                 }
                 
-                $this->logger->debug('Executing koppelingen-gebruik by product/module UUID', [
+                $this->logger->debug('Executing koppelingen-gebruik by suite/module UUID', [
                     'uuid' => $uuid,
                     'query' => $searchQuery
                 ]);
@@ -533,27 +533,27 @@ class AangebodenGebruikService
     }
 
     /**
-     * Get all gebruiks objects belonging to a specific product ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group
+     * Get all gebruiks objects belonging to a specific suite ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group
      * 
-     * This method retrieves all gebruiks objects that belong to the specified product ID, 
+     * This method retrieves all gebruiks objects that belong to the specified suite ID, 
      * bypassing normal RBAC and multitenancy restrictions. Access is restricted to users 
      * with the "ambtenaar" group.
      * 
-     * @param string $productId The ID of the product to get gebruiks for
+     * @param string $suiteId The ID of the suite to get gebruiks for
      * @param array $options Additional query options (extend, fields, etc.)
-     * @return array searchObjectsPaginated result with all gebruiks for the product
+     * @return array searchObjectsPaginated result with all gebruiks for the suite
      * @throws Exception When OpenRegister service is not available
      */
-    public function getSingleGebruikForAmbtenaar(string $productId, array $options = []): array
+    public function getSingleGebruikForAmbtenaar(string $suiteId, array $options = []): array
     {
-        $this->logger->info('Getting all gebruiks for product ID for ambtenaar (ignoring RBAC/multitenancy)', [
-            'product_id' => $productId,
+        $this->logger->info('Getting all gebruiks for suite ID for ambtenaar (ignoring RBAC/multitenancy)', [
+            'suite_id' => $suiteId,
             'options' => $options
         ]);
 
         try {
             // Validate input
-            if (empty($productId)) {
+            if (empty($suiteId)) {
                 return [
                     'results' => [],
                     'total' => 0,
@@ -561,7 +561,7 @@ class AangebodenGebruikService
                     'pages' => 0,
                     'limit' => 20,
                     'offset' => 0,
-                    'error' => 'Product ID is required'
+                    'error' => 'Suite ID is required'
                 ];
             }
 
@@ -595,7 +595,7 @@ class AangebodenGebruikService
             $this->logger->debug('AangebodenGebruikService: Executing uses-based query for ambtenaar', [
                 'query' => $query,
                 'schema_id' => $schemaId,
-                'uses_uuid' => $productId
+                'uses_uuid' => $suiteId
             ]);
             
             // Execute search following PublicationsController.php used() method pattern
@@ -606,20 +606,20 @@ class AangebodenGebruikService
                 multi: false, // Disable multitenancy to access objects from any organisation
                 published: false,  // Include unpublished objects
                 deleted: false,    // Exclude deleted objects
-                uses: $productId   // Find objects that have this UUID in their relations array
+                uses: $suiteId   // Find objects that have this UUID in their relations array
             );
             
             $this->logger->debug('AangebodenGebruikService: Uses-based query completed', [
                 'total' => $searchResult['total'] ?? 0,
                 'results_count' => count($searchResult['results'] ?? []),
-                'uses_uuid' => $productId
+                'uses_uuid' => $suiteId
             ]);
             
             return $searchResult;
 
         } catch (Exception $e) {
             $this->logger->error('Failed to get gebruiks by uses relationship', [
-                'uses_uuid' => $productId,
+                'uses_uuid' => $suiteId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -1082,26 +1082,26 @@ class AangebodenGebruikService
             
             $appUuids = [];
             
-            // Check product schema (applications)
-            if (isset($voorzieningenConfig['product_schema'])) {
-                $productQuery = [
+            // Check suite schema (applications)
+            if (isset($voorzieningenConfig['suite_schema'])) {
+                $suiteQuery = [
                     '@self' => [
                         'register' => $registerId,
-                        'schema' => $voorzieningenConfig['product_schema'],
+                        'schema' => $voorzieningenConfig['suite_schema'],
                         'organisation' => $organisationUuid
                     ],
                     '_source' => 'database'
                 ];
                 
-                $products = $objectService->searchObjects(
-                    query: $productQuery,
+                $suites = $objectService->searchObjects(
+                    query: $suiteQuery,
                     rbac: false,
                     multi: false
                 );
                 
-                foreach ($products as $product) {
-                    $productData = is_array($product) ? $product : $product->getObject();
-                    $appUuids[] = $productData['uuid'] ?? $productData['id'] ?? null;
+                foreach ($suites as $suite) {
+                    $suiteData = is_array($suite) ? $suite : $suite->getObject();
+                    $appUuids[] = $suiteData['uuid'] ?? $suiteData['id'] ?? null;
                 }
             }
             
@@ -1259,7 +1259,7 @@ class AangebodenGebruikService
      * Add query filters from options to the base query
      * 
      * This method processes additional filter options and adds them to the query.
-     * Supported filters: limit, offset, status, product, etc.
+     * Supported filters: limit, offset, status, suite, etc.
      * 
      * @param array $baseQuery The base query to extend
      * @param array $options Filter options to apply
@@ -1294,9 +1294,9 @@ class AangebodenGebruikService
             $baseQuery['status'] = $options['status'];
         }
         
-        // Add product filter if specified
-        if (isset($options['product']) && !empty($options['product'])) {
-            $baseQuery['product'] = $options['product'];
+        // Add suite filter if specified
+        if (isset($options['suite']) && !empty($options['suite'])) {
+            $baseQuery['suite'] = $options['suite'];
         }
         
         // Add date filters if specified

@@ -181,7 +181,7 @@ class SettingsService
             'voorzieningen' => [
                 'name' => 'Voorzieningen',
                 'description' => 'Voorzieningen register for software catalog services',
-                'objectTypes' => ['sector', 'product', 'dienst', 'kwetsbaarheid', 'contactpersoon', 'organisatie', 'gebruik', 'contract', 'koppeling', 'beoordeeling', 'module', 'compliancy', 'moduleVersie'] // All voorzieningen schemas
+                'objectTypes' => ['sector', 'suite', 'dienst', 'kwetsbaarheid', 'contactpersoon', 'organisatie', 'gebruik', 'contract', 'koppeling', 'beoordeeling', 'module', 'compliancy', 'moduleVersie'] // All voorzieningen schemas
             ]
         ];
 
@@ -2678,7 +2678,7 @@ class SettingsService
             // Find the voorzieningen register by slug OR by presence of expected schema slugs
             $targetRegister = null;
             $expectedSlugs = [
-                'sector', 'product', 'dienst', 'kwetsbaarheid', 'contactpersoon', 'organisatie',
+                'sector', 'suite', 'dienst', 'kwetsbaarheid', 'contactpersoon', 'organisatie',
                 'gebruik', 'contract', 'koppeling', 'beoordeeling', 'module', 'compliancy', 'moduleversie', 'moduleVersie'
             ];
 
@@ -2707,7 +2707,7 @@ class SettingsService
             $slugToKey = [
                 'organisatie' => 'organisatie_schema',
                 'contactpersoon' => 'contactpersoon_schema',
-                'product' => 'product_schema',
+                'suite' => 'suite_schema',
                 'dienst' => 'dienst_schema',
                 'kwetsbaarheid' => 'kwetsbaarheid_schema',
                 'gebruik' => 'gebruik_schema',
@@ -3029,7 +3029,7 @@ class SettingsService
         $schemaKeys = [
             'organisatie_schema',
             'contactpersoon_schema',
-            'product_schema',
+            'suite_schema',
             'dienst_schema',
             'kwetsbaarheid_schema',
             'gebruik_schema',
