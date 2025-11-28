@@ -4562,7 +4562,7 @@
                 "slug": "module",
                 "title": "Module",
                 "description": "Een module is een softwarecomponent (applicatie of systeemsoftware)",
-                "version": "0.1.1",
+                "version": "0.1.2",
                 "summary": "",
                 "icon": "Package",
                 "required": [
@@ -4915,7 +4915,8 @@
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/moduleVersie"
+                            "$ref": "#/components/schemas/moduleVersie",
+                            "inversedBy": "module"
                         }
                     },
                     "gebruiken": {
