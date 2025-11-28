@@ -732,7 +732,7 @@
                 "slug": "dienst",
                 "title": "Dienst",
                 "description": "Een specifiek aanbod van een dienst op een of meerdere modules door een leverancier",
-                "version": "0.1.1",
+                "version": "0.1.2",
                 "summary": "",
                 "icon": "Handshake",
                 "required": [
@@ -837,9 +837,7 @@
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module",
-                            "inversedBy": "diensten"
-                        }
+                            "$ref": "#/components/schemas/module"                        }
                     },
                     "aanbieder": {
                         "description": "De leverende partij die deze dienst beschikbaar stelt",
