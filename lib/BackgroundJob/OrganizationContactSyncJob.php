@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Organization Contact Synchronization Background Job
  *
@@ -21,14 +22,18 @@ namespace OCA\SoftwareCatalog\BackgroundJob;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
+use Psr\Log\LoggerInterface;
 
 /**
  * Background job for comprehensive organization and contact person synchronization
- * 
+ *
  * This job runs every 5 minutes to ensure data consistency between SoftwareCatalog objects
- * and OpenRegister entities using full sync (all organizations). All business logic is 
+ * and OpenRegister entities using full sync (all organizations). All business logic is
  * delegated to the OrganizationSyncService.
- * 
+ *
+ * The job uses CronjobContextTrait to set user and organisation context based on
+ * administrator configuration, enabling proper RBAC authorization during execution.
+ *
  * @category BackgroundJob
  * @package  OCA\SoftwareCatalog\BackgroundJob
  * @author   Conduction b.v. <info@conduction.nl>
@@ -38,6 +43,13 @@ use OCP\BackgroundJob\TimedJob;
  */
 class OrganizationContactSyncJob extends TimedJob
 {
+    use CronjobContextTrait;
+
+    /**
+     * The cronjob identifier for configuration lookup
+     */
+    private const JOB_ID = 'organization_contact_sync';
+
     /**
      * Organization synchronization service
      *
@@ -46,24 +58,45 @@ class OrganizationContactSyncJob extends TimedJob
     private OrganizationSyncService $organizationSyncService;
 
     /**
+     * Logger instance for this cronjob
+     *
+     * @var LoggerInterface
+     */
+    private LoggerInterface $logger;
+
+    /**
      * Constructor for OrganizationContactSyncJob
      *
      * @param ITimeFactory            $timeFactory             The time factory for job scheduling
      * @param OrganizationSyncService $organizationSyncService The sync service
+     * @param LoggerInterface         $logger                  The logger instance
      */
     public function __construct(
         ITimeFactory $timeFactory,
-        OrganizationSyncService $organizationSyncService
+        OrganizationSyncService $organizationSyncService,
+        LoggerInterface $logger
     ) {
         parent::__construct($timeFactory);
-        $this->setInterval(300); // 5 minutes
+        $this->setInterval(300); // 5 minutes.
         $this->organizationSyncService = $organizationSyncService;
+        $this->logger = $logger;
+    }
+
+    /**
+     * Get the logger instance for the trait.
+     *
+     * @return LoggerInterface
+     */
+    protected function getLogger(): LoggerInterface
+    {
+        return $this->logger;
     }
 
     /**
      * Runs the background job
      *
-     * This method delegates all synchronization logic to the OrganizationSyncService.
+     * This method sets the user and organisation context based on configuration,
+     * then delegates all synchronization logic to the OrganizationSyncService.
      * The service handles all business logic, logging, and error handling.
      *
      * @param mixed $argument Job arguments (not used)
@@ -72,7 +105,23 @@ class OrganizationContactSyncJob extends TimedJob
      */
     protected function run($argument): void
     {
-        // Delegate all synchronization logic to the service
-        $this->organizationSyncService->performScheduledSync();
+        try {
+            // Set the cronjob context (user and organisation) from configuration.
+            $contextSet = $this->setCronjobContext(self::JOB_ID);
+
+            if (!$contextSet) {
+                $this->logger->warning('[CRONJOB] OrganizationContactSyncJob: Running without context - RBAC checks may fail', [
+                    'jobId' => self::JOB_ID,
+                    'hint' => 'Configure user and organisation in Settings > Cronjobs to enable proper authorization'
+                ]);
+            }
+
+            // Delegate all synchronization logic to the service.
+            $this->organizationSyncService->performScheduledSync();
+
+        } finally {
+            // Always clear the context when done.
+            $this->clearCronjobContext(self::JOB_ID);
+        }
     }
-} 
+}

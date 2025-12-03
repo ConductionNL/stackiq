@@ -102,7 +102,7 @@
 				<div class="modal-header">
 					<h2>Bulk Sync Module Standards</h2>
 				</div>
-				
+
 				<div class="modal-content">
 					<!-- Preview Section -->
 					<div v-if="!syncCompleted" class="preview-section">
@@ -114,8 +114,8 @@
 							<li>Update module standaarden arrays with extracted standaardversie IDs</li>
 							<li>Save modules only if changes are needed</li>
 						</ul>
-						
-						<div class="loading-section" v-if="bulkSyncLoading">
+
+						<div v-if="bulkSyncLoading" class="loading-section">
 							<NcLoadingIcon :size="24" />
 							<p>Processing compliance objects...</p>
 							<div class="progress-info">
@@ -170,8 +170,8 @@
 										</tr>
 									</thead>
 									<tbody>
-										<tr 
-											v-for="module in syncResults.modules" 
+										<tr
+											v-for="module in syncResults.modules"
 											:key="module.uuid"
 											:class="'status-' + module.status">
 											<td class="module-name">
@@ -179,25 +179,33 @@
 												<span class="module-uuid">{{ module.uuid }}</span>
 											</td>
 											<td class="module-status">
-												<span 
+												<span
 													class="status-badge"
 													:class="'badge-' + module.status">
 													{{ module.status }}
 												</span>
 											</td>
-											<td class="module-reason">{{ module.reason }}</td>
-											<td class="module-count">{{ module.complianceCount }}</td>
-											<td class="module-count">{{ module.standardsCount }}</td>
+											<td class="module-reason">
+												{{ module.reason }}
+											</td>
+											<td class="module-count">
+												{{ module.complianceCount }}
+											</td>
+											<td class="module-count">
+												{{ module.standardsCount }}
+											</td>
 										</tr>
 									</tbody>
 								</table>
 							</div>
 						</div>
-						
+
 						<div v-if="syncResults.errors.length > 0" class="errors-section">
 							<h4>Errors:</h4>
 							<ul class="error-list">
-								<li v-for="error in syncResults.errors" :key="error">{{ error }}</li>
+								<li v-for="errorMsg in syncResults.errors" :key="errorMsg">
+									{{ errorMsg }}
+								</li>
 							</ul>
 						</div>
 					</div>
@@ -207,8 +215,8 @@
 					<NcButton
 						v-if="!syncCompleted"
 						:disabled="bulkSyncLoading"
-						@click="startBulkSync"
-						type="primary">
+						type="primary"
+						@click="startBulkSync">
 						{{ bulkSyncLoading ? 'Syncing...' : 'Start Sync' }}
 					</NcButton>
 					<NcButton @click="closeBulkSyncDialog">
@@ -258,20 +266,28 @@ export default defineComponent({
 		SyncIcon,
 	},
 
+	setup() {
+		const settingsStore = useSettingsStore()
+
+		return {
+			settingsStore,
+		}
+	},
+
 	data() {
 		return {
 			// Bulk sync dialog state
 			showSyncDialog: false,
 			bulkSyncLoading: false,
 			syncCompleted: false,
-			
+
 			// Sync progress tracking
 			syncProgress: {
 				processed: 0,
 				total: 0,
 				modulesUpdated: 0,
 			},
-			
+
 			// Sync results
 			syncResults: {
 				totalProcessed: 0,
@@ -280,14 +296,6 @@ export default defineComponent({
 				standardsAdded: 0,
 				errors: [],
 			},
-		}
-	},
-
-	setup() {
-		const settingsStore = useSettingsStore()
-
-		return {
-			settingsStore,
 		}
 	},
 
@@ -392,18 +400,18 @@ export default defineComponent({
 		async startBulkSync() {
 			this.bulkSyncLoading = true
 			this.syncProgress.total = this.complianceCount
-			
+
 			try {
 				// Call the backend API to perform bulk sync
 				const response = await this.performBulkSync()
-				
+
 				// Update results
 				this.syncResults = response.data
 				this.syncCompleted = true
-				
+
 				// Refresh statistics to show updated counts
 				await this.refreshStatistics()
-				
+
 			} catch (error) {
 				console.error('Bulk sync failed:', error)
 				this.syncResults.errors.push(`Sync failed: ${error.message}`)
@@ -426,11 +434,11 @@ export default defineComponent({
 				},
 				body: JSON.stringify({}),
 			})
-			
+
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`)
 			}
-			
+
 			return await response.json()
 		},
 	},

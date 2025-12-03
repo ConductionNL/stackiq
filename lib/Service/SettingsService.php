@@ -4781,4 +4781,303 @@ class SettingsService
         }
     }
 
+    // ========================================================================
+    // CRONJOB CONFIGURATION METHODS
+    // ========================================================================
+
+    /**
+     * Get all cronjob configurations.
+     *
+     * Returns configuration for all registered cronjobs including their
+     * user and organisation context settings.
+     *
+     * @return array The cronjob configurations indexed by job name
+     */
+    public function getCronjobConfig(): array
+    {
+        try {
+            $configJson = $this->config->getValueString($this->_appName, 'cronjob_config', '{}');
+            $config = json_decode($configJson, true);
+
+            if (!is_array($config)) {
+                $config = [];
+            }
+
+            // Define available cronjobs with their metadata.
+            $availableCronjobs = $this->getAvailableCronjobs();
+
+            // Merge stored config with defaults for each cronjob.
+            $result = [];
+            foreach ($availableCronjobs as $jobId => $jobMeta) {
+                $result[$jobId] = [
+                    'id' => $jobId,
+                    'name' => $jobMeta['name'],
+                    'description' => $jobMeta['description'],
+                    'interval' => $jobMeta['interval'],
+                    'userId' => $config[$jobId]['userId'] ?? null,
+                    'organisationUuid' => $config[$jobId]['organisationUuid'] ?? null,
+                    'enabled' => $config[$jobId]['enabled'] ?? true,
+                ];
+            }
+
+            return [
+                'success' => true,
+                'cronjobs' => $result,
+                'timestamp' => time()
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get cronjob config', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get cronjob config: ' . $e->getMessage(),
+                'cronjobs' => []
+            ];
+        }
+    }
+
+    /**
+     * Get list of available cronjobs with their metadata.
+     *
+     * @return array List of cronjob definitions
+     */
+    private function getAvailableCronjobs(): array
+    {
+        return [
+            'organization_contact_sync' => [
+                'name' => 'Organization Contact Sync',
+                'description' => 'Synchronizes organizations and contact persons between SoftwareCatalog objects and OpenRegister entities.',
+                'interval' => 300, // 5 minutes
+                'class' => 'OCA\\SoftwareCatalog\\BackgroundJob\\OrganizationContactSyncJob',
+            ],
+        ];
+    }
+
+    /**
+     * Update cronjob configuration.
+     *
+     * @param array $data The cronjob configuration data
+     * @return array Result of the update operation
+     */
+    public function updateCronjobConfig(array $data): array
+    {
+        try {
+            // Get existing config.
+            $configJson = $this->config->getValueString($this->_appName, 'cronjob_config', '{}');
+            $config = json_decode($configJson, true);
+
+            if (!is_array($config)) {
+                $config = [];
+            }
+
+            // Update configuration for the specified cronjob.
+            $jobId = $data['jobId'] ?? null;
+            if ($jobId === null) {
+                return [
+                    'success' => false,
+                    'message' => 'Job ID is required'
+                ];
+            }
+
+            // Validate that the job exists.
+            $availableCronjobs = $this->getAvailableCronjobs();
+            if (!isset($availableCronjobs[$jobId])) {
+                return [
+                    'success' => false,
+                    'message' => 'Unknown cronjob: ' . $jobId
+                ];
+            }
+
+            // Update the config for this job.
+            $config[$jobId] = [
+                'userId' => $data['userId'] ?? null,
+                'organisationUuid' => $data['organisationUuid'] ?? null,
+                'enabled' => $data['enabled'] ?? true,
+            ];
+
+            // Save the updated config.
+            $this->config->setValueString(
+                $this->_appName,
+                'cronjob_config',
+                json_encode($config, JSON_PRETTY_PRINT)
+            );
+
+            $this->logger->info('Cronjob configuration updated', [
+                'jobId' => $jobId,
+                'userId' => $config[$jobId]['userId'],
+                'organisationUuid' => $config[$jobId]['organisationUuid']
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Cronjob configuration updated successfully',
+                'config' => $config[$jobId]
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update cronjob config', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to update cronjob config: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get cronjob context for a specific job.
+     *
+     * This is used by the cronjob itself to get its configured user and organisation.
+     *
+     * @param string $jobId The cronjob identifier
+     * @return array|null The context configuration or null if not configured
+     */
+    public function getCronjobContext(string $jobId): ?array
+    {
+        try {
+            $configJson = $this->config->getValueString($this->_appName, 'cronjob_config', '{}');
+            $config = json_decode($configJson, true);
+
+            if (!is_array($config) || !isset($config[$jobId])) {
+                return null;
+            }
+
+            $jobConfig = $config[$jobId];
+
+            // Only return if both user and organisation are configured.
+            if (empty($jobConfig['userId']) || empty($jobConfig['organisationUuid'])) {
+                return null;
+            }
+
+            return [
+                'userId' => $jobConfig['userId'],
+                'organisationUuid' => $jobConfig['organisationUuid'],
+                'enabled' => $jobConfig['enabled'] ?? true,
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get cronjob context', [
+                'jobId' => $jobId,
+                'exception' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Get available users for cronjob configuration.
+     *
+     * Returns a list of users that can be selected for running cronjobs.
+     * Typically limited to admin users or users in specific groups.
+     *
+     * @return array List of users with id and display name
+     */
+    public function getAvailableUsersForCronjobs(): array
+    {
+        try {
+            $userManager = $this->container->get(\OCP\IUserManager::class);
+            $groupManager = $this->container->get(\OCP\IGroupManager::class);
+
+            $users = [];
+
+            // Get admin group users.
+            $adminGroup = $groupManager->get('admin');
+            if ($adminGroup !== null) {
+                foreach ($adminGroup->getUsers() as $user) {
+                    $users[] = [
+                        'id' => $user->getUID(),
+                        'displayName' => $user->getDisplayName(),
+                        'email' => $user->getEMailAddress(),
+                    ];
+                }
+            }
+
+            // Also include users from super user groups if configured.
+            $superUserGroups = $this->getSuperUserGroups();
+            foreach ($superUserGroups as $groupName) {
+                $group = $groupManager->get($groupName);
+                if ($group !== null) {
+                    foreach ($group->getUsers() as $user) {
+                        // Avoid duplicates.
+                        $exists = array_filter($users, fn($u) => $u['id'] === $user->getUID());
+                        if (empty($exists)) {
+                            $users[] = [
+                                'id' => $user->getUID(),
+                                'displayName' => $user->getDisplayName(),
+                                'email' => $user->getEMailAddress(),
+                            ];
+                        }
+                    }
+                }
+            }
+
+            return [
+                'success' => true,
+                'users' => $users
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get available users for cronjobs', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get available users: ' . $e->getMessage(),
+                'users' => []
+            ];
+        }
+    }
+
+    /**
+     * Get available organisations for cronjob configuration.
+     *
+     * Returns a list of organisations that can be selected for running cronjobs.
+     *
+     * @return array List of organisations with uuid and name
+     */
+    public function getAvailableOrganisationsForCronjobs(): array
+    {
+        try {
+            if (!in_array('openregister', $this->appManager->getInstalledApps())) {
+                return [
+                    'success' => false,
+                    'message' => 'OpenRegister is not installed',
+                    'organisations' => []
+                ];
+            }
+
+            $organisationMapper = $this->container->get(\OCA\OpenRegister\Db\OrganisationMapper::class);
+
+            // Get all organisations (bypass RBAC for admin access).
+            $organisations = $organisationMapper->findAll(null, null, [], [], [], [], null, false, false);
+
+            $result = [];
+            foreach ($organisations as $org) {
+                $result[] = [
+                    'uuid' => $org->getUuid(),
+                    'name' => $org->getName(),
+                    'description' => $org->getDescription(),
+                ];
+            }
+
+            return [
+                'success' => true,
+                'organisations' => $result
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get available organisations for cronjobs', [
+                'exception' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to get available organisations: ' . $e->getMessage(),
+                'organisations' => []
+            ];
+        }
+    }
+
 }

@@ -140,18 +140,18 @@ class OrganizationSyncService
 
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(o.object, \'$.status\')) as status'), 'o2.uuid as oreg_uuid', 'o2.active as active')
+        // Query to find organizations that need syncing.
+        // Note: The 'active' column was removed as it doesn't exist in the openregister_organisations table.
+        // Now syncs all non-Concept organizations that either don't have an organisation entity yet,
+        // or need to be re-synced based on their updated timestamp.
+        $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(o.object, \'$.status\')) as status'), 'o2.uuid as oreg_uuid')
             ->from(from: 'openregister_objects', alias: 'o')
             ->leftJoin(fromAlias:'o', join: 'openregister_organisations', alias: 'o2', condition: 'o.uuid = o2.uuid')
             ->where($qb->expr()->eq('o.schema', $qb->createNamedParameter($organizationSchema)))
             ->andWhere($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
-            ->andWhere($qb->expr()->orX(
-                $qb->expr()->neq('o2.active', $qb->createFunction('(LOWER(json_unquote(json_extract(o.object, \'$.status\'))) = \'actief\')')),
-                $qb->expr()->isNull('o2.uuid')
-            ))
             ->andWhere($qb->expr()->neq($qb->createFunction('LOWER(json_unquote(json_extract(o.object, \'$.status\')))'), $qb->createNamedParameter('Concept')))
-            ->orderBy('o.updated', 'ASC')  // Process oldest first for consistency
-            ->setMaxResults($batchSize);  // Limit batch size
+            ->orderBy('o.updated', 'ASC')  // Process oldest first for consistency.
+            ->setMaxResults($batchSize);  // Limit batch size.
 
         $sql = $qb->getSQL();
         $objects = $qb->execute()->fetchAll();
@@ -265,7 +265,17 @@ class OrganizationSyncService
 
             if ($contact['uid'] === null) {
                 $user = $this->contactpersonHandler->createUserAccount($contactEntity);
-                $contactEntityObject['username'] = $user->getUID();
+                // Check if user was created successfully (can be null if no email).
+                if ($user !== null) {
+                    $contactEntityObject['username'] = $user->getUID();
+                } else {
+                    // Skip this contact if user couldn't be created.
+                    $this->logger->debug('Skipping contact - user account creation failed (likely no email)', [
+                        'app' => 'softwarecatalog',
+                        'contactId' => $contactEntity->getId()
+                    ]);
+                    continue;
+                }
             }
 
             $contactEntity->setObject($contactEntityObject);
@@ -1519,26 +1529,34 @@ class OrganizationSyncService
                         ]);
 
                         $user = $this->contactpersonHandler->createUserAccount($contactObject);
-                        $contactEntityObject['username'] = $user->getUID();
+                        // Check if user was created successfully (can be null if no email).
+                        if ($user !== null) {
+                            $contactEntityObject['username'] = $user->getUID();
 
-                        // Update the contact object with the username (using RBAC bypass)
-                        $contactObject->setObject($contactEntityObject);
-                        $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-                        $objectService->saveObject(
-                            object: $contactObject,
-                            register: $register,
-                            schema: $contactSchema,
-                            rbac: false,
-                            multi: false
-                        );
+                            // Update the contact object with the username (using RBAC bypass).
+                            $contactObject->setObject($contactEntityObject);
+                            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                            $objectService->saveObject(
+                                object: $contactObject,
+                                register: $register,
+                                schema: $contactSchema,
+                                rbac: false,
+                                multi: false
+                            );
 
-                        // Add user to organization entity in database
-                        $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
+                            // Add user to organization entity in database.
+                            $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
 
-                        // Update contactpersoon object owner to user UID
-                        $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
+                            // Update contactpersoon object owner to user UID.
+                            $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
 
-                        $stats['usersCreated']++;
+                            $stats['usersCreated']++;
+                        } else {
+                            $this->logger->debug('[EVENT] Skipping contact - user account creation failed (likely no email)', [
+                                'app' => 'softwarecatalog',
+                                'contactId' => $contactObject->getUuid()
+                            ]);
+                        }
                     } else {
                         $this->logger->info('[EVENT] OrganizationSyncService: Skipping user creation - organization not active or not found in entity table', [
                             'contactId' => $contactObject->getUuid(),

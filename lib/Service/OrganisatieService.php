@@ -227,15 +227,19 @@ class OrganisatieService
         string $organizationUuid
     ): \OCA\OpenRegister\Db\Organisation {
 
+        // Get the currently active organisation UUID to set as parent.
+        $parentOrganisationUuid = $this->getActiveOrganisationUuid($organisationService);
+
         $this->logger->info('OrganisatieService: Creating organisation entity', [
             'uuid' => $organizationUuid,
             'name' => $mappedData['naam'],
-            'active' => $mappedData['active']
+            'active' => $mappedData['active'],
+            'parentOrganisation' => $parentOrganisationUuid
         ]);
 
-        // Use OrganisationService to create the entity with correct parameters
-        // Based on the error, the signature seems to be: createOrganisation(name, description, addCurrentUser, ...)
-        // Let me check what parameters are actually expected and use a simpler approach
+        // Use OrganisationService to create the entity with correct parameters.
+        // Based on the error, the signature seems to be: createOrganisation(name, description, addCurrentUser, ...).
+        // Let me check what parameters are actually expected and use a simpler approach.
         $organisationEntity = $organisationService->createOrganisation(
             $mappedData['naam'],           // name (string)
             $mappedData['type'] ?? '',     // description (string)
@@ -243,12 +247,17 @@ class OrganisatieService
             $organizationUuid              // uuid (string) - might be 4th parameter
         );
 
-        // Set additional properties after creation
+        // Set additional properties after creation.
         if ($organisationEntity) {
             $organisationEntity->setActive($mappedData['active']);
-            $organisationEntity->setUsers([]); // Will be populated by contact person processing
+            $organisationEntity->setUsers([]); // Will be populated by contact person processing.
 
-            // Save the updated entity
+            // Set the parent organisation to the currently active organisation.
+            if ($parentOrganisationUuid !== null) {
+                $organisationEntity->setParent($parentOrganisationUuid);
+            }
+
+            // Save the updated entity.
             $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
             $organisationMapper->save($organisationEntity);
         }
@@ -256,10 +265,36 @@ class OrganisatieService
         $this->logger->info('OrganisatieService: Organisation entity created successfully', [
             'uuid' => $organizationUuid,
             'entityId' => $organisationEntity->getId(),
-            'active' => $organisationEntity->getActive()
+            'active' => $organisationEntity->getActive(),
+            'parent' => $organisationEntity->getParent()
         ]);
 
         return $organisationEntity;
+    }
+
+    /**
+     * Get the currently active organisation UUID from the user session.
+     *
+     * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The organisation service
+     *
+     * @return string|null The active organisation UUID or null if not set
+     */
+    private function getActiveOrganisationUuid(
+        \OCA\OpenRegister\Service\OrganisationService $organisationService
+    ): ?string {
+        try {
+            // Try to get the active organisation from the OrganisationService.
+            $activeOrganisation = $organisationService->getActiveOrganisation();
+            if ($activeOrganisation !== null) {
+                return $activeOrganisation->getUuid();
+            }
+        } catch (\Exception $e) {
+            $this->logger->debug('OrganisatieService: Could not get active organisation', [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return null;
     }
 
     /**

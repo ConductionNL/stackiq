@@ -97,8 +97,6 @@
 								</div>
 							</div>
 
-
-
 							<!-- Voorzieningen Empty State -->
 							<div v-else-if="voorzieningenRegister && voorzieningenSchemas.length === 0">
 								<NcNoteCard type="warning">
@@ -139,8 +137,6 @@
 								</div>
 							</div>
 
-
-
 							<!-- AMEF Empty State -->
 							<div v-else-if="amefRegister && amefSchemas.length === 0">
 								<NcNoteCard type="warning">
@@ -180,28 +176,20 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Nextcloud Vue components
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 
 // Custom components
 import StandardTabs from '../../../components/StandardTabs.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
-// Icons
-import Save from 'vue-material-design-icons/ContentSave.vue'
 
 export default {
 	name: 'OpenRegisterIntegration',
 
 	components: {
 		NcSelect,
-		NcButton,
 		NcNoteCard,
-		NcLoadingIcon,
 		StandardTabs,
 		AlwaysVisibleSection,
-		Save,
 	},
 
 	/**
@@ -524,6 +512,5 @@ export default {
 	padding-top: 20px;
 	border-top: 1px solid var(--color-border);
 }
-
 
 </style>

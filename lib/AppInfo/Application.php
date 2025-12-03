@@ -290,11 +290,12 @@ class Application extends App implements IBootstrap
             );
         });
 
-        // Register background job for organization contact synchronization
+        // Register background job for organization contact synchronization.
         $context->registerService(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, function ($container) {
             return new \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob(
                 $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-                $container->get(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class)
+                $container->get(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class),
+                $container->get('Psr\Log\LoggerInterface')
             );
         });
     }
@@ -322,6 +323,14 @@ class Application extends App implements IBootstrap
                 'lastInitializedVersion' => $lastInitializedVersion,
                 'versionChanged' => $lastInitializedVersion !== $currentAppVersion
             ]);
+
+            // Skip initialization during cron/CLI context without a user.
+            // RBAC checks require an authenticated user to have proper permissions.
+            $userSession = $container->get(\OCP\IUserSession::class);
+            if ($userSession->getUser() === null) {
+                $logger->debug('SoftwareCatalog boot: Skipping in cron/CLI context (no user)');
+                return;
+            }
 
             // Check if we actually have a valid configuration, not just version matching
             $needsInitialization = false;
