@@ -204,6 +204,7 @@ class SettingsService
                 try {
                     $rawRegisters = $openRegisters->getRegisters();
 
+
                     // Filter schemas to remove properties field for cleaner response
                     $data['availableRegisters'] = array_map(function($register) {
                         if (isset($register['schemas']) && is_array($register['schemas'])) {
@@ -315,7 +316,7 @@ class SettingsService
                     // Ensure value is converted to string as required by setValueString
                     $stringValue = is_string($value) ? $value : (string) $value;
                 }
-                
+
                 $this->config->setValueString($this->_appName, $key, $stringValue);
                 // Retrieve the updated value to confirm the change
                 $data[$key] = $this->config->getValueString($this->_appName, $key);
