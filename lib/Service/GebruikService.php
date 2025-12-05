@@ -10,13 +10,25 @@ use Psr\Log\LoggerInterface;
 
 class GebruikService
 {
-    private function __construct(
+    /**
+     * @param SettingsService $settingsService
+     * @param IAppManager $appManager
+     * @param ContainerInterface $container
+     * @param LoggerInterface $logger
+     */
+    public function __construct(
         private readonly SettingsService $settingsService,
         private readonly IAppManager $appManager,
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
     ) {}
 
+    /**
+     * Fetch relevant configuration for this service.
+     *
+     * @return array The resulting configuration parameters.
+     * @throws Exception
+     */
     private function getGebruiksConfiguration(): array
     {
         // Try to get voorzieningen configuration from SettingsService
@@ -34,8 +46,9 @@ class GebruikService
             // If configuration is available, use it
             if ($registerId && $gebruikSchema) {
                 return [
-                    'register_id' => $registerId,
-                    'schemas' => [$gebruikSchema]
+                    'registerId' => $registerId ?? 'null',
+                    'gebruikSchema' => $gebruikSchema ?? 'null',
+                    'applicatieSchema' => $applicatieSchema ?? 'null',
                 ];
             }
         } catch (Exception $e) {
@@ -73,6 +86,14 @@ class GebruikService
             throw new Exception('Failed to get OpenRegister service: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Fetch gebruiken for given options.
+     *
+     * @param array $options The options to use while searching.
+     * @return array The result set of gebruiken.
+     * @throws \OCP\DB\Exception
+     */
     public function getGebruiken(array $options): array
     {
         $objectService = $this->getObjectService();
@@ -98,6 +119,13 @@ class GebruikService
         return $searchResult;
     }
 
+    /**
+     * Get application ids for given options
+     *
+     * @param array $options The options to use while searching.
+     * @return array The resulting ids
+     * @throws \OCP\DB\Exception
+     */
     public function getApplicationIds(array $options): array
     {
         $objectService = $this->getObjectService();
@@ -114,7 +142,7 @@ class GebruikService
             if (is_array($object) === false) {
                 $object = $object->getObject();
             }
-            return $object['id'];
+            return $object['@self']['id'];
         }, $searchResult['results']);
 
         return $searchResult;
