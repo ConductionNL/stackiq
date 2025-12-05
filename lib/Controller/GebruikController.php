@@ -57,33 +57,67 @@ class GebruikController extends Controller
         parent::__construct($appName, $request);
     }
 
+    /**
+     * Fetch gebruiken, for a gebruik-beheerder, get all gebruiken, for an aanbod-beheerder, fetch gebruiken of applications of the organization of the user.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse
+     */
     public function getGebruiken(): JSONResponse
     {
         $user = $this->userSession->getUser();
 
-        $groups = $this->groupManager->getUserGroups($user);
+        $groups = $this->groupManager->getUserGroups(user: $user);
         $groupNames = array_map(function (IGroup $group) {
             return $group->getGID();
         }, $groups);
 
-        $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appname: 'core', key: 'organisation');
+        $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');
 
         if(in_array(needle: 'admin', haystack: $groupNames) === true|| in_array(needle: 'gebruik-beheerder', haystack: $groupNames) === true) {
             $options = $this->request->getParams();
         } else if (in_array(needle: 'aanbod-beheerder', haystack: $groupNames) === true) {
             $options = $this->request->getParams();
-            $applicatieConfig['aanbieder'] = $orgUuid;
-            $applicatieIds = $this->gebruikService->getApplicationIds($applicatieConfig);
+            $applicatieOptions['aanbieder'] = $orgUuid;
+            $applicatieIds = $this->gebruikService->getApplicationIds(options: $applicatieOptions);
 
-            $options['module'] = ['or' => $applicatieIds];
+            $options['module'] = $applicatieIds;
         } else {
             return new JSONResponse(data: ['error' => 'no access'], statusCode: 403);
         }
 
         try {
-            return new JSONResponse($this->gebruikService->getGebruiken($options));
+            return new JSONResponse($this->gebruikService->getGebruiken(options: $options));
         } catch (\Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
     }
+
+    /**
+     * Fetch gebruiken for a deelnemer.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse
+     */
+    public function getGebruikenForDeelnemer(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');
+
+        $options = $this->request->getParams();
+        $options['deelnemers'] = [$orgUuid];
+
+        try {
+            return new JSONResponse($this->gebruikService->getGebruiken(options: $options));
+        } catch (\Exception $e) {
+            return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
+        }
+    }
+
+
+
 }
