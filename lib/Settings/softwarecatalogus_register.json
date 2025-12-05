@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Software Catalog Register",
-        "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for modules, services, organizations, and compliance tracking.",
+        "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
         "version": "2.0.1"
     },
     "x-openregister": {
@@ -371,8 +371,8 @@
                 "uri": null,
                 "slug": "suite",
                 "title": "Suite",
-                "description": "Een suite is een verzameling van modules die samen een product vormen",
-                "version": "0.1.1",
+                "description": "Een suite is een verzameling van applicaties die samen een product vormen",
+                "version": "0.1.2",
                 "summary": "",
                 "icon": "PackageVariant",
                 "required": [
@@ -551,8 +551,8 @@
                 "uri": null,
                 "slug": "component",
                 "title": "Component",
-                "description": "Een component is een logische groepering van modules",
-                "version": "0.1.1",
+                "description": "Een component is een logische groepering van applicaties",
+                "version": "0.1.2",
                 "summary": "",
                 "icon": "ViewModule",
                 "required": [
@@ -635,12 +635,12 @@
                         "$ref": "#/components/schemas/contactpersoon"
                     },
                     "modules": {
-                        "description": "De modules die onderdeel zijn van dit component",
+                        "description": "De applicaties die onderdeel zijn van dit component",
                         "type": "array",
                         "visible": true,
                         "order": 7,
                         "facetable": false,
-                        "title": "Modules",
+                        "title": "Applicaties",
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
@@ -988,7 +988,7 @@
                 "slug": "kwetsbaarheid",
                 "title": "Kwetsbaarheid",
                 "description": "Schema voor kwetsbaarheden",
-                "version": "1.0.18",
+                "version": "1.0.19",
                 "summary": "",
                 "icon": "ShieldAlert",
                 "required": [
@@ -1051,12 +1051,12 @@
                         "example": "Bijvoorbeeld: 9.8"
                     },
                     "modules": {
-                        "description": "De modules die door deze kwetsbaarheid getroffen worden",
+                        "description": "De applicaties die door deze kwetsbaarheid getroffen worden",
                         "type": "array",
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Getroffen Modules",
+                        "title": "Getroffen Applicaties",
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
@@ -1991,7 +1991,7 @@
                 "slug": "gebruik",
                 "title": "Gebruik",
                 "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-                "version": "1.1.2",
+                "version": "1.1.3",
                 "summary": "",
                 "icon": "Usage",
                 "required": [
@@ -2236,12 +2236,12 @@
                         "example": "Bijvoorbeeld: Interne notitie over het gebruik"
                     },
                     "module": {
-                        "description": "De specifieke module die gebruikt wordt",
+                        "description": "De specifieke applicatie die gebruikt wordt",
                         "type": "object",
                         "visible": true,
                         "order": 20,
                         "facetable": false,
-                        "title": "Module",
+                        "title": "Applicatie",
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
@@ -2252,12 +2252,12 @@
                         }
                     },
                     "moduleVersie": {
-                        "description": "De specifieke versie van de module die gebruikt wordt",
+                        "description": "De specifieke versie van de applicatie die gebruikt wordt",
                         "type": "object",
                         "visible": true,
                         "order": 21,
                         "facetable": false,
-                        "title": "Module Versie",
+                        "title": "Applicatie Versie",
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
@@ -2669,8 +2669,8 @@
                 "uri": null,
                 "slug": "koppeling",
                 "title": "Koppeling",
-                "description": "Schema voor koppelingen tussen modules en systemen. Er moet \u00f3f ModuleB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
-                "version": "0.0.11",
+                "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
+                "version": "0.0.12",
                 "summary": "",
                 "icon": "Link",
                 "required": [],
@@ -2785,14 +2785,14 @@
                         ]
                     },
                     "moduleA": {
-                        "description": "De module waarvan de gegevens uitgewisseld worden",
+                        "description": "De applicatie waarvan de gegevens uitgewisseld worden",
                         "type": "object",
                         "order": 9,
                         "facetable": false,
                         "table": {
                             "default": true
                         },
-                        "title": "Module A",
+                        "title": "Applicatie A",
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
@@ -2800,7 +2800,7 @@
                         "inversedBy": "koppeling"
                     },
                     "moduleB": {
-                        "description": "De module waarnaar de gegevens uitgewisseld worden",
+                        "description": "De applicatie waarnaar de gegevens uitgewisseld worden",
                         "type": "object",
                         "items": {
                             "oneOf": [
@@ -2823,7 +2823,7 @@
                         "table": {
                             "default": true
                         },
-                        "title": "Module B"
+                        "title": "Applicatie B"
                       
                     },
                     "buitengemeentelijkVoorziening": {
@@ -2854,11 +2854,11 @@
                         }
                     },
                     "gerealiseerdMetIntermediairModule": {
-                        "description": "Intermediaire module die wordt gebruikt voor de realisatie van deze koppeling",
+                        "description": "Intermediaire applicatie die wordt gebruikt voor de realisatie van deze koppeling",
                         "type": "object",
                         "order": 13,
                         "facetable": false,
-                        "title": "Gerealiseerd Met Intermediair Module",
+                        "title": "Gerealiseerd Met Intermediair Applicatie",
                         "objectConfiguration": {
                             "handling": "related-object"
                         },
@@ -2917,8 +2917,8 @@
                 "uri": null,
                 "slug": "beoordeeling",
                 "title": "Beoordeeling",
-                "description": "Schema voor beoordelingen en waarderingen van modules en diensten",
-                "version": "0.1.1",
+                "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten",
+                "version": "0.1.2",
                 "summary": "",
                 "icon": "Star",
                 "required": [
@@ -2965,11 +2965,11 @@
                         "order": 4
                     },
                     "modules": {
-                        "description": "Optioneel: specifieke modules die beoordeeld worden",
+                        "description": "Optioneel: specifieke applicaties die beoordeeld worden",
                         "type": "array",
                         "visible": true,
                         "facetable": false,
-                        "title": "Modules",
+                        "title": "Applicaties",
                         "order": 6,
                         "items": {
                             "type": "object",
@@ -4588,9 +4588,9 @@
             "module": {
                 "uri": null,
                 "slug": "module",
-                "title": "Module",
-                "description": "Een module is een softwarecomponent (applicatie of systeemsoftware)",
-                "version": "0.1.2",
+                "title": "Applicatie",
+                "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
+                "version": "0.1.3",
                 "summary": "",
                 "icon": "Package",
                 "required": [
@@ -4600,7 +4600,7 @@
                 "properties": {
                     "naam": {
                         "type": "string",
-                        "description": "Naam van de module",
+                        "description": "Naam van de applicatie",
                         "title": "Naam",
                         "order": 1,
                         "facetable": false,
@@ -4609,11 +4609,11 @@
                         "table": {
                             "default": true
                         },
-                        "example": "Bijvoorbeeld: VNG Module Suite"
+                        "example": "Bijvoorbeeld: VNG Applicatie Suite"
                     },
                     "beschrijvingKort": {
                         "type": "string",
-                        "description": "Korte beschrijving van de module",
+                        "description": "Korte beschrijving van de applicatie",
                         "title": "Korte omschrijving",
                         "order": 2,
                         "facetable": false,
@@ -4621,20 +4621,20 @@
                         "table": {
                             "default": true
                         },
-                        "example": "Bijvoorbeeld: Een korte samenvatting van de module"
+                        "example": "Bijvoorbeeld: Een korte samenvatting van de applicatie"
                     },
                     "beschrijvingLang": {
                         "type": "string",
-                        "description": "Uitgebreide beschrijving van de module",
+                        "description": "Uitgebreide beschrijving van de applicatie",
                         "title": "Beschrijving",
                 "order": 3,
                         "facetable": false,
                         "format": "markdown",
                         "maxLength": 5000,
-                        "example": "Bijvoorbeeld: Een uitgebreide beschrijving van de module met alle functionaliteiten en kenmerken"
+                        "example": "Bijvoorbeeld: Een uitgebreide beschrijving van de applicatie met alle functionaliteiten en kenmerken"
                     },
                     "website": {
-                        "description": "Website van de module",
+                        "description": "Website van de applicatie",
                         "type": "string",
                         "format": "url",
                         "visible": true,
@@ -4645,10 +4645,10 @@
                         },
                         "facetable": false,
                         "title": "Website",
-                        "example": "https://voorbeeld.nl/module"
+                        "example": "https://voorbeeld.nl/applicatie"
                     },
                     "contactpersoon": {
-                        "description": "Contactpersoon voor de module",
+                        "description": "Contactpersoon voor de applicatie",
                         "type": "object",
                         "visible": true,
                         "order": 5,
@@ -4660,7 +4660,7 @@
                         "$ref": "#/components/schemas/contactpersoon"
                     },
                     "cloudDienstverleningsmodel": {
-                        "description": "Het cloud dienstverleningsmodel voor de module",
+                        "description": "Het cloud dienstverleningsmodel voor de applicatie",
                         "type": "array",
                         "items": {
                             "type": "string",
@@ -4712,7 +4712,7 @@
                         "example": "Bijvoorbeeld: NL"
                     },
                     "aanbieder": {
-                        "description": "De aanbieder van de module",
+                        "description": "De aanbieder van de applicatie",
                         "type": "object",
                         "visible": true,
                         "order": 9,
@@ -4782,7 +4782,7 @@
                         "licentie": "License"
                     },
                     "referentieComponenten": {
-                        "description": "GEMMA referentiecomponenten die de module implementeert",
+                        "description": "GEMMA referentiecomponenten die de applicatie implementeert",
                         "type": "array",
                         "visible": true,
                         "order": 9,
@@ -4799,7 +4799,7 @@
                         "hideOnForm": true
                     },
                     "type": {
-                        "description": "Het type module zoals geregistreerd in de catalogus",
+                        "description": "Het type applicatie zoals geregistreerd in de catalogus",
                         "type": "string",
                         "visible": true,
                         "order": 11,
@@ -4812,7 +4812,7 @@
                         ]
                     },
                     "logo": {
-                        "description": "URL naar het logo van de module",
+                        "description": "URL naar het logo van de applicatie",
                         "type": "string",
                         "format": "url",
                         "visible": true,
@@ -4825,7 +4825,7 @@
                         }
                     },
                     "omvat": {
-                        "description": "Andere modules die onderdeel zijn van deze module",
+                        "description": "Andere applicaties die onderdeel zijn van deze applicatie",
                         "type": "array",
                         "visible": true,
                         "order": 19,
@@ -4841,7 +4841,7 @@
                         }
                     },
                     "onderdeelVan": {
-                        "description": "Modules waarvan deze module onderdeel is",
+                        "description": "Applicaties waarvan deze applicatie onderdeel is",
                         "type": "array",
                         "visible": true,
                         "order": 20,
@@ -4857,7 +4857,7 @@
                         }
                     },
                     "diensten": {
-                        "description": "De diensten waarvan deze module onderdeel is",
+                        "description": "De diensten waarvan deze applicatie onderdeel is",
                         "type": "array",
                         "visible": true,
                         "order": 21,
@@ -4874,7 +4874,7 @@
                         }
                     },
                     "koppelingen": {
-                        "description": "De koppelingen waarbij deze module betrokken is",
+                        "description": "De koppelingen waarbij deze applicatie betrokken is",
                         "type": "array",
                         "visible": true,
                         "order": 22,
@@ -4891,7 +4891,7 @@
                         }
                     },
                     "compliancy": {
-                        "description": "De standaarden waar deze module aan voldoet (compliance registraties)",
+                        "description": "De standaarden waar deze applicatie aan voldoet (compliance registraties)",
                         "type": "array",
                         "visible": true,
                         "order": 23,
@@ -4907,7 +4907,7 @@
                         }
                     },
                     "standaarden": {
-                        "description": "Een array van amef id's van standaarden die deze module implementeert",
+                        "description": "Een array van amef id's van standaarden die deze applicatie implementeert",
                         "type": "array",
                         "visible": true,
                         "order": 24,
@@ -4919,7 +4919,7 @@
                         }
                     },
                     "standaardenGemma": {
-                        "description": "Een array van gemma id's van standaarden die deze module implementeert",
+                        "description": "Een array van gemma id's van standaarden die deze applicatie implementeert",
                         "type": "array",
                         "visible": true,
                         "order": 25,
@@ -4931,12 +4931,12 @@
                         }
                     },
                     "moduleVersies": {
-                        "description": "De versies van deze module",
+                        "description": "De versies van deze applicatie",
                         "type": "array",
                         "visible": true,
                         "order": 26,
                         "facetable": false,
-                        "title": "Module Versies",
+                        "title": "Applicatie Versies",
                         "hideOnForm": true,
                         "items": {
                             "type": "object",
@@ -4948,7 +4948,7 @@
                         }
                     },
                     "gebruiken": {
-                        "description": "Het gebruik van deze module",
+                        "description": "Het gebruik van deze applicatie",
                         "type": "array",
                         "visible": true,
                         "order": 27,
@@ -4964,7 +4964,7 @@
                         }
                     },
                     "beoordelingen": {
-                        "description": "De beoordelingen van deze module",
+                        "description": "De beoordelingen van deze applicatie",
                         "type": "array",
                         "visible": true,
                         "order": 28,
@@ -4980,7 +4980,7 @@
                         }
                     },
                     "kwetsbaarheden": {
-                        "description": "De kwetsbaarheden die deze module treffen",
+                        "description": "De kwetsbaarheden die deze applicatie treffen",
                         "type": "array",
                         "visible": true,
                         "order": 29,
@@ -5030,7 +5030,7 @@
                 "slug": "compliancy",
                 "title": "Compliancy",
                 "description": "Schema voor compliancy en standaard ondersteuning",
-                "version": "0.0.9",
+                "version": "0.0.10",
                 "summary": "",
                 "icon": "CheckCircle",
                 "required": [],
@@ -5057,10 +5057,10 @@
                         "facetable": true
                     },
                     "module": {
-                        "description": "De module waarvan de compliance wordt geregistreerd",
+                        "description": "De applicatie waarvan de compliance wordt geregistreerd",
                         "type": "object",
                         "order": 4,
-                        "title": "Module",
+                        "title": "Applicatie",
                         "visible": true,
                         "facetable": false,
                         "objectConfiguration": {
@@ -5125,18 +5125,18 @@
             "moduleVersie": {
                 "uri": null,
                 "slug": "moduleVersie",
-                "title": "Module Versie",
-                "description": "Schema voor module versies",
-                "version": "0.0.7",
+                "title": "Applicatie Versie",
+                "description": "Schema voor applicatie versies",
+                "version": "0.0.8",
                 "summary": "",
                 "icon": "ViewModule",
                 "required": [],
                 "properties": {
                     "module": {
-                        "description": "De module waarvan dit een versie is",
+                        "description": "De applicatie waarvan dit een versie is",
                         "type": "object",
                         "order": 1,
-                        "title": "Module",
+                        "title": "Applicatie",
                         "facetable": false,
                         "objectConfiguration": {
                             "handling": "related-object"
@@ -5154,14 +5154,14 @@
                         "default": "1.0.0"
                     },
                     "beschrijvingKort": {
-                        "description": "Korte beschrijving van de module versie",
+                        "description": "Korte beschrijving van de applicatie versie",
                         "type": "string",
                         "order": 3,
                         "title": "Wat is er nieuw of bijzonder in deze versie?",
                         "maxLength": 255
                     },
                     "beschrijvingLang": {
-                        "description": "Uitgebreide beschrijving van de module versie",
+                        "description": "Uitgebreide beschrijving van de applicatie versie",
                         "type": "string",
                         "order": 4,
                         "title": "Beschrijving",
@@ -5169,7 +5169,7 @@
                         "maxLength": 5000
                     },
                     "status": {
-                        "description": "De status van de module",
+                        "description": "De status van de applicatie",
                         "type": "string",
                         "order": 13,
                         "title": "Status",
@@ -5203,14 +5203,14 @@
                         "title": "Datum Einde Ondersteuning"
                     },
                     "datumTeruggetrokken": {
-                        "description": "Datum waarop de module teruggetrokken is",
+                        "description": "Datum waarop de applicatie teruggetrokken is",
                         "type": "string",
                         "format": "date",
                         "order": 17,
                         "title": "Datum Teruggetrokken"
                     },
                     "gebruiken": {
-                        "description": "Het gebruik van deze module versie",
+                        "description": "Het gebruik van deze applicatie versie",
                         "type": "array",
                         "visible": true,
                         "order": 18,
