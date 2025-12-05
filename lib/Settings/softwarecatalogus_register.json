@@ -731,8 +731,8 @@
                 "uri": null,
                 "slug": "dienst",
                 "title": "Dienst",
-                "description": "Een specifiek aanbod van een dienst op een of meerdere modules door een leverancier",
-                "version": "0.1.2",
+                "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
+                "version": "0.1.3",
                 "summary": "",
                 "icon": "Handshake",
                 "required": [
@@ -826,18 +826,19 @@
                         "$ref": "#/components/schemas/contactpersoon"
                     },
                     "modules": {
-                        "description": "Welke modules worden via de dienst aangeboden",
+                        "description": "Welke applicaties worden via de dienst aangeboden",
                         "type": "array",
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Modules",
+                        "title": "Applicaties",
                         "items": {
                             "type": "object",
                             "objectConfiguration": {
                                 "handling": "related-object"
                             },
-                            "$ref": "#/components/schemas/module"                        }
+                            "$ref": "#/components/schemas/module"    
+                        }
                     },
                     "aanbieder": {
                         "description": "De leverende partij die deze dienst beschikbaar stelt",
@@ -1989,8 +1990,8 @@
                 "uri": null,
                 "slug": "gebruik",
                 "title": "Gebruik",
-                "description": "Het gebruik van modules, diensten en koppelingen door afnemers",
-                "version": "1.1.1",
+                "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
+                "version": "1.1.2",
                 "summary": "",
                 "icon": "Usage",
                 "required": [
@@ -2001,7 +2002,7 @@
                     "afnemer": {
                         "type": "object",
                         "title": "Afnemer",
-                        "description": "De organisatie die afnemer is van de module",
+                        "description": "De organisatie die afnemer is van de applicatie",
                         "facetable": false,
                         "objectConfiguration": {
                             "handling": "related-object"
@@ -2245,7 +2246,10 @@
                             "handling": "related-object"
                         },
                         "$ref": "#/components/schemas/module",
-                        "inversedBy": "gebruik"
+                        "inversedBy": "gebruik",
+                        "table": {
+                            "default": true
+                        }
                     },
                     "moduleVersie": {
                         "description": "De specifieke versie van de module die gebruikt wordt",
@@ -2258,7 +2262,10 @@
                             "handling": "related-object"
                         },
                         "$ref": "#/components/schemas/moduleVersie",
-                        "inversedBy": "gebruik"
+                        "inversedBy": "gebruik",
+                        "table": {
+                            "default": true
+                        }
                     },
                     "gebruiktVoorReferentiecomponenten": {
                         "description": "GEMMA referentiecomponenten waarvoor dit product wordt gebruikt",
@@ -2274,6 +2281,9 @@
                                 "queryParams": "gemmaType=referentiecomponent&_extend=aanbevolenStandaarden,verplichteStandaarden"
                             },
                             "$ref": "#/components/schemas/element"
+                        },
+                        "table": {
+                            "default": true
                         }
                     },
                     "amefElements": {
@@ -2315,6 +2325,26 @@
                                 "handling": "related-object"
                             },
                             "$ref": "#/components/schemas/dienst"
+                        }
+                    },
+                    "cloudDienstverleningsmodel": {
+                        "type": "array",
+                        "format": "",
+                        "title": "Hosting",
+                        "description": "Het cloud dienstverleningsmodel voor de applicatie",
+                        "facetable": true,
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "On-premises (self-managed)",
+                                "IaaS",
+                                "PaaS",
+                                "SaaS"
+                            ]
+                        },
+                        "example": "SaaS",
+                        "table": {
+                            "default": true
                         }
                     }
                 },
