@@ -180,6 +180,16 @@ return [
         // Bulk sync module standards from compliance objects
         ['name' => 'settings#bulkSyncStandards', 'url' => '/api/bulk-sync-standards', 'verb' => 'POST'],
 
+        // ========================================================================
+        // CRONJOB CONFIGURATION API ENDPOINTS
+        // ========================================================================
+        
+        // Cronjob configuration management
+        ['name' => 'settings#getCronjobConfig', 'url' => '/api/settings/cronjobs', 'verb' => 'GET'],
+        ['name' => 'settings#updateCronjobConfig', 'url' => '/api/settings/cronjobs', 'verb' => 'POST'],
+        ['name' => 'settings#getCronjobUsers', 'url' => '/api/settings/cronjobs/users', 'verb' => 'GET'],
+        ['name' => 'settings#getCronjobOrganisations', 'url' => '/api/settings/cronjobs/organisations', 'verb' => 'GET'],
+
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],

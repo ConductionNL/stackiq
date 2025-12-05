@@ -188,13 +188,13 @@
 				<div class="organisation-voorzieningen-sync">
 					<h4>Sync Organisations to Voorzieningen Register</h4>
 					<p>Synchronize OpenRegister organisations to the voorzieningen register as organisatie objects.</p>
-					
+
 					<div class="voorzieningen-sync-controls">
 						<div class="sync-options">
 							<div class="option-group">
 								<label>
-									<input 
-										v-model="orgSyncOptions.dryRun" 
+									<input
+										v-model="orgSyncOptions.dryRun"
 										type="checkbox"
 										:disabled="performingOrgSync">
 									Dry Run (preview only)
@@ -202,16 +202,16 @@
 							</div>
 							<div class="option-group">
 								<label for="batch-size">Batch Size:</label>
-								<input 
+								<input
 									id="batch-size"
-									v-model.number="orgSyncOptions.batchSize" 
-									type="number" 
-									min="1" 
+									v-model.number="orgSyncOptions.batchSize"
+									type="number"
+									min="1"
 									max="1000"
 									:disabled="performingOrgSync">
 							</div>
 						</div>
-						
+
 						<div class="sync-actions">
 							<NcButton
 								type="primary"
@@ -239,11 +239,21 @@
 									<ul>
 										<li>Total organisations: {{ orgSyncResult.results.total_organisations }}</li>
 										<li>Already existing: {{ orgSyncResult.results.existing_count }}</li>
-										<li v-if="!orgSyncOptions.dryRun">Created: {{ orgSyncResult.results.created_count }}</li>
-										<li v-if="orgSyncOptions.dryRun">Would create: {{ orgSyncResult.results.to_create_count }}</li>
-										<li v-if="orgSyncResult.results.failed_count > 0">Failed: {{ orgSyncResult.results.failed_count }}</li>
-										<li v-if="orgSyncResult.results.total_time_seconds">Duration: {{ orgSyncResult.results.total_time_seconds }}s</li>
-										<li v-if="orgSyncResult.results.overall_objects_per_second">Performance: {{ orgSyncResult.results.overall_objects_per_second }} orgs/sec</li>
+										<li v-if="!orgSyncOptions.dryRun">
+											Created: {{ orgSyncResult.results.created_count }}
+										</li>
+										<li v-if="orgSyncOptions.dryRun">
+											Would create: {{ orgSyncResult.results.to_create_count }}
+										</li>
+										<li v-if="orgSyncResult.results.failed_count > 0">
+											Failed: {{ orgSyncResult.results.failed_count }}
+										</li>
+										<li v-if="orgSyncResult.results.total_time_seconds">
+											Duration: {{ orgSyncResult.results.total_time_seconds }}s
+										</li>
+										<li v-if="orgSyncResult.results.overall_objects_per_second">
+											Performance: {{ orgSyncResult.results.overall_objects_per_second }} orgs/sec
+										</li>
 									</ul>
 									<div v-if="orgSyncResult.results.performance && orgSyncResult.results.performance.length > 0" class="batch-performance">
 										<h5>Batch Performance:</h5>
@@ -418,7 +428,7 @@ export default {
 		// Store-connected computed properties
 		loading() { return this.store.loadingSyncSettings },
 		settings() { return this.store.settings },
-		
+
 		/**
 		 * Check if time window configuration has changed
 		 *
@@ -426,6 +436,28 @@ export default {
 		 */
 		hasTimeWindowChanges() {
 			return this.selectedTimeWindow.value !== this.originalTimeWindow.value
+		},
+	},
+
+	/**
+	 * Watch for changes in the store's syncTimeWindow
+	 */
+	watch: {
+		'settings.syncTimeWindow': {
+			handler(newValue) {
+				if (newValue !== undefined) {
+					this.loadSavedConfiguration()
+				}
+			},
+			immediate: true,
+		},
+		'store.loadingSyncSettings': {
+			handler(newValue, oldValue) {
+				// When loading finishes, reload the configuration
+				if (oldValue === true && newValue === false) {
+					this.loadSavedConfiguration()
+				}
+			},
 		},
 	},
 
@@ -440,28 +472,6 @@ export default {
 		await this.loadSyncStatus()
 	},
 
-	/**
-	 * Watch for changes in the store's syncTimeWindow
-	 */
-	watch: {
-		'settings.syncTimeWindow': {
-			handler(newValue) {
-				if (newValue !== undefined) {
-					this.loadSavedConfiguration()
-				}
-			},
-			immediate: true
-		},
-		'store.loadingSyncSettings': {
-			handler(newValue, oldValue) {
-				// When loading finishes, reload the configuration
-				if (oldValue === true && newValue === false) {
-					this.loadSavedConfiguration()
-				}
-			}
-		}
-	},
-
 	methods: {
 		/**
 		 * Load saved time window configuration
@@ -472,13 +482,13 @@ export default {
 			try {
 				// Load the saved time window configuration from the store
 				let savedTimeWindow = this.store.settings.syncTimeWindow
-				
+
 				// If not available in store, try to load it directly
 				if (savedTimeWindow === undefined || savedTimeWindow === null) {
 					await this.store.loadSyncConfig()
 					savedTimeWindow = this.store.settings.syncTimeWindow
 				}
-				
+
 				// Only update if we have a valid value
 				if (savedTimeWindow !== undefined && savedTimeWindow !== null) {
 					// Find the matching option
@@ -529,7 +539,7 @@ export default {
 
 			try {
 				const timeWindow = this.selectedTimeWindow?.value || 10
-				
+
 				// Wrap the sync operation with heartbeat to prevent 504 timeouts
 				const result = await withHeartbeat(async () => {
 					const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync', {

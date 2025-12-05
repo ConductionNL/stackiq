@@ -61,7 +61,7 @@ export const useSettingsStore = defineStore('settings', {
 			amef_property_definition_schema: { schema: null },
 			// Voorzieningen register configuration - updated to match current schemas
 			voorzieningen_sector_schema: { schema: null },
-			voorzieningen_product_schema: { schema: null },
+			voorzieningen_suite_schema: { schema: null },
 			voorzieningen_dienst_schema: { schema: null },
 			voorzieningen_kwetsbaarheid_schema: { schema: null },
 			voorzieningen_contactpersoon_schema: { schema: null },
@@ -810,7 +810,7 @@ export const useSettingsStore = defineStore('settings', {
 				amef_property_definition_schema: { schema: null },
 				// Voorzieningen register configuration - updated to match current schemas
 				voorzieningen_sector_schema: { schema: null },
-				voorzieningen_product_schema: { schema: null },
+				voorzieningen_suite_schema: { schema: null },
 				voorzieningen_dienst_schema: { schema: null },
 				voorzieningen_kwetsbaarheid_schema: { schema: null },
 				voorzieningen_contactpersoon_schema: { schema: null },
@@ -869,7 +869,7 @@ export const useSettingsStore = defineStore('settings', {
 			const vc = this.voorzieningenRawConfig || {}
 			const vMap = [
 				['sector_schema', 'voorzieningen_sector_schema'],
-				['product_schema', 'voorzieningen_product_schema'],
+				['suite_schema', 'voorzieningen_suite_schema'],
 				['dienst_schema', 'voorzieningen_dienst_schema'],
 				['kwetsbaarheid_schema', 'voorzieningen_kwetsbaarheid_schema'],
 				['contactpersoon_schema', 'voorzieningen_contactpersoon_schema'],
@@ -1230,7 +1230,7 @@ export const useSettingsStore = defineStore('settings', {
 				const voorzieningenConfig = {}
 				const voorzieningenKeys = [
 					'voorzieningen_sector_schema',
-					'voorzieningen_product_schema',
+					'voorzieningen_suite_schema',
 					'voorzieningen_dienst_schema',
 					'voorzieningen_kwetsbaarheid_schema',
 					'voorzieningen_contactpersoon_schema',
@@ -1246,7 +1246,7 @@ export const useSettingsStore = defineStore('settings', {
 				// Map UI keys to API keys
 				const vzMap = {
 					voorzieningen_sector_schema: 'sector_schema',
-					voorzieningen_product_schema: 'product_schema',
+					voorzieningen_suite_schema: 'suite_schema',
 					voorzieningen_dienst_schema: 'dienst_schema',
 					voorzieningen_kwetsbaarheid_schema: 'kwetsbaarheid_schema',
 					voorzieningen_contactpersoon_schema: 'contactpersoon_schema',
@@ -1713,7 +1713,7 @@ export const useSettingsStore = defineStore('settings', {
 				amef_property_definition_schema: { schema: null },
 				// Voorzieningen register configuration - updated to match current schemas
 				voorzieningen_sector_schema: { schema: null },
-				voorzieningen_product_schema: { schema: null },
+				voorzieningen_suite_schema: { schema: null },
 				voorzieningen_dienst_schema: { schema: null },
 				voorzieningen_kwetsbaarheid_schema: { schema: null },
 				voorzieningen_contactpersoon_schema: { schema: null },

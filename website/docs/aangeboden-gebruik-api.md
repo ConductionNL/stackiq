@@ -529,7 +529,7 @@ The Voorzieningen configuration in the settings should include:
 - 'register': The register ID (e.g., 'voorzieningen')
 - 'gebruik_schema': The schema ID for gebruik objects
 - 'koppeling_schema': The schema ID for koppeling objects
-- 'product_schema': The schema ID for product/application objects (for ownership checks)
+- 'suite_schema': The schema ID for suite/application objects (for ownership checks)
 - 'module_schema': The schema ID for module objects (for ownership checks)
 
 ## Technical Implementation
@@ -727,7 +727,7 @@ See the main project documentation for more details on Newman testing workflows.
 **Empty results from koppelingen-gebruik endpoints**:
 - Verify user is in 'ambtenaar' or 'admin' group if expecting full access
 - Check if user's organization owns any applications/modules in the system
-- Ensure koppeling_schema, product_schema, and module_schema are configured in Voorzieningen settings
+- Ensure koppeling_schema, suite_schema, and module_schema are configured in Voorzieningen settings
 - Verify that applications/modules have proper @self.organisation set to the user's organization
 
 **Configuration errors**:

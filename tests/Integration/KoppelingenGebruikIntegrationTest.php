@@ -87,11 +87,11 @@ class KoppelingenGebruikIntegrationTest extends TestCase
     private ?string $voorzieningenRegisterId = null;
 
     /**
-     * Test product schema ID
+     * Test suite schema ID
      *
      * @var string|null
      */
-    private ?string $productSchemaId = null;
+    private ?string $suiteSchemaId = null;
 
     /**
      * Test module schema ID
@@ -147,7 +147,7 @@ class KoppelingenGebruikIntegrationTest extends TestCase
      *
      * @var array<string, mixed>|null
      */
-    private ?array $testProduct = null;
+    private ?array $testSuite = null;
 
     /**
      * Test module owned by organisation A
@@ -218,10 +218,10 @@ class KoppelingenGebruikIntegrationTest extends TestCase
         $this->loadVoorzieningenConfiguration();
 
         // Create test data
-        if ($this->voorzieningenRegisterId && $this->productSchemaId && $this->moduleSchemaId) {
+        if ($this->voorzieningenRegisterId && $this->suiteSchemaId && $this->moduleSchemaId) {
             $this->createTestOrganisations();
             $this->createTestUsers();
-            $this->createTestProductsAndModules();
+            $this->createTestSuitesAndModules();
             $this->createTestGebruiksAndKoppelingen();
         }
     }
@@ -274,7 +274,7 @@ class KoppelingenGebruikIntegrationTest extends TestCase
             $config = $data['config'] ?? $data;
             
             $this->voorzieningenRegisterId = $config['register'] ?? null;
-            $this->productSchemaId = $config['product_schema'] ?? null;
+            $this->suiteSchemaId = $config['suite_schema'] ?? null;
             $this->moduleSchemaId = $config['module_schema'] ?? null;
             $this->gebruikSchemaId = $config['gebruik_schema'] ?? null;
             $this->koppeligenSchemaId = $config['koppeling_schema'] ?? null;
@@ -366,11 +366,11 @@ class KoppelingenGebruikIntegrationTest extends TestCase
         }
 
         // Create test product
-        $this->testProduct = $this->createObject([
-            'title' => 'Test Product ' . uniqid(),
-            'description' => 'Test product for integration testing',
+        $this->testSuite = $this->createObject([
+            'title' => 'Test Suite ' . uniqid(),
+            'description' => 'Test suite for integration testing',
             'organisation' => $orgAId,
-        ], $this->voorzieningenRegisterId, $this->productSchemaId);
+        ], $this->voorzieningenRegisterId, $this->suiteSchemaId);
 
         // Create test module
         $this->testModule = $this->createObject([
@@ -384,7 +384,7 @@ class KoppelingenGebruikIntegrationTest extends TestCase
      * Create test gebruiks and koppelingen
      *
      * Creates gebruiks and koppelingen that reference:
-     * - The test product
+     * - The test suite
      * - The test module
      * - Both organisations
      *
@@ -392,26 +392,26 @@ class KoppelingenGebruikIntegrationTest extends TestCase
      */
     private function createTestGebruiksAndKoppelingen(): void
     {
-        $productId = $this->testProduct['uuid'] ?? $this->testProduct['id'] ?? null;
+        $suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'] ?? null;
         $moduleId = $this->testModule['uuid'] ?? $this->testModule['id'] ?? null;
         $orgAId = $this->organisationA['uuid'] ?? $this->organisationA['id'] ?? null;
         $orgBId = $this->organisationB['uuid'] ?? $this->organisationB['id'] ?? null;
 
-        if (!$productId || !$moduleId || !$orgAId || !$orgBId) {
+        if (!$suiteId || !$moduleId || !$orgAId || !$orgBId) {
             return;
         }
 
-        // Create gebruiks for product (by org A and org B)
+        // Create gebruiks for suite (by org A and org B)
         $this->createObject([
-            'title' => 'Product Gebruik by Org A',
-            'product' => $productId,
+            'title' => 'Suite Gebruik by Org A',
+            'suite' => $suiteId,
             'afnemer' => $orgAId,
             'organisation' => $orgAId,
         ], $this->voorzieningenRegisterId, $this->gebruikSchemaId);
 
         $this->createObject([
-            'title' => 'Product Gebruik by Org B',
-            'product' => $productId,
+            'title' => 'Suite Gebruik by Org B',
+            'suite' => $suiteId,
             'afnemer' => $orgBId,
             'organisation' => $orgBId,
         ], $this->voorzieningenRegisterId, $this->gebruikSchemaId);
@@ -431,10 +431,10 @@ class KoppelingenGebruikIntegrationTest extends TestCase
             'organisation' => $orgBId,
         ], $this->voorzieningenRegisterId, $this->gebruikSchemaId);
 
-        // Create koppelingen for product
+        // Create koppelingen for suite
         $this->createObject([
-            'title' => 'Product Koppeling by Org A',
-            'product' => $productId,
+            'title' => 'Suite Koppeling by Org A',
+            'suite' => $suiteId,
             'organisation' => $orgAId,
         ], $this->voorzieningenRegisterId, $this->koppeligenSchemaId);
 
@@ -561,12 +561,12 @@ class KoppelingenGebruikIntegrationTest extends TestCase
      */
     public function testGetKoppelingenGebruikForProductUuid(): void
     {
-        if (!$this->testProduct) {
-            $this->markTestSkipped('Test product not created');
+        if (!$this->testSuite) {
+            $this->markTestSkipped('Test suite not created');
         }
 
-        $productId = $this->testProduct['uuid'] ?? $this->testProduct['id'];
-        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$productId}");
+        $suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
+        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$suiteId}");
         
         $this->assertEquals(200, $response->getStatusCode(), 'Expected 200 OK response');
         
@@ -657,15 +657,15 @@ class KoppelingenGebruikIntegrationTest extends TestCase
      */
     public function testAmbtenaarAccessToAllOrganisations(): void
     {
-        if (!$this->testProduct || !$this->organisationB) {
+        if (!$this->testSuite || !$this->organisationB) {
             $this->markTestSkipped('Test data not created');
         }
 
-        $productId = $this->testProduct['uuid'] ?? $this->testProduct['id'];
+        $suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
         $orgBId = $this->organisationB['uuid'] ?? $this->organisationB['id'];
 
         // Admin (ambtenaar) should see objects from all organisations
-        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$productId}");
+        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$suiteId}");
         $data = json_decode($response->getBody()->getContents(), true);
 
         // Should see objects from both org A and org B
@@ -678,7 +678,7 @@ class KoppelingenGebruikIntegrationTest extends TestCase
 
         // Test filtering by organisation
         $response = $this->client->get(
-            "/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$productId}?organisation={$orgBId}"
+            "/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$suiteId}?organisation={$orgBId}"
         );
         $filteredData = json_decode($response->getBody()->getContents(), true);
 
@@ -698,14 +698,14 @@ class KoppelingenGebruikIntegrationTest extends TestCase
      */
     public function testPaginationParameters(): void
     {
-        if (!$this->testProduct) {
-            $this->markTestSkipped('Test product not created');
+        if (!$this->testSuite) {
+            $this->markTestSkipped('Test suite not created');
         }
 
-        $productId = $this->testProduct['uuid'] ?? $this->testProduct['id'];
+        $suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
 
         // Test with limit
-        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$productId}?_limit=2");
+        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$suiteId}?_limit=2");
         $data = json_decode($response->getBody()->getContents(), true);
 
         $this->assertEquals(2, $data['limit'], 'Limit should be 2');
@@ -721,12 +721,12 @@ class KoppelingenGebruikIntegrationTest extends TestCase
      */
     public function testResponseFormatConsistency(): void
     {
-        if (!$this->testProduct) {
-            $this->markTestSkipped('Test product not created');
+        if (!$this->testSuite) {
+            $this->markTestSkipped('Test suite not created');
         }
 
-        $productId = $this->testProduct['uuid'] ?? $this->testProduct['id'];
-        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$productId}");
+        $suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
+        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$suiteId}");
         $data = json_decode($response->getBody()->getContents(), true);
 
         // Verify required fields
@@ -803,17 +803,17 @@ class KoppelingenGebruikIntegrationTest extends TestCase
      */
     public function testThreeOrganisationAccessControlMatrix(): void
     {
-        if (!$this->organisationA || !$this->organisationB || !$this->organisationC || !$this->testProduct) {
-            $this->markTestSkipped('Test organisations or products not created');
+        if (!$this->organisationA || !$this->organisationB || !$this->organisationC || !$this->testSuite) {
+            $this->markTestSkipped('Test organisations or suites not created');
         }
 
         $orgAId = $this->organisationA['uuid'] ?? $this->organisationA['id'];
         $orgBId = $this->organisationB['uuid'] ?? $this->organisationB['id'];
         $orgCId = $this->organisationC['uuid'] ?? $this->organisationC['id'];
-        $productId = $this->testProduct['uuid'] ?? $this->testProduct['id'];
+        $suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
 
         // Scenario 1: Admin (ambtenaar) can see all organisations
-        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$productId}");
+        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$suiteId}");
         $data = json_decode($response->getBody()->getContents(), true);
         
         $organisations = array_unique(array_map(
@@ -835,7 +835,7 @@ class KoppelingenGebruikIntegrationTest extends TestCase
 
         // Scenario 3: Admin with organisation filter should only see filtered org
         $response = $this->client->get(
-            "/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$productId}?organisation={$orgBId}"
+            "/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$suiteId}?organisation={$orgBId}"
         );
         $filteredData = json_decode($response->getBody()->getContents(), true);
         
@@ -847,8 +847,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase
             }
         }
 
-        // Scenario 4: Verify Org A owns the product (cross-org access)
-        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$productId}");
+        // Scenario 4: Verify Org A owns the suite (cross-org access)
+        $response = $this->client->get("/index.php/apps/softwarecatalog/api/koppelingen-gebruik/{$suiteId}");
         $data = json_decode($response->getBody()->getContents(), true);
         
         // Should see usage from both A and B (since A owns the product)

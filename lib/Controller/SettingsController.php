@@ -2551,6 +2551,120 @@ class SettingsController extends Controller
         }
     }
 
+    // ========================================================================
+    // CRONJOB CONFIGURATION ENDPOINTS
+    // ========================================================================
+
+    /**
+     * Get cronjob configuration
+     *
+     * Returns configuration for all registered cronjobs including their
+     * user and organisation context settings.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse Cronjob configurations
+     */
+    public function getCronjobConfig(): JSONResponse
+    {
+        try {
+            $config = $this->settingsService->getCronjobConfig();
+            return new JSONResponse($config);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get cronjob config', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get cronjob config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update cronjob configuration
+     *
+     * Updates the user and organisation context for a specific cronjob.
+     *
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse Update result
+     */
+    public function updateCronjobConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            $result = $this->settingsService->updateCronjobConfig($data);
+            
+            $statusCode = $result['success'] ? 200 : 400;
+            return new JSONResponse($result, $statusCode);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to update cronjob config', [
+                'exception' => $e->getMessage(),
+                'requestData' => $this->request->getParams()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to update cronjob config: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available users for cronjob configuration
+     *
+     * Returns a list of users that can be selected for running cronjobs.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse List of available users
+     */
+    public function getCronjobUsers(): JSONResponse
+    {
+        try {
+            $result = $this->settingsService->getAvailableUsersForCronjobs();
+            return new JSONResponse($result);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get cronjob users', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get cronjob users: ' . $e->getMessage(),
+                'users' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available organisations for cronjob configuration
+     *
+     * Returns a list of organisations that can be selected for running cronjobs.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse List of available organisations
+     */
+    public function getCronjobOrganisations(): JSONResponse
+    {
+        try {
+            $result = $this->settingsService->getAvailableOrganisationsForCronjobs();
+            return new JSONResponse($result);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get cronjob organisations', [
+                'exception' => $e->getMessage()
+            ]);
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get cronjob organisations: ' . $e->getMessage(),
+                'organisations' => []
+            ], 500);
+        }
+    }
+
 }//end class
 
 

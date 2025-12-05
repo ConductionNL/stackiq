@@ -97,8 +97,6 @@
 								</div>
 							</div>
 
-
-
 							<!-- Voorzieningen Empty State -->
 							<div v-else-if="voorzieningenRegister && voorzieningenSchemas.length === 0">
 								<NcNoteCard type="warning">
@@ -139,8 +137,6 @@
 								</div>
 							</div>
 
-
-
 							<!-- AMEF Empty State -->
 							<div v-else-if="amefRegister && amefSchemas.length === 0">
 								<NcNoteCard type="warning">
@@ -180,28 +176,20 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Nextcloud Vue components
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 
 // Custom components
 import StandardTabs from '../../../components/StandardTabs.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
-// Icons
-import Save from 'vue-material-design-icons/ContentSave.vue'
 
 export default {
 	name: 'OpenRegisterIntegration',
 
 	components: {
 		NcSelect,
-		NcButton,
 		NcNoteCard,
-		NcLoadingIcon,
 		StandardTabs,
 		AlwaysVisibleSection,
-		Save,
 	},
 
 	/**
@@ -255,7 +243,7 @@ export default {
 			return [
 				{ key: 'voorzieningen_organisatie_schema', title: 'Organisatie Schema', description: 'Schema for organizations' },
 				{ key: 'voorzieningen_contactpersoon_schema', title: 'Contactpersoon Schema', description: 'Schema for contact persons' },
-				{ key: 'voorzieningen_product_schema', title: 'Product Schema', description: 'Schema for products' },
+				{ key: 'voorzieningen_suite_schema', title: 'Suite Schema', description: 'Schema for suites' },
 				{ key: 'voorzieningen_dienst_schema', title: 'Dienst Schema', description: 'Schema for services' },
 				{ key: 'voorzieningen_kwetsbaarheid_schema', title: 'Kwetsbaarheid Schema', description: 'Schema for vulnerabilities' },
 				{ key: 'voorzieningen_gebruik_schema', title: 'Gebruik Schema', description: 'Schema for usage' },
@@ -395,7 +383,7 @@ export default {
 			const voorzieningenKeys = [
 				'voorzieningen_organisatie_schema',
 				'voorzieningen_contactpersoon_schema',
-				'voorzieningen_product_schema',
+				'voorzieningen_suite_schema',
 				'voorzieningen_dienst_schema',
 				'voorzieningen_kwetsbaarheid_schema',
 				'voorzieningen_gebruik_schema',
@@ -524,6 +512,5 @@ export default {
 	padding-top: 20px;
 	border-top: 1px solid var(--color-border);
 }
-
 
 </style>

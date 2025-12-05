@@ -343,7 +343,7 @@ export default {
 				contactpersoon: AccountMultiple,
 				voorziening: ApplicationCog,
 				contract: FileDocumentEdit,
-				product: ApplicationCog,
+				suite: ApplicationCog,
 				module: ApplicationCog,
 				koppeling: ApplicationCog,
 				dienst: ApplicationCog,

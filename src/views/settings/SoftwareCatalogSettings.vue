@@ -62,6 +62,9 @@
 
 		<!-- Email Configuration Section -->
 		<EmailConfiguration />
+
+		<!-- Background Jobs Configuration Section -->
+		<CronjobConfiguration />
 	</div>
 </template>
 
@@ -70,11 +73,8 @@ import { defineComponent } from 'vue'
 import {
 	NcSettingsSection,
 	NcTextField,
-	NcButton,
-	NcLoadingIcon,
 } from '@nextcloud/vue'
 import { settingsStore } from '../../store/store.js'
-import Save from 'vue-material-design-icons/ContentSave.vue'
 import Web from 'vue-material-design-icons/Web.vue'
 import OpenRegisterIntegration from './sections/OpenRegisterIntegration.vue'
 import VersionInformation from './sections/VersionInformation.vue'
@@ -83,6 +83,7 @@ import UserGroupsConfiguration from './sections/UserGroupsConfiguration.vue'
 import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
 import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
 import EmailConfiguration from './sections/EmailConfiguration.vue'
+import CronjobConfiguration from './sections/CronjobConfiguration.vue'
 import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 
 /**
@@ -97,8 +98,6 @@ export default defineComponent({
 	components: {
 		NcSettingsSection,
 		NcTextField,
-		NcButton,
-		NcLoadingIcon,
 		OpenRegisterIntegration,
 		VersionInformation,
 		StatisticsOverview,
@@ -106,8 +105,8 @@ export default defineComponent({
 		OrganizationSynchronization,
 		ArchiMateImportExport,
 		EmailConfiguration,
+		CronjobConfiguration,
 		AlwaysVisibleSection,
-		Save,
 		Web,
 	},
 
@@ -142,15 +141,6 @@ export default defineComponent({
 	},
 
 	/**
-	 * Load settings data when component is created
-	 */
-	async created() {
-		await this.store.loadSettings()
-		// Initialize catalog location from store
-		this.catalogLocation = this.store.settings.catalogLocation || ''
-	},
-
-	/**
 	 * Watch for changes in the store's catalogLocation
 	 */
 	watch: {
@@ -160,7 +150,7 @@ export default defineComponent({
 					this.catalogLocation = newValue
 				}
 			},
-			immediate: true
+			immediate: true,
 		},
 		'store.loadingGeneralSettings': {
 			handler(newValue, oldValue) {
@@ -168,8 +158,17 @@ export default defineComponent({
 				if (oldValue === true && newValue === false) {
 					this.catalogLocation = this.store.settings.catalogLocation || ''
 				}
-			}
-		}
+			},
+		},
+	},
+
+	/**
+	 * Load settings data when component is created
+	 */
+	async created() {
+		await this.store.loadSettings()
+		// Initialize catalog location from store
+		this.catalogLocation = this.store.settings.catalogLocation || ''
 	},
 
 	methods: {
