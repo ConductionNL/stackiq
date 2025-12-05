@@ -128,7 +128,7 @@ class ContactpersonenController extends Controller
         try {
             // Get object service
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            
+
             // Search for contactpersonen belonging to this organisation
             // Use a more generic search that doesn't require specific register/schema
             $searchParams = [
@@ -144,7 +144,7 @@ class ContactpersonenController extends Controller
             foreach ($contactpersonen['results'] as $contactpersoon) {
                 $contactData = $contactpersoon->getObject();
                 $username = $contactData['username'] ?? null;
-                
+
                 $userInfo = [
                     'hasUser' => !empty($username),
                     'username' => $username,
@@ -159,7 +159,7 @@ class ContactpersonenController extends Controller
                         $userInfo['groups'] = array_map(function($group) {
                             return $group->getGID();
                         }, $userGroups);
-                        
+
                         // Get the disabled status from Nextcloud
                         $userInfo['disabled'] = !$user->isEnabled();
                     }
@@ -207,11 +207,11 @@ class ContactpersonenController extends Controller
         try {
             // Get object service
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            
+
             // First try to find the object by UUID without register/schema constraints
             // ObjectService can find objects via ObjectEntityMapper using UUID
             $contactpersoonObject = $objectService->findByUuid($contactpersoonId);
-            
+
             if (!$contactpersoonObject) {
                 return new JSONResponse([
                     'success' => false,
@@ -222,7 +222,7 @@ class ContactpersonenController extends Controller
             // Get register and schema from the found object
             $registerId = $contactpersoonObject->getRegister();
             $schemaId = $contactpersoonObject->getSchema();
-            
+
             $this->logger->info('ContactpersonenController: Found contactpersoon object', [
                 'contactpersoonId' => $contactpersoonId,
                 'registerId' => $registerId,
@@ -230,7 +230,7 @@ class ContactpersonenController extends Controller
             ]);
 
             $contactData = $contactpersoonObject->getObject();
-            
+
             // Check if user already exists
             if (!empty($contactData['username'])) {
                 return new JSONResponse([
@@ -241,7 +241,7 @@ class ContactpersonenController extends Controller
 
             // Create user account using ContactPersonHandler
             $user = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
-            
+
             if (!$user) {
                 return new JSONResponse([
                     'success' => false,
@@ -253,17 +253,20 @@ class ContactpersonenController extends Controller
             // This is a safety check in case the createUserAccount didn't assign groups properly
             $contactData = $contactpersoonObject->getObject();
             $organizationId = $contactData['organisatie'] ?? $contactData['organisation'] ?? '';
-            
+
             if (!empty($organizationId)) {
                 $this->logger->info('ContactpersonenController: Ensuring groups are assigned based on organization type', [
                     'contactpersoonId' => $contactpersoonId,
                     'username' => $user->getUID(),
                     'organizationId' => $organizationId
                 ]);
-                
+
                 // Call the ContactPersonHandler to update groups based on contact data
                 $this->contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
             }
+
+            // Link user to organization entity
+            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $user->getUID());
 
             // Update the contactpersoon object with the username
             $contactData['username'] = $user->getUID();
@@ -287,7 +290,7 @@ class ContactpersonenController extends Controller
             $userGroups = $this->groupManager->getUserGroups($user);
             $softwareCatalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
             $userGroupNames = [];
-            
+
             foreach ($userGroups as $group) {
                 $groupId = $group->getGID();
                 if (in_array($groupId, $softwareCatalogGroups)) {
@@ -337,7 +340,7 @@ class ContactpersonenController extends Controller
     {
         try {
             $user = $this->userManager->get($username);
-            
+
             if (!$user) {
                 return new JSONResponse([
                     'success' => false,
@@ -393,7 +396,7 @@ class ContactpersonenController extends Controller
     {
         try {
             $user = $this->userManager->get($username);
-            
+
             if (!$user) {
                 return new JSONResponse([
                     'success' => false,
@@ -403,14 +406,14 @@ class ContactpersonenController extends Controller
 
             // Get allowed software catalog groups
             $allowedGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
-            
+
             // Filter to only allowed groups
             $validGroups = array_intersect($groups, $allowedGroups);
 
             // Get current user groups (only software catalog groups)
             $currentGroups = $this->groupManager->getUserGroups($user);
             $currentSoftwareCatalogGroups = [];
-            
+
             foreach ($currentGroups as $group) {
                 if (in_array($group->getGID(), $allowedGroups)) {
                     $currentSoftwareCatalogGroups[] = $group->getGID();
@@ -567,10 +570,10 @@ class ContactpersonenController extends Controller
 
             // Get contactpersoon from OpenRegister
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            
+
             // First try to find the object by UUID without register/schema constraints
             $contactObject = $objectService->findByUuid($contactpersoonId);
-            
+
             if (!$contactObject) {
                 return new JSONResponse([
                     'success' => false,
@@ -580,7 +583,7 @@ class ContactpersonenController extends Controller
 
             $contactData = $contactObject->getObject();
             $username = $contactData['username'] ?? null;
-            
+
             $userInfo = [
                 'hasUser' => !empty($username),
                 'username' => $username,
@@ -594,14 +597,14 @@ class ContactpersonenController extends Controller
                 if ($user) {
                     $userGroups = $this->groupManager->getUserGroups($user);
                     $softwareCatalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
-                    
+
                     foreach ($userGroups as $group) {
                         $groupId = $group->getGID();
                         if (in_array($groupId, $softwareCatalogGroups)) {
                             $userInfo['groups'][] = $groupId;
                         }
                     }
-                    
+
                     // Get the disabled status from Nextcloud
                     $userInfo['disabled'] = !$user->isEnabled();
                 }
@@ -722,7 +725,7 @@ class ContactpersonenController extends Controller
         try {
             // Delegate to service
             $this->contactpersoonService->disableUserForContactpersoon($contactpersoonId);
-            
+
             $this->logger->info('User account disabled', [
                 'contactpersoonId' => $contactpersoonId,
                 'disabled_by' => $this->userId
@@ -749,7 +752,7 @@ class ContactpersonenController extends Controller
         try {
             // Delegate to service
             $this->contactpersoonService->enableUserForContactpersoon($contactpersoonId);
-            
+
             $this->logger->info('User account enabled', [
                 'contactpersoonId' => $contactpersoonId,
                 'enabled_by' => $this->userId
