@@ -41,7 +41,7 @@ class GebruikService
 
             $registerId = $voorzieningenConfig['register'] ?? null;
             $gebruikSchema = $voorzieningenConfig['gebruik_schema'] ?? null;
-            $applicatieSchema = $voorzieningenConfig['applicatie_schema'] ?? null;
+            $applicatieSchema = $voorzieningenConfig['module_schema'] ?? null;
 
             // If configuration is available, use it
             if ($registerId && $gebruikSchema) {
@@ -100,7 +100,7 @@ class GebruikService
         $gebruiksConfig = $this->getGebruiksConfiguration();
 
         $options['@self'] = [
-            'register' => $gebruiksConfig['register_id'],
+            'register' => $gebruiksConfig['registerId'],
             'schema' => $gebruiksConfig['gebruikSchema'],
         ];
 
@@ -132,7 +132,7 @@ class GebruikService
         $gebruiksConfig = $this->getGebruiksConfiguration();
 
         $options['@self'] = [
-            'register' => $gebruiksConfig['register_id'],
+            'register' => $gebruiksConfig['registerId'],
             'schema' => $gebruiksConfig['applicatieSchema'],
         ];
 
