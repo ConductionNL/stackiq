@@ -76,7 +76,7 @@ class GebruikController extends Controller
 
         $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');
 
-        if(in_array(needle: 'admin', haystack: $groupNames) === true|| in_array(needle: 'gebruik-beheerder', haystack: $groupNames) === true) {
+        if (in_array(needle: 'admin', haystack: $groupNames) === true || in_array(needle: 'gebruik-beheerder', haystack: $groupNames) === true) {
             $options = $this->request->getParams();
         } else if (in_array(needle: 'aanbod-beheerder', haystack: $groupNames) === true) {
             $options = $this->request->getParams();
