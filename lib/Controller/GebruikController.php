@@ -16,6 +16,7 @@
 
 namespace OCA\SoftwareCatalog\Controller;
 
+use Exception;
 use OCA\SoftwareCatalog\Service\GebruikService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
@@ -90,7 +91,7 @@ class GebruikController extends Controller
 
         try {
             return new JSONResponse($this->gebruikService->getGebruiken(options: $options));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
     }
@@ -113,7 +114,7 @@ class GebruikController extends Controller
 
         try {
             return new JSONResponse($this->gebruikService->getGebruiken(options: $options));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
     }
