@@ -90,16 +90,16 @@ These endpoints require user authentication and use standard Nextcloud RBAC (Rol
 }
 ```
 
-### 3. Set Gebruik @self Property to Active Organization
+### 3. Set Gebruik @self Property to Active Organization (Overnemen)
 
 **Endpoint:** 'PUT /api/aangeboden-gebruik/{gebruikId}/set-self'
 
-**Description:** Sets the '@self.organisation' property of a specific gebruik object to the active organization. This operation is only allowed if the active organization is the afnemer for that gebruik.
+**Description:** Sets the '@self.organisation' property of a specific gebruik or koppeling object to the active organization. This operation is only allowed if the active organization is the afnemer (consumer) or aanbieder (provider) for that object. This implements the 'overnemen' (take over) workflow.
 
 **Path Parameters:**
-- 'gebruikId' (string, required): The UUID of the gebruik object to update
+- 'gebruikId' (string, required): The UUID of the gebruik or koppeling object to update
 
-**Security:** This endpoint verifies that the active organization is the afnemer before allowing the update.
+**Security:** This endpoint verifies that the active organization is either the afnemer or aanbieder before allowing the update.
 
 **Response Example (Success):**
 ```json
@@ -123,19 +123,26 @@ These endpoints require user authentication and use standard Nextcloud RBAC (Rol
 ```json
 {
   'success': false,
-  'error': 'Operation not allowed: active organization is not the afnemer',
-  'gebruik': null
+  'error': 'Operation not allowed: active organization is not the afnemer or aanbieder',
+  'gebruik': null,
+  'debug': {
+    'afnemer_in_object': 'other-org-uuid',
+    'resolved_afnemer_id': 'other-org-uuid',
+    'aanbieder_in_object': null,
+    'resolved_aanbieder_id': null,
+    'current_org': 'gemeente-uuid'
+  }
 }
 ```
 
-### 4. Deny a Suggestion (Delete)
+### 4. Deny a Suggestion (Delete / Afwijzen)
 
 **Endpoint:** 'DELETE /api/aangeboden-gebruik/{gebruikId}/deny'
 
-**Description:** Denies a gebruik suggestion by deleting the object completely. Only allowed if the active organization is the afnemer for the object.
+**Description:** Denies a gebruik or koppeling suggestion by deleting the object completely. Only allowed if the active organization is the afnemer (consumer) or aanbieder (provider) for the object. This implements the 'afwijzen' (reject) workflow where a gemeente can reject a suggestion from a leverancier, or a leverancier can reject/delete their own koppelingen.
 
 **Parameters:**
-- 'gebruikId' (path, required): The UUID of the gebruik object to deny
+- 'gebruikId' (path, required): The UUID of the gebruik or koppeling object to deny
 
 **Success Response (200):**
 ```json
@@ -152,11 +159,13 @@ These endpoints require user authentication and use standard Nextcloud RBAC (Rol
 ```json
 {
   'success': false,
-  'error': 'Operation not allowed: active organization is not the afnemer',
+  'error': 'Operation not allowed: active organization is not the afnemer or aanbieder',
   'deleted': false,
   'debug': {
     'afnemer_in_object': 'other-org-uuid',
     'resolved_afnemer_id': 'other-org-uuid',
+    'aanbieder_in_object': null,
+    'resolved_aanbieder_id': null,
     'current_org': 'gemeente-uuid'
   }
 }
@@ -230,7 +239,7 @@ The API uses standard HTTP status codes:
 
 - **200 OK**: Request successful
 - **400 Bad Request**: Invalid parameters or missing required fields
-- **403 Forbidden**: Operation not allowed (e.g., organization is not afnemer for @self update)
+- **403 Forbidden**: Operation not allowed (e.g., organization is not afnemer or aanbieder for @self update or delete)
 - **404 Not Found**: Gebruik object not found
 - **500 Internal Server Error**: Server-side error occurred
 
@@ -244,9 +253,16 @@ The API uses standard HTTP status codes:
 - Uses RBAC-disabled search to find participation records
 - Searches across all gebruiks to find those where the active organization appears in the deelnemers array
 
-### @self Update Permission
-- Verifies that the active organization is the afnemer before allowing updates
-- Prevents unauthorized modification of gebruik ownership
+### @self Update Permission (Overnemen)
+- Verifies that the active organization is either the afnemer (consumer) or aanbieder (provider) before allowing updates
+- Prevents unauthorized modification of gebruik or koppeling ownership
+- Supports both gebruiks and koppelingen objects
+
+### Delete Permission (Afwijzen)
+- Verifies that the active organization is either the afnemer (consumer) or aanbieder (provider) before allowing deletion
+- Allows gemeenten to reject suggestions from leveranciers
+- Allows leveranciers to reject/delete their own koppelingen
+- Supports both gebruiks and koppelingen objects
 
 ### Extended Access Control (Koppelingen-Gebruik)
 The koppelingen-gebruik endpoints implement a multi-level access control system:
@@ -360,13 +376,14 @@ Replace 'USAGE_UUID', 'ORG_UUID', 'MODULE_UUID', and 'APP_UUID' with actual UUID
 
 ## Leverancier-Gemeente Workflow
 
-The AangebodenGebruik API supports a specific workflow where leveranciers (suppliers) can register gebruik objects for gemeenten (municipalities), and gemeenten can then claim or deny these suggestions.
+The AangebodenGebruik API supports a specific workflow where leveranciers (suppliers) can register gebruik or koppeling objects for gemeenten (municipalities), and gemeenten can then claim (overnemen) or deny (afwijzen) these suggestions. Additionally, leveranciers can also reject/delete their own koppelingen where they are the aanbieder.
 
 ### Workflow Overview
 
-1. **Leverancier Creates Suggestion**: A leverancier creates a gebruik object with the afnemer set to a gemeente (different from their own organisation)
+1. **Leverancier Creates Suggestion**: A leverancier creates a gebruik or koppeling object with the afnemer set to a gemeente (different from their own organisation) and aanbieder set to themselves
 2. **Cross-Organisation Access**: The gemeente can access this suggestion even though they didn't create it
-3. **Claim or Deny**: The gemeente can either claim the suggestion (set @self.organisation to themselves) or deny it (delete the object)
+3. **Claim or Deny**: The gemeente (as afnemer) can either claim the suggestion (set @self.organisation to themselves - overnemen) or deny it (delete the object - afwijzen)
+4. **Aanbieder Actions**: The leverancier (as aanbieder) can also reject/delete their own koppelingen using the same endpoints
 
 ### Step-by-Step Process
 
@@ -455,10 +472,10 @@ The AangebodenGebruik API uses OpenRegister's built-in RBAC and multitenancy con
 
 #### Security Model
 
-1. **Creation**: Leveranciers can create gebruik objects with any afnemer (no restriction)
-2. **Discovery**: Gemeenten can only see gebruik objects where they are the afnemer
-3. **Claiming**: Only the afnemer organisation can claim a gebruik suggestion
-4. **Deletion**: Only after claiming can the gemeente delete the object (to deny the suggestion)
+1. **Creation**: Leveranciers can create gebruik or koppeling objects with any afnemer (no restriction)
+2. **Discovery**: Gemeenten can see gebruik objects where they are the afnemer, and leveranciers can see koppelingen where they are the aanbieder
+3. **Claiming (Overnemen)**: Both the afnemer and aanbieder organisations can claim (set @self.organisation) a gebruik or koppeling suggestion
+4. **Deletion (Afwijzen)**: Both the afnemer and aanbieder organisations can delete the object to reject/deny the suggestion
 
 ### Example Complete Workflow
 

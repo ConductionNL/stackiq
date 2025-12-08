@@ -741,9 +741,10 @@ class AangebodenGebruikService
      * Set the @self property of a gebruik to the active organization
      * 
      * This method updates the @self.organisation property of a specific gebruik
-     * object, but only if the active organization is the afnemer for that gebruik.
+     * or koppeling object, but only if the active organization is the afnemer
+     * (consumer) or aanbieder (provider) for that object.
      * 
-     * @param string $gebruikId The UUID of the gebruik object to update
+     * @param string $gebruikId The UUID of the gebruik or koppeling object to update
      * @param array $options Additional update options
      * @return array Result with success status and updated object data
      * @throws Exception When OpenRegister service is not available or operation fails
@@ -778,7 +779,7 @@ class AangebodenGebruikService
                 ];
             }
 
-            // Get the existing gebruik object with RBAC and multitenancy disabled
+            // Get the existing gebruik or koppeling object with RBAC and multitenancy disabled
             // since the object might be owned by a different organisation (leverancier)
             try {
                 $existingGebruik = $objectService->find(
@@ -802,9 +803,10 @@ class AangebodenGebruikService
                 ];
             }
 
-            // Verify that the active organization is the afnemer
+            // Verify that the active organization is either the afnemer or aanbieder
             $gebruikData = $existingGebruik->getObject();
             $afnemerInfo = $gebruikData['afnemer'] ?? null;
+            $aanbiederInfo = $gebruikData['aanbieder'] ?? null;
             
             // Check various ways the afnemer might be stored (UUID, object, or string)
             $afnemerId = null;
@@ -813,15 +815,29 @@ class AangebodenGebruikService
             } elseif (is_string($afnemerInfo)) {
                 $afnemerId = $afnemerInfo;
             }
+            
+            // Check various ways the aanbieder might be stored (UUID, object, or string)
+            $aanbiederId = null;
+            if (is_array($aanbiederInfo) && isset($aanbiederInfo['id'])) {
+                $aanbiederId = $aanbiederInfo['id'];
+            } elseif (is_string($aanbiederInfo)) {
+                $aanbiederId = $aanbiederInfo;
+            }
 
-            if (!$afnemerId || $afnemerId !== $currentOrg) {
+            // Allow operation if current org is either afnemer or aanbieder
+            $isAfnemer = ($afnemerId && $afnemerId === $currentOrg);
+            $isAanbieder = ($aanbiederId && $aanbiederId === $currentOrg);
+            
+            if (!$isAfnemer && !$isAanbieder) {
                 return [
                     'success' => false,
-                    'error' => 'Operation not allowed: active organization is not the afnemer',
+                    'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
                     'gebruik' => null,
                     'debug' => [
                         'afnemer_in_object' => $afnemerInfo,
                         'resolved_afnemer_id' => $afnemerId,
+                        'aanbieder_in_object' => $aanbiederInfo,
+                        'resolved_aanbieder_id' => $aanbiederId,
                         'current_org' => $currentOrg
                     ]
                 ];
@@ -848,7 +864,10 @@ class AangebodenGebruikService
             $this->logger->info('Successfully updated gebruik @self property', [
                 'gebruik_id' => $gebruikId,
                 'organisation' => $currentOrg,
-                'afnemer_verified' => $afnemerId
+                'is_afnemer' => $isAfnemer,
+                'is_aanbieder' => $isAanbieder,
+                'afnemer_id' => $afnemerId,
+                'aanbieder_id' => $aanbiederId
             ]);
 
             return [
@@ -1312,22 +1331,23 @@ class AangebodenGebruikService
     }
 
     /**
-     * Delete (deny) a gebruik object with security validation
+     * Delete (deny) a gebruik or koppeling object with security validation
      * 
-     * This method allows deleting a gebruik object, but only if the active organization
-     * is the afnemer (consumer) for that gebruik. This implements the "deny" workflow
-     * where a gemeente can reject a suggestion from a leverancier.
+     * This method allows deleting a gebruik or koppeling object, but only if the active
+     * organization is the afnemer (consumer) or aanbieder (provider) for that object.
+     * This implements the "deny" workflow where a gemeente can reject a suggestion from
+     * a leverancier, or a leverancier can reject/delete their own koppelingen.
      * 
      * Security: Since we disable RBAC to access cross-organisation objects, we must
-     * implement our own security checks to ensure only the afnemer can delete.
+     * implement our own security checks to ensure only the afnemer or aanbieder can delete.
      * 
-     * @param string $gebruikId The UUID of the gebruik object to delete
+     * @param string $gebruikId The UUID of the gebruik or koppeling object to delete
      * @param array $options Additional options for the operation
      * @return array Result array with success status and details
      */
     public function deleteGebruikAsAfnemer(string $gebruikId, array $options = []): array
     {
-        $this->logger->info('Deleting gebruik object as afnemer', [
+        $this->logger->info('Deleting gebruik object as afnemer or aanbieder', [
             'gebruik_id' => $gebruikId,
             'options' => $options
         ]);
@@ -1355,7 +1375,7 @@ class AangebodenGebruikService
                 ];
             }
 
-            // Get the existing gebruik object with RBAC and multitenancy disabled
+            // Get the existing gebruik or koppeling object with RBAC and multitenancy disabled
             // since the object might be owned by a different organisation (leverancier)
             $gebruiksConfig = $this->getGebruiksConfiguration();
             
@@ -1370,7 +1390,8 @@ class AangebodenGebruikService
                     $gebruikData = $existingGebruik->getObject();
                     $this->logger->debug('Found gebruik object for deletion', [
                         'gebruik_id' => $gebruikId,
-                        'afnemer' => $gebruikData['afnemer'] ?? 'unknown'
+                        'afnemer' => $gebruikData['afnemer'] ?? 'unknown',
+                        'aanbieder' => $gebruikData['aanbieder'] ?? 'unknown'
                     ]);
                 } else {
                     $gebruikData = null;
@@ -1391,9 +1412,10 @@ class AangebodenGebruikService
                 ];
             }
 
-            // SECURITY CHECK: Verify that the active organization is the afnemer
+            // SECURITY CHECK: Verify that the active organization is either the afnemer or aanbieder
             // This is critical since we're bypassing RBAC
             $afnemerInfo = $gebruikData['afnemer'] ?? null;
+            $aanbiederInfo = $gebruikData['aanbieder'] ?? null;
             
             // Check various ways the afnemer might be stored (UUID, object, or string)
             $afnemerId = null;
@@ -1402,22 +1424,38 @@ class AangebodenGebruikService
             } elseif (is_string($afnemerInfo)) {
                 $afnemerId = $afnemerInfo;
             }
+            
+            // Check various ways the aanbieder might be stored (UUID, object, or string)
+            $aanbiederId = null;
+            if (is_array($aanbiederInfo) && isset($aanbiederInfo['id'])) {
+                $aanbiederId = $aanbiederInfo['id'];
+            } elseif (is_string($aanbiederInfo)) {
+                $aanbiederId = $aanbiederInfo;
+            }
+            
+            // Allow operation if current org is either afnemer or aanbieder
+            $isAfnemer = ($afnemerId && $afnemerId === $currentOrg);
+            $isAanbieder = ($aanbiederId && $aanbiederId === $currentOrg);
 
-            if (!$afnemerId || $afnemerId !== $currentOrg) {
-                $this->logger->warning('Unauthorized delete attempt - user is not afnemer', [
+            if (!$isAfnemer && !$isAanbieder) {
+                $this->logger->warning('Unauthorized delete attempt - user is not afnemer or aanbieder', [
                     'gebruik_id' => $gebruikId,
                     'current_org' => $currentOrg,
                     'afnemer_in_object' => $afnemerInfo,
-                    'resolved_afnemer_id' => $afnemerId
+                    'resolved_afnemer_id' => $afnemerId,
+                    'aanbieder_in_object' => $aanbiederInfo,
+                    'resolved_aanbieder_id' => $aanbiederId
                 ]);
                 
                 return [
                     'success' => false,
-                    'error' => 'Operation not allowed: active organization is not the afnemer',
+                    'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
                     'deleted' => false,
                     'debug' => [
                         'afnemer_in_object' => $afnemerInfo,
                         'resolved_afnemer_id' => $afnemerId,
+                        'aanbieder_in_object' => $aanbiederInfo,
+                        'resolved_aanbieder_id' => $aanbiederId,
                         'current_org' => $currentOrg
                     ]
                 ];
@@ -1438,7 +1476,10 @@ class AangebodenGebruikService
             $this->logger->info('Successfully deleted gebruik object', [
                 'gebruik_id' => $gebruikId,
                 'organisation' => $currentOrg,
-                'afnemer_verified' => $afnemerId,
+                'is_afnemer' => $isAfnemer,
+                'is_aanbieder' => $isAanbieder,
+                'afnemer_id' => $afnemerId,
+                'aanbieder_id' => $aanbiederId,
                 'delete_result' => $deleteResult
             ]);
 
