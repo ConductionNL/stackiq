@@ -155,7 +155,16 @@ return [
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================
-        // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks
+        // AANBOD API ENDPOINTS - Unified API for all aanbod types
+        // ========================================================================
+
+        // Aanbod API endpoints for managing offers (gebruik, dienst, module, koppeling)
+        ['name' => 'aanbod#getAanbod', 'url' => '/api/aanbod', 'verb' => 'GET'],
+        ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
+        ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
+
+        // ========================================================================
+        // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks (Legacy)
         // ========================================================================
 
         // AangebodenGebruik API endpoints for filtering gebruiks by organization involvement
