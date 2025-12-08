@@ -25,7 +25,7 @@ These endpoints require user authentication and use standard Nextcloud RBAC (Rol
 
 **Endpoint:** 'GET /api/aangeboden-gebruik/afnemer'
 
-**Description:** Returns all gebruiks objects where the active organization is the afnemer (consumer).
+**Description:** Returns all gebruiks, koppelingen, and other objects where the active organization is the afnemer (consumer) and where '@self.organisation' does not equal the currently active organisation (i.e., objects that haven't been accepted/claimed by this organisation yet). This excludes objects that have already been accepted (overnomen) by the current organisation. Note that '@self.organisation' is never empty, so we check if it equals the current organisation.
 
 **Query Parameters:**
 - 'limit' (integer, optional): Maximum number of results to return
@@ -247,7 +247,10 @@ The API uses standard HTTP status codes:
 
 ### Afnemer Filtering
 - Uses standard RBAC filtering based on organization association
-- Only returns gebruiks where the active organization has proper access rights
+- Only returns gebruiks, koppelingen, and other objects where the active organization is the afnemer
+- Excludes objects where '@self.organisation' equals the currently active organisation (already accepted by this org)
+- Only shows offered objects that haven't been accepted (overnomen) by the current organisation yet
+- Note: '@self.organisation' is never empty, so filtering checks if it equals the current organisation
 
 ### Deelnemers Filtering  
 - Uses RBAC-disabled search to find participation records

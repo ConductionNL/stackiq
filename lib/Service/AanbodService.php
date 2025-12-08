@@ -1,0 +1,642 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Aanbod Service for SoftwareCatalog
+ * 
+ * Handles operations related to aanbod (offers) which can be gebruik, dienst,
+ * module, or koppeling objects where the active organization is involved as
+ * either afnemer (consumer) or aanbieder (provider).
+ * 
+ * @category Service
+ * @package  OCA\SoftwareCatalog\Service
+ * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version  1.0.0
+ * @link     https://github.com/ConductionNL/SoftwareCatalog
+ */
+
+namespace OCA\SoftwareCatalog\Service;
+
+use OCA\OpenRegister\Service\ObjectService;
+use OCP\App\IAppManager;
+use OCP\IAppConfig;
+use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Exception;
+
+/**
+ * Service for managing aanbod (offers) operations
+ * 
+ * This service provides operations for querying aanbod objects (gebruik, dienst,
+ * module, koppeling) where the active organization is involved either as the
+ * afnemer (consumer) or aanbieder (provider), and for accepting or denying these offers.
+ * 
+ * @category Service
+ * @package  OCA\SoftwareCatalog\Service
+ * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version  1.0.0
+ * @link     https://github.com/ConductionNL/SoftwareCatalog
+ */
+class AanbodService
+{
+    /**
+     * Constructor for AanbodService
+     * 
+     * @param IAppConfig $config Nextcloud app configuration service
+     * @param IAppManager $appManager App manager service for checking available apps
+     * @param ContainerInterface $container PSR-11 container interface for dependency injection
+     * @param LoggerInterface $logger Logger service for debugging and error reporting
+     * @param SettingsService $settingsService Settings service for retrieving configuration
+     * @param IUserSession $userSession User session service for current user context
+     */
+    public function __construct(
+        private readonly IAppConfig $config,
+        private readonly IAppManager $appManager,
+        private readonly ContainerInterface $container,
+        private readonly LoggerInterface $logger,
+        private readonly SettingsService $settingsService,
+        private readonly IUserSession $userSession
+    ) {
+    }
+
+    /**
+     * Get all aanbod objects (modules, diensten, koppelingen, gebruiks)
+     * 
+     * Returns modules, diensten, and koppelingen where the current organisation
+     * is in the aanbieder property, or gebruiks where the current organisation
+     * is in the afnemer property. Excludes objects where @self.organisation
+     * equals the current organisation (already accepted).
+     * 
+     * @param array $options Additional query options (limit, offset, filters, etc.)
+     * @return array Array with success status, aanbod objects data, and metadata
+     * @throws Exception When OpenRegister service is not available
+     */
+    public function getAanbod(array $options = []): array
+    {
+        $this->logger->info('Getting aanbod objects for active organisation', [
+            'options' => $options
+        ]);
+
+        try {
+            // Get ObjectService from OpenRegister
+            $objectService = $this->getObjectService();
+            
+            // Get current organization
+            $currentOrg = $this->getCurrentOrganisation();
+            if (!$currentOrg) {
+                $this->logger->warning('No current organization available for aanbod filtering');
+                return [
+                    'results' => [],
+                    'total' => 0,
+                    'page' => 1,
+                    'pages' => 0,
+                    'limit' => 20,
+                    'offset' => 0,
+                    'message' => 'No current organization available'
+                ];
+            }
+
+            // Get voorzieningen configuration
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $registerId = $voorzieningenConfig['register'] ?? null;
+            $gebruikSchema = $voorzieningenConfig['gebruik_schema'] ?? null;
+            $koppelingSchema = $voorzieningenConfig['koppeling_schema'] ?? null;
+            $moduleSchema = $voorzieningenConfig['module_schema'] ?? null;
+            $dienstSchema = $voorzieningenConfig['dienst_schema'] ?? null;
+            
+            if (!$registerId) {
+                throw new Exception('Voorzieningen register not configured');
+            }
+
+            $allResults = [];
+            $schemasToSearch = [];
+
+            // Collect all schemas we need to search
+            if ($gebruikSchema) {
+                $schemasToSearch[] = ['schema' => $gebruikSchema, 'type' => 'gebruik', 'filter_field' => 'afnemer'];
+            }
+            if ($koppelingSchema) {
+                $schemasToSearch[] = ['schema' => $koppelingSchema, 'type' => 'koppeling', 'filter_field' => 'aanbieder'];
+            }
+            if ($moduleSchema) {
+                $schemasToSearch[] = ['schema' => $moduleSchema, 'type' => 'module', 'filter_field' => 'aanbieder'];
+            }
+            if ($dienstSchema) {
+                $schemasToSearch[] = ['schema' => $dienstSchema, 'type' => 'dienst', 'filter_field' => 'aanbieder'];
+            }
+
+            // Search each schema type
+            foreach ($schemasToSearch as $schemaConfig) {
+                try {
+                    $query = [
+                        '@self' => [
+                            'register' => $registerId,
+                            'schema' => $schemaConfig['schema']
+                        ],
+                        $schemaConfig['filter_field'] => $currentOrg
+                    ];
+
+                    // Add pagination and other filters from options
+                    $query = $this->addQueryFilters($query, $options);
+
+                    $this->logger->debug('Searching aanbod objects', [
+                        'schema' => $schemaConfig['schema'],
+                        'type' => $schemaConfig['type'],
+                        'filter_field' => $schemaConfig['filter_field'],
+                        'current_org' => $currentOrg
+                    ]);
+
+                    // Execute search with RBAC and multitenancy disabled to find cross-organisation objects
+                    $searchResult = $objectService->searchObjectsPaginated(
+                        query: $query,
+                        rbac: false,
+                        multi: false
+                    );
+
+                    // Filter out objects where @self.organisation equals current org
+                    foreach ($searchResult['results'] ?? [] as $result) {
+                        $resultData = is_array($result) ? $result : $result->getObject();
+                        $selfOrg = $resultData['@self']['organisation'] ?? null;
+                        
+                        // Only include if @self.organisation is NOT set to the current organisation
+                        if ($selfOrg !== $currentOrg) {
+                            // Add type information to result
+                            $resultData['_aanbod_type'] = $schemaConfig['type'];
+                            $allResults[] = $resultData;
+                        }
+                    }
+
+                    $this->logger->debug('Found aanbod objects for schema', [
+                        'schema' => $schemaConfig['schema'],
+                        'type' => $schemaConfig['type'],
+                        'count' => count($searchResult['results'] ?? [])
+                    ]);
+
+                } catch (Exception $e) {
+                    $this->logger->warning('Failed to get aanbod objects from schema', [
+                        'schema' => $schemaConfig['schema'],
+                        'type' => $schemaConfig['type'],
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // Apply pagination to combined results
+            $requestedLimit = $options['_limit'] ?? $options['limit'] ?? 20;
+            $requestedPage = $options['_page'] ?? 1;
+            $requestedOffset = isset($options['_offset']) ? $options['_offset'] : (($requestedPage - 1) * $requestedLimit);
+
+            $totalFiltered = count($allResults);
+            $paginatedResults = array_slice($allResults, $requestedOffset, $requestedLimit);
+
+            $totalPages = $requestedLimit > 0 
+                ? (int) ceil($totalFiltered / $requestedLimit) 
+                : 1;
+
+            return [
+                'results' => $paginatedResults,
+                'total' => $totalFiltered,
+                'page' => $requestedPage,
+                'pages' => $totalPages,
+                'limit' => $requestedLimit,
+                'offset' => $requestedOffset
+            ];
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to get aanbod objects', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'results' => [],
+                'total' => 0,
+                'page' => 1,
+                'pages' => 0,
+                'limit' => 20,
+                'offset' => 0,
+                'error' => 'Failed to retrieve aanbod: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Accept an aanbod object (set @self.organisation to current organisation)
+     * 
+     * This method updates the @self.organisation property of an aanbod object
+     * to the active organization, but only if the active organization is either
+     * the afnemer (for gebruiks) or aanbieder (for modules, diensten, koppelingen).
+     * 
+     * @param string $aanbodId The UUID of the aanbod object to accept
+     * @param array $options Additional update options
+     * @return array Result with success status and updated object data
+     * @throws Exception When OpenRegister service is not available or operation fails
+     */
+    public function acceptAanbod(string $aanbodId, array $options = []): array
+    {
+        $this->logger->info('Accepting aanbod object', [
+            'aanbod_id' => $aanbodId,
+            'options' => $options
+        ]);
+
+        try {
+            // Validate input
+            if (empty($aanbodId)) {
+                return [
+                    'success' => false,
+                    'error' => 'Aanbod ID is required',
+                    'aanbod' => null
+                ];
+            }
+
+            // Get ObjectService from OpenRegister
+            $objectService = $this->getObjectService();
+            
+            // Get current organization
+            $currentOrg = $this->getCurrentOrganisation();
+            if (!$currentOrg) {
+                return [
+                    'success' => false,
+                    'error' => 'No current organization available',
+                    'aanbod' => null
+                ];
+            }
+
+            // Get the existing aanbod object with RBAC and multitenancy disabled
+            try {
+                $existingAanbod = $objectService->find(
+                    id: $aanbodId,
+                    rbac: false,
+                    multi: false
+                );
+            } catch (Exception $e) {
+                $this->logger->warning('Failed to find aanbod object', [
+                    'aanbod_id' => $aanbodId,
+                    'error' => $e->getMessage()
+                ]);
+                $existingAanbod = null;
+            }
+            
+            if (!$existingAanbod) {
+                return [
+                    'success' => false,
+                    'error' => 'Aanbod object not found',
+                    'aanbod' => null
+                ];
+            }
+
+            // Verify that the active organization is either afnemer or aanbieder
+            $aanbodData = $existingAanbod->getObject();
+            $afnemerInfo = $aanbodData['afnemer'] ?? null;
+            $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
+            
+            // Check various ways the afnemer might be stored
+            $afnemerId = null;
+            if (is_array($afnemerInfo) && isset($afnemerInfo['id'])) {
+                $afnemerId = $afnemerInfo['id'];
+            } elseif (is_string($afnemerInfo)) {
+                $afnemerId = $afnemerInfo;
+            }
+            
+            // Check various ways the aanbieder might be stored
+            $aanbiederId = null;
+            if (is_array($aanbiederInfo) && isset($aanbiederInfo['id'])) {
+                $aanbiederId = $aanbiederInfo['id'];
+            } elseif (is_string($aanbiederInfo)) {
+                $aanbiederId = $aanbiederInfo;
+            }
+
+            // Allow operation if current org is either afnemer or aanbieder
+            $isAfnemer = ($afnemerId && $afnemerId === $currentOrg);
+            $isAanbieder = ($aanbiederId && $aanbiederId === $currentOrg);
+            
+            if (!$isAfnemer && !$isAanbieder) {
+                return [
+                    'success' => false,
+                    'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
+                    'aanbod' => null,
+                    'debug' => [
+                        'afnemer_in_object' => $afnemerInfo,
+                        'resolved_afnemer_id' => $afnemerId,
+                        'aanbieder_in_object' => $aanbiederInfo,
+                        'resolved_aanbieder_id' => $aanbiederId,
+                        'current_org' => $currentOrg
+                    ]
+                ];
+            }
+
+            // Update the @self.organisation property
+            $selfData = $aanbodData['@self'] ?? [];
+            $selfData['organisation'] = $currentOrg;
+            $aanbodData['@self'] = $selfData;
+
+            // Get schema and register from object
+            $schemaId = $aanbodData['@self']['schema'] ?? null;
+            $registerId = $aanbodData['@self']['register'] ?? null;
+
+            if (!$schemaId || !$registerId) {
+                return [
+                    'success' => false,
+                    'error' => 'Aanbod object missing schema or register information',
+                    'aanbod' => null
+                ];
+            }
+
+            // Save the updated object with RBAC and multitenancy disabled
+            $existingAanbod->setObject($aanbodData);
+            $updatedAanbod = $objectService->saveObject(
+                object: $existingAanbod,
+                register: $registerId,
+                schema: $schemaId,
+                uuid: $aanbodId,
+                rbac: false,
+                multi: false
+            );
+
+            $this->logger->info('Successfully accepted aanbod object', [
+                'aanbod_id' => $aanbodId,
+                'organisation' => $currentOrg,
+                'is_afnemer' => $isAfnemer,
+                'is_aanbieder' => $isAanbieder
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Aanbod object accepted successfully',
+                'aanbod' => $updatedAanbod->getObject(),
+                'updated_fields' => ['@self.organisation']
+            ];
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to accept aanbod object', [
+                'aanbod_id' => $aanbodId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Failed to accept aanbod: ' . $e->getMessage(),
+                'aanbod' => null
+            ];
+        }
+    }
+
+    /**
+     * Deny an aanbod object (delete it)
+     * 
+     * This method deletes an aanbod object, but only if the active organization
+     * is either the afnemer (for gebruiks) or aanbieder (for modules, diensten, koppelingen).
+     * 
+     * @param string $aanbodId The UUID of the aanbod object to deny
+     * @param array $options Additional options for the operation
+     * @return array Result array with success status and details
+     */
+    public function denyAanbod(string $aanbodId, array $options = []): array
+    {
+        $this->logger->info('Denying aanbod object', [
+            'aanbod_id' => $aanbodId,
+            'options' => $options
+        ]);
+
+        try {
+            // Validate input
+            if (empty($aanbodId)) {
+                return [
+                    'success' => false,
+                    'error' => 'Aanbod ID is required',
+                    'deleted' => false
+                ];
+            }
+
+            // Get ObjectService from OpenRegister
+            $objectService = $this->getObjectService();
+            
+            // Get current organization
+            $currentOrg = $this->getCurrentOrganisation();
+            if (!$currentOrg) {
+                return [
+                    'success' => false,
+                    'error' => 'No current organization available',
+                    'deleted' => false
+                ];
+            }
+
+            // Get the existing aanbod object with RBAC and multitenancy disabled
+            try {
+                $existingAanbod = $objectService->find(
+                    id: $aanbodId,
+                    rbac: false,
+                    multi: false
+                );
+                
+                if ($existingAanbod) {
+                    $aanbodData = $existingAanbod->getObject();
+                } else {
+                    $aanbodData = null;
+                }
+            } catch (Exception $e) {
+                $this->logger->warning('Failed to find aanbod object for deletion', [
+                    'aanbod_id' => $aanbodId,
+                    'error' => $e->getMessage()
+                ]);
+                $aanbodData = null;
+            }
+            
+            if (!$aanbodData) {
+                return [
+                    'success' => false,
+                    'error' => 'Aanbod object not found',
+                    'deleted' => false
+                ];
+            }
+
+            // SECURITY CHECK: Verify that the active organization is either afnemer or aanbieder
+            $afnemerInfo = $aanbodData['afnemer'] ?? null;
+            $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
+            
+            // Check various ways the afnemer might be stored
+            $afnemerId = null;
+            if (is_array($afnemerInfo) && isset($afnemerInfo['id'])) {
+                $afnemerId = $afnemerInfo['id'];
+            } elseif (is_string($afnemerInfo)) {
+                $afnemerId = $afnemerInfo;
+            }
+            
+            // Check various ways the aanbieder might be stored
+            $aanbiederId = null;
+            if (is_array($aanbiederInfo) && isset($aanbiederInfo['id'])) {
+                $aanbiederId = $aanbiederInfo['id'];
+            } elseif (is_string($aanbiederInfo)) {
+                $aanbiederId = $aanbiederInfo;
+            }
+            
+            // Allow operation if current org is either afnemer or aanbieder
+            $isAfnemer = ($afnemerId && $afnemerId === $currentOrg);
+            $isAanbieder = ($aanbiederId && $aanbiederId === $currentOrg);
+
+            if (!$isAfnemer && !$isAanbieder) {
+                $this->logger->warning('Unauthorized delete attempt - user is not afnemer or aanbieder', [
+                    'aanbod_id' => $aanbodId,
+                    'current_org' => $currentOrg,
+                    'afnemer_in_object' => $afnemerInfo,
+                    'resolved_afnemer_id' => $afnemerId,
+                    'aanbieder_in_object' => $aanbiederInfo,
+                    'resolved_aanbieder_id' => $aanbiederId
+                ]);
+                
+                return [
+                    'success' => false,
+                    'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
+                    'deleted' => false,
+                    'debug' => [
+                        'afnemer_in_object' => $afnemerInfo,
+                        'resolved_afnemer_id' => $afnemerId,
+                        'aanbieder_in_object' => $aanbiederInfo,
+                        'resolved_aanbieder_id' => $aanbiederId,
+                        'current_org' => $currentOrg
+                    ]
+                ];
+            }
+
+            // Get schema and register from object
+            $schemaId = $aanbodData['@self']['schema'] ?? null;
+            $registerId = $aanbodData['@self']['register'] ?? null;
+
+            if (!$schemaId || !$registerId) {
+                return [
+                    'success' => false,
+                    'error' => 'Aanbod object missing schema or register information',
+                    'deleted' => false
+                ];
+            }
+
+            // Delete the object with RBAC and multitenancy disabled
+            $objectService->setRegister($registerId);
+            $objectService->setSchema($schemaId);
+            
+            $deleteResult = $objectService->deleteObject(
+                uuid: $aanbodId,
+                rbac: false,
+                multi: false
+            );
+
+            $this->logger->info('Successfully denied aanbod object', [
+                'aanbod_id' => $aanbodId,
+                'organisation' => $currentOrg,
+                'is_afnemer' => $isAfnemer,
+                'is_aanbieder' => $isAanbieder
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Aanbod object denied successfully',
+                'deleted' => true,
+                'aanbod_id' => $aanbodId,
+                'organisation' => $currentOrg
+            ];
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to deny aanbod object', [
+                'aanbod_id' => $aanbodId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Failed to deny aanbod: ' . $e->getMessage(),
+                'deleted' => false
+            ];
+        }
+    }
+
+    /**
+     * Get current active organisation for filtering
+     * 
+     * @return string|null Current organisation identifier or null if no user session
+     */
+    private function getCurrentOrganisation(): ?string
+    {
+        $user = $this->userSession->getUser();
+        if (!$user) {
+            return null;
+        }
+        
+        try {
+            // Get the OpenRegister OrganisationService to get the active organisation
+            $organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
+            $activeOrg = $organisationService->getActiveOrganisation();
+            
+            if ($activeOrg) {
+                return $activeOrg->getUuid();
+            }
+            
+            return null;
+        } catch (Exception $e) {
+            $this->logger->error('Failed to get current organisation from OpenRegister', [
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Get ObjectService from OpenRegister app
+     * 
+     * @return ObjectService The OpenRegister object service
+     * @throws Exception When OpenRegister service is not available
+     */
+    private function getObjectService(): ObjectService
+    {
+        if (!in_array('openregister', $this->appManager->getInstalledApps())) {
+            throw new Exception('OpenRegister app is not installed');
+        }
+
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        } catch (Exception $e) {
+            throw new Exception('Failed to get OpenRegister service: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Add query filters from options to the base query
+     * 
+     * @param array $baseQuery The base query to extend
+     * @param array $options Filter options to apply
+     * @return array Extended query with additional filters
+     */
+    private function addQueryFilters(array $baseQuery, array $options): array
+    {
+        // Add limit if specified
+        $limit = $options['_limit'] ?? $options['limit'] ?? null;
+        if ($limit !== null && is_numeric($limit)) {
+            $baseQuery['_limit'] = (int)$limit;
+        }
+        
+        // Add offset if specified
+        $offset = $options['_offset'] ?? $options['offset'] ?? null;
+        if ($offset !== null && is_numeric($offset)) {
+            $baseQuery['_offset'] = (int)$offset;
+        }
+        
+        // Add page if specified
+        if (isset($options['_page']) && is_numeric($options['_page'])) {
+            $baseQuery['_page'] = (int)$options['_page'];
+        }
+        
+        // Add source parameter if specified
+        if (isset($options['_source']) && !empty($options['_source'])) {
+            $baseQuery['_source'] = $options['_source'];
+        }
+        
+        return $baseQuery;
+    }
+}

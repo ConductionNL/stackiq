@@ -66,13 +66,15 @@ class AangebodenGebruikService
     }
 
     /**
-     * Get all gebruiks objects where the active organization is the afnemer (consumer)
+     * Get all gebruiks, koppelingen, and other objects where the active organization is the afnemer (consumer)
      * 
-     * This method retrieves all gebruiks objects where the active organization
-     * appears as the afnemer using standard RBAC filtering.
+     * This method retrieves all objects (gebruiks, koppelingen, modules, etc.) where the active organization
+     * appears as the afnemer using standard RBAC filtering. It excludes objects where '@self.organisation'
+     * equals the currently active organisation, meaning only offered objects that haven't been accepted
+     * (overnomen) by this organisation yet are returned.
      * 
      * @param array $options Additional query options (limit, offset, filters, etc.)
-     * @return array Array with success status, gebruiks data, and metadata
+     * @return array Array with success status, objects data, and metadata
      * @throws Exception When OpenRegister service is not available
      */
     public function getGebruiksWhereAfnemer(array $options = []): array
@@ -164,15 +166,18 @@ class AangebodenGebruikService
                 'organisation' => $currentOrg
             ]);
             
-            // Filter out objects where the active organization is already the owner
-            // Only return objects that are offered TO this org but not yet owned BY this org
+            // Filter out objects where @self.organisation equals the currently active organisation
+            // Only return objects that are offered TO this org but not yet claimed/accepted BY this org
+            // This excludes gebruiks, koppelingen, and other objects that have already been accepted (overnomen)
+            // Note: @self.organisation is never empty, so we check if it equals the current org
             $filteredResults = [];
             foreach ($searchResult['results'] ?? [] as $result) {
                 // Convert ObjectEntity to array if needed
                 $resultData = is_array($result) ? $result : $result->getObject();
                 $selfOrg = $resultData['@self']['organisation'] ?? null;
                 
-                // Only include if the current org is NOT already the owner
+                // Only include if @self.organisation is NOT set to the current organisation
+                // (meaning it hasn't been accepted by this organisation yet)
                 if ($selfOrg !== $currentOrg) {
                     $filteredResults[] = $result;
                 }
