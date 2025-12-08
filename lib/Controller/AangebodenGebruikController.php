@@ -477,20 +477,20 @@ class AangebodenGebruikController extends Controller
     }
 
     /**
-     * Set the @self property of a gebruik to the active organization
+     * Set the @self property of a gebruik or koppeling to the active organization
      * 
      * API Endpoint: PUT /api/aangeboden-gebruik/{gebruikId}/set-self
      * 
      * This endpoint allows setting the @self.organisation property of a specific gebruik
-     * object to the active organization, but only if the active organization is the
-     * afnemer (consumer) for that gebruik.
+     * or koppeling object to the active organization, but only if the active organization
+     * is the afnemer (consumer) or aanbieder (provider) for that object.
      * 
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
      * 
-     * @param string $gebruikId The UUID of the gebruik object to update
+     * @param string $gebruikId The UUID of the gebruik or koppeling object to update
      * @return JSONResponse JSON response with success status and updated object
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
@@ -525,7 +525,7 @@ class AangebodenGebruikController extends Controller
             
             // Determine appropriate HTTP status code
             $statusCode = $result['success'] ? 200 : ($result['error'] === 'Gebruik object not found' ? 404 : 
-                         ($result['error'] === 'Operation not allowed: active organization is not the afnemer' ? 403 : 500));
+                         (strpos($result['error'] ?? '', 'Operation not allowed') !== false ? 403 : 500));
             
             $this->logger->info('API: Set gebruik @self property request completed', [
                 'gebruik_id' => $gebruikId,
@@ -551,23 +551,24 @@ class AangebodenGebruikController extends Controller
     }
 
     /**
-     * Delete (deny) a gebruik object as afnemer
+     * Delete (deny) a gebruik or koppeling object as afnemer or aanbieder
      * 
      * API Endpoint: DELETE /api/aangeboden-gebruik/{gebruikId}/deny
      * 
-     * This endpoint allows deleting a specific gebruik object, but only if the active 
-     * organization is the afnemer (consumer) for that gebruik. This implements the 
-     * "deny" workflow where a gemeente can reject a suggestion from a leverancier.
+     * This endpoint allows deleting a specific gebruik or koppeling object, but only
+     * if the active organization is the afnemer (consumer) or aanbieder (provider) for
+     * that object. This implements the "deny" workflow where a gemeente can reject a
+     * suggestion from a leverancier, or a leverancier can reject/delete their own koppelingen.
      * 
      * Security: Implements custom security checks since RBAC is disabled to access
-     * cross-organisation objects. Only the afnemer can delete the object.
+     * cross-organisation objects. Only the afnemer or aanbieder can delete the object.
      * 
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
      * 
-     * @param string $gebruikId The UUID of the gebruik object to delete
+     * @param string $gebruikId The UUID of the gebruik or koppeling object to delete
      * @return JSONResponse JSON response with success status and deletion details
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
@@ -602,7 +603,7 @@ class AangebodenGebruikController extends Controller
             
             // Determine appropriate HTTP status code
             $statusCode = $result['success'] ? 200 : ($result['error'] === 'Gebruik object not found' ? 404 : 
-                         ($result['error'] === 'Operation not allowed: active organization is not the afnemer' ? 403 : 500));
+                         (strpos($result['error'] ?? '', 'Operation not allowed') !== false ? 403 : 500));
             
             $this->logger->info('API: Delete gebruik as afnemer request completed', [
                 'gebruik_id' => $gebruikId,
@@ -769,7 +770,7 @@ class AangebodenGebruikController extends Controller
                 [
                     'method' => 'PUT',
                     'path' => '/api/aangeboden-gebruik/{gebruikId}/set-self',
-                    'description' => 'Set the @self property of a gebruik to the active organization (only allowed if active org is afnemer)',
+                    'description' => 'Set the @self property of a gebruik or koppeling to the active organization (only allowed if active org is afnemer or aanbieder)',
                     'parameters' => [
                         [
                             'name' => 'gebruikId',
@@ -905,12 +906,12 @@ class AangebodenGebruikController extends Controller
             'security' => [
                 'afnemer_filtering' => 'Uses standard RBAC filtering based on organization association',
                 'deelnemers_filtering' => 'Uses RBAC-disabled search to find participation records',
-                'self_update_permission' => 'Only allowed if active organization is the afnemer for the specific gebruik',
+                'self_update_permission' => 'Only allowed if active organization is the afnemer or aanbieder for the specific gebruik or koppeling',
                 'koppelingen_gebruik_access' => 'Extended access: ambtenaar users can see all objects (optionally filtered by organization), organization owners can see usage of their applications/modules'
             ],
             'error_codes' => [
                 400 => 'Bad Request - Invalid parameters or missing required fields',
-                403 => 'Forbidden - Operation not allowed (e.g., org is not afnemer for @self update)',
+                403 => 'Forbidden - Operation not allowed (e.g., org is not afnemer or aanbieder for @self update or delete)',
                 404 => 'Not Found - Gebruik object not found',
                 500 => 'Internal Server Error - Server-side error occurred'
             ]
