@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 /**
  * Aanbod Service for SoftwareCatalog
- * 
+ *
  * Handles operations related to aanbod (offers) which can be gebruik, dienst,
  * module, or koppeling objects where the active organization is involved as
  * either afnemer (consumer) or aanbieder (provider).
- * 
+ *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
@@ -30,11 +30,11 @@ use Exception;
 
 /**
  * Service for managing aanbod (offers) operations
- * 
+ *
  * This service provides operations for querying aanbod objects (gebruik, dienst,
  * module, koppeling) where the active organization is involved either as the
  * afnemer (consumer) or aanbieder (provider), and for accepting or denying these offers.
- * 
+ *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
@@ -47,7 +47,7 @@ class AanbodService
 {
     /**
      * Constructor for AanbodService
-     * 
+     *
      * @param IAppConfig $config Nextcloud app configuration service
      * @param IAppManager $appManager App manager service for checking available apps
      * @param ContainerInterface $container PSR-11 container interface for dependency injection
@@ -67,12 +67,12 @@ class AanbodService
 
     /**
      * Get all aanbod objects (modules, diensten, koppelingen, gebruiks)
-     * 
+     *
      * Returns modules, diensten, and koppelingen where the current organisation
      * is in the aanbieder property, or gebruiks where the current organisation
      * is in the afnemer property. Excludes objects where @self.organisation
      * equals the current organisation (already accepted).
-     * 
+     *
      * @param array $options Additional query options (limit, offset, filters, etc.)
      * @return array Array with success status, aanbod objects data, and metadata
      * @throws Exception When OpenRegister service is not available
@@ -86,7 +86,7 @@ class AanbodService
         try {
             // Get ObjectService from OpenRegister
             $objectService = $this->getObjectService();
-            
+
             // Get current organization
             $currentOrg = $this->getCurrentOrganisation();
             if (!$currentOrg) {
@@ -109,7 +109,7 @@ class AanbodService
             $koppelingSchema = $voorzieningenConfig['koppeling_schema'] ?? null;
             $moduleSchema = $voorzieningenConfig['module_schema'] ?? null;
             $dienstSchema = $voorzieningenConfig['dienst_schema'] ?? null;
-            
+
             if (!$registerId) {
                 throw new Exception('Voorzieningen register not configured');
             }
@@ -163,7 +163,7 @@ class AanbodService
                     foreach ($searchResult['results'] ?? [] as $result) {
                         $resultData = is_array($result) ? $result : $result->getObject();
                         $selfOrg = $resultData['@self']['organisation'] ?? null;
-                        
+
                         // Only include if @self.organisation is NOT set to the current organisation
                         if ($selfOrg !== $currentOrg) {
                             // Add type information to result
@@ -195,8 +195,8 @@ class AanbodService
             $totalFiltered = count($allResults);
             $paginatedResults = array_slice($allResults, $requestedOffset, $requestedLimit);
 
-            $totalPages = $requestedLimit > 0 
-                ? (int) ceil($totalFiltered / $requestedLimit) 
+            $totalPages = $requestedLimit > 0
+                ? (int) ceil($totalFiltered / $requestedLimit)
                 : 1;
 
             return [
@@ -228,11 +228,11 @@ class AanbodService
 
     /**
      * Accept an aanbod object (set @self.organisation to current organisation)
-     * 
+     *
      * This method updates the @self.organisation property of an aanbod object
      * to the active organization, but only if the active organization is either
      * the afnemer (for gebruiks) or aanbieder (for modules, diensten, koppelingen).
-     * 
+     *
      * @param string $aanbodId The UUID of the aanbod object to accept
      * @param array $options Additional update options
      * @return array Result with success status and updated object data
@@ -257,7 +257,7 @@ class AanbodService
 
             // Get ObjectService from OpenRegister
             $objectService = $this->getObjectService();
-            
+
             // Get current organization
             $currentOrg = $this->getCurrentOrganisation();
             if (!$currentOrg) {
@@ -282,7 +282,7 @@ class AanbodService
                 ]);
                 $existingAanbod = null;
             }
-            
+
             if (!$existingAanbod) {
                 return [
                     'success' => false,
@@ -295,7 +295,7 @@ class AanbodService
             $aanbodData = $existingAanbod->getObject();
             $afnemerInfo = $aanbodData['afnemer'] ?? null;
             $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-            
+
             // Check various ways the afnemer might be stored
             $afnemerId = null;
             if (is_array($afnemerInfo) && isset($afnemerInfo['id'])) {
@@ -303,7 +303,7 @@ class AanbodService
             } elseif (is_string($afnemerInfo)) {
                 $afnemerId = $afnemerInfo;
             }
-            
+
             // Check various ways the aanbieder might be stored
             $aanbiederId = null;
             if (is_array($aanbiederInfo) && isset($aanbiederInfo['id'])) {
@@ -315,7 +315,7 @@ class AanbodService
             // Allow operation if current org is either afnemer or aanbieder
             $isAfnemer = ($afnemerId && $afnemerId === $currentOrg);
             $isAanbieder = ($aanbiederId && $aanbiederId === $currentOrg);
-            
+
             if (!$isAfnemer && !$isAanbieder) {
                 return [
                     'success' => false,
@@ -341,6 +341,8 @@ class AanbodService
             $existingAanbod->setObject($aanbodData);
             $updatedAanbod = $objectService->saveObject(
                 object: $existingAanbod,
+                register: $existingAanbod->getRegister(),
+                schema: $existingAanbod->getSchema(),
                 uuid: $aanbodId,
                 rbac: false,
                 multi: false
@@ -377,10 +379,10 @@ class AanbodService
 
     /**
      * Deny an aanbod object (delete it)
-     * 
+     *
      * This method deletes an aanbod object, but only if the active organization
      * is either the afnemer (for gebruiks) or aanbieder (for modules, diensten, koppelingen).
-     * 
+     *
      * @param string $aanbodId The UUID of the aanbod object to deny
      * @param array $options Additional options for the operation
      * @return array Result array with success status and details
@@ -404,7 +406,7 @@ class AanbodService
 
             // Get ObjectService from OpenRegister
             $objectService = $this->getObjectService();
-            
+
             // Get current organization
             $currentOrg = $this->getCurrentOrganisation();
             if (!$currentOrg) {
@@ -422,7 +424,7 @@ class AanbodService
                     rbac: false,
                     multi: false
                 );
-                
+
                 if ($existingAanbod) {
                     $aanbodData = $existingAanbod->getObject();
                 } else {
@@ -435,7 +437,7 @@ class AanbodService
                 ]);
                 $aanbodData = null;
             }
-            
+
             if (!$aanbodData) {
                 return [
                     'success' => false,
@@ -447,7 +449,7 @@ class AanbodService
             // SECURITY CHECK: Verify that the active organization is either afnemer or aanbieder
             $afnemerInfo = $aanbodData['afnemer'] ?? null;
             $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-            
+
             // Check various ways the afnemer might be stored
             $afnemerId = null;
             if (is_array($afnemerInfo) && isset($afnemerInfo['id'])) {
@@ -455,7 +457,7 @@ class AanbodService
             } elseif (is_string($afnemerInfo)) {
                 $afnemerId = $afnemerInfo;
             }
-            
+
             // Check various ways the aanbieder might be stored
             $aanbiederId = null;
             if (is_array($aanbiederInfo) && isset($aanbiederInfo['id'])) {
@@ -463,7 +465,7 @@ class AanbodService
             } elseif (is_string($aanbiederInfo)) {
                 $aanbiederId = $aanbiederInfo;
             }
-            
+
             // Allow operation if current org is either afnemer or aanbieder
             $isAfnemer = ($afnemerId && $afnemerId === $currentOrg);
             $isAanbieder = ($aanbiederId && $aanbiederId === $currentOrg);
@@ -477,7 +479,7 @@ class AanbodService
                     'aanbieder_in_object' => $aanbiederInfo,
                     'resolved_aanbieder_id' => $aanbiederId
                 ]);
-                
+
                 return [
                     'success' => false,
                     'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
@@ -494,11 +496,18 @@ class AanbodService
 
             // Delete the object with RBAC and multitenancy disabled
             // ObjectService should be able to determine register and schema from the UUID
+            $aanbod = $objectService->find(id: $aanbodId, rbac: false,multi: false);
+
+            $objectService->setRegister(register: $aanbod->getRegister());
+            $objectService->setSchema(schema: $aanbod->getSchema());
+
             $deleteResult = $objectService->deleteObject(
                 uuid: $aanbodId,
                 rbac: false,
                 multi: false
             );
+
+            $objectService->clearCurrents();
 
             $this->logger->info('Successfully denied aanbod object', [
                 'aanbod_id' => $aanbodId,
@@ -532,7 +541,7 @@ class AanbodService
 
     /**
      * Get current active organisation for filtering
-     * 
+     *
      * @return string|null Current organisation identifier or null if no user session
      */
     private function getCurrentOrganisation(): ?string
@@ -541,16 +550,16 @@ class AanbodService
         if (!$user) {
             return null;
         }
-        
+
         try {
             // Get the OpenRegister OrganisationService to get the active organisation
             $organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
             $activeOrg = $organisationService->getActiveOrganisation();
-            
+
             if ($activeOrg) {
                 return $activeOrg->getUuid();
             }
-            
+
             return null;
         } catch (Exception $e) {
             $this->logger->error('Failed to get current organisation from OpenRegister', [
@@ -562,7 +571,7 @@ class AanbodService
 
     /**
      * Get ObjectService from OpenRegister app
-     * 
+     *
      * @return ObjectService The OpenRegister object service
      * @throws Exception When OpenRegister service is not available
      */
@@ -581,7 +590,7 @@ class AanbodService
 
     /**
      * Add query filters from options to the base query
-     * 
+     *
      * @param array $baseQuery The base query to extend
      * @param array $options Filter options to apply
      * @return array Extended query with additional filters
@@ -593,23 +602,23 @@ class AanbodService
         if ($limit !== null && is_numeric($limit)) {
             $baseQuery['_limit'] = (int)$limit;
         }
-        
+
         // Add offset if specified
         $offset = $options['_offset'] ?? $options['offset'] ?? null;
         if ($offset !== null && is_numeric($offset)) {
             $baseQuery['_offset'] = (int)$offset;
         }
-        
+
         // Add page if specified
         if (isset($options['_page']) && is_numeric($options['_page'])) {
             $baseQuery['_page'] = (int)$options['_page'];
         }
-        
+
         // Add source parameter if specified
         if (isset($options['_source']) && !empty($options['_source'])) {
             $baseQuery['_source'] = $options['_source'];
         }
-        
+
         return $baseQuery;
     }
 }
