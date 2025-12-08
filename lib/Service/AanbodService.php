@@ -336,24 +336,11 @@ class AanbodService
             $selfData['organisation'] = $currentOrg;
             $aanbodData['@self'] = $selfData;
 
-            // Get schema and register from object
-            $schemaId = $aanbodData['@self']['schema'] ?? null;
-            $registerId = $aanbodData['@self']['register'] ?? null;
-
-            if (!$schemaId || !$registerId) {
-                return [
-                    'success' => false,
-                    'error' => 'Aanbod object missing schema or register information',
-                    'aanbod' => null
-                ];
-            }
-
             // Save the updated object with RBAC and multitenancy disabled
+            // ObjectService should be able to determine register and schema from the object itself
             $existingAanbod->setObject($aanbodData);
             $updatedAanbod = $objectService->saveObject(
                 object: $existingAanbod,
-                register: $registerId,
-                schema: $schemaId,
                 uuid: $aanbodId,
                 rbac: false,
                 multi: false
@@ -505,22 +492,8 @@ class AanbodService
                 ];
             }
 
-            // Get schema and register from object
-            $schemaId = $aanbodData['@self']['schema'] ?? null;
-            $registerId = $aanbodData['@self']['register'] ?? null;
-
-            if (!$schemaId || !$registerId) {
-                return [
-                    'success' => false,
-                    'error' => 'Aanbod object missing schema or register information',
-                    'deleted' => false
-                ];
-            }
-
             // Delete the object with RBAC and multitenancy disabled
-            $objectService->setRegister($registerId);
-            $objectService->setSchema($schemaId);
-            
+            // ObjectService should be able to determine register and schema from the UUID
             $deleteResult = $objectService->deleteObject(
                 uuid: $aanbodId,
                 rbac: false,
