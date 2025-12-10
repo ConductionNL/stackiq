@@ -231,6 +231,26 @@
 								)
 							}}
 						</li>
+						<li :class="{ 'requirement-met': passwordValidation.notPwned }">
+							<NcLoadingIcon
+								v-if="pwnedCheckLoading"
+								:size="16"
+								class="loading-icon" />
+							<CheckCircle
+								v-else-if="passwordValidation.notPwned"
+								:size="16"
+								class="check-icon" />
+							<CloseCircle
+								v-else
+								:size="16"
+								class="close-icon" />
+							{{
+								t(
+									"softwarecatalog",
+									"Password has not appeared in known data breaches"
+								)
+							}}
+						</li>
 					</ul>
 				</div>
 
@@ -367,6 +387,9 @@ export default {
 			userStatusRefreshInProgress: false,
 			userStatusRefreshTimeout: null,
 			userInfoLoaded: false,
+			isPasswordPwned: false,
+			pwnedCheckLoading: false,
+			pwnedCheckTimeout: null,
 		}
 	},
 
@@ -408,6 +431,7 @@ export default {
 				hasLowercase: /[a-z]/.test(this.newPassword),
 				hasNumber: /\d/.test(this.newPassword),
 				hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(this.newPassword),
+				notPwned: !this.isPasswordPwned,
 			}
 		},
 
@@ -418,6 +442,26 @@ export default {
 		},
 	},
 
+	watch: {
+		newPassword(newVal) {
+			// Clear existing timeout
+			if (this.pwnedCheckTimeout) {
+				clearTimeout(this.pwnedCheckTimeout)
+			}
+
+			// Reset pwned status when password changes
+			this.isPasswordPwned = false
+
+			// Only check if password meets minimum length requirement
+			if (newVal && newVal.length >= 10) {
+				// Debounce the API call to avoid excessive requests
+				this.pwnedCheckTimeout = setTimeout(() => {
+					this.checkPasswordPwned(newVal)
+				}, 500)
+			}
+		},
+	},
+
 	async mounted() {
 		await this.loadData()
 		// Load user info and groups to get status information
@@ -425,9 +469,12 @@ export default {
 	},
 
 	beforeDestroy() {
-		// Clean up timeout to prevent memory leaks
+		// Clean up timeouts to prevent memory leaks
 		if (this.userStatusRefreshTimeout) {
 			clearTimeout(this.userStatusRefreshTimeout)
+		}
+		if (this.pwnedCheckTimeout) {
+			clearTimeout(this.pwnedCheckTimeout)
 		}
 	},
 
@@ -435,6 +482,179 @@ export default {
 	// User info and groups will be loaded only when explicitly requested
 
 	methods: {
+		/**
+		 * Compute SHA-1 hash of a string
+		 * @param {string} str - String to hash
+		 * @return {Promise<string>} SHA-1 hash in hexadecimal format (uppercase)
+		 */
+		async sha1(str) {
+			// Simple SHA-1 implementation
+			// Based on: https://github.com/emn178/js-sha1
+			const encoder = new TextEncoder()
+			const utf8Bytes = encoder.encode(str)
+			const bytes = Array.from(utf8Bytes)
+
+			const h = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]
+
+			const w = []
+			const length = bytes.length * 8
+
+			bytes.push(0x80)
+			while (bytes.length % 64 !== 56) {
+				bytes.push(0)
+			}
+
+			for (let i = 0; i < bytes.length; i += 4) {
+				w.push(
+					(bytes[i] << 24)
+					| (bytes[i + 1] << 16)
+					| (bytes[i + 2] << 8)
+					| bytes[i + 3],
+				)
+			}
+
+			w.push(0)
+			w.push(0)
+			w[w.length - 2] = Math.floor(length / 0x100000000)
+			w[w.length - 1] = length & 0xffffffff
+
+			for (let i = 0; i < w.length; i += 16) {
+				// Create a local copy of w for this 512-bit block (expand to 80 words)
+				const wLocal = new Array(80)
+				for (let j = 0; j < 16; j++) {
+					wLocal[j] = w[i + j]
+				}
+
+				// Expand w array for rounds 16-79
+				for (let j = 16; j < 80; j++) {
+					const wVal = wLocal[j - 3]
+						^ wLocal[j - 8]
+						^ wLocal[j - 14]
+						^ wLocal[j - 16]
+					wLocal[j] = ((wVal << 1) | (wVal >>> 31)) >>> 0
+				}
+
+				let a = h[0]
+				let b = h[1]
+				let c = h[2]
+				let d = h[3]
+				let e = h[4]
+
+				for (let j = 0; j < 80; j++) {
+					let f
+					let k
+					if (j < 20) {
+						f = (b & c) | (~b & d)
+						k = 0x5A827999
+					} else if (j < 40) {
+						f = b ^ c ^ d
+						k = 0x6ED9EBA1
+					} else if (j < 60) {
+						f = (b & c) | (b & d) | (c & d)
+						k = 0x8F1BBCDC
+					} else {
+						f = b ^ c ^ d
+						k = 0xCA62C1D6
+					}
+
+					const temp = (this.rotl(a, 5) + f + e + k + wLocal[j]) >>> 0
+					e = d
+					d = c
+					c = this.rotl(b, 30) >>> 0
+					b = a
+					a = temp
+				}
+
+				h[0] = (h[0] + a) >>> 0
+				h[1] = (h[1] + b) >>> 0
+				h[2] = (h[2] + c) >>> 0
+				h[3] = (h[3] + d) >>> 0
+				h[4] = (h[4] + e) >>> 0
+			}
+
+			return (
+				h[0].toString(16).padStart(8, '0')
+				+ h[1].toString(16).padStart(8, '0')
+				+ h[2].toString(16).padStart(8, '0')
+				+ h[3].toString(16).padStart(8, '0')
+				+ h[4].toString(16).padStart(8, '0')
+			).toUpperCase()
+		},
+
+		/**
+		 * Rotate left operation for SHA-1
+		 * @param {number} value - Value to rotate
+		 * @param {number} amount - Amount to rotate
+		 * @return {number} Rotated value
+		 */
+		rotl(value, amount) {
+			return ((value << amount) | (value >>> (32 - amount))) >>> 0
+		},
+
+		/**
+		 * Check if password is in Have I Been Pwned database
+		 * @param {string} password - Password to check
+		 */
+		async checkPasswordPwned(password) {
+			if (!password || password.length < 10) {
+				this.isPasswordPwned = false
+				return
+			}
+
+			this.pwnedCheckLoading = true
+
+			try {
+				// Hash the password with SHA-1
+				const sha1Hash = await this.sha1(password)
+				const prefix = sha1Hash.substring(0, 5)
+				const suffix = sha1Hash.substring(5)
+
+				// Call Have I Been Pwned API
+				const response = await fetch(
+					`https://api.pwnedpasswords.com/range/${prefix}`,
+					{
+						method: 'GET',
+						headers: {
+							'User-Agent': 'Nextcloud-SoftwareCatalog',
+						},
+					},
+				)
+
+				if (!response.ok) {
+					console.error(
+						'HIBP API error:',
+						response.status,
+						response.statusText,
+					)
+					// If API fails, don't block password (fail open)
+					this.isPasswordPwned = false
+					return
+				}
+
+				const text = await response.text()
+				const hashes = text.split('\n')
+
+				// Check if our suffix is in the list
+				for (const line of hashes) {
+					const [hashSuffix] = line.split(':')
+					if (hashSuffix && hashSuffix.toUpperCase() === suffix) {
+						this.isPasswordPwned = true
+						this.pwnedCheckLoading = false
+						return
+					}
+				}
+
+				// Password not found in database
+				this.isPasswordPwned = false
+			} catch (error) {
+				console.error('Error checking password against HIBP:', error)
+				// If check fails, don't block password (fail open)
+				this.isPasswordPwned = false
+			} finally {
+				this.pwnedCheckLoading = false
+			}
+		},
+
 		async loadData() {
 			try {
 				// Only fetch available groups, contactpersonen come from organisation data
@@ -746,6 +966,12 @@ export default {
 		openPasswordDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
 			this.newPassword = ''
+			this.isPasswordPwned = false
+			this.pwnedCheckLoading = false
+			if (this.pwnedCheckTimeout) {
+				clearTimeout(this.pwnedCheckTimeout)
+				this.pwnedCheckTimeout = null
+			}
 			this.showPasswordDialog = true
 		},
 
@@ -754,6 +980,12 @@ export default {
 			this.selectedContactpersoon = null
 			this.newPassword = ''
 			this.passwordLoading = false
+			this.isPasswordPwned = false
+			this.pwnedCheckLoading = false
+			if (this.pwnedCheckTimeout) {
+				clearTimeout(this.pwnedCheckTimeout)
+				this.pwnedCheckTimeout = null
+			}
 		},
 
 		async savePassword() {
@@ -764,6 +996,25 @@ export default {
 						'Password must be at least 10 characters long',
 					),
 				)
+				return
+			}
+
+			if (!this.isPasswordValid) {
+				if (this.isPasswordPwned) {
+					showError(
+						this.t(
+							'softwarecatalog',
+							'This password has been found in data breaches and is not secure. Please choose a different password.',
+						),
+					)
+				} else {
+					showError(
+						this.t(
+							'softwarecatalog',
+							'Password does not meet all requirements',
+						),
+					)
+				}
 				return
 			}
 
@@ -1141,5 +1392,9 @@ export default {
 
 .close-icon {
   color: var(--color-error);
+}
+
+.loading-icon {
+  color: var(--color-text-lighter);
 }
 </style>
