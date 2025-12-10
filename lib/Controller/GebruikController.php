@@ -84,7 +84,16 @@ class GebruikController extends Controller
             $applicatieOptions['aanbieder'] = $orgUuid;
             $applicatieIds = $this->gebruikService->getApplicationIds(options: $applicatieOptions);
 
-            $options['module'] = $applicatieIds !== [] ? $applicatieIds : null;
+            if ($applicatieIds === []) {
+                return new JSONResponse(data: ['error' => 'no access'], statusCode: 403);
+            }
+
+            if (isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false) {
+                return new JSONResponse(data: ['error' => 'no access'], statusCode: 403);
+            } else if (isset($options['module']) === false) {
+                $options['module'] = $applicatieIds;
+            }
+
         } else {
             return new JSONResponse(data: ['error' => 'no access'], statusCode: 403);
         }
