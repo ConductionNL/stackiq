@@ -17,9 +17,11 @@ Modal component for adding new contactpersoon to an organisation
 		size="small"
 		@closing="closeModal">
 		<div class="add-contactpersoon-modal">
-			<p class="modal-description">{{ t('softwarecatalog', 'Add a new contactpersoon to organisation: {name}', { name: organisation?.naam || 'Unknown' }) }}</p>
-			
-			<form @submit.prevent="saveContactpersoon" class="contactpersoon-form">
+			<p class="modal-description">
+				{{ t('softwarecatalog', 'Add a new contactpersoon to organisation: {name}', { name: organisation?.naam || 'Unknown' }) }}
+			</p>
+
+			<form class="contactpersoon-form" @submit.prevent="saveContactpersoon">
 				<div class="form-row">
 					<NcTextField
 						:value="formData.voornaam"
@@ -55,7 +57,7 @@ Modal component for adding new contactpersoon to an organisation
 					<NcButton type="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton type="primary" 
+					<NcButton type="primary"
 						:disabled="loading || !isFormValid"
 						native-type="submit">
 						<template #icon>
@@ -70,11 +72,11 @@ Modal component for adding new contactpersoon to an organisation
 </template>
 
 <script>
-import { 
+import {
 	NcDialog,
 	NcButton,
 	NcTextField,
-	NcLoadingIcon
+	NcLoadingIcon,
 } from '@nextcloud/vue'
 
 import { showSuccess, showError } from '@nextcloud/dialogs'
@@ -87,18 +89,18 @@ export default {
 		NcDialog,
 		NcButton,
 		NcTextField,
-		NcLoadingIcon
+		NcLoadingIcon,
 	},
 
 	props: {
 		show: {
 			type: Boolean,
-			default: false
+			default: false,
 		},
 		organisation: {
 			type: Object,
-			default: () => ({})
-		}
+			default: () => ({}),
+		},
 	},
 
 	emits: ['close', 'contactpersoon-added'],
@@ -109,18 +111,18 @@ export default {
 			formData: {
 				voornaam: '',
 				achternaam: '',
-				'e-mailadres': ''
-			}
+				'e-mailadres': '',
+			},
 		}
 	},
 
 	computed: {
 		isFormValid() {
-			return this.formData.voornaam.trim() && 
-				   this.formData.achternaam.trim() && 
-				   this.formData['e-mailadres'].trim() &&
-				   this.isValidEmail(this.formData['e-mailadres'])
-		}
+			return this.formData.voornaam.trim()
+				   && this.formData.achternaam.trim()
+				   && this.formData['e-mailadres'].trim()
+				   && this.isValidEmail(this.formData['e-mailadres'])
+		},
 	},
 
 	methods: {
@@ -133,7 +135,7 @@ export default {
 			this.formData = {
 				voornaam: '',
 				achternaam: '',
-				'e-mailadres': ''
+				'e-mailadres': '',
 			}
 			this.loading = false
 		},
@@ -154,7 +156,7 @@ export default {
 			try {
 				// Get schema configuration for contactpersoon
 				const contactpersoonConfig = objectStore.getSchemaConfig('contactpersoon')
-				
+
 				// Create new contactpersoon object with proper structure
 				const newContactpersoonObject = {
 					...this.formData,
@@ -164,21 +166,21 @@ export default {
 						created: new Date().toISOString(),
 						updated: new Date().toISOString(),
 						// Set the organisation metadata to link the contact person to the organization
-						organisation: this.organisation.id || this.organisation.uuid
-					}
+						organisation: this.organisation.id || this.organisation.uuid,
+					},
 				}
 
 				// Save the new contactpersoon object
 				const result = await objectStore.saveObject(newContactpersoonObject, {
 					register: contactpersoonConfig.register,
-					schema: contactpersoonConfig.schema
+					schema: contactpersoonConfig.schema,
 				})
 
 				showSuccess(this.t('softwarecatalog', 'Contactpersoon added successfully'))
-				
+
 				// Emit event to parent component
 				this.$emit('contactpersoon-added', result.data)
-				
+
 				// Close modal
 				this.closeModal()
 
@@ -186,7 +188,7 @@ export default {
 				await objectStore.fetchCollection('organisatie', {
 					_extend: '@self.schema,contactpersonen',
 					_limit: 20,
-					_page: 1
+					_page: 1,
 				})
 
 			} catch (error) {
@@ -203,8 +205,8 @@ export default {
 				const v = c === 'x' ? r : (r & 0x3 | 0x8)
 				return v.toString(16)
 			})
-		}
-	}
+		},
+	},
 }
 </script>
 

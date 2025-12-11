@@ -806,7 +806,7 @@ export const useSettingsStore = defineStore('settings', {
 				amef_relation_schema: { schema: null },
 				amef_view_schema: { schema: null },
 				amef_model_schema: { schema: null },
-	
+
 				amef_property_definition_schema: { schema: null },
 				// Voorzieningen register configuration - updated to match current schemas
 				voorzieningen_sector_schema: { schema: null },
@@ -1348,8 +1348,6 @@ export const useSettingsStore = defineStore('settings', {
 					)
 				}
 
-
-
 				// Execute all save operations
 				if (savePromises.length > 0) {
 					const responses = await Promise.all(savePromises)
@@ -1709,7 +1707,7 @@ export const useSettingsStore = defineStore('settings', {
 				amef_relation_schema: { schema: null },
 				amef_view_schema: { schema: null },
 				amef_model_schema: { schema: null },
-	
+
 				amef_property_definition_schema: { schema: null },
 				// Voorzieningen register configuration - updated to match current schemas
 				voorzieningen_sector_schema: { schema: null },

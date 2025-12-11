@@ -136,23 +136,24 @@ export default {
 				// This ensures the organisation owns itself immediately upon activation
 				if (newStatus.toLowerCase() === 'actief') {
 					const organisatieUuid = organisatie.id || organisatie.uuid || organisatie['@self']?.id
-					
+
 					// Set the owner and organisation in @self metadata to the organisation's own UUID
 					patchData['@self'] = {
 						...organisatie['@self'],
 						owner: organisatieUuid,
-						organisation: organisatieUuid
+						organisation: organisatieUuid,
 					}
-					
+
 					console.info('Setting @self owner and organisation properties to own UUID during activation:', {
 						organisatieId: organisatieUuid,
 						ownerProperty: patchData['@self'].owner,
-						selfOrganisationProperty: patchData['@self'].organisation
+						selfOrganisationProperty: patchData['@self'].organisation,
 					})
 				}
 
-				// Update only the status (and @self if activating) using PATCH
-				const updatedOrganisatie = await objectStore.patchObject('organisatie', organisatie.id, patchData)
+				// THIS CODE IS NOT BEING USED, COMMENTED OUT FOR NOW
+				// // Update only the status (and @self if activating) using PATCH
+				// const updatedOrganisatie = await objectStore.patchObject('organisatie', organisatie.id, patchData)
 
 				this.success = true
 

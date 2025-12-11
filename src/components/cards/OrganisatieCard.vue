@@ -16,7 +16,7 @@
 		<div class="cardHeader">
 			<h2 v-tooltip.bottom="getOrganisatieSummary(item)">
 				<component :is="cardIcon" :size="20" />
-				<Alert 
+				<Alert
 					v-if="!isOrganisatiePublished(item)"
 					v-tooltip="'Organisatie is niet gepubliceerd'"
 					class="unpublished-warning-icon"
@@ -117,9 +117,9 @@
 
 			<!-- Contactpersonen View -->
 			<div v-else-if="currentView === 'contactpersonen'" class="contactpersonenView">
-				<ContactpersonenList 
+				<ContactpersonenList
 					ref="contactpersonenList"
-					:organisation-id="item.id || item.uuid" 
+					:organisation-id="item.id || item.uuid"
 					:organisation-data="item" />
 
 				<!-- Toggle Button Row in Contactpersonen View -->
@@ -205,10 +205,10 @@ export default {
 		 * Watch for changes in currentView and refresh user data when switching to contactpersonen
 		 */
 		currentView: {
-			handler: async function(newView, oldView) {
+			async handler(newView, oldView) {
 				// Only trigger when actually switching TO contactpersonen view from a different view
 				if (newView === 'contactpersonen' && oldView && oldView !== 'contactpersonen') {
-					console.log('Switched to contactpersonen view, loading user info and groups...')
+					console.info('Switched to contactpersonen view, loading user info and groups...')
 					// Use nextTick to ensure the component is fully rendered
 					await this.$nextTick()
 					if (this.$refs.contactpersonenList && this.$refs.contactpersonenList.loadUserInfoAndGroups) {
@@ -221,8 +221,8 @@ export default {
 					}
 				}
 			},
-			immediate: false
-		}
+			immediate: false,
+		},
 	},
 
 	methods: {
@@ -289,7 +289,7 @@ export default {
 		async toggleView() {
 			const newView = this.currentView === 'organisatie' ? 'contactpersonen' : 'organisatie'
 			this.currentView = newView
-			
+
 			// Note: The watch handler will handle refreshing user data when switching to contactpersonen view
 			// No need to duplicate the logic here
 		},
@@ -310,7 +310,7 @@ export default {
 			const adres = this.item?.adres
 			const postcode = this.item?.postcode
 			const plaats = this.item?.plaats
-			
+
 			if (adres && postcode && plaats) {
 				return `${adres}, ${postcode} ${plaats}`
 			} else if (adres && plaats) {
@@ -320,7 +320,7 @@ export default {
 			} else if (adres) {
 				return adres
 			}
-			
+
 			return 'Geen adres beschikbaar'
 		},
 
@@ -517,6 +517,5 @@ export default {
 	font-weight: 600;
 	color: var(--color-main-text);
 }
-
 
 </style>

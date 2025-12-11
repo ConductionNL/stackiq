@@ -756,14 +756,8 @@ export const useObjectStore = defineStore('object', {
 			const baseUrl = '/index.php/apps/openregister/api/objects'
 
 			// Ensure register and schema are strings (extract id if they're objects)
-			const registerId
-        = typeof config.register === 'object'
-        	? config.register?.id || config.register?.uuid
-        	: config.register
-			const schemaId
-        = typeof config.schema === 'object'
-        	? config.schema?.id || config.schema?.uuid
-        	: config.schema
+			const registerId = typeof config.register === 'object' ? config.register?.id || config.register?.uuid : config.register
+			const schemaId = typeof config.schema === 'object' ? config.schema?.id || config.schema?.uuid : config.schema
 
 			// Construct the path with register and schema
 			let url = `${baseUrl}/${registerId}/${schemaId}`
@@ -1653,10 +1647,7 @@ export const useObjectStore = defineStore('object', {
 
 				const response = await fetch(endpoint, {
 					method: 'POST',
-					headers:
-            Object.keys(body).length > 0
-            	? { 'Content-Type': 'application/json' }
-            	: undefined,
+					headers: Object.keys(body).length > 0 ? { 'Content-Type': 'application/json' } : undefined,
 					body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
 				})
 
