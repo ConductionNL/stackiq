@@ -3,13 +3,12 @@
  *
  * Manages organisatie data and contactpersonen operations
  *
- * @category Store
  * @package
  * @author Ruben Linde
  * @copyright 2024
  * @license AGPL-3.0-or-later
  * @version 1.0.0
- * @link https://github.com/opencatalogi/softwarecatalog
+ * @see https://github.com/opencatalogi/softwarecatalog
  */
 
 import { defineStore } from 'pinia'
