@@ -215,6 +215,11 @@ class OrganisatieService
     /**
      * Internal method to create organization entity
      *
+     * HOTFIX: Parent organisation setting has been disabled due to RBAC issues.
+     * Previously, new organisations were automatically set as children of the active organisation,
+     * but this caused permission problems where users could not access newly created organisations.
+     * TODO: Re-enable parent organisation setting after fixing RBAC logic.
+     *
      * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The organisation service
      * @param array                                         $mappedData          The mapped data
      * @param string                                        $organizationUuid    The organization UUID
@@ -227,14 +232,17 @@ class OrganisatieService
         string $organizationUuid
     ): \OCA\OpenRegister\Db\Organisation {
 
-        // Get the currently active organisation UUID to set as parent.
-        $parentOrganisationUuid = $this->getActiveOrganisationUuid($organisationService);
+        // HOTFIX: Commented out automatic parent organisation setting due to RBAC issues.
+        // When child organisations are created, the parent relationship causes permission problems
+        // where users cannot access the newly created organisations due to hierarchical RBAC filtering.
+        // TODO: Investigate and fix RBAC logic to properly handle parent-child organisation relationships.
+        // $parentOrganisationUuid = $this->getActiveOrganisationUuid($organisationService);
 
         $this->logger->info('OrganisatieService: Creating organisation entity', [
             'uuid' => $organizationUuid,
             'name' => $mappedData['naam'],
             'active' => $mappedData['active'],
-            'parentOrganisation' => $parentOrganisationUuid
+            // 'parentOrganisation' => $parentOrganisationUuid // HOTFIX: Commented out
         ]);
 
         // Use OrganisationService to create the entity with correct parameters.
@@ -252,10 +260,14 @@ class OrganisatieService
             $organisationEntity->setActive($mappedData['active']);
             $organisationEntity->setUsers([]); // Will be populated by contact person processing.
 
-            // Set the parent organisation to the currently active organisation.
-            if ($parentOrganisationUuid !== null) {
-                $organisationEntity->setParent($parentOrganisationUuid);
-            }
+            // HOTFIX: Commented out automatic parent organisation setting due to RBAC issues.
+            // Setting the parent organisation causes users to lose access to newly created organisations
+            // because the RBAC filtering expects users to belong to the parent organisation chain.
+            // This needs to be properly resolved with RBAC logic updates.
+            // TODO: Re-enable this once RBAC properly handles parent-child organisation relationships.
+            // if ($parentOrganisationUuid !== null) {
+            //     $organisationEntity->setParent($parentOrganisationUuid);
+            // }
 
             // Save the updated entity.
             $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
