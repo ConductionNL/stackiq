@@ -1425,7 +1425,7 @@
                 "slug": "organisatie",
                 "title": "Organisatie",
                 "description": "Een organisatie die voorzieningen aanbiedt",
-                "version": "0.0.99",
+                "version": "0.1.0",
                 "summary": "",
                 "icon": "OfficeBuildingOutline",
                 "required": [
@@ -1539,35 +1539,6 @@
                         "facetable": false,
                         "title": "CBS Nummer",
                         "order": 3
-                    },
-                    "kvkNummer": {
-                        "description": "KvK-nummer van de organisatie",
-                        "type": "string",
-                        "visible": true,
-                        "order": 9,
-                        "minLength": null,
-                        "maxLength": null,
-                        "minimum": null,
-                        "maximum": null,
-                        "multipleOf": null,
-                        "minItems": null,
-                        "maxItems": null,
-                        "inversedBy": "",
-                        "$ref": "",
-                        "objectConfiguration": {
-                            "handling": "nested-object",
-                            "schema": ""
-                        },
-                        "fileConfiguration": {
-                            "handling": "ignore",
-                            "allowedMimeTypes": [],
-                            "location": "",
-                            "maxSize": 0
-                        },
-                        "oneOf": [],
-                        "facetable": false,
-                        "title": "KvK Nummer",
-                        "example": "12345678"
                     },
                     "contactpersonen": {
                         "description": "De contactpersoon van de organisatie",
