@@ -315,10 +315,9 @@ export default {
 			this.success = false
 
 			try {
-				// THIS CODE IS NOT BEING USED, COMMENTED OUT FOR NOW (1/3)
-				// // Get schema configuration for organisatie
-				// const schemaConfig = objectStore.getSchemaConfig('organisatie')
-				// let result
+				// Get schema configuration for organisatie
+				const schemaConfig = objectStore.getSchemaConfig('organisatie')
+				let result
 
 				if (this.isEditMode) {
 					// Get only the changed properties for PATCH request
@@ -334,17 +333,15 @@ export default {
 						return
 					}
 
-					// THIS CODE IS NOT BEING USED, COMMENTED OUT FOR NOW (2/3)
-					// // Update existing organisation using PATCH - only send changed properties
-					// result = await objectStore.patchObject('organisatie', this.organisation.id, changes)
+					// Update existing organisation using PATCH - only send changed properties
+					result = await objectStore.patchObject('organisatie', this.organisation.id, changes)
 					this.successMessage = this.t('softwarecatalog', 'Organisation updated successfully')
 				} else {
-					// THIS CODE IS NOT BEING USED, COMMENTED OUT FOR NOW (3/3)
-					// // Create new organisation (both create and copy modes)
-					// result = await objectStore.saveObject(this.formData, {
-					//   register: schemaConfig.register,
-					//   schema: schemaConfig.schema,
-					// })
+					// Create new organisation (both create and copy modes)
+					result = await objectStore.saveObject(this.formData, {
+					  register: schemaConfig.register,
+					  schema: schemaConfig.schema,
+					})
 					this.successMessage = this.t('softwarecatalog', 'Organisation created successfully')
 				}
 
