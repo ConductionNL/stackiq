@@ -151,9 +151,8 @@ export default {
 					})
 				}
 
-				// THIS CODE IS NOT BEING USED, COMMENTED OUT FOR NOW
-				// // Update only the status (and @self if activating) using PATCH
-				// const updatedOrganisatie = await objectStore.patchObject('organisatie', organisatie.id, patchData)
+				// Update only the status (and @self if activating) using PATCH
+				const updatedOrganisatie = await objectStore.patchObject('organisatie', organisatie.id, patchData)
 
 				this.success = true
 
