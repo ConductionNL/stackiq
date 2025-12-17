@@ -1,21 +1,8 @@
-<!--
-ContactpersonenList.vue
-Component for displaying and managing contactpersonen with user actions
-
-@category Components
-@package softwarecatalog
-@author Ruben Linde
-@copyright 2024
-@license AGPL-3.0-or-later
-@version 1.0.0
-@link https://github.com/opencatalogi/softwarecatalog
--->
-
 <template>
 	<div class="contactpersonen-list">
 		<div v-if="loading" class="loading">
 			<NcLoadingIcon :size="20" />
-			{{ t('softwarecatalog', 'Loading contactpersonen...') }}
+			{{ t("softwarecatalog", "Loading contactpersonen...") }}
 		</div>
 
 		<div v-else-if="error" class="error">
@@ -25,9 +12,11 @@ Component for displaying and managing contactpersonen with user actions
 		</div>
 
 		<div v-else-if="contactpersonen.length === 0" class="empty">
-			<NcEmptyContent 
+			<NcEmptyContent
 				:name="t('softwarecatalog', 'No contactpersonen found')"
-				:description="t('softwarecatalog', 'This organisation has no contactpersonen.')">
+				:description="
+					t('softwarecatalog', 'This organisation has no contactpersonen.')
+				">
 				<template #icon>
 					<AccountMultiple :size="64" />
 				</template>
@@ -38,39 +27,55 @@ Component for displaying and managing contactpersonen with user actions
 			<table class="compact-table">
 				<thead>
 					<tr>
-						<th>{{ t('softwarecatalog', 'Name') }}</th>
-						<th>{{ t('softwarecatalog', 'Email') }}</th>
-						<th>{{ t('softwarecatalog', 'Status') }}</th>
-						<th>{{ t('softwarecatalog', 'Groups') }}</th>
-						<th>{{ t('softwarecatalog', 'Actions') }}</th>
+						<th>{{ t("softwarecatalog", "Name") }}</th>
+						<th>{{ t("softwarecatalog", "Email") }}</th>
+						<th>{{ t("softwarecatalog", "Status") }}</th>
+						<th>{{ t("softwarecatalog", "Groups") }}</th>
+						<th>{{ t("softwarecatalog", "Actions") }}</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="contactpersoon in contactpersonen" :key="contactpersoon.id">
+					<tr
+						v-for="contactpersoon in contactpersonen"
+						:key="contactpersoon.id">
 						<td class="name-cell">
 							{{ getContactpersoonName(contactpersoon) }}
 						</td>
 						<td class="email-cell">
-							{{ contactpersoon.data.email || contactpersoon.data['e-mailadres'] || '-' }}
+							{{
+								contactpersoon.data.email ||
+									contactpersoon.data["e-mailadres"] ||
+									"-"
+							}}
 						</td>
 						<td class="status-cell">
-							<span v-if="contactpersoon.user.hasUser && !contactpersoon.user.disabled" 
+							<span
+								v-if="
+									contactpersoon.user.hasUser && !contactpersoon.user.disabled
+								"
 								class="status-chip status-success">
-								{{ t('softwarecatalog', 'User') }}
+								{{ t("softwarecatalog", "User") }}
 							</span>
-							<span v-else-if="contactpersoon.user.hasUser && contactpersoon.user.disabled" 
+							<span
+								v-else-if="
+									contactpersoon.user.hasUser && contactpersoon.user.disabled
+								"
 								class="status-chip status-warning">
-								{{ t('softwarecatalog', 'Disabled') }}
+								{{ t("softwarecatalog", "Disabled") }}
 							</span>
-							<span v-else 
-								class="status-chip status-tertiary">
-								{{ t('softwarecatalog', 'No User') }}
+							<span v-else class="status-chip status-tertiary">
+								{{ t("softwarecatalog", "No User") }}
 							</span>
 						</td>
 						<td class="groups-cell">
-							<div v-if="contactpersoon.user.hasUser && contactpersoon.user.groups.length > 0" 
+							<div
+								v-if="
+									contactpersoon.user.hasUser &&
+										contactpersoon.user.groups.length > 0
+								"
 								class="groups">
-								<span v-for="group in contactpersoon.user.groups" 
+								<span
+									v-for="group in contactpersoon.user.groups"
 									:key="group"
 									class="group-chip">
 									{{ formatGroupName(group) }}
@@ -81,7 +86,8 @@ Component for displaying and managing contactpersonen with user actions
 						<td class="actions-cell">
 							<NcActions>
 								<!-- Convert to User Action -->
-								<NcActionButton v-if="!contactpersoon.user.hasUser"
+								<NcActionButton
+									v-if="!contactpersoon.user.hasUser"
 									:close-after-click="true"
 									:disabled="contactpersoon.loading"
 									@click="convertToUser(contactpersoon)">
@@ -89,47 +95,59 @@ Component for displaying and managing contactpersonen with user actions
 										<NcLoadingIcon v-if="contactpersoon.loading" :size="20" />
 										<AccountPlus v-else :size="20" />
 									</template>
-									{{ contactpersoon.loading ? t('softwarecatalog', 'Converting...') : t('softwarecatalog', 'Convert to User') }}
+									{{
+										contactpersoon.loading
+											? t("softwarecatalog", "Converting...")
+											: t("softwarecatalog", "Convert to User")
+									}}
 								</NcActionButton>
 
 								<!-- Change Password Action -->
-								<NcActionButton v-if="contactpersoon.user.hasUser"
+								<NcActionButton
+									v-if="contactpersoon.user.hasUser"
 									:close-after-click="true"
 									@click="openPasswordDialog(contactpersoon)">
 									<template #icon>
 										<Key :size="20" />
 									</template>
-									{{ t('softwarecatalog', 'Change Password') }}
+									{{ t("softwarecatalog", "Change Password") }}
 								</NcActionButton>
 
 								<!-- Manage Groups Action -->
-								<NcActionButton v-if="contactpersoon.user.hasUser"
+								<NcActionButton
+									v-if="contactpersoon.user.hasUser"
 									:close-after-click="true"
 									@click="openGroupsDialog(contactpersoon)">
 									<template #icon>
 										<AccountGroup :size="20" />
 									</template>
-									{{ t('softwarecatalog', 'Manage Groups') }}
+									{{ t("softwarecatalog", "Manage Groups") }}
 								</NcActionButton>
 
 								<!-- Disable User Action -->
-								<NcActionButton v-if="contactpersoon.user.hasUser && !contactpersoon.user.disabled"
+								<NcActionButton
+									v-if="
+										contactpersoon.user.hasUser && !contactpersoon.user.disabled
+									"
 									:close-after-click="true"
 									@click="disableUser(contactpersoon)">
 									<template #icon>
 										<CloseCircle :size="20" />
 									</template>
-									{{ t('softwarecatalog', 'Disable User') }}
+									{{ t("softwarecatalog", "Disable User") }}
 								</NcActionButton>
 
 								<!-- Enable User Action -->
-								<NcActionButton v-if="contactpersoon.user.hasUser && contactpersoon.user.disabled"
+								<NcActionButton
+									v-if="
+										contactpersoon.user.hasUser && contactpersoon.user.disabled
+									"
 									:close-after-click="true"
 									@click="enableUser(contactpersoon)">
 									<template #icon>
 										<CheckCircle :size="20" />
 									</template>
-									{{ t('softwarecatalog', 'Enable User') }}
+									{{ t("softwarecatalog", "Enable User") }}
 								</NcActionButton>
 							</NcActions>
 						</td>
@@ -139,13 +157,20 @@ Component for displaying and managing contactpersonen with user actions
 		</div>
 
 		<!-- Password Change Dialog -->
-		<NcDialog v-if="showPasswordDialog"
+		<NcDialog
+			v-if="showPasswordDialog"
 			:name="t('softwarecatalog', 'Change Password')"
 			size="small"
 			@closing="closePasswordDialog">
 			<div class="password-dialog">
-				<p class="dialog-description">{{ t('softwarecatalog', 'Change password for user: {username}', { username: selectedContactpersoon?.user?.username }) }}</p>
-				
+				<p class="dialog-description">
+					{{
+						t("softwarecatalog", "Change password for user: {username}", {
+							username: selectedContactpersoon?.user?.username,
+						})
+					}}
+				</p>
+
 				<div class="password-input">
 					<NcTextField
 						:value="newPassword"
@@ -158,62 +183,112 @@ Component for displaying and managing contactpersonen with user actions
 
 				<!-- Password Requirements -->
 				<div class="password-requirements">
-					<h4>{{ t('softwarecatalog', 'Password Requirements:') }}</h4>
+					<h4>{{ t("softwarecatalog", "Password Requirements:") }}</h4>
 					<ul class="requirements-list">
 						<li :class="{ 'requirement-met': passwordValidation.minLength }">
-							<CheckCircle v-if="passwordValidation.minLength" :size="16" class="check-icon" />
+							<CheckCircle
+								v-if="passwordValidation.minLength"
+								:size="16"
+								class="check-icon" />
 							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t('softwarecatalog', 'At least 10 characters') }}
+							{{ t("softwarecatalog", "At least 10 characters") }}
 						</li>
 						<li :class="{ 'requirement-met': passwordValidation.hasUppercase }">
-							<CheckCircle v-if="passwordValidation.hasUppercase" :size="16" class="check-icon" />
+							<CheckCircle
+								v-if="passwordValidation.hasUppercase"
+								:size="16"
+								class="check-icon" />
 							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t('softwarecatalog', 'At least one uppercase letter') }}
+							{{ t("softwarecatalog", "At least one uppercase letter") }}
 						</li>
 						<li :class="{ 'requirement-met': passwordValidation.hasLowercase }">
-							<CheckCircle v-if="passwordValidation.hasLowercase" :size="16" class="check-icon" />
+							<CheckCircle
+								v-if="passwordValidation.hasLowercase"
+								:size="16"
+								class="check-icon" />
 							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t('softwarecatalog', 'At least one lowercase letter') }}
+							{{ t("softwarecatalog", "At least one lowercase letter") }}
 						</li>
 						<li :class="{ 'requirement-met': passwordValidation.hasNumber }">
-							<CheckCircle v-if="passwordValidation.hasNumber" :size="16" class="check-icon" />
+							<CheckCircle
+								v-if="passwordValidation.hasNumber"
+								:size="16"
+								class="check-icon" />
 							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t('softwarecatalog', 'At least one number') }}
+							{{ t("softwarecatalog", "At least one number") }}
 						</li>
-						<li :class="{ 'requirement-met': passwordValidation.hasSpecialChar }">
-							<CheckCircle v-if="passwordValidation.hasSpecialChar" :size="16" class="check-icon" />
+						<li
+							:class="{ 'requirement-met': passwordValidation.hasSpecialChar }">
+							<CheckCircle
+								v-if="passwordValidation.hasSpecialChar"
+								:size="16"
+								class="check-icon" />
 							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t('softwarecatalog', 'At least one special character (!@#$%^&*)') }}
+							{{
+								t(
+									"softwarecatalog",
+									"At least one special character (!@#$%^&*)"
+								)
+							}}
+						</li>
+						<li :class="{ 'requirement-met': passwordValidation.notPwned }">
+							<NcLoadingIcon
+								v-if="pwnedCheckLoading"
+								:size="16"
+								class="loading-icon" />
+							<CheckCircle
+								v-else-if="passwordValidation.notPwned"
+								:size="16"
+								class="check-icon" />
+							<CloseCircle
+								v-else
+								:size="16"
+								class="close-icon" />
+							{{
+								t(
+									"softwarecatalog",
+									"Password has not appeared in known data breaches"
+								)
+							}}
 						</li>
 					</ul>
 				</div>
 
 				<div class="dialog-actions">
 					<NcButton type="secondary" @click="closePasswordDialog">
-						{{ t('softwarecatalog', 'Cancel') }}
+						{{ t("softwarecatalog", "Cancel") }}
 					</NcButton>
-					<NcButton type="primary" 
-						:disabled="passwordLoading || !isPasswordValid"
+					<NcButton
+						type="primary"
+						:disabled="passwordLoading || !isPasswordValid || pwnedCheckLoading"
 						@click="savePassword">
 						<template #icon>
 							<NcLoadingIcon v-if="passwordLoading" :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Save') }}
+						{{ t("softwarecatalog", "Save") }}
 					</NcButton>
 				</div>
 			</div>
 		</NcDialog>
 
 		<!-- Groups Management Dialog -->
-		<NcDialog v-if="showGroupsDialog"
+		<NcDialog
+			v-if="showGroupsDialog"
 			:name="t('softwarecatalog', 'Manage User Groups')"
 			size="normal"
 			@closing="closeGroupsDialog">
 			<div class="groups-dialog">
-				<p class="dialog-description">{{ t('softwarecatalog', 'Select groups for user: {username}', { username: selectedContactpersoon?.user?.username }) }}</p>
-				
+				<p class="dialog-description">
+					{{
+						t("softwarecatalog", "Select groups for user: {username}", {
+							username: selectedContactpersoon?.user?.username,
+						})
+					}}
+				</p>
+
 				<div class="groups-selection">
-					<NcCheckboxRadioSwitch v-for="group in availableGroups"
+					<NcCheckboxRadioSwitch
+						v-for="group in availableGroups"
 						:key="group.id"
 						:checked="selectedGroups.includes(group.id)"
 						type="checkbox"
@@ -228,15 +303,16 @@ Component for displaying and managing contactpersonen with user actions
 
 				<div class="dialog-actions">
 					<NcButton type="secondary" @click="closeGroupsDialog">
-						{{ t('softwarecatalog', 'Cancel') }}
+						{{ t("softwarecatalog", "Cancel") }}
 					</NcButton>
-					<NcButton type="primary" 
+					<NcButton
+						type="primary"
 						:disabled="groupsLoading"
 						@click="saveGroups">
 						<template #icon>
 							<NcLoadingIcon v-if="groupsLoading" :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Save') }}
+						{{ t("softwarecatalog", "Save") }}
 					</NcButton>
 				</div>
 			</div>
@@ -245,17 +321,16 @@ Component for displaying and managing contactpersonen with user actions
 </template>
 
 <script>
-import { 
-	NcActions, 
-	NcActionButton, 
-	NcActionInput,
-	NcLoadingIcon, 
-	NcNoteCard, 
+import {
+	NcActions,
+	NcActionButton,
+	NcLoadingIcon,
+	NcNoteCard,
 	NcEmptyContent,
 	NcDialog,
 	NcButton,
 	NcCheckboxRadioSwitch,
-	NcTextField
+	NcTextField,
 } from '@nextcloud/vue'
 
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
@@ -274,7 +349,6 @@ export default {
 	components: {
 		NcActions,
 		NcActionButton,
-		NcActionInput,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcEmptyContent,
@@ -287,18 +361,18 @@ export default {
 		AccountGroup,
 		Key,
 		CheckCircle,
-		CloseCircle
+		CloseCircle,
 	},
 
 	props: {
 		organisationId: {
 			type: String,
-			required: true
+			required: true,
 		},
 		organisationData: {
 			type: Object,
-			default: () => ({})
-		}
+			default: () => ({}),
+		},
 	},
 
 	data() {
@@ -312,7 +386,10 @@ export default {
 			passwordLoading: false,
 			userStatusRefreshInProgress: false,
 			userStatusRefreshTimeout: null,
-			userInfoLoaded: false
+			userInfoLoaded: false,
+			isPasswordPwned: true, // start of with true
+			pwnedCheckLoading: false,
+			pwnedCheckTimeout: null,
 		}
 	},
 
@@ -323,8 +400,13 @@ export default {
 
 		contactpersonen() {
 			// Use contactpersonen from organisation data if available, otherwise fall back to store
-			if (this.organisationData.contactpersonen && Array.isArray(this.organisationData.contactpersonen)) {
-				return this.processContactpersonen(this.organisationData.contactpersonen)
+			if (
+				this.organisationData.contactpersonen
+        && Array.isArray(this.organisationData.contactpersonen)
+			) {
+				return this.processContactpersonen(
+					this.organisationData.contactpersonen,
+				)
 			}
 			return this.organisatieStore.getContactpersonen
 		},
@@ -348,13 +430,40 @@ export default {
 				hasUppercase: /[A-Z]/.test(this.newPassword),
 				hasLowercase: /[a-z]/.test(this.newPassword),
 				hasNumber: /\d/.test(this.newPassword),
-				hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(this.newPassword)
+				hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(this.newPassword),
+				// Only consider notPwned valid if check is complete and password is not pwned
+				// If check is still loading, treat as invalid to prevent premature save
+				notPwned: !this.pwnedCheckLoading && !this.isPasswordPwned,
 			}
 		},
 
 		isPasswordValid() {
-			return Object.values(this.passwordValidation).every(requirement => requirement)
-		}
+			return Object.values(this.passwordValidation).every(
+				(requirement) => requirement,
+			)
+		},
+	},
+
+	watch: {
+		newPassword(newVal) {
+			// Clear existing timeout
+			if (this.pwnedCheckTimeout) {
+				clearTimeout(this.pwnedCheckTimeout)
+			}
+
+			// Only check if password meets minimum length requirement
+			if (newVal && newVal.length >= 10) {
+				// Set loading state immediately to prevent save during debounce
+				this.pwnedCheckLoading = true
+				// Debounce the API call to avoid excessive requests
+				this.pwnedCheckTimeout = setTimeout(() => {
+					this.checkPasswordPwned(newVal)
+				}, 500)
+			} else {
+				// Password too short, no check needed
+				this.pwnedCheckLoading = false
+			}
+		},
 	},
 
 	async mounted() {
@@ -364,22 +473,197 @@ export default {
 	},
 
 	beforeDestroy() {
-		// Clean up timeout to prevent memory leaks
+		// Clean up timeouts to prevent memory leaks
 		if (this.userStatusRefreshTimeout) {
 			clearTimeout(this.userStatusRefreshTimeout)
 		}
+		if (this.pwnedCheckTimeout) {
+			clearTimeout(this.pwnedCheckTimeout)
+		}
 	},
-
 
 	// Watchers removed to prevent infinite loops
 	// User info and groups will be loaded only when explicitly requested
 
 	methods: {
+		/**
+		 * Compute SHA-1 hash of a string
+		 * @param {string} str - String to hash
+		 * @return {Promise<string>} SHA-1 hash in hexadecimal format (uppercase)
+		 */
+		async sha1(str) {
+			// Simple SHA-1 implementation
+			// Based on: https://github.com/emn178/js-sha1
+			const encoder = new TextEncoder()
+			const utf8Bytes = encoder.encode(str)
+			const bytes = Array.from(utf8Bytes)
+
+			const h = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]
+
+			const w = []
+			const length = bytes.length * 8
+
+			bytes.push(0x80)
+			while (bytes.length % 64 !== 56) {
+				bytes.push(0)
+			}
+
+			for (let i = 0; i < bytes.length; i += 4) {
+				w.push(
+					(bytes[i] << 24)
+					| (bytes[i + 1] << 16)
+					| (bytes[i + 2] << 8)
+					| bytes[i + 3],
+				)
+			}
+
+			w.push(0)
+			w.push(0)
+			w[w.length - 2] = Math.floor(length / 0x100000000)
+			w[w.length - 1] = length & 0xffffffff
+
+			for (let i = 0; i < w.length; i += 16) {
+				// Create a local copy of w for this 512-bit block (expand to 80 words)
+				const wLocal = new Array(80)
+				for (let j = 0; j < 16; j++) {
+					wLocal[j] = w[i + j]
+				}
+
+				// Expand w array for rounds 16-79
+				for (let j = 16; j < 80; j++) {
+					const wVal = wLocal[j - 3]
+						^ wLocal[j - 8]
+						^ wLocal[j - 14]
+						^ wLocal[j - 16]
+					wLocal[j] = ((wVal << 1) | (wVal >>> 31)) >>> 0
+				}
+
+				let a = h[0]
+				let b = h[1]
+				let c = h[2]
+				let d = h[3]
+				let e = h[4]
+
+				for (let j = 0; j < 80; j++) {
+					let f
+					let k
+					if (j < 20) {
+						f = (b & c) | (~b & d)
+						k = 0x5A827999
+					} else if (j < 40) {
+						f = b ^ c ^ d
+						k = 0x6ED9EBA1
+					} else if (j < 60) {
+						f = (b & c) | (b & d) | (c & d)
+						k = 0x8F1BBCDC
+					} else {
+						f = b ^ c ^ d
+						k = 0xCA62C1D6
+					}
+
+					const temp = (this.rotl(a, 5) + f + e + k + wLocal[j]) >>> 0
+					e = d
+					d = c
+					c = this.rotl(b, 30) >>> 0
+					b = a
+					a = temp
+				}
+
+				h[0] = (h[0] + a) >>> 0
+				h[1] = (h[1] + b) >>> 0
+				h[2] = (h[2] + c) >>> 0
+				h[3] = (h[3] + d) >>> 0
+				h[4] = (h[4] + e) >>> 0
+			}
+
+			return (
+				h[0].toString(16).padStart(8, '0')
+				+ h[1].toString(16).padStart(8, '0')
+				+ h[2].toString(16).padStart(8, '0')
+				+ h[3].toString(16).padStart(8, '0')
+				+ h[4].toString(16).padStart(8, '0')
+			).toUpperCase()
+		},
+
+		/**
+		 * Rotate left operation for SHA-1
+		 * @param {number} value - Value to rotate
+		 * @param {number} amount - Amount to rotate
+		 * @return {number} Rotated value
+		 */
+		rotl(value, amount) {
+			return ((value << amount) | (value >>> (32 - amount))) >>> 0
+		},
+
+		/**
+		 * Check if password is in Have I Been Pwned database
+		 * @param {string} password - Password to check
+		 */
+		async checkPasswordPwned(password) {
+			if (!password || password.length < 10) {
+				this.isPasswordPwned = true
+				return
+			}
+
+			this.pwnedCheckLoading = true
+
+			try {
+				// Hash the password with SHA-1
+				const sha1Hash = await this.sha1(password)
+				const prefix = sha1Hash.substring(0, 5)
+				const suffix = sha1Hash.substring(5)
+
+				// Call Have I Been Pwned API
+				const response = await fetch(
+					`https://api.pwnedpasswords.com/range/${prefix}`,
+					{
+						method: 'GET',
+						headers: {
+							'User-Agent': 'Nextcloud-SoftwareCatalog',
+						},
+					},
+				)
+
+				if (!response.ok) {
+					console.error(
+						'HIBP API error:',
+						response.status,
+						response.statusText,
+					)
+					// If API fails, don't block password (fail open)
+					this.isPasswordPwned = false
+					return
+				}
+
+				const text = await response.text()
+				const hashes = text.split('\n')
+
+				// Check if our suffix is in the list
+				for (const line of hashes) {
+					const [hashSuffix] = line.split(':')
+					if (hashSuffix && hashSuffix.toUpperCase() === suffix) {
+						this.isPasswordPwned = true
+						this.pwnedCheckLoading = false
+						return
+					}
+				}
+
+				// Password not found in database
+				this.isPasswordPwned = false
+			} catch (error) {
+				console.error('Error checking password against HIBP:', error)
+				// If check fails, don't block password (fail open)
+				this.isPasswordPwned = false
+			} finally {
+				this.pwnedCheckLoading = false
+			}
+		},
+
 		async loadData() {
 			try {
 				// Only fetch available groups, contactpersonen come from organisation data
 				await this.organisatieStore.fetchAvailableGroups()
-				
+
 				// If no organisation data provided, fall back to fetching contactpersonen separately
 				if (!this.organisationData.contactpersonen) {
 					await this.organisatieStore.fetchContactpersonen(this.organisationId)
@@ -395,32 +679,32 @@ export default {
 		 * @return {Array} Processed contactpersonen with user information
 		 */
 		processContactpersonen(rawContactpersonen) {
-			return rawContactpersonen.map(contactpersoon => {
+			return rawContactpersonen.map((contactpersoon) => {
 				const contactId = contactpersoon.id || contactpersoon.uuid
 				const data = contactpersoon.data || contactpersoon
-				const hasUser = !!(data.username)
-				
+				const hasUser = !!data.username
+
 				// Debug logging to understand the data structure
-				console.log('Processing contactpersoon:', {
+				console.info('Processing contactpersoon:', {
 					contactId,
 					data,
 					hasUser,
 					userFromAPI: contactpersoon.user,
 					usernameFromData: data.username,
 					disabledFromAPI: contactpersoon.user?.disabled,
-					disabledFromData: data.disabled
+					disabledFromData: data.disabled,
 				})
-				
+
 				return {
 					id: contactId,
-					data: data,
+					data,
 					user: {
-						hasUser: hasUser,
+						hasUser,
 						username: data.username || '',
 						groups: data.groups || [],
-						disabled: contactpersoon.user?.disabled || data.disabled || false // Use user.disabled from API, fallback to data.disabled
+						disabled: contactpersoon.user?.disabled || data.disabled || false, // Use user.disabled from API, fallback to data.disabled
 					},
-					loading: contactpersoon.loading || false // Include loading state from organisation data
+					loading: contactpersoon.loading || false, // Include loading state from organisation data
 				}
 			})
 		},
@@ -431,56 +715,64 @@ export default {
 		async loadUserInfoAndGroups() {
 			// Prevent multiple simultaneous calls
 			if (this.userStatusRefreshInProgress) {
-				console.log('User info loading already in progress, skipping...')
+				console.info('User info loading already in progress, skipping...')
 				return
 			}
 
 			// Prevent multiple calls per session
 			if (this.userInfoLoaded) {
-				console.log('User info already loaded in this session, skipping...')
+				console.info('User info already loaded in this session, skipping...')
 				return
 			}
 
 			if (!this.organisationData || !this.organisationData.contactpersonen) {
-				console.log('No organisation data available for user info loading')
+				console.info('No organisation data available for user info loading')
 				return
 			}
-			
+
 			this.userStatusRefreshInProgress = true
-			
+
 			try {
-				console.log('Starting SINGLE parallel loading of user info and available groups')
-				
+				console.info(
+					'Starting SINGLE parallel loading of user info and available groups',
+				)
+
 				// Get all contact person IDs, filter out empty ones
 				const contactpersoonIds = this.organisationData.contactpersonen
-					.map(cp => cp.id || cp.uuid)
-					.filter(id => id && id.trim() !== '')
-				
-				console.log('Loading user info for contactpersons:', contactpersoonIds.length)
-				console.log('Contactpersoon IDs:', contactpersoonIds)
-				
+					.map((cp) => cp.id || cp.uuid)
+					.filter((id) => id && id.trim() !== '')
+
+				console.info(
+					'Loading user info for contactpersons:',
+					contactpersoonIds.length,
+				)
+				console.info('Contactpersoon IDs:', contactpersoonIds)
+
 				// Load available groups and bulk user info in parallel - but only once
-				const promises = [
-					this.organisatieStore.fetchAvailableGroups()
-				]
-				
+				const promises = [this.organisatieStore.fetchAvailableGroups()]
+
 				// Only add bulk user info request if we have contactpersonen
 				if (contactpersoonIds.length > 0) {
-					promises.push(this.organisatieStore.getBulkUserInfo(contactpersoonIds))
+					promises.push(
+						this.organisatieStore.getBulkUserInfo(contactpersoonIds),
+					)
 				} else {
 					promises.push(Promise.resolve({}))
 				}
-				
+
+				// eslint-disable-next-line no-unused-vars
 				const [availableGroups, bulkUserInfo] = await Promise.all(promises)
-				
-				console.log('Received bulk user info:', bulkUserInfo)
-				
+
+				console.info('Received bulk user info:', bulkUserInfo)
+
 				// Update contactpersonen with user info
 				if (bulkUserInfo && Object.keys(bulkUserInfo).length > 0) {
 					this.updateContactpersonenWithUserInfo(bulkUserInfo)
 				}
-				
-				console.log('Completed SINGLE parallel loading of user info and available groups')
+
+				console.info(
+					'Completed SINGLE parallel loading of user info and available groups',
+				)
 				this.userInfoLoaded = true
 			} catch (error) {
 				console.error('Error loading user info and groups:', error)
@@ -491,38 +783,45 @@ export default {
 
 		/**
 		 * Update contactpersonen with bulk user info
-		 * @param {Object} bulkUserInfo - User info object keyed by contactpersoon ID
+		 * @param {object} bulkUserInfo - User info object keyed by contactpersoon ID
 		 */
 		updateContactpersonenWithUserInfo(bulkUserInfo) {
 			if (!this.organisationData.contactpersonen) return
-			
+
 			this.organisationData.contactpersonen.forEach((contactpersoon, index) => {
 				const contactpersoonId = contactpersoon.id || contactpersoon.uuid
 				const userInfo = bulkUserInfo[contactpersoonId]
-				
+
 				if (userInfo) {
-					console.log(`Updating contactpersoon ${contactpersoonId} with user info:`, userInfo)
-					
+					console.info(
+						`Updating contactpersoon ${contactpersoonId} with user info:`,
+						userInfo,
+					)
+
 					// Ensure user object exists
 					if (!contactpersoon.user) {
 						contactpersoon.user = {}
 					}
-					
+
 					// Update user object
 					contactpersoon.user.hasUser = userInfo.hasUser
 					contactpersoon.user.username = userInfo.username
 					contactpersoon.user.groups = userInfo.groups || []
-					contactpersoon.user.disabled = !userInfo.enabled  // Map enabled to disabled
+					contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled
 					contactpersoon.user.displayName = userInfo.displayName
 					contactpersoon.user.lastLogin = userInfo.lastLogin
-					
+
 					// Update data object for consistency
 					if (contactpersoon.data) {
-						contactpersoon.data.disabled = !userInfo.enabled  // Map enabled to disabled
+						contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled
 					}
-					
+
 					// Force reactivity update
-					this.$set(this.organisationData.contactpersonen, index, contactpersoon)
+					this.$set(
+						this.organisationData.contactpersonen,
+						index,
+						contactpersoon,
+					)
 				}
 			})
 		},
@@ -532,7 +831,9 @@ export default {
 		 * @deprecated Use loadUserInfoAndGroups() instead for better performance
 		 */
 		async refreshUserStatuses() {
-			console.log('refreshUserStatuses called - redirecting to loadUserInfoAndGroups')
+			console.info(
+				'refreshUserStatuses called - redirecting to loadUserInfoAndGroups',
+			)
 			await this.loadUserInfoAndGroups()
 		},
 
@@ -540,61 +841,81 @@ export default {
 		 * Public method to refresh user statuses - can be called from parent component
 		 */
 		async refreshUserData() {
-			console.log('Public refreshUserData called')
+			console.info('Public refreshUserData called')
 			await this.loadUserInfoAndGroups()
 		},
 
 		getContactpersoonName(contactpersoon) {
 			const data = contactpersoon.data
-			return data.naam || data.name || data.voornaam + ' ' + data.achternaam || data.email || data['e-mailadres'] || 'Unknown'
+			return (
+				data.naam
+        || data.name
+        || data.voornaam + ' ' + data.achternaam
+        || data.email
+        || data['e-mailadres']
+        || 'Unknown'
+			)
 		},
 
 		formatGroupName(groupId) {
 			const groupMap = {
 				'gebruik-beheerder': 'Gebruik Beheerder',
 				'aanbod-beheerder': 'Aanbod Beheerder',
-				'gebruik-raadpleger': 'Gebruik Raadpleger'
+				'gebruik-raadpleger': 'Gebruik Raadpleger',
 			}
 			return groupMap[groupId] || groupId
 		},
 
 		async convertToUser(contactpersoon) {
-			console.log('convertToUser called with:', contactpersoon)
-			console.log('organisationData.contactpersonen:', this.organisationData.contactpersonen)
-			
-			// Find the contactpersoon in the organisation data and set loading state
-			const contactIndex = this.organisationData.contactpersonen.findIndex(cp => 
-				(cp.id || cp.uuid) === contactpersoon.id
+			console.info('convertToUser called with:', contactpersoon)
+			console.info(
+				'organisationData.contactpersonen:',
+				this.organisationData.contactpersonen,
 			)
-			
-			console.log('Found contactpersoon at index:', contactIndex)
-			
+
+			// Find the contactpersoon in the organisation data and set loading state
+			const contactIndex = this.organisationData.contactpersonen.findIndex(
+				(cp) => (cp.id || cp.uuid) === contactpersoon.id,
+			)
+
+			console.info('Found contactpersoon at index:', contactIndex)
+
 			if (contactIndex === -1) {
-				showError(this.t('softwarecatalog', 'Contactpersoon not found in organisation data'))
+				showError(
+					this.t(
+						'softwarecatalog',
+						'Contactpersoon not found in organisation data',
+					),
+				)
 				return
 			}
-			
+
 			// Set loading state on the specific contactpersoon - ensure it's an object first
 			const contactObject = this.organisationData.contactpersonen[contactIndex]
 			if (typeof contactObject === 'object' && contactObject !== null) {
 				this.$set(contactObject, 'loading', true)
 			} else {
 				console.error('Contactpersoon is not an object:', contactObject)
-				showError(this.t('softwarecatalog', 'Invalid contactpersoon data structure'))
+				showError(
+					this.t('softwarecatalog', 'Invalid contactpersoon data structure'),
+				)
 				return
 			}
-			
+
 			try {
-				const result = await this.organisatieStore.convertToUser(contactpersoon.id)
-				
-				console.log('Convert to user result:', result)
-				
+				const result = await this.organisatieStore.convertToUser(
+					contactpersoon.id,
+				)
+
+				console.info('Convert to user result:', result)
+
 				// Replace the contactpersoon object with the updated one from the API
 				if (result.contactpersoon) {
 					// The API returns the contactpersoon object directly, we need to structure it properly
 					const updatedContactpersoon = {
 						id: result.contactpersoon.id || result.contactpersoon['@self']?.id,
-						uuid: result.contactpersoon.id || result.contactpersoon['@self']?.id,
+						uuid:
+              result.contactpersoon.id || result.contactpersoon['@self']?.id,
 						data: {
 							voornaam: result.contactpersoon.voornaam,
 							achternaam: result.contactpersoon.achternaam,
@@ -602,28 +923,44 @@ export default {
 							naam: result.contactpersoon.naam,
 							organisatie: result.contactpersoon.organisatie,
 							username: result.contactpersoon.username,
-							groups: result.contactpersoon.groups || []
+							groups: result.contactpersoon.groups || [],
 						},
-						loading: false // Clear loading state
+						loading: false, // Clear loading state
 					}
-					
-					console.log('Replacing contactpersoon at index:', contactIndex, updatedContactpersoon)
-					
+
+					console.info(
+						'Replacing contactpersoon at index:',
+						contactIndex,
+						updatedContactpersoon,
+					)
+
 					// Replace the entire contactpersoon object in the organisation data
-					this.organisationData.contactpersonen.splice(contactIndex, 1, updatedContactpersoon)
+					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+					this.organisationData.contactpersonen.splice(
+						contactIndex,
+						1,
+						updatedContactpersoon,
+					)
 				}
-				
+
 				// Refresh user info for all contactpersonen to ensure the newly created user shows correct status
-				console.log('Refreshing user info after successful conversion...')
+				console.info('Refreshing user info after successful conversion...')
 				await this.refreshUserData()
-				
-				showSuccess(this.t('softwarecatalog', 'User account created successfully'))
+
+				showSuccess(
+					this.t('softwarecatalog', 'User account created successfully'),
+				)
 			} catch (error) {
 				console.error('Error in convertToUser:', error)
-				showError(this.t('softwarecatalog', 'Failed to create user account: {error}', { error: error.message }))
-				
+				showError(
+					this.t('softwarecatalog', 'Failed to create user account: {error}', {
+						error: error.message,
+					}),
+				)
+
 				// Clear loading state on error - ensure it's an object first
-				const contactObject = this.organisationData.contactpersonen[contactIndex]
+				const contactObject
+          = this.organisationData.contactpersonen[contactIndex]
 				if (typeof contactObject === 'object' && contactObject !== null) {
 					this.$set(contactObject, 'loading', false)
 				}
@@ -633,6 +970,12 @@ export default {
 		openPasswordDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
 			this.newPassword = ''
+			this.isPasswordPwned = true // start of with true
+			this.pwnedCheckLoading = false
+			if (this.pwnedCheckTimeout) {
+				clearTimeout(this.pwnedCheckTimeout)
+				this.pwnedCheckTimeout = null
+			}
 			this.showPasswordDialog = true
 		},
 
@@ -641,22 +984,59 @@ export default {
 			this.selectedContactpersoon = null
 			this.newPassword = ''
 			this.passwordLoading = false
+			this.isPasswordPwned = true // reset to true
+			this.pwnedCheckLoading = false
+			if (this.pwnedCheckTimeout) {
+				clearTimeout(this.pwnedCheckTimeout)
+				this.pwnedCheckTimeout = null
+			}
 		},
 
 		async savePassword() {
 			if (!this.newPassword || this.newPassword.length < 10) {
-				showError(this.t('softwarecatalog', 'Password must be at least 10 characters long'))
+				showError(
+					this.t(
+						'softwarecatalog',
+						'Password must be at least 10 characters long',
+					),
+				)
+				return
+			}
+
+			if (!this.isPasswordValid) {
+				if (this.isPasswordPwned) {
+					showError(
+						this.t(
+							'softwarecatalog',
+							'This password has been found in data breaches and is not secure. Please choose a different password.',
+						),
+					)
+				} else {
+					showError(
+						this.t(
+							'softwarecatalog',
+							'Password does not meet all requirements',
+						),
+					)
+				}
 				return
 			}
 
 			this.passwordLoading = true
 
 			try {
-				await this.organisatieStore.changePassword(this.selectedContactpersoon.user.username, this.newPassword)
+				await this.organisatieStore.changePassword(
+					this.selectedContactpersoon.user.username,
+					this.newPassword,
+				)
 				showSuccess(this.t('softwarecatalog', 'Password changed successfully'))
 				this.closePasswordDialog()
 			} catch (error) {
-				showError(this.t('softwarecatalog', 'Failed to change password: {error}', { error: error.message }))
+				showError(
+					this.t('softwarecatalog', 'Failed to change password: {error}', {
+						error: error.message,
+					}),
+				)
 			} finally {
 				this.passwordLoading = false
 			}
@@ -665,10 +1045,12 @@ export default {
 		async openGroupsDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
 			this.showGroupsDialog = true
-			
+
 			try {
 				// Fetch user-specific info to get current groups and available groups
-				const userInfo = await this.organisatieStore.fetchUserInfo(contactpersoon.id)
+				const userInfo = await this.organisatieStore.fetchUserInfo(
+					contactpersoon.id,
+				)
 				this.selectedGroups = [...(userInfo.groups || [])]
 			} catch (error) {
 				console.error('Error fetching user info for groups dialog:', error)
@@ -706,12 +1088,18 @@ export default {
 			try {
 				await this.organisatieStore.updateUserGroups(
 					this.selectedContactpersoon.user.username,
-					this.selectedGroups
+					this.selectedGroups,
 				)
-				showSuccess(this.t('softwarecatalog', 'User groups updated successfully'))
+				showSuccess(
+					this.t('softwarecatalog', 'User groups updated successfully'),
+				)
 				this.closeGroupsDialog()
 			} catch (error) {
-				showError(this.t('softwarecatalog', 'Failed to update user groups: {error}', { error: error.message }))
+				showError(
+					this.t('softwarecatalog', 'Failed to update user groups: {error}', {
+						error: error.message,
+					}),
+				)
 			} finally {
 				this.groupsLoading = false
 			}
@@ -725,11 +1113,15 @@ export default {
 			try {
 				await this.organisatieStore.disableUser(contactpersoon.id)
 				showSuccess(this.t('softwarecatalog', 'User disabled successfully'))
-				
+
 				// Update the local contactpersoon data to reflect disabled status
 				this.updateContactpersoonStatus(contactpersoon.id, true)
 			} catch (error) {
-				showError(this.t('softwarecatalog', 'Failed to disable user: {error}', { error: error.message }))
+				showError(
+					this.t('softwarecatalog', 'Failed to disable user: {error}', {
+						error: error.message,
+					}),
+				)
 			}
 		},
 
@@ -741,11 +1133,15 @@ export default {
 			try {
 				await this.organisatieStore.enableUser(contactpersoon.id)
 				showSuccess(this.t('softwarecatalog', 'User enabled successfully'))
-				
+
 				// Update the local contactpersoon data to reflect enabled status
 				this.updateContactpersoonStatus(contactpersoon.id, false)
 			} catch (error) {
-				showError(this.t('softwarecatalog', 'Failed to enable user: {error}', { error: error.message }))
+				showError(
+					this.t('softwarecatalog', 'Failed to enable user: {error}', {
+						error: error.message,
+					}),
+				)
 			}
 		},
 
@@ -757,242 +1153,252 @@ export default {
 		updateContactpersoonStatus(contactpersoonId, disabled) {
 			// Find and update the contactpersoon in the organisation data
 			if (this.organisationData.contactpersonen) {
-				const contactIndex = this.organisationData.contactpersonen.findIndex(cp => 
-					(cp.id || cp.uuid) === contactpersoonId
+				const contactIndex = this.organisationData.contactpersonen.findIndex(
+					(cp) => (cp.id || cp.uuid) === contactpersoonId,
 				)
-				
+
 				if (contactIndex !== -1) {
 					// Update the disabled status in both user and data objects
-					const contactpersoon = this.organisationData.contactpersonen[contactIndex]
-					
+					const contactpersoon
+            = this.organisationData.contactpersonen[contactIndex]
+
 					// Update in the user object (primary source)
 					if (contactpersoon.user) {
 						contactpersoon.user.disabled = disabled
 					}
-					
+
 					// Also update in data object for consistency
 					if (contactpersoon.data) {
 						contactpersoon.data.disabled = disabled
 					}
-					
+
 					// Force reactivity update
-					this.$set(this.organisationData.contactpersonen, contactIndex, contactpersoon)
+					this.$set(
+						this.organisationData.contactpersonen,
+						contactIndex,
+						contactpersoon,
+					)
 				}
 			}
-		}
-	}
+		},
+	},
 }
 </script>
 
 <style scoped>
 .contactpersonen-list {
-	padding: 8px;
+  padding: 8px;
 }
 
-.loading, .error {
-	padding: 16px;
-	text-align: center;
+.loading,
+.error {
+  padding: 16px;
+  text-align: center;
 }
 
 .contactpersonen-table {
-	margin-top: 8px;
+  margin-top: 8px;
 }
 
 .compact-table {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: 14px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
 }
 
 .compact-table th,
 .compact-table td {
-	padding: 8px;
-	text-align: left;
-	border-bottom: 1px solid var(--color-border);
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .compact-table th {
-	font-weight: bold;
-	background-color: var(--color-background-hover);
-	font-size: 13px;
+  font-weight: bold;
+  background-color: var(--color-background-hover);
+  font-size: 13px;
 }
 
 .name-cell {
-	font-weight: 500;
-	max-width: 150px;
+  font-weight: 500;
+  max-width: 150px;
 }
 
 .email-cell {
-	max-width: 200px;
-	word-break: break-all;
+  max-width: 200px;
+  word-break: break-all;
 }
 
 .status-cell {
-	width: 80px;
+  width: 80px;
 }
 
 .groups-cell {
-	max-width: 150px;
+  max-width: 150px;
 }
 
 .actions-cell {
-	width: 60px;
+  width: 60px;
 }
 
 .groups {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
 }
 
 .no-groups {
-	color: var(--color-text-lighter);
-	font-size: 12px;
+  color: var(--color-text-lighter);
+  font-size: 12px;
 }
 
 .status-chip {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: 12px;
-	font-size: 11px;
-	font-weight: 500;
-	text-align: center;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
 }
 
 .status-success {
-	background-color: #d4edda;
-	color: #155724;
-	border: 1px solid #c3e6cb;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
 .status-tertiary {
-	background-color: #f8f9fa;
-	color: #6c757d;
-	border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
 }
 
 .status-warning {
-	background-color: #fff3cd;
-	color: #856404;
-	border: 1px solid #ffeaa7;
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
 }
 
 .group-chip {
-	display: inline-block;
-	padding: 2px 6px;
-	margin: 1px;
-	border-radius: 10px;
-	font-size: 10px;
-	font-weight: 500;
-	background-color: var(--color-primary-light);
-	color: var(--color-primary-element-text);
-	border: 1px solid var(--color-primary);
+  display: inline-block;
+  padding: 2px 6px;
+  margin: 1px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-element-text);
+  border: 1px solid var(--color-primary);
 }
 
 .password-dialog {
-	padding: 12px;
-	min-width: 320px;
-	max-width: 400px;
+  padding: 12px;
+  min-width: 320px;
+  max-width: 400px;
 }
 
 .groups-dialog {
-	padding: 12px;
-	min-width: 350px;
-	max-width: 450px;
+  padding: 12px;
+  min-width: 350px;
+  max-width: 450px;
 }
 
 .dialog-description {
-	margin: 0 0 12px 0;
-	font-size: 14px;
-	color: var(--color-text-lighter);
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--color-text-lighter);
 }
 
 .password-input {
-	margin: 12px 0;
+  margin: 12px 0;
 }
 
 .groups-selection {
-	margin: 12px 0;
-	max-height: 200px;
-	overflow-y: auto;
+  margin: 12px 0;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .groups-selection .checkbox-radio-switch {
-	margin-bottom: 6px;
+  margin-bottom: 6px;
 }
 
 .compact-checkbox {
-	padding: 4px 0;
+  padding: 4px 0;
 }
 
 .compact-input {
-	margin: 8px 0;
+  margin: 8px 0;
 }
 
 .dialog-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-	margin-top: 12px;
-	padding-top: 8px;
-	border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
 }
 
 /* Make NcTextField more compact */
 .compact-input :deep(.input-field) {
-	margin-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 .compact-input :deep(.input-field__main-wrapper) {
-	min-height: 36px;
+  min-height: 36px;
 }
 
 .compact-input :deep(.input-field__input) {
-	padding: 8px 12px;
-	font-size: 14px;
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
 /* Password Requirements Styles */
 .password-requirements {
-	margin: 16px 0;
-	padding: 12px;
-	background: var(--color-background-dark);
-	border-radius: 6px;
-	border: 1px solid var(--color-border);
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--color-background-dark);
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
 }
 
 .password-requirements h4 {
-	margin: 0 0 8px 0;
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--color-text-dark);
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-dark);
 }
 
 .requirements-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .requirements-list li {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 4px 0;
-	font-size: 13px;
-	color: var(--color-text-lighter);
-	transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--color-text-lighter);
+  transition: color 0.2s ease;
 }
 
 .requirements-list li.requirement-met {
-	color: var(--color-success);
+  color: var(--color-success);
 }
 
 .check-icon {
-	color: var(--color-success);
+  color: var(--color-success);
 }
 
 .close-icon {
-	color: var(--color-error);
+  color: var(--color-error);
+}
+
+.loading-icon {
+  color: var(--color-text-lighter);
 }
 </style>
