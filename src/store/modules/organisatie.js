@@ -1,15 +1,14 @@
 /**
  * Organisatie Store Module
- * 
+ *
  * Manages organisatie data and contactpersonen operations
- * 
- * @category Store
- * @package softwarecatalog
+ *
+ * @package
  * @author Ruben Linde
  * @copyright 2024
  * @license AGPL-3.0-or-later
  * @version 1.0.0
- * @link https://github.com/opencatalogi/softwarecatalog
+ * @see https://github.com/opencatalogi/softwarecatalog
  */
 
 import { defineStore } from 'pinia'
@@ -24,7 +23,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		/** @type {string|null} */
 		error: null,
 		/** @type {Array} */
-		availableGroups: []
+		availableGroups: [],
 	}),
 
 	getters: {
@@ -54,7 +53,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * @param {object} state - The store state
 		 * @return {Array} Available groups
 		 */
-		getAvailableGroups: (state) => state.availableGroups
+		getAvailableGroups: (state) => state.availableGroups,
 	},
 
 	actions: {
@@ -69,15 +68,15 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 			try {
 				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/organisation/{organisationId}', {
-					organisationId
+					organisationId,
 				})
 
 				const response = await fetch(url, {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken
-					}
+						requesttoken: OC.requestToken,
+					},
 				})
 
 				if (!response.ok) {
@@ -112,15 +111,15 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 			try {
 				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/{contactpersoonId}/convert-to-user', {
-					contactpersoonId
+					contactpersoonId,
 				})
 
 				const response = await fetch(url, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken
-					}
+						requesttoken: OC.requestToken,
+					},
 				})
 
 				if (!response.ok) {
@@ -162,12 +161,12 @@ export const useOrganisatieStore = defineStore('organisatie', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken
+						requesttoken: OC.requestToken,
 					},
 					body: JSON.stringify({
 						username,
-						newPassword
-					})
+						newPassword,
+					}),
 				})
 
 				if (!response.ok) {
@@ -207,12 +206,12 @@ export const useOrganisatieStore = defineStore('organisatie', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken
+						requesttoken: OC.requestToken,
 					},
 					body: JSON.stringify({
 						username,
-						groups
-					})
+						groups,
+					}),
 				})
 
 				if (!response.ok) {
@@ -248,15 +247,15 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		async fetchUserInfo(contactpersoonId) {
 			try {
 				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/{contactpersoonId}/user-info', {
-					contactpersoonId
+					contactpersoonId,
 				})
 
 				const response = await fetch(url, {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken
-					}
+						requesttoken: OC.requestToken,
+					},
 				})
 
 				if (!response.ok) {
@@ -280,45 +279,6 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		},
 
 		/**
-		 * Get bulk user info for multiple contact persons
-		 * @param {Array} contactpersoonIds - Array of contact person IDs
-		 * @return {Promise<Object>} Object with user info keyed by contact person ID
-		 */
-		async getBulkUserInfo(contactpersoonIds) {
-			try {
-				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/bulk-user-info')
-
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken
-					},
-					body: JSON.stringify({
-						contactpersoonIds: contactpersoonIds
-					})
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
-				}
-
-				const data = await response.json()
-
-				if (data.success) {
-					console.log('Successfully fetched bulk user info:', data)
-					return data.userInfo || {}
-				} else {
-					throw new Error(data.message || 'Failed to fetch bulk user info')
-				}
-			} catch (error) {
-				console.error('Error fetching bulk user info:', error)
-				this.error = error.message
-				return {}
-			}
-		},
-
-		/**
 		 * Fetch contact persons with user details for an organization
 		 * @param {string} organizationUuid - The organization UUID
 		 * @return {Promise<Array>} Array of contact persons with user details
@@ -331,8 +291,8 @@ export const useOrganisatieStore = defineStore('organisatie', {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken
-					}
+						requesttoken: OC.requestToken,
+					},
 				})
 
 				if (!response.ok) {
@@ -342,7 +302,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 				const data = await response.json()
 
 				if (data.success) {
-					console.log('Successfully fetched contact persons with user details:', data)
+					console.info('Successfully fetched contact persons with user details:', data)
 					return data.data || []
 				} else {
 					throw new Error(data.message || 'Failed to fetch contact persons with user details')
@@ -366,8 +326,8 @@ export const useOrganisatieStore = defineStore('organisatie', {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken
-					}
+						requesttoken: OC.requestToken,
+					},
 				})
 
 				if (!response.ok) {
@@ -453,23 +413,23 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		/**
 		 * Get user info for multiple contactpersonen in one request
 		 * @param {Array<string>} contactpersoonIds - Array of contactpersoon UUIDs
-		 * @return {Promise<Object>} Bulk user info object keyed by contactpersoon ID
+		 * @return {Promise<object>} Bulk user info object keyed by contactpersoon ID
 		 */
 		async getBulkUserInfo(contactpersoonIds) {
 			try {
-				console.log('Store: Getting bulk user info for IDs:', contactpersoonIds)
-				
+				console.info('Store: Getting bulk user info for IDs:', contactpersoonIds)
+
 				const response = await fetch('/index.php/apps/softwarecatalog/api/contactpersonen/bulk-user-info', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 					},
 					body: JSON.stringify({
-						contactpersoonIds: contactpersoonIds
-					})
+						contactpersoonIds,
+					}),
 				})
 
-				console.log('Store: Bulk user info response status:', response.status)
+				console.info('Store: Bulk user info response status:', response.status)
 
 				if (!response.ok) {
 					const errorData = await response.json()
@@ -478,12 +438,12 @@ export const useOrganisatieStore = defineStore('organisatie', {
 				}
 
 				const data = await response.json()
-				console.log('Store: Bulk user info success response:', data)
+				console.info('Store: Bulk user info success response:', data)
 				return data.userInfo || {}
 			} catch (error) {
 				console.error('Store: Error getting bulk user info:', error)
 				throw error
 			}
-		}
-	}
+		},
+	},
 })

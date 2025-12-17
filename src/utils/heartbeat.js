@@ -1,9 +1,9 @@
 /**
  * Heartbeat utility for keeping long-running connections alive
- * 
+ *
  * This utility prevents 504 gateway timeouts by sending periodic
  * keep-alive requests during long operations.
- * 
+ *
  * @author Conduction B.V. <info@conduction.nl>
  * @license AGPL-3.0-or-later
  * @version 1.0.0
@@ -13,9 +13,10 @@
  * Heartbeat class for managing keep-alive requests
  */
 class Heartbeat {
+
 	/**
 	 * Create a new heartbeat instance
-	 * 
+	 *
 	 * @param {number} interval - Heartbeat interval in milliseconds (default: 30000 = 30s)
 	 */
 	constructor(interval = 30000) {
@@ -27,7 +28,7 @@ class Heartbeat {
 
 	/**
 	 * Start sending heartbeat requests
-	 * 
+	 *
 	 * @return {void}
 	 */
 	start() {
@@ -49,7 +50,7 @@ class Heartbeat {
 
 	/**
 	 * Stop sending heartbeat requests
-	 * 
+	 *
 	 * @return {void}
 	 */
 	stop() {
@@ -58,7 +59,7 @@ class Heartbeat {
 		}
 
 		this.isRunning = false
-		
+
 		if (this.timer) {
 			clearInterval(this.timer)
 			this.timer = null
@@ -69,7 +70,7 @@ class Heartbeat {
 
 	/**
 	 * Send a single heartbeat request
-	 * 
+	 *
 	 * @private
 	 * @return {void}
 	 */
@@ -99,12 +100,13 @@ class Heartbeat {
 
 	/**
 	 * Check if heartbeat is currently running
-	 * 
+	 *
 	 * @return {boolean} True if heartbeat is running
 	 */
 	get running() {
 		return this.isRunning
 	}
+
 }
 
 // Export singleton instance for global use
@@ -112,7 +114,7 @@ const heartbeat = new Heartbeat()
 
 /**
  * Start heartbeat for long operations
- * 
+ *
  * @param {number} interval - Optional custom interval in milliseconds
  * @return {void}
  */
@@ -125,7 +127,7 @@ export function startHeartbeat(interval) {
 
 /**
  * Stop heartbeat
- * 
+ *
  * @return {void}
  */
 export function stopHeartbeat() {
@@ -134,7 +136,7 @@ export function stopHeartbeat() {
 
 /**
  * Check if heartbeat is running
- * 
+ *
  * @return {boolean} True if running
  */
 export function isHeartbeatRunning() {
@@ -143,7 +145,7 @@ export function isHeartbeatRunning() {
 
 /**
  * Convenience function to wrap a long-running operation with heartbeat
- * 
+ *
  * @param {Function} operation - Async function to execute
  * @param {number} interval - Optional heartbeat interval in milliseconds
  * @return {Promise} Promise that resolves with the operation result
@@ -158,7 +160,3 @@ export async function withHeartbeat(operation, interval = 30000) {
 }
 
 export default heartbeat
-
-
-
-

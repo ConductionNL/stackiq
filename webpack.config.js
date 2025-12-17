@@ -55,4 +55,11 @@ webpackConfig.plugins = [
 	new VueLoaderPlugin(),
 ]
 
+// Ensure '@' alias resolves to the project's 'src' directory for cleaner imports like '@/...'
+webpackConfig.resolve = webpackConfig.resolve || {}
+webpackConfig.resolve.alias = {
+	...(webpackConfig.resolve.alias || {}),
+	'@': path.resolve(__dirname, 'src'),
+}
+
 module.exports = webpackConfig

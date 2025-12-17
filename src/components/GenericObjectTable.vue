@@ -209,17 +209,18 @@ import { objectStore, navigationStore } from '../store/store.js'
 										<template #icon>
 											<DotsHorizontal :size="20" />
 										</template>
-										<NcActionButton
-											v-for="action in objectActions"
-											v-if="!action.condition || action.condition(item)"
-											:key="action.id"
-											close-after-click
-											@click="executeObjectAction(action, item)">
-											<template #icon>
-												<component :is="action.icon" :size="20" />
-											</template>
-											{{ action.label }}
-										</NcActionButton>
+										<template v-for="action in objectActions">
+											<NcActionButton
+												v-if="!action.condition || action.condition(item)"
+												:key="action.id"
+												close-after-click
+												@click="executeObjectAction(action, item)">
+												<template #icon>
+													<component :is="action.icon" :size="20" />
+												</template>
+												{{ action.label }}
+											</NcActionButton>
+										</template>
 									</NcActions>
 								</div>
 								<!-- Card Content -->
@@ -341,17 +342,18 @@ import { objectStore, navigationStore } from '../store/store.js'
 										</td>
 										<td class="tableColumnActions">
 											<NcActions class="actionsButton">
-												<NcActionButton
-													v-for="action in objectActions"
-													v-if="!action.condition || action.condition(item)"
-													:key="action.id"
-													close-after-click
-													@click="executeObjectAction(action, item)">
-													<template #icon>
-														<component :is="action.icon" :size="20" />
-													</template>
-													{{ action.label }}
-												</NcActionButton>
+												<template v-for="action in objectActions">
+													<NcActionButton
+														v-if="!action.condition || action.condition(item)"
+														:key="action.id"
+														close-after-click
+														@click="executeObjectAction(action, item)">
+														<template #icon>
+															<component :is="action.icon" :size="20" />
+														</template>
+														{{ action.label }}
+													</NcActionButton>
+												</template>
 											</NcActions>
 										</td>
 									</tr>
@@ -402,17 +404,18 @@ import { objectStore, navigationStore } from '../store/store.js'
 									</td>
 									<td class="tableColumnActions">
 										<NcActions class="actionsButton">
-											<NcActionButton
-												v-for="action in objectActions"
-												v-if="!action.condition || action.condition(item)"
-												:key="action.id"
-												close-after-click
-												@click="executeObjectAction(action, item)">
-												<template #icon>
-													<component :is="action.icon" :size="20" />
-												</template>
-												{{ action.label }}
-											</NcActionButton>
+											<template v-for="action in objectActions">
+												<NcActionButton
+													v-if="!action.condition || action.condition(item)"
+													:key="action.id"
+													close-after-click
+													@click="executeObjectAction(action, item)">
+													<template #icon>
+														<component :is="action.icon" :size="20" />
+													</template>
+													{{ action.label }}
+												</NcActionButton>
+											</template>
 										</NcActions>
 									</td>
 								</tr>
@@ -691,22 +694,22 @@ export default {
 			// Check if we should use server-side pagination
 			// Server-side pagination is when we have proper pagination metadata AND
 			// the total from server matches the actual results length (indicating server handled pagination)
-			const hasServerPagination = this.currentPagination?.page && 
-				this.currentPagination?.limit && 
-				this.currentPagination?.total &&
-				this.filteredObjects.length <= this.currentPagination.limit
+			const hasServerPagination = this.currentPagination?.page
+				&& this.currentPagination?.limit
+				&& this.currentPagination?.total
+				&& this.filteredObjects.length <= this.currentPagination.limit
 
 			if (hasServerPagination) {
 				// Server has already paginated the results
 				return this.filteredObjects
 			}
-			
+
 			// Client-side pagination - split the full result set into pages
 			const pageSize = this.currentPagination?.limit || 20
 			const currentPage = this.currentPagination?.page || 1
 			const startIndex = (currentPage - 1) * pageSize
 			const endIndex = startIndex + pageSize
-			
+
 			return this.filteredObjects.slice(startIndex, endIndex)
 		},
 		selectedObjects() {
@@ -780,14 +783,14 @@ export default {
 
 	mounted() {
 		console.info(`GenericObjectTable mounted for ${this.objectType}, fetching objects...`)
-		
+
 		// Initialize active filters with default values
 		if (this.filters && this.filters.length > 0) {
 			this.filters.forEach(filter => {
 				this.$set(this.activeFilters, filter.key, 'all')
 			})
 		}
-		
+
 		this.refreshObjects()
 		// Initialize column filters
 		objectStore.initializeColumnFilters()
@@ -1009,7 +1012,7 @@ export default {
 		 */
 		setFilter(filterKey, option) {
 			this.$set(this.activeFilters, filterKey, option.value)
-			
+
 			// Call the onChange handler if it exists for this filter
 			const filter = this.filters.find(f => f.key === filterKey)
 			if (filter && filter.onChange) {
@@ -1022,14 +1025,14 @@ export default {
 				this.refreshFunction()
 			} else {
 				// For organisatie, always include contactpersonen extend
-				const extendParams = this.objectType === 'organisatie' 
+				const extendParams = this.objectType === 'organisatie'
 					? { _extend: '@self.schema,contactpersonen' }
 					: {}
 				objectStore.fetchCollection(this.objectType, extendParams)
 			}
 			// Clear selection after refresh
 			objectStore.setSelectedObjects([])
-			
+
 			// Reset filters to default values
 			if (this.filters && this.filters.length > 0) {
 				this.filters.forEach(filter => {

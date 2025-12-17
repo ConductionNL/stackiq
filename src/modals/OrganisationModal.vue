@@ -1,11 +1,13 @@
 <template>
-	<NcModal v-if="show" 
+	<NcModal v-if="show"
 		:name="modalTitle"
 		:title="modalTitle"
 		size="normal"
 		@close="closeModal">
 		<div class="organisation-modal">
-			<h2 class="modal-title">{{ modalTitle }}</h2>
+			<h2 class="modal-title">
+				{{ modalTitle }}
+			</h2>
 			<form @submit.prevent="saveOrganisation">
 				<div class="form-grid">
 					<div class="form-row">
@@ -77,15 +79,15 @@
 							:placeholder="t('softwarecatalog', 'CBS number')"
 							@update:value="formData.cbs = $event" />
 					</div>
-
-
 				</div>
 
 				<!-- Success Message -->
 				<div v-if="success" class="success-message">
 					<CheckCircle :size="24" class="success-icon" />
 					<p>{{ successMessage }}</p>
-					<p class="auto-close-message">{{ t('softwarecatalog', 'This dialog will close automatically in {seconds} seconds...', { seconds: countdown }) }}</p>
+					<p class="auto-close-message">
+						{{ t('softwarecatalog', 'This dialog will close automatically in {seconds} seconds...', { seconds: countdown }) }}
+					</p>
 				</div>
 
 				<div class="form-actions">
@@ -93,7 +95,7 @@
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
 					<NcButton v-if="!success"
-						type="primary" 
+						type="primary"
 						:disabled="loading || !isFormValid"
 						native-type="submit">
 						<template #icon>
@@ -108,16 +110,16 @@
 </template>
 
 <script>
-import { 
+import {
 	NcModal,
 	NcTextField,
 	NcSelect,
 	NcButton,
-	NcLoadingIcon
+	NcLoadingIcon,
 } from '@nextcloud/vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import { objectStore } from '../store/store.js'
-import { showSuccess, showError } from '@nextcloud/dialogs'
+import { showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'OrganisationModal',
@@ -208,6 +210,12 @@ export default {
 			immediate: true,
 		},
 	},
+	beforeUnmount() {
+		// Clean up countdown interval
+		if (this.countdownInterval) {
+			clearInterval(this.countdownInterval)
+		}
+	},
 	methods: {
 		resetForm() {
 			this.formData = {
@@ -257,7 +265,7 @@ export default {
 			}
 		},
 		handleTypeChange(selectedOption) {
-			console.log('Type changed:', selectedOption)
+			console.info('Type changed:', selectedOption)
 			this.formData.type = selectedOption ? selectedOption.value : ''
 		},
 		closeModal() {
@@ -309,12 +317,11 @@ export default {
 			try {
 				// Get schema configuration for organisatie
 				const schemaConfig = objectStore.getSchemaConfig('organisatie')
-				let result
 
 				if (this.isEditMode) {
 					// Get only the changed properties for PATCH request
 					const changes = this.getChangedProperties()
-					
+
 					if (Object.keys(changes).length === 0) {
 						// No changes detected
 						this.successMessage = this.t('softwarecatalog', 'No changes to save')
@@ -326,27 +333,27 @@ export default {
 					}
 
 					// Update existing organisation using PATCH - only send changed properties
-					result = await objectStore.patchObject('organisatie', this.organisation.id, changes)
+					await objectStore.patchObject('organisatie', this.organisation.id, changes)
 					this.successMessage = this.t('softwarecatalog', 'Organisation updated successfully')
 				} else {
 					// Create new organisation (both create and copy modes)
-					result = await objectStore.saveObject(this.formData, {
-						register: schemaConfig.register,
-						schema: schemaConfig.schema
+					await objectStore.saveObject(this.formData, {
+					  register: schemaConfig.register,
+					  schema: schemaConfig.schema,
 					})
 					this.successMessage = this.t('softwarecatalog', 'Organisation created successfully')
 				}
 
 				// Show success state
 				this.success = true
-				
+
 				// Refresh organisation list
 				await objectStore.fetchCollection('organisatie', {
 					_extend: '@self.schema,contactpersonen',
 					_limit: 20,
-					_page: 1
+					_page: 1,
 				})
-				
+
 				// Start countdown timer
 				this.countdown = 3
 				this.countdownInterval = setInterval(() => {
@@ -364,12 +371,6 @@ export default {
 				this.loading = false
 			}
 		},
-	},
-	beforeUnmount() {
-		// Clean up countdown interval
-		if (this.countdownInterval) {
-			clearInterval(this.countdownInterval)
-		}
 	},
 }
 </script>

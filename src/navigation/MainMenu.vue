@@ -94,7 +94,7 @@ export default {
 
 			// Find the voorzieningen register
 			const voorzieningenRegister = this.objectStore.settings.availableRegisters.find(
-				register => register.slug === 'voorzieningen'
+				register => register.slug === 'voorzieningen',
 			)
 
 			if (!voorzieningenRegister?.schemas) {
@@ -103,7 +103,7 @@ export default {
 			}
 
 			const menuItems = []
-			
+
 			console.info('MainMenu: Building dynamic menu items from voorzieningen register', {
 				registerTitle: voorzieningenRegister.title,
 				schemaCount: voorzieningenRegister.schemas.length,
@@ -171,8 +171,8 @@ export default {
 			]
 
 			// Include if it's in our always-include list or if it has a configuration with icon
-			return alwaysIncludeSchemas.includes(schema.slug) || 
-				(schema.configuration && this.hasIconForSchema(schema.slug))
+			return alwaysIncludeSchemas.includes(schema.slug)
+				|| (schema.configuration && this.hasIconForSchema(schema.slug))
 		},
 
 		/**

@@ -350,6 +350,16 @@ export default {
 			},
 		}
 	},
+
+	/**
+	 * Component cleanup - clear timeouts
+	 * @return {void}
+	 */
+	beforeDestroy() {
+		if (this.searchDebounceTimeout) {
+			clearTimeout(this.searchDebounceTimeout)
+		}
+	},
 	methods: {
 		/**
 		 * Handle component mount - initialize settings and fetch organisaties
@@ -369,7 +379,7 @@ export default {
 				await objectStore.fetchCollection('organisatie', {
 					_extend: '@self.schema,@self.register,contactpersonen',
 					_limit: 20,
-					_page: 1
+					_page: 1,
 				})
 			} catch (error) {
 				console.error('Error initializing OrganisatieIndex:', error)
@@ -521,7 +531,7 @@ export default {
 			}
 
 			let websiteUrl = organisatie.website.trim()
-			
+
 			// Add protocol if missing
 			if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
 				websiteUrl = 'https://' + websiteUrl
@@ -560,18 +570,18 @@ export default {
 		 */
 		async publishOrganisatie(organisatie) {
 			try {
-				console.log('Publishing organisatie:', organisatie)
-				console.log('Organisatie @self:', organisatie['@self'])
-				console.log('Organisatie id:', organisatie.id)
-				console.log('Organisatie register:', organisatie['@self']?.register)
-				console.log('Organisatie schema:', organisatie['@self']?.schema)
-				
+				console.info('Publishing organisatie:', organisatie)
+				console.info('Organisatie @self:', organisatie['@self'])
+				console.info('Organisatie id:', organisatie.id)
+				console.info('Organisatie register:', organisatie['@self']?.register)
+				console.info('Organisatie schema:', organisatie['@self']?.schema)
+
 				await objectStore.publishObject(organisatie)
 				// Refresh the organisation list to show updated status
 				await objectStore.fetchCollection('organisatie', {
 					_extend: '@self.schema,@self.register,contactpersonen',
 					_limit: 20,
-					_page: 1
+					_page: 1,
 				})
 			} catch (error) {
 				console.error('Failed to publish organisation:', error)
@@ -590,22 +600,12 @@ export default {
 				await objectStore.fetchCollection('organisatie', {
 					_extend: '@self.schema,@self.register,contactpersonen',
 					_limit: 20,
-					_page: 1
+					_page: 1,
 				})
 			} catch (error) {
 				console.error('Failed to depublish organisation:', error)
 			}
 		},
-	},
-
-	/**
-	 * Component cleanup - clear timeouts
-	 * @return {void}
-	 */
-	beforeDestroy() {
-		if (this.searchDebounceTimeout) {
-			clearTimeout(this.searchDebounceTimeout)
-		}
 	},
 }
 </script>

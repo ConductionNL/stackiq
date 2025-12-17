@@ -302,12 +302,12 @@ export default {
 		align-items: stretch;
 		gap: 12px;
 	}
-	
+
 	.viewPaginationNav {
 		justify-content: center;
 		flex-wrap: wrap;
 	}
-	
+
 	.viewPaginationNumbers {
 		justify-content: center;
 		flex-wrap: wrap;

@@ -28,7 +28,9 @@
 			<!-- Info Box -->
 			<NcNoteCard type="info" class="infoBox">
 				<div class="infoBoxContent">
-					<h3 class="infoBoxTitle">Beheer van Organisaties</h3>
+					<h3 class="infoBoxTitle">
+						Beheer van Organisaties
+					</h3>
 					<p class="infoBoxText">
 						Organisaties kunnen worden geaccepteerd en beheerd via de organisaties pagina. Het aanmaken en bewerken van gebruikers gaat ook via de organisatie pagina, omdat deze onderdeel zijn van organisaties.
 					</p>
@@ -47,28 +49,38 @@
 
 			<!-- Object Statistics Tables -->
 			<div class="objectStatistics">
-				<h2 class="sectionTitle">Object Statistieken</h2>
-				<p class="sectionDescription">Overzicht van objecten opgeslagen in geconfigureerde registers</p>
-				
+				<h2 class="sectionTitle">
+					Object Statistieken
+				</h2>
+				<p class="sectionDescription">
+					Overzicht van objecten opgeslagen in geconfigureerde registers
+				</p>
+
 				<div class="statisticsTablesRow">
 					<!-- First Table -->
 					<div class="statisticsTableContainer">
 						<div class="statisticsTableHeader">
 							<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
 						</div>
-						
+
 						<table class="objectStatisticsTable">
 							<thead>
 								<tr>
 									<th>Object Type</th>
-									<th class="countHeader">Aantal</th>
-									<th class="manageHeader">Beheren</th>
+									<th class="countHeader">
+										Aantal
+									</th>
+									<th class="manageHeader">
+										Beheren
+									</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr v-for="stat in firstTableStats" :key="stat.objectType">
 									<td>{{ stat.objectType }}</td>
-									<td class="countCell">{{ stat.count.toLocaleString() }}</td>
+									<td class="countCell">
+										{{ stat.count.toLocaleString() }}
+									</td>
 									<td class="manageCell">
 										<NcButton
 											v-if="stat.slug === 'organisatie'"
@@ -95,19 +107,25 @@
 						<div class="statisticsTableHeader">
 							<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
 						</div>
-						
+
 						<table class="objectStatisticsTable">
 							<thead>
 								<tr>
 									<th>Object Type</th>
-									<th class="countHeader">Aantal</th>
-									<th class="manageHeader">Beheren</th>
+									<th class="countHeader">
+										Aantal
+									</th>
+									<th class="manageHeader">
+										Beheren
+									</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr v-for="stat in secondTableStats" :key="stat.objectType">
 									<td>{{ stat.objectType }}</td>
-									<td class="countCell">{{ stat.count.toLocaleString() }}</td>
+									<td class="countCell">
+										{{ stat.count.toLocaleString() }}
+									</td>
 									<td class="manageCell">
 										<NcButton
 											v-if="stat.slug === 'organisatie'"
@@ -130,7 +148,6 @@
 					</div>
 				</div>
 			</div>
-
 		</div>
 
 		<!-- Loading State -->
@@ -192,7 +209,7 @@ export default {
 		}
 	},
 
-		computed: {
+	computed: {
 		/**
 		 * Get object statistics for the table display
 		 * @return {Array} Array of object statistics
@@ -206,7 +223,7 @@ export default {
 			}
 
 			const voorzieningenRegister = objectStore.settings.availableRegisters.find(
-				register => register.slug === 'voorzieningen'
+				register => register.slug === 'voorzieningen',
 			)
 
 			if (!voorzieningenRegister?.schemas) {
@@ -251,10 +268,6 @@ export default {
 			const midPoint = Math.ceil(stats.length / 2)
 			return stats.slice(midPoint)
 		},
-
-
-
-
 
 	},
 
@@ -368,7 +381,7 @@ export default {
 				voorziening: 'voorzieningen',
 				contract: 'contracten',
 			}
-			
+
 			const route = routeMap[objectType] || `${objectType}s`
 			navigationStore.setSelected(route)
 		},
@@ -428,19 +441,19 @@ export default {
 		async refreshAllData() {
 			console.info('Dashboard: Refreshing all data...')
 			this.loading = true
-			
+
 			try {
 				// Force reload settings (even if already loaded)
 				console.info('Dashboard: Force reloading settings...')
 				await objectStore.fetchSettings(true) // Force refresh
-				
+
 				// Wait for object types to be registered
 				await new Promise(resolve => setTimeout(resolve, 500))
-				
+
 				// Refresh all registered object collections
 				const registeredTypes = Object.keys(objectStore.objectTypeRegistry || {})
 				console.info('Dashboard: Refreshing collections for:', registeredTypes)
-				
+
 				if (registeredTypes.length > 0) {
 					await Promise.all(
 						registeredTypes.map(async (objectType) => {
@@ -450,12 +463,12 @@ export default {
 							} catch (error) {
 								console.warn(`Failed to refresh ${objectType} collection:`, error)
 							}
-						})
+						}),
 					)
 				} else {
 					console.warn('Dashboard: No object types registered after settings refresh')
 				}
-				
+
 				console.info('Dashboard: All data refreshed successfully')
 			} catch (error) {
 				console.error('Dashboard: Failed to refresh all data:', error)
@@ -596,8 +609,6 @@ export default {
 	color: var(--color-text-lighter);
 }
 
-
-
 /* Object Statistics Tables */
 .objectStatistics {
 	margin-bottom: 32px;
@@ -702,6 +713,5 @@ export default {
 		align-self: stretch;
 	}
 }
-
 
 </style>
