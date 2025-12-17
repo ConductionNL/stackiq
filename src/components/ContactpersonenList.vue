@@ -260,7 +260,7 @@
 					</NcButton>
 					<NcButton
 						type="primary"
-						:disabled="passwordLoading || !isPasswordValid"
+						:disabled="passwordLoading || !isPasswordValid || pwnedCheckLoading"
 						@click="savePassword">
 						<template #icon>
 							<NcLoadingIcon v-if="passwordLoading" :size="20" />
@@ -387,7 +387,7 @@ export default {
 			userStatusRefreshInProgress: false,
 			userStatusRefreshTimeout: null,
 			userInfoLoaded: false,
-			isPasswordPwned: false,
+			isPasswordPwned: true, // start of with true
 			pwnedCheckLoading: false,
 			pwnedCheckTimeout: null,
 		}
@@ -431,7 +431,9 @@ export default {
 				hasLowercase: /[a-z]/.test(this.newPassword),
 				hasNumber: /\d/.test(this.newPassword),
 				hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(this.newPassword),
-				notPwned: !this.isPasswordPwned,
+				// Only consider notPwned valid if check is complete and password is not pwned
+				// If check is still loading, treat as invalid to prevent premature save
+				notPwned: !this.pwnedCheckLoading && !this.isPasswordPwned,
 			}
 		},
 
@@ -449,15 +451,17 @@ export default {
 				clearTimeout(this.pwnedCheckTimeout)
 			}
 
-			// Reset pwned status when password changes
-			this.isPasswordPwned = false
-
 			// Only check if password meets minimum length requirement
 			if (newVal && newVal.length >= 10) {
+				// Set loading state immediately to prevent save during debounce
+				this.pwnedCheckLoading = true
 				// Debounce the API call to avoid excessive requests
 				this.pwnedCheckTimeout = setTimeout(() => {
 					this.checkPasswordPwned(newVal)
 				}, 500)
+			} else {
+				// Password too short, no check needed
+				this.pwnedCheckLoading = false
 			}
 		},
 	},
@@ -597,7 +601,7 @@ export default {
 		 */
 		async checkPasswordPwned(password) {
 			if (!password || password.length < 10) {
-				this.isPasswordPwned = false
+				this.isPasswordPwned = true
 				return
 			}
 
@@ -966,7 +970,7 @@ export default {
 		openPasswordDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
 			this.newPassword = ''
-			this.isPasswordPwned = false
+			this.isPasswordPwned = true // start of with true
 			this.pwnedCheckLoading = false
 			if (this.pwnedCheckTimeout) {
 				clearTimeout(this.pwnedCheckTimeout)
@@ -980,7 +984,7 @@ export default {
 			this.selectedContactpersoon = null
 			this.newPassword = ''
 			this.passwordLoading = false
-			this.isPasswordPwned = false
+			this.isPasswordPwned = true // reset to true
 			this.pwnedCheckLoading = false
 			if (this.pwnedCheckTimeout) {
 				clearTimeout(this.pwnedCheckTimeout)
