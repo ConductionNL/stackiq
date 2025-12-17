@@ -317,7 +317,6 @@ export default {
 			try {
 				// Get schema configuration for organisatie
 				const schemaConfig = objectStore.getSchemaConfig('organisatie')
-				let result
 
 				if (this.isEditMode) {
 					// Get only the changed properties for PATCH request
@@ -334,11 +333,11 @@ export default {
 					}
 
 					// Update existing organisation using PATCH - only send changed properties
-					result = await objectStore.patchObject('organisatie', this.organisation.id, changes)
+					await objectStore.patchObject('organisatie', this.organisation.id, changes)
 					this.successMessage = this.t('softwarecatalog', 'Organisation updated successfully')
 				} else {
 					// Create new organisation (both create and copy modes)
-					result = await objectStore.saveObject(this.formData, {
+					await objectStore.saveObject(this.formData, {
 					  register: schemaConfig.register,
 					  schema: schemaConfig.schema,
 					})
