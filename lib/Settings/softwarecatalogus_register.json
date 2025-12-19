@@ -5096,9 +5096,9 @@
             "moduleVersie": {
                 "uri": null,
                 "slug": "moduleVersie",
-                "title": "Applicatie Versie",
+                "title": "Module Versie",
                 "description": "Schema voor applicatie versies",
-                "version": "0.0.8",
+                "version": "0.0.9",
                 "summary": "",
                 "icon": "ViewModule",
                 "required": [],
@@ -5113,7 +5113,10 @@
                             "handling": "related-object"
                         },
                         "$ref": "#/components/schemas/module",
-                        "inversedBy": "moduleVersie"
+                        "inversedBy": "moduleVersie",
+                        "table": {
+                            "default": true
+                        }
                     },
                     "versie": {
                         "description": "Versienummer in semantic versioning format (MAJOR.MINOR.PATCH)",
@@ -5122,7 +5125,10 @@
                         "title": "Versienummer",
                         "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
                         "maxLength": 50,
-                        "default": "1.0.0"
+                        "default": "1.0.0",
+                        "table": {
+                            "default": true
+                        }
                     },
                     "beschrijvingKort": {
                         "description": "Korte beschrijving van de applicatie versie",
@@ -5150,7 +5156,10 @@
                             "einde ondersteuning",
                             "teruggetrokken"
                         ],
-                        "default": "in gebruik"
+                        "default": "in gebruik",
+                        "table": {
+                            "default": true
+                        }
                     },
                     "datumInOntwikkeling": {
                         "description": "Startdatum van de ontwikkelingsfase",
