@@ -2641,7 +2641,7 @@
                 "slug": "koppeling",
                 "title": "Koppeling",
                 "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
-                "version": "0.0.12",
+                "version": "0.0.13",
                 "summary": "",
                 "icon": "Link",
                 "required": [],
@@ -2878,7 +2878,7 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "type",
+                    "objectNameField": "naam",
                     "objectDescriptionField": "beschrijvingKort",
                     "autoPublish": false
                 },
