@@ -1,41 +1,60 @@
 const {
-    defineConfig,
-} = require("@eslint/config-helpers");
+	defineConfig,
+} = require('@eslint/config-helpers')
 
-const js = require("@eslint/js");
+const js = require('@eslint/js')
 
 const {
-    FlatCompat,
-} = require("@eslint/eslintrc");
+	FlatCompat,
+} = require('@eslint/eslintrc')
 
 const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
-});
+	baseDirectory: __dirname,
+	recommendedConfig: js.configs.recommended,
+	allConfig: js.configs.all,
+})
 
-module.exports = defineConfig([{
-    extends: compat.extends("@nextcloud"),
+module.exports = defineConfig([
+	...compat.extends('@nextcloud'),
 
-    settings: {
-		'import/resolver': {
-			alias: {
-				map: [['@', './src']],
-				extensions: ['.js', '.ts', '.vue', '.json'],
+	{
+		languageOptions: {
+			// set latest version of ECMAScript
+			// default (non explicitly set) causes errors when importing
+			ecmaVersion: 'latest',
+			sourceType: 'module',
+
+			// also pass through to parsers that still read parserOptions
+			parserOptions: {
+				ecmaVersion: 'latest',
+				sourceType: 'module',
 			},
 		},
-	},
 
-    rules: {
-        "jsdoc/require-jsdoc": "off",
-        "vue/first-attribute-linebreak": "off",
-        '@typescript-eslint/no-explicit-any': 'off',
-		'n/no-missing-import': 'off',
-        'import/namespace': 'off', // disable namespace checking to avoid parser requirement
-		'import/default': 'off', // disable default import checking to avoid parser requirement
-		'import/no-named-as-default': 'off', // disable named-as-default checking to avoid parser requirement
-		'import/no-named-as-default-member': 'off', // disable named-as-default-member checking to avoid parser requirement
-        // I am fully aware that it is improper to disable these rules, but it is a lot of work to get a parser working,
-        // hence I went with the easier option.
-    },
-}]);
+		settings: {
+			'import/resolver': {
+				alias: {
+					map: [['@', './src']],
+					extensions: ['.js', '.ts', '.vue', '.json'],
+				},
+			},
+
+			// import/parsers is used to parse the files
+			// espree is used to parse the JavaScript files
+			// @typescript-eslint/parser is used to parse the TypeScript files
+			// vue-eslint-parser is used to parse the Vue files
+			'import/parsers': {
+				espree: ['.js', '.mjs', '.cjs', '.jsx'],
+				'@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'],
+				'vue-eslint-parser': ['.vue'],
+			},
+		},
+
+		rules: {
+			'jsdoc/require-jsdoc': 'off',
+			'vue/first-attribute-linebreak': 'off',
+			'@typescript-eslint/no-explicit-any': 'off',
+			'n/no-missing-import': 'off',
+		},
+	},
+])

@@ -2641,7 +2641,7 @@
                 "slug": "koppeling",
                 "title": "Koppeling",
                 "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
-                "version": "0.0.12",
+                "version": "0.0.13",
                 "summary": "",
                 "icon": "Link",
                 "required": [],
@@ -2878,7 +2878,7 @@
                 "authorization": null,
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "type",
+                    "objectNameField": "naam",
                     "objectDescriptionField": "beschrijvingKort",
                     "autoPublish": false
                 },
@@ -4561,7 +4561,7 @@
                 "slug": "module",
                 "title": "Applicatie",
                 "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-                "version": "0.1.3",
+                "version": "0.1.4",
                 "summary": "",
                 "icon": "Package",
                 "required": [
@@ -4889,11 +4889,23 @@
                             "type": "string"
                         }
                     },
+                    "standaardVersies": {
+                        "description": "Een array van standaardversie id's van standaarden die deze applicatie implementeert",
+                        "type": "array",
+                        "visible": true,
+                        "order": 25,
+                        "facetable": true,
+                        "title": "Standaard Versies",
+                        "hideOnForm": true,
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "standaardenGemma": {
                         "description": "Een array van gemma id's van standaarden die deze applicatie implementeert",
                         "type": "array",
                         "visible": true,
-                        "order": 25,
+                        "order": 26,
                         "facetable": true,
                         "title": "Standaarden Gemma",
                         "hideOnForm": true,
@@ -4905,7 +4917,7 @@
                         "description": "De versies van deze applicatie",
                         "type": "array",
                         "visible": true,
-                        "order": 26,
+                        "order": 27,
                         "facetable": false,
                         "title": "Applicatie Versies",
                         "hideOnForm": true,
@@ -4922,7 +4934,7 @@
                         "description": "Het gebruik van deze applicatie",
                         "type": "array",
                         "visible": true,
-                        "order": 27,
+                        "order": 28,
                         "facetable": false,
                         "title": "Gebruik",
                         "hideOnForm": true,
@@ -4938,7 +4950,7 @@
                         "description": "De beoordelingen van deze applicatie",
                         "type": "array",
                         "visible": true,
-                        "order": 28,
+                        "order": 29,
                         "facetable": false,
                         "title": "Beoordelingen",
                         "hideOnForm": true,
@@ -4954,7 +4966,7 @@
                         "description": "De kwetsbaarheden die deze applicatie treffen",
                         "type": "array",
                         "visible": true,
-                        "order": 29,
+                        "order": 30,
                         "facetable": false,
                         "title": "Kwetsbaarheden",
                         "hideOnForm": true,
@@ -5096,9 +5108,9 @@
             "moduleVersie": {
                 "uri": null,
                 "slug": "moduleVersie",
-                "title": "Applicatie Versie",
+                "title": "Module Versie",
                 "description": "Schema voor applicatie versies",
-                "version": "0.0.8",
+                "version": "0.0.9",
                 "summary": "",
                 "icon": "ViewModule",
                 "required": [],
@@ -5113,7 +5125,10 @@
                             "handling": "related-object"
                         },
                         "$ref": "#/components/schemas/module",
-                        "inversedBy": "moduleVersie"
+                        "inversedBy": "moduleVersie",
+                        "table": {
+                            "default": true
+                        }
                     },
                     "versie": {
                         "description": "Versienummer in semantic versioning format (MAJOR.MINOR.PATCH)",
@@ -5122,7 +5137,10 @@
                         "title": "Versienummer",
                         "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
                         "maxLength": 50,
-                        "default": "1.0.0"
+                        "default": "1.0.0",
+                        "table": {
+                            "default": true
+                        }
                     },
                     "beschrijvingKort": {
                         "description": "Korte beschrijving van de applicatie versie",
@@ -5150,7 +5168,10 @@
                             "einde ondersteuning",
                             "teruggetrokken"
                         ],
-                        "default": "in gebruik"
+                        "default": "in gebruik",
+                        "table": {
+                            "default": true
+                        }
                     },
                     "datumInOntwikkeling": {
                         "description": "Startdatum van de ontwikkelingsfase",
