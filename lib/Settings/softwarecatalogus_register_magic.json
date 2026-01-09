@@ -3,7 +3,7 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.0.1"
+    "version": "2.0.4"
   },
   "x-openregister": {
     "type": "application",
@@ -17,6 +17,15 @@
       "path": "apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register_magic.json"
     },
     "description": "Magic Mapper version - Uses dedicated SQL tables for high-performance schema storage",
+    "dependencies": [
+      {
+        "type": "nextcloud-app",
+        "app": "opencatalogi",
+        "version": ">=0.7.0",
+        "required": true,
+        "reason": "SoftwareCatalog seedData requires page and menu schemas from OpenCatalogi publication register"
+      }
+    ],
     "seedData": {
       "description": "Initial pages and menus for a working software catalog website",
       "objects": {
@@ -33,7 +42,13 @@
                 }
               }
             ],
-            "published": true
+            "published": true,
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "page",
+              "version": "0.0.3"
+            }
           },
           {
             "title": "Over Ons",
@@ -47,7 +62,13 @@
                 }
               }
             ],
-            "published": true
+            "published": true,
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "page",
+              "version": "0.0.3"
+            }
           },
           {
             "title": "Privacyverklaring",
@@ -61,7 +82,13 @@
                 }
               }
             ],
-            "published": true
+            "published": true,
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "page",
+              "version": "0.0.3"
+            }
           },
           {
             "title": "FAQ",
@@ -75,7 +102,13 @@
                 }
               }
             ],
-            "published": true
+            "published": true,
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "page",
+              "version": "0.0.3"
+            }
           }
         ],
         "menu": [
@@ -86,19 +119,28 @@
               {
                 "order": 1,
                 "name": "Home",
-                "link": "/"
+                "link": "/",
+                "items": []
               },
               {
                 "order": 2,
                 "name": "Applicaties",
-                "link": "/applications"
+                "link": "/applications",
+                "items": []
               },
               {
                 "order": 3,
                 "name": "Over Ons",
-                "link": "/over-ons"
+                "link": "/over-ons",
+                "items": []
               }
-            ]
+            ],
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "menu",
+              "version": "0.0.3"
+            }
           },
           {
             "title": "Footer Sub",
@@ -107,19 +149,28 @@
               {
                 "order": 1,
                 "name": "Privacy",
-                "link": "/privacyverklaring"
+                "link": "/privacyverklaring",
+                "items": []
               },
               {
                 "order": 2,
                 "name": "Contact",
-                "link": "/contact"
+                "link": "/contact",
+                "items": []
               },
               {
                 "order": 3,
                 "name": "FAQ",
-                "link": "/faq"
+                "link": "/faq",
+                "items": []
               }
-            ]
+            ],
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "menu",
+              "version": "0.0.3"
+            }
           },
           {
             "title": "User Menu",
@@ -128,14 +179,22 @@
               {
                 "order": 1,
                 "name": "Aanmelden",
-                "link": "/register"
+                "link": "/register",
+                "items": []
               },
               {
                 "order": 2,
                 "name": "Inloggen",
-                "link": "/login"
+                "link": "/login",
+                "items": []
               }
-            ]
+            ],
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "menu",
+              "version": "0.0.3"
+            }
           }
         ]
       }
@@ -2113,7 +2172,7 @@
             "AVG compliance document",
             "ESPD (Europees aanbestedingsdocument)",
             "Integriteitsverklaring",
-            "Financiële capaciteitsverklaring",
+            "Financi\u00eble capaciteitsverklaring",
             "Technische capaciteitsverklaring",
             "Kwaliteitscertificaten",
             "Milieucertificaten",
@@ -2251,7 +2310,7 @@
             "example": "Bijvoorbeeld: 2025-03-01"
           },
           "startDatumUitTeFaseren": {
-            "description": "De start datum voor het \"Beëindigd\" status",
+            "description": "De start datum voor het \"Be\u00ebindigd\" status",
             "type": "string",
             "format": "date",
             "visible": true,
@@ -2812,7 +2871,7 @@
         "uri": null,
         "slug": "koppeling",
         "title": "Koppeling",
-        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet óf ApplicatieB óf buitengemeentelijkVoorziening gevuld zijn.",
+        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
         "version": "0.0.12",
         "summary": "",
         "icon": "Link",
@@ -2981,7 +3040,7 @@
             "$ref": "#/components/schemas/element"
           },
           "standaardversies": {
-            "description": "Standaardversies die door deze koppeling geïmplementeerd worden",
+            "description": "Standaardversies die door deze koppeling ge\u00efmplementeerd worden",
             "type": "array",
             "order": 12,
             "facetable": false,

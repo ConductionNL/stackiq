@@ -144,6 +144,20 @@ class SettingsService
     }
 
     /**
+     * Get the OpenRegister RegisterService.
+     *
+     * @return \OCA\OpenRegister\Service\RegisterService|null The RegisterService instance or null if not available.
+     */
+    public function getRegisterService(): ?\OCA\OpenRegister\Service\RegisterService
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps())) {
+            return $this->container->get('OCA\OpenRegister\Service\RegisterService');
+        }
+
+        throw new \RuntimeException('OpenRegister RegisterService is not available.');
+    }
+
+    /**
      * Attempts to retrieve the Configuration service from the container
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available
@@ -200,9 +214,10 @@ class SettingsService
             if ($openRegisters !== null) {
                 $data['openRegisters'] = true;
 
-                // Add additional error handling for OpenRegister internal errors
+                // Add additional error handling for OpenRegister internal errors.
                 try {
-                    $rawRegisters = $openRegisters->getRegisters();
+                    $registerService = $this->getRegisterService();
+                    $rawRegisters = $registerService->findAll();
 
 
                     // Filter schemas to remove properties field for cleaner response
@@ -357,7 +372,7 @@ class SettingsService
     }
 
     /**
-     * Auto-configures settings specifically after importing the softwarecatalogus_register.json
+     * Auto-configures settings specifically after importing the softwarecatalogus_register_magic.json
      *
      * This method looks for the voorzieningen register and automatically configures
      * ALL schemas using the new consolidated configuration format, and creates required user groups.
@@ -911,8 +926,8 @@ class SettingsService
         $results = [];
 
         try {
-            // Load settings from merged softwarecatalogus_register.json
-            $softwareCatalogPath = __DIR__ . '/../Settings/softwarecatalogus_register.json';
+            // Load settings from merged softwarecatalogus_register_magic.json (magic mapper version for performance)
+            $softwareCatalogPath = __DIR__ . '/../Settings/softwarecatalogus_register_magic.json';
             if (file_exists($softwareCatalogPath)) {
                 $softwareCatalogContent = file_get_contents($softwareCatalogPath);
                 $softwareCatalogSettings = json_decode($softwareCatalogContent, true);
@@ -1743,8 +1758,8 @@ class SettingsService
 
             if ($debugInfo['openRegister']['installed'] && $debugInfo['openRegister']['enabled']) {
                 try {
-                    $objectService = $this->getObjectService();
-                    $debugInfo['openRegister']['availableRegisters'] = $objectService->getRegisters();
+                    $registerService = $this->getRegisterService();
+                    $debugInfo['openRegister']['availableRegisters'] = $registerService->findAll();
                 } catch (\Exception $e) {
                     $debugInfo['openRegister']['error'] = $e->getMessage();
                 }
@@ -2656,9 +2671,10 @@ class SettingsService
             }
 
             try {
-                $registers = $objectService->getRegisters();
+                $registerService = $this->getRegisterService();
+                $registers = $registerService->findAll();
             } catch (\TypeError | \Exception $e) {
-                $this->logger->warning('OpenRegister getRegisters() failed in configureVoorzieningen', [
+                $this->logger->warning('OpenRegister RegisterService->findAll() failed in configureVoorzieningen', [
                     'exception' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine()
@@ -2806,9 +2822,10 @@ class SettingsService
             }
 
             try {
-                $registers = $objectService->getRegisters();
+                $registerService = $this->getRegisterService();
+                $registers = $registerService->findAll();
             } catch (\TypeError | \Exception $e) {
-                $this->logger->warning('OpenRegister getRegisters() failed in configureAmef', [
+                $this->logger->warning('OpenRegister RegisterService->findAll() failed in configureAmef', [
                     'exception' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine()
@@ -4241,9 +4258,10 @@ class SettingsService
             if ($targetRegisterId !== '') {
                 $objectService = $this->getObjectService();
                 if ($objectService !== null) {
-                    // Build a set of schema ids for the chosen register
+                    // Build a set of schema ids for the chosen register.
                     try {
-                        $registers = $objectService->getRegisters();
+                        $registerService = $this->getRegisterService();
+                        $registers = $registerService->findAll();
                         $schemaIdSet = [];
                         foreach ($registers as $register) {
                             if ((string)($register['id'] ?? '') === $targetRegisterId) {
@@ -4254,7 +4272,7 @@ class SettingsService
                             }
                         }
                     } catch (\TypeError | \Exception $e) {
-                        $this->logger->warning('OpenRegister getRegisters() failed in updateAmefConfig', [
+                        $this->logger->warning('OpenRegister RegisterService->findAll() failed in updateAmefConfig', [
                             'exception' => $e->getMessage(),
                             'file' => $e->getFile(),
                             'line' => $e->getLine()
