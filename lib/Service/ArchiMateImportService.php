@@ -1086,19 +1086,76 @@ class ArchiMateImportService
 
 
 
-        // HYBRID OPTIMIZATION: Choose best strategy based on dataset size
-        // Small datasets: Direct to ObjectService (avoids batching overhead)
-        // Large datasets: Use our intelligent batching (better performance for bulk operations)
+        // MAGIC MAPPING SUPPORT: Group objects by schema first, then save each schema group.
+        // This ensures each batch has a single schema so UnifiedObjectMapper can route to the correct magic table.
         $batchProcessingStartTime = microtime(true);
-        $objectCount = count($objects);
 
-        if ($objectCount < 2000) {
-            // Small dataset: Let ObjectService handle everything directly
-            $result = $this->saveObjectsDirectToService($objects, $objectService, $registerId);
-        } else {
-            // Large dataset: Use our intelligent batching for better performance
-            $result = $this->saveObjectsInParallelBatches($objects, $objectService, $registerId);
+        // Group objects by schema
+        $schemaGroups = [];
+        foreach ($objects as $obj) {
+            $schemaId = $obj['@self']['schema'] ?? 'unknown';
+            $schemaGroups[$schemaId][] = $obj;
         }
+
+        $this->logger->info('ArchiMate import: Grouped objects by schema for magic mapping', [
+            'schemaCount' => count($schemaGroups),
+            'schemas' => array_map('count', $schemaGroups)
+        ]);
+
+        // Process each schema group
+        $allResults = [];
+        $aggregatedStats = [
+            'saved' => [],
+            'updated' => [],
+            'unchanged' => [],
+            'skipped' => [],
+            'invalid' => [],
+        ];
+
+        foreach ($schemaGroups as $schemaId => $schemaObjects) {
+            $schemaObjectCount = count($schemaObjects);
+
+            try {
+                // Save this schema group with the specific schema ID
+                // PERFORMANCE: Disabled validation and events for bulk import (like CSV import pattern)
+                $saveResult = $objectService->saveObjects(
+                    objects: $schemaObjects,
+                    register: $registerId,
+                    schema: $schemaId !== 'unknown' ? (int) $schemaId : null,
+                    _rbac: false,
+                    _multitenancy: false,
+                    validation: false,
+                    events: false
+                );
+
+                // Merge results
+                $aggregatedStats['saved'] = array_merge($aggregatedStats['saved'], $saveResult['saved'] ?? []);
+                $aggregatedStats['updated'] = array_merge($aggregatedStats['updated'], $saveResult['updated'] ?? []);
+                $aggregatedStats['unchanged'] = array_merge($aggregatedStats['unchanged'], $saveResult['unchanged'] ?? []);
+                $aggregatedStats['skipped'] = array_merge($aggregatedStats['skipped'], $saveResult['skipped'] ?? []);
+                $aggregatedStats['invalid'] = array_merge($aggregatedStats['invalid'], $saveResult['invalid'] ?? []);
+
+                $allResults = array_merge($allResults, $saveResult['saved'] ?? [], $saveResult['updated'] ?? [], $saveResult['unchanged'] ?? []);
+
+                $this->logger->debug('Schema group saved for magic mapping', [
+                    'schemaId' => $schemaId,
+                    'objectCount' => $schemaObjectCount,
+                    'saved' => count($saveResult['saved'] ?? []),
+                    'updated' => count($saveResult['updated'] ?? []),
+                ]);
+            } catch (\Exception $e) {
+                $this->logger->error('Error saving schema group', [
+                    'schemaId' => $schemaId,
+                    'error' => $e->getMessage(),
+                    'objectCount' => $schemaObjectCount
+                ]);
+            }
+        }
+
+        // Store aggregated result for statistics
+        $this->lastSaveResult = $aggregatedStats;
+        $result = $allResults;
+
         $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
 
         $totalSaveTime = microtime(true) - $saveStartTime;
@@ -1108,12 +1165,14 @@ class ArchiMateImportService
         // Database save completed
 
         // Store timing breakdown for performance metrics
+        // FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations
+        $totalSavedCount = count($aggregatedStats['saved'] ?? []) + count($aggregatedStats['updated'] ?? []) + count($aggregatedStats['unchanged'] ?? []);
         $this->lastSaveTimingBreakdown = [
             'total_save_seconds' => round($totalSaveTime, 3),
             'service_init_seconds' => round($serviceInitTime, 3),
             'gemma_processing_seconds' => round($gemmaProcessingTime, 3),
             'batch_processing_seconds' => round($batchProcessingTime, 3),
-            'objects_saved' => count($result),
+            'objects_saved' => $totalSavedCount > 0 ? $totalSavedCount : count($objects),
             'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1)
         ];
 
@@ -1132,41 +1191,76 @@ class ArchiMateImportService
     private function saveObjectsDirectToService(array $objects, ObjectService $objectService, int $registerId): array
     {
         try {
-            // Single call to ObjectService - let it handle everything
-            $saveResult = $objectService->saveObjects(
-                objects: $objects,
-                register: $registerId,
-                schema: null, // Mixed schemas supported now
-                rbac: true, // Enable proper RBAC
-                multi: true, // Enable multi-processing if available
-                validation: true, // Enable validation
-                events: true // Enable events
-            );
+            // GROUP BY SCHEMA: For magic mapping support, save objects schema by schema.
+            // This ensures each batch has a single schema so UnifiedObjectMapper can route to the correct table.
+            $schemaGroups = [];
+            foreach ($objects as $obj) {
+                $schemaId = $obj['@self']['schema'] ?? 'unknown';
+                $schemaGroups[$schemaId][] = $obj;
+            }
+
+            $this->logger->info('ArchiMate import: Grouped objects by schema', [
+                'schemaCount' => count($schemaGroups),
+                'schemas' => array_map('count', $schemaGroups)
+            ]);
+
+            // Save each schema group separately
+            $allSaved = [];
+            $allUpdated = [];
+            $allUnchanged = [];
+            $allSkipped = [];
+            $allInvalid = [];
+
+            foreach ($schemaGroups as $schemaId => $schemaObjects) {
+                $saveResult = $objectService->saveObjects(
+                    objects: $schemaObjects,
+                    register: $registerId,
+                    schema: $schemaId !== 'unknown' ? (int) $schemaId : null,
+                    _rbac: true,
+                    _multitenancy: true,
+                    validation: true,
+                    events: true
+                );
+
+                // Merge results
+                $allSaved = array_merge($allSaved, $saveResult['saved'] ?? []);
+                $allUpdated = array_merge($allUpdated, $saveResult['updated'] ?? []);
+                $allUnchanged = array_merge($allUnchanged, $saveResult['unchanged'] ?? []);
+                $allSkipped = array_merge($allSkipped, $saveResult['skipped'] ?? []);
+                $allInvalid = array_merge($allInvalid, $saveResult['invalid'] ?? []);
+
+                $this->logger->debug('Schema group saved', [
+                    'schemaId' => $schemaId,
+                    'objectCount' => count($schemaObjects),
+                    'saved' => count($saveResult['saved'] ?? []),
+                    'updated' => count($saveResult['updated'] ?? []),
+                ]);
+            }
+
+            // Combine all results
+            $saveResult = [
+                'saved' => $allSaved,
+                'updated' => $allUpdated,
+                'unchanged' => $allUnchanged,
+                'skipped' => $allSkipped,
+                'invalid' => $allInvalid,
+            ];
 
             // Store result for statistics
             $this->lastSaveResult = $saveResult;
 
-            // DEBUG: Log ObjectService save result to understand skipping behavior
+            // DEBUG: Log ObjectService save result
             $this->logger->info('ObjectService save result DEBUG', [
                 'total_objects_sent' => count($objects),
-                'saved_count' => count($saveResult['saved'] ?? []),
-                'updated_count' => count($saveResult['updated'] ?? []),
-                'unchanged_count' => count($saveResult['unchanged'] ?? []),
-                'skipped_count' => count($saveResult['skipped'] ?? []),
-                'invalid_count' => count($saveResult['invalid'] ?? []),
-                'result_keys' => array_keys($saveResult),
-                'first_unchanged_sample' => isset($saveResult['unchanged'][0]) ? [
-                    'id' => $saveResult['unchanged'][0]->getUuid(),
-                    'object_type' => get_class($saveResult['unchanged'][0])
-                ] : null
+                'saved_count' => count($allSaved),
+                'updated_count' => count($allUpdated),
+                'unchanged_count' => count($allUnchanged),
+                'skipped_count' => count($allSkipped),
+                'invalid_count' => count($allInvalid),
             ]);
 
             // Return combined saved and updated objects
-            return array_merge(
-                $saveResult['saved'] ?? [],
-                $saveResult['updated'] ?? [],
-                $saveResult['unchanged'] ?? []
-            );
+            return array_merge($allSaved, $allUpdated, $allUnchanged);
 
         } catch (\Exception $e) {
             $this->logger->error('Error in direct ObjectService save', [
@@ -1216,8 +1310,8 @@ class ArchiMateImportService
                     objects: $chunk,
                     register: $registerId,
                     schema: null,
-                    rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
-                    multi: self::PERFORMANCE_OPTIMIZATIONS['use_multi'],
+                    _rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
+                    _multitenancy: true,
                     validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
                     events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
                 );
@@ -1297,8 +1391,8 @@ class ArchiMateImportService
             objects: $objects,
             register: $registerId,
             schema: null,
-            rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
-            multi: self::PERFORMANCE_OPTIMIZATIONS['use_multi'],
+            _rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
+            _multitenancy: true,
             validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
             events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
         );

@@ -279,7 +279,7 @@ class OrganizationSyncService
             }
 
             $contactEntity->setObject($contactEntityObject);
-            $objectService->saveObject(object: $contactEntity, register: $register, schema: $contactSchema, rbac: false, multi: false);
+            $objectService->saveObject(object: $contactEntity, register: $register, schema: $contactSchema, _rbac: false, _multitenancy: false);
 
             $stats['contactPersonsProcessed']++;
         }
@@ -1373,8 +1373,8 @@ class OrganizationSyncService
                 object: $contactData,
                 register: $register,
                 schema: $contactSchema,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             if ($contactObject) {
@@ -1415,8 +1415,8 @@ class OrganizationSyncService
                                     object: $contactObject,
                                     register: $register,
                                     schema: $contactSchema,
-                                    rbac: false,
-                                    multi: false
+                                    _rbac: false,
+                                    _multitenancy: false
                                 );
 
                                 // Add user to organization entity in database
@@ -1540,8 +1540,8 @@ class OrganizationSyncService
                                 object: $contactObject,
                                 register: $register,
                                 schema: $contactSchema,
-                                rbac: false,
-                                multi: false
+                                _rbac: false,
+                                _multitenancy: false
                             );
 
                             // Add user to organization entity in database.
@@ -1911,8 +1911,8 @@ class OrganizationSyncService
                 object: $organisatieObject,
                 register: $register,
                 schema: $organizationSchema,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             $this->logger->info('OrganizationSyncService: Successfully updated organisatie object owner and organisation', [
@@ -1989,8 +1989,8 @@ class OrganizationSyncService
                 object: $contactObject,
                 register: $register,
                 schema: $contactSchema,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             $this->logger->info('OrganizationSyncService: Successfully updated contactpersoon object owner and organisation', [

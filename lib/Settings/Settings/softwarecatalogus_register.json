@@ -160,14 +160,12 @@
               {
                 "order": 1,
                 "name": "Aanmelden",
-                "link": "/register",
-                "items": []
+                "link": "/register"
               },
               {
                 "order": 2,
                 "name": "Inloggen",
-                "link": "/login",
-                "items": []
+                "link": "/login"
               }
             ],
             "hideAfterLogin": true,
@@ -186,20 +184,17 @@
               {
                 "order": 1,
                 "name": "Home",
-                "link": "/",
-                "items": []
+                "link": "/"
               },
               {
                 "order": 3,
                 "name": "Organisaties",
-                "link": "/zoeken?@self[schema]=67",
-                "items": []
+                "link": "/zoeken?@self[schema]=67"
               },
               {
                 "order": 4,
                 "name": "Applicaties",
-                "link": "/zoeken?@self[schema]=78",
-                "items": []
+                "link": "/zoeken?@self[schema]=78"
               }
             ],
             "@self": {
@@ -216,14 +211,12 @@
               {
                 "order": 1,
                 "name": "GEMMA Online",
-                "link": "https://www.gemmaonline.nl/",
-                "items": []
+                "link": "https://www.gemmaonline.nl/"
               },
               {
                 "order": 2,
                 "name": "NORA Online",
-                "link": "https://www.noraonline.nl/",
-                "items": []
+                "link": "https://www.noraonline.nl/"
               }
             ],
             "@self": {
@@ -240,8 +233,7 @@
               {
                 "order": 1,
                 "name": "VNG",
-                "link": "https://vng.nl/",
-                "items": []
+                "link": "https://vng.nl/"
               }
             ],
             "@self": {
@@ -258,8 +250,7 @@
               {
                 "order": 1,
                 "name": "Commonground",
-                "link": "https://commonground.nl/",
-                "items": []
+                "link": "https://commonground.nl/"
               }
             ],
             "@self": {
@@ -276,26 +267,22 @@
               {
                 "order": 1,
                 "name": "Privacy",
-                "link": "/privacyverklaring",
-                "items": []
+                "link": "/privacyverklaring"
               },
               {
                 "order": 2,
                 "name": "Algemene voorwaarden",
-                "link": "/algemene-voorwaarden",
-                "items": []
+                "link": "/algemene-voorwaarden"
               },
               {
                 "order": 3,
                 "name": "Disclaimer",
-                "link": "/disclaimer",
-                "items": []
+                "link": "/disclaimer"
               },
               {
                 "order": 4,
                 "name": "FAQ",
-                "link": "/faq",
-                "items": []
+                "link": "/faq"
               }
             ],
             "@self": {
@@ -312,14 +299,12 @@
               {
                 "order": 1,
                 "name": "Dashboard",
-                "link": "/beheer",
-                "items": []
+                "link": "/beheer"
               },
               {
                 "order": 2,
                 "name": "Uitloggen",
-                "link": "/logout",
-                "items": []
+                "link": "/logout"
               }
             ],
             "hideBeforeLogin": true,
@@ -337,56 +322,47 @@
               {
                 "order": 1,
                 "name": "Dashboard",
-                "link": "/beheer",
-                "items": []
+                "link": "/beheer"
               },
               {
                 "order": 2,
                 "name": "Mijn Account",
-                "link": "/beheer/my-account",
-                "items": []
+                "link": "/beheer/my-account"
               },
               {
                 "order": 3,
                 "name": "Mijn Organisatie",
-                "link": "/beheer/my-organisation",
-                "items": []
+                "link": "/beheer/my-organisation"
               },
               {
                 "order": 5,
                 "name": "Diensten",
-                "link": "/beheer/diensten",
-                "items": []
+                "link": "/beheer/diensten"
               },
               {
                 "order": 6,
                 "name": "Contactpersonen",
-                "link": "/beheer/contactpersoon",
-                "items": []
+                "link": "/beheer/contactpersoon"
               },
               {
                 "order": 7,
                 "name": "Applicaties",
-                "link": "/beheer/applicaties",
-                "items": []
+                "link": "/beheer/applicaties"
               },
               {
                 "order": 8,
                 "name": "Gebruik",
-                "link": "/beheer/gebruik",
-                "items": []
+                "link": "/beheer/gebruik"
               },
               {
                 "order": 9,
                 "name": "Koppelingen",
-                "link": "/beheer/koppeling",
-                "items": []
+                "link": "/beheer/koppeling"
               },
               {
                 "order": 10,
                 "name": "View",
-                "link": "/beheer/view",
-                "items": []
+                "link": "/beheer/view"
               }
             ],
             "@self": {
@@ -2152,7 +2128,7 @@
             "description": "URL van de website van de organisatie",
             "title": "Website",
             "type": "string",
-            "required": false,
+            "required": true,
             "visible": true,
             "facetable": false,
             "order": 16,
@@ -5657,19 +5633,13 @@
             "inversedBy": "moduleVersie"
           },
           "versie": {
-            "description": "Versienummer of versie-aanduiding",
+            "description": "Versienummer in semantic versioning format (MAJOR.MINOR.PATCH)",
             "type": "string",
             "order": 2,
             "title": "Versienummer",
-            "maxLength": null,
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+            "maxLength": 50,
             "default": "1.0.0"
-          },
-          "pakketversie_beschrijving": {
-            "description": "Beschrijving van de pakketversie",
-            "type": "string",
-            "order": 2,
-            "title": "Pakketversie beschrijving",
-            "maxLength": null
           },
           "beschrijvingKort": {
             "description": "Korte beschrijving van de applicatie versie",
@@ -5684,7 +5654,7 @@
             "order": 4,
             "title": "Beschrijving",
             "format": "markdown",
-            "maxLength": null
+            "maxLength": 5000
           },
           "status": {
             "description": "De status van de applicatie",

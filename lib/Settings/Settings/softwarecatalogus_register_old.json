@@ -3,7 +3,7 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.0.5"
+    "version": "2.0.4"
   },
   "x-openregister": {
     "type": "application",
@@ -16,463 +16,14 @@
       "branch": "master",
       "path": "apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register_magic.json"
     },
-    "description": "Magic Mapper version - Uses dedicated SQL tables for high-performance schema storage",
-    "dependencies": [
-      {
-        "type": "nextcloud-app",
-        "app": "opencatalogi",
-        "version": ">=0.7.0",
-        "required": true,
-        "reason": "SoftwareCatalog seedData requires page and menu schemas from OpenCatalogi publication register"
-      }
-    ],
-    "seedData": {
-      "description": "Pages and menus for the Software Catalog website - synced from softwarecatalogus.accept.opencatalogi.nl",
-      "objects": {
-        "page": [
-          {
-            "title": "Website",
-            "slug": "website",
-            "contents": [
-              {
-                "type": "text",
-                "id": "website-content",
-                "data": {
-                  "text": "Website Information",
-                  "html": "<h1>Website Information</h1><p>Information about this website, its purpose, and technical details.</p>"
-                }
-              }
-            ],
-            "published": true,
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "page",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Welkom",
-            "slug": "home",
-            "contents": [
-              {
-                "type": "RichText",
-                "id": "bs2ccjxkup",
-                "data": {
-                  "content": "<h1>Welkom bij de Softwarecatalogus</h1><p>Ontdek en vergelijk software voor de Nederlandse overheid. Deze catalogus biedt inzicht in beschikbare softwareoplossingen, leveranciers en compliance.</p>"
-                }
-              }
-            ],
-            "published": true,
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "page",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Privacyverklaring",
-            "slug": "privacyverklaring",
-            "contents": [
-              {
-                "type": "RichText",
-                "id": "ays7tyejd8",
-                "data": {
-                  "content": "<h1>Privacyverklaring</h1><p>Deze privacyverklaring beschrijft hoe wij omgaan met uw persoonsgegevens, de wettelijke gronden voor verwerking, bewaartermijnen en uw rechten onder de AVG.</p>"
-                }
-              }
-            ],
-            "published": true,
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "page",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Disclaimer",
-            "slug": "disclaimer",
-            "contents": [
-              {
-                "type": "RichText",
-                "id": "x0teq1disc0",
-                "data": {
-                  "content": "<h1>Disclaimer</h1><p>Deze disclaimer bevat voorwaarden over aansprakelijkheid, beschikbaarheid van de website, gebruikersverantwoordelijkheden en intellectuele eigendomsrechten.</p>"
-                }
-              }
-            ],
-            "published": true,
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "page",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Algemene Voorwaarden",
-            "slug": "algemene-voorwaarden",
-            "contents": [
-              {
-                "type": "RichText",
-                "id": "x0teq1eqci0",
-                "data": {
-                  "content": "<h1>Algemene Voorwaarden</h1><p>Deze algemene voorwaarden bevatten definities, servicevoorwaarden, gebruikersverantwoordelijkheden, betalingsvoorwaarden en geschillenbeslechting.</p>"
-                }
-              }
-            ],
-            "published": true,
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "page",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "FAQ",
-            "slug": "faq",
-            "contents": [
-              {
-                "type": "RichText",
-                "id": "x0teq1eqci1",
-                "data": {
-                  "content": "<h1>Veelgestelde Vragen</h1><p>Antwoorden op veelgestelde vragen over algemene informatie, accounttoegang, technische ondersteuning, privacy en facturering.</p>"
-                }
-              }
-            ],
-            "published": true,
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "page",
-              "version": "0.0.3"
-            }
-          }
-        ],
-        "menu": [
-          {
-            "title": "User Menu",
-            "position": 1,
-            "items": [
-              {
-                "order": 1,
-                "name": "Aanmelden",
-                "link": "/register",
-                "items": []
-              },
-              {
-                "order": 2,
-                "name": "Inloggen",
-                "link": "/login",
-                "items": []
-              }
-            ],
-            "hideAfterLogin": true,
-            "hideBeforeLogin": false,
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "menu",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Main nav",
-            "position": 2,
-            "items": [
-              {
-                "order": 1,
-                "name": "Home",
-                "link": "/",
-                "items": []
-              },
-              {
-                "order": 3,
-                "name": "Organisaties",
-                "link": "/zoeken?@self[schema]=67",
-                "items": []
-              },
-              {
-                "order": 4,
-                "name": "Applicaties",
-                "link": "/zoeken?@self[schema]=78",
-                "items": []
-              }
-            ],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "menu",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Footer Left",
-            "position": 3,
-            "items": [
-              {
-                "order": 1,
-                "name": "GEMMA Online",
-                "link": "https://www.gemmaonline.nl/",
-                "items": []
-              },
-              {
-                "order": 2,
-                "name": "NORA Online",
-                "link": "https://www.noraonline.nl/",
-                "items": []
-              }
-            ],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "menu",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Footer Center",
-            "position": 4,
-            "items": [
-              {
-                "order": 1,
-                "name": "VNG",
-                "link": "https://vng.nl/",
-                "items": []
-              }
-            ],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "menu",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Footer Right",
-            "position": 5,
-            "items": [
-              {
-                "order": 1,
-                "name": "Commonground",
-                "link": "https://commonground.nl/",
-                "items": []
-              }
-            ],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "menu",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Footer Sub",
-            "position": 6,
-            "items": [
-              {
-                "order": 1,
-                "name": "Privacy",
-                "link": "/privacyverklaring",
-                "items": []
-              },
-              {
-                "order": 2,
-                "name": "Algemene voorwaarden",
-                "link": "/algemene-voorwaarden",
-                "items": []
-              },
-              {
-                "order": 3,
-                "name": "Disclaimer",
-                "link": "/disclaimer",
-                "items": []
-              },
-              {
-                "order": 4,
-                "name": "FAQ",
-                "link": "/faq",
-                "items": []
-              }
-            ],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "menu",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Admin",
-            "position": 1,
-            "items": [
-              {
-                "order": 1,
-                "name": "Dashboard",
-                "link": "/beheer",
-                "items": []
-              },
-              {
-                "order": 2,
-                "name": "Uitloggen",
-                "link": "/logout",
-                "items": []
-              }
-            ],
-            "hideBeforeLogin": true,
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "menu",
-              "version": "0.0.3"
-            }
-          },
-          {
-            "title": "Dashboard",
-            "position": 7,
-            "items": [
-              {
-                "order": 1,
-                "name": "Dashboard",
-                "link": "/beheer",
-                "items": []
-              },
-              {
-                "order": 2,
-                "name": "Mijn Account",
-                "link": "/beheer/my-account",
-                "items": []
-              },
-              {
-                "order": 3,
-                "name": "Mijn Organisatie",
-                "link": "/beheer/my-organisation",
-                "items": []
-              },
-              {
-                "order": 5,
-                "name": "Diensten",
-                "link": "/beheer/diensten",
-                "items": []
-              },
-              {
-                "order": 6,
-                "name": "Contactpersonen",
-                "link": "/beheer/contactpersoon",
-                "items": []
-              },
-              {
-                "order": 7,
-                "name": "Applicaties",
-                "link": "/beheer/applicaties",
-                "items": []
-              },
-              {
-                "order": 8,
-                "name": "Gebruik",
-                "link": "/beheer/gebruik",
-                "items": []
-              },
-              {
-                "order": 9,
-                "name": "Koppelingen",
-                "link": "/beheer/koppeling",
-                "items": []
-              },
-              {
-                "order": 10,
-                "name": "View",
-                "link": "/beheer/view",
-                "items": []
-              }
-            ],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "menu",
-              "version": "0.0.3"
-            }
-          }
-        ],
-        "publication": [
-          {
-            "title": "Open Catalogi Platform",
-            "summary": "Een open source platform voor het publiceren en doorzoeken van overheidscatalogi",
-            "description": "Open Catalogi is een innovatief platform dat overheidsorganisaties helpt bij het publiceren, beheren en doorzoekbaar maken van hun catalogi. Het platform ondersteunt verschillende standaarden en maakt het eenvoudig om informatie te delen tussen organisaties.",
-            "organization": "VNG Realisatie",
-            "themes": ["Open Source", "Overheid", "Catalogi"],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "publication",
-              "version": "0.0.1"
-            }
-          },
-          {
-            "title": "Common Ground",
-            "summary": "Een nieuwe manier van werken met informatiesystemen binnen de overheid",
-            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en efficiënte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
-            "organization": "VNG Realisatie",
-            "themes": ["Architectuur", "Overheid", "Digitalisering"],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "publication",
-              "version": "0.0.1"
-            }
-          },
-          {
-            "title": "OpenRegister",
-            "summary": "Een Nextcloud app voor het beheren van gestructureerde data in registers",
-            "description": "OpenRegister is een krachtige Nextcloud applicatie waarmee organisaties gestructureerde data kunnen beheren in registers. Met ondersteuning voor JSON Schema validatie, Magic Mapper voor optimale performance, en uitgebreide API mogelijkheden.",
-            "organization": "Conduction",
-            "themes": ["Open Source", "Nextcloud", "Data Management"],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "publication",
-              "version": "0.0.1"
-            }
-          },
-          {
-            "title": "Softwarecatalogus",
-            "summary": "De centrale catalogus voor software binnen de Nederlandse overheid",
-            "description": "De Softwarecatalogus biedt een overzicht van alle software die wordt gebruikt binnen de Nederlandse overheid. Organisaties kunnen hier software registreren, vergelijken en informatie delen over implementaties en ervaringen.",
-            "organization": "VNG",
-            "themes": ["Software", "Overheid", "Catalogus"],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "publication",
-              "version": "0.0.1"
-            }
-          },
-          {
-            "title": "GEMMA Architectuur",
-            "summary": "De gemeentelijke referentiearchitectuur voor informatievoorziening",
-            "description": "GEMMA (GEMeentelijke Model Architectuur) is de referentiearchitectuur voor gemeenten. Het biedt richtlijnen en standaarden voor de inrichting van de informatievoorziening, processen en applicatielandschap van gemeenten.",
-            "organization": "VNG Realisatie",
-            "themes": ["Architectuur", "Gemeenten", "Standaarden"],
-            "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
-              "register": "publication",
-              "schema": "publication",
-              "version": "0.0.1"
-            }
-          }
-        ]
-      }
-    }
+    "description": "Magic Mapper version - Uses dedicated SQL tables for high-performance schema storage"
   },
   "components": {
     "registers": {
       "voorzieningen": {
         "slug": "voorzieningen",
         "title": "Voorzieningen",
-        "version": "2.0.2",
+        "version": "2.0.1",
         "description": "Register voor voorzieningen uit de softwarecatalogus",
         "schemas": [
           "sector",
@@ -503,61 +54,30 @@
         "deleted": null,
         "configuration": {
           "schemas": {
-            "sector": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "suite": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "component": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
             "module": {
               "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "dienst": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "kwetsbaarheid": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "contactpersoon": {
-              "magicMapping": true,
-              "autoCreateTable": true
+              "autoCreateTable": true,
+              "comment": "High-volume applicaties schema - optimized for performance"
             },
             "organisatie": {
               "magicMapping": true,
-              "autoCreateTable": true
+              "autoCreateTable": true,
+              "comment": "Frequently queried organisaties - benefits from SQL indexing"
             },
             "gebruik": {
               "magicMapping": true,
-              "autoCreateTable": true
+              "autoCreateTable": true,
+              "comment": "Usage tracking - high query volume"
             },
-            "contract": {
+            "dienst": {
               "magicMapping": true,
-              "autoCreateTable": true
+              "autoCreateTable": true,
+              "comment": "Service offerings - frequently filtered and sorted"
             },
             "koppeling": {
               "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "beoordeeling": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "compliancy": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "moduleVersie": {
-              "magicMapping": true,
-              "autoCreateTable": true
+              "autoCreateTable": true,
+              "comment": "Integration mappings - complex queries"
             }
           }
         }
@@ -565,7 +85,7 @@
       "vng-gemma": {
         "slug": "vng-gemma",
         "title": "AMEF",
-        "version": "0.0.6",
+        "version": "0.0.5",
         "description": "Register voor AMEF (ArchiMate Model Exchange Format) modellen en architectuur elementen",
         "schemas": [
           "element",
@@ -590,31 +110,18 @@
           "schemas": {
             "element": {
               "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "model": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "organization": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "property-definition": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "relation": {
-              "magicMapping": true,
-              "autoCreateTable": true
+              "autoCreateTable": true,
+              "comment": "AMEF elements - large dataset with complex queries"
             },
             "view": {
               "magicMapping": true,
-              "autoCreateTable": true
+              "autoCreateTable": true,
+              "comment": "Architecture views - frequently accessed"
             },
-            "property": {
+            "relation": {
               "magicMapping": true,
-              "autoCreateTable": true
+              "autoCreateTable": true,
+              "comment": "Element relations - many-to-many queries"
             }
           }
         }
@@ -2152,7 +1659,7 @@
             "description": "URL van de website van de organisatie",
             "title": "Website",
             "type": "string",
-            "required": false,
+            "required": true,
             "visible": true,
             "facetable": false,
             "order": 16,
@@ -2483,7 +1990,7 @@
             "AVG compliance document",
             "ESPD (Europees aanbestedingsdocument)",
             "Integriteitsverklaring",
-            "Financi\u00eble capaciteitsverklaring",
+            "Financiële capaciteitsverklaring",
             "Technische capaciteitsverklaring",
             "Kwaliteitscertificaten",
             "Milieucertificaten",
@@ -2621,7 +2128,7 @@
             "example": "Bijvoorbeeld: 2025-03-01"
           },
           "startDatumUitTeFaseren": {
-            "description": "De start datum voor het \"Be\u00ebindigd\" status",
+            "description": "De start datum voor het \"Beëindigd\" status",
             "type": "string",
             "format": "date",
             "visible": true,
@@ -3182,7 +2689,7 @@
         "uri": null,
         "slug": "koppeling",
         "title": "Koppeling",
-        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
+        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet óf ApplicatieB óf buitengemeentelijkVoorziening gevuld zijn.",
         "version": "0.0.12",
         "summary": "",
         "icon": "Link",
@@ -3351,7 +2858,7 @@
             "$ref": "#/components/schemas/element"
           },
           "standaardversies": {
-            "description": "Standaardversies die door deze koppeling ge\u00efmplementeerd worden",
+            "description": "Standaardversies die door deze koppeling geïmplementeerd worden",
             "type": "array",
             "order": 12,
             "facetable": false,
@@ -5657,19 +5164,13 @@
             "inversedBy": "moduleVersie"
           },
           "versie": {
-            "description": "Versienummer of versie-aanduiding",
+            "description": "Versienummer in semantic versioning format (MAJOR.MINOR.PATCH)",
             "type": "string",
             "order": 2,
             "title": "Versienummer",
-            "maxLength": null,
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+            "maxLength": 50,
             "default": "1.0.0"
-          },
-          "pakketversie_beschrijving": {
-            "description": "Beschrijving van de pakketversie",
-            "type": "string",
-            "order": 2,
-            "title": "Pakketversie beschrijving",
-            "maxLength": null
           },
           "beschrijvingKort": {
             "description": "Korte beschrijving van de applicatie versie",
@@ -5684,7 +5185,7 @@
             "order": 4,
             "title": "Beschrijving",
             "format": "markdown",
-            "maxLength": null
+            "maxLength": 5000
           },
           "status": {
             "description": "De status van de applicatie",
@@ -5764,6 +5265,171 @@
         "searchable": true
       }
     },
-    "objects": []
+    "objects": [
+      {
+        "title": "Welkom",
+        "slug": "home",
+        "contents": [
+          {
+            "type": "RichText",
+            "order": 0,
+            "data": {
+              "content": "<h1>Welkom bij de Softwarecatalogus</h1><p>Ontdek en vergelijk software voor de Nederlandse overheid. Deze catalogus biedt inzicht in beschikbare softwareoplossingen, leveranciers en compliance.</p>"
+            }
+          }
+        ],
+        "published": true,
+        "@self": {
+          "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+          "register": "publication",
+          "schema": "page",
+          "version": "0.0.3"
+        }
+      },
+      {
+        "title": "Over Ons",
+        "slug": "over-ons",
+        "contents": [
+          {
+            "type": "RichText",
+            "order": 0,
+            "data": {
+              "content": "<h1>Over de Softwarecatalogus</h1><p>De Softwarecatalogus is een initiatief om overheidssoftware inzichtelijk en vergelijkbaar te maken.</p>"
+            }
+          }
+        ],
+        "published": true,
+        "@self": {
+          "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+          "register": "publication",
+          "schema": "page",
+          "version": "0.0.3"
+        }
+      },
+      {
+        "title": "Privacyverklaring",
+        "slug": "privacyverklaring",
+        "contents": [
+          {
+            "type": "RichText",
+            "order": 0,
+            "data": {
+              "content": "<h1>Privacyverklaring</h1><p>Informatie over hoe wij omgaan met uw persoonsgegevens conform de AVG.</p>"
+            }
+          }
+        ],
+        "published": true,
+        "@self": {
+          "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+          "register": "publication",
+          "schema": "page",
+          "version": "0.0.3"
+        }
+      },
+      {
+        "title": "FAQ",
+        "slug": "faq",
+        "contents": [
+          {
+            "type": "RichText",
+            "order": 0,
+            "data": {
+              "content": "<h1>Veelgestelde Vragen</h1><p>Antwoorden op de meest gestelde vragen over de Softwarecatalogus.</p>"
+            }
+          }
+        ],
+        "published": true,
+        "@self": {
+          "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+          "register": "publication",
+          "schema": "page",
+          "version": "0.0.3"
+        }
+      },
+      {
+        "title": "Main nav",
+        "position": 1,
+        "items": [
+          {
+            "order": 1,
+            "name": "Home",
+            "link": "/",
+            "items": []
+          },
+          {
+            "order": 2,
+            "name": "Applicaties",
+            "link": "/applications",
+            "items": []
+          },
+          {
+            "order": 3,
+            "name": "Over Ons",
+            "link": "/over-ons",
+            "items": []
+          }
+        ],
+        "@self": {
+          "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+          "register": "publication",
+          "schema": "menu",
+          "version": "0.0.3"
+        }
+      },
+      {
+        "title": "Footer Sub",
+        "position": 2,
+        "items": [
+          {
+            "order": 1,
+            "name": "Privacy",
+            "link": "/privacyverklaring",
+            "items": []
+          },
+          {
+            "order": 2,
+            "name": "Contact",
+            "link": "/contact",
+            "items": []
+          },
+          {
+            "order": 3,
+            "name": "FAQ",
+            "link": "/faq",
+            "items": []
+          }
+        ],
+        "@self": {
+          "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+          "register": "publication",
+          "schema": "menu",
+          "version": "0.0.3"
+        }
+      },
+      {
+        "title": "User Menu",
+        "position": 3,
+        "items": [
+          {
+            "order": 1,
+            "name": "Aanmelden",
+            "link": "/register",
+            "items": []
+          },
+          {
+            "order": 2,
+            "name": "Inloggen",
+            "link": "/login",
+            "items": []
+          }
+        ],
+        "@self": {
+          "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+          "register": "publication",
+          "schema": "menu",
+          "version": "0.0.3"
+        }
+      }
+    ]
   }
 }
