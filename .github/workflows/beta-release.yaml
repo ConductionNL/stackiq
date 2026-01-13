@@ -3,7 +3,8 @@ name: Beta Release
 on:
   push:
     branches:
-      - beta
+      - feature/newopenregister
+      # - beta
 
 jobs:
   release-management:
@@ -30,7 +31,7 @@ jobs:
           git fetch origin main
           main_version=$(git show origin/main:appinfo/info.xml | grep -oP '(?<=<version>)[^<]+' || echo "")
 
-          # Get current version from feature/beta branch
+          # Get current version from feature/newopenregister branch
           current_version=$(grep -oP '(?<=<version>)[^<]+' appinfo/info.xml || echo "")
 
           # Split main version into parts
@@ -42,7 +43,7 @@ jobs:
           # Extract beta counter from current version if it exists
           beta_counter=1
           if [[ $current_version =~ -beta\.([0-9]+)$ ]]; then
-            # If current patch version is still ahead of main, increment counter
+            # If current patch version is still ahead of master, increment counter
             current_patch=$(echo $current_version | grep -oP '^[0-9]+\.[0-9]+\.(\d+)' | cut -d. -f3)
             if [ "$current_patch" -eq "$next_patch" ]; then
               beta_counter=$((BASH_REMATCH[1] + 1))
@@ -53,7 +54,7 @@ jobs:
 
           echo "NEW_VERSION=$beta_version" >> $GITHUB_ENV
           echo "new_version=$beta_version" >> $GITHUB_OUTPUT
-          echo "Master version: $main_version"
+          echo "Main version: $main_version"
           echo "Current version: $current_version"
           echo "Using beta version: $beta_version"
 
@@ -151,7 +152,7 @@ jobs:
         id: version
         uses: codacy/git-version@2.7.1
         with:
-          release-branch: beta
+          release-branch: feature/newopenregister
 
       # Stap 14: Extraheer repository description (optioneel)
       - name: Extract repository description
@@ -164,8 +165,6 @@ jobs:
       - name: Use the version
         run: |
           echo "Git Version info: ${{ steps.version.outputs.version }}"
-
-          rsync -av --progress --exclude='package' --exclude='.git' ./ package/${{ github.event.repository.name }}/
 
       # Stap 17: Maak een nieuwe GitHub release (als prerelease)
       - name: Upload Beta Release
