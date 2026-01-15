@@ -1102,13 +1102,12 @@ class ArchiMateImportService
             'schemas' => array_map('count', $schemaGroups)
         ]);
 
-        // Process each schema group
+        // Process each schema group.
         $allResults = [];
         $aggregatedStats = [
             'saved' => [],
             'updated' => [],
             'unchanged' => [],
-            'skipped' => [],
             'invalid' => [],
         ];
 
@@ -1128,11 +1127,10 @@ class ArchiMateImportService
                     events: false
                 );
 
-                // Merge results
+                // Merge results.
                 $aggregatedStats['saved'] = array_merge($aggregatedStats['saved'], $saveResult['saved'] ?? []);
                 $aggregatedStats['updated'] = array_merge($aggregatedStats['updated'], $saveResult['updated'] ?? []);
                 $aggregatedStats['unchanged'] = array_merge($aggregatedStats['unchanged'], $saveResult['unchanged'] ?? []);
-                $aggregatedStats['skipped'] = array_merge($aggregatedStats['skipped'], $saveResult['skipped'] ?? []);
                 $aggregatedStats['invalid'] = array_merge($aggregatedStats['invalid'], $saveResult['invalid'] ?? []);
 
                 $allResults = array_merge($allResults, $saveResult['saved'] ?? [], $saveResult['updated'] ?? [], $saveResult['unchanged'] ?? []);
@@ -4486,12 +4484,12 @@ class ArchiMateImportService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
-            // Count objects by section type from the actual processed objects
+            // Count objects by section type from the actual processed objects.
             $allProcessedObjects = array_merge(
                 $saveResult['saved'] ?? [],
                 $saveResult['updated'] ?? [],
-                $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [],
-                // For invalid objects, extract the original object from the error structure
+                $saveResult['unchanged'] ?? [],
+                // For invalid objects, extract the original object from the error structure.
                 array_map(fn($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
             );
 
@@ -4529,7 +4527,7 @@ class ArchiMateImportService
                     fn($updated) => ($updated->getUuid() === $objectId)));
 
                 // Check if this object was unchanged (no changes).
-                $unchangedObjects = $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [];
+                $unchangedObjects = $saveResult['unchanged'] ?? [];
                 $wasSkipped = !empty(array_filter($unchangedObjects,
                     fn($unchanged) => ($unchanged->getUuid() === $objectId)));
 
@@ -4568,20 +4566,20 @@ class ArchiMateImportService
             }
         }
 
-        // Calculate summary totals from actual statistics
+        // Calculate summary totals from actual statistics.
         $summary = [
             'total_objects_created' => 0,
             'total_objects_updated' => 0,
             'total_objects_deleted' => 0,
-            'total_objects_skipped' => 0,
+            'total_objects_unchanged' => 0,
             'total_errors' => 0
         ];
 
         foreach ($statistics as $section => $sectionStats) {
-            if ($section !== 'summary') { // Skip summary section itself
+            if ($section !== 'summary') { // Skip summary section itself.
                 $summary['total_objects_created'] += $sectionStats['created'];
                 $summary['total_objects_updated'] += $sectionStats['updated'];
-                $summary['total_objects_skipped'] += $sectionStats['skipped'];
+                $summary['total_objects_unchanged'] += $sectionStats['unchanged'];
                 $summary['total_errors'] += count($sectionStats['errors']);
             }
         }
