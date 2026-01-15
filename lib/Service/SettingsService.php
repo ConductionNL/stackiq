@@ -4166,7 +4166,7 @@ class SettingsService
             $base = $this->getSettings();
 
             $versionInfo = $this->getVersionInfo();
-            
+
             // Add voorzieningen and amef configs for frontend.
             $consolidatedConfig = $this->getConsolidatedConfiguration();
 
@@ -4612,6 +4612,7 @@ class SettingsService
                         $registers = $registerService->findAll();
                         $schemaIdSet = [];
                         foreach ($registers as $register) {
+                            $register = $register->jsonSerialize();
                             if ((string)($register['id'] ?? '') === $targetRegisterId) {
                                 foreach (($register['schemas'] ?? []) as $schema) {
                                     $schemaIdSet[(string)$schema['id']] = true;
