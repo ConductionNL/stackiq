@@ -1761,6 +1761,10 @@ class ArchiMateImportService
         $mapping = [];
 
         foreach ($propertyDefinitionMap as $propertyRef => $originalName) {
+            // Skip non-string values (e.g., empty arrays from incomplete property definitions)
+            if (!is_string($originalName)) {
+                continue;
+            }
             $mapping[$originalName] = $this->convertToCamelCase($originalName);
         }
 
@@ -4513,23 +4517,23 @@ class ArchiMateImportService
                     continue; // Skip unknown section types
                 }
 
-                // Determine if this object was created, updated, or had errors
+                // Determine if this object was created, updated, or had errors.
                 $objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
 
-                // Check if this object is in the saved (created) list
+                // Check if this object is in the saved (created) list.
                 $wasCreated = !empty(array_filter($saveResult['saved'] ?? [],
                     fn($saved) => ($saved->getUuid() === $objectId)));
 
-                // Check if this object is in the updated list
+                // Check if this object is in the updated list.
                 $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [],
                     fn($updated) => ($updated->getUuid() === $objectId)));
 
-                // Check if this object was unchanged (no changes)
+                // Check if this object was unchanged (no changes).
                 $unchangedObjects = $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [];
                 $wasSkipped = !empty(array_filter($unchangedObjects,
                     fn($unchanged) => ($unchanged->getUuid() === $objectId)));
 
-                // Check if this object had validation errors
+                // Check if this object had validation errors.
                 $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
                     fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)));
 
@@ -4538,9 +4542,9 @@ class ArchiMateImportService
                 } elseif ($wasUpdated) {
                     $statistics[$sectionKey]['updated']++;
                 } elseif ($wasSkipped) {
-                    $statistics[$sectionKey]['skipped']++;
+                    $statistics[$sectionKey]['unchanged']++;
                 } elseif ($hasErrors) {
-                    // Add to errors array for this section
+                    // Add to errors array for this section.
                     $errorInfo = array_filter($saveResult['invalid'] ?? [],
                         fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId));
 
@@ -4548,8 +4552,8 @@ class ArchiMateImportService
                         $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
                     }
                 } else {
-                    // This shouldn't happen, but leave as fallback
-                    $statistics[$sectionKey]['skipped']++;
+                    // This shouldn't happen, but leave as fallback.
+                    $statistics[$sectionKey]['unchanged']++;
                 }
             }
         } else {
