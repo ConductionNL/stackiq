@@ -1821,6 +1821,9 @@ class ArchiMateImportService
      */
     private function calculateOptimizedStatistics(array $savedObjects): array
     {
+        // DEBUG: Check if lastSaveResult is set.
+        error_log('[ArchiMate] calculateOptimizedStatistics called, lastSaveResult is ' . ($this->lastSaveResult === null ? 'NULL' : 'SET with ' . count($this->lastSaveResult) . ' keys'));
+        
         // Initialize statistics structure for detailed error extraction.
         $statistics = [
             'elements' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
@@ -1836,10 +1839,16 @@ class ArchiMateImportService
                 'total_errors' => 0
             ]
         ];
+        
+        // DEBUG: Log initialized statistics structure.
+        error_log('[ArchiMate] Statistics initialized with keys: ' . json_encode(array_keys($statistics['elements'])));
 
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
+            // DEBUG: Log save result structure.
+            error_log('[ArchiMate] lastSaveResult has: saved=' . count($saveResult['saved'] ?? []) . ', updated=' . count($saveResult['updated'] ?? []) . ', unchanged=' . count($saveResult['unchanged'] ?? []));
+            
             // Process objects by section type similar to calculateObjectStatistics.
             $allProcessedObjects = array_merge(
                 $saveResult['saved'] ?? [],
@@ -1938,6 +1947,9 @@ class ArchiMateImportService
             'elements_keys' => array_keys($statistics['elements'] ?? []),
             'summary' => $statistics['summary'] ?? []
         ]);
+
+        // DEBUG: Force output to see what we're actually returning.
+        error_log('[ArchiMate DEBUG] Statistics structure: ' . json_encode($statistics['elements']));
 
         return $statistics;
     }
