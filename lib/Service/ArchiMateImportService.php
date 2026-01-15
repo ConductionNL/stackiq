@@ -1821,13 +1821,13 @@ class ArchiMateImportService
      */
     private function calculateOptimizedStatistics(array $savedObjects): array
     {
-        // Initialize statistics structure for detailed error extraction
+        // Initialize statistics structure for detailed error extraction.
         $statistics = [
-            'elements' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'organizations' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'relationships' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'views' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'property_definitions' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'elements' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'organizations' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'relationships' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'views' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'property_definitions' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
             'summary' => [
                 'total_objects_created' => 0,
                 'total_objects_updated' => 0,
@@ -1840,12 +1840,12 @@ class ArchiMateImportService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
-            // Process objects by section type similar to calculateObjectStatistics
+            // Process objects by section type similar to calculateObjectStatistics.
             $allProcessedObjects = array_merge(
                 $saveResult['saved'] ?? [],
                 $saveResult['updated'] ?? [],
-                $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [],
-                // For invalid objects, extract the original object from the error structure
+                $saveResult['unchanged'] ?? [],
+                // For invalid objects, extract the original object from the error structure.
                 array_map(fn($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
             );
 
@@ -1882,12 +1882,12 @@ class ArchiMateImportService
                 $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [],
                     fn($updated) => (is_object($updated) && method_exists($updated, 'getUuid') ? $updated->getUuid() : null) === $objectId));
 
-                // Check if this object was skipped (no changes)
-                $unchangedObjects = $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [];
-                $wasSkipped = !empty(array_filter($unchangedObjects,
+                // Check if this object was unchanged (no changes).
+                $unchangedObjects = $saveResult['unchanged'] ?? [];
+                $wasUnchanged = !empty(array_filter($unchangedObjects,
                     fn($unchanged) => (is_object($unchanged) && method_exists($unchanged, 'getUuid') ? $unchanged->getUuid() : null) === $objectId));
 
-                // Check if this object had validation errors
+                // Check if this object had validation errors.
                 $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
                     fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)));
 
@@ -1895,10 +1895,10 @@ class ArchiMateImportService
                     $statistics[$sectionKey]['created']++;
                 } elseif ($wasUpdated) {
                     $statistics[$sectionKey]['updated']++;
-                } elseif ($wasSkipped) {
-                    $statistics[$sectionKey]['skipped']++;
+                } elseif ($wasUnchanged) {
+                    $statistics[$sectionKey]['unchanged']++;
                 } elseif ($hasErrors) {
-                    // Add to errors array for this section
+                    // Add to errors array for this section.
                     $errorInfo = array_filter($saveResult['invalid'] ?? [],
                         fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId));
 
@@ -1906,12 +1906,12 @@ class ArchiMateImportService
                         $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
                     }
                 } else {
-                    // This shouldn't happen, but leave as fallback
-                    $statistics[$sectionKey]['skipped']++;
+                    // This shouldn't happen, but leave as fallback.
+                    $statistics[$sectionKey]['unchanged']++;
                 }
             }
 
-            // Calculate summary totals from actual statistics
+            // Calculate summary totals from actual statistics.
             $summary = [
                 'total_objects_created' => 0,
                 'total_objects_updated' => 0,
@@ -1921,16 +1921,23 @@ class ArchiMateImportService
             ];
 
             foreach ($statistics as $section => $sectionStats) {
-                if ($section !== 'summary') { // Skip summary section itself
+                if ($section !== 'summary') { // Skip summary section itself.
                     $summary['total_objects_created'] += $sectionStats['created'];
                     $summary['total_objects_updated'] += $sectionStats['updated'];
-                    $summary['total_objects_unchanged'] += $sectionStats['skipped'];
+                    $summary['total_objects_unchanged'] += $sectionStats['unchanged'];
                     $summary['total_errors'] += count($sectionStats['errors']);
                 }
             }
 
             $statistics['summary'] = $summary;
         }
+
+        // DEBUG: Log final statistics before return.
+        $this->logger->info('[ArchiMate] calculateOptimizedStatistics returning', [
+            'statistics_keys' => array_keys($statistics),
+            'elements_keys' => array_keys($statistics['elements'] ?? []),
+            'summary' => $statistics['summary'] ?? []
+        ]);
 
         return $statistics;
     }
@@ -4484,6 +4491,15 @@ class ArchiMateImportService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
+            // DEBUG: Log what we got from ObjectService.
+            $this->logger->info('[ArchiMate] Using lastSaveResult for statistics', [
+                'saved_count' => count($saveResult['saved'] ?? []),
+                'updated_count' => count($saveResult['updated'] ?? []),
+                'unchanged_count' => count($saveResult['unchanged'] ?? []),
+                'invalid_count' => count($saveResult['invalid'] ?? []),
+                'keys_present' => array_keys($saveResult)
+            ]);
+
             // Count objects by section type from the actual processed objects.
             $allProcessedObjects = array_merge(
                 $saveResult['saved'] ?? [],
@@ -4585,6 +4601,17 @@ class ArchiMateImportService
         }
 
         $statistics['summary'] = $summary;
+
+        // DEBUG: Log the summary statistics to help diagnose the issue.
+        $this->logger->info('[ArchiMate] Statistics summary calculated', [
+            'summary' => $summary,
+            'section_counts' => array_map(fn($s) => [
+                'created' => $s['created'] ?? 0,
+                'updated' => $s['updated'] ?? 0,
+                'unchanged' => $s['unchanged'] ?? 0,
+                'errors' => count($s['errors'] ?? [])
+            ], array_filter($statistics, fn($k) => $k !== 'summary', ARRAY_FILTER_USE_KEY))
+        ]);
 
         return $statistics;
     }
