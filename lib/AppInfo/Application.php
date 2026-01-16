@@ -137,7 +137,7 @@ class Application extends App implements IBootstrap
 
         // Register TEST event listener for easily triggerable Nextcloud events
         $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
-        
+
         // Register event listeners for OpenRegister events
         $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
@@ -341,8 +341,8 @@ class Application extends App implements IBootstrap
                 $initReason = empty($lastInitializedVersion) ? 'never_initialized' : 'version_changed';
             } else {
                 // Even if version matches, check if we have valid configuration
-                $hasValidConfig = $config->getValueString(self::APP_ID, 'voorzieningen_organisatie_schema', '') !== '' ||
-                                  $config->getValueString(self::APP_ID, 'organization_schema', '') !== '';
+                $hasValidConfig = json_decode($config->getValueString(self::APP_ID, 'voorzieningen_config', '{"organisatie_schema": ""}'), true)['organisatie_schema'] !== '' ||
+                                  json_decode($config->getValueString(self::APP_ID, 'amef_config', '{"organization_schema": ""}'), true)['organization_schema'] !== '';
 
                 if (!$hasValidConfig) {
                     $needsInitialization = true;
