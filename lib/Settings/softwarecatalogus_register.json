@@ -2322,10 +2322,11 @@
             "description": "Type van de organisatie (Gemeente, Leverancier, Samenwerking)",
             "title": "Organisatie Type",
             "type": "string",
-            "required": true,
+            "required": false,
             "visible": true,
             "facetable": true,
             "order": 4,
+            "default": "{{ type }}",
             "enum": [
               "Gemeente",
               "Leverancier",
@@ -5356,7 +5357,7 @@
             "order": 12,
             "facetable": true,
             "title": "Module Type",
-            "default": "Applicatie",
+            "default": "{{ type }}",
             "enum": [
               "Applicatie",
               "Systeemsoftware"
