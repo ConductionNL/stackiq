@@ -826,26 +826,15 @@ export const useObjectStore = defineStore('object', {
 				}
 
 			// Add _extend parameter if not explicitly set
-			// For organizations, force database queries to ensure fresh data and only extend contactpersonen
+			// For organizations, only extend contactpersonen (not @self.schema)
 			const queryParams = {
 				...params,
 				_extend: params._extend || params.extend || (type === 'organisatie' ? 'contactpersonen' : '@self.schema'),
-				// Force database queries for organizations to bypass any index caching
-				...((type === 'organisatie' || type === 'contactpersoon' || type === 'moduleVersie') && !params._source
-					? { _source: 'database' }
-					: {}),
 			}
 
-				// Log the final URL for debugging
-				const apiUrl = this._constructApiUrl(type, null, null, queryParams)
-				console.info('fetchCollection API URL:', apiUrl)
-				if (type === 'organisatie') {
-					console.info('Organization fetch - ensuring database source:', {
-						type,
-						hasSourceParam: queryParams._source === 'database',
-						queryParams,
-					})
-				}
+			// Log the final URL for debugging
+			const apiUrl = this._constructApiUrl(type, null, null, queryParams)
+			console.info('fetchCollection API URL:', apiUrl)
 
 				const response = await fetch(apiUrl)
 				if (!response.ok) throw new Error(`Failed to fetch ${type} collection`)
@@ -908,23 +897,11 @@ export const useObjectStore = defineStore('object', {
 			const queryParams = {
 				...params,
 				_extend: params._extend || params.extend || (type === 'organisatie' ? 'contactpersonen' : '@self.schema'),
-				// Force database queries for organizations to bypass any index caching
-				...(type === 'organisatie' && !params._source
-					? { _source: 'database' }
-					: {}),
 			}
 
-				// Log the final URL for debugging
-				const apiUrl = this._constructApiUrl(type, id, null, queryParams)
-				console.info('fetchObject API URL:', apiUrl)
-				if (type === 'organisatie') {
-					console.info('Organization fetch - ensuring database source:', {
-						type,
-						id,
-						hasSourceParam: queryParams._source === 'database',
-						queryParams,
-					})
-				}
+			// Log the final URL for debugging
+			const apiUrl = this._constructApiUrl(type, id, null, queryParams)
+			console.info('fetchObject API URL:', apiUrl)
 
 				const response = await fetch(apiUrl)
 				if (!response.ok) throw new Error(`Failed to fetch ${type} object`)
