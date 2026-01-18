@@ -628,6 +628,21 @@ class ContactpersoonService
 
             $bulkUserInfo = [];
             $userManager = \OC::$server->get('OCP\IUserManager');
+            
+            // Get contact person register and schema from settings
+            $contactRegister = null;
+            $contactSchema = null;
+            try {
+                $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+                $contactRegister = (int) ($voorzieningenConfig['register'] ?? 2);
+                $contactSchema = (int) ($voorzieningenConfig['contactpersoon_schema'] ?? 25);
+            } catch (\Exception $e) {
+                $this->logger->warning('Could not get contact person schema config, using defaults', [
+                    'error' => $e->getMessage()
+                ]);
+                $contactRegister = 2;
+                $contactSchema = 25;
+            }
 
             foreach ($contactpersoonIds as $contactpersoonId) {
                 try {
@@ -640,8 +655,16 @@ class ContactpersoonService
                         continue;
                     }
 
-                    // Find the contactpersoon object
-                    $contactObject = $objectService->findByUuid($contactpersoonId);
+                    // Find the contactpersoon object with register and schema specified
+                    $contactObject = $objectService->findSilent(
+                        id: $contactpersoonId,
+                        _extend: [],
+                        files: false,
+                        register: $contactRegister,
+                        schema: $contactSchema,
+                        _rbac: false,
+                        _multitenancy: false
+                    );
                     
                     if (!$contactObject) {
                         $this->logger->warning('ContactpersoonService: Contactpersoon not found for bulk user info', [
