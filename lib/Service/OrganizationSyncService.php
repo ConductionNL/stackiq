@@ -785,7 +785,8 @@ class OrganizationSyncService
     {
         try {
             $contactData = $contactPerson->getObject();
-            $email = $contactData['email'] ?? '';
+            // Schema uses 'e-mailadres' but some data may use 'email'
+            $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
             $existingUsername = $contactData['username'] ?? '';
 
             if (empty($email)) {
@@ -1509,7 +1510,7 @@ class OrganizationSyncService
         } catch (\Exception $e) {
             $this->logger->error('[FLOW] Failed to create/update contact person object', [
                 'organizationId' => $organizationUuid,
-                'email' => $contactData['email'] ?? 'unknown',
+                'email' => $contactData['email'] ?? $contactData['e-mailadres'] ?? 'unknown',
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

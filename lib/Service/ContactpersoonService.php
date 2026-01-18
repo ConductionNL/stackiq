@@ -87,12 +87,13 @@ class ContactpersoonService
             $this->logger->info('ContactpersoonService: Starting contactpersoon processing', [
                 'contactId' => $contactId,
                 'isUpdate' => $isUpdate,
-                'hasEmail' => !empty($contactData['email']),
+                'hasEmail' => !empty($contactData['email'] ?? $contactData['e-mailadres'] ?? ''),
                 'hasOrganisation' => !empty($contactData['organisation'])
             ]);
 
             // Check if contactpersoon has required data
-            $email = $contactData['email'] ?? '';
+            // Schema uses 'e-mailadres' but some data may use 'email'
+            $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
             if (empty($email)) {
                 $this->logger->warning('ContactpersoonService: Contactpersoon has no email, skipping processing', [
                     'contactId' => $contactId
@@ -349,7 +350,7 @@ class ContactpersoonService
         
         // Check if roles have changed
         if ($newRoles !== $oldRoles) {
-            $username = $newData['email'] ?? $newData['username'] ?? '';
+            $username = $newData['email'] ?? $newData['e-mailadres'] ?? $newData['username'] ?? '';
             if ($username) {
                 $this->logger->info('ContactpersoonService: Roles changed, updating user groups', [
                     'contactId' => $newContactpersoonObject->getId(),
@@ -394,8 +395,8 @@ class ContactpersoonService
     {
         try {
             $contactData = $contactObject->getObject();
-            $username = $contactData['email'] ?? $contactData['username'] ?? '';
-            
+            $username = $contactData['email'] ?? $contactData['e-mailadres'] ?? $contactData['username'] ?? '';
+
             if (!$username) {
                 $this->logger->warning('ContactpersoonService: Contact deletion - no username found', [
                     'contactId' => $contactObject->getId()

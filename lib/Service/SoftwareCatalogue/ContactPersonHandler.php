@@ -389,7 +389,7 @@ class ContactPersonHandler
             $this->_logger->error('💥 USER CREATION EXCEPTION', [
                 'app' => 'softwarecatalog',
                 'contactpersoonId' => $contactpersoonObject->getId(),
-                'email' => $objectData['email'] ?? 'unknown',
+                'email' => $objectData['email'] ?? $objectData['e-mailadres'] ?? 'unknown',
                 'username' => $username ?? 'unknown',
                 'exception' => $e->getMessage(),
                 'exception_class' => get_class($e),
