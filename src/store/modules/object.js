@@ -783,7 +783,8 @@ export const useObjectStore = defineStore('object', {
 			})
 
 			// Handle _extend parameter - convert comma-separated string to multiple _extend[] parameters
-			const extendValue = params._extend || params.extend || '@self.schema'
+			// For organizations, only extend contactpersonen (not @self.schema)
+			const extendValue = params._extend || params.extend || (type === 'organisatie' ? 'contactpersonen' : '@self.schema')
 			if (extendValue) {
 				// Split comma-separated extends into individual parameters
 				const extendParts = extendValue.split(',').map(part => part.trim())
@@ -821,16 +822,16 @@ export const useObjectStore = defineStore('object', {
 					await this.fetchSettings()
 				}
 
-				// Add _extend parameter if not explicitly set
-				// For organizations, force database queries to ensure fresh data
-				const queryParams = {
-					...params,
-					_extend: params._extend || params.extend || '@self.schema',
-					// Force database queries for organizations to bypass any index caching
-					...((type === 'organisatie' || type === 'contactpersoon' || type === 'moduleVersie') && !params._source
-						? { _source: 'database' }
-						: {}),
-				}
+			// Add _extend parameter if not explicitly set
+			// For organizations, force database queries to ensure fresh data and only extend contactpersonen
+			const queryParams = {
+				...params,
+				_extend: params._extend || params.extend || (type === 'organisatie' ? 'contactpersonen' : '@self.schema'),
+				// Force database queries for organizations to bypass any index caching
+				...((type === 'organisatie' || type === 'contactpersoon' || type === 'moduleVersie') && !params._source
+					? { _source: 'database' }
+					: {}),
+			}
 
 				// Log the final URL for debugging
 				const apiUrl = this._constructApiUrl(type, null, null, queryParams)
@@ -899,16 +900,16 @@ export const useObjectStore = defineStore('object', {
 					await this.fetchSettings()
 				}
 
-				// Add _extend parameter if not explicitly set
-				// For organizations, force database queries to ensure fresh data
-				const queryParams = {
-					...params,
-					_extend: params._extend || params.extend || '@self.schema',
-					// Force database queries for organizations to bypass any index caching
-					...(type === 'organisatie' && !params._source
-						? { _source: 'database' }
-						: {}),
-				}
+			// Add _extend parameter if not explicitly set
+			// For organizations, only extend contactpersonen (not @self.schema)
+			const queryParams = {
+				...params,
+				_extend: params._extend || params.extend || (type === 'organisatie' ? 'contactpersonen' : '@self.schema'),
+				// Force database queries for organizations to bypass any index caching
+				...(type === 'organisatie' && !params._source
+					? { _source: 'database' }
+					: {}),
+			}
 
 				// Log the final URL for debugging
 				const apiUrl = this._constructApiUrl(type, id, null, queryParams)
