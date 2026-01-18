@@ -182,13 +182,29 @@ class OrganisatieService
      *
      * @return array The mapped data for OpenRegister
      */
+    /**
+     * Maps organization data from Software Catalog object to OpenRegister format.
+     *
+     * @param array $objectData The organization object data.
+     *
+     * @return array The mapped data for OpenRegister.
+     */
     private function mapOrganizationDataForOpenRegister(array $objectData): array
     {
+        // Get the organization name - try 'naam' first, then 'name', then use UUID as fallback
+        $naam = $objectData['naam'] ?? $objectData['name'] ?? null;
+        
+        // If still no name, create a unique one using the ID to avoid slug conflicts
+        if (empty($naam) || $naam === 'Unknown') {
+            $orgId = $objectData['id'] ?? uniqid('org-');
+            $naam = 'Organisation ' . substr($orgId, 0, 8);
+        }
+        
         return [
-            'naam' => $objectData['naam'] ?? 'Unknown',
+            'naam' => $naam,
             'type' => $objectData['type'] ?? '',
             'website' => $objectData['website'] ?? '',
-            'active' => $this->mapStatus($objectData['beoordeling'] ?? 'actief'),
+            'active' => $this->mapStatus($objectData['status'] ?? $objectData['beoordeling'] ?? 'actief'),
             'contactpersonen' => $objectData['contactpersonen'] ?? [],
             'deelnemers' => $objectData['deelnemers'] ?? []
         ];
@@ -245,34 +261,14 @@ class OrganisatieService
             // 'parentOrganisation' => $parentOrganisationUuid // HOTFIX: Commented out
         ]);
 
-        // Use OrganisationService to create the entity with correct parameters.
-        // Based on the error, the signature seems to be: createOrganisation(name, description, addCurrentUser, ...).
-        // Let me check what parameters are actually expected and use a simpler approach.
+        // Use OrganisationService to create the entity.
+        // NOTE: Don't call save() afterwards as it causes UUID/ID issues in the mapper.
         $organisationEntity = $organisationService->createOrganisation(
             $mappedData['naam'],           // name (string)
             $mappedData['type'] ?? '',     // description (string)
             false,                         // addCurrentUser (bool) - don't auto-add current user
-            $organizationUuid              // uuid (string) - might be 4th parameter
+            $organizationUuid              // uuid (string)
         );
-
-        // Set additional properties after creation.
-        if ($organisationEntity) {
-            $organisationEntity->setActive($mappedData['active']);
-            $organisationEntity->setUsers([]); // Will be populated by contact person processing.
-
-            // HOTFIX: Commented out automatic parent organisation setting due to RBAC issues.
-            // Setting the parent organisation causes users to lose access to newly created organisations
-            // because the RBAC filtering expects users to belong to the parent organisation chain.
-            // This needs to be properly resolved with RBAC logic updates.
-            // TODO: Re-enable this once RBAC properly handles parent-child organisation relationships.
-            // if ($parentOrganisationUuid !== null) {
-            //     $organisationEntity->setParent($parentOrganisationUuid);
-            // }
-
-            // Save the updated entity.
-            $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
-            $organisationMapper->save($organisationEntity);
-        }
 
         $this->logger->info('OrganisatieService: Organisation entity created successfully', [
             'uuid' => $organizationUuid,

@@ -214,7 +214,8 @@ class ContactpersoonService
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
         // Use the new organization type-based logic instead of old role-based logic
-        $user = $this->userManager->get($username);
+        $userManager = \OC::$server->get('OCP\IUserManager');
+        $user = $userManager->get($username);
         if ($user) {
             $contactData = $contactpersoonObject->getObject();
             $this->contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
@@ -786,8 +787,8 @@ class ContactpersoonService
                 object: $contactObject,
                 register: $register,
                 schema: $contactSchema,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
             
             $this->logger->info('ContactpersoonService: Successfully updated contactpersoon object owner and organisation', [

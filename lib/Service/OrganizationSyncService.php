@@ -534,14 +534,35 @@ class OrganizationSyncService
     private function ensureOrganisationEntity(object $organisatieObject, array &$stats): ?object
     {
         try {
+            // Get the full object data - the passed object might not have all fields populated
+            $organisatieId = $organisatieObject->getUuid();
+            
+            // Fetch the complete object from the database to ensure we have all data
+            try {
+                $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                $fullObject = $objectService->find(
+                    id: $organisatieId,
+                    register: $organisatieObject->getRegister(),
+                    schema: $organisatieObject->getSchema()
+                );
+                if ($fullObject) {
+                    $organisatieObject = $fullObject;
+                }
+            } catch (\Exception $e) {
+                $this->logger->warning('Could not fetch full organisation object, using provided object', [
+                    'organisatieId' => $organisatieId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
             $objectData = $organisatieObject->getObject();
-            $organisatieId = $objectData['id'] ?? $organisatieObject->getId();
 
             $this->logger->critical('🔍 ENSURING ORGANISATION ENTITY', [
                 'app' => 'softwarecatalog',
                 'organisatieId' => $organisatieId,
-                'naam' => $objectData['naam'] ?? 'Unknown',
-                'status' => $objectData['status'] ?? 'Unknown'
+                'naam' => $objectData['naam'] ?? $objectData['name'] ?? 'Unknown',
+                'status' => $objectData['status'] ?? 'Unknown',
+                'objectDataKeys' => array_keys($objectData)
             ]);
 
             // Get configuration for object updates
@@ -1113,6 +1134,14 @@ class OrganizationSyncService
                     'entitiesUpdated' => $stats['entitiesUpdated']
                 ]);
 
+                // Step 1.5: Process nested contact persons (from registration form data)
+                $this->logger->info('[FLOW] Step 1.5: Processing nested contactpersonen from organization data', [
+                    'organizationId' => $organizationUuid,
+                    'action' => 'process_nested_contactpersonen'
+                ]);
+
+                $this->processNestedContactPersons($organizationObject, $stats);
+
                 // Step 2: Find and process related contactpersonen objects (separate objects, not nested)
                 $this->logger->info('[FLOW] Step 2: Finding related contactpersoon objects', [
                     'organizationId' => $organizationUuid,
@@ -1264,6 +1293,7 @@ class OrganizationSyncService
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
             // Search for contactpersoon objects with this organization reference
+            // Try both 'organisatie' and 'organisation' field names
             $query = [
                 '@self' => [
                     'register' => (int) $register,
@@ -1272,12 +1302,27 @@ class OrganizationSyncService
                 'organisatie' => $organizationUuid
             ];
 
-            $this->logger->info('[FLOW] Searching for related contact persons', [
+            $this->logger->critical('[FLOW] Searching for related contact persons with organisatie field', [
                 'organizationId' => $organizationUuid,
+                'register' => $register,
+                'contactSchema' => $contactSchema,
                 'query' => $query
             ]);
 
             $relatedContacts = $objectService->searchObjects($query);
+            
+            // If not found, try with 'organisation' field
+            if (empty($relatedContacts)) {
+                $query['organisation'] = $organizationUuid;
+                unset($query['organisatie']);
+                
+                $this->logger->critical('[FLOW] Retrying search with organisation field', [
+                    'organizationId' => $organizationUuid,
+                    'query' => $query
+                ]);
+                
+                $relatedContacts = $objectService->searchObjects($query);
+            }
 
             if (empty($relatedContacts)) {
                 $this->logger->info('[FLOW] No related contact persons found', [

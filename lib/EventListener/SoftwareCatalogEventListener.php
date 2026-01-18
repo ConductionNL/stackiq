@@ -72,7 +72,7 @@ class SoftwareCatalogEventListener implements IEventListener
             $contactpersoonService = \OC::$server->get(ContactpersoonService::class);
             $settingsService = \OC::$server->get(SettingsService::class);
             
-            $logger->debug('SoftwareCatalog: Processing event', [
+            $logger->info('SoftwareCatalog: Processing event', [
                 'eventType' => get_class($event),
                 'timestamp' => date('Y-m-d H:i:s')
             ]);
@@ -288,9 +288,7 @@ class SoftwareCatalogEventListener implements IEventListener
                 'schemaId' => $objectSchemaId,
                 'schemaIdInt' => $objectSchemaIdInt,
                 'registerId' => $objectRegisterId,
-                'hasOldObject' => $oldObject !== null,
-                'newObjectData' => $object->getObject(),
-                'oldObjectData' => $oldObject ? $oldObject->getObject() : null
+                'hasOldObject' => $oldObject !== null
             ]
         );
         
@@ -298,10 +296,35 @@ class SoftwareCatalogEventListener implements IEventListener
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
         
+        $logger->critical('[DEBUG] Got organisation schema ID', [
+            'app' => 'softwarecatalog',
+            'organisatieSchemaId' => $organisatieSchemaId,
+            'organisatieSchemaIdInt' => $organisatieSchemaIdInt
+        ]);
+        
+        $logger->critical('[DEBUG] Organization schema check', [
+            'app' => 'softwarecatalog',
+            'objectSchemaId' => $objectSchemaId,
+            'objectSchemaIdInt' => $objectSchemaIdInt,
+            'organisatieSchemaId' => $organisatieSchemaId,
+            'organisatieSchemaIdInt' => $organisatieSchemaIdInt,
+            'matches' => ($objectSchemaIdInt === $organisatieSchemaIdInt)
+        ]);
+        
         if ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt) {
             $objectData = $object->getObject();
             $status = strtolower($objectData['status'] ?? '');
-            $oldStatus = strtolower($oldObject->getObject()['status'] ?? '');
+            $oldStatus = $oldObject ? strtolower($oldObject->getObject()['status'] ?? '') : '';
+            
+            $logger->critical('[DEBUG] Organization status check', [
+                'app' => 'softwarecatalog',
+                'objectId' => $objectId,
+                'status' => $status,
+                'oldStatus' => $oldStatus,
+                'statusChanged' => ($status !== $oldStatus),
+                'isActief' => in_array($status, ['actief', 'active']),
+                'willProcess' => (in_array($status, ['actief', 'active']) && $status !== $oldStatus)
+            ]);
             
             // Only process active organizations
             if (in_array($status, ['actief', 'active']) === true && $status !== $oldStatus) {
@@ -312,9 +335,29 @@ class SoftwareCatalogEventListener implements IEventListener
                 ]);
                 
                 try {
+                    // Refetch organization WITH contactpersonen expanded to get full contact data
+                    $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+                    $register = $voorzieningenConfig['register'] ?? '';
+                    $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+                    
+                    $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                    $organizationWithContacts = $objectService->find(
+                        id: $objectId,
+                        register: $register,
+                        schema: $organizationSchema,
+                        _extend: ['contactpersonen'],  // This expands contactpersonen with full data!
+                        _rbac: false,
+                        _multitenancy: false
+                    );
+                    
+                    $logger->info('SoftwareCatalog: Refetched organization with contactpersonen', [
+                        'objectId' => $objectId,
+                        'contactperso nenCount' => count($organizationWithContacts->getObject()['contactpersonen'] ?? [])
+                    ]);
+                    
                     // Process organization with OrganizationSyncService
                     $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
-                    $result = $organizationSyncService->processSpecificOrganization($object);
+                    $result = $organizationSyncService->processSpecificOrganization($organizationWithContacts);
                     
                     $logger->info('SoftwareCatalog: Successfully processed organization update', [
                         'objectId' => $objectId,

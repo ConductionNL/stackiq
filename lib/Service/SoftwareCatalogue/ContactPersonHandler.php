@@ -411,35 +411,50 @@ class ContactPersonHandler
      *
      * @return void
      */
+    /**
+     * Assign user to appropriate groups based on their role and organization.
+     * 
+     * Users are NOT added to generic groups or organization-specific groups.
+     * Users are tied to organization entities in OpenRegister instead.
+     * 
+     * @param \OCP\IUser $user The user to assign groups to.
+     * @param array $objectData The contactpersoon object data.
+     * @param bool $isFirstContact Whether this is the first contact of the organization.
+     * 
+     * @return void
+     */
     private function assignUserGroups(\OCP\IUser $user, array $objectData, bool $isFirstContact = false): void
     {
         try {
             $roles = $objectData['roles'] ?? [];
             $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
-            // Ensure roles is an array
+            // Ensure roles is an array.
             if (!is_array($roles)) {
                 $roles = [$roles];
             }
 
-            // Get the settings service to access group configurations
+            // Get the settings service to access group configurations.
             $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 
-            // Add user to only truly generic groups (not role-specific groups)
-            $trulyGenericGroups = ['software-catalog-users']; // Only non-role-specific groups
-            foreach ($trulyGenericGroups as $groupName) {
-                $this->addUserToGroupWithCheck($user, $groupName, 'generic-user-group');
-            }
-
-            // Add user to organization admin groups if this is the first contact
+            // Add user to organization admin groups if this is the first contact.
             if ($isFirstContact) {
                 $organizationAdminGroups = $settingsService->getOrganizationAdminGroups();
                 foreach ($organizationAdminGroups as $groupName) {
                     $this->addUserToGroupWithCheck($user, $groupName, 'organization-admin');
                 }
+                
+                $this->_logger->info(
+                    'Assigned organization admin groups to first contact',
+                    [
+                        'username' => $user->getUID(),
+                        'organizationId' => $organizationId,
+                        'adminGroups' => $organizationAdminGroups
+                    ]
+                );
             }
 
-            // Assign role based on organization type instead of configuration
+            // Assign role based on organization type.
             if (!empty($organizationId)) {
                 $organizationType = $this->getOrganizationType((string)$organizationId);
                 $roleGroup = $this->getRoleGroupByOrganizationType($organizationType);
@@ -468,59 +483,18 @@ class ContactPersonHandler
                 }
             }
 
-            // Add user to organization group if available
-            if (!empty($organizationId)) {
-                $organizationGroup = $this->getOrganizationGroup((string)$organizationId);
-
-                if ($organizationGroup && !$organizationGroup->inGroup($user)) {
-                    $organizationGroup->addUser($user);
-
-                    // If this is the first contact, make them a subadmin of the organization group
-                    if ($isFirstContact) {
-                        try {
-                            $subAdminManager = \OC::$server->getSubAdminManager();
-                            $subAdminManager->createSubAdmin($user, $organizationGroup);
-                            $this->_logger->info(
-                                'Added user to organization group as subadmin (first contact)',
-                                [
-                                    'username' => $user->getUID(),
-                                    'organizationId' => $organizationId,
-                                    'groupName' => $organizationGroup->getGID()
-                                ]
-                            );
-                        } catch (\Exception $e) {
-                            $this->_logger->warning(
-                                'Failed to make user subadmin of organization group: ' . $e->getMessage(),
-                                [
-                                    'username' => $user->getUID(),
-                                    'organizationId' => $organizationId,
-                                    'groupName' => $organizationGroup->getGID(),
-                                    'error' => $e->getMessage()
-                                ]
-                            );
-                        }
-                    } else {
-                        $this->_logger->info(
-                            'Added user to organization group',
-                            [
-                                'username' => $user->getUID(),
-                                'organizationId' => $organizationId,
-                                'groupName' => $organizationGroup->getGID()
-                            ]
-                        );
-                    }
-                }
-
-            }
+            // Users are now tied to organisation entities in OpenRegister.
+            // No need to add to organization-specific groups.
 
             $this->_logger->info(
                 'Successfully assigned user groups based on organization type',
                 [
                     'username' => $user->getUID(),
-                    'genericGroups' => $trulyGenericGroups,
                     'isFirstContact' => $isFirstContact,
                     'organizationAdminGroups' => $isFirstContact ? ($organizationAdminGroups ?? []) : [],
-                    'organizationId' => $organizationId
+                    'organizationId' => $organizationId,
+                    'roleGroup' => $roleGroup ?? 'none',
+                    'organizationType' => $organizationType ?? 'unknown'
                 ]
             );
 
@@ -1338,8 +1312,20 @@ class ContactPersonHandler
                 'organizationId' => $organizationId
             ]);
 
-            // Try to find by UUID using the same method as other parts of the code
-            $organizationObject = $objectService->findByUuid($organizationId);
+            // Get voorzieningen config for register and schema
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+            $register = $voorzieningenConfig['register'] ?? '';
+            $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+
+            // Find by UUID - use find() with register and schema
+            $organizationObject = $objectService->find(
+                id: $organizationId,
+                register: $register,
+                schema: $organizationSchema,
+                _rbac: false,
+                _multitenancy: false
+            );
 
             if ($organizationObject) {
                 $organizationData = $organizationObject->getObject();
@@ -2138,8 +2124,20 @@ class ContactPersonHandler
             // Get the organization object from OpenRegister
             $objectService = $this->_getObjectService();
             
-            // Find the organization object by UUID
-            $organizationObject = $objectService->findByUuid($organizationUuid);
+            // Get voorzieningen config for register and schema
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+            $register = $voorzieningenConfig['register'] ?? '';
+            $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+            
+            // Find the organization object by UUID - use find() with register and schema
+            $organizationObject = $objectService->find(
+                id: $organizationUuid,
+                register: $register,
+                schema: $organizationSchema,
+                _rbac: false,
+                _multitenancy: false
+            );
             
             if (!$organizationObject) {
                 $this->_logger->error('ContactPersonHandler: Organization object not found in OpenRegister', [
