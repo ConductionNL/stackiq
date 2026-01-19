@@ -278,6 +278,10 @@ class OrganizationSyncService
                 }
             }
 
+            // Remove organisatie field to avoid validation error
+            // (it's stored as UUID string but schema expects object type)
+            unset($contactEntityObject['organisatie']);
+
             $contactEntity->setObject($contactEntityObject);
             $objectService->saveObject(object: $contactEntity, register: $register, schema: $contactSchema, _rbac: false, _multitenancy: false);
 
@@ -1564,15 +1568,41 @@ class OrganizationSyncService
                                 $stats['usersCreated']++;
                                 $contactObjectData['username'] = $user->getUID();
 
+                                // Remove organisatie field to avoid validation error
+                                // (it's stored as UUID string but schema expects object type)
+                                unset($contactObjectData['organisatie']);
+
+                                $this->logger->critical('💾 ABOUT TO SAVE CONTACT WITH USERNAME', [
+                                    'app' => 'softwarecatalog',
+                                    'contactId' => $contactObject->getUuid(),
+                                    'username' => $user->getUID(),
+                                    'contactDataKeys' => array_keys($contactObjectData),
+                                    'hasOrganisatie' => isset($contactObjectData['organisatie'])
+                                ]);
+
                                 // Update the contact object with username
                                 $contactObject->setObject($contactObjectData);
-                                $objectService->saveObject(
-                                    object: $contactObject,
-                                    register: $register,
-                                    schema: $contactSchema,
-                                    _rbac: false,
-                                    _multitenancy: false
-                                );
+                                try {
+                                    $objectService->saveObject(
+                                        object: $contactObject,
+                                        register: $register,
+                                        schema: $contactSchema,
+                                        _rbac: false,
+                                        _multitenancy: false
+                                    );
+                                    $this->logger->critical('✅ CONTACT SAVED WITH USERNAME', [
+                                        'app' => 'softwarecatalog',
+                                        'contactId' => $contactObject->getUuid(),
+                                        'username' => $user->getUID()
+                                    ]);
+                                } catch (\Exception $saveEx) {
+                                    $this->logger->error('❌ FAILED TO SAVE CONTACT WITH USERNAME', [
+                                        'app' => 'softwarecatalog',
+                                        'contactId' => $contactObject->getUuid(),
+                                        'error' => $saveEx->getMessage(),
+                                        'trace' => $saveEx->getTraceAsString()
+                                    ]);
+                                }
 
                                 // Add user to organization entity in database
                                 $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
@@ -1691,6 +1721,10 @@ class OrganizationSyncService
                         // Check if user was created successfully (can be null if no email).
                         if ($user !== null) {
                             $contactEntityObject['username'] = $user->getUID();
+
+                            // Remove organisatie field to avoid validation error
+                            // (it's stored as UUID string but schema expects object type)
+                            unset($contactEntityObject['organisatie']);
 
                             // Update the contact object with the username (using RBAC bypass).
                             $contactObject->setObject($contactEntityObject);
