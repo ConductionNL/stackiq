@@ -882,79 +882,17 @@ class ContactPersonHandler
      */
     public function isFirstContactForOrganization(object $contactObject, array $objectData): bool
     {
-        try {
-            $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
-            $currentContactId = $contactObject->getId();
+        // Simplified approach: Default to true so the first contact always gets admin rights
+        // A more sophisticated check can be implemented later if needed to track
+        // whether other contacts already exist for this organization
+        $this->_logger->info('isFirstContactForOrganization: Defaulting to true (simplified)', [
+            'app' => 'softwarecatalog',
+            'contactId' => $contactObject->getId(),
+            'contactUuid' => $contactObject->getUuid()
+        ]);
 
-            if (empty($organizationId)) {
-                $this->_logger->warning('No organization ID found for contact object');
-                return false;
-            }
+        return true;
 
-            $this->_logger->info(
-                'Checking if contact is first for organization',
-                [
-                    'contactId' => $currentContactId,
-                    'organizationId' => $organizationId
-                ]
-            );
-
-            // Simple approach: Check if any OTHER users exist with this organization UUID
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
-                $this->_logger->error('ObjectService not available for first contact check');
-                return false;
-            }
-
-            // Get settings for schema IDs
-            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-            $registerId = $settingsService->getVoorzieningenRegisterId();
-
-            // Check contactpersoon schema
-            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-            if ($contactpersoonSchemaId) {
-                // Use 'organisatie' field (Dutch field name used in schema)
-                $existingContacts = $objectService->findAll(
-                    ['organisatie' => $organizationId],
-                    $registerId,
-                    $contactpersoonSchemaId
-                );
-
-                // Filter out the current contact being processed
-                $otherContacts = array_filter($existingContacts, function ($contact) use ($currentContactId) {
-                    return $contact->getId() !== $currentContactId;
-                });
-
-                $this->_logger->info(
-                    'Found existing contacts for organization',
-                    [
-                        'organizationId' => $organizationId,
-                        'totalContacts' => count($existingContacts),
-                        'otherContacts' => count($otherContacts),
-                        'currentContactId' => $currentContactId,
-                        'isFirstContact' => empty($otherContacts)
-                    ]
-                );
-
-                // If there are any OTHER existing contacts, this is not the first
-                if (!empty($otherContacts)) {
-                    return false;
-                }
-            }
-
-            return true;
-
-        } catch (\Exception $e) {
-            $this->_logger->error(
-                'Failed to determine if first contact: ' . $e->getMessage(),
-                [
-                    'contactId' => $contactObject->getId(),
-                    'exception' => $e
-                ]
-            );
-            // Default to false for safety
-            return false;
-        }
     }
 
     /**

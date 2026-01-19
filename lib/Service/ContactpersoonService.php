@@ -118,15 +118,19 @@ class ContactpersoonService
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
                         
                         if ($organisationEntity && $organisationEntity->getActive()) {
+                            // Determine if this is the first contact for the organization
+                            $isFirstContact = $this->contactPersonHandler->isFirstContactForOrganization($contactpersoonObject, $contactData);
+
                             // Create user account - organization is active
                             $this->logger->info('ContactpersoonService: Creating user account for contactpersoon (org is active)', [
                                 'contactId' => $contactId,
                                 'username' => $username,
                                 'organizationUuid' => $organizationUuid,
-                                'organizationActive' => true
+                                'organizationActive' => true,
+                                'isFirstContact' => $isFirstContact
                             ]);
 
-                            $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
+                            $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject, $isFirstContact);
                             if (!$success) {
                                 throw new \Exception('Failed to create user account');
                             }

@@ -1242,10 +1242,12 @@ class OrganizationSyncService
 
                         // Fetch the contact person object using the UUID
                         $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-                        $contactObject = $objectService->getObject(
+                        $contactObject = $objectService->find(
+                            id: $contactData,
                             register: $register,
                             schema: $contactSchema,
-                            id: $contactData
+                            _rbac: false,
+                            _multitenancy: false
                         );
 
                         if ($contactObject === null) {
