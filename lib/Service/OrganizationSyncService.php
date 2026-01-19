@@ -1232,6 +1232,41 @@ class OrganizationSyncService
 
             foreach ($contactPersons as $index => $contactData) {
                 try {
+                    // Handle UUID references - if contactData is a string (UUID), fetch the actual object
+                    if (is_string($contactData)) {
+                        $this->logger->info('[FLOW] Contact person is a UUID reference, fetching object', [
+                            'organizationId' => $organizationUuid,
+                            'contactIndex' => $index,
+                            'contactUuid' => $contactData
+                        ]);
+
+                        // Fetch the contact person object using the UUID
+                        $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                        $contactObject = $objectService->getObject(
+                            register: $register,
+                            schema: $contactSchema,
+                            id: $contactData
+                        );
+
+                        if ($contactObject === null) {
+                            $this->logger->warning('[FLOW] Contact person not found by UUID', [
+                                'organizationId' => $organizationUuid,
+                                'contactUuid' => $contactData
+                            ]);
+                            continue;
+                        }
+
+                        // Get the object data as array
+                        $contactData = $contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity
+                            ? $contactObject->getObject()
+                            : (is_array($contactObject) ? $contactObject : []);
+
+                        // Add the UUID if not present
+                        if (!isset($contactData['id']) && $contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
+                            $contactData['id'] = $contactObject->getUuid();
+                        }
+                    }
+
                     $this->logger->info('[FLOW] Processing nested contact person', [
                         'organizationId' => $organizationUuid,
                         'contactIndex' => $index,
@@ -1442,15 +1477,19 @@ class OrganizationSyncService
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
 
                         if ($organisationEntity && $organisationEntity->getActive()) {
+                            // Determine if this is the first contact for the organization
+                            $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization($contactObject, $contactObjectData);
+
                             $this->logger->critical('👤 CREATING USER ACCOUNT (org is active)', [
                                 'app' => 'softwarecatalog',
                                 'contactId' => $contactObject->getUuid(),
                                 'organizationId' => $organizationUuid,
                                 'organizationActive' => true,
-                                'email' => $email
+                                'email' => $email,
+                                'isFirstContact' => $isFirstContact
                             ]);
 
-                            $user = $this->contactpersonHandler->createUserAccount($contactObject);
+                            $user = $this->contactpersonHandler->createUserAccount($contactObject, $isFirstContact);
                             if ($user) {
                                 $stats['usersCreated']++;
                                 $contactObjectData['username'] = $user->getUID();
@@ -1567,14 +1606,18 @@ class OrganizationSyncService
                     $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
 
                     if ($organisationEntity && $organisationEntity->getActive()) {
+                        // Determine if this is the first contact for the organization
+                        $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization($contactObject, $contactEntityObject);
+
                         $this->logger->info('[EVENT] OrganizationSyncService: Creating user account for contact person (org is active)', [
                             'contactId' => $contactObject->getUuid(),
                             'organizationId' => $organizationUuid,
                             'organizationActive' => true,
-                            'email' => $contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown'
+                            'email' => $contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown',
+                            'isFirstContact' => $isFirstContact
                         ]);
 
-                        $user = $this->contactpersonHandler->createUserAccount($contactObject);
+                        $user = $this->contactpersonHandler->createUserAccount($contactObject, $isFirstContact);
                         // Check if user was created successfully (can be null if no email).
                         if ($user !== null) {
                             $contactEntityObject['username'] = $user->getUID();

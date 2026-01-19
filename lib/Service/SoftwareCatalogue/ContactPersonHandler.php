@@ -880,7 +880,7 @@ class ContactPersonHandler
      *
      * @return bool True if this is the first contact for the organization
      */
-    private function isFirstContactForOrganization(object $contactObject, array $objectData): bool
+    public function isFirstContactForOrganization(object $contactObject, array $objectData): bool
     {
         try {
             $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
@@ -913,8 +913,9 @@ class ContactPersonHandler
             // Check contactpersoon schema
             $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
             if ($contactpersoonSchemaId) {
+                // Use 'organisatie' field (Dutch field name used in schema)
                 $existingContacts = $objectService->findAll(
-                    ['organisation' => $organizationId],
+                    ['organisatie' => $organizationId],
                     $registerId,
                     $contactpersoonSchemaId
                 );
