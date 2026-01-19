@@ -298,6 +298,23 @@ class Application extends App implements IBootstrap
                 $container->get('Psr\Log\LoggerInterface')
             );
         });
+
+        // Register ContactpersonenController with explicit dependencies for /me endpoint
+        $context->registerService(\OCA\SoftwareCatalog\Controller\ContactpersonenController::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Controller\ContactpersonenController(
+                self::APP_ID,
+                $container->get('OCP\IRequest'),
+                $container->get(SettingsService::class),
+                $container->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
+                $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
+                $container->get('OCP\IUserManager'),
+                $container->get('OCP\IGroupManager'),
+                $container->get('OCP\IUserSession'),
+                $container,
+                $container->get('OCP\Security\ISecureRandom'),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
     }
 
     /**

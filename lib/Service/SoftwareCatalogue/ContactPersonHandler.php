@@ -255,16 +255,19 @@ class ContactPersonHandler
                         $this->storeUserOrganizationUuid($existingUser, $organizationUuid);
                     }
 
+                    // Store contact name fields for existing user (update if contact data changed)
+                    $this->storeContactNameFields($existingUser, $objectData);
+
                     // Update groups for existing user
                     $this->assignUserGroups($existingUser, $objectData, $isFirstContact);
-                    
+
                     $this->_logger->critical('✅ EXISTING USER UPDATED', [
                         'app' => 'softwarecatalog',
                         'username' => $existingUser->getUID(),
                         'email' => $email,
                         'organizationUuid' => $organizationUuid
                     ]);
-                    
+
                     return $existingUser;
                 }
             }
@@ -286,16 +289,19 @@ class ContactPersonHandler
                     $this->storeUserOrganizationUuid($existingUserByUsername, $organizationUuid);
                 }
 
+                // Store contact name fields for existing user (update if contact data changed)
+                $this->storeContactNameFields($existingUserByUsername, $objectData);
+
                 // Update groups for existing user
                 $this->assignUserGroups($existingUserByUsername, $objectData, $isFirstContact);
-                
+
                 $this->_logger->critical('✅ EXISTING USER UPDATED BY USERNAME', [
                     'app' => 'softwarecatalog',
                     'username' => $username,
                     'email' => $existingUserByUsername->getEMailAddress(),
                     'organizationUuid' => $organizationUuid
                 ]);
-                
+
                 return $existingUserByUsername;
             }
 
@@ -326,12 +332,19 @@ class ContactPersonHandler
                 $user->setEMailAddress($email);
                 $displayName = $this->getDisplayNameFromContactData($objectData);
                 $user->setDisplayName($displayName);
-                
+
+                // Store contact name fields in Nextcloud user config for /me endpoint
+                $this->storeContactNameFields($user, $objectData);
+
                 $this->_logger->critical('📋 USER DETAILS SET', [
                     'app' => 'softwarecatalog',
                     'username' => $username,
                     'email' => $email,
-                    'displayName' => $displayName
+                    'displayName' => $displayName,
+                    'firstName' => $objectData['voornaam'] ?? '',
+                    'middleName' => $objectData['tussenvoegsel'] ?? '',
+                    'lastName' => $objectData['achternaam'] ?? '',
+                    'functie' => $objectData['functie'] ?? ''
                 ]);
 
                 // Store organization UUID in user config for OpenConnector access
@@ -1028,6 +1041,91 @@ class ContactPersonHandler
         ]);
 
         return implode(' ', $parts) ?: ($contactData['email'] ?? $contactData['e-mailadres'] ?? 'Unknown User');
+    }
+
+    /**
+     * Stores contact person name fields in Nextcloud user config
+     *
+     * This method stores the contact person's name fields (firstName, lastName, middleName)
+     * and functie (role) in the Nextcloud user configuration so they can be retrieved
+     * by the /me endpoint in OpenRegister's UserService.
+     *
+     * @param \OCP\IUser $user        The user to store fields for
+     * @param array      $contactData The contact data containing name fields
+     *
+     * @return void
+     */
+    private function storeContactNameFields(\OCP\IUser $user, array $contactData): void
+    {
+        try {
+            $userId = $user->getUID();
+
+            // Store name fields in Nextcloud user config (core app)
+            // These are read by OpenRegister UserService::getCustomNameFields()
+            $firstName = $contactData['voornaam'] ?? '';
+            $middleName = $contactData['tussenvoegsel'] ?? '';
+            $lastName = $contactData['achternaam'] ?? '';
+            $functie = $contactData['functie'] ?? '';
+
+            if (!empty($firstName)) {
+                $this->config->setUserValue($userId, 'core', 'firstName', $firstName);
+            }
+
+            if (!empty($lastName)) {
+                $this->config->setUserValue($userId, 'core', 'lastName', $lastName);
+            }
+
+            if (!empty($middleName)) {
+                $this->config->setUserValue($userId, 'core', 'middleName', $middleName);
+            }
+
+            // Store functie in AccountManager as 'role' property
+            // This is read by OpenRegister UserService via AccountManager
+            if (!empty($functie)) {
+                try {
+                    $accountManager = $this->_container->get('OCP\Accounts\IAccountManager');
+                    $account = $accountManager->getAccount($user);
+
+                    // Try to set the role property
+                    $roleProperty = $account->getProperty(\OCP\Accounts\IAccountManager::PROPERTY_ROLE);
+                    if ($roleProperty !== null) {
+                        $roleProperty->setValue($functie);
+                        $accountManager->updateAccount($account);
+                    } else {
+                        // Property doesn't exist, create it
+                        $account->setProperty(
+                            \OCP\Accounts\IAccountManager::PROPERTY_ROLE,
+                            $functie,
+                            \OCP\Accounts\IAccountManager::SCOPE_LOCAL,
+                            \OCP\Accounts\IAccountManager::NOT_VERIFIED
+                        );
+                        $accountManager->updateAccount($account);
+                    }
+                } catch (\Exception $e) {
+                    // Fallback: store functie in user config if AccountManager fails
+                    $this->config->setUserValue($userId, 'core', 'functie', $functie);
+                    $this->_logger->warning('Failed to store functie in AccountManager, stored in user config', [
+                        'userId' => $userId,
+                        'functie' => $functie,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            $this->_logger->info('Stored contact name fields in user config', [
+                'userId' => $userId,
+                'firstName' => $firstName,
+                'middleName' => $middleName,
+                'lastName' => $lastName,
+                'functie' => $functie
+            ]);
+
+        } catch (\Exception $e) {
+            $this->_logger->error('Failed to store contact name fields', [
+                'userId' => $user->getUID(),
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**

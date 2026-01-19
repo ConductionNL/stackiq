@@ -815,6 +815,14 @@ class ArchiMateImportService
                         'xml' => $this->extractEssentialXmlData($item) // OPTIMIZATION: Store only essential XML data
                     ];
 
+                    // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent", "Referentiecomponent")
+                    // The xsi:type is stored as _xsi__type or in _attributes['xsi:type']
+                    if (isset($item['_xsi__type'])) {
+                        $object['type'] = $item['_xsi__type'];
+                    } elseif (isset($item['_attributes']['xsi:type'])) {
+                        $object['type'] = $item['_attributes']['xsi:type'];
+                    }
+
                     // Extract name from XML if it exists
                     if (isset($item['name'])) {
                         if (is_array($item['name']) && isset($item['name']['_value'])) {
@@ -824,12 +832,17 @@ class ArchiMateImportService
                         }
                     }
 
-                    // Extract documentation from XML if it exists and set to summary
+                    // Extract documentation from XML if it exists - set both summary and documentation
                     if (isset($item['documentation'])) {
+                        $docValue = null;
                         if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
-                            $object['summary'] = $item['documentation']['_value'];
+                            $docValue = $item['documentation']['_value'];
                         } elseif (is_string($item['documentation'])) {
-                            $object['summary'] = $item['documentation'];
+                            $docValue = $item['documentation'];
+                        }
+                        if ($docValue !== null) {
+                            $object['summary'] = $docValue;
+                            $object['documentation'] = $docValue; // Also set documentation field for schema compatibility
                         }
                     }
 
@@ -1056,15 +1069,18 @@ class ArchiMateImportService
         $saveStartTime = microtime(true);
 
         // DEBUG: Log basic object info before sending to ObjectService
-        $this->logger->info('saveObjectsToDatabase DEBUG', [
+        // Find first element with gemmaType for debugging
+        $elementsWithGemmaType = array_filter($objects, fn($o) => ($o['section'] ?? '') === 'element' && !empty($o['gemmaType']));
+        $sampleElementWithGemmaType = !empty($elementsWithGemmaType) ? array_values($elementsWithGemmaType)[0] : null;
+
+        $this->logger->error('GEMMA_IMPORT_DEBUG: Objects before save', [
             'total_objects_to_save' => count($objects),
-            'first_object_sample' => !empty($objects) ? [
-                'id' => $objects[0]['@self']['id'] ?? 'no-id',
-                'register' => $objects[0]['@self']['register'] ?? 'no-register',
-                'schema' => $objects[0]['@self']['schema'] ?? 'no-schema',
-                'section' => $objects[0]['section'] ?? 'no-section'
-            ] : null,
-            'object_sections' => array_count_values(array_column($objects, 'section'))
+            'elements_with_gemmaType' => count($elementsWithGemmaType),
+            'sample_element_with_gemmaType' => $sampleElementWithGemmaType ? [
+                'id' => $sampleElementWithGemmaType['@self']['id'] ?? 'no-id',
+                'gemmaType' => $sampleElementWithGemmaType['gemmaType'] ?? 'no-gemmaType',
+                'type' => $sampleElementWithGemmaType['type'] ?? 'no-type'
+            ] : 'no element with gemmaType found'
         ]);
 
 
@@ -3097,7 +3113,13 @@ class ArchiMateImportService
 
         foreach ($possiblePropertyNames as $propertyName) {
             if (isset($object[$propertyName]) && !empty($object[$propertyName])) {
-                $value = (string) $object[$propertyName];
+                $rawValue = $object[$propertyName];
+                // Handle case where value might be an array (e.g., from XML parsing with _value key)
+                if (is_array($rawValue)) {
+                    $value = $rawValue['_value'] ?? $rawValue[0] ?? '';
+                } else {
+                    $value = (string) $rawValue;
+                }
 
                 // Log the first successful match for debugging
                 if (!isset($this->gemmaTypePropertyFound)) {
@@ -3542,6 +3564,13 @@ class ArchiMateImportService
                 }
             }
 
+            // Extract type from xsi:type attribute
+            if (isset($item['_xsi__type'])) {
+                $object['type'] = $item['_xsi__type'];
+            } elseif (isset($item['_attributes']['xsi:type'])) {
+                $object['type'] = $item['_attributes']['xsi:type'];
+            }
+
             // Flatten properties efficiently (same as other sections)
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
@@ -3688,6 +3717,13 @@ class ArchiMateImportService
                 $element['summary'] = is_array($rawItem['documentation']) && isset($rawItem['documentation']['_value'])
                     ? $rawItem['documentation']['_value']
                     : (is_string($rawItem['documentation']) ? $rawItem['documentation'] : '');
+            }
+
+            // Extract type from xsi:type attribute
+            if (isset($rawItem['_xsi__type'])) {
+                $element['type'] = $rawItem['_xsi__type'];
+            } elseif (isset($rawItem['_attributes']['xsi:type'])) {
+                $element['type'] = $rawItem['_attributes']['xsi:type'];
             }
 
             // Fast properties flattening (only essential properties for splicing)
@@ -3863,7 +3899,12 @@ class ArchiMateImportService
                 }
             }
 
-
+            // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent")
+            if (isset($item['_xsi__type'])) {
+                $object['type'] = $item['_xsi__type'];
+            } elseif (isset($item['_attributes']['xsi:type'])) {
+                $object['type'] = $item['_attributes']['xsi:type'];
+            }
 
             // Flatten properties efficiently (if present)
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
@@ -4192,6 +4233,13 @@ class ArchiMateImportService
                     : (is_string($item['documentation']) ? $item['documentation'] : '');
             }
 
+            // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent")
+            if (isset($item['_xsi__type'])) {
+                $object['type'] = $item['_xsi__type'];
+            } elseif (isset($item['_attributes']['xsi:type'])) {
+                $object['type'] = $item['_attributes']['xsi:type'];
+            }
+
             // Fast flatten properties
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
@@ -4310,6 +4358,13 @@ class ArchiMateImportService
                 $object['summary'] = is_array($item['documentation']) && isset($item['documentation']['_value'])
                     ? $item['documentation']['_value']
                     : (is_string($item['documentation']) ? $item['documentation'] : '');
+            }
+
+            // Extract type from xsi:type attribute
+            if (isset($item['_xsi__type'])) {
+                $object['type'] = $item['_xsi__type'];
+            } elseif (isset($item['_attributes']['xsi:type'])) {
+                $object['type'] = $item['_attributes']['xsi:type'];
             }
 
             // Fast properties flattening
