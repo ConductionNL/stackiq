@@ -1173,6 +1173,11 @@ class ArchiMateImportService
 
         $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
 
+        // POST-PROCESSING: Fix StandaardVersie standaard field UUIDs
+        // The standaard field was set with ArchiMate identifiers, but we need database UUIDs
+        // for the inversedBy lookup to work correctly.
+        $this->fixStandaardVersieUuids($registerId);
+
         $totalSaveTime = microtime(true) - $saveStartTime;
 
 
@@ -1192,6 +1197,83 @@ class ArchiMateImportService
         ];
 
         return $result;
+    }
+
+    /**
+     * Fix StandaardVersie standaard field UUIDs after import
+     *
+     * The ArchiMate import sets the standaard field with ArchiMate identifiers (e.g., "92b166c5...")
+     * but the inversedBy lookup needs database UUIDs. This method:
+     * 1. Queries all Standaarden to get identifier → uuid mapping
+     * 2. Updates StandaardVersie objects to use the correct database UUIDs
+     *
+     * @param int $registerId The register ID
+     * @return void
+     */
+    private function fixStandaardVersieUuids(int $registerId): void
+    {
+        try {
+            $elementSchemaId = $this->cachedConfig['schemaIds']['element'] ?? null;
+            if ($elementSchemaId === null) {
+                $this->logger->warning('fixStandaardVersieUuids: Element schema ID not found in config');
+                return;
+            }
+
+            // Get database connection
+            $connection = \OC::$server->getDatabaseConnection();
+            $tableName = 'oc_openregister_table_' . $registerId . '_' . $elementSchemaId;
+
+            // Step 1: Build a mapping from ArchiMate identifier to database UUID for Standaarden
+            // The identifier field contains "id-{archimate_id}" and we need the _uuid field
+            $standaardQuery = $connection->executeQuery(
+                "SELECT _uuid, identifier FROM {$tableName} WHERE gemma_type = 'Standaard' AND identifier IS NOT NULL"
+            );
+
+            $identifierToUuid = [];
+            while ($row = $standaardQuery->fetch()) {
+                $identifier = $row['identifier'] ?? '';
+                $uuid = $row['_uuid'] ?? '';
+
+                if ($identifier && $uuid) {
+                    // Store mapping without "id-" prefix for matching
+                    $cleanId = str_replace('id-', '', $identifier);
+                    $identifierToUuid[$cleanId] = $uuid;
+                }
+            }
+
+            $this->logger->info('fixStandaardVersieUuids: Built identifier->uuid mapping', [
+                'standaard_count' => count($identifierToUuid)
+            ]);
+
+            if (empty($identifierToUuid)) {
+                $this->logger->warning('fixStandaardVersieUuids: No Standaarden found to map');
+                return;
+            }
+
+            // Step 2: Update StandaardVersies that have a standaard field with ArchiMate identifiers
+            // We need to replace ArchiMate IDs with database UUIDs
+            $updateCount = 0;
+
+            foreach ($identifierToUuid as $archiMateId => $dbUuid) {
+                // Update all StandaardVersies where standaard matches this ArchiMate ID
+                $result = $connection->executeStatement(
+                    "UPDATE {$tableName} SET standaard = ? WHERE standaard = ? AND gemma_type = 'Standaardversie'",
+                    [$dbUuid, $archiMateId]
+                );
+                $updateCount += $result;
+            }
+
+            $this->logger->info('fixStandaardVersieUuids: Updated StandaardVersie standaard fields', [
+                'updated_count' => $updateCount,
+                'mapping_count' => count($identifierToUuid)
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('fixStandaardVersieUuids: Error fixing UUIDs', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**
@@ -3170,19 +3252,21 @@ class ArchiMateImportService
      */
     private function processGemmaReferenceComponentStandards(array $objects): array
     {
-        $this->logger->info('Processing GEMMA Referentiecomponent-Standaard relationships with optimized single-pass algorithm');
+        $this->logger->info('Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships with optimized single-pass algorithm');
 
         // OPTIMIZATION: Single-pass processing - collect all data types at once
         $referentieComponenten = [];
         $standaarden = [];
+        $standaardVersies = [];
         $gemmaRelationshipMap = [];
+        $standaardVersieRelationshipMap = []; // StandaardVersie -> Standaard mappings
 
         // Debug: Count objects and property variations
         $elementCount = 0;
         $elementsWithGemmaType = 0;
         $gemmaTypeVariations = [];
 
-        // PASS 1: Collect Referentiecomponenten and Standaarden, process relationships immediately
+        // PASS 1: Collect Referentiecomponenten, Standaarden, and StandaardVersies
         foreach ($objects as $index => $object) {
             // Debug: Count elements and GEMMA types
             if (isset($object['section']) && $object['section'] === 'element') {
@@ -3203,13 +3287,21 @@ class ArchiMateImportService
                         $referentieComponenten[$object['identifier']] = $index;
                     } elseif ($gemmaTypeValue === 'Standaard') {
                         $standaarden[$object['identifier']] = $index;
+                    } elseif ($gemmaTypeValue === 'Standaardversie') {
+                        $standaardVersies[$object['identifier']] = $index;
                     }
                 }
             }
+        }
 
-            // Process relationships immediately when found (no separate collection needed)
+        // PASS 2: Process relationships (need all entities collected first for StandaardVersie relationships)
+        foreach ($objects as $object) {
             if (isset($object['section']) && $object['section'] === 'relationship') {
+                // Process Referentiecomponent-Standaard relationships
                 $this->processRelationshipImmediate($object, $referentieComponenten, $standaarden, $gemmaRelationshipMap);
+
+                // Process StandaardVersie-Standaard relationships (Specialization type)
+                $this->processStandaardVersieRelationship($object, $standaardVersies, $standaarden, $standaardVersieRelationshipMap);
             }
         }
 
@@ -3220,7 +3312,9 @@ class ArchiMateImportService
             'gemma_type_variations' => $gemmaTypeVariations,
             'referentiecomponenten_count' => count($referentieComponenten),
             'standaarden_count' => count($standaarden),
-            'processed_relationships' => count($gemmaRelationshipMap)
+            'standaardversies_count' => count($standaardVersies),
+            'processed_relationships' => count($gemmaRelationshipMap),
+            'standaardversie_relationships' => count($standaardVersieRelationshipMap)
         ]);
 
         // STEP 2: Apply the processed relationship mappings to Referentiecomponenten
@@ -3259,7 +3353,73 @@ class ArchiMateImportService
             'total_relationships_processed' => count($gemmaRelationshipMap)
         ]);
 
+        // STEP 3: Apply StandaardVersie-Standaard relationship mappings
+        // Only store 'standaard' on StandaardVersie - use inversedBy for reverse lookup
+        $versieEnhancedCount = 0;
+
+        foreach ($standaardVersieRelationshipMap as $versieId => $standaardId) {
+            // Add standaard reference to StandaardVersie
+            if (isset($standaardVersies[$versieId])) {
+                $versieIndex = $standaardVersies[$versieId];
+                // Convert to UUID format (remove "id-" prefix)
+                $standaardUuid = str_replace('id-', '', $standaardId);
+                $objects[$versieIndex]['standaard'] = $standaardUuid;
+                $versieEnhancedCount++;
+            }
+        }
+
+        $this->logger->info('GEMMA StandaardVersie-Standaard processing completed', [
+            'standaardversies_enhanced' => $versieEnhancedCount,
+            'total_standaardversies' => count($standaardVersies),
+            'total_versie_relationships' => count($standaardVersieRelationshipMap)
+        ]);
+
         return $objects;
+    }
+
+    /**
+     * Process StandaardVersie-Standaard relationships (Specialization type)
+     *
+     * @param array $relationship The relationship object
+     * @param array $standaardVersies Array of StandaardVersie identifiers
+     * @param array $standaarden Array of Standaard identifiers
+     * @param array &$standaardVersieRelationshipMap Map of StandaardVersie -> Standaard (by reference)
+     * @return void
+     */
+    private function processStandaardVersieRelationship(array $relationship, array $standaardVersies, array $standaarden, array &$standaardVersieRelationshipMap): void
+    {
+        // Get source and target from relationship
+        $source = $this->extractRelationshipEndpoint($relationship, 'source');
+        $target = $this->extractRelationshipEndpoint($relationship, 'target');
+
+        if (!$source || !$target) {
+            return;
+        }
+
+        // Get relationship type (looking for Specialization)
+        // Type can be in 'type' (from _xsi__type) or in _attributes['xsi:type']
+        $relationType = $relationship['type'] ?? $relationship['_xsi__type'] ?? $relationship['_attributes']['xsi:type'] ?? null;
+        if ($relationType !== 'Specialization') {
+            return;
+        }
+
+        // Check if one end is a StandaardVersie and the other is a Standaard
+        $versieId = null;
+        $standaardId = null;
+
+        if (isset($standaardVersies[$source]) && isset($standaarden[$target])) {
+            // StandaardVersie -> Standaard
+            $versieId = $source;
+            $standaardId = $target;
+        } elseif (isset($standaarden[$source]) && isset($standaardVersies[$target])) {
+            // Standaard -> StandaardVersie (reverse direction)
+            $versieId = $target;
+            $standaardId = $source;
+        }
+
+        if ($versieId && $standaardId) {
+            $standaardVersieRelationshipMap[$versieId] = $standaardId;
+        }
     }
 
     /**
@@ -3317,10 +3477,12 @@ class ArchiMateImportService
             }
 
             // Add to appropriate array based on Verbindingsrol
+            // Convert identifier to UUID format (remove "id-" prefix) for _extend compatibility
+            $standaardUuid = str_replace('id-', '', $standaardId);
             if (strtolower($verbindingsrol) === 'aanbevolen') {
-                $gemmaRelationshipMap[$refCompId]['aanbevolen'][] = $standaardId;
+                $gemmaRelationshipMap[$refCompId]['aanbevolen'][] = $standaardUuid;
             } elseif (strtolower($verbindingsrol) === 'verplicht') {
-                $gemmaRelationshipMap[$refCompId]['verplicht'][] = $standaardId;
+                $gemmaRelationshipMap[$refCompId]['verplicht'][] = $standaardUuid;
             }
         }
     }

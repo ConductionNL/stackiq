@@ -4128,39 +4128,89 @@
             "facetable": false
           },
           "aanbevolenStandaarden": {
-            "description": "Array van UUIDs van aanbevolen standaarden voor dit referentiecomponent",
+            "description": "Array van aanbevolen standaarden voor dit referentiecomponent",
             "type": "array",
             "facetable": false,
             "title": "Aanbevolen Standaarden",
             "items": {
-              "type": "string"
+              "type": "object",
+              "$ref": "#/components/schemas/element",
+              "objectConfiguration": {
+                "handling": "related-object"
+              }
             }
           },
           "verplichteStandaarden": {
-            "description": "Array van UUIDs van verplichte standaarden voor dit referentiecomponent",
+            "description": "Array van verplichte standaarden voor dit referentiecomponent",
             "type": "array",
             "facetable": false,
             "title": "Verplichte Standaarden",
             "items": {
-              "type": "string"
+              "type": "object",
+              "$ref": "#/components/schemas/element",
+              "objectConfiguration": {
+                "handling": "related-object"
+              }
             }
           },
           "standaarden": {
-            "description": "Array van alle standaarden UUIDs (aanbevolen + verplicht)",
+            "description": "Array van alle standaarden (aanbevolen + verplicht) - combined inversedBy lookup",
             "type": "array",
             "facetable": false,
             "title": "Standaarden",
             "items": {
-              "type": "string"
+              "type": "object",
+              "$ref": "#/components/schemas/element",
+              "objectConfiguration": {
+                "handling": "related-object"
+              }
+            }
+          },
+          "aanbevolenVoorReferentiecomponent": {
+            "description": "UUID van het Referentiecomponent waarvoor deze standaard aanbevolen is",
+            "type": "object",
+            "facetable": false,
+            "visible": false,
+            "title": "Aanbevolen Voor Referentiecomponent",
+            "$ref": "#/components/schemas/element",
+            "objectConfiguration": {
+              "handling": "related-object"
+            }
+          },
+          "verplichteVoorReferentiecomponent": {
+            "description": "UUID van het Referentiecomponent waarvoor deze standaard verplicht is",
+            "type": "object",
+            "facetable": false,
+            "visible": false,
+            "title": "Verplicht Voor Referentiecomponent",
+            "$ref": "#/components/schemas/element",
+            "objectConfiguration": {
+              "handling": "related-object"
             }
           },
           "standaardVersies": {
-            "description": "Array van UUIDs van versies voor dit standaard element",
+            "description": "Array van versies voor dit standaard element (inversedBy lookup)",
             "type": "array",
             "facetable": false,
             "title": "Standaard Versies",
             "items": {
-              "type": "string"
+              "type": "object",
+              "$ref": "#/components/schemas/element",
+              "objectConfiguration": {
+                "handling": "related-object"
+              },
+              "inversedBy": "standaard"
+            }
+          },
+          "standaard": {
+            "description": "UUID van de Standaard waartoe deze standaardversie behoort",
+            "type": "object",
+            "facetable": false,
+            "visible": false,
+            "title": "Standaard",
+            "$ref": "#/components/schemas/element",
+            "objectConfiguration": {
+              "handling": "related-object"
             }
           }
         },
@@ -5746,7 +5796,7 @@
             "type": "object",
             "visible": true,
             "order": 9,
-            "facetable": true,
+            "facetable": false,
             "table": {
               "default": true
             },
