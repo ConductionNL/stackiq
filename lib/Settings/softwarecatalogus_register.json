@@ -1652,7 +1652,7 @@
         },
         "deleted": null,
         "configuration": {
-          "objectNameField": "achternaam",
+          "objectNameField": "{{ voornaam }} {{ tussenvoegsel }} {{ achternaam }}",
           "objectDescriptionField": "functie",
           "autoPublish": true
         },
@@ -3142,8 +3142,9 @@
         "authorization": null,
         "deleted": null,
         "configuration": {
-          "objectNameField": "type",
-          "objectDescriptionField": "beschrijvingKort",
+          "objectNameField": "naam | type | koppelingType",
+          "objectSummaryField": "beschrijvingKort",
+          "objectDescriptionField": "beschrijvingLang",
           "autoPublish": false
         },
         "searchable": true
@@ -3922,8 +3923,8 @@
         "authorization": null,
         "deleted": null,
         "configuration": {
-          "objectNameField": "name",
-          "objectSummaryField": "summary",
+          "objectNameField": "name | ggm_naam | identifier",
+          "objectSummaryField": "summary | documentation",
           "autoPublish": false,
           "searchable": true
         },
@@ -5006,6 +5007,8 @@
         "authorization": null,
         "deleted": null,
         "configuration": {
+          "objectNameField": "name | identifier",
+          "objectDescriptionField": "type",
           "autoPublish": false
         },
         "searchable": true
@@ -5357,6 +5360,9 @@
         "authorization": null,
         "deleted": null,
         "configuration": {
+          "objectNameField": "name | type | identifier",
+          "objectSummaryField": "type",
+          "objectDescriptionField": "documentation",
           "autoPublish": false
         },
         "searchable": true
@@ -5902,7 +5908,7 @@
         "configuration": {
           "objectNameField": "module",
           "objectSummaryField": "standaardversie",
-          "objectDescriptionField": "module",
+          "objectDescriptionField": "url",
           "allowFiles": true,
           "allowedTags": [
             "testraport"
