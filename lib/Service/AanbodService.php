@@ -155,8 +155,8 @@ class AanbodService
                     // Execute search with RBAC and multitenancy disabled to find cross-organisation objects
                     $searchResult = $objectService->searchObjectsPaginated(
                         query: $query,
-                        rbac: false,
-                        multi: false
+                        _rbac: false,
+                        _multitenancy: false
                     );
 
                     // Filter out objects where @self.organisation equals current org
@@ -272,8 +272,8 @@ class AanbodService
             try {
                 $existingAanbod = $objectService->find(
                     id: $aanbodId,
-                    rbac: false,
-                    multi: false
+                    _rbac: false,
+                    _multitenancy: false
                 );
             } catch (Exception $e) {
                 $this->logger->warning('Failed to find aanbod object', [
@@ -344,8 +344,8 @@ class AanbodService
                 register: $existingAanbod->getRegister(),
                 schema: $existingAanbod->getSchema(),
                 uuid: $aanbodId,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             $this->logger->info('Successfully accepted aanbod object', [
@@ -421,8 +421,8 @@ class AanbodService
             try {
                 $existingAanbod = $objectService->find(
                     id: $aanbodId,
-                    rbac: false,
-                    multi: false
+                    _rbac: false,
+                    _multitenancy: false
                 );
 
                 if ($existingAanbod) {
@@ -496,15 +496,15 @@ class AanbodService
 
             // Delete the object with RBAC and multitenancy disabled
             // ObjectService should be able to determine register and schema from the UUID
-            $aanbod = $objectService->find(id: $aanbodId, rbac: false,multi: false);
+            $aanbod = $objectService->find(id: $aanbodId, _rbac: false,_multitenancy: false);
 
             $objectService->setRegister(register: $aanbod->getRegister());
             $objectService->setSchema(schema: $aanbod->getSchema());
 
             $deleteResult = $objectService->deleteObject(
                 uuid: $aanbodId,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             $objectService->clearCurrents();

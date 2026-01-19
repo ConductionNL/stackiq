@@ -156,8 +156,8 @@ class AangebodenGebruikService
             // Fetch a large batch that we'll filter and paginate afterward
             $searchResult = $objectService->searchObjectsPaginated(
                 query: $query,
-                rbac: false,  // Disable RBAC to find cross-organisation objects
-                multi: false  // Disable multitenancy to find objects from other organisations
+                _rbac: false,  // Disable RBAC to find cross-organisation objects
+                _multitenancy: false  // Disable multitenancy to find objects from other organisations
             );
             
             $this->logger->debug('AangebodenGebruikService: Search completed before filtering', [
@@ -322,7 +322,7 @@ class AangebodenGebruikService
             } else if ($currentOrg) {
                 // Check if the application/module is owned by user's organization
                 try {
-                    $appObject = $objectService->find(id: $uuid, rbac: false, multi: false);
+                    $appObject = $objectService->find(id: $uuid, _rbac: false, _multitenancy: false);
                     if ($appObject) {
                         $appData = $appObject->getObject();
                         $ownerOrg = $appData['@self']['organisation'] ?? null;
@@ -363,7 +363,7 @@ class AangebodenGebruikService
             // Check if UUID is an organisation UUID by trying to fetch it and checking its schema
             $isOrganisationUuid = false;
             try {
-                $uuidObject = $objectService->find(id: $uuid, rbac: false, multi: false);
+                $uuidObject = $objectService->find(id: $uuid, _rbac: false, _multitenancy: false);
                 if ($uuidObject) {
                     $uuidData = $uuidObject->getObject();
                     $uuidSchema = $uuidData['@self']['schema'] ?? null;
@@ -397,8 +397,8 @@ class AangebodenGebruikService
                 // Execute paginated search without 'uses' parameter
                 $searchResult = $objectService->searchObjectsPaginated(
                     query: $searchQuery,
-                    rbac: false,
-                    multi: false,
+                    _rbac: false,
+                    _multitenancy: false,
                     published: false,
                     deleted: false
                 );
@@ -417,8 +417,8 @@ class AangebodenGebruikService
                 // Execute paginated search using 'uses' parameter to filter by UUID in relations
                 $searchResult = $objectService->searchObjectsPaginated(
                     query: $searchQuery,
-                    rbac: false,
-                    multi: false,
+                    _rbac: false,
+                    _multitenancy: false,
                     published: false,
                     deleted: false,
                     uses: $uuid
@@ -506,8 +506,8 @@ class AangebodenGebruikService
             // Use database source and include unpublished objects
             $searchResult = $objectService->searchObjectsPaginated(
                 query: $query,
-                rbac: false,  // Disable RBAC to access all objects
-                multi: false, // Disable multitenancy to access objects from all organisations
+                _rbac: false,  // Disable RBAC to access all objects
+                _multitenancy: false, // Disable multitenancy to access objects from all organisations
                 published: false,  // Include unpublished objects
                 deleted: false     // Exclude deleted objects
             );
@@ -607,8 +607,8 @@ class AangebodenGebruikService
             // Use database source and uses parameter for relationship filtering
             $searchResult = $objectService->searchObjectsPaginated(
                 query: $query,
-                rbac: false,  // Disable RBAC to access any object
-                multi: false, // Disable multitenancy to access objects from any organisation
+                _rbac: false,  // Disable RBAC to access any object
+                _multitenancy: false, // Disable multitenancy to access objects from any organisation
                 published: false,  // Include unpublished objects
                 deleted: false,    // Exclude deleted objects
                 uses: $suiteId   // Find objects that have this UUID in their relations array
@@ -696,7 +696,7 @@ class AangebodenGebruikService
                     $query = $this->addQueryFilters($query, $options);
                     
                     // Execute search with RBAC disabled to find deelnemers
-                    $gebruikItems = $objectService->searchObjects($query, rbac: false);
+                    $gebruikItems = $objectService->searchObjects($query, _rbac: false);
                     
                     // Process and add to results
                     foreach ($gebruikItems as $gebruik) {
@@ -789,8 +789,8 @@ class AangebodenGebruikService
             try {
                 $existingGebruik = $objectService->find(
                     id: $gebruikId,
-                    rbac: false,  // Disable RBAC to access cross-organisation objects
-                    multi: false  // Disable multitenancy to access objects from other organisations
+                    _rbac: false,  // Disable RBAC to access cross-organisation objects
+                    _multitenancy: false  // Disable multitenancy to access objects from other organisations
                 );
             } catch (Exception $e) {
                 $this->logger->warning('Failed to find gebruik object', [
@@ -862,8 +862,8 @@ class AangebodenGebruikService
                 register: $gebruiksConfig['register_id'],  // Provide register context
                 schema: $gebruiksConfig['schemas'][0],     // Provide schema context
                 uuid: $gebruikId,                          // Provide UUID for update
-                rbac: false,  // Disable RBAC to allow cross-organisation updates
-                multi: false  // Disable multitenancy to allow updates from different organisations
+                _rbac: false,  // Disable RBAC to allow cross-organisation updates
+                _multitenancy: false  // Disable multitenancy to allow updates from different organisations
             );
 
             $this->logger->info('Successfully updated gebruik @self property', [
@@ -1075,8 +1075,8 @@ class AangebodenGebruikService
         // Execute search with RBAC and multitenancy disabled using paginated search
         $searchResult = $objectService->searchObjectsPaginated(
             query: $searchQuery,
-            rbac: false,
-            multi: false,
+            _rbac: false,
+            _multitenancy: false,
             published: false,
             deleted: false
         );
@@ -1119,8 +1119,8 @@ class AangebodenGebruikService
                 
                 $suites = $objectService->searchObjects(
                     query: $suiteQuery,
-                    rbac: false,
-                    multi: false
+                    _rbac: false,
+                    _multitenancy: false
                 );
                 
                 foreach ($suites as $suite) {
@@ -1142,8 +1142,8 @@ class AangebodenGebruikService
                 
                 $modules = $objectService->searchObjects(
                     query: $moduleQuery,
-                    rbac: false,
-                    multi: false
+                    _rbac: false,
+                    _multitenancy: false
                 );
                 
                 foreach ($modules as $module) {
@@ -1219,8 +1219,8 @@ class AangebodenGebruikService
         // Execute search using the uses parameter to find relationships with pagination
         $searchResult = $objectService->searchObjectsPaginated(
             query: $searchQuery,
-            rbac: false,
-            multi: false,
+            _rbac: false,
+            _multitenancy: false,
             published: false,
             deleted: false,
             uses: $relatedUuid
@@ -1246,8 +1246,8 @@ class AangebodenGebruikService
             // Get the application/module object
             $appObject = $objectService->find(
                 id: $appUuid,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
             
             if (!$appObject) {
@@ -1387,8 +1387,8 @@ class AangebodenGebruikService
             try {
                 $existingGebruik = $objectService->find(
                     id: $gebruikId,
-                    rbac: false,  // Disable RBAC to access cross-organisation objects
-                    multi: false  // Disable multitenancy to access objects from other organisations
+                    _rbac: false,  // Disable RBAC to access cross-organisation objects
+                    _multitenancy: false  // Disable multitenancy to access objects from other organisations
                 );
                 
                 if ($existingGebruik) {
@@ -1474,8 +1474,8 @@ class AangebodenGebruikService
             
             $deleteResult = $objectService->deleteObject(
                 uuid: $gebruikId,
-                rbac: false,  // Disable RBAC to allow cross-organisation deletion
-                multi: false  // Disable multitenancy to allow deletion from different organisations
+                _rbac: false,  // Disable RBAC to allow cross-organisation deletion
+                _multitenancy: false  // Disable multitenancy to allow deletion from different organisations
             );
 
             $this->logger->info('Successfully deleted gebruik object', [

@@ -132,6 +132,9 @@ return [
         ['name' => 'settings#updateSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'POST'],
         ['name' => 'settings#syncOrganisations', 'url' => '/api/settings/sync/organisations', 'verb' => 'POST'],
 
+        // User Profile endpoint
+        ['name' => 'contactpersonen#getMe', 'url' => '/api/me', 'verb' => 'GET'],
+
         // Contactpersonen Management endpoints
         ['name' => 'contactpersonen#getContactpersonen', 'url' => '/api/contactpersonen/organisation/{organisationId}', 'verb' => 'GET'],
         ['name' => 'contactpersonen#getContactPersonsWithUserDetailsForOrganization', 'url' => '/api/contactpersonen/organisation/{organizationUuid}/with-user-details', 'verb' => 'GET'],

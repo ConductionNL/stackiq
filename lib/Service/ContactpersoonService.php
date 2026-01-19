@@ -87,12 +87,13 @@ class ContactpersoonService
             $this->logger->info('ContactpersoonService: Starting contactpersoon processing', [
                 'contactId' => $contactId,
                 'isUpdate' => $isUpdate,
-                'hasEmail' => !empty($contactData['email']),
+                'hasEmail' => !empty($contactData['email'] ?? $contactData['e-mailadres'] ?? ''),
                 'hasOrganisation' => !empty($contactData['organisation'])
             ]);
 
             // Check if contactpersoon has required data
-            $email = $contactData['email'] ?? '';
+            // Schema uses 'e-mailadres' but some data may use 'email'
+            $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
             if (empty($email)) {
                 $this->logger->warning('ContactpersoonService: Contactpersoon has no email, skipping processing', [
                     'contactId' => $contactId
@@ -117,15 +118,19 @@ class ContactpersoonService
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
                         
                         if ($organisationEntity && $organisationEntity->getActive()) {
+                            // Determine if this is the first contact for the organization
+                            $isFirstContact = $this->contactPersonHandler->isFirstContactForOrganization($contactpersoonObject, $contactData);
+
                             // Create user account - organization is active
                             $this->logger->info('ContactpersoonService: Creating user account for contactpersoon (org is active)', [
                                 'contactId' => $contactId,
                                 'username' => $username,
                                 'organizationUuid' => $organizationUuid,
-                                'organizationActive' => true
+                                'organizationActive' => true,
+                                'isFirstContact' => $isFirstContact
                             ]);
 
-                            $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
+                            $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject, $isFirstContact);
                             if (!$success) {
                                 throw new \Exception('Failed to create user account');
                             }
@@ -214,7 +219,8 @@ class ContactpersoonService
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
         // Use the new organization type-based logic instead of old role-based logic
-        $user = $this->userManager->get($username);
+        $userManager = \OC::$server->get('OCP\IUserManager');
+        $user = $userManager->get($username);
         if ($user) {
             $contactData = $contactpersoonObject->getObject();
             $this->contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
@@ -348,7 +354,7 @@ class ContactpersoonService
         
         // Check if roles have changed
         if ($newRoles !== $oldRoles) {
-            $username = $newData['email'] ?? $newData['username'] ?? '';
+            $username = $newData['email'] ?? $newData['e-mailadres'] ?? $newData['username'] ?? '';
             if ($username) {
                 $this->logger->info('ContactpersoonService: Roles changed, updating user groups', [
                     'contactId' => $newContactpersoonObject->getId(),
@@ -393,8 +399,8 @@ class ContactpersoonService
     {
         try {
             $contactData = $contactObject->getObject();
-            $username = $contactData['email'] ?? $contactData['username'] ?? '';
-            
+            $username = $contactData['email'] ?? $contactData['e-mailadres'] ?? $contactData['username'] ?? '';
+
             if (!$username) {
                 $this->logger->warning('ContactpersoonService: Contact deletion - no username found', [
                     'contactId' => $contactObject->getId()
@@ -627,6 +633,21 @@ class ContactpersoonService
 
             $bulkUserInfo = [];
             $userManager = \OC::$server->get('OCP\IUserManager');
+            
+            // Get contact person register and schema from settings
+            $contactRegister = null;
+            $contactSchema = null;
+            try {
+                $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+                $contactRegister = (int) ($voorzieningenConfig['register'] ?? 2);
+                $contactSchema = (int) ($voorzieningenConfig['contactpersoon_schema'] ?? 25);
+            } catch (\Exception $e) {
+                $this->logger->warning('Could not get contact person schema config, using defaults', [
+                    'error' => $e->getMessage()
+                ]);
+                $contactRegister = 2;
+                $contactSchema = 25;
+            }
 
             foreach ($contactpersoonIds as $contactpersoonId) {
                 try {
@@ -639,8 +660,16 @@ class ContactpersoonService
                         continue;
                     }
 
-                    // Find the contactpersoon object
-                    $contactObject = $objectService->findByUuid($contactpersoonId);
+                    // Find the contactpersoon object with register and schema specified
+                    $contactObject = $objectService->findSilent(
+                        id: $contactpersoonId,
+                        _extend: [],
+                        files: false,
+                        register: $contactRegister,
+                        schema: $contactSchema,
+                        _rbac: false,
+                        _multitenancy: false
+                    );
                     
                     if (!$contactObject) {
                         $this->logger->warning('ContactpersoonService: Contactpersoon not found for bulk user info', [
@@ -786,8 +815,8 @@ class ContactpersoonService
                 object: $contactObject,
                 register: $register,
                 schema: $contactSchema,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
             
             $this->logger->info('ContactpersoonService: Successfully updated contactpersoon object owner and organisation', [
@@ -825,7 +854,13 @@ class ContactpersoonService
                 throw new \Exception('ObjectService not available');
             }
 
-            $contactObject = $objectService->findByUuid($contactpersoonId);
+            $contactObject = $objectService->find(
+                id: $contactpersoonId,
+                register: 'voorzieningen',
+                schema: 'contactpersoon',
+                _rbac: false,
+                _multitenancy: false
+            );
             if (!$contactObject) {
                 throw new \Exception('Contactpersoon not found');
             }
@@ -879,7 +914,13 @@ class ContactpersoonService
                 throw new \Exception('ObjectService not available');
             }
 
-            $contactObject = $objectService->findByUuid($contactpersoonId);
+            $contactObject = $objectService->find(
+                id: $contactpersoonId,
+                register: 'voorzieningen',
+                schema: 'contactpersoon',
+                _rbac: false,
+                _multitenancy: false
+            );
             if (!$contactObject) {
                 throw new \Exception('Contactpersoon not found');
             }

@@ -137,7 +137,7 @@ class Application extends App implements IBootstrap
 
         // Register TEST event listener for easily triggerable Nextcloud events
         $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
-        
+
         // Register event listeners for OpenRegister events
         $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
@@ -298,6 +298,23 @@ class Application extends App implements IBootstrap
                 $container->get('Psr\Log\LoggerInterface')
             );
         });
+
+        // Register ContactpersonenController with explicit dependencies for /me endpoint
+        $context->registerService(\OCA\SoftwareCatalog\Controller\ContactpersonenController::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Controller\ContactpersonenController(
+                self::APP_ID,
+                $container->get('OCP\IRequest'),
+                $container->get(SettingsService::class),
+                $container->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
+                $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
+                $container->get('OCP\IUserManager'),
+                $container->get('OCP\IGroupManager'),
+                $container->get('OCP\IUserSession'),
+                $container,
+                $container->get('OCP\Security\ISecureRandom'),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
     }
 
     /**
@@ -341,8 +358,8 @@ class Application extends App implements IBootstrap
                 $initReason = empty($lastInitializedVersion) ? 'never_initialized' : 'version_changed';
             } else {
                 // Even if version matches, check if we have valid configuration
-                $hasValidConfig = $config->getValueString(self::APP_ID, 'voorzieningen_organisatie_schema', '') !== '' ||
-                                  $config->getValueString(self::APP_ID, 'organization_schema', '') !== '';
+                $hasValidConfig = json_decode($config->getValueString(self::APP_ID, 'voorzieningen_config', '{"organisatie_schema": ""}'), true)['organisatie_schema'] !== '' ||
+                                  json_decode($config->getValueString(self::APP_ID, 'amef_config', '{"organization_schema": ""}'), true)['organization_schema'] !== '';
 
                 if (!$hasValidConfig) {
                     $needsInitialization = true;

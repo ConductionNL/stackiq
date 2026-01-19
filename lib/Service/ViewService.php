@@ -649,7 +649,7 @@ class ViewService
                         ];
                         
                         // Call with RBAC disabled
-                        $deelnamesGebruikItems = $objectService->searchObjects($query, rbac: false);
+                        $deelnamesGebruikItems = $objectService->searchObjects($query, _rbac: false);
                         $this->processGebruikItems($deelnamesGebruikItems, $allGebruik, $currentOrg, 'deelnames');
                         
                         $this->logger->debug('Retrieved deelnames gebruik from schema', [
