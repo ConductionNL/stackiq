@@ -3791,6 +3791,377 @@
             "type": "string",
             "facetable": false,
             "order": 10
+          },
+          "objectId": {
+            "description": "Object ID van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "objectIdSync": {
+            "description": "Object ID sync van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "gemmaStatus": {
+            "description": "GEMMA status van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "gemmaSubtype": {
+            "description": "GEMMA subtype van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "gemmaSortering": {
+            "description": "GEMMA sortering van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "gemma-toelichting": {
+            "description": "GEMMA toelichting van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "gemma-ggmStatus": {
+            "description": "GEMMA-GGM status van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "afkorting": {
+            "description": "Afkorting van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "alternateName": {
+            "description": "Alternate name van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "architectuurlaag": {
+            "description": "Architectuurlaag van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "architectuurtool": {
+            "description": "Architectuurtool van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "bbn": {
+            "description": "BBN van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "beheerder": {
+            "description": "Beheerder van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "beleidsdomein": {
+            "description": "Beleidsdomein van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "beschikbaarheid": {
+            "description": "Beschikbaarheid van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "beschikbaarheid(belangrijksteReden)": {
+            "description": "Beschikbaarheid belangrijkste reden van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "bivScoreBbn": {
+            "description": "BIV score BBN van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "bron": {
+            "description": "Bron van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "compliancy": {
+            "description": "Compliancy van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "compliancyUrl": {
+            "description": "Compliancy URL van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "contextview": {
+            "description": "Contextview van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "detailniveau": {
+            "description": "Detailniveau van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "domein": {
+            "description": "Domein van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "eigenaar": {
+            "description": "Eigenaar van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "excludefromview": {
+            "description": "Exclude from view van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "groepering": {
+            "description": "Groepering van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "heeftBron": {
+            "description": "Heeft bron van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "id": {
+            "description": "ID van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "implicaties": {
+            "description": "Implicaties van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "integriteit": {
+            "description": "Integriteit van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "integriteit(belangrijksteReden)": {
+            "description": "Integriteit belangrijkste reden van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "latestSyncDate": {
+            "description": "Latest Sync Date van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "letOp": {
+            "description": "Let op van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "model": {
+            "description": "Model van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "noraKernwaarde": {
+            "description": "NORA kernwaarde van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "noraKwaliteitsdoel": {
+            "description": "NORA kwaliteitsdoel van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "noraPrincipe": {
+            "description": "NORA principe van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "projectstatus": {
+            "description": "Projectstatus van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "publiceren": {
+            "description": "Publiceren van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "release": {
+            "description": "Release van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "roundtrip": {
+            "description": "Roundtrip van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "scope": {
+            "description": "Scope van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "status": {
+            "description": "Status van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "synoniemen": {
+            "description": "Synoniemen van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "toelichting": {
+            "description": "Toelichting van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "typeBeforeConversion": {
+            "description": "Type before conversion van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "typeModel": {
+            "description": "Type model van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "typeUri": {
+            "description": "Type URI van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "typeVoorziening": {
+            "description": "Type voorziening van dit Element",
+            "type": "string",
+            "facetable": true
+          },
+          "uri": {
+            "description": "URI van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "url": {
+            "description": "URL van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "verbindingsrol": {
+            "description": "Verbindingsrol van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "versieaanduiding": {
+            "description": "Versieaanduiding van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "vertrouwelijkheid": {
+            "description": "Vertrouwelijkheid van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "vertrouwelijkheid(belangrijksteReden)": {
+            "description": "Vertrouwelijkheid belangrijkste reden van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-bron": {
+            "description": "GGM bron van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-datum-tijd-export": {
+            "description": "GGM datum tijd export van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-definitie": {
+            "description": "GGM definitie van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-guid": {
+            "description": "GGM guid van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-naam": {
+            "description": "GGM naam van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-specialisaties": {
+            "description": "GGM specialisaties van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-toelichting": {
+            "description": "GGM toelichting van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-type": {
+            "description": "GGM type van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "ggm-uml-type": {
+            "description": "GGM uml type van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "api-portaal": {
+            "description": "API portaal van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "api-portaal(url)": {
+            "description": "API portaal URL van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "summary": {
+            "description": "Summary van dit Element",
+            "type": "string",
+            "facetable": false
+          },
+          "aanbevolenStandaarden": {
+            "description": "Array van UUIDs van aanbevolen standaarden voor dit referentiecomponent",
+            "type": "array",
+            "facetable": false,
+            "title": "Aanbevolen Standaarden",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verplichteStandaarden": {
+            "description": "Array van UUIDs van verplichte standaarden voor dit referentiecomponent",
+            "type": "array",
+            "facetable": false,
+            "title": "Verplichte Standaarden",
+            "items": {
+              "type": "string"
+            }
+          },
+          "standaarden": {
+            "description": "Array van alle standaarden UUIDs (aanbevolen + verplicht)",
+            "type": "array",
+            "facetable": false,
+            "title": "Standaarden",
+            "items": {
+              "type": "string"
+            }
+          },
+          "standaardVersies": {
+            "description": "Array van UUIDs van versies voor dit standaard element",
+            "type": "array",
+            "facetable": false,
+            "title": "Standaard Versies",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "archive": [],
@@ -4079,6 +4450,76 @@
               "maxSize": 0
             },
             "oneOf": []
+          },
+          "objectId": {
+            "description": "Object ID van deze View",
+            "type": "string",
+            "facetable": false
+          },
+          "viewtype": {
+            "description": "Viewtype van deze View",
+            "type": "string",
+            "facetable": true
+          },
+          "titelViewSwc": {
+            "description": "Titel view SWC van deze View",
+            "type": "string",
+            "facetable": false
+          },
+          "gemmaType": {
+            "description": "GEMMA type van deze View",
+            "type": "string",
+            "facetable": true
+          },
+          "gemmaThema": {
+            "description": "GEMMA thema van deze View",
+            "type": "string",
+            "facetable": true
+          },
+          "gemmaUrl": {
+            "description": "GEMMA URL van deze View",
+            "type": "string",
+            "facetable": false
+          },
+          "gemmaStatus": {
+            "description": "GEMMA status van deze View",
+            "type": "string",
+            "facetable": true
+          },
+          "contextview": {
+            "description": "Contextview van deze View",
+            "type": "string",
+            "facetable": false
+          },
+          "layoutDirectionBo": {
+            "description": "Layout direction BO van deze View",
+            "type": "string",
+            "facetable": false
+          },
+          "layoutDirectionDo": {
+            "description": "Layout direction DO van deze View",
+            "type": "string",
+            "facetable": false
+          },
+          "detailniveau": {
+            "description": "Detailniveau van deze View",
+            "type": "string",
+            "facetable": true
+          },
+          "scope": {
+            "description": "Scope van deze View",
+            "type": "string",
+            "facetable": true
+          },
+          "publiceren": {
+            "description": "Publiceren van deze View",
+            "type": "string",
+            "facetable": false
+          },
+          "summary": {
+            "description": "Summary van deze View",
+            "type": "string",
+            "facetable": false
           }
         },
         "archive": [],
@@ -5106,6 +5547,56 @@
               "maxSize": 0
             },
             "oneOf": []
+          },
+          "objectId": {
+            "description": "Object ID van deze Relation",
+            "type": "string",
+            "facetable": false
+          },
+          "gemmaType": {
+            "description": "GEMMA type van deze Relation",
+            "type": "string",
+            "facetable": true
+          },
+          "gemmaThema": {
+            "description": "GEMMA thema van deze Relation",
+            "type": "string",
+            "facetable": true
+          },
+          "gemmaUrl": {
+            "description": "GEMMA URL van deze Relation",
+            "type": "string",
+            "facetable": false
+          },
+          "gemmaStatus": {
+            "description": "GEMMA status van deze Relation",
+            "type": "string",
+            "facetable": true
+          },
+          "status": {
+            "description": "Status van deze Relation",
+            "type": "string",
+            "facetable": true
+          },
+          "verbindingsrol": {
+            "description": "Verbindingsrol van deze Relation",
+            "type": "string",
+            "facetable": false
+          },
+          "toelichting": {
+            "description": "Toelichting van deze Relation",
+            "type": "string",
+            "facetable": false
+          },
+          "bron": {
+            "description": "Bron van deze Relation",
+            "type": "string",
+            "facetable": false
+          },
+          "summary": {
+            "description": "Summary van deze Relation",
+            "type": "string",
+            "facetable": false
           }
         },
         "archive": [],
