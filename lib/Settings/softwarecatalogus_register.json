@@ -192,13 +192,13 @@
               {
                 "order": 3,
                 "name": "Organisaties",
-                "link": "/zoeken?@self[schema]=67",
+                "link": "/zoeken?_schema=organisatie",
                 "items": []
               },
               {
                 "order": 4,
                 "name": "Applicaties",
-                "link": "/zoeken?@self[schema]=78",
+                "link": "/zoeken?_schema=module",
                 "items": []
               }
             ],
@@ -478,7 +478,6 @@
         "schemas": [
           "sector",
           "suite",
-          "component",
           "module",
           "dienst",
           "kwetsbaarheid",
@@ -509,10 +508,6 @@
               "autoCreateTable": true
             },
             "suite": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "component": {
               "magicMapping": true,
               "autoCreateTable": true
             },
@@ -575,8 +570,7 @@
           "organization",
           "property-definition",
           "relation",
-          "view",
-          "property"
+          "view"
         ],
         "source": "",
         "tablePrefix": "",
@@ -611,10 +605,6 @@
               "autoCreateTable": true
             },
             "view": {
-              "magicMapping": true,
-              "autoCreateTable": true
-            },
-            "property": {
               "magicMapping": true,
               "autoCreateTable": true
             }
@@ -691,122 +681,6 @@
       }
     },
     "schemas": {
-      "property": {
-        "uri": null,
-        "slug": "property",
-        "title": "Property",
-        "description": "Schema voor generieke eigenschappen die aan voorzieningen of relaties kunnen hangen",
-        "version": "0.0.9",
-        "summary": "",
-        "icon": "Tag",
-        "required": [
-          "name",
-          "type"
-        ],
-        "properties": {
-          "name": {
-            "description": "Naam van de eigenschap",
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200,
-            "facetable": false,
-            "title": "Naam"
-          },
-          "type": {
-            "description": "Datatype van de eigenschap",
-            "type": "string",
-            "enum": [
-              "string",
-              "number",
-              "boolean",
-              "date"
-            ],
-            "facetable": true,
-            "title": "Type"
-          },
-          "value": {
-            "description": "Waarde van de eigenschap",
-            "type": "string",
-            "maxLength": 1000,
-            "facetable": false,
-            "title": "Waarde"
-          },
-          "lang": {
-            "description": "Taalcode (optioneel)",
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 2,
-            "facetable": false,
-            "title": "Taal"
-          }
-        },
-        "archive": [],
-        "source": "",
-        "hardValidation": false,
-        "updated": "2025-08-10T00:00:00+00:00",
-        "created": "2025-08-10T00:00:00+00:00",
-        "maxDepth": 0,
-        "owner": "system",
-        "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-        "groups": null,
-        "authorization": {
-          "create": [
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisaties-beheerder",
-            "organisatie-beheerder",
-            "gebruik-raadpleger",
-            "gebruik-beheerder",
-            "functioneel-beheerder",
-            "ambtenaar",
-            "aanbod-beheerder"
-          ],
-          "read": [
-            "public",
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
-            "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger"
-          ],
-          "update": [
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
-            "gebruik-beheerder",
-            "gebruik-raadpleger",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "software-catalog-admins",
-            "software-catalog-users",
-            "vng-raadpleger"
-          ],
-          "delete": [
-            "aanbod-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisaties-beheerder",
-            "organisatie-beheerder",
-            "gebruik-raadpleger",
-            "gebruik-beheerder",
-            "functioneel-beheerder",
-            "ambtenaar"
-          ]
-        },
-        "deleted": null,
-        "configuration": {
-          "autoPublish": false
-        },
-        "searchable": true
-      },
       "sector": {
         "uri": null,
         "slug": "sector",
@@ -1000,186 +874,6 @@
           },
           "applicaties": {
             "description": "De modules (applicaties) die onderdeel zijn van deze suite",
-            "type": "array",
-            "visible": true,
-            "order": 7,
-            "facetable": false,
-            "title": "Applicaties",
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/module"
-            }
-          }
-        },
-        "archive": [],
-        "source": "internal",
-        "hardValidation": false,
-        "immutable": false,
-        "updated": "2025-11-04T12:00:00+00:00",
-        "created": "2025-11-04T12:00:00+00:00",
-        "maxDepth": 0,
-        "owner": "system",
-        "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
-        "groups": null,
-        "authorization": {
-          "create": [
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisaties-beheerder",
-            "organisatie-beheerder",
-            "gebruik-raadpleger",
-            "gebruik-beheerder",
-            "functioneel-beheerder",
-            "ambtenaar",
-            "aanbod-beheerder"
-          ],
-          "read": [
-            "public",
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
-            "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger"
-          ],
-          "update": [
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
-            "gebruik-beheerder",
-            "gebruik-raadpleger",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "software-catalog-admins",
-            "software-catalog-users",
-            "vng-raadpleger"
-          ],
-          "delete": [
-            "aanbod-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisaties-beheerder",
-            "organisatie-beheerder",
-            "gebruik-raadpleger",
-            "gebruik-beheerder",
-            "functioneel-beheerder",
-            "ambtenaar"
-          ]
-        },
-        "deleted": null,
-        "configuration": {
-          "objectNameField": "naam",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
-          "objectImageField": "logo",
-          "allowFiles": true,
-          "allowedTags": [
-            "DPIA",
-            "Handleiding"
-          ],
-          "autoPublish": true
-        },
-        "searchable": true
-      },
-      "component": {
-        "uri": null,
-        "slug": "component",
-        "title": "Component",
-        "description": "Een component is een logische groepering van applicaties",
-        "version": "0.1.2",
-        "summary": "",
-        "icon": "ViewModule",
-        "required": [
-          "naam",
-          "beschrijvingKort"
-        ],
-        "properties": {
-          "naam": {
-            "description": "Naam van het component",
-            "type": "string",
-            "required": true,
-            "visible": true,
-            "order": 1,
-            "maxLength": 200,
-            "facetable": false,
-            "title": "Naam",
-            "table": {
-              "default": true
-            },
-            "example": "Bijvoorbeeld: Zaaksysteem Component"
-          },
-          "beschrijvingKort": {
-            "type": "string",
-            "title": "Korte omschrijving",
-            "description": "Korte beschrijving van het component",
-            "facetable": false,
-            "maxLength": 255,
-            "order": 2,
-            "table": {
-              "default": true
-            },
-            "example": "Bijvoorbeeld: Een korte samenvatting van het component"
-          },
-          "beschrijvingLang": {
-            "description": "Uitgebreide beschrijving van het component",
-            "type": "string",
-            "format": "markdown",
-            "visible": true,
-            "order": 3,
-            "maxLength": 5000,
-            "facetable": false,
-            "title": "Uitgebreide omschrijving",
-            "example": "Bijvoorbeeld: Een uitgebreide beschrijving van het component"
-          },
-          "logo": {
-            "description": "URL naar het logo van het component",
-            "type": "string",
-            "format": "url",
-            "visible": true,
-            "order": 4,
-            "maxLength": 500,
-            "facetable": false,
-            "table": {
-              "default": true
-            },
-            "title": "Logo",
-            "example": "https://voorbeeld.nl/logo.png"
-          },
-          "website": {
-            "description": "Website van het component",
-            "type": "string",
-            "format": "url",
-            "visible": true,
-            "order": 5,
-            "maxLength": 500,
-            "facetable": false,
-            "title": "Website",
-            "example": "https://voorbeeld.nl/component"
-          },
-          "contactpersoon": {
-            "description": "Contactpersoon voor het component",
-            "type": "object",
-            "visible": true,
-            "order": 6,
-            "facetable": false,
-            "title": "Contact",
-            "objectConfiguration": {
-              "handling": "related-object"
-            },
-            "$ref": "#/components/schemas/contactpersoon"
-          },
-          "modules": {
-            "description": "De applicaties die onderdeel zijn van dit component",
             "type": "array",
             "visible": true,
             "order": 7,
