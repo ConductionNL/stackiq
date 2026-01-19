@@ -5255,11 +5255,11 @@
             "type": "object",
             "visible": true,
             "order": 9,
-            "facetable": false,
+            "facetable": true,
             "table": {
               "default": true
             },
-            "title": "Aanbieder",
+            "title": "Leverancier",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -5355,7 +5355,7 @@
             "type": "string",
             "visible": true,
             "order": 12,
-            "facetable": true,
+            "facetable": false,
             "title": "Module Type",
             "default": "{{ type }}",
             "enum": [

@@ -850,7 +850,13 @@ class ContactpersoonService
                 throw new \Exception('ObjectService not available');
             }
 
-            $contactObject = $objectService->findByUuid($contactpersoonId);
+            $contactObject = $objectService->find(
+                id: $contactpersoonId,
+                register: 'voorzieningen',
+                schema: 'contactpersoon',
+                _rbac: false,
+                _multitenancy: false
+            );
             if (!$contactObject) {
                 throw new \Exception('Contactpersoon not found');
             }
@@ -904,7 +910,13 @@ class ContactpersoonService
                 throw new \Exception('ObjectService not available');
             }
 
-            $contactObject = $objectService->findByUuid($contactpersoonId);
+            $contactObject = $objectService->find(
+                id: $contactpersoonId,
+                register: 'voorzieningen',
+                schema: 'contactpersoon',
+                _rbac: false,
+                _multitenancy: false
+            );
             if (!$contactObject) {
                 throw new \Exception('Contactpersoon not found');
             }

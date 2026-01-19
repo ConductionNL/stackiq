@@ -104,7 +104,7 @@ class GebruikService
             'schema' => $gebruiksConfig['gebruikSchema'],
         ];
 
-        $searchResult = $objectService->searchObjectsPaginated(query: $options, rbac: false, multi: false);
+        $searchResult = $objectService->searchObjectsPaginated(query: $options, _rbac: false, _multitenancy: false);
 
         $searchResult['results'] = array_map(function($object) {
             if (is_array($object) === false) {
@@ -136,7 +136,7 @@ class GebruikService
             'schema' => $gebruiksConfig['applicatieSchema'],
         ];
 
-        $searchResult = $objectService->searchObjectsPaginated(query: $options, rbac: false, multi: false);
+        $searchResult = $objectService->searchObjectsPaginated(query: $options, _rbac: false, _multitenancy: false);
 
         $searchResult = array_map(function($object) {
             if (is_array($object) === false) {

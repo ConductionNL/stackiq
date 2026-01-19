@@ -537,7 +537,7 @@ XML;
         ];
 
         try {
-            $allObjects = $objectService->searchObjects(query: $query, rbac: false, multi: false);
+            $allObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
             
             $this->logger->info('Objects retrieved successfully from AMEF register', [
                 'total_retrieved_count' => count($allObjects),

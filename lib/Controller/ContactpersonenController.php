@@ -208,9 +208,14 @@ class ContactpersonenController extends Controller
             // Get object service
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // First try to find the object by UUID without register/schema constraints
-            // ObjectService can find objects via ObjectEntityMapper using UUID
-            $contactpersoonObject = $objectService->findByUuid($contactpersoonId);
+            // Find the contactpersoon object
+            $contactpersoonObject = $objectService->find(
+                id: $contactpersoonId,
+                register: 'voorzieningen',
+                schema: 'contactpersoon',
+                _rbac: false,
+                _multitenancy: false
+            );
 
             if (!$contactpersoonObject) {
                 return new JSONResponse([
@@ -277,8 +282,8 @@ class ContactpersonenController extends Controller
                 object: $contactpersoonObject,
                 register: $registerId,
                 schema: $schemaId,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             $this->logger->info('ContactpersonenController: Updated contactpersoon with username', [
@@ -571,8 +576,14 @@ class ContactpersonenController extends Controller
             // Get contactpersoon from OpenRegister
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // First try to find the object by UUID without register/schema constraints
-            $contactObject = $objectService->findByUuid($contactpersoonId);
+            // First try to find the object by UUID
+            $contactObject = $objectService->find(
+                id: $contactpersoonId,
+                register: 'voorzieningen',
+                schema: 'contactpersoon',
+                _rbac: false,
+                _multitenancy: false
+            );
 
             if (!$contactObject) {
                 return new JSONResponse([

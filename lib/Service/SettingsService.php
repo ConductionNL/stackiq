@@ -4954,8 +4954,8 @@ class SettingsService
                     ],
                     '_limit' => 10000 // Get all existing
                 ],
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             $this->logger->info('Retrieved existing organisaties from voorzieningen register', [
@@ -5065,8 +5065,8 @@ class SettingsService
                         objects: $batch,
                         register: $voorzieningenConfig['register'],
                         schema: $voorzieningenConfig['organisatie_schema'],
-                        rbac: false,
-                        multi: false,
+                        _rbac: false,
+                        _multitenancy: false,
                         validation: false, // Skip validation for performance
                         events: false      // Skip events for performance
                     );
