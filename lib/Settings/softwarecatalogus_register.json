@@ -5724,6 +5724,23 @@
               "type": "string"
             }
           },
+          "standaardVersies": {
+            "description": "De standaardversies die deze applicatie implementeert",
+            "type": "array",
+            "visible": true,
+            "order": 26,
+            "facetable": true,
+            "title": "Standaard Versies",
+            "hideOnForm": true,
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object",
+                "queryParams": "gemmaType=standaardversie"
+              },
+              "$ref": "#/components/schemas/element"
+            }
+          },
           "moduleVersies": {
             "description": "De versies van deze applicatie",
             "type": "array",

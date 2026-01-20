@@ -114,7 +114,7 @@ class ModuleComplianceService
             ]);
 
             // Get current standaarden from module
-            $currentStandaarden = $moduleData['standaarden'] ?? [];
+            $currentStandaarden = $moduleData['standaardVersies'] ?? [];
             
             // Ensure currentStandaarden is an array
             if (!is_array($currentStandaarden)) {
@@ -360,13 +360,13 @@ class ModuleComplianceService
             $moduleData = $moduleObject->getObject();
             
             // Update standaarden property
-            $moduleData['standaarden'] = $standaardversieUuids;
+            $moduleData['standaardVersies'] = $standaardversieUuids;
             
             // Get register ID from module object
             $registerId = $moduleObject->getRegister();
             
             // Save the updated module
-            $objectService->saveObject(
+            $savedObject = $objectService->saveObject(
                 object: $moduleData,
                 extend: [],
                 register: $registerId,
@@ -586,7 +586,7 @@ class ModuleComplianceService
                     }
 
                     // Get current standaarden from module
-                    $currentStandaarden = $moduleData['standaarden'] ?? [];
+                    $currentStandaarden = $moduleData['standaardVersies'] ?? [];
                     
                     // Ensure currentStandaarden is an array
                     if (!is_array($currentStandaarden)) {
