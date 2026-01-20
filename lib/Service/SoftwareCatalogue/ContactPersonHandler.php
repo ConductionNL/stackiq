@@ -1592,7 +1592,8 @@ class ContactPersonHandler
                 $this->ensureContactpersoonInOrganization($contactpersoonObject);
 
                 // Also add user to organization entity (OpenRegister entity, not object)
-                $this->addUserToOrganizationEntity($contactpersoonObject, $username);
+                $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+                $this->addUserToOrganizationEntity($contactpersoonObject, $username, $organizationUuid);
 
                 $this->_logger->info(
                     'Successfully created inactive user and updated contactpersoon',
@@ -2057,14 +2058,17 @@ class ContactPersonHandler
      *
      * @param object $contactpersoonObject The contactpersoon object
      * @param string $username The username to add
+     * @param string|null $organizationUuidOverride Optional organization UUID to use instead of extracting from object
+     *                                              (useful when organisatie field was removed from object data)
      *
      * @return void
      */
-    public function addUserToOrganizationEntity(object $contactpersoonObject, string $username): void
+    public function addUserToOrganizationEntity(object $contactpersoonObject, string $username, ?string $organizationUuidOverride = null): void
     {
         try {
             $objectData = $contactpersoonObject->getObject();
-            $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+            // Use override if provided (useful when organisatie field was removed from object)
+            $organizationUuid = $organizationUuidOverride ?? $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
             if (empty($organizationUuid)) {
                 $this->_logger->warning('ContactPersonHandler: No organization reference found for contact person', [

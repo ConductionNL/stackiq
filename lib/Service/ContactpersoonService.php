@@ -136,7 +136,7 @@ class ContactpersoonService
                             }
 
                             // Link user to organization entity
-                            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $username);
+                            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $username, $organizationUuid);
 
                             // Update contactpersoon object owner to user UID
                             $this->updateContactpersoonObjectOwner($contactpersoonObject, $username);

@@ -293,7 +293,7 @@ class ContactpersonenController extends Controller
             }
 
             // Link user to organization entity
-            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $user->getUID());
+            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $user->getUID(), $organizationId);
 
             // Update the contactpersoon object with the username
             $contactData['username'] = $user->getUID();
