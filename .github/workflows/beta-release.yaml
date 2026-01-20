@@ -3,7 +3,7 @@ name: Beta Release
 on:
   push:
     branches:
-      - beta
+      - feature/newopenregister
 
 jobs:
   release-management:
@@ -91,7 +91,7 @@ jobs:
 
       # Stap 9: Voer npm install, build en composer install uit
       - run: npm ci
-      - run: npm run build
+      - run: npm run dev
       - run: composer install --no-dev
 
       # Stap 10: Kopieer de bestanden naar de package directory
@@ -151,7 +151,7 @@ jobs:
         id: version
         uses: codacy/git-version@2.7.1
         with:
-          release-branch: beta
+          release-branch: beta-release
 
       # Stap 14: Extraheer repository description (optioneel)
       - name: Extract repository description

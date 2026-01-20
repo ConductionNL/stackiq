@@ -23,6 +23,9 @@ AUTH="${AUTH:-admin:admin}"
 REGISTER="${REGISTER:-voorzieningen}"
 SCHEMA="${SCHEMA:-organisatie}"
 
+# API base path
+API_PATH="/api/apps/openregister/api/objects"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -50,7 +53,7 @@ echo ""
 echo -e "${YELLOW}Step 1: Creating organization with status 'Concept'...${NC}"
 
 ORG_RESPONSE=$(curl -s -X POST \
-  "${BASE_URL}/index.php/apps/openregister/api/objects/${REGISTER}/${SCHEMA}" \
+  "${BASE_URL}${API_PATH}/${REGISTER}/${SCHEMA}" \
   -u "${AUTH}" \
   -H "Content-Type: application/json" \
   -H "OCS-APIRequest: true" \
@@ -112,7 +115,7 @@ echo ""
 echo -e "${YELLOW}Step 3: PATCHing organization status to 'Actief'...${NC}"
 
 PATCH_RESPONSE=$(curl -s -X PATCH \
-  "${BASE_URL}/index.php/apps/openregister/api/objects/${REGISTER}/${SCHEMA}/${ORG_ID}" \
+  "${BASE_URL}${API_PATH}/${REGISTER}/${SCHEMA}/${ORG_ID}" \
   -u "${AUTH}" \
   -H "Content-Type: application/json" \
   -H "OCS-APIRequest: true" \
@@ -204,7 +207,7 @@ if [ "${USER_EXISTS_AFTER}" = "ok" ]; then
   echo "  curl -X DELETE '${BASE_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}' -u '${AUTH}' -H 'OCS-APIRequest: true'"
   echo ""
   echo "  # Delete organization:"
-  echo "  curl -X DELETE '${BASE_URL}/index.php/apps/openregister/api/objects/${ORG_ID}' -u '${AUTH}'"
+  echo "  curl -X DELETE '${BASE_URL}${API_PATH}/${ORG_ID}' -u '${AUTH}'"
 
   exit 0
 else
