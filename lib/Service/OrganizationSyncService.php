@@ -113,6 +113,60 @@ class OrganizationSyncService
         $this->settingsService = $settingsService;
     }
 
+    /**
+     * Create a database-agnostic JSON extraction expression
+     *
+     * Returns the appropriate SQL function for extracting a value from a JSON column
+     * based on the database platform (MySQL vs PostgreSQL).
+     *
+     * @param string $column The column name containing JSON data
+     * @param string $path   The JSON path to extract (e.g., '$.status' or 'status')
+     *
+     * @return string The SQL expression for JSON extraction
+     */
+    private function jsonExtract(string $column, string $path): string
+    {
+        $platform = $this->db->getDatabasePlatform();
+        $isPostgres = $platform->getName() === 'postgresql';
+
+        // Normalize path - remove '$.' prefix if present for PostgreSQL
+        $cleanPath = ltrim($path, '$.');
+
+        if ($isPostgres) {
+            // PostgreSQL: Use ->> operator for text extraction
+            // Cast to json first if needed, then extract
+            return "({$column}::json->>'{$cleanPath}')";
+        }
+
+        // MySQL/MariaDB: Use json_unquote(json_extract())
+        $jsonPath = str_starts_with($path, '$.') ? $path : '$.'. $path;
+        return "json_unquote(json_extract({$column}, '{$jsonPath}'))";
+    }
+
+    /**
+     * Create a database-agnostic JSON contains expression
+     *
+     * Returns the appropriate SQL for checking if a JSON array contains a value.
+     *
+     * @param string $column The column name containing JSON array
+     * @param string $value  The value to check for
+     *
+     * @return string The SQL expression for JSON contains check
+     */
+    private function jsonContains(string $column, string $value): string
+    {
+        $platform = $this->db->getDatabasePlatform();
+        $isPostgres = $platform->getName() === 'postgresql';
+
+        if ($isPostgres) {
+            // PostgreSQL: Use @> operator with jsonb
+            return "({$column}::jsonb @> '\"{$value}\"'::jsonb)";
+        }
+
+        // MySQL/MariaDB: Use JSON_CONTAINS
+        return "json_contains({$column}, '\"{$value}\"')";
+    }
+
     public function performOrganizationsSync(int $batchSize = 50, int $maxExecutionSeconds = 45): array
     {
         // Check configuration
@@ -144,12 +198,13 @@ class OrganizationSyncService
         // Note: The 'active' column was removed as it doesn't exist in the openregister_organisations table.
         // Now syncs all non-Concept organizations that either don't have an organisation entity yet,
         // or need to be re-synced based on their updated timestamp.
-        $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(o.object, \'$.status\')) as status'), 'o2.uuid as oreg_uuid')
+        $statusExtract = $this->jsonExtract('o.object', '$.status');
+        $qb->select('o.uuid', $qb->createFunction("{$statusExtract} as status"), 'o2.uuid as oreg_uuid')
             ->from(from: 'openregister_objects', alias: 'o')
             ->leftJoin(fromAlias:'o', join: 'openregister_organisations', alias: 'o2', condition: 'o.uuid = o2.uuid')
             ->where($qb->expr()->eq('o.schema', $qb->createNamedParameter($organizationSchema)))
             ->andWhere($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
-            ->andWhere($qb->expr()->neq($qb->createFunction('LOWER(json_unquote(json_extract(o.object, \'$.status\')))'), $qb->createNamedParameter('Concept')))
+            ->andWhere($qb->expr()->neq($qb->createFunction("LOWER({$statusExtract})"), $qb->createNamedParameter('concept')))
             ->orderBy('o.updated', 'ASC')  // Process oldest first for consistency.
             ->setMaxResults($batchSize);  // Limit batch size.
 
@@ -213,11 +268,15 @@ class OrganizationSyncService
 
         $qb = $this->db->getQueryBuilder();
 
+        $emailExtract = $this->jsonExtract('o.object', '$.e-mailadres');
+        $usernameExtract = $this->jsonExtract('o.object', '$.username');
+        $organisatieExtract = $this->jsonExtract('o.object', '$.organisatie');
+
         $qb->select(
             'o.uuid',
             'a.uid',
-            $qb->createFunction('json_unquote(json_extract(o.object, \'$.e-mailadres\')) as email'),
-            $qb->createFunction('json_unquote(json_extract(o.object, \'$.username\')) as username'),
+            $qb->createFunction("{$emailExtract} as email"),
+            $qb->createFunction("{$usernameExtract} as username"),
             'oo.uuid as organisation'
         )
             ->from('openregister_objects', 'o')
@@ -225,16 +284,16 @@ class OrganizationSyncService
                 fromAlias: 'o',
                 join: 'accounts_data',
                 alias: 'a',
-                condition: 'json_unquote(json_extract(o.object, \'$.e-mailadres\')) = a.value')
+                condition: "{$emailExtract} = a.value")
             ->leftJoin(
                 fromAlias: 'o',
                 join: 'openregister_organisations',
                 alias: 'oo',
-                condition: 'oo.uuid = json_unquote(json_extract(o.object, \'$.organisatie\'))'
+                condition: "oo.uuid = {$organisatieExtract}"
             )
             ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
             ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
-            ->andWhere($qb->expr()->isNull($qb->createFunction('json_unquote(json_extract(o.object, \'$.username\'))')))
+            ->andWhere($qb->expr()->isNull($qb->createFunction($usernameExtract)))
             ->orderBy('o.updated', 'ASC')  // Process oldest first
             ->setMaxResults($batchSize);   // Limit batch size
 
@@ -301,12 +360,27 @@ class OrganizationSyncService
 
 
         $qb = $this->db->getQueryBuilder();
-        $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(`o`.`object`, \'$.username\')) as username'), $qb->createFunction('json_unquote(json_extract(o.object, \'$.organisatie\')) as organisation'), 'oo.users')
+        $usernameExtract2 = $this->jsonExtract('o.object', '$.username');
+        $organisatieExtract2 = $this->jsonExtract('o.object', '$.organisatie');
+
+        // Build JSON contains check - this is complex and platform-specific
+        $platform = $this->db->getDatabasePlatform();
+        $isPostgres = $platform->getName() === 'postgresql';
+
+        if ($isPostgres) {
+            // PostgreSQL: Check if username is NOT in the users array
+            $jsonContainsCheck = "NOT (oo.users::jsonb @> to_jsonb({$usernameExtract2}))";
+        } else {
+            // MySQL: Use JSON_CONTAINS
+            $jsonContainsCheck = "json_contains(oo.users, json_extract(o.object, '$.username')) = 0";
+        }
+
+        $qb->select('o.uuid', $qb->createFunction("{$usernameExtract2} as username"), $qb->createFunction("{$organisatieExtract2} as organisation"), 'oo.users')
             ->from(from:'openregister_objects', alias: 'o')
-            ->leftJoin(fromAlias: 'o', join: 'openregister_organisations', alias: 'oo', condition: 'oo.uuid = json_unquote(json_extract(o.object, \'$.organisatie\'))')
+            ->leftJoin(fromAlias: 'o', join: 'openregister_organisations', alias: 'oo', condition: "oo.uuid = {$organisatieExtract2}")
             ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
-            ->andWhere($qb->expr()->orX('o.schema', $qb->createNamedParameter($contactSchema)))
-            ->andWhere($qb->expr()->eq($qb->createFunction('json_contains(oo.users, json_extract(`o`.`object`, \'$.username\'))'), $qb->createNamedParameter(0)));
+            ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
+            ->andWhere($qb->createFunction($jsonContainsCheck));
 
         $sql = $qb->getSQL();
         $users = $qb->execute()->fetchAll();
