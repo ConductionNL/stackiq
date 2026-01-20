@@ -441,6 +441,13 @@ class ModuleComplianceService
                 throw new \RuntimeException('Voorzieningen register not configured');
             }
 
+            // Get module schema ID from configuration
+            $moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
+
+            if (!$moduleSchemaId) {
+                throw new \RuntimeException('Module schema not configured');
+            }
+
             // Get object service
             $objectService = $this->getObjectService();
             if (!$objectService) {
@@ -519,8 +526,12 @@ class ModuleComplianceService
             // Process each module
             foreach ($complianceByModule as $moduleUuid => $moduleComplianceObjects) {
                 try {
-                    // Find the module object
-                    $moduleObject = $objectService->find($moduleUuid);
+                    // Find the module object (must specify register and schema for magic table lookup)
+                    $moduleObject = $objectService->find(
+                        id: $moduleUuid,
+                        register: (int) $registerId,
+                        schema: (int) $moduleSchemaId
+                    );
                     if (!$moduleObject) {
                         $results['modulesNotFound']++;
                         $results['errors'][] = 'Module not found for UUID: ' . $moduleUuid;
