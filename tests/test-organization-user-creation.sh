@@ -30,6 +30,8 @@
 #   REGISTER        - Register slug (default: voorzieningen)
 #   SCHEMA          - Organisation schema slug (default: organisatie)
 #   WAIT_TIME       - Seconds to wait for event processing (default: 3)
+#   API_PATH        - API path prefix (default: /api/apps/openregister/api/objects)
+#                     External environments may need: /index.php/apps/openregister/api/objects
 #
 # =============================================================================
 # USAGE EXAMPLES
@@ -49,6 +51,12 @@
 # With custom wait time and register:
 #   WAIT_TIME=5 REGISTER=my-register ./test-organization-user-creation.sh
 #
+# External environment (with index.php API path):
+#   BASE_URL=https://softwarecatalogus.performance.commonground.nu \
+#   NEXTCLOUD_URL=https://softwarecatalogus.performance.commonground.nu \
+#   API_PATH=/index.php/apps/openregister/api/objects \
+#   USERNAME=user@example.com PASSWORD=secret ./test-organization-user-creation.sh
+#
 # =============================================================================
 
 # Disable exit on error to see all test results
@@ -63,9 +71,7 @@ NEXTCLOUD_URL="${NEXTCLOUD_URL:-http://localhost:8080}"
 REGISTER="${REGISTER:-voorzieningen}"
 SCHEMA="${SCHEMA:-organisatie}"
 WAIT_TIME="${WAIT_TIME:-3}"
-
-# API base path
-API_PATH="/api/apps/openregister/api/objects"
+API_PATH="${API_PATH:-/api/apps/openregister/api/objects}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -86,6 +92,7 @@ echo ""
 echo -e "${YELLOW}Configuration:${NC}"
 echo -e "  OpenRegister API:  ${BASE_URL}"
 echo -e "  Nextcloud OCS API: ${NEXTCLOUD_URL}"
+echo -e "  API Path:          ${API_PATH}"
 echo -e "  Auth:              ${USERNAME}:****"
 echo -e "  Register:          ${REGISTER}"
 echo -e "  Schema:            ${SCHEMA}"
