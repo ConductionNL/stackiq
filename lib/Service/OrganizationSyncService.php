@@ -1605,7 +1605,7 @@ class OrganizationSyncService
                                 }
 
                                 // Add user to organization entity in database
-                                $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
+                                $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID(), $organizationUuid);
 
                                 // Update contactpersoon object owner to user UID
                                 $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
@@ -1738,7 +1738,7 @@ class OrganizationSyncService
                             );
 
                             // Add user to organization entity in database.
-                            $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
+                            $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID(), $organizationUuid);
 
                             // Update contactpersoon object owner to user UID.
                             $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
