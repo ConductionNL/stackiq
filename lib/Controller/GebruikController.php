@@ -63,6 +63,7 @@ class GebruikController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @PublicPage
      *
      * @return JSONResponse
      */
