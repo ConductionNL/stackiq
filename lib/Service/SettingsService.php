@@ -219,43 +219,55 @@ class SettingsService
                     $registerService = $this->getRegisterService();
                     $rawRegisters = $registerService->findAll();
 
-                    // Get schema mapper to fetch schema details if needed
-                    $schemaMapper = null;
-                    try {
-                        $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
-                    } catch (\Exception $e) {
-                        $this->logger->warning('SchemaMapper not available for register listing', ['error' => $e->getMessage()]);
-                    }
-
-                    // Convert Register entities to arrays and fetch full schema details
-                    $rawRegisters = array_map(function($register) use ($schemaMapper) {
-                        $registerArray = is_object($register) && method_exists($register, 'jsonSerialize')
+                    // Convert Register entities to arrays first
+                    $rawRegisters = array_map(function($register) {
+                        return is_object($register) && method_exists($register, 'jsonSerialize')
                             ? $register->jsonSerialize()
                             : (array)$register;
+                    }, $rawRegisters);
 
-                        // Fetch full schema details if schemas are IDs
-                        if (isset($registerArray['schemas']) && is_array($registerArray['schemas']) && $schemaMapper !== null) {
+                    // Collect all schema IDs that need to be fetched (batch approach)
+                    $allSchemaIds = [];
+                    foreach ($rawRegisters as $register) {
+                        foreach (($register['schemas'] ?? []) as $schema) {
+                            if (is_int($schema) || is_numeric($schema)) {
+                                $allSchemaIds[] = (int)$schema;
+                            }
+                        }
+                    }
+
+                    // Batch fetch all schemas in one query if we have IDs
+                    $schemaMap = [];
+                    if (!empty($allSchemaIds)) {
+                        try {
+                            $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
+                            $schemas = $schemaMapper->findMultipleOptimized(array_unique($allSchemaIds));
+                            foreach ($schemas as $schema) {
+                                $schemaMap[$schema->getId()] = $schema->jsonSerialize();
+                            }
+                        } catch (\Exception $e) {
+                            $this->logger->warning('Failed to batch fetch schemas', ['error' => $e->getMessage()]);
+                        }
+                    }
+
+                    // Map schema details back to registers
+                    $rawRegisters = array_map(function($register) use ($schemaMap) {
+                        if (isset($register['schemas']) && is_array($register['schemas'])) {
                             $schemaDetails = [];
-                            foreach ($registerArray['schemas'] as $schema) {
+                            foreach ($register['schemas'] as $schema) {
                                 if (is_array($schema) && isset($schema['slug'])) {
                                     // Schema is already a full object
                                     $schemaDetails[] = $schema;
                                 } elseif (is_int($schema) || is_numeric($schema)) {
-                                    // Schema is an ID - fetch details using SchemaMapper
-                                    try {
-                                        $schemaEntity = $schemaMapper->find((int)$schema);
-                                        if ($schemaEntity !== null) {
-                                            $schemaDetails[] = $schemaEntity->jsonSerialize();
-                                        }
-                                    } catch (\Exception $e) {
-                                        $this->logger->warning('Failed to fetch schema details', ['schemaId' => $schema, 'error' => $e->getMessage()]);
+                                    // Schema is an ID - get from pre-fetched map
+                                    if (isset($schemaMap[(int)$schema])) {
+                                        $schemaDetails[] = $schemaMap[(int)$schema];
                                     }
                                 }
                             }
-                            $registerArray['schemas'] = $schemaDetails;
+                            $register['schemas'] = $schemaDetails;
                         }
-
-                        return $registerArray;
+                        return $register;
                     }, $rawRegisters);
 
                     // Filter schemas to remove properties field for cleaner response
@@ -3147,20 +3159,38 @@ class SettingsService
             $candidate = null;
             $amefCoreSlugs = ['model', 'element', 'relation', 'view', 'organization', 'property', 'property-definition'];
 
-            // Get schema mapper to fetch schema details if needed
-            $schemaMapper = null;
-            try {
-                $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
-            } catch (\Exception $e) {
-                $this->logger->warning('SchemaMapper not available for AMEF detection', ['error' => $e->getMessage()]);
+            // Convert all registers to arrays first
+            $registers = array_map(function($register) {
+                return ($register instanceof \OCA\OpenRegister\Db\Register)
+                    ? $register->jsonSerialize()
+                    : (array)$register;
+            }, $registers);
+
+            // Collect all schema IDs for batch fetch
+            $allSchemaIds = [];
+            foreach ($registers as $register) {
+                foreach (($register['schemas'] ?? []) as $schema) {
+                    if (is_int($schema) || is_numeric($schema)) {
+                        $allSchemaIds[] = (int)$schema;
+                    }
+                }
+            }
+
+            // Batch fetch all schemas in one query
+            $schemaMap = [];
+            if (!empty($allSchemaIds)) {
+                try {
+                    $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
+                    $schemas = $schemaMapper->findMultipleOptimized(array_unique($allSchemaIds));
+                    foreach ($schemas as $schema) {
+                        $schemaMap[$schema->getId()] = $schema->jsonSerialize();
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->warning('SchemaMapper not available for AMEF detection', ['error' => $e->getMessage()]);
+                }
             }
 
             foreach ($registers as $register) {
-                // Convert Register entity to array if needed
-                if ($register instanceof \OCA\OpenRegister\Db\Register) {
-                    $register = $register->jsonSerialize();
-                }
-
                 // Handle schemas - they might be IDs (integers) or full objects
                 $schemas = $register['schemas'] ?? [];
                 $schemaSlugs = [];
@@ -3172,18 +3202,11 @@ class SettingsService
                         $schemaSlugs[] = strtolower($schema['slug']);
                         $schemaDetails[] = $schema;
                     } elseif (is_int($schema) || is_numeric($schema)) {
-                        // Schema is an ID - fetch details using SchemaMapper
-                        if ($schemaMapper !== null) {
-                            try {
-                                $schemaEntity = $schemaMapper->find((int)$schema);
-                                if ($schemaEntity !== null) {
-                                    $schemaArray = $schemaEntity->jsonSerialize();
-                                    $schemaSlugs[] = strtolower($schemaArray['slug'] ?? '');
-                                    $schemaDetails[] = $schemaArray;
-                                }
-                            } catch (\Exception $e) {
-                                // Skip schemas that can't be fetched
-                            }
+                        // Schema is an ID - get from pre-fetched map
+                        if (isset($schemaMap[(int)$schema])) {
+                            $schemaArray = $schemaMap[(int)$schema];
+                            $schemaSlugs[] = strtolower($schemaArray['slug'] ?? '');
+                            $schemaDetails[] = $schemaArray;
                         }
                     }
                 }
@@ -4167,14 +4190,28 @@ class SettingsService
 
             $versionInfo = $this->getVersionInfo();
 
-            // Add voorzieningen and amef configs for frontend.
-            $consolidatedConfig = $this->getConsolidatedConfiguration();
+            // Get voorzieningen config (lightweight - just reads from config storage)
+            $voorzieningenConfig = $this->getVoorzieningenConfig();
+
+            // Get amef config directly from config storage (avoid heavy ArchiMateService call)
+            $amefConfigJson = $this->config->getValueString($this->_appName, 'amef_config', '{}');
+            $amefConfig = json_decode($amefConfigJson, true);
+            if (!is_array($amefConfig)) {
+                $amefConfig = [
+                    'register' => $this->config->getValueString($this->_appName, 'amef_register_id', ''),
+                    'organization_schema' => $this->config->getValueString($this->_appName, 'amef_organizations_schema', ''),
+                    'element_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
+                    'relation_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
+                    'view_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', ''),
+                    'model_schema' => $this->config->getValueString($this->_appName, 'amef_models_schema', '')
+                ];
+            }
 
             $result = [
                 'availableRegisters' => $base['availableRegisters'] ?? [],
                 'versionInfo' => $versionInfo,
-                'voorzieningenConfig' => $consolidatedConfig['voorzieningen'] ?? null,
-                'amefConfig' => $consolidatedConfig['amef'] ?? null,
+                'voorzieningenConfig' => $voorzieningenConfig,
+                'amefConfig' => $amefConfig,
                 'timestamp' => time(),
             ];
 
