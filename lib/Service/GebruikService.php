@@ -104,6 +104,17 @@ class GebruikService
             'schema' => $gebruiksConfig['gebruikSchema'],
         ];
 
+        // Normalize _extend parameter to array format.
+        // Supports both 'extend' and '_extend' parameter names.
+        $extend = $options['extend'] ?? $options['_extend'] ?? [];
+        if (is_string($extend) === true) {
+            $extend = array_map('trim', explode(',', $extend));
+        } else if (is_array($extend) === false) {
+            $extend = [$extend];
+        }
+        $options['_extend'] = $extend;
+        unset($options['extend']);
+
         $searchResult = $objectService->searchObjectsPaginated(query: $options, _rbac: false, _multitenancy: false);
 
         $searchResult['results'] = array_map(function($object) {
