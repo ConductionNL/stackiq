@@ -70,6 +70,11 @@ class GebruikController extends Controller
     {
         $user = $this->userSession->getUser();
 
+        // Return empty results for non-logged-in users to prevent unnecessary errors.
+        if ($user === null) {
+            return new JSONResponse($this->getEmptyResult());
+        }
+
         $groups = $this->groupManager->getUserGroups(user: $user);
         $groupNames = array_map(function (IGroup $group) {
             return $group->getGID();
@@ -85,17 +90,17 @@ class GebruikController extends Controller
             $applicatieIds = $this->gebruikService->getApplicationIds(options: $applicatieOptions);
 
             if ($applicatieIds === []) {
-                return new JSONResponse(data: ['error' => 'no access'], statusCode: 403);
+                return new JSONResponse($this->getEmptyResult());
             }
 
             if (isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false) {
-                return new JSONResponse(data: ['error' => 'no access'], statusCode: 403);
+                return new JSONResponse($this->getEmptyResult());
             } else if (isset($options['module']) === false) {
                 $options['module'] = $applicatieIds;
             }
 
         } else {
-            return new JSONResponse(data: ['error' => 'no access'], statusCode: 403);
+            return new JSONResponse($this->getEmptyResult());
         }
 
         try {
@@ -116,6 +121,12 @@ class GebruikController extends Controller
     public function getGebruikenForDeelnemer(): JSONResponse
     {
         $user = $this->userSession->getUser();
+
+        // Return empty results for non-logged-in users to prevent unnecessary errors.
+        if ($user === null) {
+            return new JSONResponse($this->getEmptyResult());
+        }
+
         $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');
 
         $options = $this->request->getParams();
@@ -126,6 +137,32 @@ class GebruikController extends Controller
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
+    }
+
+    /**
+     * Returns an empty result set with the standard paginated response structure.
+     *
+     * @return array The empty result structure.
+     */
+    private function getEmptyResult(): array
+    {
+        return [
+            'results' => [],
+            'total'   => 0,
+            'page'    => 1,
+            'pages'   => 0,
+            'limit'   => 1000,
+            'offset'  => 0,
+            'facets'  => [],
+            '@self'   => [
+                'source'    => 'database',
+                'query'     => [],
+                'rbac'      => false,
+                'multi'     => false,
+                'published' => false,
+                'deleted'   => false,
+            ],
+        ];
     }
 
 
