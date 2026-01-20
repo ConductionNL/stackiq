@@ -19,6 +19,7 @@ set -e
 
 # Configuration
 BASE_URL="${BASE_URL:-http://localhost:3000}"
+NEXTCLOUD_URL="${NEXTCLOUD_URL:-http://localhost:8080}"
 AUTH="${AUTH:-admin:admin}"
 REGISTER="${REGISTER:-voorzieningen}"
 SCHEMA="${SCHEMA:-organisatie}"
@@ -42,7 +43,8 @@ echo -e "${BLUE}======================================================${NC}"
 echo -e "${BLUE}  Organization Status -> User Creation Test${NC}"
 echo -e "${BLUE}======================================================${NC}"
 echo ""
-echo -e "Base URL: ${BASE_URL}"
+echo -e "OpenRegister API: ${BASE_URL}"
+echo -e "Nextcloud OCS API: ${NEXTCLOUD_URL}"
 echo -e "Auth: ${AUTH}"
 echo -e "Contact Email: ${CONTACT_EMAIL}"
 echo ""
@@ -95,10 +97,9 @@ echo ""
 echo -e "${YELLOW}Step 2: Verifying user does not exist yet...${NC}"
 
 USER_CHECK_BEFORE=$(curl -s -X GET \
-  "${BASE_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}" \
+  "${NEXTCLOUD_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}?format=json" \
   -u "${AUTH}" \
-  -H "OCS-APIRequest: true" \
-  -H "Accept: application/json")
+  -H "OCS-APIRequest: true")
 
 USER_EXISTS_BEFORE=$(echo "${USER_CHECK_BEFORE}" | jq -r '.ocs.meta.status // "failure"')
 
@@ -145,10 +146,9 @@ echo ""
 echo -e "${YELLOW}Step 5: Verifying user was created...${NC}"
 
 USER_CHECK_AFTER=$(curl -s -X GET \
-  "${BASE_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}" \
+  "${NEXTCLOUD_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}?format=json" \
   -u "${AUTH}" \
-  -H "OCS-APIRequest: true" \
-  -H "Accept: application/json")
+  -H "OCS-APIRequest: true")
 
 USER_EXISTS_AFTER=$(echo "${USER_CHECK_AFTER}" | jq -r '.ocs.meta.status // "failure"')
 
@@ -160,10 +160,9 @@ if [ "${USER_EXISTS_AFTER}" = "ok" ]; then
   echo -e "${YELLOW}Step 6: Checking user groups...${NC}"
 
   USER_GROUPS=$(curl -s -X GET \
-    "${BASE_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}/groups" \
+    "${NEXTCLOUD_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}/groups?format=json" \
     -u "${AUTH}" \
-    -H "OCS-APIRequest: true" \
-    -H "Accept: application/json")
+    -H "OCS-APIRequest: true")
 
   GROUPS=$(echo "${USER_GROUPS}" | jq -r '.ocs.data.groups[]? // empty' | tr '\n' ', ' | sed 's/,$//')
 
@@ -204,7 +203,7 @@ if [ "${USER_EXISTS_AFTER}" = "ok" ]; then
   echo ""
   echo -e "${YELLOW}Cleanup commands (run manually if needed):${NC}"
   echo "  # Delete user:"
-  echo "  curl -X DELETE '${BASE_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}' -u '${AUTH}' -H 'OCS-APIRequest: true'"
+  echo "  curl -X DELETE '${NEXTCLOUD_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}' -u '${AUTH}' -H 'OCS-APIRequest: true'"
   echo ""
   echo "  # Delete organization:"
   echo "  curl -X DELETE '${BASE_URL}${API_PATH}/${ORG_ID}' -u '${AUTH}'"
