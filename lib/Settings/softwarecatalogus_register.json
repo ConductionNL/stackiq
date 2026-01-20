@@ -2220,8 +2220,7 @@
         "summary": "",
         "icon": "Usage",
         "required": [
-          "afnemer",
-          "status"
+          "afnemer"
         ],
         "properties": {
           "afnemer": {
@@ -2396,7 +2395,7 @@
             "description": "De status van het gebruik",
             "type": "string",
             "default": "Concept",
-            "required": true,
+            "required": false,
             "visible": true,
             "order": 17,
             "minLength": null,
