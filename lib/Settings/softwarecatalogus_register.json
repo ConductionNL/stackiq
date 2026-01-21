@@ -2000,7 +2000,7 @@
           },
           "type": {
             "description": "Type van de organisatie (Gemeente, Leverancier, Samenwerking) ",
-            "title": "Organisatie Type",
+            "title": "Organisatietype",
             "type": "string",
             "required": true,
             "visible": true,
@@ -2036,11 +2036,11 @@
           },
           "organisatieType": {
             "description": "Type van de organisatie (Gemeente, Leverancier, Samenwerking)",
-            "title": "Organisatie Type",
+            "title": "Organisatietype",
             "type": "string",
             "required": false,
             "visible": true,
-            "facetable": true,
+            "facetable": false,
             "order": 4,
             "default": "{{ type }}",
             "enum": [
@@ -2129,6 +2129,20 @@
               "Bedrijfsvoeringsorganisatie",
               "Archiefdienst (regionaal)",
               "Ambtelijke fusie"
+            ]
+          },
+          "geregistreerdDoor": {
+            "description": "Het type partij dat dit object heeft geregistreerd",
+            "type": "string",
+            "order": 18,
+            "facetable": true,
+            "title": "Geregistreerd door",
+            "visible": true,
+            "enum": [
+              "Gemeente",
+              "Applicatie",
+              "Samenwerking",
+              "Leverancier"
             ]
           }
         },
@@ -3145,6 +3159,20 @@
             },
             "$ref": "#/components/schemas/dienst",
             "inversedBy": "koppelingen"
+          },
+          "geregistreerdDoor": {
+            "description": "Het type partij dat dit object heeft geregistreerd",
+            "type": "string",
+            "order": 16,
+            "facetable": true,
+            "title": "Geregistreerd door",
+            "visible": true,
+            "enum": [
+              "Gemeente",
+              "Applicatie",
+              "Samenwerking",
+              "Leverancier"
+            ]
           }
         },
         "archive": [],
@@ -3877,6 +3905,19 @@
             "type": "array",
             "facetable": false,
             "title": "Standaarden",
+            "items": {
+              "type": "object",
+              "$ref": "#/components/schemas/element",
+              "objectConfiguration": {
+                "handling": "related-object"
+              }
+            }
+          },
+          "gekoppeldeStandaardVersies": {
+            "description": "Array van standaardversies gekoppeld aan dit referentiecomponent (via standaarden)",
+            "type": "array",
+            "facetable": false,
+            "title": "Gekoppelde Standaard Versies",
             "items": {
               "type": "object",
               "$ref": "#/components/schemas/element",
@@ -5544,7 +5585,7 @@
             "type": "object",
             "visible": true,
             "order": 9,
-            "facetable": false,
+            "facetable": true,
             "table": {
               "default": true
             },
@@ -5615,7 +5656,7 @@
             "visible": true,
             "order": 9,
             "facetable": true,
-            "title": "Referentie Componenten",
+            "title": "Referentiecomponenten",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -5752,7 +5793,7 @@
             "type": "array",
             "visible": true,
             "order": 24,
-            "facetable": true,
+            "facetable": false,
             "title": "Standaarden AMEF",
             "hideOnForm": true,
             "items": {
@@ -5764,7 +5805,7 @@
             "type": "array",
             "visible": true,
             "order": 25,
-            "facetable": true,
+            "facetable": false,
             "title": "Standaarden Gemma",
             "hideOnForm": true,
             "items": {
@@ -5852,6 +5893,20 @@
               },
               "$ref": "#/components/schemas/kwetsbaarheid"
             }
+          },
+          "geregistreerdDoor": {
+            "description": "Het type partij dat dit object heeft geregistreerd",
+            "type": "string",
+            "order": 30,
+            "facetable": true,
+            "title": "Geregistreerd door",
+            "visible": true,
+            "enum": [
+              "Gemeente",
+              "Applicatie",
+              "Samenwerking",
+              "Leverancier"
+            ]
           }
         },
         "archive": [],
@@ -5903,7 +5958,7 @@
             "order": 1,
             "title": "Standaard Versie",
             "visible": true,
-            "facetable": true,
+            "facetable": false,
             "objectConfiguration": {
               "handling": "related-object",
               "queryParams": "gemmaType=standaardversie"
@@ -5916,7 +5971,7 @@
             "order": 1,
             "title": "Standaard Gemaa",
             "visible": true,
-            "facetable": true
+            "facetable": false
           },
           "module": {
             "description": "De applicatie waarvan de compliance wordt geregistreerd",
@@ -6095,6 +6150,20 @@
               },
               "$ref": "#/components/schemas/gebruik"
             }
+          },
+          "geregistreerdDoor": {
+            "description": "Het type partij dat dit object heeft geregistreerd",
+            "type": "string",
+            "order": 19,
+            "facetable": true,
+            "title": "Geregistreerd door",
+            "visible": true,
+            "enum": [
+              "Gemeente",
+              "Applicatie",
+              "Samenwerking",
+              "Leverancier"
+            ]
           }
         },
         "archive": [],
