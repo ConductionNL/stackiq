@@ -403,7 +403,11 @@
             "summary": "Een open source platform voor het publiceren en doorzoeken van overheidscatalogi",
             "description": "Open Catalogi is een innovatief platform dat overheidsorganisaties helpt bij het publiceren, beheren en doorzoekbaar maken van hun catalogi. Het platform ondersteunt verschillende standaarden en maakt het eenvoudig om informatie te delen tussen organisaties.",
             "organization": "VNG Realisatie",
-            "themes": ["Open Source", "Overheid", "Catalogi"],
+            "themes": [
+              "Open Source",
+              "Overheid",
+              "Catalogi"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -414,9 +418,13 @@
           {
             "title": "Common Ground",
             "summary": "Een nieuwe manier van werken met informatiesystemen binnen de overheid",
-            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en efficiënte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
+            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en effici\u00ebnte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
             "organization": "VNG Realisatie",
-            "themes": ["Architectuur", "Overheid", "Digitalisering"],
+            "themes": [
+              "Architectuur",
+              "Overheid",
+              "Digitalisering"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -429,7 +437,11 @@
             "summary": "Een Nextcloud app voor het beheren van gestructureerde data in registers",
             "description": "OpenRegister is een krachtige Nextcloud applicatie waarmee organisaties gestructureerde data kunnen beheren in registers. Met ondersteuning voor JSON Schema validatie, Magic Mapper voor optimale performance, en uitgebreide API mogelijkheden.",
             "organization": "Conduction",
-            "themes": ["Open Source", "Nextcloud", "Data Management"],
+            "themes": [
+              "Open Source",
+              "Nextcloud",
+              "Data Management"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -442,7 +454,11 @@
             "summary": "De centrale catalogus voor software binnen de Nederlandse overheid",
             "description": "De Softwarecatalogus biedt een overzicht van alle software die wordt gebruikt binnen de Nederlandse overheid. Organisaties kunnen hier software registreren, vergelijken en informatie delen over implementaties en ervaringen.",
             "organization": "VNG",
-            "themes": ["Software", "Overheid", "Catalogus"],
+            "themes": [
+              "Software",
+              "Overheid",
+              "Catalogus"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -455,7 +471,11 @@
             "summary": "De gemeentelijke referentiearchitectuur voor informatievoorziening",
             "description": "GEMMA (GEMeentelijke Model Architectuur) is de referentiearchitectuur voor gemeenten. Het biedt richtlijnen en standaarden voor de inrichting van de informatievoorziening, processen en applicatielandschap van gemeenten.",
             "organization": "VNG Realisatie",
-            "themes": ["Architectuur", "Gemeenten", "Standaarden"],
+            "themes": [
+              "Architectuur",
+              "Gemeenten",
+              "Standaarden"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -2597,7 +2617,6 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
             "aanbod-beheerder",
             "ambtenaar",
             "functioneel-beheerder",
@@ -3269,7 +3288,11 @@
         "application": null,
         "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
         "groups": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "objectNameField": "naam",
@@ -3919,7 +3942,11 @@
         "owner": null,
         "application": null,
         "organisation": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "objectNameField": "name | ggm_naam | identifier",
@@ -4277,7 +4304,11 @@
         "owner": null,
         "application": null,
         "organisation": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "autoPublish": false
@@ -4703,7 +4734,11 @@
         "owner": null,
         "application": null,
         "organisation": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "autoPublish": false
@@ -4877,7 +4912,11 @@
         "owner": null,
         "application": null,
         "organisation": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "autoPublish": false
@@ -5003,7 +5042,11 @@
         "owner": null,
         "application": null,
         "organisation": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "objectNameField": "name | identifier",
@@ -5356,7 +5399,11 @@
         "owner": null,
         "application": null,
         "organisation": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "objectNameField": "name | type | identifier",
@@ -5818,7 +5865,11 @@
         "application": null,
         "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
         "groups": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "objectNameField": "naam",
@@ -5919,7 +5970,11 @@
         "application": null,
         "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
         "groups": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "objectNameField": "module",
@@ -6052,7 +6107,11 @@
         "application": null,
         "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
         "groups": null,
-        "authorization": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
         "deleted": null,
         "configuration": {
           "objectNameField": "versie",
