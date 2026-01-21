@@ -161,7 +161,9 @@ class AanbodService
 
                     // Filter out objects where @self.organisation equals current org
                     foreach ($searchResult['results'] ?? [] as $result) {
-                        $resultData = is_array($result) ? $result : $result->getObject();
+                        // Use jsonSerialize() instead of getObject() to include @self metadata
+                        // getObject() only returns raw object data without @self.organisation
+                        $resultData = is_array($result) ? $result : $result->jsonSerialize();
                         $selfOrg = $resultData['@self']['organisation'] ?? null;
 
                         // Only include if @self.organisation is NOT set to the current organisation
