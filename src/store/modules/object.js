@@ -839,22 +839,28 @@ export const useObjectStore = defineStore('object', {
 				const response = await fetch(apiUrl)
 				if (!response.ok) throw new Error(`Failed to fetch ${type} collection`)
 
-				const data = await response.json()
-				console.info('API Response:', data)
+			const data = await response.json()
+			console.info('API Response:', data)
+			console.info('API Response Pagination:', {
+				total: data.total,
+				page: data.page,
+				pages: data.pages,
+				limit: data.limit,
+				resultsLength: data.results?.length,
+			})
 
-				// Update pagination info - handle both pagination formats
-				const paginationInfo = {
-					total: data.total || 0,
-					page: data.page || 1,
-					pages:
-            data.pages
-            || (data.next ? Math.ceil((data.total || 0) / (data.limit || 20)) : 1),
-					limit: data.limit || 20,
-					next: data.next || null,
-					prev: data.prev || null,
-				}
+			// Update pagination info - handle both pagination formats
+			const paginationInfo = {
+				total: data.total || 0,
+				page: data.page || 1,
+				pages: data.pages || Math.ceil((data.total || 0) / (data.limit || 20)),
+				limit: data.limit || 20,
+				next: data.next || null,
+				prev: data.prev || null,
+			}
 
-				this.setPagination(type, paginationInfo)
+			console.info('Setting pagination for type:', type, paginationInfo)
+			this.setPagination(type, paginationInfo)
 
 				// Set the collection using the new method
 				this.setCollection(type, data.results, append)

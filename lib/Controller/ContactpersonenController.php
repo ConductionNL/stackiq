@@ -297,7 +297,25 @@ class ContactpersonenController extends Controller
 
             // Update the contactpersoon object with the username
             $contactData['username'] = $user->getUID();
+
+            // Ensure string fields are properly typed (fixes data stored with incorrect types)
+            $stringFields = ['voornaam', 'tussenvoegsel', 'achternaam', 'functie', 'telefoonnummer', 'email', 'e-mailadres'];
+            foreach ($stringFields as $field) {
+                if (isset($contactData[$field]) && !is_string($contactData[$field])) {
+                    $contactData[$field] = (string)$contactData[$field];
+                }
+            }
+
             $contactpersoonObject->setObject($contactData);
+
+            // Debug logging to understand data types before save
+            $this->logger->info('ContactpersonenController: About to save contactpersoon object', [
+                'contactpersoonId' => $contactpersoonId,
+                'achternaamValue' => $contactData['achternaam'] ?? 'not set',
+                'achternaamType' => isset($contactData['achternaam']) ? gettype($contactData['achternaam']) : 'not set',
+                'registerId' => $registerId,
+                'schemaId' => $schemaId
+            ]);
 
             // Save the updated contactpersoon object
             $objectService->saveObject(
