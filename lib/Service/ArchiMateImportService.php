@@ -3374,6 +3374,55 @@ class ArchiMateImportService
             'total_versie_relationships' => count($standaardVersieRelationshipMap)
         ]);
 
+        // STEP 4: Add standaardVersies to ReferentieComponenten
+        // This allows querying ?gemmaType=referentiecomponent&_extend[]=gekoppeldeStandaardVersies
+        // to get all referentiecomponenten with their related standaardVersies in one call
+
+        // Build reverse map: Standaard ID -> [StandaardVersie UUIDs]
+        $standaardToVersiesMap = [];
+        foreach ($standaardVersieRelationshipMap as $versieId => $standaardId) {
+            $versieUuid = str_replace('id-', '', $versieId);
+            if (!isset($standaardToVersiesMap[$standaardId])) {
+                $standaardToVersiesMap[$standaardId] = [];
+            }
+            $standaardToVersiesMap[$standaardId][] = $versieUuid;
+        }
+
+        // Add standaardVersies to each ReferentieComponent
+        $refCompWithVersiesCount = 0;
+        foreach ($referentieComponenten as $refCompId => $objectIndex) {
+            $standaardVersiesForRefComp = [];
+
+            // Get all standaarden for this referentiecomponent (combined array)
+            $refCompStandaarden = $objects[$objectIndex]['standaarden'] ?? [];
+
+            // For each standaard, collect its standaardVersies
+            foreach ($refCompStandaarden as $standaardUuid) {
+                // Convert UUID back to identifier format for lookup
+                $standaardIdentifier = 'id-' . $standaardUuid;
+
+                if (isset($standaardToVersiesMap[$standaardIdentifier])) {
+                    $standaardVersiesForRefComp = array_merge(
+                        $standaardVersiesForRefComp,
+                        $standaardToVersiesMap[$standaardIdentifier]
+                    );
+                }
+            }
+
+            // Remove duplicates and add to referentiecomponent
+            // Use 'gekoppeldeStandaardVersies' to avoid conflict with inversedBy on 'standaardVersies'
+            if (!empty($standaardVersiesForRefComp)) {
+                $objects[$objectIndex]['gekoppeldeStandaardVersies'] = array_values(array_unique($standaardVersiesForRefComp));
+                $refCompWithVersiesCount++;
+            }
+        }
+
+        $this->logger->info('GEMMA ReferentieComponent-StandaardVersies processing completed', [
+            'referentiecomponenten_with_versies' => $refCompWithVersiesCount,
+            'total_referentiecomponenten' => count($referentieComponenten),
+            'standaard_to_versies_mappings' => count($standaardToVersiesMap)
+        ]);
+
         return $objects;
     }
 
@@ -4400,6 +4449,21 @@ class ArchiMateImportService
                 $object['type'] = $item['_xsi__type'];
             } elseif (isset($item['_attributes']['xsi:type'])) {
                 $object['type'] = $item['_attributes']['xsi:type'];
+            }
+
+            // For relationships, extract source and target from attributes
+            if ($schemaType === 'relationship') {
+                if (isset($item['_source'])) {
+                    $object['source'] = $item['_source'];
+                } elseif (isset($item['_attributes']['source'])) {
+                    $object['source'] = $item['_attributes']['source'];
+                }
+
+                if (isset($item['_target'])) {
+                    $object['target'] = $item['_target'];
+                } elseif (isset($item['_attributes']['target'])) {
+                    $object['target'] = $item['_attributes']['target'];
+                }
             }
 
             // Fast flatten properties
