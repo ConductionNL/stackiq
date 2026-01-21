@@ -185,10 +185,11 @@ export default {
 				this.closeModal()
 
 				// Refresh the organisation data to show the new contactpersoon
+				const pagination = objectStore.getPagination('organisatie')
 				await objectStore.fetchCollection('organisatie', {
 					_extend: '@self.schema,contactpersonen',
-					_limit: 20,
-					_page: 1,
+					_limit: pagination.limit || 20,
+					_page: pagination.page || 1,
 				})
 
 			} catch (error) {
