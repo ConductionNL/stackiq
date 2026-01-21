@@ -127,28 +127,18 @@ export default {
 					throw new Error('Organisatie of nieuwe status ontbreekt')
 				}
 
-				// Prepare the patch data - only include changed properties
-				const patchData = {
-					status: newStatus,
-				}
-
-			// If activating the organisation, set the owner and organisation properties
-			// This ensures the organisation owns itself immediately upon activation
-			if (newStatus.toLowerCase() === 'actief') {
-				const organisatieUuid = organisatie.id || organisatie.uuid || organisatie['@self']?.id
-
-				// Only set the owner and organisation properties - don't send entire @self
-				patchData.owner = organisatieUuid
-				patchData.organisation = organisatieUuid
-
-				console.info('Setting owner and organisation properties to own UUID during activation:', {
-					organisatieId: organisatieUuid,
-					ownerProperty: patchData.owner,
-					organisationProperty: patchData.organisation,
-				})
+			// Prepare the patch data - only include the status property
+			const patchData = {
+				status: newStatus,
 			}
 
-			// Update only the status (and owner/organisation if activating) using PATCH
+			console.info('Changing organisation status:', {
+				organisatieId: organisatie.id,
+				currentStatus: organisatie.status,
+				newStatus: newStatus,
+			})
+
+			// Update only the status using PATCH
 			await objectStore.patchObject('organisatie', organisatie.id, patchData)
 
 				this.success = true
