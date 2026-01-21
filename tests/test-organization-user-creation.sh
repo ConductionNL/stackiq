@@ -327,6 +327,128 @@ if [ "${USER_EXISTS_AFTER}" = "ok" ]; then
     fi
   fi
 
+  # ---------------------------------------------------------------------------
+  # Step 10: Test user login via OpenRegister login endpoint
+  # ---------------------------------------------------------------------------
+  echo ""
+  echo -e "${YELLOW}Step 10: Testing user login via OpenRegister API...${NC}"
+
+  # First, set a known password for the user via Nextcloud OCS API (admin can do this)
+  # Use a complex password that passes Nextcloud's password policy
+  TEST_PASSWORD="T3st!P@ss_${UNIQUE_ID}"
+
+  # Use Nextcloud provisioning API to set password
+  SET_PW_RESPONSE=$(curl -s -X PUT \
+    "${NEXTCLOUD_URL}/ocs/v1.php/cloud/users/${CONTACT_EMAIL}" \
+    -u "${AUTH}" \
+    -H "OCS-APIRequest: true" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "key=password&value=${TEST_PASSWORD}")
+
+  SET_PW_STATUS=$(echo "${SET_PW_RESPONSE}" | grep -o '<status>[^<]*</status>' | sed 's/<[^>]*>//g')
+
+  if [ "${SET_PW_STATUS}" = "ok" ]; then
+    echo "  Password set successfully for user"
+
+    # Now test login via OpenRegister endpoint
+    LOGIN_RESPONSE=$(curl -s -X POST \
+      "${NEXTCLOUD_URL}/index.php/apps/openregister/api/user/login" \
+      -H "Content-Type: application/json" \
+      -d "{\"username\": \"${CONTACT_EMAIL}\", \"password\": \"${TEST_PASSWORD}\"}")
+
+    # Check if login was successful (should return user data, not an error)
+    LOGIN_ERROR=$(echo "${LOGIN_RESPONSE}" | jq -r '.error // empty')
+    LOGIN_USER=$(echo "${LOGIN_RESPONSE}" | jq -r '.userId // .uid // .user.id // empty')
+
+    if [ -n "${LOGIN_ERROR}" ]; then
+      echo -e "${RED}FAILED: Login returned error: ${LOGIN_ERROR}${NC}"
+    elif [ -n "${LOGIN_USER}" ]; then
+      echo -e "${GREEN}SUCCESS: User '${CONTACT_EMAIL}' can login via OpenRegister API${NC}"
+      echo "  Logged in user ID: ${LOGIN_USER}"
+    else
+      echo -e "${YELLOW}WARNING: Login response unclear, checking response...${NC}"
+      echo "  Response: $(echo "${LOGIN_RESPONSE}" | jq -c '.')"
+    fi
+  else
+    echo -e "${YELLOW}WARNING: Could not set password for user (may require different API)${NC}"
+    echo "  Response: ${SET_PW_RESPONSE}"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 11: Verify organisation object's @self metadata is updated
+  # ---------------------------------------------------------------------------
+  echo ""
+  echo -e "${YELLOW}Step 11: Verifying organisation object @self metadata...${NC}"
+
+  # Fetch the organisation object again to check @self metadata
+  ORG_OBJ_REFRESHED=$(curl -s -X GET \
+    "${BASE_URL}${API_PATH}/${REGISTER}/${SCHEMA}/${ORG_ID}" \
+    -u "${AUTH}" \
+    -H "Content-Type: application/json")
+
+  ORG_SELF_OWNER=$(echo "${ORG_OBJ_REFRESHED}" | jq -r '.["@self"].owner // empty')
+  ORG_SELF_ORGANISATION=$(echo "${ORG_OBJ_REFRESHED}" | jq -r '.["@self"].organisation // empty')
+  ORG_TOP_ORGANISATION=$(echo "${ORG_OBJ_REFRESHED}" | jq -r '.organisation // empty')
+
+  echo "  @self.owner: ${ORG_SELF_OWNER}"
+  echo "  @self.organisation: ${ORG_SELF_ORGANISATION}"
+  echo "  organisation (top-level): ${ORG_TOP_ORGANISATION}"
+
+  # Verify organisation owns itself
+  if [ "${ORG_SELF_OWNER}" = "${ORG_ID}" ]; then
+    echo -e "${GREEN}SUCCESS: Organisation @self.owner is set to its own UUID (self-owned)${NC}"
+  else
+    echo -e "${RED}FAILED: Organisation @self.owner should be '${ORG_ID}' but is '${ORG_SELF_OWNER}'${NC}"
+  fi
+
+  if [ "${ORG_SELF_ORGANISATION}" = "${ORG_ID}" ]; then
+    echo -e "${GREEN}SUCCESS: Organisation @self.organisation is set to its own UUID${NC}"
+  else
+    echo -e "${YELLOW}WARNING: Organisation @self.organisation is '${ORG_SELF_ORGANISATION}' (expected '${ORG_ID}')${NC}"
+  fi
+
+  if [ "${ORG_TOP_ORGANISATION}" = "${ORG_ID}" ]; then
+    echo -e "${GREEN}SUCCESS: Organisation top-level 'organisation' field is set to its own UUID${NC}"
+  else
+    echo -e "${RED}FAILED: Organisation 'organisation' field should be '${ORG_ID}' but is '${ORG_TOP_ORGANISATION}'${NC}"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 12: Verify contactpersoon object's @self metadata is updated
+  # ---------------------------------------------------------------------------
+  echo ""
+  echo -e "${YELLOW}Step 12: Verifying contactpersoon object @self metadata...${NC}"
+
+  if [ -n "${CONTACT_UUID}" ] && [ "${CONTACT_UUID}" != "null" ]; then
+    # Fetch the contactpersoon object again to check @self metadata
+    CONTACT_OBJ_REFRESHED=$(curl -s -X GET \
+      "${BASE_URL}${API_PATH}/${REGISTER}/contactpersoon/${CONTACT_UUID}" \
+      -u "${AUTH}" \
+      -H "Content-Type: application/json")
+
+    CONTACT_SELF_OWNER=$(echo "${CONTACT_OBJ_REFRESHED}" | jq -r '.["@self"].owner // empty')
+    CONTACT_SELF_ORGANISATION=$(echo "${CONTACT_OBJ_REFRESHED}" | jq -r '.["@self"].organisation // empty')
+
+    echo "  @self.owner: ${CONTACT_SELF_OWNER}"
+    echo "  @self.organisation: ${CONTACT_SELF_ORGANISATION}"
+
+    # Verify contactpersoon is owned by the created user
+    if [ "${CONTACT_SELF_OWNER}" = "${CONTACT_EMAIL}" ]; then
+      echo -e "${GREEN}SUCCESS: Contactpersoon @self.owner is set to user '${CONTACT_EMAIL}'${NC}"
+    else
+      echo -e "${RED}FAILED: Contactpersoon @self.owner should be '${CONTACT_EMAIL}' but is '${CONTACT_SELF_OWNER}'${NC}"
+    fi
+
+    # Verify contactpersoon belongs to the organisation
+    if [ "${CONTACT_SELF_ORGANISATION}" = "${ORG_ID}" ]; then
+      echo -e "${GREEN}SUCCESS: Contactpersoon @self.organisation is set to organisation UUID${NC}"
+    else
+      echo -e "${RED}FAILED: Contactpersoon @self.organisation should be '${ORG_ID}' but is '${CONTACT_SELF_ORGANISATION}'${NC}"
+    fi
+  else
+    echo -e "${YELLOW}WARNING: Cannot verify contactpersoon metadata - UUID not found${NC}"
+  fi
+
 else
   echo -e "${RED}FAILED: User '${CONTACT_EMAIL}' was NOT created${NC}"
   echo "Response: ${USER_CHECK_AFTER}"

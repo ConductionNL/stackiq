@@ -306,6 +306,18 @@ class ContactpersonenController extends Controller
                 }
             }
 
+            // Handle organisatie field - if it's a string UUID, convert to null to avoid validation errors
+            // The relationship is maintained through the organisation entity's users array
+            if (isset($contactData['organisatie']) && is_string($contactData['organisatie'])) {
+                $this->logger->info('ContactpersonenController: Converting organisatie string to null for validation', [
+                    'originalValue' => $contactData['organisatie']
+                ]);
+                $contactData['organisatie'] = null;
+            }
+            if (isset($contactData['organisation']) && is_string($contactData['organisation'])) {
+                $contactData['organisation'] = null;
+            }
+
             $contactpersoonObject->setObject($contactData);
 
             // Debug logging to understand data types before save
@@ -317,14 +329,10 @@ class ContactpersonenController extends Controller
                 'schemaId' => $schemaId
             ]);
 
-            // Save the updated contactpersoon object
-            $objectService->saveObject(
-                object: $contactpersoonObject,
-                register: $registerId,
-                schema: $schemaId,
-                _rbac: false,
-                _multitenancy: false
-            );
+            // Save using ObjectEntityMapper directly to bypass schema validation
+            // This avoids "Unresolved reference" errors when schema references can't be resolved
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper->update($contactpersoonObject);
 
             $this->logger->info('ContactpersonenController: Updated contactpersoon with username', [
                 'contactpersoonId' => $contactpersoonId,

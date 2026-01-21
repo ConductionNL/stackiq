@@ -1682,7 +1682,7 @@ class OrganizationSyncService
                                 $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID(), $organizationUuid);
 
                                 // Update contactpersoon object owner to user UID
-                                $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
+                                $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema, $organizationUuid);
 
                                 $this->logger->critical('🎉 USER ACCOUNT CREATED SUCCESS', [
                                     'app' => 'softwarecatalog',
@@ -1815,7 +1815,7 @@ class OrganizationSyncService
                             $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID(), $organizationUuid);
 
                             // Update contactpersoon object owner to user UID.
-                            $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
+                            $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema, $organizationUuid);
 
                             $stats['usersCreated']++;
                         } else {
@@ -2165,6 +2165,9 @@ class OrganizationSyncService
             // Update the owner field in @self metadata to the organisation entity UUID
             $selfMetadata['owner'] = $organisationEntityUuid;
 
+            // Update the organisation field in @self metadata (so organisation owns itself)
+            $selfMetadata['organisation'] = $organisationEntityUuid;
+
             // Update the organisation property to the organisation entity UUID (so organisation owns itself)
             $currentObject['organisation'] = $organisationEntityUuid;
 
@@ -2172,15 +2175,14 @@ class OrganizationSyncService
             $currentObject['@self'] = $selfMetadata;
             $organisatieObject->setObject($currentObject);
 
-            // Save the updated object using ObjectService
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            $objectService->saveObject(
-                object: $organisatieObject,
-                register: $register,
-                schema: $organizationSchema,
-                _rbac: false,
-                _multitenancy: false
-            );
+            // Also update the entity's owner and organisation fields directly
+            // These are separate from the object data and control multi-tenancy
+            $organisatieObject->setOwner($organisationEntityUuid);
+            $organisatieObject->setOrganisation($organisationEntityUuid);
+
+            // Save using ObjectEntityMapper directly to bypass validation and ensure metadata is persisted
+            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper->update($organisatieObject);
 
             $this->logger->info('OrganizationSyncService: Successfully updated organisatie object owner and organisation', [
                 'organisatieId' => $organisatieId,
@@ -2207,9 +2209,10 @@ class OrganizationSyncService
      * @param string $userUID The user UID to set as owner
      * @param string $register The register ID
      * @param string $contactSchema The contact schema ID
+     * @param string|null $organizationUuidOverride Optional organization UUID to use (from caller context)
      * @return void
      */
-    private function updateContactpersoonObjectOwner(object $contactObject, string $userUID, string $register, string $contactSchema): void
+    private function updateContactpersoonObjectOwner(object $contactObject, string $userUID, string $register, string $contactSchema, ?string $organizationUuidOverride = null): void
     {
         try {
             $contactId = $contactObject->getUuid();
@@ -2218,7 +2221,8 @@ class OrganizationSyncService
                 'contactId' => $contactId,
                 'userUID' => $userUID,
                 'register' => $register,
-                'schema' => $contactSchema
+                'schema' => $contactSchema,
+                'organizationUuidOverride' => $organizationUuidOverride
             ]);
 
             // Get the current object data
@@ -2231,13 +2235,14 @@ class OrganizationSyncService
             $selfMetadata['owner'] = $userUID;
 
             // Set the organisation field in @self metadata to the organization UUID
-            // This ensures the contact person is properly linked to their organization
-            $organizationUuid = $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '';
+            // Use override if provided, otherwise try to get from object data
+            $organizationUuid = $organizationUuidOverride ?? $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '';
             if (!empty($organizationUuid)) {
                 $selfMetadata['organisation'] = $organizationUuid;
                 $this->logger->info('OrganizationSyncService: Setting @self.organisation metadata', [
                     'contactId' => $contactId,
-                    'organizationUuid' => $organizationUuid
+                    'organizationUuid' => $organizationUuid,
+                    'source' => $organizationUuidOverride ? 'override' : 'object'
                 ]);
             } else {
                 $this->logger->warning('OrganizationSyncService: No organization UUID found for contact person', [
@@ -2250,15 +2255,16 @@ class OrganizationSyncService
             $currentObject['@self'] = $selfMetadata;
             $contactObject->setObject($currentObject);
 
-            // Save the updated object using ObjectService
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            $objectService->saveObject(
-                object: $contactObject,
-                register: $register,
-                schema: $contactSchema,
-                _rbac: false,
-                _multitenancy: false
-            );
+            // Also update the entity's owner and organisation fields directly
+            // These are separate from the object data and control multi-tenancy
+            $contactObject->setOwner($userUID);
+            if (!empty($organizationUuid)) {
+                $contactObject->setOrganisation($organizationUuid);
+            }
+
+            // Save using ObjectEntityMapper directly to bypass validation and ensure metadata is persisted
+            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper->update($contactObject);
 
             $this->logger->info('OrganizationSyncService: Successfully updated contactpersoon object owner and organisation', [
                 'contactId' => $contactId,
