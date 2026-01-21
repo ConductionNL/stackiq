@@ -38,6 +38,7 @@ import OrganisationModal from '../../modals/OrganisationModal.vue'
 			:search-query="searchQuery"
 			:on-search-input="onSearchInput"
 			:clear-search="clearSearch"
+			:pagination-function="handlePagination"
 			@mounted="onMounted" />
 
 		<!-- Add Contactpersoon Modal -->
@@ -360,7 +361,89 @@ export default {
 			clearTimeout(this.searchDebounceTimeout)
 		}
 	},
+
+	/**
+	 * Component mounted - read URL parameters for deep linking
+	 * @return {void}
+	 */
+	mounted() {
+		// Read URL hash parameters for deep linking
+		this.initializeFromUrl()
+	},
+
 	methods: {
+		/**
+		 * Initialize component state from URL hash parameters
+		 * @return {void}
+		 */
+		initializeFromUrl() {
+			try {
+				const hash = window.location.hash.substring(1) // Remove the # character
+				if (!hash) return
+
+				const params = new URLSearchParams(hash)
+
+				// Restore search query
+				if (params.has('search')) {
+					this.searchQuery = params.get('search')
+				}
+
+				// Restore filters
+				if (params.has('status')) {
+					this.currentFilters.status = params.get('status')
+				}
+				if (params.has('type')) {
+					this.currentFilters.type = params.get('type')
+				}
+
+				// Note: page is handled by the store's pagination state
+				console.info('Initialized from URL:', {
+					search: this.searchQuery,
+					filters: this.currentFilters,
+				})
+			} catch (error) {
+				console.error('Error parsing URL parameters:', error)
+			}
+		},
+
+		/**
+		 * Update URL hash with current state
+		 * @return {void}
+		 */
+		updateUrl() {
+			const params = new URLSearchParams()
+
+			// Add search query
+			if (this.searchQuery && this.searchQuery.trim()) {
+				params.set('search', this.searchQuery.trim())
+			}
+
+			// Add filters if not 'all'
+			if (this.currentFilters.status !== 'all') {
+				params.set('status', this.currentFilters.status)
+			}
+			if (this.currentFilters.type !== 'all') {
+				params.set('type', this.currentFilters.type)
+			}
+
+			// Add current page from pagination
+			const pagination = objectStore.getPagination('organisatie')
+			if (pagination && pagination.page > 1) {
+				params.set('page', pagination.page.toString())
+			}
+
+			// Update URL hash
+			const hash = params.toString()
+			if (hash) {
+				window.location.hash = hash
+			} else {
+				// Clear hash if no parameters
+				history.replaceState(null, '', window.location.pathname + window.location.search)
+			}
+
+			console.info('URL updated:', window.location.hash)
+		},
+
 		/**
 		 * Handle component mount - initialize settings and fetch organisaties
 		 * @return {Promise<void>}
@@ -374,13 +457,15 @@ export default {
 					await objectStore.fetchSettings()
 				}
 
-				// Fetch organisaties collection with contactpersonen extended
-				console.info('Fetching organisaties with contactpersonen...')
-				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,@self.register,contactpersonen',
-					_limit: 20,
-					_page: 1,
-				})
+				// Check if we should load from URL parameters
+				const hash = window.location.hash.substring(1)
+				const params = new URLSearchParams(hash)
+				const page = params.has('page') ? parseInt(params.get('page'), 10) : 1
+				const limit = 20
+
+				// Fetch organisaties collection with contactpersonen extended and URL parameters
+				console.info('Fetching organisaties with page:', page)
+				await this.fetchOrganisatiesWithFilters(page, limit)
 			} catch (error) {
 				console.error('Error initializing OrganisatieIndex:', error)
 				// Show error to user if needed
@@ -416,6 +501,9 @@ export default {
 
 				// Use the unified filter method that includes current filters
 				await this.fetchOrganisatiesWithFilters()
+
+				// Update URL to reflect search state
+				this.updateUrl()
 			} catch (error) {
 				console.error('Error performing search:', error)
 			}
@@ -435,6 +523,9 @@ export default {
 
 			// Fetch all organisaties without search filter but with contactpersonen extended
 			await this.fetchOrganisatiesWithFilters()
+
+			// Update URL to reflect cleared search
+			this.updateUrl()
 		},
 
 		/**
@@ -451,19 +542,25 @@ export default {
 
 			// Reset to first page when filters change
 			await this.fetchOrganisatiesWithFilters()
+
+			// Update URL to reflect filter change
+			this.updateUrl()
 		},
 
 		/**
 		 * Fetch organisaties with current filters and search
+		 * @param {number} page - The page number to fetch (defaults to 1)
+		 * @param {number} limit - The page size (defaults to 20)
 		 * @return {Promise<void>}
 		 */
-		async fetchOrganisatiesWithFilters() {
+		async fetchOrganisatiesWithFilters(page = 1, limit = 20) {
 			try {
-				console.info('Fetching organisaties with filters:', this.currentFilters)
+				console.info('Fetching organisaties with filters:', this.currentFilters, { page, limit })
 
 				const searchParams = {
 					_extend: '@self.schema,contactpersonen',
-					_page: 1, // Reset to first page
+					_page: page,
+					_limit: limit,
 				}
 
 				// Add search query if present
@@ -488,6 +585,20 @@ export default {
 			} catch (error) {
 				console.error('Error fetching organisaties with filters:', error)
 			}
+		},
+
+		/**
+		 * Handle pagination changes - preserves search and filters
+		 * @param {number} page - The page number to fetch
+		 * @param {number} limit - The page size
+		 * @return {Promise<void>}
+		 */
+		async handlePagination(page, limit) {
+			console.info('Pagination changed:', { page, limit })
+			await this.fetchOrganisatiesWithFilters(page, limit)
+
+			// Update URL to reflect page change
+			this.updateUrl()
 		},
 
 		/**
