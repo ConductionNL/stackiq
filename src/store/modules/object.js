@@ -853,9 +853,7 @@ export const useObjectStore = defineStore('object', {
 				const paginationInfo = {
 					total: data.total || 0,
 					page: data.page || 1,
-					pages:
-            data.pages
-            || (data.next ? Math.ceil((data.total || 0) / (data.limit || 20)) : 1),
+					pages: data.pages || (data.next ? Math.ceil((data.total || 0) / (data.limit || 20)) : 1),
 					limit: data.limit || 20,
 					next: data.next || null,
 					prev: data.prev || null,
@@ -1298,8 +1296,14 @@ export const useObjectStore = defineStore('object', {
 				if (!this.objects[type]) this.objects[type] = {}
 				this.objects[type][id] = updatedObject
 
-				// Refresh the collection to ensure it's up to date
-				await this.fetchCollection(type)
+				// Refresh the collection to ensure it's up to date, preserving current pagination
+				const pagination = this.pagination[type]
+				const refreshParams = {}
+				if (pagination && pagination.limit >= 10) {
+					refreshParams._page = pagination.page
+					refreshParams._limit = pagination.limit
+				}
+				await this.fetchCollection(type, refreshParams)
 
 				// If this is the active object, update it
 				if (this.activeObjects[type]?.id === id) {

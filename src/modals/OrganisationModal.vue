@@ -348,10 +348,11 @@ export default {
 				this.success = true
 
 				// Refresh organisation list
+				const pagination = objectStore.getPagination('organisatie')
 				await objectStore.fetchCollection('organisatie', {
 					_extend: '@self.schema,contactpersonen',
-					_limit: 20,
-					_page: 1,
+					_limit: pagination.limit || 20,
+					_page: pagination.page || 1,
 				})
 
 				// Start countdown timer

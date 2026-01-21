@@ -1,15 +1,3 @@
-/**
- * OrganisatieIndex.vue
- * Component for displaying and managing organisaties using GenericObjectTable
- * @category Views
- * @package softwarecatalog
- * @author Ruben Linde
- * @copyright 2024
- * @license AGPL-3.0-or-later
- * @version 1.0.0
- * @link https://github.com/opencatalogi/softwarecatalog
- */
-
 <script setup>
 import { navigationStore, objectStore } from '../../store/store.js'
 import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
@@ -301,7 +289,8 @@ export default {
 					label: 'Refresh',
 					icon: Refresh,
 					handler: () => {
-						objectStore.fetchCollection('organisatie')
+						// Preserve current filters and pagination when refreshing
+						this.fetchOrganisatiesWithFilters()
 					},
 					disabled: () => objectStore.isLoading('organisatie'),
 				},
@@ -461,9 +450,14 @@ export default {
 			try {
 				console.info('Fetching organisaties with filters:', this.currentFilters)
 
+				// Preserve the current pagination limit
+				const currentPagination = objectStore.getPagination('organisatie')
+				const currentLimit = currentPagination?.limit || 20
+
 				const searchParams = {
 					_extend: '@self.schema,contactpersonen',
 					_page: 1, // Reset to first page
+					_limit: currentLimit, // Preserve the current limit
 				}
 
 				// Add search query if present
@@ -577,12 +571,8 @@ export default {
 				console.info('Organisatie schema:', organisatie['@self']?.schema)
 
 				await objectStore.publishObject(organisatie)
-				// Refresh the organisation list to show updated status
-				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,@self.register,contactpersonen',
-					_limit: 20,
-					_page: 1,
-				})
+				// Refresh the organisation list to show updated status, preserving current filters and limit
+				await this.fetchOrganisatiesWithFilters()
 			} catch (error) {
 				console.error('Failed to publish organisation:', error)
 			}
@@ -596,12 +586,8 @@ export default {
 		async depublishOrganisatie(organisatie) {
 			try {
 				await objectStore.depublishObject(organisatie)
-				// Refresh the organisation list to show updated status
-				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,@self.register,contactpersonen',
-					_limit: 20,
-					_page: 1,
-				})
+				// Refresh the organisation list to show updated status, preserving current filters and limit
+				await this.fetchOrganisatiesWithFilters()
 			} catch (error) {
 				console.error('Failed to depublish organisation:', error)
 			}
