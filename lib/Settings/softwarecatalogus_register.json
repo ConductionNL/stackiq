@@ -418,7 +418,7 @@
           {
             "title": "Common Ground",
             "summary": "Een nieuwe manier van werken met informatiesystemen binnen de overheid",
-            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en effici\u00ebnte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
+            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en efficiënte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
             "organization": "VNG Realisatie",
             "themes": [
               "Architectuur",
@@ -736,15 +736,14 @@
           }
         },
         "archive": [],
-        "source": "",
+        "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-05-13T19:35:39+00:00",
-        "created": "2025-05-01T14:49:42+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "system",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "create": [
@@ -797,13 +796,11 @@
             "ambtenaar"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "naam",
           "objectDescriptionField": "beschrijving",
           "autoPublish": false
-        },
-        "searchable": true
+        }
       },
       "suite": {
         "uri": null,
@@ -912,12 +909,11 @@
         "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-11-04T12:00:00+00:00",
-        "created": "2025-11-04T12:00:00+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "system",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "create": [
@@ -970,7 +966,6 @@
             "ambtenaar"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "naam",
           "objectSummaryField": "beschrijvingKort",
@@ -982,8 +977,7 @@
             "Handleiding"
           ],
           "autoPublish": true
-        },
-        "searchable": true
+        }
       },
       "dienst": {
         "uri": null,
@@ -995,7 +989,9 @@
         "icon": "Handshake",
         "required": [
           "naam",
-          "aanbieder"
+          "aanbieder",
+          "type",
+          "dienstType"
         ],
         "properties": {
           "naam": {
@@ -1069,7 +1065,8 @@
             "description": "De status van dit aanbod",
             "type": "string",
             "default": "Concept",
-            "example": "Bijvoorbeeld: Concept"
+            "example": "Bijvoorbeeld: Concept",
+            "title": "status"
           },
           "contactpersoon": {
             "description": "Contactpersoon voor deze dienst",
@@ -1123,7 +1120,7 @@
             "table": {
               "default": true
             },
-            "facetable": true,
+            "facetable": false,
             "title": "Soort dienst",
             "enum": [
               "Functioneel beheer",
@@ -1160,18 +1157,39 @@
               "$ref": "#/components/schemas/koppeling",
               "inversedBy": "dienst"
             }
+          },
+          "dienstType": {
+            "description": "Het type dienst dat wordt aangeboden",
+            "type": "string",
+            "required": true,
+            "visible": true,
+            "order": 4,
+            "table": {
+              "default": true
+            },
+            "facetable": true,
+            "title": "Soort dienst",
+            "enum": [
+              "Functioneel beheer",
+              "Applicatiebeheer",
+              "Technisch beheer",
+              "Implementatieondersteuning",
+              "Opleidingen",
+              "Licentiereseller"
+            ],
+            "example": "Bijvoorbeeld: Implementatieondersteuning",
+            "default": "{{ type }}"
           }
         },
         "archive": [],
         "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-07-29T09:35:54+00:00",
-        "created": "2025-05-09T12:14:18+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "1",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "create": [
@@ -1224,7 +1242,6 @@
             "ambtenaar"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "naam",
           "objectSummaryField": "beschrijvingKort",
@@ -1238,8 +1255,7 @@
             "Verklaring van toepasselijkheid"
           ],
           "autoPublish": true
-        },
-        "searchable": true
+        }
       },
       "kwetsbaarheid": {
         "uri": null,
@@ -1329,12 +1345,11 @@
         "source": "internal",
         "hardValidation": true,
         "immutable": false,
-        "updated": "2025-05-09T12:14:18+00:00",
-        "created": "2025-05-09T12:14:18+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "1",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "create": [
@@ -1387,14 +1402,12 @@
             "ambtenaar"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "naam",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "autoPublish": false
-        },
-        "searchable": true
+        }
       },
       "contactpersoon": {
         "uri": null,
@@ -1612,12 +1625,11 @@
         "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-06-05T11:53:54+00:00",
-        "created": "2025-05-09T12:14:18+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "1",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "create": [
@@ -1670,13 +1682,11 @@
             "ambtenaar"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "{{ voornaam }} {{ tussenvoegsel }} {{ achternaam }}",
           "objectDescriptionField": "functie",
           "autoPublish": true
-        },
-        "searchable": true
+        }
       },
       "organisatie": {
         "uri": null,
@@ -2040,7 +2050,7 @@
             "type": "string",
             "required": false,
             "visible": true,
-            "facetable": false,
+            "facetable": true,
             "order": 4,
             "default": "{{ type }}",
             "enum": [
@@ -2150,12 +2160,11 @@
         "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-07-29T09:35:54+00:00",
-        "created": "2025-05-09T12:14:18+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "1",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "create": [
@@ -2209,7 +2218,6 @@
             "ambtenaar"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "naam",
           "objectSummaryField": "beschrijvingKort",
@@ -2229,7 +2237,7 @@
             "AVG compliance document",
             "ESPD (Europees aanbestedingsdocument)",
             "Integriteitsverklaring",
-            "Financi\u00eble capaciteitsverklaring",
+            "Financiële capaciteitsverklaring",
             "Technische capaciteitsverklaring",
             "Kwaliteitscertificaten",
             "Milieucertificaten",
@@ -2242,8 +2250,7 @@
             "Aanbestedingsdocumentatie"
           ],
           "autoPublish": false
-        },
-        "searchable": true
+        }
       },
       "gebruik": {
         "uri": null,
@@ -2366,7 +2373,7 @@
             "example": "Bijvoorbeeld: 2025-03-01"
           },
           "startDatumUitTeFaseren": {
-            "description": "De start datum voor het \"Be\u00ebindigd\" status",
+            "description": "De start datum voor het \"Beëindigd\" status",
             "type": "string",
             "format": "date",
             "visible": true,
@@ -2491,7 +2498,25 @@
             "oneOf": [],
             "facetable": false,
             "title": "Interne Aantekening",
-            "example": "Bijvoorbeeld: Interne notitie over het gebruik"
+            "example": "Bijvoorbeeld: Interne notitie over het gebruik",
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
           },
           "module": {
             "description": "De specifieke applicatie die gebruikt wordt",
@@ -2610,12 +2635,11 @@
         "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-07-29T09:35:54+00:00",
-        "created": "2025-05-09T12:14:18+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "1",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "create": [
@@ -2631,16 +2655,19 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
             "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger"
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "aanbieder": "$organisation"
+              }
+            }
           ],
           "update": [
             "aanbod-beheerder",
@@ -2667,7 +2694,6 @@
             "ambtenaar"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "afnemer",
           "objectDescriptionField": "module",
@@ -2678,8 +2704,7 @@
             "Verwerkingsovereenkomst"
           ],
           "autoPublish": false
-        },
-        "searchable": true
+        }
       },
       "contract": {
         "uri": null,
@@ -2856,12 +2881,11 @@
         "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-05-09T12:14:18+00:00",
-        "created": "2025-05-09T12:14:18+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "1",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "create": [
@@ -2914,20 +2938,18 @@
             "ambtenaar"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "contractNummer",
           "objectDescriptionField": "contractType",
           "autoPublish": false
-        },
-        "searchable": true
+        }
       },
       "koppeling": {
         "uri": null,
         "slug": "koppeling",
         "title": "Koppeling",
-        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
-        "version": "0.0.13",
+        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet óf ApplicatieB óf buitengemeentelijkVoorziening gevuld zijn.",
+        "version": "0.0.14.1",
         "summary": "",
         "icon": "Link",
         "required": [],
@@ -2985,7 +3007,7 @@
             "type": "string",
             "order": 2,
             "facetable": true,
-            "title": "Koppeling Type",
+            "title": "Koppelingtype",
             "enum": [
               "intern",
               "extern"
@@ -3106,11 +3128,11 @@
             "$ref": "#/components/schemas/element"
           },
           "standaardversies": {
-            "description": "Standaardversies die door deze koppeling ge\u00efmplementeerd worden",
+            "description": "Standaardversies die door deze koppeling geïmplementeerd worden",
             "type": "array",
             "order": 12,
             "facetable": false,
-            "title": "Standaard Versies",
+            "title": "Standaardversies",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -3172,28 +3194,31 @@
               "Applicatie",
               "Samenwerking",
               "Leverancier"
-            ]
+            ],
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           }
         },
         "archive": [],
-        "source": "",
-        "hardValidation": false,
-        "updated": "2025-08-08T07:11:40+00:00",
-        "created": "2025-08-08T07:11:40+00:00",
+        "source": "internal",
+        "hardValidation": true,
+        "immutable": false,
+        "searchable": true,
         "maxDepth": 0,
-        "owner": "system",
-        "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "owner": "softwarecatalog",
+        "application": "softwarecatalog",
+        "organisation": null,
         "groups": null,
         "authorization": null,
-        "deleted": null,
         "configuration": {
-          "objectNameField": "naam | type | koppelingType",
+          "autoPublish": false,
+          "objectNameField": "naam",
           "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
-          "autoPublish": false
-        },
-        "searchable": true
+          "objectDescriptionField": "beschrijvingLang"
+        }
       },
       "beoordeeling": {
         "uri": null,
@@ -3309,32 +3334,30 @@
         "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-05-12T20:01:42+00:00",
-        "created": "2025-05-12T19:58:51+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "system",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "naam",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "autoPublish": false
-        },
-        "searchable": true
+        }
       },
       "element": {
+        "uri": null,
         "slug": "element",
         "title": "Element",
         "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
-        "version": "0.0.9",
+        "version": "0.0.10",
         "summary": "",
         "icon": "Cube",
         "required": [
@@ -3365,7 +3388,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "identifier",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "type": {
             "description": "Het type van dit Element",
@@ -3390,7 +3419,13 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": true
+            "facetable": false,
+            "title": "type",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "name": {
             "description": "De naam van dit Element",
@@ -3415,7 +3450,13 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": false
+            "facetable": false,
+            "title": "name",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "name-lang": {
             "description": "De name-language van dit Element",
@@ -3440,7 +3481,13 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": false
+            "facetable": false,
+            "title": "name-lang",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "documentation": {
             "description": "De documentation van dit Element",
@@ -3465,7 +3512,13 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": false
+            "facetable": false,
+            "title": "documentation",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "documentation-lang": {
             "description": "De documentation-language van dit Element",
@@ -3490,7 +3543,13 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": false
+            "facetable": false,
+            "title": "documentation-lang",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "properties": {
             "description": "De properties van dit Element",
@@ -3519,360 +3578,786 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": false
+            "facetable": false,
+            "title": "properties",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaType": {
             "description": "Het gemma type van dit Element",
             "type": "string",
             "facetable": false,
-            "order": 10
+            "order": 10,
+            "title": "gemmaType",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaThema": {
             "description": "Het gemma thema van dit Element",
             "type": "string",
             "facetable": false,
-            "order": 10
+            "order": 10,
+            "title": "gemmaThema",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaUrl": {
             "description": "De gemma url van dit Element",
             "type": "string",
             "facetable": false,
-            "order": 10
+            "order": 10,
+            "title": "gemmaUrl",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "objectId": {
             "description": "Object ID van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "objectId",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "objectIdSync": {
             "description": "Object ID sync van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "objectIdSync",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaStatus": {
             "description": "GEMMA status van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "gemmaStatus",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaSubtype": {
             "description": "GEMMA subtype van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "gemmaSubtype",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaSortering": {
             "description": "GEMMA sortering van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "gemmaSortering",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemma-toelichting": {
             "description": "GEMMA toelichting van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "gemma-toelichting",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemma-ggmStatus": {
             "description": "GEMMA-GGM status van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "gemma-ggmStatus",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "afkorting": {
             "description": "Afkorting van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "afkorting",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "alternateName": {
             "description": "Alternate name van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "alternateName",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "architectuurlaag": {
             "description": "Architectuurlaag van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "architectuurlaag",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "architectuurtool": {
             "description": "Architectuurtool van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "architectuurtool",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "bbn": {
             "description": "BBN van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "bbn",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "beheerder": {
             "description": "Beheerder van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "beheerder",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "beleidsdomein": {
             "description": "Beleidsdomein van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "beleidsdomein",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "beschikbaarheid": {
             "description": "Beschikbaarheid van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "beschikbaarheid",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "beschikbaarheid(belangrijksteReden)": {
             "description": "Beschikbaarheid belangrijkste reden van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "beschikbaarheid(belangrijksteReden)",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "bivScoreBbn": {
             "description": "BIV score BBN van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "bivScoreBbn",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "bron": {
             "description": "Bron van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "bron",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "compliancy": {
             "description": "Compliancy van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "compliancy",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "compliancyUrl": {
             "description": "Compliancy URL van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "compliancyUrl",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "contextview": {
             "description": "Contextview van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "contextview",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "detailniveau": {
             "description": "Detailniveau van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "detailniveau",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "domein": {
             "description": "Domein van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "domein",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "eigenaar": {
             "description": "Eigenaar van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "eigenaar",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "excludefromview": {
             "description": "Exclude from view van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "excludefromview",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "groepering": {
             "description": "Groepering van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "groepering",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "heeftBron": {
             "description": "Heeft bron van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "heeftBron",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "id": {
             "description": "ID van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "id",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "implicaties": {
             "description": "Implicaties van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "implicaties",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "integriteit": {
             "description": "Integriteit van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "integriteit",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "integriteit(belangrijksteReden)": {
             "description": "Integriteit belangrijkste reden van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "integriteit(belangrijksteReden)",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "latestSyncDate": {
             "description": "Latest Sync Date van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "latestSyncDate",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "letOp": {
             "description": "Let op van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "letOp",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "model": {
             "description": "Model van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "model",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "noraKernwaarde": {
             "description": "NORA kernwaarde van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "noraKernwaarde",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "noraKwaliteitsdoel": {
             "description": "NORA kwaliteitsdoel van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "noraKwaliteitsdoel",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "noraPrincipe": {
             "description": "NORA principe van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "noraPrincipe",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "projectstatus": {
             "description": "Projectstatus van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "projectstatus",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "publiceren": {
             "description": "Publiceren van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "publiceren",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "release": {
             "description": "Release van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "release",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "roundtrip": {
             "description": "Roundtrip van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "roundtrip",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "scope": {
             "description": "Scope van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "scope",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "status": {
             "description": "Status van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": false,
+            "title": "status",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "synoniemen": {
             "description": "Synoniemen van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "synoniemen",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "toelichting": {
             "description": "Toelichting van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "toelichting",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "typeBeforeConversion": {
             "description": "Type before conversion van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "typeBeforeConversion",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "typeModel": {
             "description": "Type model van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "typeModel",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "typeUri": {
             "description": "Type URI van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "typeUri",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "typeVoorziening": {
             "description": "Type voorziening van dit Element",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "typeVoorziening",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "uri": {
             "description": "URI van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "uri",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "url": {
             "description": "URL van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "url",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "verbindingsrol": {
             "description": "Verbindingsrol van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "verbindingsrol",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "versieaanduiding": {
             "description": "Versieaanduiding van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "versieaanduiding",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "vertrouwelijkheid": {
             "description": "Vertrouwelijkheid van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "vertrouwelijkheid",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "vertrouwelijkheid(belangrijksteReden)": {
             "description": "Vertrouwelijkheid belangrijkste reden van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "vertrouwelijkheid(belangrijksteReden)",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-bron": {
             "description": "GGM bron van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-bron",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-datum-tijd-export": {
             "description": "GGM datum tijd export van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-datum-tijd-export",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-definitie": {
             "description": "GGM definitie van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-definitie",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-guid": {
             "description": "GGM guid van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-guid",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-naam": {
             "description": "GGM naam van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-naam",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-specialisaties": {
             "description": "GGM specialisaties van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-specialisaties",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-toelichting": {
             "description": "GGM toelichting van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-toelichting",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-type": {
             "description": "GGM type van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-type",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "ggm-uml-type": {
             "description": "GGM uml type van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "ggm-uml-type",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "api-portaal": {
             "description": "API portaal van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "api-portaal",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "api-portaal(url)": {
             "description": "API portaal URL van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "api-portaal(url)",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "summary": {
             "description": "Summary van dit Element",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "summary",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "aanbevolenStandaarden": {
             "description": "Array van aanbevolen standaarden voor dit referentiecomponent",
@@ -3885,6 +4370,11 @@
               "objectConfiguration": {
                 "handling": "related-object"
               }
+            },
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
             }
           },
           "verplichteStandaarden": {
@@ -3898,6 +4388,11 @@
               "objectConfiguration": {
                 "handling": "related-object"
               }
+            },
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
             }
           },
           "standaarden": {
@@ -3911,19 +4406,11 @@
               "objectConfiguration": {
                 "handling": "related-object"
               }
-            }
-          },
-          "gekoppeldeStandaardVersies": {
-            "description": "Array van standaardversies gekoppeld aan dit referentiecomponent (via standaarden)",
-            "type": "array",
-            "facetable": false,
-            "title": "Gekoppelde Standaard Versies",
-            "items": {
-              "type": "object",
-              "$ref": "#/components/schemas/element",
-              "objectConfiguration": {
-                "handling": "related-object"
-              }
+            },
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
             }
           },
           "aanbevolenVoorReferentiecomponent": {
@@ -3935,6 +4422,11 @@
             "$ref": "#/components/schemas/element",
             "objectConfiguration": {
               "handling": "related-object"
+            },
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
             }
           },
           "verplichteVoorReferentiecomponent": {
@@ -3946,13 +4438,18 @@
             "$ref": "#/components/schemas/element",
             "objectConfiguration": {
               "handling": "related-object"
+            },
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
             }
           },
           "standaardVersies": {
             "description": "Array van versies voor dit standaard element (inversedBy lookup)",
             "type": "array",
             "facetable": false,
-            "title": "Standaard Versies",
+            "title": "Standaardversies",
             "items": {
               "type": "object",
               "$ref": "#/components/schemas/element",
@@ -3960,6 +4457,11 @@
                 "handling": "related-object"
               },
               "inversedBy": "standaard"
+            },
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
             }
           },
           "standaard": {
@@ -3971,33 +4473,50 @@
             "$ref": "#/components/schemas/element",
             "objectConfiguration": {
               "handling": "related-object"
+            },
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
+          },
+          "gekoppeldeStandaardVersies": {
+            "description": "Array van standaardversies gekoppeld aan dit referentiecomponent (via standaarden)",
+            "type": "array",
+            "facetable": false,
+            "title": "Gekoppelde Standaardversies",
+            "items": {
+              "type": "object",
+              "$ref": "#/components/schemas/element",
+              "objectConfiguration": {
+                "handling": "related-object"
+              }
             }
           }
         },
         "archive": [],
-        "source": "",
-        "hardValidation": false,
-        "updated": "2025-04-01T12:16:33+00:00",
-        "created": "2025-03-03T13:56:42+00:00",
+        "source": "internal",
+        "hardValidation": true,
+        "immutable": false,
+        "searchable": true,
         "maxDepth": 4,
-        "owner": null,
-        "application": null,
+        "owner": "softwarecatalog",
+        "application": "softwarecatalog",
         "organisation": null,
+        "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
-          "objectNameField": "name | ggm_naam | identifier",
-          "objectSummaryField": "summary | documentation",
-          "autoPublish": false,
-          "searchable": true
-        },
-        "searchable": true
+          "objectNameField": "name",
+          "objectSummaryField": "summary",
+          "objectDescriptionField": "documentation"
+        }
       },
       "view": {
+        "uri": null,
         "slug": "view",
         "title": "View",
         "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
@@ -4035,7 +4554,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "identifier"
           },
           "type": {
             "description": "De type van deze View",
@@ -4060,7 +4580,8 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": true
+            "facetable": false,
+            "title": "type"
           },
           "viewpoint": {
             "description": "De viewpoint van deze View",
@@ -4084,7 +4605,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "viewpoint"
           },
           "name": {
             "description": "De name van deze View",
@@ -4109,7 +4631,8 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": false
+            "facetable": false,
+            "title": "name"
           },
           "name-lang": {
             "description": "De name-language van deze View",
@@ -4133,7 +4656,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "name-lang"
           },
           "documentation": {
             "description": "De documentation van deze View",
@@ -4157,7 +4681,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "documentation"
           },
           "documentation-lang": {
             "description": "De documentation-language van deze View",
@@ -4181,7 +4706,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "documentation-lang"
           },
           "properties": {
             "description": "De properties van deze View",
@@ -4209,7 +4735,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "properties"
           },
           "nodes": {
             "description": "De nodes van deze View",
@@ -4236,7 +4763,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "nodes"
           },
           "connections": {
             "description": "De connections van deze View",
@@ -4263,100 +4791,117 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "connections"
           },
           "objectId": {
             "description": "Object ID van deze View",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "objectId"
           },
           "viewtype": {
             "description": "Viewtype van deze View",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "viewtype"
           },
           "titelViewSwc": {
             "description": "Titel view SWC van deze View",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "titelViewSwc"
           },
           "gemmaType": {
             "description": "GEMMA type van deze View",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "gemmaType"
           },
           "gemmaThema": {
             "description": "GEMMA thema van deze View",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "gemmaThema"
           },
           "gemmaUrl": {
             "description": "GEMMA URL van deze View",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "gemmaUrl"
           },
           "gemmaStatus": {
             "description": "GEMMA status van deze View",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "gemmaStatus"
           },
           "contextview": {
             "description": "Contextview van deze View",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "contextview"
           },
           "layoutDirectionBo": {
             "description": "Layout direction BO van deze View",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "layoutDirectionBo"
           },
           "layoutDirectionDo": {
             "description": "Layout direction DO van deze View",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "layoutDirectionDo"
           },
           "detailniveau": {
             "description": "Detailniveau van deze View",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "detailniveau"
           },
           "scope": {
             "description": "Scope van deze View",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "scope"
           },
           "publiceren": {
             "description": "Publiceren van deze View",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "publiceren"
           },
           "summary": {
             "description": "Summary van deze View",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "summary"
           }
         },
         "archive": [],
-        "source": "",
+        "source": "internal",
         "hardValidation": false,
-        "updated": "2025-03-25T16:30:49+00:00",
-        "created": "2025-03-03T13:56:48+00:00",
+        "immutable": false,
+        "searchable": true,
         "maxDepth": 0,
         "owner": null,
         "application": null,
         "organisation": null,
+        "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
-          "autoPublish": false
-        },
-        "searchable": true
+          "autoPublish": false,
+          "objectNameField": "name",
+          "objectDescriptionField": "summary"
+        }
       },
       "model": {
+        "uri": null,
         "slug": "model",
         "title": "Model",
         "description": "AMEF Model - Volledig ArchiMate model met alle elementen, relaties en views",
@@ -4403,7 +4948,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "xmlns"
           },
           "xsi": {
             "description": "De xsi van dit GEMMA Model",
@@ -4427,7 +4973,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "xsi"
           },
           "schemaLocation": {
             "description": "De schemaLocation van dit GEMMA Model",
@@ -4451,7 +4998,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "schemaLocation"
           },
           "identifier": {
             "description": "De identifier van dit GEMMA Model",
@@ -4475,7 +5023,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "identifier"
           },
           "name": {
             "description": "De name van dit GEMMA Model",
@@ -4499,7 +5048,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "name"
           },
           "name-lang": {
             "description": "De name-language van dit GEMMA Model",
@@ -4523,7 +5073,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "name-lang"
           },
           "version": {
             "description": "De version van dit GEMMA Model",
@@ -4547,7 +5098,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "version"
           },
           "documentation": {
             "description": "De documentation van dit GEMMA Model",
@@ -4571,7 +5123,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "documentation"
           },
           "documentation-lang": {
             "description": "De documentation-language van dit GEMMA Model",
@@ -4595,7 +5148,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "documentation-lang"
           },
           "properties": {
             "description": "De properties van dit GEMMA Model",
@@ -4623,7 +5177,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "properties"
           },
           "elements": {
             "description": "De elements van dit GEMMA Model",
@@ -4651,7 +5206,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "elements"
           },
           "relationships": {
             "description": "De relationships van dit GEMMA Model",
@@ -4679,7 +5235,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "relationships"
           },
           "organizations": {
             "description": "De organizations van dit GEMMA Model",
@@ -4707,7 +5264,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "organizations"
           },
           "propertyDefinitions": {
             "description": "De propertyDefinitions van dit GEMMA Model",
@@ -4735,7 +5293,8 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "propertyDefinitions"
           },
           "views": {
             "description": "De views van dit GEMMA Model",
@@ -4763,212 +5322,165 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "views"
           }
         },
         "archive": [],
-        "source": "",
+        "source": "internal",
         "hardValidation": false,
-        "updated": "2025-04-01T15:12:59+00:00",
-        "created": "2025-03-03T13:57:16+00:00",
+        "immutable": false,
+        "searchable": true,
         "maxDepth": 4,
         "owner": null,
         "application": null,
         "organisation": null,
+        "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
-          "autoPublish": false
-        },
-        "searchable": true
+          "autoPublish": false,
+          "objectNameField": "name"
+        }
       },
       "organization": {
+        "uri": null,
         "slug": "organization",
         "title": "Organization",
-        "description": "AMEF Organization - Organisatie structuren uit het ArchiMate model",
-        "version": "0.0.7",
-        "summary": "",
-        "icon": "Building",
-        "required": [],
+        "description": "Organizations represent entities that publish or manage catalogs. They can be government agencies, companies, or other institutions. Each organization can have multiple catalogs and is identified by various standardized identifiers like OIN, RSIN, and PKI certificates.",
+        "version": "0.0.5",
+        "summary": "An organization that publishes or manages catalogs",
+        "icon": null,
+        "required": [
+          "name",
+          "summary"
+        ],
         "properties": {
-          "identifierRef": {
-            "description": "De identifierRef van deze Organization",
+          "name": {
             "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "id-009fa62f25844aa3a87d252bf2b6bb0c",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
+            "description": "The name of the organization",
+            "minLength": 1,
+            "facetable": true,
+            "title": "name",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
-          "label": {
-            "description": "De label van deze Organization",
+          "summary": {
             "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "Strategy",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
+            "description": "Brief description of the organization",
+            "minLength": 1,
+            "facetable": false,
+            "title": "summary",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
-          "label-lang": {
-            "description": "De label-language van deze Organization",
+          "description": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 2,
-            "example": "nl",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
+            "description": "Detailed description of the organization",
+            "facetable": false,
+            "title": "description",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
-          "documentation": {
-            "description": "De documentation van deze Organization",
+          "oin": {
             "type": "string",
-            "minLength": null,
-            "maxLength": null,
-            "example": "Het Ondernemingsdossier stelt een ondernemer in staat om bepaalde informatie uit de bedrijfsvoering eenmalig vast te leggen en meerdere keren beschikbaar te stellen aan overheden zoals toezichthouders en vergunningverleners",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
+            "description": "Organization Identification Number (OIN)",
+            "pattern": "^0000000\\d{10}000$",
+            "facetable": true,
+            "title": "oin",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
-          "documentation-lang": {
-            "description": "De documentation-language van deze Organization",
+          "tooi": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 2,
-            "example": "nl",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
+            "description": "TOOI identifier for the organization",
+            "pattern": "^\\w{2,}\\d{4}$",
+            "facetable": true,
+            "title": "tooi",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
-          "item": {
-            "description": "De items (Organizations) van deze Organization",
-            "type": "array",
-            "minLength": null,
-            "maxLength": null,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "$ref": "",
-            "items": {
-              "cascadeDelete": true,
-              "$ref": "#/components/schemas/organization",
-              "type": "object"
-            },
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
+          "rsin": {
+            "type": "string",
+            "description": "RSIN number for tax identification",
+            "pattern": "^\\d{9}$",
+            "facetable": true,
+            "title": "rsin",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
+          },
+          "pki": {
+            "type": "string",
+            "description": "PKI certificate information",
+            "pattern": "^\\d{1,}$",
+            "facetable": false,
+            "title": "pki",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
+          },
+          "image": {
+            "type": "string",
+            "description": "URL to the organization's logo or image",
+            "facetable": false,
+            "title": "image",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           }
         },
         "archive": [],
-        "source": "",
-        "hardValidation": false,
-        "updated": "2025-04-03T09:28:37+00:00",
-        "created": "2025-03-03T13:56:55+00:00",
-        "maxDepth": 4,
-        "owner": null,
-        "application": null,
+        "source": "internal",
+        "hardValidation": true,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "owner": "opencatalogi",
+        "application": "opencatalogi",
         "organisation": null,
+        "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
-          "autoPublish": false
-        },
-        "searchable": true
+          "objectNameField": "name",
+          "objectSummaryField": "summary",
+          "objectDescriptionField": "description"
+        }
       },
       "property-definition": {
+        "uri": null,
         "slug": "property-definition",
         "title": "Property Definition",
         "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
-        "version": "0.0.7",
+        "version": "0.0.8",
         "summary": "",
         "icon": "Settings",
         "required": [
@@ -4998,7 +5510,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "identifier",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "type": {
             "description": "De type van deze Property Definition",
@@ -5023,7 +5541,13 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": true
+            "facetable": false,
+            "title": "type",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "name": {
             "description": "De name van deze Property Definition",
@@ -5047,7 +5571,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "name",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "name-lang": {
             "description": "De name-language van deze Property Definition",
@@ -5071,36 +5601,41 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "name-lang",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           }
         },
         "archive": [],
-        "source": "",
-        "hardValidation": false,
-        "updated": "2025-03-27T14:48:34+00:00",
-        "created": "2025-03-10T13:31:19+00:00",
+        "source": "internal",
+        "hardValidation": true,
+        "immutable": false,
+        "searchable": true,
         "maxDepth": 0,
-        "owner": null,
-        "application": null,
+        "owner": "softwarecatalog",
+        "application": "softwarecatalog",
         "organisation": null,
+        "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "name | identifier",
-          "objectDescriptionField": "type",
-          "autoPublish": false
-        },
-        "searchable": true
+          "objectDescriptionField": "description"
+        }
       },
       "relation": {
+        "uri": null,
         "slug": "relation",
         "title": "Relation",
         "description": "AMEF Relation - Relaties tussen architectuur elementen uit het ArchiMate model",
-        "version": "0.0.7",
+        "version": "0.0.8",
         "summary": "",
         "icon": "ArrowRight",
         "required": [
@@ -5133,7 +5668,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "identifier",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "source": {
             "description": "De source van deze Relation",
@@ -5157,7 +5698,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "source",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "target": {
             "description": "De target van deze Relation",
@@ -5181,7 +5728,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "target",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "type": {
             "description": "De type van deze Relation",
@@ -5206,7 +5759,13 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "facetable": true
+            "facetable": false,
+            "title": "type",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "accessType": {
             "description": "De accessType van deze Relation",
@@ -5230,7 +5789,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "accessType",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "isDirected": {
             "description": "De isDirected van deze Relation",
@@ -5254,7 +5819,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "isDirected",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "name": {
             "description": "De name van deze Relation",
@@ -5278,7 +5849,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "name",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "name-lang": {
             "description": "De name-language van deze Relation",
@@ -5302,7 +5879,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "name-lang",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "documentation": {
             "description": "De documentation van deze Relation",
@@ -5326,7 +5909,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "documentation",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "documentation-lang": {
             "description": "De documentation-lang van deze Relation",
@@ -5350,7 +5939,13 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "documentation-lang",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "properties": {
             "description": "De properties van deze Relation",
@@ -5378,81 +5973,145 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "title": "properties",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "objectId": {
             "description": "Object ID van deze Relation",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "objectId",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaType": {
             "description": "GEMMA type van deze Relation",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "gemmaType",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaThema": {
             "description": "GEMMA thema van deze Relation",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "gemmaThema",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaUrl": {
             "description": "GEMMA URL van deze Relation",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "gemmaUrl",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "gemmaStatus": {
             "description": "GEMMA status van deze Relation",
             "type": "string",
-            "facetable": true
+            "facetable": true,
+            "title": "gemmaStatus",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "status": {
             "description": "Status van deze Relation",
             "type": "string",
-            "facetable": true
+            "facetable": false,
+            "title": "status",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "verbindingsrol": {
             "description": "Verbindingsrol van deze Relation",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "verbindingsrol",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "toelichting": {
             "description": "Toelichting van deze Relation",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "toelichting",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "bron": {
             "description": "Bron van deze Relation",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "bron",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           },
           "summary": {
             "description": "Summary van deze Relation",
             "type": "string",
-            "facetable": false
+            "facetable": false,
+            "title": "summary",
+            "table": {
+              "enabled": true,
+              "indexed": false,
+              "searchable": false
+            }
           }
         },
         "archive": [],
-        "source": "",
-        "hardValidation": false,
-        "updated": "2025-04-01T08:47:45+00:00",
-        "created": "2025-03-03T13:57:01+00:00",
+        "source": "internal",
+        "hardValidation": true,
+        "immutable": false,
+        "searchable": true,
         "maxDepth": 4,
-        "owner": null,
-        "application": null,
+        "owner": "softwarecatalog",
+        "application": "softwarecatalog",
         "organisation": null,
+        "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "name | type | identifier",
-          "objectSummaryField": "type",
-          "objectDescriptionField": "documentation",
-          "autoPublish": false
-        },
-        "searchable": true
+          "objectSummaryField": "summary",
+          "objectDescriptionField": "description"
+        }
       },
       "module": {
         "uri": null,
@@ -5648,7 +6307,8 @@
               "BSD Licentie (Berkeley Software Distribution)",
               "European Union Public Licence (EUPL), versie 1.2"
             ],
-            "licentie": "License"
+            "licentie": "License",
+            "title": "Licentie"
           },
           "referentieComponenten": {
             "description": "GEMMA referentiecomponenten die de applicatie implementeert",
@@ -5686,7 +6346,7 @@
             "visible": true,
             "order": 12,
             "facetable": false,
-            "title": "Module Type",
+            "title": "Moduletype",
             "default": "{{ type }}",
             "enum": [
               "Applicatie",
@@ -5818,7 +6478,7 @@
             "visible": true,
             "order": 26,
             "facetable": true,
-            "title": "Standaard Versies",
+            "title": "Standaardversies",
             "hideOnForm": true,
             "items": {
               "type": "object",
@@ -5913,19 +6573,17 @@
         "source": "internal",
         "hardValidation": false,
         "immutable": false,
-        "updated": "2025-07-29T09:24:00+00:00",
-        "created": "2025-07-29T09:24:00+00:00",
+        "searchable": true,
         "maxDepth": 0,
         "owner": "system",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "naam",
           "objectSummaryField": "beschrijvingKort",
@@ -5937,10 +6595,8 @@
             "Handleiding",
             "Technische specificatie"
           ],
-          "autoPublish": true,
-          "searchable": true
-        },
-        "searchable": true
+          "autoPublish": true
+        }
       },
       "compliancy": {
         "uri": null,
@@ -6016,21 +6672,20 @@
           }
         },
         "archive": [],
-        "source": "",
+        "source": "internal",
         "hardValidation": false,
-        "updated": "2025-08-08T07:11:40+00:00",
-        "created": "2025-08-08T07:11:40+00:00",
+        "immutable": false,
+        "searchable": true,
         "maxDepth": 0,
         "owner": "system",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "module",
           "objectSummaryField": "standaardversie",
@@ -6040,8 +6695,7 @@
             "testraport"
           ],
           "autoPublish": true
-        },
-        "searchable": true
+        }
       },
       "moduleVersie": {
         "uri": null,
@@ -6167,28 +6821,26 @@
           }
         },
         "archive": [],
-        "source": "",
+        "source": "internal",
         "hardValidation": false,
-        "updated": "2025-08-08T07:11:40+00:00",
-        "created": "2025-08-08T07:11:40+00:00",
+        "immutable": false,
+        "searchable": true,
         "maxDepth": 0,
         "owner": "system",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "groups": null,
         "authorization": {
           "read": [
             "public"
           ]
         },
-        "deleted": null,
         "configuration": {
           "objectNameField": "versie",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "autoPublish": true
-        },
-        "searchable": true
+        }
       }
     },
     "objects": []
