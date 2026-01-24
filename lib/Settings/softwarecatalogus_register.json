@@ -5627,7 +5627,7 @@
         },
         "configuration": {
           "objectNameField": "name | identifier",
-          "objectDescriptionField": "description"
+          "objectDescriptionField": "type"
         }
       },
       "relation": {
@@ -6110,7 +6110,7 @@
         "configuration": {
           "objectNameField": "name | type | identifier",
           "objectSummaryField": "summary",
-          "objectDescriptionField": "description"
+          "objectDescriptionField": "documentation"
         }
       },
       "module": {
