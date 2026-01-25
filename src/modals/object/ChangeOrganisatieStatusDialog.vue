@@ -112,7 +112,7 @@ export default {
 		},
 
 		/**
-		 * Change the organisation status
+		 * Change the organisation status.
 		 * @return {Promise<void>}
 		 */
 		async changeStatus() {
@@ -127,7 +127,7 @@ export default {
 					throw new Error('Organisatie of nieuwe status ontbreekt')
 				}
 
-			// Prepare the patch data - only include the status property
+			// Prepare the patch data - only include the status property.
 			const patchData = {
 				status: newStatus,
 			}
@@ -138,18 +138,29 @@ export default {
 				newStatus: newStatus,
 			})
 
-			// Update only the status using PATCH
+			// Update only the status using PATCH.
 			await objectStore.patchObject('organisatie', organisatie.id, patchData)
 
 				this.success = true
 
-				// Refresh the collection to show the updated status
-				objectStore.fetchCollection('organisatie')
+			// If activating an organisation, store it for search filtering.
+			if (newStatus === 'Actief') {
+				const organisatieNaam = organisatie?.naam || organisatie?.name || organisatie?.['@self']?.name
+				
+				// Store the activated organisation info in navigationStore transferData.
+				navigationStore.setTransferData({
+					action: 'organisationActivated',
+					organisationName: organisatieNaam,
+					status: 'Actief',
+				})
+			}
+			// For deactivation, don't fetch - the organisation will just disappear from 
+			// the current view if the user has an active filter, which is the expected behavior.
 
-				// Auto-close after 2 seconds on success
-				setTimeout(() => {
-					this.closeDialog()
-				}, 2000)
+			// Auto-close after 2 seconds on success.
+			setTimeout(() => {
+				this.closeDialog()
+			}, 2000)
 
 			} catch (error) {
 				console.error('Error changing organisation status:', error)
