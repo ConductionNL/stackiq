@@ -2276,6 +2276,18 @@
             "required": true,
             "order": 11
           },
+          "aanbieder": {
+            "type": "object",
+            "title": "Aanbieder",
+            "description": "De organisatie die aanbieder is van de applicatie",
+            "facetable": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/organisatie",
+            "required": false,
+            "order": 12
+          },
           "contactpersoon": {
             "type": "object",
             "description": "De contactpersoon voor dit gebruik",
@@ -3212,7 +3224,66 @@
         "application": "softwarecatalog",
         "organisation": null,
         "groups": null,
-        "authorization": null,
+        "authorization": {
+          "create": [
+            "aanbod-beheerder",
+            "ambtenaar",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "gebruik-raadpleger",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "software-catalog-admins",
+            "software-catalog-users",
+            "vng-raadpleger"
+          ],
+          "read": [
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "aanbieder": "$organisation"
+              }
+            },
+            "gebruik-beheerder",
+            "ambtenaar",
+            "functioneel-beheerder",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "software-catalog-admins",
+            "software-catalog-users",
+            "vng-raadpleger"
+          ],
+          "update": [
+            "aanbod-beheerder",
+            "ambtenaar",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "gebruik-raadpleger",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "software-catalog-admins",
+            "software-catalog-users",
+            "vng-raadpleger"
+          ],
+          "delete": [
+            "aanbod-beheerder",
+            "ambtenaar",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "gebruik-raadpleger",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "software-catalog-admins",
+            "software-catalog-users",
+            "vng-raadpleger"
+          ]
+        },
         "configuration": {
           "autoPublish": false,
           "objectNameField": "naam",
@@ -5627,7 +5698,7 @@
         },
         "configuration": {
           "objectNameField": "name | identifier",
-          "objectDescriptionField": "description"
+          "objectDescriptionField": "type"
         }
       },
       "relation": {
@@ -6110,7 +6181,7 @@
         "configuration": {
           "objectNameField": "name | type | identifier",
           "objectSummaryField": "summary",
-          "objectDescriptionField": "description"
+          "objectDescriptionField": "documentation"
         }
       },
       "module": {

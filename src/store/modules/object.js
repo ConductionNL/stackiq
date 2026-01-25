@@ -1285,8 +1285,10 @@ export const useObjectStore = defineStore('object', {
 				if (!this.objects[type]) this.objects[type] = {}
 				this.objects[type][id] = updatedObject
 
-				// Refresh the collection to ensure it's up to date
-				await this.fetchCollection(type)
+				// NOTE: We don't automatically refresh the collection here anymore.
+				// Components should handle refreshing with their own filters/search params.
+				// This prevents unfiltered fetches from overwriting filtered results.
+				// await this.fetchCollection(type)
 
 				// If this is the active object, update it
 				if (this.activeObjects[type]?.id === id) {
