@@ -785,15 +785,23 @@ export default {
 	mounted() {
 		console.info(`GenericObjectTable mounted for ${this.objectType}, fetching objects...`)
 
-		// Initialize active filters with default values
+		// Initialize active filters with default values.
 		if (this.filters && this.filters.length > 0) {
 			this.filters.forEach(filter => {
 				this.$set(this.activeFilters, filter.key, 'all')
 			})
 		}
 
-		this.refreshObjects()
-		// Initialize column filters
+		// Only call refreshObjects if there's NO pagination function.
+		// If a pagination function is provided, the parent component handles data fetching via the @mounted event.
+		if (!this.paginationFunction) {
+			this.refreshObjects()
+		}
+
+		// Emit mounted event so parent can handle initialization.
+		this.$emit('mounted')
+
+		// Initialize column filters.
 		objectStore.initializeColumnFilters()
 	},
 

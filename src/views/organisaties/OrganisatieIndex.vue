@@ -383,10 +383,11 @@ export default {
 
 				const params = new URLSearchParams(hash)
 
-				// Restore search query
-				if (params.has('search')) {
-					this.searchQuery = params.get('search')
-				}
+			// Restore search query
+			if (params.has('search')) {
+				this.searchQuery = params.get('search')
+				console.info('Search query restored from URL:', this.searchQuery)
+			}
 
 				// Restore filters
 				if (params.has('status')) {
@@ -461,11 +462,16 @@ export default {
 				const hash = window.location.hash.substring(1)
 				const params = new URLSearchParams(hash)
 				const page = params.has('page') ? parseInt(params.get('page'), 10) : 1
-				const limit = 20
+			const limit = 20
 
-				// Fetch organisaties collection with contactpersonen extended and URL parameters
-				console.info('Fetching organisaties with page:', page)
-				await this.fetchOrganisatiesWithFilters(page, limit)
+			// IMPORTANT: Initialize URL parameters FIRST before fetching.
+			// This ensures search queries and filters from deep links are applied.
+			this.initializeFromUrl()
+
+			// Fetch organisaties collection with contactpersonen extended and URL parameters.
+			// At this point, this.searchQuery should already be set from initializeFromUrl().
+			console.info('Fetching organisaties with page:', page, 'search:', this.searchQuery)
+			await this.fetchOrganisatiesWithFilters(page, limit)
 			} catch (error) {
 				console.error('Error initializing OrganisatieIndex:', error)
 				// Show error to user if needed
