@@ -2276,6 +2276,18 @@
             "required": true,
             "order": 11
           },
+          "aanbieder": {
+            "type": "object",
+            "title": "Aanbieder",
+            "description": "De organisatie die aanbieder is van de applicatie",
+            "facetable": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/organisatie",
+            "required": false,
+            "order": 12
+          },
           "contactpersoon": {
             "type": "object",
             "description": "De contactpersoon voor dit gebruik",
