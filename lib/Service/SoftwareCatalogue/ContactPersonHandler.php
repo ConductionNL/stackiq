@@ -2202,11 +2202,11 @@ class ContactPersonHandler
             $organisationService = $this->_container->get('OCA\\OpenRegister\\Service\\OrganisationService');
             
             // Create organisation with specific UUID, without adding current user (as we're in admin context)
-            $organisation = $organisationService->createOrganisationWithUuid(
-                $organizationName,
-                $organizationDescription,
-                $organizationUuid,
-                false  // Don't add current user (admin) to this organisation
+            $organisation = $organisationService->createOrganisation(
+                name: $organizationName,
+                description: $organizationDescription,
+                addCurrentUser: false,  // Don't add current user (admin) to this organisation
+                uuid: $organizationUuid
             );
             
             $this->_logger->info('ContactPersonHandler: Successfully created organization entity', [

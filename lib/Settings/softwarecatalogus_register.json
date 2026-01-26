@@ -418,7 +418,7 @@
           {
             "title": "Common Ground",
             "summary": "Een nieuwe manier van werken met informatiesystemen binnen de overheid",
-            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en efficiënte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
+            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en effici\u00ebnte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
             "organization": "VNG Realisatie",
             "themes": [
               "Architectuur",
@@ -2244,7 +2244,7 @@
             "AVG compliance document",
             "ESPD (Europees aanbestedingsdocument)",
             "Integriteitsverklaring",
-            "Financiële capaciteitsverklaring",
+            "Financi\u00eble capaciteitsverklaring",
             "Technische capaciteitsverklaring",
             "Kwaliteitscertificaten",
             "Milieucertificaten",
@@ -2392,7 +2392,7 @@
             "example": "Bijvoorbeeld: 2025-03-01"
           },
           "startDatumUitTeFaseren": {
-            "description": "De start datum voor het \"Beëindigd\" status",
+            "description": "De start datum voor het \"Be\u00ebindigd\" status",
             "type": "string",
             "format": "date",
             "visible": true,
@@ -2967,7 +2967,7 @@
         "uri": null,
         "slug": "koppeling",
         "title": "Koppeling",
-        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet óf ApplicatieB óf buitengemeentelijkVoorziening gevuld zijn.",
+        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
         "version": "0.0.14.1",
         "summary": "",
         "icon": "Link",
@@ -3147,7 +3147,7 @@
             "$ref": "#/components/schemas/element"
           },
           "standaardversies": {
-            "description": "Standaardversies die door deze koppeling geïmplementeerd worden",
+            "description": "Standaardversies die door deze koppeling ge\u00efmplementeerd worden",
             "type": "array",
             "order": 12,
             "facetable": false,
@@ -6545,7 +6545,8 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/compliancy"
+              "$ref": "#/components/schemas/compliancy",
+              "inversedBy": "module"
             }
           },
           "standaarden": {
