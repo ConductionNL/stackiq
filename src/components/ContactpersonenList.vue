@@ -67,22 +67,22 @@
 								{{ t("softwarecatalog", "No User") }}
 							</span>
 						</td>
-						<td class="groups-cell">
-							<div
-								v-if="
-									contactpersoon.user.hasUser &&
-										contactpersoon.user.groups.length > 0
-								"
-								class="groups">
-								<span
-									v-for="group in contactpersoon.user.groups"
-									:key="group"
-									class="group-chip">
-									{{ formatGroupName(group) }}
-								</span>
-							</div>
-							<span v-else class="no-groups">-</span>
-						</td>
+					<td class="groups-cell">
+						<div
+							v-if="
+								contactpersoon.user.hasUser &&
+									getFilteredGroups(contactpersoon).length > 0
+							"
+							class="groups">
+							<span
+								v-for="group in getFilteredGroups(contactpersoon)"
+								:key="group"
+								class="group-chip">
+								{{ formatGroupName(group) }}
+							</span>
+						</div>
+						<span v-else class="no-groups">-</span>
+					</td>
 						<td class="actions-cell">
 							<NcActions>
 								<!-- Convert to User Action -->
@@ -674,9 +674,9 @@ export default {
 		},
 
 		/**
-		 * Process contactpersonen data from organisation object to match expected format
-		 * @param {Array} rawContactpersonen - Raw contactpersonen data from organisation
-		 * @return {Array} Processed contactpersonen with user information
+		 * Process contactpersonen data from organisation object to match expected format.
+		 * @param {Array} rawContactpersonen - Raw contactpersonen data from organisation.
+		 * @return {Array} Processed contactpersonen with user information.
 		 */
 		processContactpersonen(rawContactpersonen) {
 			return rawContactpersonen.map((contactpersoon) => {
@@ -684,7 +684,7 @@ export default {
 				const data = contactpersoon.data || contactpersoon
 				const hasUser = !!data.username
 
-				// Debug logging to understand the data structure
+				// Debug logging to understand the data structure.
 				console.info('Processing contactpersoon:', {
 					contactId,
 					data,
@@ -693,6 +693,8 @@ export default {
 					usernameFromData: data.username,
 					disabledFromAPI: contactpersoon.user?.disabled,
 					disabledFromData: data.disabled,
+					groupsFromAPI: contactpersoon.user?.groups,
+					groupsFromData: data.groups,
 				})
 
 				return {
@@ -701,10 +703,13 @@ export default {
 					user: {
 						hasUser,
 						username: data.username || '',
-						groups: data.groups || [],
-						disabled: contactpersoon.user?.disabled || data.disabled || false, // Use user.disabled from API, fallback to data.disabled
+						// Use groups from API user object if available, otherwise from data.
+						groups: contactpersoon.user?.groups || data.groups || [],
+						// Use user.disabled from API, fallback to data.disabled.
+						disabled: contactpersoon.user?.disabled || data.disabled || false,
 					},
-					loading: contactpersoon.loading || false, // Include loading state from organisation data
+					// Include loading state from organisation data.
+					loading: contactpersoon.loading || false,
 				}
 			})
 		},
@@ -781,50 +786,53 @@ export default {
 			}
 		},
 
-		/**
-		 * Update contactpersonen with bulk user info
-		 * @param {object} bulkUserInfo - User info object keyed by contactpersoon ID
-		 */
-		updateContactpersonenWithUserInfo(bulkUserInfo) {
-			if (!this.organisationData.contactpersonen) return
+	/**
+	 * Update contactpersonen with bulk user info.
+	 * @param {object} bulkUserInfo - User info object keyed by contactpersoon ID.
+	 * @return {void}
+	 */
+	updateContactpersonenWithUserInfo(bulkUserInfo) {
+		if (!this.organisationData.contactpersonen) return
 
-			this.organisationData.contactpersonen.forEach((contactpersoon, index) => {
-				const contactpersoonId = contactpersoon.id || contactpersoon.uuid
-				const userInfo = bulkUserInfo[contactpersoonId]
+		this.organisationData.contactpersonen.forEach((contactpersoon, index) => {
+			const contactpersoonId = contactpersoon.id || contactpersoon.uuid
+			const userInfo = bulkUserInfo[contactpersoonId]
 
-				if (userInfo) {
-					console.info(
-						`Updating contactpersoon ${contactpersoonId} with user info:`,
-						userInfo,
-					)
+			if (userInfo) {
+				console.info(
+					`Updating contactpersoon ${contactpersoonId} with user info:`,
+					userInfo,
+				)
 
-					// Ensure user object exists
-					if (!contactpersoon.user) {
-						contactpersoon.user = {}
-					}
-
-					// Update user object
-					contactpersoon.user.hasUser = userInfo.hasUser
-					contactpersoon.user.username = userInfo.username
-					contactpersoon.user.groups = userInfo.groups || []
-					contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled
-					contactpersoon.user.displayName = userInfo.displayName
-					contactpersoon.user.lastLogin = userInfo.lastLogin
-
-					// Update data object for consistency
-					if (contactpersoon.data) {
-						contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled
-					}
-
-					// Force reactivity update
-					this.$set(
-						this.organisationData.contactpersonen,
-						index,
-						contactpersoon,
-					)
+				// Ensure user object exists.
+				if (!contactpersoon.user) {
+					contactpersoon.user = {}
 				}
-			})
-		},
+
+				// Update user object.
+				contactpersoon.user.hasUser = userInfo.hasUser
+				contactpersoon.user.username = userInfo.username
+				contactpersoon.user.groups = userInfo.groups || []
+				contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled.
+				contactpersoon.user.displayName = userInfo.displayName
+				contactpersoon.user.lastLogin = userInfo.lastLogin
+
+				// Update data object for consistency.
+				if (contactpersoon.data) {
+					contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled.
+					contactpersoon.data.groups = userInfo.groups || [] // Also set groups in data.
+					contactpersoon.data.username = userInfo.username // Also set username in data.
+				}
+
+				// Force reactivity update.
+				this.$set(
+					this.organisationData.contactpersonen,
+					index,
+					contactpersoon,
+				)
+			}
+		})
+	},
 
 		/**
 		 * Refresh user statuses from Nextcloud for all contact persons
@@ -845,26 +853,55 @@ export default {
 			await this.loadUserInfoAndGroups()
 		},
 
-		getContactpersoonName(contactpersoon) {
-			const data = contactpersoon.data
-			return (
-				data.naam
+	/**
+	 * Get contactperson name.
+	 * @param {object} contactpersoon - The contact person object.
+	 * @return {string} The contact person's name.
+	 */
+	getContactpersoonName(contactpersoon) {
+		const data = contactpersoon.data
+		return (
+			data.naam
         || data.name
         || data.voornaam + ' ' + data.achternaam
         || data.email
         || data['e-mailadres']
         || 'Unknown'
-			)
-		},
+		)
+	},
 
-		formatGroupName(groupId) {
-			const groupMap = {
-				'gebruik-beheerder': 'Gebruik Beheerder',
-				'aanbod-beheerder': 'Aanbod Beheerder',
-				'gebruik-raadpleger': 'Gebruik Raadpleger',
-			}
-			return groupMap[groupId] || groupId
-		},
+	/**
+	 * Filter groups to only show those available in the modal.
+	 * @param {object} contactpersoon - The contact person object.
+	 * @return {Array} Filtered array of group IDs.
+	 */
+	getFilteredGroups(contactpersoon) {
+		if (!contactpersoon.user.groups || contactpersoon.user.groups.length === 0) {
+			return []
+		}
+		
+		// Get list of available group IDs from the store.
+		const availableGroupIds = this.availableGroups.map(g => g.id)
+		
+		// Filter user groups to only include those in availableGroups.
+		return contactpersoon.user.groups.filter(groupId => 
+			availableGroupIds.includes(groupId)
+		)
+	},
+
+	/**
+	 * Format group name.
+	 * @param {string} groupId - The group ID.
+	 * @return {string} Formatted group name.
+	 */
+	formatGroupName(groupId) {
+		const groupMap = {
+			'gebruik-beheerder': 'Gebruik Beheerder',
+			'aanbod-beheerder': 'Aanbod Beheerder',
+			'gebruik-raadpleger': 'Gebruik Raadpleger',
+		}
+		return groupMap[groupId] || groupId
+	},
 
 		async convertToUser(contactpersoon) {
 			console.info('convertToUser called with:', contactpersoon)
@@ -1042,23 +1079,32 @@ export default {
 			}
 		},
 
-		async openGroupsDialog(contactpersoon) {
-			this.selectedContactpersoon = contactpersoon
-			this.showGroupsDialog = true
+	/**
+	 * Open groups management dialog.
+	 * @param {object} contactpersoon - The contact person object.
+	 * @return {Promise<void>}
+	 */
+	async openGroupsDialog(contactpersoon) {
+		this.selectedContactpersoon = contactpersoon
+		this.showGroupsDialog = true
 
-			try {
-				// Fetch user-specific info to get current groups and available groups
-				const userInfo = await this.organisatieStore.fetchUserInfo(
-					contactpersoon.id,
-				)
-				this.selectedGroups = [...(userInfo.groups || [])]
-			} catch (error) {
-				console.error('Error fetching user info for groups dialog:', error)
-				// Fallback to existing groups
-				this.selectedGroups = [...contactpersoon.user.groups]
-				// Note: Available groups should already be loaded from loadUserInfoAndGroups()
-			}
-		},
+		try {
+			// Fetch user-specific info to get current groups and available groups.
+			const userInfo = await this.organisatieStore.fetchUserInfo(
+				contactpersoon.id,
+			)
+			this.selectedGroups = [...(userInfo.groups || [])]
+			
+			// Update the local contactpersoon data with the fresh groups info.
+			// This ensures the table shows the correct groups.
+			this.updateContactpersoonGroups(contactpersoon.id, userInfo.groups || [])
+		} catch (error) {
+			console.error('Error fetching user info for groups dialog:', error)
+			// Fallback to existing groups.
+			this.selectedGroups = [...contactpersoon.user.groups]
+			// Note: Available groups should already be loaded from loadUserInfoAndGroups().
+		}
+	},
 
 		closeGroupsDialog() {
 			this.showGroupsDialog = false
@@ -1080,30 +1126,38 @@ export default {
 			}
 		},
 
-		async saveGroups() {
-			if (!this.selectedContactpersoon) return
+	/**
+	 * Save user groups.
+	 * @return {Promise<void>}
+	 */
+	async saveGroups() {
+		if (!this.selectedContactpersoon) return
 
-			this.groupsLoading = true
+		this.groupsLoading = true
 
-			try {
-				await this.organisatieStore.updateUserGroups(
-					this.selectedContactpersoon.user.username,
-					this.selectedGroups,
-				)
-				showSuccess(
-					this.t('softwarecatalog', 'User groups updated successfully'),
-				)
-				this.closeGroupsDialog()
-			} catch (error) {
-				showError(
-					this.t('softwarecatalog', 'Failed to update user groups: {error}', {
-						error: error.message,
-					}),
-				)
-			} finally {
-				this.groupsLoading = false
-			}
-		},
+		try {
+			await this.organisatieStore.updateUserGroups(
+				this.selectedContactpersoon.user.username,
+				this.selectedGroups,
+			)
+			
+			// Update the local contactpersoon data to reflect the new groups.
+			this.updateContactpersoonGroups(this.selectedContactpersoon.id, this.selectedGroups)
+			
+			showSuccess(
+				this.t('softwarecatalog', 'User groups updated successfully'),
+			)
+			this.closeGroupsDialog()
+		} catch (error) {
+			showError(
+				this.t('softwarecatalog', 'Failed to update user groups: {error}', {
+					error: error.message,
+				}),
+			)
+		} finally {
+			this.groupsLoading = false
+		}
+	},
 
 		/**
 		 * Disable a user account
@@ -1145,43 +1199,81 @@ export default {
 			}
 		},
 
-		/**
-		 * Update the disabled status of a contactpersoon in the local data
-		 * @param {string} contactpersoonId - The ID of the contact person
-		 * @param {boolean} disabled - Whether the user is disabled
-		 */
-		updateContactpersoonStatus(contactpersoonId, disabled) {
-			// Find and update the contactpersoon in the organisation data
-			if (this.organisationData.contactpersonen) {
-				const contactIndex = this.organisationData.contactpersonen.findIndex(
-					(cp) => (cp.id || cp.uuid) === contactpersoonId,
-				)
+	/**
+	 * Update the disabled status of a contactpersoon in the local data.
+	 * @param {string} contactpersoonId - The ID of the contact person.
+	 * @param {boolean} disabled - Whether the user is disabled.
+	 * @return {void}
+	 */
+	updateContactpersoonStatus(contactpersoonId, disabled) {
+		// Find and update the contactpersoon in the organisation data.
+		if (this.organisationData.contactpersonen) {
+			const contactIndex = this.organisationData.contactpersonen.findIndex(
+				(cp) => (cp.id || cp.uuid) === contactpersoonId,
+			)
 
-				if (contactIndex !== -1) {
-					// Update the disabled status in both user and data objects
-					const contactpersoon
-            = this.organisationData.contactpersonen[contactIndex]
+			if (contactIndex !== -1) {
+				// Update the disabled status in both user and data objects.
+				const contactpersoon
+          = this.organisationData.contactpersonen[contactIndex]
 
-					// Update in the user object (primary source)
-					if (contactpersoon.user) {
-						contactpersoon.user.disabled = disabled
-					}
-
-					// Also update in data object for consistency
-					if (contactpersoon.data) {
-						contactpersoon.data.disabled = disabled
-					}
-
-					// Force reactivity update
-					this.$set(
-						this.organisationData.contactpersonen,
-						contactIndex,
-						contactpersoon,
-					)
+				// Update in the user object (primary source).
+				if (contactpersoon.user) {
+					contactpersoon.user.disabled = disabled
 				}
+
+				// Also update in data object for consistency.
+				if (contactpersoon.data) {
+					contactpersoon.data.disabled = disabled
+				}
+
+				// Force reactivity update.
+				this.$set(
+					this.organisationData.contactpersonen,
+					contactIndex,
+					contactpersoon,
+				)
 			}
-		},
+		}
 	},
+	
+	/**
+	 * Update the groups of a contactpersoon in the local data.
+	 * @param {string} contactpersoonId - The ID of the contact person.
+	 * @param {Array} groups - Array of group IDs.
+	 * @return {void}
+	 */
+	updateContactpersoonGroups(contactpersoonId, groups) {
+		// Find and update the contactpersoon in the organisation data.
+		if (this.organisationData.contactpersonen) {
+			const contactIndex = this.organisationData.contactpersonen.findIndex(
+				(cp) => (cp.id || cp.uuid) === contactpersoonId,
+			)
+
+			if (contactIndex !== -1) {
+				// Update the groups in both user and data objects.
+				const contactpersoon = this.organisationData.contactpersonen[contactIndex]
+
+				// Update in the user object (primary source).
+				if (contactpersoon.user) {
+					contactpersoon.user.groups = [...groups]
+				}
+
+				// Also update in data object for consistency.
+				if (contactpersoon.data) {
+					contactpersoon.data.groups = [...groups]
+				}
+
+				// Force reactivity update.
+				this.$set(
+					this.organisationData.contactpersonen,
+					contactIndex,
+					contactpersoon,
+				)
+			}
+		}
+	},
+},
 }
 </script>
 
@@ -1281,14 +1373,15 @@ export default {
 
 .group-chip {
   display: inline-block;
-  padding: 2px 6px;
-  margin: 1px;
-  border-radius: 10px;
-  font-size: 10px;
+  padding: 4px 8px;
+  margin: 2px;
+  border-radius: 12px;
+  font-size: 11px;
   font-weight: 500;
-  background-color: var(--color-primary-light);
-  color: var(--color-primary-element-text);
-  border: 1px solid var(--color-primary);
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+  white-space: nowrap;
 }
 
 .password-dialog {

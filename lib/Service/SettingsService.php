@@ -1276,17 +1276,10 @@ class SettingsService
      */
     public function getOrganizationAdminGroups(): array
     {
-        $groupsJson = $this->config->getValueString($this->_appName, 'organization_admin_groups', '');
-
-        if (empty($groupsJson)) {
-            // Return default groups if no configuration exists
-            return [
-                'organisaties-beheerder'
-            ];
-        }
-
-        $groups = json_decode($groupsJson, true);
-        return is_array($groups) ? $groups : [];
+        // DISABLED: No automatic group assignment for organization admins
+        // Users should be assigned groups explicitly via the admin UI
+        // Previously this returned ['organisaties-beheerder', 'organisatie-beheerder'] by default
+        return [];
     }
 
     /**
@@ -1458,10 +1451,8 @@ class SettingsService
                 'software-catalog-users'
             ]);
 
-            $this->setOrganizationAdminGroups([
-                'organisaties-beheerder',
-                'organisatie-beheerder'
-            ]);
+            // No automatic organization admin groups - can be configured via settings
+            $this->setOrganizationAdminGroups([]);
 
             $this->setSuperUserGroups([
                 'admin', // Keep existing admin group
@@ -1571,10 +1562,8 @@ class SettingsService
                 'software-catalog-users'
             ]);
 
-            $this->setOrganizationAdminGroups([
-                'organisaties-beheerder',
-                'organisatie-beheerder'
-            ]);
+            // No automatic organization admin groups - can be configured via settings
+            $this->setOrganizationAdminGroups([]);
 
             $this->setSuperUserGroups([
                 'admin', // Keep existing admin group
