@@ -853,18 +853,26 @@
             "example": "Bijvoorbeeld: Een uitgebreide beschrijving van de suite met alle functionaliteiten"
           },
           "logo": {
-            "description": "URL naar het logo van de suite",
-            "type": "string",
-            "format": "url",
+            "description": "Logo van de suite",
+            "type": "file",
+            "format": "base64",
             "visible": true,
             "order": 4,
-            "maxLength": 500,
             "facetable": false,
+            "title": "Logo",
             "table": {
               "default": true
             },
-            "title": "Logo",
-            "example": "https://voorbeeld.nl/logo.png"
+            "fileConfiguration": {
+              "allowedMimeTypes": [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/svg+xml",
+                "image/webp"
+              ],
+              "maxSize": 5242880
+            }
           },
           "website": {
             "description": "Website van de suite",
@@ -1133,14 +1141,23 @@
             "example": "Bijvoorbeeld: Implementatieondersteuning"
           },
           "logo": {
-            "description": "URL naar het logo van de dienst",
-            "type": "string",
-            "format": "url",
+            "description": "Logo van de dienst",
+            "type": "file",
+            "format": "base64",
             "visible": true,
             "order": 5,
             "facetable": false,
             "title": "Logo",
-            "example": "https://dienst.voorbeeld.nl/logo.png"
+            "fileConfiguration": {
+              "allowedMimeTypes": [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/svg+xml",
+                "image/webp"
+              ],
+              "maxSize": 5242880
+            }
           },
           "koppelingen": {
             "description": "Koppelingen die gebruikt worden door deze dienst",
@@ -1753,32 +1770,22 @@
           },
           "logo": {
             "description": "Logo van de organisatie",
-            "type": "string",
-            "format": "uri",
+            "type": "file",
+            "format": "base64",
             "visible": true,
-            "minLength": null,
-            "maxLength": null,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "inversedBy": "",
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": [],
+            "order": 10,
             "facetable": false,
             "title": "Logo",
-            "order": 10
+            "fileConfiguration": {
+              "allowedMimeTypes": [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/svg+xml",
+                "image/webp"
+              ],
+              "maxSize": 5242880
+            }
           },
           "cbsCode": {
             "description": "CBS nummer van de organisatie",
@@ -2249,7 +2256,7 @@
             "CE-markering documenten",
             "Aanbestedingsdocumentatie"
           ],
-          "autoPublish": false
+          "autoPublish": true
         }
       },
       "gebruik": {
@@ -5514,14 +5521,26 @@
             }
           },
           "image": {
-            "type": "string",
-            "description": "URL to the organization's logo or image",
+            "description": "Logo or image of the organization",
+            "type": "file",
+            "format": "base64",
+            "visible": true,
             "facetable": false,
-            "title": "image",
+            "title": "Image",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
+            },
+            "fileConfiguration": {
+              "allowedMimeTypes": [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/svg+xml",
+                "image/webp"
+              ],
+              "maxSize": 5242880
             }
           }
         },
@@ -5543,7 +5562,8 @@
         "configuration": {
           "objectNameField": "name",
           "objectSummaryField": "summary",
-          "objectDescriptionField": "description"
+          "objectDescriptionField": "description",
+          "autoPublish": true
         }
       },
       "property-definition": {
@@ -6425,16 +6445,25 @@
             ]
           },
           "logo": {
-            "description": "URL naar het logo van de applicatie",
-            "type": "string",
-            "format": "url",
+            "description": "Logo van de applicatie",
+            "type": "file",
+            "format": "base64",
             "visible": true,
             "order": 18,
             "facetable": false,
             "title": "Logo",
-            "maxLength": 500,
             "table": {
               "default": true
+            },
+            "fileConfiguration": {
+              "allowedMimeTypes": [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/svg+xml",
+                "image/webp"
+              ],
+              "maxSize": 5242880
             }
           },
           "omvat": {

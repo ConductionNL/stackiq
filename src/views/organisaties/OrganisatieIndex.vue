@@ -69,8 +69,6 @@ import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
-import PublishIcon from 'vue-material-design-icons/Publish.vue'
-import PublishOffIcon from 'vue-material-design-icons/PublishOff.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
@@ -228,24 +226,6 @@ export default {
 					},
 				},
 				{
-					id: 'publish',
-					label: 'Publiceren',
-					icon: PublishIcon,
-					condition: (organisatie) => !organisatie['@self']?.published,
-					handler: (organisatie) => {
-						this.publishOrganisatie(organisatie)
-					},
-				},
-				{
-					id: 'depublish',
-					label: 'Depubliceren',
-					icon: PublishOffIcon,
-					condition: (organisatie) => organisatie['@self']?.published,
-					handler: (organisatie) => {
-						this.depublishOrganisatie(organisatie)
-					},
-				},
-				{
 					id: 'delete',
 					label: 'Delete',
 					icon: TrashCanOutline,
@@ -255,41 +235,19 @@ export default {
 					},
 				},
 			],
-			organisatieMassActions: [
-				{
-					id: 'massDelete',
-					label: 'Delete Selected',
-					icon: Delete,
-					handler: () => {
-						navigationStore.setDialog('massDeleteObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
-						})
-					},
+		organisatieMassActions: [
+			{
+				id: 'massDelete',
+				label: 'Delete Selected',
+				icon: Delete,
+				handler: () => {
+					navigationStore.setDialog('massDeleteObjects', {
+						objectType: 'organisatie',
+						dialogTitle: 'Organisaties',
+					})
 				},
-				{
-					id: 'massPublish',
-					label: 'Publish Selected',
-					icon: PublishIcon,
-					handler: () => {
-						navigationStore.setDialog('massPublishObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
-						})
-					},
-				},
-				{
-					id: 'massDepublish',
-					label: 'Depublish Selected',
-					icon: PublishOffIcon,
-					handler: () => {
-						navigationStore.setDialog('massDepublishObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
-						})
-					},
-				},
-			],
+			},
+		],
 			organisatieActions: [
 				{
 					id: 'add',
@@ -419,6 +377,15 @@ export default {
 				navigationStore.setTransferData(null)
 				
 				// Refresh with current search and filters to show the updated/new organisation.
+				this.fetchOrganisatiesWithFilters()
+			}
+			
+			// Handle contactpersoon added - refresh with current filters preserved.
+			if (state.transferData.action === 'contactpersoonAdded') {
+				// Clear the transfer data.
+				navigationStore.setTransferData(null)
+				
+				// Refresh with current search and filters to show the updated organisation.
 				this.fetchOrganisatiesWithFilters()
 			}
 		})
@@ -742,50 +709,6 @@ export default {
 			this.showOrganisationModal = false
 			this.selectedOrganisation = null
 			this.organisationModalMode = 'create'
-		},
-
-		/**
-		 * Publish an organisation
-		 * @param {object} organisatie - The organisation to publish
-		 * @return {Promise<void>}
-		 */
-		async publishOrganisatie(organisatie) {
-			try {
-				console.info('Publishing organisatie:', organisatie)
-				console.info('Organisatie @self:', organisatie['@self'])
-				console.info('Organisatie id:', organisatie.id)
-				console.info('Organisatie register:', organisatie['@self']?.register)
-				console.info('Organisatie schema:', organisatie['@self']?.schema)
-
-				await objectStore.publishObject(organisatie)
-				// Refresh the organisation list to show updated status
-				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,@self.register,contactpersonen',
-					_limit: 20,
-					_page: 1,
-				})
-			} catch (error) {
-				console.error('Failed to publish organisation:', error)
-			}
-		},
-
-		/**
-		 * Depublish an organisation
-		 * @param {object} organisatie - The organisation to depublish
-		 * @return {Promise<void>}
-		 */
-		async depublishOrganisatie(organisatie) {
-			try {
-				await objectStore.depublishObject(organisatie)
-				// Refresh the organisation list to show updated status
-				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,@self.register,contactpersonen',
-					_limit: 20,
-					_page: 1,
-				})
-			} catch (error) {
-				console.error('Failed to depublish organisation:', error)
-			}
 		},
 	},
 }
