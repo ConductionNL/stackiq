@@ -3245,6 +3245,7 @@
             "vng-raadpleger"
           ],
           "read": [
+            "gebruik-beheerder",
             {
               "group": "aanbod-beheerder",
               "match": {
@@ -3256,15 +3257,7 @@
               "match": {
                 "aanbieder": "$organisation"
               }
-            },
-            "gebruik-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "software-catalog-admins",
-            "software-catalog-users",
-            "vng-raadpleger"
+            }
           ],
           "update": [
             "aanbod-beheerder",
@@ -6209,7 +6202,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.1.4",
+        "version": "0.1.5",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6682,7 +6675,19 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            "gebruik-beheerder",
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "geregistreerdDoor": "Leverancier"
+              }
+            }
           ]
         },
         "configuration": {
