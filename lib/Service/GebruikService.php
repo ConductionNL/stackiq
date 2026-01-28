@@ -150,10 +150,18 @@ class GebruikService
         $searchResult = $objectService->searchObjectsPaginated(query: $options, _rbac: false, _multitenancy: false);
 
         $searchResult = array_map(function($object) {
+            // Handle both ObjectEntity and array results.
             if (is_array($object) === false) {
-                $object = $object->getObject();
+                // Use jsonSerialize to get full object with @self metadata.
+                if (method_exists($object, 'jsonSerialize') === true) {
+                    $object = $object->jsonSerialize();
+                } else if (method_exists($object, 'getId') === true) {
+                    return $object->getId();
+                } else {
+                    $object = $object->getObject();
+                }
             }
-            return $object['@self']['id'];
+            return $object['@self']['id'] ?? $object['id'] ?? null;
         }, $searchResult['results']);
 
         return $searchResult;

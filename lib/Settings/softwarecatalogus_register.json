@@ -1121,7 +1121,18 @@
           },
           "type": {
             "description": "Het type dienst dat wordt aangeboden",
-            "type": "string",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Functioneel beheer",
+                "Applicatiebeheer",
+                "Technisch beheer",
+                "Implementatieondersteuning",
+                "Opleidingen",
+                "Licentiereseller"
+              ]
+            },
             "required": true,
             "visible": true,
             "order": 4,
@@ -1130,14 +1141,6 @@
             },
             "facetable": false,
             "title": "Soort dienst",
-            "enum": [
-              "Functioneel beheer",
-              "Applicatiebeheer",
-              "Technisch beheer",
-              "Implementatieondersteuning",
-              "Opleidingen",
-              "Licentiereseller"
-            ],
             "example": "Bijvoorbeeld: Implementatieondersteuning"
           },
           "logo": {
@@ -1177,7 +1180,18 @@
           },
           "dienstType": {
             "description": "Het type dienst dat wordt aangeboden",
-            "type": "string",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Functioneel beheer",
+                "Applicatiebeheer",
+                "Technisch beheer",
+                "Implementatieondersteuning",
+                "Opleidingen",
+                "Licentiereseller"
+              ]
+            },
             "required": true,
             "visible": true,
             "order": 4,
@@ -1186,16 +1200,7 @@
             },
             "facetable": true,
             "title": "Soort dienst",
-            "enum": [
-              "Functioneel beheer",
-              "Applicatiebeheer",
-              "Technisch beheer",
-              "Implementatieondersteuning",
-              "Opleidingen",
-              "Licentiereseller"
-            ],
-            "example": "Bijvoorbeeld: Implementatieondersteuning",
-            "default": "{{ type }}"
+            "example": "Bijvoorbeeld: Implementatieondersteuning"
           }
         },
         "archive": [],
@@ -1582,7 +1587,13 @@
             "writeBack": false,
             "removeAfterWriteBack": false,
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Aanbod-beheerder",
+                "Gebruik-beheerder",
+                "Functioneel-beheerder",
+                "Organisatie-beheerder"
+              ]
             },
             "objectConfiguration": {
               "handling": "nested-object",
@@ -1595,13 +1606,11 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "enum": [
-              "Aanbod-beheerder",
-              "Gebruik-beheerder",
-              "Functioneel-beheerder",
-              "Organisatie-beheerder"
-            ],
-            "example": "Bijvoorbeeld: [\"Aanbod-beheerder\", \"Functioneel-beheerder\"]"
+            "enum": [],
+            "example": "Bijvoorbeeld: [\"Aanbod-beheerder\", \"Functioneel-beheerder\"]",
+            "authorization": {
+              "update": ["gebruik-beheerder", "admin"]
+            }
           },
           "e-mailadres": {
             "description": "E-mailadres van de contactpersoon",
@@ -3245,6 +3254,7 @@
             "vng-raadpleger"
           ],
           "read": [
+            "gebruik-beheerder",
             {
               "group": "aanbod-beheerder",
               "match": {
@@ -3256,15 +3266,7 @@
               "match": {
                 "aanbieder": "$organisation"
               }
-            },
-            "gebruik-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "software-catalog-admins",
-            "software-catalog-users",
-            "vng-raadpleger"
+            }
           ],
           "update": [
             "aanbod-beheerder",
@@ -6209,7 +6211,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.1.4",
+        "version": "0.1.5",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6682,7 +6684,19 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            "gebruik-beheerder",
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "geregistreerdDoor": "Leverancier"
+              }
+            }
           ]
         },
         "configuration": {

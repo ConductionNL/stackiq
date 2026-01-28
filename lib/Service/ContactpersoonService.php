@@ -262,6 +262,28 @@ class ContactpersoonService
      * 
      * @return void
      */
+    /**
+     * Normalize contact data types to match schema expectations.
+     * This ensures numeric strings are properly typed as strings.
+     *
+     * @param array $data The contact data to normalize
+     *
+     * @return array The normalized contact data
+     */
+    private function normalizeContactDataTypes(array $data): array
+    {
+        // Fields that should always be strings according to the contactpersoon schema
+        $stringFields = ['voornaam', 'tussenvoegsel', 'achternaam', 'functie', 'telefoonnummer', 'username'];
+
+        foreach ($stringFields as $field) {
+            if (isset($data[$field]) && (is_int($data[$field]) || is_float($data[$field]))) {
+                $data[$field] = (string) $data[$field];
+            }
+        }
+
+        return $data;
+    }
+
     private function updateContactpersoonUsername(object $contactpersoonObject, string $username): void
     {
         try {
@@ -272,6 +294,8 @@ class ContactpersoonService
             }
 
             $contactData = $contactpersoonObject->getObject();
+            // Normalize data types to ensure schema validation passes
+            $contactData = $this->normalizeContactDataTypes($contactData);
             $contactData['username'] = $username;
 
             $updatedObject = $objectService->saveObject(
@@ -780,15 +804,16 @@ class ContactpersoonService
                 'schema' => $contactSchema
             ]);
 
-            // Get the current object data
+            // Get the current object data and normalize types
             $currentObject = $contactObject->getObject();
-            
+            $currentObject = $this->normalizeContactDataTypes($currentObject);
+
             // Get current @self metadata or create new
             $selfMetadata = $currentObject['@self'] ?? [];
-            
+
             // Update the owner field to the user UID
             $selfMetadata['owner'] = $userUID;
-            
+
             // Set the organisation field in @self metadata to the organization UUID
             // This ensures the contact person is properly linked to their organization
             $organizationUuid = $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '';
@@ -804,7 +829,7 @@ class ContactpersoonService
                     'contactData' => $currentObject
                 ]);
             }
-            
+
             // Update the object with the new @self metadata
             $currentObject['@self'] = $selfMetadata;
             $contactObject->setObject($currentObject);
