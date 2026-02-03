@@ -990,7 +990,7 @@
         "slug": "dienst",
         "title": "Dienst",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
-        "version": "0.1.3",
+        "version": "0.1.4",
         "summary": "",
         "icon": "Handshake",
         "required": [
@@ -999,7 +999,7 @@
         ],
         "properties": {
           "naam": {
-            "description": "De naam van de dienst",
+            "description": "De naam van uw dienst",
             "type": "string",
             "required": true,
             "visible": true,
@@ -1033,8 +1033,8 @@
           },
           "beschrijvingKort": {
             "type": "string",
-            "description": "Korte beschrijving van de dienst",
-            "title": "Samenvatting",
+            "description": "Een korte beschrijving van de dienst voor o.a. in de zoekresultaten.",
+            "title": "Korte omschrijving",
             "facetable": false,
             "maxLength": 255,
             "table": {
@@ -1044,20 +1044,20 @@
             "example": "Bijvoorbeeld: Korte beschrijving van de dienst"
           },
           "beschrijvingLang": {
-            "description": "Uitgebreide beschrijving van de dienst",
+            "description": "Een uitgebreide omschrijving van uw dienst. Dit kan met mark down opgemaakt worden.",
             "type": "string",
             "format": "markdown",
             "visible": true,
             "order": 6,
             "facetable": false,
-            "title": "Beschrijving",
+            "title": "Uitgebreide omschrijving",
             "maxLength": 5000,
             "example": "Bijvoorbeeld: Uitgebreide beschrijving van de dienst met alle details"
           },
           "website": {
             "type": "string",
             "format": "url",
-            "description": "De website waarop meer informatie over dit aanbod te vinden is",
+            "description": "Een URL naar uw dienst, applicatie of organisatie",
             "facetable": false,
             "title": "Website",
             "order": 4,
@@ -1072,7 +1072,7 @@
             "example": "Bijvoorbeeld: Concept"
           },
           "contactpersoon": {
-            "description": "Contactpersoon voor deze dienst",
+            "description": "Selecteer de contactpersoon voor deze dienst",
             "type": "object",
             "visible": true,
             "order": 1,
@@ -1115,7 +1115,7 @@
             "$ref": "#/components/schemas/organisatie"
           },
           "type": {
-            "description": "Het type dienst dat wordt aangeboden",
+            "description": "kies één of meer typen die op deze dienst van toepassing zijn.",
             "type": "string",
             "required": true,
             "visible": true,
@@ -1124,7 +1124,7 @@
               "default": true
             },
             "facetable": true,
-            "title": "Soort dienst",
+            "title": "Diensttype",
             "enum": [
               "Functioneel beheer",
               "Applicatiebeheer",
@@ -1136,7 +1136,7 @@
             "example": "Bijvoorbeeld: Implementatieondersteuning"
           },
           "logo": {
-            "description": "URL naar het logo van de dienst",
+            "description": "Het logo van de dienst of de organisatie.",
             "type": "string",
             "format": "url",
             "visible": true,
@@ -2250,7 +2250,7 @@
         "slug": "gebruik",
         "title": "Gebruik",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.1.3",
+        "version": "1.1.4",
         "summary": "",
         "icon": "Usage",
         "required": [
@@ -2426,10 +2426,10 @@
             "example": "Bijvoorbeeld: 2025-12-31"
           },
           "status": {
-            "description": "De status van het gebruik",
+            "description": "Selecteer de status van de versie in uw landschap (default status \"in productie\")",
             "type": "string",
-            "default": "Concept",
-            "required": false,
+            "default": "In productie",
+            "required": true,
             "visible": true,
             "order": 17,
             "minLength": null,
@@ -2464,7 +2464,7 @@
             "example": "Bijvoorbeeld: Gepland"
           },
           "interneAantekening": {
-            "description": "Aanvullende interne informatie over het gebruik van de voorziening",
+            "description": "Voeg Interne notitie toe, bijvoorbeeld over kosten of eigenaarschap.",
             "type": "string",
             "visible": true,
             "hideOnCollection": true,
@@ -2490,11 +2490,11 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Interne Aantekening",
+            "title": "Interne notitie",
             "example": "Bijvoorbeeld: Interne notitie over het gebruik"
           },
           "module": {
-            "description": "De specifieke applicatie die gebruikt wordt",
+            "description": "Selecteer de applicatie uit uw aanbod",
             "type": "object",
             "visible": true,
             "order": 20,
@@ -2510,7 +2510,7 @@
             }
           },
           "moduleVersie": {
-            "description": "De specifieke versie van de applicatie die gebruikt wordt",
+            "description": "Selecteer de versie (on-premisse - default nieuwste versie, SaaS - default versie 'Cloud')",
             "type": "object",
             "visible": true,
             "order": 21,
@@ -2589,7 +2589,7 @@
             "type": "array",
             "format": "",
             "title": "Hosting",
-            "description": "Het cloud dienstverleningsmodel voor de applicatie",
+            "description": "Kies het type hosting waarmee de applicatie wordt gebruikt. (Saas of On-premise)",
             "facetable": true,
             "items": {
               "type": "string",
@@ -2927,13 +2927,13 @@
         "slug": "koppeling",
         "title": "Koppeling",
         "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
-        "version": "0.0.13",
+        "version": "0.1.0",
         "summary": "",
         "icon": "Link",
         "required": [],
         "properties": {
           "naam": {
-            "description": "Naam van de koppeling",
+            "description": "Naam van de koppeling, default waarde [AppA] [<-richting->] [AppB]",
             "type": "string",
             "order": 1,
             "facetable": false,
@@ -2944,14 +2944,14 @@
             "example": "Bijvoorbeeld: API Koppeling"
           },
           "beschrijvingKort": {
-            "description": "Korte beschrijving van de koppeling",
+            "description": "Een korte omschrijving van de koppeling (maximaal 256 karakters).",
             "type": "string",
             "table": {
               "default": true
             },
             "order": 5,
             "facetable": false,
-            "title": "Samenvatting",
+            "title": "Korte beschrijving",
             "example": "Bijvoorbeeld: Korte beschrijving van de koppeling"
           },
           "beschrijvingLang": {
@@ -2960,11 +2960,11 @@
             "format": "markdown",
             "order": 6,
             "facetable": false,
-            "title": "Beschrijving",
+            "title": "Lange beschrijving",
             "example": "Bijvoorbeeld: Uitgebreide beschrijving van de koppeling"
           },
           "type": {
-            "description": "Het type koppeling, bijvoorbeeld 'bestandsoverdracht', 'digikoppeling', of 'api'.",
+            "description": "kies de techniek van de koppeling",
             "type": "string",
             "order": 1,
             "facetable": false,
@@ -2992,7 +2992,7 @@
             ]
           },
           "status": {
-            "description": "De status van de koppeling",
+            "description": "Geef de status van de koppeling aan, default 'in gebruik'",
             "type": "string",
             "order": 3,
             "facetable": false,
@@ -3053,7 +3053,7 @@
             ]
           },
           "moduleA": {
-            "description": "De applicatie waarvan de gegevens uitgewisseld worden",
+            "description": "Geselecteerde applicatie, niet wijzigbaar",
             "type": "object",
             "order": 9,
             "facetable": false,
@@ -3068,7 +3068,7 @@
             "inversedBy": "koppeling"
           },
           "moduleB": {
-            "description": "De applicatie waarnaar de gegevens uitgewisseld worden",
+            "description": "Kies de applicatie of buitengemeentelijke voorziening waarmee gekoppeld wordt.",
             "type": "object",
             "items": {
               "oneOf": [
@@ -3106,11 +3106,11 @@
             "$ref": "#/components/schemas/element"
           },
           "standaardversies": {
-            "description": "Standaardversies die door deze koppeling ge\u00efmplementeerd worden",
+            "description": "Kies de standaardversie(s) waarop de koppeling is gebaseerd.",
             "type": "array",
             "order": 12,
             "facetable": false,
-            "title": "Standaard Versies",
+            "title": "Standaardversie",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -3121,7 +3121,7 @@
             }
           },
           "gerealiseerdMetIntermediairModule": {
-            "description": "Intermediaire applicatie die wordt gebruikt voor de realisatie van deze koppeling",
+            "description": "Kies de intermediair, bijvoorbeeld een servicebus, via welke de koppeling loopt.",
             "type": "object",
             "order": 13,
             "facetable": false,
@@ -5459,7 +5459,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.1.5",
+        "version": "0.1.6",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -5469,7 +5469,7 @@
         "properties": {
           "naam": {
             "type": "string",
-            "description": "Naam van de applicatie",
+            "description": "Naam van uw applicatie",
             "title": "Naam",
             "order": 1,
             "facetable": false,
@@ -5529,7 +5529,7 @@
             "$ref": "#/components/schemas/contactpersoon"
           },
           "cloudDienstverleningsmodel": {
-            "description": "Het cloud dienstverleningsmodel voor de applicatie",
+            "description": "Kies één of meerdere hosting typen waarmee de applicatie wordt aangeboden.",
             "type": "array",
             "items": {
               "type": "string",
@@ -6048,7 +6048,7 @@
         "slug": "moduleVersie",
         "title": "Applicatie Versie",
         "description": "Schema voor applicatie versies",
-        "version": "0.0.8",
+        "version": "0.0.9",
         "summary": "",
         "icon": "ViewModule",
         "required": [],
@@ -6066,10 +6066,10 @@
             "inversedBy": "moduleVersie"
           },
           "versie": {
-            "description": "Versienummer of versie-aanduiding",
+            "description": "Voer de versie van uw applicatie in; dit kan een nummer, tekst of combinatie daarvan zijn.",
             "type": "string",
             "order": 2,
-            "title": "Versienummer",
+            "title": "Versie",
             "maxLength": null,
             "default": "1.0.0"
           },
@@ -6081,22 +6081,22 @@
             "maxLength": null
           },
           "beschrijvingKort": {
-            "description": "Korte beschrijving van de applicatie versie",
+            "description": "Een korte omschrijving van de versie (256 karakters)",
             "type": "string",
             "order": 3,
-            "title": "Wat is er nieuw of bijzonder in deze versie?",
+            "title": "Korte omschrijving",
             "maxLength": 255
           },
           "beschrijvingLang": {
             "description": "Uitgebreide beschrijving van de applicatie versie",
             "type": "string",
             "order": 4,
-            "title": "Beschrijving",
+            "title": "Lange omschrijving",
             "format": "markdown",
             "maxLength": null
           },
           "status": {
-            "description": "De status van de applicatie",
+            "description": "Geef aan wat de status van de versie is.",
             "type": "string",
             "order": 13,
             "title": "Status",
