@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/newopenregister
+      - development
 
 jobs:
   release-management:
