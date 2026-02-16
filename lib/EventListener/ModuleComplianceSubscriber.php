@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\EventListener;
 
 use OCA\SoftwareCatalog\Service\ModuleComplianceService;
+use OCA\SoftwareCatalog\Service\ModuleVersionService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -109,7 +110,7 @@ class ModuleComplianceSubscriber implements IEventListener
             // Handle module compliance update
             $moduleComplianceService = $this->container->get(ModuleComplianceService::class);
             $moduleComplianceService->handleModuleComplianceUpdate($object);
-            
+
             $logger->info('ModuleComplianceSubscriber: Successfully processed module compliance update', [
                 'objectId' => $objectId,
                 'timestamp' => date('Y-m-d H:i:s')
@@ -121,6 +122,19 @@ class ModuleComplianceSubscriber implements IEventListener
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
+            ]);
+        }
+
+        // Ensure the module has at least one version (default 1.0.0).
+        try {
+            $moduleVersionService = $this->container->get(ModuleVersionService::class);
+            $moduleVersionService->ensureDefaultVersion($object);
+        } catch (\Exception $e) {
+            $logger->error('ModuleComplianceSubscriber: Failed to ensure default module version', [
+                'objectId' => $objectId,
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
         }
     }

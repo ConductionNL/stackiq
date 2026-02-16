@@ -25,6 +25,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
 use OCA\SoftwareCatalog\EventListener\TestEventListener;
 use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
+use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -32,6 +33,7 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
+use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Event\OrganisationCreatedEvent;
 use OCA\OpenRegister\Event\RegisterCreatedEvent;
 use OCA\OpenRegister\Event\RegisterDeletedEvent;
@@ -149,6 +151,9 @@ class Application extends App implements IBootstrap
         // Register module compliance subscriber for module updates
         $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
+
+        // Register listener to sync user profile updates to contactpersoon objects
+        $context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
 
 
 

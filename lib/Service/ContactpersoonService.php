@@ -333,7 +333,7 @@ class ContactpersoonService
         try {
             $contactData = $contactpersoonObject->getObject();
             $contactId = $contactpersoonObject->getId();
-            
+
             $this->logger->info('ContactpersoonService: Handling contactpersoon update', [
                 'contactId' => $contactId,
                 'hasOldObject' => $oldContactpersoonObject !== null
@@ -347,6 +347,9 @@ class ContactpersoonService
                 $this->handleRoleChanges($contactpersoonObject, $oldContactpersoonObject);
             }
 
+            // Sync name/functie fields back to the Nextcloud user when changed.
+            $this->syncNameFieldsToUser($contactpersoonObject, $oldContactpersoonObject);
+
             $this->logger->info('ContactpersoonService: Successfully handled contactpersoon update', [
                 'contactId' => $contactId
             ]);
@@ -358,6 +361,62 @@ class ContactpersoonService
                 'trace' => $e->getTraceAsString()
             ]);
         }
+    }
+
+    /**
+     * Syncs name/functie fields from contactpersoon to the corresponding Nextcloud user.
+     *
+     * @param object      $contactpersoonObject    The updated contactpersoon object.
+     * @param object|null $oldContactpersoonObject The previous contactpersoon object.
+     *
+     * @return void
+     */
+    private function syncNameFieldsToUser(object $contactpersoonObject, ?object $oldContactpersoonObject): void
+    {
+        $newData = $contactpersoonObject->getObject();
+        $oldData = $oldContactpersoonObject !== null ? $oldContactpersoonObject->getObject() : [];
+
+        // Check if any name/functie fields have changed.
+        $nameFields = ['voornaam', 'tussenvoegsel', 'achternaam', 'functie', 'e-mailadres'];
+        $hasNameChanges = false;
+
+        foreach ($nameFields as $field) {
+            if (($newData[$field] ?? '') !== ($oldData[$field] ?? '')) {
+                $hasNameChanges = true;
+                break;
+            }
+        }
+
+        if ($hasNameChanges === false) {
+            return;
+        }
+
+        // Find the corresponding Nextcloud user.
+        $username = $newData['username'] ?? '';
+        if (empty($username) === true) {
+            return;
+        }
+
+        $userManager = \OC::$server->get('OCP\IUserManager');
+        $user = $userManager->get($username);
+
+        if ($user === null) {
+            $this->logger->debug('ContactpersoonService: No Nextcloud user found for name sync', [
+                'username' => $username,
+            ]);
+            return;
+        }
+
+        $this->logger->info('ContactpersoonService: Syncing contactpersoon name fields to user', [
+            'username'    => $username,
+            'contactId'   => $contactpersoonObject->getId(),
+            'changedData' => array_intersect_key(
+                $newData,
+                array_flip($nameFields)
+            ),
+        ]);
+
+        $this->contactPersonHandler->storeContactNameFields($user, $newData);
     }
 
     /**

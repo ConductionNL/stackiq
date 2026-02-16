@@ -1968,23 +1968,58 @@ class ArchiMateImportService
 
         $saveResult = $this->lastSaveResult;
 
-        // For now, put all counts in 'elements' section since we don't categorize by ArchiMate type.
-        // TODO: Could enhance this by examining object properties to determine section type.
-        $statistics['elements']['created']   = count($saveResult['saved'] ?? []);
-        $statistics['elements']['updated']   = count($saveResult['updated'] ?? []);
-        $statistics['elements']['unchanged'] = count($saveResult['unchanged'] ?? []);
+        // Map singular section values (from import) to plural statistics keys
+        $sectionMap = [
+            'element' => 'elements',
+            'relationship' => 'relationships',
+            'organization' => 'organizations',
+            'view' => 'views',
+            'property_definition' => 'property_definitions',
+            'model' => 'elements', // model objects fall under elements
+        ];
 
-        // Count invalid objects as errors.
-        $invalidCount = count($saveResult['invalid'] ?? []);
-        foreach ($saveResult['invalid'] ?? [] as $invalidItem) {
-            $statistics['elements']['errors'][] = $invalidItem['error'] ?? 'Unknown error';
+        // Helper to get the statistics key for an object
+        $getSectionKey = function ($obj) use ($sectionMap): string {
+            if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                $obj = $obj->jsonSerialize();
+            }
+            $section = $obj['section'] ?? 'element';
+            return $sectionMap[$section] ?? 'elements';
+        };
+
+        // Categorize saved (created) objects by section
+        foreach ($saveResult['saved'] ?? [] as $obj) {
+            $key = $getSectionKey($obj);
+            $statistics[$key]['created']++;
         }
 
-        // Calculate summary totals.
-        $statistics['summary']['total_objects_created']   = $statistics['elements']['created'];
-        $statistics['summary']['total_objects_updated']   = $statistics['elements']['updated'];
-        $statistics['summary']['total_objects_unchanged'] = $statistics['elements']['unchanged'];
-        $statistics['summary']['total_errors']            = $invalidCount;
+        // Categorize updated objects by section
+        foreach ($saveResult['updated'] ?? [] as $obj) {
+            $key = $getSectionKey($obj);
+            $statistics[$key]['updated']++;
+        }
+
+        // Categorize unchanged objects by section
+        foreach ($saveResult['unchanged'] ?? [] as $obj) {
+            $key = $getSectionKey($obj);
+            $statistics[$key]['unchanged']++;
+        }
+
+        // Count invalid objects as errors
+        foreach ($saveResult['invalid'] ?? [] as $invalidItem) {
+            $obj = $invalidItem['object'] ?? [];
+            $key = $getSectionKey($obj);
+            $statistics[$key]['errors'][] = $invalidItem['error'] ?? 'Unknown error';
+        }
+
+        // Calculate summary totals
+        foreach ($statistics as $section => $sectionStats) {
+            if ($section === 'summary') continue;
+            $statistics['summary']['total_objects_created']   += $sectionStats['created'];
+            $statistics['summary']['total_objects_updated']   += $sectionStats['updated'];
+            $statistics['summary']['total_objects_unchanged'] += $sectionStats['unchanged'];
+            $statistics['summary']['total_errors']            += count($sectionStats['errors']);
+        }
 
         return $statistics;
     }
@@ -2013,28 +2048,42 @@ class ArchiMateImportService
             ]
         ];
         
-        // DEBUG: Log initialized statistics structure.
-        error_log('[ArchiMate] Statistics initialized with keys: ' . json_encode(array_keys($statistics['elements'])));
-
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
-            // DEBUG: Log save result structure.
-            error_log('[ArchiMate] lastSaveResult has: saved=' . count($saveResult['saved'] ?? []) . ', updated=' . count($saveResult['updated'] ?? []) . ', unchanged=' . count($saveResult['unchanged'] ?? []));
-            
-            // Simple approach: Just count totals without trying to categorize by section.
-            // The section categorization isn't working, so let's just put everything in 'elements'.
-            $statistics['elements']['created'] = count($saveResult['saved'] ?? []);
-            $statistics['elements']['updated'] = count($saveResult['updated'] ?? []);
-            $statistics['elements']['unchanged'] = count($saveResult['unchanged'] ?? []);
-            
-            // Count errors.
-            $invalidObjects = $saveResult['invalid'] ?? [];
-            foreach ($invalidObjects as $invalidItem) {
-                $statistics['elements']['errors'][] = $invalidItem['error'] ?? 'Unknown validation error';
+            // Map singular section values (from import) to plural statistics keys
+            $sectionMap = [
+                'element' => 'elements',
+                'relationship' => 'relationships',
+                'organization' => 'organizations',
+                'view' => 'views',
+                'property_definition' => 'property_definitions',
+                'model' => 'elements',
+            ];
+
+            $getSectionKey = function ($obj) use ($sectionMap): string {
+                if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                    $obj = $obj->jsonSerialize();
+                }
+                $section = $obj['section'] ?? 'element';
+                return $sectionMap[$section] ?? 'elements';
+            };
+
+            foreach ($saveResult['saved'] ?? [] as $obj) {
+                $statistics[$getSectionKey($obj)]['created']++;
+            }
+            foreach ($saveResult['updated'] ?? [] as $obj) {
+                $statistics[$getSectionKey($obj)]['updated']++;
+            }
+            foreach ($saveResult['unchanged'] ?? [] as $obj) {
+                $statistics[$getSectionKey($obj)]['unchanged']++;
+            }
+            foreach ($saveResult['invalid'] ?? [] as $invalidItem) {
+                $obj = $invalidItem['object'] ?? [];
+                $statistics[$getSectionKey($obj)]['errors'][] = $invalidItem['error'] ?? 'Unknown validation error';
             }
 
-            // Calculate summary totals from actual statistics.
+            // Calculate summary totals
             $summary = [
                 'total_objects_created' => 0,
                 'total_objects_updated' => 0,
@@ -2044,7 +2093,7 @@ class ArchiMateImportService
             ];
 
             foreach ($statistics as $section => $sectionStats) {
-                if ($section !== 'summary') { // Skip summary section itself.
+                if ($section !== 'summary') {
                     $summary['total_objects_created'] += $sectionStats['created'];
                     $summary['total_objects_updated'] += $sectionStats['updated'];
                     $summary['total_objects_unchanged'] += $sectionStats['unchanged'];
@@ -2054,16 +2103,6 @@ class ArchiMateImportService
 
             $statistics['summary'] = $summary;
         }
-
-        // DEBUG: Log final statistics before return.
-        $this->logger->info('[ArchiMate] calculateOptimizedStatistics returning', [
-            'statistics_keys' => array_keys($statistics),
-            'elements_keys' => array_keys($statistics['elements'] ?? []),
-            'summary' => $statistics['summary'] ?? []
-        ]);
-
-        // DEBUG: Force output to see what we're actually returning.
-        error_log('[ArchiMate DEBUG] Statistics structure: ' . json_encode($statistics['elements']));
 
         return $statistics;
     }
@@ -2403,7 +2442,15 @@ class ArchiMateImportService
             }
         }
 
-        // Extract nodes and connections for view objects with element splicing
+        // Preserve original node/connection arrays for views (needed by export's addViewDataToXmlNode)
+        if (isset($item['node'])) {
+            $essential['node'] = $item['node'];
+        }
+        if (isset($item['connection'])) {
+            $essential['connection'] = $item['connection'];
+        }
+
+        // Extract flattened viewNodes/viewRelationships for frontend consumption
         if ($schemaType === 'view') {
             $this->extractViewNodesAndConnections($item, $essential, $elementsLookup);
         } else {

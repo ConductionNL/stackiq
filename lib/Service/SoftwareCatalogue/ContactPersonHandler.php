@@ -994,7 +994,7 @@ class ContactPersonHandler
      *
      * @return void
      */
-    private function storeContactNameFields(\OCP\IUser $user, array $contactData): void
+    public function storeContactNameFields(\OCP\IUser $user, array $contactData): void
     {
         try {
             $userId = $user->getUID();
@@ -1049,6 +1049,16 @@ class ContactPersonHandler
                         'error' => $e->getMessage()
                     ]);
                 }
+            }
+
+            // Sync e-mailadres to user's email property.
+            $email = $contactData['e-mailadres'] ?? $contactData['email'] ?? '';
+            if (!empty($email) && $email !== $user->getEMailAddress()) {
+                $user->setEMailAddress($email);
+                $this->_logger->info('Updated user email from contactpersoon', [
+                    'userId' => $userId,
+                    'email' => $email
+                ]);
             }
 
             $this->_logger->info('Stored contact name fields in user config', [
