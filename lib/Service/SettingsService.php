@@ -715,6 +715,7 @@ class SettingsService
         $voorzieningenKeyMap = [
             'module' => 'module_schema',
             'compliancy' => 'compliancy_schema',
+            'moduleVersie' => 'moduleVersie_schema',
         ];
 
         // Only check voorzieningen config if object type exists in the key map
