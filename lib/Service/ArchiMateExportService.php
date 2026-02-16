@@ -731,7 +731,7 @@ XML;
         }
         
         // Step 2: Generate XML sections directly
-        $validSections = ['elements', 'relationships', 'views', 'organizations', 'property_definitions'];
+        $validSections = ['elements', 'relationships', 'organizations', 'property_definitions', 'views'];
         $sectionCounts = [];
         
         // Map singular section names to plural for XML generation
@@ -754,15 +754,45 @@ XML;
             
             if (!empty($sectionObjects)) {
                 $sectionCounts[$sectionName] = count($sectionObjects);
-                
+
+                // Organizations are stored as a single tree object with the full hierarchy
+                // in the xml field. Write items directly as children of <organizations>.
+                if ($sectionName === 'organizations') {
+                    $orgFolder = $this->createSectionFolder($xml, $sectionName);
+                    foreach ($sectionObjects as $object) {
+                        if (is_object($object) && method_exists($object, 'jsonSerialize')) {
+                            $object = $object->jsonSerialize();
+                        }
+                        $xmlField = $object['xml'] ?? [];
+                        // The xml field contains the raw organizations data with 'item' array
+                        if (isset($xmlField['item'])) {
+                            $items = $xmlField['item'];
+                            // Ensure items is a list (could be single assoc array for one top-level folder)
+                            if (!isset($items[0])) {
+                                $items = [$items];
+                            }
+                            foreach ($items as $itemData) {
+                                if (is_array($itemData)) {
+                                    $itemNode = $orgFolder->addChild('item');
+                                    $this->arrayToXml($itemData, $itemNode);
+                                }
+                            }
+                        }
+                    }
+                    $this->logger->debug("Generated XML section: {$sectionName} (tree mode)", [
+                        'object_count' => count($sectionObjects)
+                    ]);
+                    continue;
+                }
+
                 // Create section folder
                 $sectionFolder = $this->createSectionFolder($xml, $sectionName);
-                
+
                 // Add all objects in this section
                 foreach ($sectionObjects as $object) {
                     $this->addObjectDirectlyToXmlWithProperties($sectionFolder, $object, $sectionName, $propertyDefinitionMap);
                 }
-                
+
                 $this->logger->debug("Generated XML section: {$sectionName}", [
                     'object_count' => count($sectionObjects)
                 ]);
@@ -1327,35 +1357,47 @@ XML;
      */
     private function addModelMetadataToXml(\SimpleXMLElement $xml, array $modelMetadata): void
     {
-        // Add name if present
-        if (isset($modelMetadata['name'])) {
+        // Prefer xml field data (preserves full array structure with xml:lang from import)
+        $xmlField = $modelMetadata['xml'] ?? [];
+
+        // Resolve name: prefer xml field (array with _value/_xml__lang), fall back to flat field
+        $nameData = $xmlField['name'] ?? $modelMetadata['name'] ?? null;
+        if ($nameData !== null) {
             $nameNode = $xml->addChild('name');
-            if (is_array($modelMetadata['name']) && isset($modelMetadata['name']['_value'])) {
-                $nameNode[0] = (string)$modelMetadata['name']['_value'];
-                if (isset($modelMetadata['name']['xml:lang'])) {
-                    $nameNode->addAttribute('xml:lang', $modelMetadata['name']['xml:lang'], 'http://www.w3.org/XML/1998/namespace');
+            if (is_array($nameData) && isset($nameData['_value'])) {
+                $nameNode[0] = (string)$nameData['_value'];
+                foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
+                    if (isset($nameData[$langKey])) {
+                        $nameNode->addAttribute('xml:lang', $nameData[$langKey], 'http://www.w3.org/XML/1998/namespace');
+                        break;
+                    }
                 }
-            } elseif (is_string($modelMetadata['name'])) {
-                $nameNode[0] = $modelMetadata['name'];
+            } elseif (is_string($nameData)) {
+                $nameNode[0] = $nameData;
             }
         }
 
-        // Add documentation if present
-        if (isset($modelMetadata['documentation'])) {
+        // Resolve documentation: prefer xml field, fall back to flat field
+        $docData = $xmlField['documentation'] ?? $modelMetadata['documentation'] ?? null;
+        if ($docData !== null) {
             $docNode = $xml->addChild('documentation');
-            if (is_array($modelMetadata['documentation']) && isset($modelMetadata['documentation']['_value'])) {
-                $docNode[0] = (string)$modelMetadata['documentation']['_value'];
-                if (isset($modelMetadata['documentation']['xml:lang'])) {
-                    $docNode->addAttribute('xml:lang', $modelMetadata['documentation']['xml:lang'], 'http://www.w3.org/XML/1998/namespace');
+            if (is_array($docData) && isset($docData['_value'])) {
+                $docNode[0] = (string)$docData['_value'];
+                foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
+                    if (isset($docData[$langKey])) {
+                        $docNode->addAttribute('xml:lang', $docData[$langKey], 'http://www.w3.org/XML/1998/namespace');
+                        break;
+                    }
                 }
-            } elseif (is_string($modelMetadata['documentation'])) {
-                $docNode[0] = $modelMetadata['documentation'];
+            } elseif (is_string($docData)) {
+                $docNode[0] = $docData;
             }
         }
 
-        // Add properties if present
-        if (isset($modelMetadata['properties']) && is_array($modelMetadata['properties'])) {
-            $this->addPropertiesToXml($xml, $modelMetadata['properties']);
+        // Resolve properties: prefer xml field, fall back to flat field
+        $propsData = $xmlField['properties'] ?? $modelMetadata['properties'] ?? null;
+        if ($propsData !== null && is_array($propsData)) {
+            $this->addPropertiesToXml($xml, $propsData);
         }
     }
 

@@ -777,7 +777,20 @@ class ArchiMateImportService
                 }
             }
             if ($sectionData !== null) {
-                $normalized[$section] = $this->extractSectionDataWithProperties($sectionData, $section, $modelIdentifier, $propertyDefinitionMap);
+                // Organizations are hierarchical folder trees, not flat objects with identifiers.
+                // Store the entire tree as one raw entry so round-trip export can reconstruct it.
+                if ($section === 'organizations') {
+                    $syntheticId = 'org-' . preg_replace('/^id-/', '', $modelIdentifier);
+                    $normalized[$section][$syntheticId] = [
+                        'identifier' => $syntheticId,
+                        'section' => 'organization',
+                        'model_identifier' => $modelIdentifier,
+                        'name' => 'Organizations',
+                        'xml' => $sectionData // complete hierarchy preserved
+                    ];
+                } else {
+                    $normalized[$section] = $this->extractSectionDataWithProperties($sectionData, $section, $modelIdentifier, $propertyDefinitionMap);
+                }
             }
         }
         $this->logger->info('Data normalization completed', [
@@ -976,6 +989,31 @@ class ArchiMateImportService
         $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
         $schemaId = $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException("Schema ID for 'model' not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
 
+        // Extract a plain string name (schema column expects string, not array)
+        $nameString = null;
+        if (isset($metadata['name'])) {
+            if (is_array($metadata['name']) && isset($metadata['name']['_value'])) {
+                $nameString = (string)$metadata['name']['_value'];
+            } elseif (is_string($metadata['name'])) {
+                $nameString = $metadata['name'];
+            }
+        }
+
+        // Build xml field preserving full array structure for round-trip fidelity
+        $xmlData = [];
+        if (isset($metadata['name'])) {
+            $xmlData['name'] = $metadata['name'];
+        }
+        if (isset($metadata['documentation'])) {
+            $xmlData['documentation'] = $metadata['documentation'];
+        }
+        if (isset($metadata['properties'])) {
+            $xmlData['properties'] = $metadata['properties'];
+        }
+        if (isset($metadata['propertyDefinitionMap'])) {
+            $xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
+        }
+
         // Create object with @self structure and metadata at root level (no JSON serialization)
         $object = [
             '@self' => [
@@ -988,11 +1026,17 @@ class ArchiMateImportService
             ],
             'identifier' => $metadata['identifier'] ?? '',
             'section' => 'model',
-            'model_identifier' => $modelIdentifier
+            'model_identifier' => $modelIdentifier,
+            'xml' => $xmlData
         ];
 
-        // Merge metadata directly at root level
-        return array_merge($object, $metadata);
+        // Merge metadata directly at root level, but override name with string version
+        $merged = array_merge($object, $metadata);
+        if ($nameString !== null) {
+            $merged['name'] = $nameString;
+        }
+
+        return $merged;
     }
 
     /**
@@ -1127,6 +1171,8 @@ class ArchiMateImportService
             'unchanged' => [],
             'invalid' => [],
         ];
+        // Track counts per schema for accurate statistics (serialized objects lose the 'section' field)
+        $countsBySchema = [];
 
         foreach ($schemaGroups as $schemaId => $schemaObjects) {
             $schemaObjectCount = count($schemaObjects);
@@ -1150,6 +1196,14 @@ class ArchiMateImportService
                 $aggregatedStats['unchanged'] = array_merge($aggregatedStats['unchanged'], $saveResult['unchanged'] ?? []);
                 $aggregatedStats['invalid'] = array_merge($aggregatedStats['invalid'], $saveResult['invalid'] ?? []);
 
+                // Track per-schema counts for statistics (since serialized objects lose 'section')
+                $countsBySchema[$schemaId] = [
+                    'saved' => count($saveResult['saved'] ?? []),
+                    'updated' => count($saveResult['updated'] ?? []),
+                    'unchanged' => count($saveResult['unchanged'] ?? []),
+                    'invalid' => count($saveResult['invalid'] ?? []),
+                ];
+
                 $allResults = array_merge($allResults, $saveResult['saved'] ?? [], $saveResult['updated'] ?? [], $saveResult['unchanged'] ?? []);
 
                 $this->logger->debug('Schema group saved for magic mapping', [
@@ -1167,7 +1221,8 @@ class ArchiMateImportService
             }
         }
 
-        // Store aggregated result for statistics
+        // Store aggregated result for statistics, including per-schema counts
+        $aggregatedStats['countsBySchema'] = $countsBySchema;
         $this->lastSaveResult = $aggregatedStats;
         $result = $allResults;
 
@@ -1968,48 +2023,33 @@ class ArchiMateImportService
 
         $saveResult = $this->lastSaveResult;
 
-        // Map singular section values (from import) to plural statistics keys
-        $sectionMap = [
-            'element' => 'elements',
-            'relationship' => 'relationships',
-            'organization' => 'organizations',
-            'view' => 'views',
-            'property_definition' => 'property_definitions',
-            'model' => 'elements', // model objects fall under elements
-        ];
+        // Use per-schema counts if available (reliable — objects are saved per-schema-group,
+        // so we know which schema each count belongs to without inspecting serialized objects).
+        if (!empty($saveResult['countsBySchema']) && $this->cachedConfig !== null) {
+            $sectionMap = [
+                'model' => 'elements',
+                'element' => 'elements',
+                'relationship' => 'relationships',
+                'organization' => 'organizations',
+                'view' => 'views',
+                'property_definition' => 'property_definitions',
+            ];
 
-        // Helper to get the statistics key for an object
-        $getSectionKey = function ($obj) use ($sectionMap): string {
-            if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
-                $obj = $obj->jsonSerialize();
+            // Build reverse map: schema ID → plural section name
+            $schemaToSection = [];
+            foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
+                $schemaToSection[(int)$schemaId] = $sectionMap[$type] ?? 'elements';
             }
-            $section = $obj['section'] ?? 'element';
-            return $sectionMap[$section] ?? 'elements';
-        };
 
-        // Categorize saved (created) objects by section
-        foreach ($saveResult['saved'] ?? [] as $obj) {
-            $key = $getSectionKey($obj);
-            $statistics[$key]['created']++;
-        }
-
-        // Categorize updated objects by section
-        foreach ($saveResult['updated'] ?? [] as $obj) {
-            $key = $getSectionKey($obj);
-            $statistics[$key]['updated']++;
-        }
-
-        // Categorize unchanged objects by section
-        foreach ($saveResult['unchanged'] ?? [] as $obj) {
-            $key = $getSectionKey($obj);
-            $statistics[$key]['unchanged']++;
-        }
-
-        // Count invalid objects as errors
-        foreach ($saveResult['invalid'] ?? [] as $invalidItem) {
-            $obj = $invalidItem['object'] ?? [];
-            $key = $getSectionKey($obj);
-            $statistics[$key]['errors'][] = $invalidItem['error'] ?? 'Unknown error';
+            foreach ($saveResult['countsBySchema'] as $schemaId => $counts) {
+                $sectionKey = $schemaToSection[(int)$schemaId] ?? 'elements';
+                $statistics[$sectionKey]['created'] += $counts['saved'] ?? 0;
+                $statistics[$sectionKey]['updated'] += $counts['updated'] ?? 0;
+                $statistics[$sectionKey]['unchanged'] += $counts['unchanged'] ?? 0;
+                if (($counts['invalid'] ?? 0) > 0) {
+                    $statistics[$sectionKey]['errors'][] = "{$counts['invalid']} validation error(s)";
+                }
+            }
         }
 
         // Calculate summary totals
@@ -2051,36 +2091,31 @@ class ArchiMateImportService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
-            // Map singular section values (from import) to plural statistics keys
-            $sectionMap = [
-                'element' => 'elements',
-                'relationship' => 'relationships',
-                'organization' => 'organizations',
-                'view' => 'views',
-                'property_definition' => 'property_definitions',
-                'model' => 'elements',
-            ];
+            // Use per-schema counts if available (reliable — doesn't depend on serialized object fields)
+            if (!empty($saveResult['countsBySchema']) && $this->cachedConfig !== null) {
+                $sectionMap = [
+                    'model' => 'elements',
+                    'element' => 'elements',
+                    'relationship' => 'relationships',
+                    'organization' => 'organizations',
+                    'view' => 'views',
+                    'property_definition' => 'property_definitions',
+                ];
 
-            $getSectionKey = function ($obj) use ($sectionMap): string {
-                if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
-                    $obj = $obj->jsonSerialize();
+                $schemaToSection = [];
+                foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
+                    $schemaToSection[(int)$schemaId] = $sectionMap[$type] ?? 'elements';
                 }
-                $section = $obj['section'] ?? 'element';
-                return $sectionMap[$section] ?? 'elements';
-            };
 
-            foreach ($saveResult['saved'] ?? [] as $obj) {
-                $statistics[$getSectionKey($obj)]['created']++;
-            }
-            foreach ($saveResult['updated'] ?? [] as $obj) {
-                $statistics[$getSectionKey($obj)]['updated']++;
-            }
-            foreach ($saveResult['unchanged'] ?? [] as $obj) {
-                $statistics[$getSectionKey($obj)]['unchanged']++;
-            }
-            foreach ($saveResult['invalid'] ?? [] as $invalidItem) {
-                $obj = $invalidItem['object'] ?? [];
-                $statistics[$getSectionKey($obj)]['errors'][] = $invalidItem['error'] ?? 'Unknown validation error';
+                foreach ($saveResult['countsBySchema'] as $schemaId => $counts) {
+                    $sectionKey = $schemaToSection[(int)$schemaId] ?? 'elements';
+                    $statistics[$sectionKey]['created'] += $counts['saved'] ?? 0;
+                    $statistics[$sectionKey]['updated'] += $counts['updated'] ?? 0;
+                    $statistics[$sectionKey]['unchanged'] += $counts['unchanged'] ?? 0;
+                    if (($counts['invalid'] ?? 0) > 0) {
+                        $statistics[$sectionKey]['errors'][] = "{$counts['invalid']} validation error(s)";
+                    }
+                }
             }
 
             // Calculate summary totals
@@ -4026,19 +4061,52 @@ class ArchiMateImportService
     {
         $organisation = $this->getCurrentOrganisation();
 
-        return [
+        // Extract a plain string name (schema column expects string, not array)
+        $nameString = null;
+        if (isset($metadata['name'])) {
+            if (is_array($metadata['name']) && isset($metadata['name']['_value'])) {
+                $nameString = (string)$metadata['name']['_value'];
+            } elseif (is_string($metadata['name'])) {
+                $nameString = $metadata['name'];
+            }
+        }
+
+        // Build xml field preserving full array structure for round-trip fidelity
+        $xmlData = [];
+        if (isset($metadata['name'])) {
+            $xmlData['name'] = $metadata['name'];
+        }
+        if (isset($metadata['documentation'])) {
+            $xmlData['documentation'] = $metadata['documentation'];
+        }
+        if (isset($metadata['properties'])) {
+            $xmlData['properties'] = $metadata['properties'];
+        }
+        if (isset($metadata['propertyDefinitionMap'])) {
+            $xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
+        }
+
+        $object = [
             '@self' => [
                 'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                 'schema' => $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException("Schema ID for 'model' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                 'id' => $modelIdentifier,
                 'owner' => $this->cachedConfig['userId'],
-                'organisation' => $organisation,  // Use the method instead of cached value
+                'organisation' => $organisation,
                 'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $modelIdentifier,
             'section' => 'model',
-            'model_identifier' => $modelIdentifier
+            'model_identifier' => $modelIdentifier,
+            'xml' => $xmlData
         ] + $metadata;
+
+        // Override name with string version so schema column stores it properly
+        if ($nameString !== null) {
+            $object['name'] = $nameString;
+        }
+
+        return $object;
     }
 
     /**
@@ -4422,6 +4490,30 @@ class ArchiMateImportService
         ];
 
         foreach ($sections as $sectionName => $schemaType) {
+            // Organizations are hierarchical folder trees — store as one tree object
+            if ($sectionName === 'organizations') {
+                $orgData = $this->findSectionData($xmlData, 'organizations');
+                if (!empty($orgData)) {
+                    $syntheticId = 'org-' . preg_replace('/^id-/', '', $modelIdentifier);
+                    $objects[] = [
+                        '@self' => [
+                            'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration."),
+                            'schema' => $this->cachedConfig['schemaIds']['organization'] ?? throw new \RuntimeException("Schema ID for 'organization' not found."),
+                            'id' => $syntheticId,
+                            'owner' => $this->cachedConfig['userId'],
+                            'organisation' => $this->getCurrentOrganisation(),
+                            'published' => date('Y-m-d\TH:i:s\Z')
+                        ],
+                        'identifier' => $syntheticId,
+                        'section' => 'organization',
+                        'model_identifier' => $modelIdentifier,
+                        'name' => 'Organizations',
+                        'xml' => $orgData
+                    ];
+                }
+                continue;
+            }
+
             if (empty($allLookups[$sectionName])) continue;
 
             $this->logger->debug("SPEED: Bulk processing {$sectionName}", [
@@ -4871,17 +4963,38 @@ class ArchiMateImportService
                     $object = $object->jsonSerialize();
                 }
 
-                $sectionType = $object['section'] ?? 'elements'; // Default to elements if section not found
+                $sectionType = $object['section'] ?? null;
 
-                // Map section types to statistics keys
+                // Map section types (singular or plural) to statistics keys
                 $sectionKey = match($sectionType) {
-                    'elements' => 'elements',
-                    'relationships' => 'relationships',
-                    'organizations' => 'organizations',
-                    'views' => 'views',
-                    'property_definitions' => 'property_definitions',
-                    default => 'elements' // Default fallback
+                    'elements', 'element', 'model' => 'elements',
+                    'relationships', 'relationship' => 'relationships',
+                    'organizations', 'organization' => 'organizations',
+                    'views', 'view' => 'views',
+                    'property_definitions', 'property_definition' => 'property_definitions',
+                    default => null
                 };
+
+                // Fallback: use @self.schema to determine section
+                if ($sectionKey === null && $this->cachedConfig !== null && isset($this->cachedConfig['schemaIds'])) {
+                    $objSchemaId = $object['@self']['schema'] ?? null;
+                    if ($objSchemaId !== null) {
+                        $singularToPlural = [
+                            'element' => 'elements', 'relationship' => 'relationships',
+                            'organization' => 'organizations', 'view' => 'views',
+                            'property_definition' => 'property_definitions', 'model' => 'elements',
+                        ];
+                        foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
+                            if ((int)$schemaId === (int)$objSchemaId) {
+                                $sectionKey = $singularToPlural[$type] ?? 'elements';
+                                break;
+                            }
+                        }
+                    }
+                    $sectionKey = $sectionKey ?? 'elements';
+                } elseif ($sectionKey === null) {
+                    $sectionKey = 'elements';
+                }
 
                 if (!isset($statistics[$sectionKey])) {
                     continue; // Skip unknown section types
