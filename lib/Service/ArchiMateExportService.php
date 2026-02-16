@@ -110,6 +110,11 @@ class ArchiMateExportService
                 continue;
             }
 
+            // Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing)
+            if (is_string($key) && str_starts_with($key, ':')) {
+                continue;
+            }
+
             // Skip numeric keys - they indicate array items that should be handled differently
             if (is_int($key)) {
                 continue;
@@ -517,42 +522,101 @@ XML;
 
     /**
      * Get all objects from the AMEF register
-     * 
+     *
+     * Queries each schema separately because OpenRegister's magic table routing
+     * requires both register AND schema in the query. Without schema, the query
+     * falls back to the generic objects table (which is empty for magic-table registers).
+     *
      * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService
      * @param int $registerId AMEF register ID
+     * @param array $schemaIdMap Mapping of schema IDs to schema types
      * @return array Array of objects from all schemas in the register
      * @throws \RuntimeException If retrieval fails
      */
-    public function getObjectsFromDatabase(\OCA\OpenRegister\Service\ObjectService $objectService, int $registerId): array
+    public function getObjectsFromDatabase(\OCA\OpenRegister\Service\ObjectService $objectService, int $registerId, array $schemaIdMap = []): array
     {
         $this->logger->info('Retrieving all objects from AMEF register', [
+            'register_id' => $registerId,
+            'schema_count' => count($schemaIdMap)
+        ]);
+
+        $allObjects = [];
+
+        // Map schema types (singular) to section names used in XML generation
+        $sectionNameMap = [
+            'element' => 'element',
+            'relationship' => 'relationship',
+            'view' => 'view',
+            'organization' => 'organization',
+            'property_definition' => 'property_definition',
+            'model' => 'model'
+        ];
+
+        // Query each schema separately (required for magic table routing)
+        foreach ($schemaIdMap as $schemaId => $schemaType) {
+            $query = [
+                '@self' => [
+                    'register' => $registerId,
+                    'schema' => (int) $schemaId
+                ],
+                '_limit' => 10000
+            ];
+
+            try {
+                $schemaObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+
+                // Inject 'section' field if missing (magic table objects don't store it)
+                $sectionName = $sectionNameMap[$schemaType] ?? $schemaType;
+                foreach ($schemaObjects as &$obj) {
+                    if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                        $obj = $obj->jsonSerialize();
+                    }
+                    if (!isset($obj['section'])) {
+                        $obj['section'] = $sectionName;
+                    }
+                }
+                unset($obj);
+
+                $this->logger->info("Objects retrieved for schema", [
+                    'schema_id' => $schemaId,
+                    'schema_type' => $schemaType,
+                    'count' => count($schemaObjects)
+                ]);
+
+                $allObjects = array_merge($allObjects, $schemaObjects);
+            } catch (\Exception $e) {
+                $this->logger->warning("Failed to retrieve objects for schema", [
+                    'schema_id' => $schemaId,
+                    'schema_type' => $schemaType,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Fallback: if no schemaIdMap provided, try querying register directly
+        if (empty($schemaIdMap)) {
+            $query = [
+                '@self' => ['register' => $registerId],
+                '_limit' => 10000
+            ];
+
+            try {
+                $allObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+            } catch (\Exception $e) {
+                $this->logger->error("Failed to retrieve objects from AMEF register", [
+                    'register_id' => $registerId,
+                    'error' => $e->getMessage()
+                ]);
+                throw new \RuntimeException("Failed to retrieve objects from database: " . $e->getMessage());
+            }
+        }
+
+        $this->logger->info('Objects retrieved successfully from AMEF register', [
+            'total_retrieved_count' => count($allObjects),
             'register_id' => $registerId
         ]);
 
-        // Build simple query for all objects in the register (all schemas)
-        $query = [
-            '@self' => [
-                'register' => $registerId
-            ]
-        ];
-
-        try {
-            $allObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
-            
-            $this->logger->info('Objects retrieved successfully from AMEF register', [
-                'total_retrieved_count' => count($allObjects),
-                'register_id' => $registerId
-            ]);
-
-            return $allObjects;
-            
-        } catch (\Exception $e) {
-            $this->logger->error("Failed to retrieve objects from AMEF register", [
-                'register_id' => $registerId,
-                'error' => $e->getMessage()
-            ]);
-            throw new \RuntimeException("Failed to retrieve objects from database: " . $e->getMessage());
-        }
+        return $allObjects;
     }
 
 
@@ -593,8 +657,8 @@ XML;
             'organization_filter' => $organization
         ]);
 
-        // Step 1: Get all objects from database in one efficient query
-        $objects = $this->getObjectsFromDatabase($objectService, $registerId);
+        // Step 1: Get all objects from database (queries each schema separately for magic table support)
+        $objects = $this->getObjectsFromDatabase($objectService, $registerId, $schemaIdMap);
         $dbTime = microtime(true) - $startTime;
         
         // Step 2: Process and generate XML in single optimized pass (no schema mapping needed)
@@ -756,7 +820,14 @@ XML;
             default => 'element'
         };
         $objectNode = $folder->addChild($tagName);
-        $xmlData = $this->cleanObjectDataForXml($object, $propertyDefinitionMap);
+        // Prefer the 'xml' field (original ArchiMate structure preserved during import)
+        // over cleanObjectDataForXml which loses array structure for name/documentation
+        if (isset($object['xml']) && is_array($object['xml']) && !empty($object['xml'])) {
+            $xmlData = $object['xml'];
+            unset($xmlData['_essential_data']);
+        } else {
+            $xmlData = $this->cleanObjectDataForXml($object, $propertyDefinitionMap);
+        }
         if (is_array($xmlData) && !empty($xmlData)) {
             if ($sectionName === 'views') {
                 $this->addViewDataToXmlNode($objectNode, $xmlData);
@@ -798,7 +869,11 @@ XML;
         // Process all other elements, handling nodes and connections specially
         foreach ($viewData as $key => $value) {
             // Skip already processed attributes and metadata, including duplicate id element
-            if (in_array($key, ['_attributes', '_identifier', 'identifier', '_xsi__type', 'xsi:type', '_xsi:type', 'id'])) {
+            if (in_array($key, ['_attributes', '_identifier', 'identifier', '_xsi__type', 'xsi:type', '_xsi:type', 'id', '_essential_data', 'viewNodes', 'viewRelationships'])) {
+                continue;
+            }
+            // Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing)
+            if (is_string($key) && str_starts_with($key, ':')) {
                 continue;
             }
             
@@ -888,9 +963,14 @@ XML;
             if (in_array($key, $skipKeys)) {
                 continue; // Skip already processed attributes
             }
-            
+
             // Skip numeric keys as they can't be valid XML element names
             if (is_numeric($key)) {
+                continue;
+            }
+
+            // Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing)
+            if (is_string($key) && str_starts_with($key, ':')) {
                 continue;
             }
             
@@ -990,16 +1070,23 @@ XML;
         }
         if (isset($data['_attributes']) && is_array($data['_attributes'])) {
             foreach ($data['_attributes'] as $attrKey => $attrValue) {
-                $cleanKey = str_replace(':', '', $attrKey);
+                // Skip colon-prefixed duplicate keys
+                if (str_starts_with($attrKey, ':')) {
+                    continue;
+                }
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
-                if ($cleanKey === 'type') {
+                if ($attrKey === 'xsi:type') {
                     if ($isPropertyDefinition) {
                         $attributes['type'] = (string)$attrValue;
                     } else {
                         $attributes['xsi:type'] = (string)$attrValue;
                     }
-                } elseif (in_array($cleanKey, ['identifier', 'source', 'target', 'accessType'])) {
-                    $attributes[$cleanKey] = (string)$attrValue;
+                } elseif (in_array($attrKey, ['identifier', 'source', 'target', 'accessType', 'type'])) {
+                    if ($attrKey === 'type' && !$isPropertyDefinition) {
+                        $attributes['xsi:type'] = (string)$attrValue;
+                    } else {
+                        $attributes[$attrKey] = (string)$attrValue;
+                    }
                 }
             }
         }
@@ -1038,7 +1125,11 @@ XML;
         }
         // Handle child elements
         foreach ($data as $key => $value) {
-            if (in_array($key, ['identifier', 'xsi:type', 'xsi_type', '_xsi:type', '_type', 'source', 'target', 'accessType', 'type', '_attributes'])) {
+            if (in_array($key, ['identifier', 'xsi:type', 'xsi_type', '_xsi:type', '_type', 'source', 'target', 'accessType', 'type', '_attributes', '_essential_data'])) {
+                continue;
+            }
+            // Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing)
+            if (is_string($key) && str_starts_with($key, ':')) {
                 continue;
             }
             if ($key === 'name' && is_array($value)) {

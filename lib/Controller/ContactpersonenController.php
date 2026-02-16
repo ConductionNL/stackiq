@@ -409,8 +409,16 @@ class ContactpersonenController extends Controller
                 ], 400);
             }
 
-            // Set new password
-            $user->setPassword($newPassword);
+            // Set new password — setPassword() returns false if the password
+            // is rejected (e.g., compromised password list, policy violation).
+            $result = $user->setPassword($newPassword);
+
+            if ($result === false) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Password was rejected. It may be too common or violate the password policy. Please choose a different password.'
+                ], 400);
+            }
 
             $this->logger->info('Password changed for user', [
                 'username' => $username

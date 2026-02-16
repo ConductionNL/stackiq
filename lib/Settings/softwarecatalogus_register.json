@@ -4723,6 +4723,11 @@
                 "handling": "related-object"
               }
             }
+          },
+          "xml": {
+            "type": "object",
+            "title": "XML Data",
+            "description": "Original ArchiMate XML structure for round-trip export fidelity"
           }
         },
         "archive": [],
@@ -5108,6 +5113,11 @@
             "type": "string",
             "facetable": false,
             "title": "summary"
+          },
+          "xml": {
+            "type": "object",
+            "title": "XML Data",
+            "description": "Original ArchiMate XML structure for round-trip export fidelity"
           }
         },
         "archive": [],
@@ -5555,6 +5565,11 @@
             },
             "oneOf": [],
             "title": "views"
+          },
+          "xml": {
+            "type": "object",
+            "title": "XML Data",
+            "description": "Original ArchiMate XML structure for round-trip export fidelity"
           }
         },
         "archive": [],
@@ -5695,6 +5710,11 @@
               ],
               "maxSize": 5242880
             }
+          },
+          "xml": {
+            "type": "object",
+            "title": "XML Data",
+            "description": "Original ArchiMate XML structure for round-trip export fidelity"
           }
         },
         "archive": [],
@@ -5852,6 +5872,11 @@
               "indexed": false,
               "searchable": false
             }
+          },
+          "xml": {
+            "type": "object",
+            "title": "XML Data",
+            "description": "Original ArchiMate XML structure for round-trip export fidelity"
           }
         },
         "archive": [],
@@ -6334,6 +6359,11 @@
               "indexed": false,
               "searchable": false
             }
+          },
+          "xml": {
+            "type": "object",
+            "title": "XML Data",
+            "description": "Original ArchiMate XML structure for round-trip export fidelity"
           }
         },
         "archive": [],
