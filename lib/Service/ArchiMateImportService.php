@@ -2671,22 +2671,26 @@ class ArchiMateImportService
                 }
             }
 
+            // Add parent node BEFORE its children so the frontend rendering
+            // engine can look up parents via graph.getCell(parentId).
+            $viewNodes[] = $viewNode;
+
             // Handle child nodes recursively (flatten hierarchy into single array while preserving parent-child relationships)
             if (isset($node['node'])) {
                 $childNodes = $this->extractViewNodesRecursively($node['node'], $elementsLookup);
 
-                // IMPORTANT: Set parent reference for all child nodes to maintain hierarchy
-                // This allows the frontend to reconstruct the nested structure
+                // Set parent reference only for DIRECT children (those with parent === null).
+                // Grandchildren already have their parent set by the recursive call.
                 foreach ($childNodes as &$childNode) {
-                    $childNode['parent'] = $nodeId; // Parent is the current node's ID
+                    if ($childNode['parent'] === null) {
+                        $childNode['parent'] = $nodeId;
+                    }
                 }
                 unset($childNode);
 
                 // Add child nodes to the main flattened array (maintaining parent references)
                 $viewNodes = array_merge($viewNodes, $childNodes);
             }
-
-            $viewNodes[] = $viewNode;
         }
 
         return $viewNodes;
@@ -2920,13 +2924,18 @@ class ArchiMateImportService
             $viewNode['color'] = "rgb($r, $g, $b)";
         }
 
-        // Extract lineColor
+        // Extract lineColor (including alpha for border visibility)
         if (isset($style['lineColor']['_attributes'])) {
             $lineColor = $style['lineColor']['_attributes'];
             $r = isset($lineColor['r']) ? (int)$lineColor['r'] : 0;
             $g = isset($lineColor['g']) ? (int)$lineColor['g'] : 0;
             $b = isset($lineColor['b']) ? (int)$lineColor['b'] : 0;
-            $viewNode['borderColor'] = "rgb($r, $g, $b)";
+            $a = isset($lineColor['a']) ? (int)$lineColor['a'] : 100;
+            if ($a < 100) {
+                $viewNode['borderColor'] = "rgba($r, $g, $b, " . round($a / 100, 2) . ")";
+            } else {
+                $viewNode['borderColor'] = "rgb($r, $g, $b)";
+            }
         }
 
         // Extract font information
@@ -3868,23 +3877,11 @@ class ArchiMateImportService
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
 
-                // Update ID and slug if objectId is available
-                if (isset($object['objectId'])) {
-                    $object['@self']['id'] = $object['objectId'];
-                    $object['@self']['slug'] = $identifier;
-                } else {
-                    if ($identifier && str_starts_with($identifier, 'id-')) {
-                        $object['@self']['slug'] = substr($identifier, 3);
-                    } else {
-                        $object['@self']['slug'] = $identifier;
-                    }
-                }
+                // Keep @self.id as the full ArchiMate identifier (set above)
+                // so stored IDs match GEMMA Online URLs (id-e0f57689-...).
+                $object['@self']['slug'] = $identifier;
             } else {
-                if ($identifier && str_starts_with($identifier, 'id-')) {
-                    $object['@self']['slug'] = substr($identifier, 3);
-                } else {
-                    $object['@self']['slug'] = $identifier;
-                }
+                $object['@self']['slug'] = $identifier;
             }
 
             // Copy viewNodes and viewRelationships from XML to root level for easy access
@@ -4736,18 +4733,11 @@ class ArchiMateImportService
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
 
-                if (isset($object['objectId'])) {
-                    $object['@self']['id'] = $object['objectId'];
-                    $object['@self']['slug'] = $identifier;
-                } else {
-                    $object['@self']['slug'] = str_starts_with($identifier, 'id-')
-                        ? substr($identifier, 3)
-                        : $identifier;
-                }
+                // Keep @self.id as the full ArchiMate identifier (set above)
+                // so stored IDs match GEMMA Online URLs (id-e0f57689-...).
+                $object['@self']['slug'] = $identifier;
             } else {
-                $object['@self']['slug'] = str_starts_with($identifier, 'id-')
-                    ? substr($identifier, 3)
-                    : $identifier;
+                $object['@self']['slug'] = $identifier;
             }
 
             // SPEED OPTIMIZATION: Direct copy without checks (we know it exists)

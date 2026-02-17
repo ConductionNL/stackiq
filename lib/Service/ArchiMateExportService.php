@@ -86,15 +86,26 @@ class ArchiMateExportService
                 if (str_starts_with($attrKey, ':') || in_array($attrKey, $addedAttributes)) {
                     continue;
                 }
-                
+
                 // Fix double underscores to colons
                 $cleanAttrKey = str_replace('__', ':', $attrKey);
-                
+
                 // Skip if cleaned version was already added
                 if (in_array($cleanAttrKey, $addedAttributes)) {
                     continue;
                 }
-                
+
+                // Handle namespaced attributes (e.g., xml:lang, xsi:type)
+                [$nsPrefix, $local] = $this->splitNamespacedKey($cleanAttrKey);
+                if ($nsPrefix !== null) {
+                    $nsUri = $this->getNamespaceUri($xml, $nsPrefix);
+                    if ($nsUri) {
+                        $xml->addAttribute($nsPrefix . ':' . $local, (string) $attrValue, $nsUri);
+                        $addedAttributes[] = $nsPrefix . ':' . $local;
+                        continue;
+                    }
+                }
+
                 $xml->addAttribute($cleanAttrKey, (string) $attrValue);
                 $addedAttributes[] = $cleanAttrKey;
             }
@@ -177,6 +188,13 @@ class ArchiMateExportService
                 return [$parts[0], $parts[1]];
             }
         }
+        // Also handle already-converted colon notation (e.g., 'xml:lang')
+        if (str_contains($key, ':')) {
+            $parts = explode(':', $key, 2);
+            if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
+                return [$parts[0], $parts[1]];
+            }
+        }
         return [null, $key];
     }
 
@@ -233,6 +251,16 @@ class ArchiMateExportService
 
     private function getNamespaceUri(\SimpleXMLElement $xml, string $prefix): string
     {
+        // Well-known namespaces — check first to avoid expensive getDocNamespaces calls
+        static $wellKnown = [
+            'xml' => 'http://www.w3.org/XML/1998/namespace',
+            'xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+        ];
+
+        if (isset($wellKnown[$prefix])) {
+            return $wellKnown[$prefix];
+        }
+
         $namespaces = $xml->getDocNamespaces(true) ?: [];
         return $namespaces[$prefix] ?? '';
     }
@@ -774,7 +802,7 @@ XML;
                             foreach ($items as $itemData) {
                                 if (is_array($itemData)) {
                                     $itemNode = $orgFolder->addChild('item');
-                                    $this->arrayToXml($itemData, $itemNode);
+                                    $this->addOrganizationItemToXml($itemNode, $itemData);
                                 }
                             }
                         }
@@ -878,6 +906,15 @@ XML;
                 if (str_starts_with($attrKey, ':')) {
                     continue; // Skip duplicate attributes with colon prefix
                 }
+                // Handle namespaced attributes (e.g., xsi:type)
+                [$nsPrefix, $local] = $this->splitNamespacedKey($attrKey);
+                if ($nsPrefix !== null) {
+                    $nsUri = $this->getNamespaceUri($viewNode, $nsPrefix);
+                    if ($nsUri) {
+                        $viewNode->addAttribute($nsPrefix . ':' . $local, (string)$attrValue, $nsUri);
+                        continue;
+                    }
+                }
                 $viewNode->addAttribute($attrKey, (string)$attrValue);
             }
         }
@@ -896,52 +933,37 @@ XML;
             }
         }
 
-        // Process all other elements, handling nodes and connections specially
-        foreach ($viewData as $key => $value) {
-            // Skip already processed attributes and metadata, including duplicate id element
-            if (in_array($key, ['_attributes', '_identifier', 'identifier', '_xsi__type', 'xsi:type', '_xsi:type', 'id', '_essential_data', 'viewNodes', 'viewRelationships'])) {
-                continue;
+        // XSD-required order for ViewType (Diagram): name → documentation → properties → node → connection
+        $this->addLangTextChild($viewNode, 'name', $viewData['name'] ?? null);
+        $this->addLangTextChild($viewNode, 'documentation', $viewData['documentation'] ?? null);
+        if (isset($viewData['properties']) && is_array($viewData['properties'])) {
+            $this->addPropertiesToXml($viewNode, $viewData['properties']);
+        }
+
+        // Nodes
+        if (isset($viewData['node']) && is_array($viewData['node'])) {
+            $nodes = $viewData['node'];
+            if (!$this->isList($nodes)) {
+                $nodes = [$nodes];
             }
-            // Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing)
-            if (is_string($key) && str_starts_with($key, ':')) {
-                continue;
+            foreach ($nodes as $nodeData) {
+                if (is_array($nodeData)) {
+                    $nodeElement = $viewNode->addChild('node');
+                    $this->addNodeDataToXmlElement($nodeElement, $nodeData);
+                }
             }
-            
-            if ($key === 'node' && is_array($value)) {
-                // Handle view nodes with specialized processing
-                foreach ($value as $nodeData) {
-                    if (is_array($nodeData)) {
-                        $nodeElement = $viewNode->addChild('node');
-                        $this->addNodeDataToXmlElement($nodeElement, $nodeData);
-                    } else {
-                        // If it's not an array, treat it as a simple text value
-                        $nodeElement = $viewNode->addChild('node');
-                        $nodeElement[0] = (string)$nodeData;
-                    }
-                }
-            } elseif ($key === 'connection' && is_array($value)) {
-                // Handle view connections with special processing
-                foreach ($value as $connectionData) {
-                    if (is_array($connectionData)) {
-                        $connectionElement = $viewNode->addChild('connection');
-                        $this->arrayToXml($connectionData, $connectionElement);
-                    } else {
-                        // If it's not an array, treat it as a simple text value
-                        $connectionElement = $viewNode->addChild('connection');
-                        $connectionElement[0] = (string)$connectionData;
-                    }
-                }
-            } else {
-                // Handle all other elements normally (name, documentation, properties, etc.)
-                if ($key === 'properties' && is_array($value)) {
-                    // Use specialized property handling to avoid duplicate attributes
-                    $this->addPropertiesToXml($viewNode, $value);
-                } elseif (is_array($value)) {
-                    $childElement = $viewNode->addChild($key);
-                    $this->arrayToXml($value, $childElement);
-                } else {
-                    $childElement = $viewNode->addChild($key);
-                    $childElement[0] = (string)$value;
+        }
+
+        // Connections
+        if (isset($viewData['connection']) && is_array($viewData['connection'])) {
+            $connections = $viewData['connection'];
+            if (!$this->isList($connections)) {
+                $connections = [$connections];
+            }
+            foreach ($connections as $connectionData) {
+                if (is_array($connectionData)) {
+                    $connectionElement = $viewNode->addChild('connection');
+                    $this->arrayToXml($connectionData, $connectionElement);
                 }
             }
         }
@@ -963,12 +985,24 @@ XML;
             '_xsi__type' => 'xsi:type'
         ];
         
+        $addedNodeAttrs = [];
         foreach ($nodeAttributes as $dataKey => $xmlAttr) {
             if (isset($nodeData[$dataKey])) {
+                // Handle namespaced attributes like xsi:type
+                [$nsPrefix, $local] = $this->splitNamespacedKey($xmlAttr);
+                if ($nsPrefix !== null) {
+                    $nsUri = $this->getNamespaceUri($nodeElement, $nsPrefix);
+                    if ($nsUri) {
+                        $nodeElement->addAttribute($nsPrefix . ':' . $local, (string)$nodeData[$dataKey], $nsUri);
+                        $addedNodeAttrs[] = $nsPrefix . ':' . $local;
+                        continue;
+                    }
+                }
                 $nodeElement->addAttribute($xmlAttr, (string)$nodeData[$dataKey]);
+                $addedNodeAttrs[] = $xmlAttr;
             }
         }
-        
+
         // Also check regular attributes array
         if (isset($nodeData['_attributes'])) {
             foreach ($nodeData['_attributes'] as $attrKey => $attrValue) {
@@ -976,52 +1010,123 @@ XML;
                     continue; // Skip duplicate attributes with colon prefix
                 }
                 // Skip if we already added this attribute from the direct keys
-                if (in_array($attrKey, ['identifier', 'x', 'y', 'w', 'h', 'elementRef', 'xsi:type'])) {
+                if (in_array($attrKey, ['identifier', 'x', 'y', 'w', 'h', 'elementRef', 'xsi:type']) || in_array($attrKey, $addedNodeAttrs)) {
                     continue;
+                }
+                // Handle namespaced attributes
+                [$nsPrefix, $local] = $this->splitNamespacedKey($attrKey);
+                if ($nsPrefix !== null) {
+                    $nsUri = $this->getNamespaceUri($nodeElement, $nsPrefix);
+                    if ($nsUri) {
+                        $nodeElement->addAttribute($nsPrefix . ':' . $local, (string)$attrValue, $nsUri);
+                        continue;
+                    }
                 }
                 $nodeElement->addAttribute($attrKey, (string)$attrValue);
             }
         }
         
-        // Process nested elements (style, label, properties, etc.) but skip the attribute keys and duplicate keys
-        $skipKeys = array_keys($nodeAttributes);
-        $skipKeys[] = '_attributes';
-        // Also skip the triple underscore duplicates
-        $skipKeys = array_merge($skipKeys, ['___identifier', '___x', '___y', '___w', '___h', '___elementRef']);
-        
-        foreach ($nodeData as $key => $value) {
-            if (in_array($key, $skipKeys)) {
-                continue; // Skip already processed attributes
+        // XSD-required order for ViewNodeType: label → style → viewRef → node (nested)
+        // Label (used in Label nodes)
+        if (isset($nodeData['label'])) {
+            $labelData = $nodeData['label'];
+            if (is_array($labelData)) {
+                $labelElement = $nodeElement->addChild('label');
+                $this->arrayToXml($labelData, $labelElement);
+            } else {
+                $labelElement = $nodeElement->addChild('label');
+                $labelElement[0] = (string)$labelData;
             }
+        }
 
-            // Skip numeric keys as they can't be valid XML element names
-            if (is_numeric($key)) {
-                continue;
+        // Style (lineColor → fillColor → font per XSD StyleType order)
+        if (isset($nodeData['style']) && is_array($nodeData['style'])) {
+            $styleElement = $nodeElement->addChild('style');
+            $styleData = $nodeData['style'];
+            // Enforce StyleType order: lineColor → fillColor → font
+            foreach (['lineColor', 'fillColor', 'font'] as $styleKey) {
+                if (isset($styleData[$styleKey]) && is_array($styleData[$styleKey])) {
+                    $child = $styleElement->addChild($styleKey);
+                    $this->arrayToXml($styleData[$styleKey], $child);
+                }
             }
+        }
 
-            // Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing)
-            if (is_string($key) && str_starts_with($key, ':')) {
-                continue;
+        // viewRef
+        if (isset($nodeData['viewRef'])) {
+            $viewRefData = $nodeData['viewRef'];
+            if (is_array($viewRefData)) {
+                $vrElement = $nodeElement->addChild('viewRef');
+                $this->arrayToXml($viewRefData, $vrElement);
             }
-            
-            if ($key === 'node' && is_array($value)) {
-                // Handle nested nodes recursively
-                foreach ($value as $nestedNodeData) {
-                    if (is_array($nestedNodeData)) {
-                        $nestedNodeElement = $nodeElement->addChild('node');
-                        $this->addNodeDataToXmlElement($nestedNodeElement, $nestedNodeData);
-                    } else {
-                        // If it's not an array, treat it as a simple text value
-                        $nestedNodeElement = $nodeElement->addChild('node');
-                        $nestedNodeElement[0] = (string)$nestedNodeData;
+        }
+
+        // Nested nodes (Container/Element type)
+        if (isset($nodeData['node']) && is_array($nodeData['node'])) {
+            $nestedNodes = $nodeData['node'];
+            if (!$this->isList($nestedNodes)) {
+                $nestedNodes = [$nestedNodes];
+            }
+            foreach ($nestedNodes as $nestedNodeData) {
+                if (is_array($nestedNodeData)) {
+                    $nestedNodeElement = $nodeElement->addChild('node');
+                    $this->addNodeDataToXmlElement($nestedNodeElement, $nestedNodeData);
+                }
+            }
+        }
+    }
+
+    /**
+     * Add organization item to XML with XSD-required child order: label → documentation → item
+     */
+    private function addOrganizationItemToXml(\SimpleXMLElement $itemNode, array $itemData): void
+    {
+        // Add identifierRef attribute if present
+        if (isset($itemData['_identifierRef'])) {
+            $itemNode->addAttribute('identifierRef', (string)$itemData['_identifierRef']);
+        } elseif (isset($itemData['_attributes']['identifierRef'])) {
+            $itemNode->addAttribute('identifierRef', (string)$itemData['_attributes']['identifierRef']);
+        }
+
+        // XSD order: label → documentation → item
+        // Labels first
+        if (isset($itemData['label'])) {
+            $labels = $itemData['label'];
+            if (is_array($labels) && !$this->isList($labels)) {
+                $labels = [$labels]; // Single label → list
+            }
+            if (is_array($labels)) {
+                foreach ($labels as $labelData) {
+                    if (is_array($labelData)) {
+                        $labelElement = $itemNode->addChild('label');
+                        $this->arrayToXml($labelData, $labelElement);
+                    } elseif (is_string($labelData)) {
+                        $labelElement = $itemNode->addChild('label');
+                        $labelElement[0] = $labelData;
                     }
                 }
-            } elseif (is_array($value)) {
-                $childElement = $nodeElement->addChild($key);
-                $this->arrayToXml($value, $childElement);
-            } else {
-                $childElement = $nodeElement->addChild($key);
-                $childElement[0] = (string)$value;
+            } elseif (is_string($labels)) {
+                $labelElement = $itemNode->addChild('label');
+                $labelElement[0] = $labels;
+            }
+        }
+
+        // Documentation
+        $this->addLangTextChild($itemNode, 'documentation', $itemData['documentation'] ?? null);
+
+        // Nested items
+        if (isset($itemData['item'])) {
+            $items = $itemData['item'];
+            if (is_array($items) && !$this->isList($items)) {
+                $items = [$items];
+            }
+            if (is_array($items)) {
+                foreach ($items as $childItemData) {
+                    if (is_array($childItemData)) {
+                        $childNode = $itemNode->addChild('item');
+                        $this->addOrganizationItemToXml($childNode, $childItemData);
+                    }
+                }
             }
         }
     }
@@ -1111,7 +1216,7 @@ XML;
                     } else {
                         $attributes['xsi:type'] = (string)$attrValue;
                     }
-                } elseif (in_array($attrKey, ['identifier', 'source', 'target', 'accessType', 'type'])) {
+                } elseif (in_array($attrKey, ['identifier', 'source', 'target', 'accessType', 'isDirected', 'type'])) {
                     if ($attrKey === 'type' && !$isPropertyDefinition) {
                         $attributes['xsi:type'] = (string)$attrValue;
                     } else {
@@ -1132,7 +1237,7 @@ XML;
                 }
             }
         }
-        foreach (['source', 'target', 'accessType', 'type'] as $attrName) {
+        foreach (['source', 'target', 'accessType', 'isDirected', 'type'] as $attrName) {
             if (isset($data[$attrName]) && !isset($attributes[$attrName])) {
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
                 if ($attrName === 'type') {
@@ -1153,51 +1258,12 @@ XML;
                 $node->addAttribute($attrName, $attrValue);
             }
         }
-        // Handle child elements
-        foreach ($data as $key => $value) {
-            if (in_array($key, ['identifier', 'xsi:type', 'xsi_type', '_xsi:type', '_type', 'source', 'target', 'accessType', 'type', '_attributes', '_essential_data'])) {
-                continue;
-            }
-            // Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing)
-            if (is_string($key) && str_starts_with($key, ':')) {
-                continue;
-            }
-            if ($key === 'name' && is_array($value)) {
-                $nameNode = $node->addChild('name');
-                if (isset($value['_value'])) {
-                    $nameNode[0] = (string)$value['_value'];
-                }
-                foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
-                    if (isset($value[$langKey])) {
-                        $nameNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
-                        break;
-                    }
-                }
-            } elseif ($key === 'documentation' && is_array($value)) {
-                $docNode = $node->addChild('documentation');
-                if (isset($value['_value'])) {
-                    $docNode[0] = (string)$value['_value'];
-                }
-                foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
-                    if (isset($value[$langKey])) {
-                        $docNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
-                        break;
-                    }
-                }
-            } elseif ($key === 'properties' && is_array($value)) {
-                $this->addPropertiesToXml($node, $value);
-            } elseif ($key === 'value' && is_array($value)) {
-                $valueNode = $node->addChild('value');
-                if (isset($value['_value'])) {
-                    $valueNode[0] = (string)$value['_value'];
-                }
-                foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
-                    if (isset($value[$langKey])) {
-                        $valueNode->addAttribute('xml:lang', $value[$langKey], 'http://www.w3.org/XML/1998/namespace');
-                        break;
-                    }
-                }
-            }
+        // Handle child elements in XSD-required order (xs:sequence):
+        // NamedReferenceableType: name → documentation → properties
+        $this->addLangTextChild($node, 'name', $data['name'] ?? null);
+        $this->addLangTextChild($node, 'documentation', $data['documentation'] ?? null);
+        if (isset($data['properties']) && is_array($data['properties'])) {
+            $this->addPropertiesToXml($node, $data['properties']);
         }
         // Add properties from root fields using propertyDefinitionMap ONLY if no properties were already processed
         if (!empty($propertyDefinitionMap) && !isset($data['properties'])) {
@@ -1331,6 +1397,31 @@ XML;
                     $valueNode[0] = (string)$property['value'];
                 }
             }
+        }
+    }
+
+    /**
+     * Add a child element with text content and optional xml:lang attribute
+     */
+    private function addLangTextChild(\SimpleXMLElement $parent, string $tagName, $data): void
+    {
+        if ($data === null) {
+            return;
+        }
+        if (is_array($data)) {
+            $childNode = $parent->addChild($tagName);
+            if (isset($data['_value'])) {
+                $childNode[0] = (string)$data['_value'];
+            }
+            foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
+                if (isset($data[$langKey])) {
+                    $childNode->addAttribute('xml:lang', $data[$langKey], 'http://www.w3.org/XML/1998/namespace');
+                    break;
+                }
+            }
+        } elseif (is_string($data) && $data !== '') {
+            $childNode = $parent->addChild($tagName);
+            $childNode[0] = $data;
         }
     }
 

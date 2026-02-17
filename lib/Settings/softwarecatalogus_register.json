@@ -439,7 +439,7 @@
           {
             "title": "Common Ground",
             "summary": "Een nieuwe manier van werken met informatiesystemen binnen de overheid",
-            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en effici\u00ebnte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
+            "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en efficiënte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
             "organization": "VNG Realisatie",
             "themes": [
               "Architectuur",
@@ -511,7 +511,9 @@
             "summary": "Aanvullende afspraak bij het convenant met nadere detaillering voor één standaard",
             "description": "Voor elke op het convenant aanvullende afspraak die nadere detaillering behoeft, worden losse addenda (aanvullingen) aan het convenant gehangen. In een addendum wordt voor 1 standaard een realisatietermijn afgesproken. Leveranciers streven ernaar de betreffende standaard tijdig en juist in de softwareproducten in te bouwen, te implementeren en te laten gebruiken door gemeenten.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Addendum",
-            "keywords": ["Addenda"],
+            "keywords": [
+              "Addenda"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -524,7 +526,10 @@
             "summary": "Algemene samenwerkingsafspraken met leveranciers, gebruikersverenigingen en samenwerkingsverbanden",
             "description": "Hierin zijn algemene samenwerkingsafspraken vastgelegd met leveranciers, gebruikersverenigingen, en samenwerkingsverbanden die voor gemeenten software inkopen. De samenwerking is gericht op het gezamenlijk (door)ontwikkelen van procesmatige en technische standaarden o.a. door vakmatig kennis te delen.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Convenant%20VNG",
-            "keywords": ["VNG-convenant", "convenant"],
+            "keywords": [
+              "VNG-convenant",
+              "convenant"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -537,7 +542,9 @@
             "summary": "Standaard waarbij functionaliteit, services en rolverdeling scherp gedefinieerd zijn",
             "description": "Hierbij zijn de functionaliteit, de (web)services en rolverdeling tussen systemen gedetailleerd en scherp gedefinieerd. Juiste toepassing is preventief goed testbaar en daardoor is de voorspelbaarheid op goed functioneren hoog.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Eindproduct-standaard",
-            "keywords": ["Eindproduct-standaarden"],
+            "keywords": [
+              "Eindproduct-standaarden"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -550,7 +557,10 @@
             "summary": "Afspraken over meervoudig gebruik en uitwisseling van gegevens",
             "description": "Om ervoor te zorgen dat de uitgewisselde gegevens juist zijn en op de juiste manier worden gebruikt, met de juiste betekenis, dienen er zeer goede afspraken gemaakt te worden. De afspraken over het meervoudig gebruik van gegevens en de (gemeentelijke) gegevensuitwisseling zijn vastgelegd in gegevensstandaarden. Ook hiervoor geldt dat de leverancier dient aan te geven op welke wijze hieraan wordt voldaan.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Gegevensstandaard",
-            "keywords": ["Gegevens-standaarden", "Gegevensstandaarden"],
+            "keywords": [
+              "Gegevens-standaarden",
+              "Gegevensstandaarden"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -561,9 +571,11 @@
           {
             "title": "Grondstof-standaard",
             "summary": "Standaard die specialistische kennis en uitgebreide specificaties vereist",
-            "description": "Hierbij moeten n\u00f3g meer dan bij half-fabrikaten specificaties en activiteiten worden uitgevoerd om interoperabiliteit te kunnen realiseren. Dit vergt specialistische kennis.",
+            "description": "Hierbij moeten nóg meer dan bij half-fabrikaten specificaties en activiteiten worden uitgevoerd om interoperabiliteit te kunnen realiseren. Dit vergt specialistische kennis.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Grondstof-standaard",
-            "keywords": ["Grondstof-standaarden"],
+            "keywords": [
+              "Grondstof-standaarden"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -576,7 +588,9 @@
             "summary": "Standaard waarbij de opdrachtgever aanvullende specificaties moet toevoegen",
             "description": "Hierbij dient de opdrachtgever aanvullende specificaties toe te voegen.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Halffabrikaat-standaard",
-            "keywords": ["Halffabrikaat-standaarden"],
+            "keywords": [
+              "Halffabrikaat-standaarden"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -589,7 +603,9 @@
             "summary": "Aanbieder van standaard-softwarepakketten voor gemeentelijke taken",
             "description": "Aanbieders van standaard-software(pakketten) voor gemeentelijke taken. Alleen leveranciers die het convenant met VNG ondertekend hebben, mogen hun gegevens in de Softwarecatalogus zetten.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Leverancier",
-            "keywords": ["Leveranciers"],
+            "keywords": [
+              "Leveranciers"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -600,9 +616,11 @@
           {
             "title": "Referentiecomponent",
             "summary": "Verbinding tussen softwareaanbod van leveranciers en softwaregebruik van gemeenten",
-            "description": "De verbinding tussen softwareaanbod leveranciers en softwaregebruik gemeenten. Een softwarepakket kan functionaliteit bieden voor \u00e9\u00e9n of meerdere referentiecomponenten, daarmee krijgt u een globaal beeld van de functionaliteit.",
+            "description": "De verbinding tussen softwareaanbod leveranciers en softwaregebruik gemeenten. Een softwarepakket kan functionaliteit bieden voor één of meerdere referentiecomponenten, daarmee krijgt u een globaal beeld van de functionaliteit.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Referentiecomponent",
-            "keywords": ["Referentiecomponenten"],
+            "keywords": [
+              "Referentiecomponenten"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -613,9 +631,11 @@
           {
             "title": "SaaS",
             "summary": "Software as a Service: applicatie aangeboden vanuit de cloud door een leverancier",
-            "description": "Bij Software as a Service maakt een gemeente of samenwerking gebruik van een applicatie die door een leverancier vanuit de cloud wordt aangeboden. De gemeente of samenwerking heeft g\u00e9\u00e9n toegang tot de onderliggende infrastructuur en software, oftewel het technisch beheer wordt geheel door de leverancier verzorgd.",
+            "description": "Bij Software as a Service maakt een gemeente of samenwerking gebruik van een applicatie die door een leverancier vanuit de cloud wordt aangeboden. De gemeente of samenwerking heeft géén toegang tot de onderliggende infrastructuur en software, oftewel het technisch beheer wordt geheel door de leverancier verzorgd.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#SaaS",
-            "keywords": ["Software as a Service"],
+            "keywords": [
+              "Software as a Service"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -628,7 +648,9 @@
             "summary": "Norm of set van eisen waaraan gemeentelijke software moet voldoen",
             "description": "Norm of set van eisen/voorwaarden/afspraken waaraan (gemeentelijke) software moet voldoen. (Open) Standaarden zijn opgenomen die voor gemeenten van belang zijn voor interne en externe applicatiekoppelingen, gegevensmanagement, bedrijfsvoering en digitale dienstverlening. Standaarden kunnen als producten worden getypeerd in eindproducten, halffabrikaten, grondstoffen en gegevensstandaarden. Deze typering is een indicatie wat de benodigde inspanning is om op basis van de standaard tot een werkende koppeling te komen. VNG adviseert gemeenten bij voorkeur functioneel passende eindproduct-standaarden te gebruiken en pas daarna (in aflopende prioriteit) halffabrikaat- en grondstof-standaarden, en als laatste maatwerk toe te passen.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Standaard",
-            "keywords": ["Standaarden"],
+            "keywords": [
+              "Standaarden"
+            ],
             "@self": {
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
@@ -1755,7 +1777,10 @@
             "enum": [],
             "example": "Bijvoorbeeld: [\"Aanbod-beheerder\", \"Functioneel-beheerder\"]",
             "authorization": {
-              "update": ["gebruik-beheerder", "admin"]
+              "update": [
+                "gebruik-beheerder",
+                "admin"
+              ]
             }
           },
           "e-mailadres": {
@@ -2204,7 +2229,8 @@
               "Leverancier",
               "Samenwerking",
               "Community"
-            ]
+            ],
+            "hideOnCollection": true
           },
           "organisatieType": {
             "description": "Type van de organisatie (Gemeente, Leverancier, Samenwerking)",
@@ -2262,7 +2288,6 @@
             "title": "Samenwerkingstype",
             "type": "string",
             "visible": false,
-            "hideOnCollection": true,
             "facetable": true,
             "order": 14,
             "minLength": null,
@@ -2399,7 +2424,7 @@
             "AVG compliance document",
             "ESPD (Europees aanbestedingsdocument)",
             "Integriteitsverklaring",
-            "Financi\u00eble capaciteitsverklaring",
+            "Financiële capaciteitsverklaring",
             "Technische capaciteitsverklaring",
             "Kwaliteitscertificaten",
             "Milieucertificaten",
@@ -2547,7 +2572,7 @@
             "example": "Bijvoorbeeld: 2025-03-01"
           },
           "startDatumUitTeFaseren": {
-            "description": "De start datum voor het \"Be\u00ebindigd\" status",
+            "description": "De start datum voor het \"Beëindigd\" status",
             "type": "string",
             "format": "date",
             "visible": true,
@@ -3122,11 +3147,13 @@
         "uri": null,
         "slug": "koppeling",
         "title": "Koppeling",
-        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet \u00f3f ApplicatieB \u00f3f buitengemeentelijkVoorziening gevuld zijn.",
+        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet óf ApplicatieB óf buitengemeentelijkVoorziening gevuld zijn.",
         "version": "0.1.0",
         "summary": "",
         "icon": "Link",
-        "required": [],
+        "required": [
+          "naam"
+        ],
         "properties": {
           "naam": {
             "description": "Naam van de koppeling, default waarde [AppA] [<-richting->] [AppB]",
@@ -3135,6 +3162,8 @@
             "required": true,
             "facetable": false,
             "title": "Naam",
+            "default": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB }}",
+            "defaultBehavior": "falsy",
             "table": {
               "default": true
             },
@@ -3256,7 +3285,7 @@
             "type": "object",
             "order": 9,
             "facetable": false,
-            "required": true,
+            "required": false,
             "table": {
               "default": true
             },
@@ -3270,7 +3299,7 @@
           "moduleB": {
             "description": "Kies de applicatie of buitengemeentelijke voorziening waarmee gekoppeld wordt.",
             "type": "object",
-            "required": true,
+            "required": false,
             "items": {
               "oneOf": [
                 {
@@ -6396,8 +6425,7 @@
         "summary": "",
         "icon": "Package",
         "required": [
-          "naam",
-          "beschrijvingKort"
+          "naam"
         ],
         "properties": {
           "naam": {
@@ -6419,7 +6447,7 @@
             "title": "Korte omschrijving",
             "order": 2,
             "facetable": false,
-            "required": true,
+            "required": false,
             "maxLength": 255,
             "table": {
               "default": true
@@ -6440,7 +6468,7 @@
             "description": "Een URL naar uw applicatie. Default website van de organisatie",
             "type": "string",
             "format": "url",
-            "required": true,
+            "required": false,
             "visible": true,
             "order": 4,
             "maxLength": 500,
