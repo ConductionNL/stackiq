@@ -198,12 +198,11 @@ class ViewService
             '@self' => [
                 'register' => $registerId,
                 'schema' => $viewSchemaId
-            ],
-            'section' => 'view'
+            ]
         ];
 
         $views = $objectService->searchObjects($query);
-        
+
         $this->logger->debug('Retrieved views from register', [
             'register_id' => $registerId,
             'view_schema_id' => $viewSchemaId,
@@ -238,7 +237,7 @@ class ViewService
         try {
             // Get specific view object by ID
             $view = $objectService->getObject($registerId, $viewSchemaId, $viewId);
-            
+
             $this->logger->debug('Retrieved specific view from register', [
                 'view_id' => $viewId,
                 'register_id' => $registerId,
