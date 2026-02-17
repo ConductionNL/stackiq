@@ -1289,13 +1289,95 @@ class SettingsController extends Controller
     }
 
     /**
+     * Export organization-specific ArchiMate file with enriched views
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @return Response File download response or JSON error response
+     */
+    public function exportOrgArchiMate(): Response
+    {
+        try {
+            $rawInput = file_get_contents('php://input');
+            $data = json_decode($rawInput, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $data = [
+                    'organization' => $this->request->getParam('organization', null)
+                ];
+            }
+
+            $organizationUuid = $data['organization'] ?? null;
+
+            if (empty($organizationUuid)) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Organization UUID is required',
+                    'error' => 'MISSING_ORGANIZATION'
+                ], 400);
+            }
+
+            $result = $this->archiMateService->exportOrgArchiMate($organizationUuid);
+
+            if (!$result['success']) {
+                $statusCode = 500;
+                if (str_contains($result['error'] ?? '', 'not found')) {
+                    $statusCode = 404;
+                }
+
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Export failed',
+                    'error' => $result['error'] ?? 'EXPORT_FAILED'
+                ], $statusCode);
+            }
+
+            $fileName = $result['file_name'] ?? 'archimate_org_export_' . date('Y-m-d_H-i-s') . '.xml';
+            $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
+
+            $response = new class($xmlContent) extends Response {
+                public function __construct(private string $content) {
+                    parent::__construct();
+                }
+
+                public function render(): string {
+                    return $this->content;
+                }
+            };
+
+            $response->setStatus(200);
+            $response->addHeader('Content-Type', 'application/xml');
+            $response->addHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+            $response->addHeader('Content-Length', (string)strlen($xmlContent));
+            $response->addHeader('Cache-Control', 'no-cache');
+
+            return $response;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Organization ArchiMate export failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $statusCode = $this->getHttpStatusForException($e);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Export failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], $statusCode);
+        }
+    }
+
+    /**
      * Download ArchiMate file
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @param string $fileName The filename to download
-     * 
+     *
      * @return Response File download response
      */
     public function downloadArchiMate(string $fileName): Response

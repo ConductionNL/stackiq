@@ -355,7 +355,18 @@
 							<NcLoadingIcon v-if="exporting" :size="20" />
 							<Download v-else :size="20" />
 						</template>
-						{{ exporting ? 'Exporting...' : 'Export' }}
+						{{ exporting ? 'Exporting...' : 'Export Base' }}
+					</NcButton>
+
+					<NcButton
+						type="primary"
+						:disabled="exportingOrg || !selectedOrganization"
+						@click="exportOrgArchiMateFile">
+						<template #icon>
+							<NcLoadingIcon v-if="exportingOrg" :size="20" />
+							<Download v-else :size="20" />
+						</template>
+						{{ exportingOrg ? 'Exporting...' : 'Organization Export' }}
 					</NcButton>
 				</div>
 			</div>
@@ -435,6 +446,7 @@ export default {
 		return {
 			importing: false,
 			exporting: false,
+			exportingOrg: false,
 			selectedFile: null,
 			selectedOrganization: null,
 			importResult: null,
@@ -663,6 +675,74 @@ export default {
 		},
 
 		/**
+		 * Export organization-specific ArchiMate file with enriched views
+		 */
+		async exportOrgArchiMateFile() {
+			if (!this.selectedOrganization) return
+			this.exportingOrg = true
+
+			try {
+				const exportData = {
+					organization: this.selectedOrganization?.value ?? this.selectedOrganization,
+				}
+
+				await withHeartbeat(async () => {
+					const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export/organization', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'OCS-APIREQUEST': 'true',
+							requesttoken: OC.requestToken,
+						},
+						body: JSON.stringify(exportData),
+					})
+
+					if (response.ok) {
+						const blob = await response.blob()
+						const url = window.URL.createObjectURL(blob)
+
+						const contentDisposition = response.headers.get('content-disposition')
+						let fileName = 'archimate_org_export.xml'
+						if (contentDisposition) {
+							const match = contentDisposition.match(/filename="?([^"]*)"?/)
+							if (match) {
+								fileName = match[1]
+							}
+						}
+
+						const a = document.createElement('a')
+						a.href = url
+						a.download = fileName
+						document.body.appendChild(a)
+						a.click()
+						window.URL.revokeObjectURL(url)
+						document.body.removeChild(a)
+
+						const orgLabel = this.organizationOptions.find(
+							opt => opt.value === (this.selectedOrganization?.value ?? this.selectedOrganization),
+						)?.label ?? 'Organization'
+						OC.Notification.showTemporary(
+							`Organization ArchiMate file exported for ${orgLabel}`,
+							{ type: 'success' },
+						)
+					} else {
+						const errorData = await response.json()
+						throw new Error(errorData.message || 'Organization export failed')
+					}
+				}, 30000)
+
+			} catch (error) {
+				console.error('Error exporting organization ArchiMate file:', error)
+				OC.Notification.showTemporary(
+					'Organization export failed: ' + error.message,
+					{ type: 'error' },
+				)
+			} finally {
+				this.exportingOrg = false
+			}
+		},
+
+		/**
 		 * Clear import results and errors
 		 *
 		 * @return {void}
@@ -829,9 +909,50 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async loadOrganizations() {
-			// TODO: Implement organization loading when OpenRegister organization endpoint is available
-			// For now, keep default Generic option to prevent 404 errors
-			console.debug('Organization loading disabled - using default Generic option')
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config', {
+					headers: {
+						'OCS-APIREQUEST': 'true',
+						requesttoken: OC.requestToken,
+					},
+				})
+				if (!response.ok) throw new Error('Failed to load config')
+				const data = await response.json()
+
+				// Get voorzieningen register and organisatie schema from config
+				const voorzRegister = data?.config?.register
+				const orgSchema = data?.config?.organisatie_schema
+				if (!voorzRegister || !orgSchema) {
+					console.debug('Voorzieningen config not available, using default Generic option')
+					return
+				}
+
+				// Load organizations from OpenRegister
+				const orgResponse = await fetch(
+					`/index.php/apps/openregister/api/objects/${voorzRegister}/${orgSchema}?_limit=5000&_fields=id,naam`,
+					{
+						headers: {
+							'OCS-APIREQUEST': 'true',
+							requesttoken: OC.requestToken,
+						},
+					},
+				)
+				if (!orgResponse.ok) throw new Error('Failed to load organizations')
+				const orgData = await orgResponse.json()
+
+				const orgs = orgData?.results || orgData || []
+				if (Array.isArray(orgs) && orgs.length > 0) {
+					this.organizationOptions = orgs
+						.filter(org => org.naam || org.name)
+						.map(org => ({
+							label: org.naam || org.name,
+							value: org.id || org['@self']?.id,
+						}))
+						.sort((a, b) => a.label.localeCompare(b.label))
+				}
+			} catch (error) {
+				console.warn('Could not load organizations:', error.message)
+			}
 		},
 	},
 }
