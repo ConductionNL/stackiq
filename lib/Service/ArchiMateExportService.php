@@ -2566,13 +2566,16 @@ XML;
                 }
             }
         }
-        // Add SWC folders
+        // Add SWC folder: top-level folder named after organization, with sub-folders
+        $orgFolder = $orgsFolder->addChild('item');
+        $orgLabelEl = $orgFolder->addChild('label', htmlspecialchars($orgName));
+        $orgLabelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
         foreach ($swcFolders as $folderData) {
-            $folderItem = $orgsFolder->addChild('item');
-            $labelEl = $folderItem->addChild('label', htmlspecialchars($folderData['label']['_value']));
+            $subFolder = $orgFolder->addChild('item');
+            $labelEl = $subFolder->addChild('label', htmlspecialchars($folderData['label']['_value']));
             $labelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
             foreach ($folderData['items'] as $identifierRefItem) {
-                $childItem = $folderItem->addChild('item');
+                $childItem = $subFolder->addChild('item');
                 $childItem->addAttribute('identifierRef', $identifierRefItem['_identifierRef']);
             }
         }
