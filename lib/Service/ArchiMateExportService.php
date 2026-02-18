@@ -1891,6 +1891,717 @@ XML;
         
         $this->logger->debug("Validated " . count($textElements) . " text elements are properly trimmed and normalized");
     }
+
+    // =========================================================================
+    // Organization-specific ArchiMate export
+    // =========================================================================
+
+    /**
+     * Export organization-enriched ArchiMate XML.
+     *
+     * Takes the base GEMMA model objects, adds the organization's applications
+     * as ApplicationComponent elements, creates SpecializationRelationships to
+     * referentiecomponenten, copies views with applications plotted inside, and
+     * adds SWC-specific organization folders.
+     *
+     * @param \OCA\OpenRegister\Service\ObjectService $objectService
+     * @param int    $registerId    AMEF register ID
+     * @param array  $schemaIdMap   Schema ID → type mapping
+     * @param string $orgName       Human-readable organization name
+     * @param string $orgUuid       Organization UUID
+     * @param array  $gebruikData   Usage objects for this organization
+     * @param array  $modulesData   Module objects for this organization
+     * @return string Generated XML
+     */
+    public function exportOrganizationArchiMateXml(
+        \OCA\OpenRegister\Service\ObjectService $objectService,
+        int $registerId,
+        array $schemaIdMap,
+        string $orgName,
+        string $orgUuid,
+        array $gebruikData,
+        array $modulesData
+    ): string {
+        $startTime = microtime(true);
+        $this->logger->info('Starting organization ArchiMate export', [
+            'organization' => $orgName,
+            'gebruik_count' => count($gebruikData),
+            'modules_count' => count($modulesData)
+        ]);
+
+        // Step 1: Get all base GEMMA objects
+        $baseObjects = $this->getObjectsFromDatabase($objectService, $registerId, $schemaIdMap);
+
+        // Step 2: Build module lookup maps
+        [$moduleRefMap, $moduleNameMap] = $this->buildModuleLookupMaps($gebruikData, $modulesData);
+
+        // Step 3: Ensure Bron property definition
+        $bronPropDefId = $this->ensureBronPropertyDefinition($baseObjects);
+
+        // Step 4: Generate SWC application elements
+        $appElements = $this->generateApplicationElements($moduleRefMap, $moduleNameMap, $bronPropDefId);
+
+        // Step 5: Generate SpecializationRelationships
+        $relationships = $this->generateSpecializationRelationships($moduleRefMap, $bronPropDefId);
+
+        // Step 6: Copy and enrich views
+        $viewCopies = $this->copyAndEnrichViews(
+            $baseObjects, $orgName, $moduleRefMap, $moduleNameMap, $appElements, $relationships, $bronPropDefId
+        );
+
+        // Step 7: Build SWC organization folders
+        $swcFolders = $this->buildSwcOrganizationFolders($appElements, $relationships, $viewCopies);
+
+        // Step 8: Assemble into XML
+        $xml = $this->assembleOrganizationXml(
+            $baseObjects, $orgName, $appElements, $relationships, $viewCopies, $swcFolders, $bronPropDefId
+        );
+
+        $totalTime = microtime(true) - $startTime;
+        $this->logger->info('Organization ArchiMate export completed', [
+            'organization' => $orgName,
+            'app_elements' => count($appElements),
+            'relationships' => count($relationships),
+            'view_copies' => count($viewCopies),
+            'total_time_seconds' => round($totalTime, 3)
+        ]);
+
+        return $xml;
+    }
+
+    /**
+     * Build lookup maps from gebruik and modules data.
+     *
+     * @return array [moduleRefMap, moduleNameMap]
+     *   moduleRefMap: moduleId => [refCompIdentifiers]
+     *   moduleNameMap: moduleId => name
+     */
+    private function buildModuleLookupMaps(array $gebruikData, array $modulesData): array
+    {
+        $moduleRefMap = [];   // moduleId => [refCompIdentifiers]
+        $moduleNameMap = [];  // moduleId => name
+
+        // Build name map from modules data
+        foreach ($modulesData as $module) {
+            if (is_object($module) && method_exists($module, 'jsonSerialize')) {
+                $module = $module->jsonSerialize();
+            }
+            $id = $module['id'] ?? $module['@self']['id'] ?? null;
+            $name = $module['naam'] ?? $module['name'] ?? $module['@self']['name'] ?? null;
+            if ($id && $name) {
+                $moduleNameMap[$id] = $name;
+            }
+        }
+
+        // Build ref map from gebruik data
+        foreach ($gebruikData as $gebruik) {
+            if (is_object($gebruik) && method_exists($gebruik, 'jsonSerialize')) {
+                $gebruik = $gebruik->jsonSerialize();
+            }
+
+            $moduleId = $gebruik['module'] ?? null;
+            if (!$moduleId) continue;
+
+            // Get module name from gebruik if not already known
+            if (!isset($moduleNameMap[$moduleId])) {
+                $moduleNameMap[$moduleId] = $gebruik['moduleName'] ?? $gebruik['@self']['name'] ?? 'Module';
+            }
+
+            // Get referentiecomponenten UUIDs
+            $refComps = $gebruik['gebruiktVoorReferentiecomponenten'] ?? [];
+            if (!is_array($refComps)) continue;
+
+            foreach ($refComps as $refComp) {
+                $refCompUuid = is_string($refComp) ? $refComp : ($refComp['id'] ?? $refComp['uuid'] ?? null);
+                if (!$refCompUuid) continue;
+
+                // Build the ArchiMate identifier (id-{uuid})
+                $refCompIdentifier = 'id-' . $refCompUuid;
+
+                if (!isset($moduleRefMap[$moduleId])) {
+                    $moduleRefMap[$moduleId] = [];
+                }
+                if (!in_array($refCompIdentifier, $moduleRefMap[$moduleId])) {
+                    $moduleRefMap[$moduleId][] = $refCompIdentifier;
+                }
+            }
+        }
+
+        $this->logger->debug('Module lookup maps built', [
+            'modules_with_refs' => count($moduleRefMap),
+            'modules_with_names' => count($moduleNameMap)
+        ]);
+
+        return [$moduleRefMap, $moduleNameMap];
+    }
+
+    /**
+     * Check if a Bron property definition exists in base objects, add one if not.
+     *
+     * @return string The propertyDefinition identifier for Bron
+     */
+    private function ensureBronPropertyDefinition(array &$baseObjects): string
+    {
+        $bronId = 'id-swc-propdef-bron';
+
+        // Check if "Bron" already exists
+        foreach ($baseObjects as $obj) {
+            if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                $obj = $obj->jsonSerialize();
+            }
+            $section = $obj['section'] ?? '';
+            if ($section === 'property_definition') {
+                $xml = $obj['xml'] ?? [];
+                $name = $xml['name']['_value'] ?? $xml['name'] ?? null;
+                if ($name === 'Bron') {
+                    $existingId = $xml['_identifier'] ?? $obj['identifier'] ?? null;
+                    if ($existingId) {
+                        $this->logger->debug('Found existing Bron property definition', ['id' => $existingId]);
+                        return $existingId;
+                    }
+                }
+            }
+        }
+
+        $this->logger->debug('Bron property definition not found, will create', ['id' => $bronId]);
+        return $bronId;
+    }
+
+    /**
+     * Generate ApplicationComponent element arrays for each module.
+     *
+     * @return array Array of element data arrays ready for XML generation
+     */
+    private function generateApplicationElements(array $moduleRefMap, array $moduleNameMap, string $bronPropDefId): array
+    {
+        $elements = [];
+
+        foreach ($moduleRefMap as $moduleId => $refCompIds) {
+            $appIdentifier = 'id-swc-app-' . $moduleId;
+            $name = $moduleNameMap[$moduleId] ?? 'Module';
+
+            $elements[] = [
+                'identifier' => $appIdentifier,
+                'name' => $name,
+                'xsi_type' => 'ApplicationComponent',
+                'bronPropDefId' => $bronPropDefId,
+                'moduleId' => $moduleId,
+            ];
+        }
+
+        $this->logger->debug('Generated application elements', ['count' => count($elements)]);
+        return $elements;
+    }
+
+    /**
+     * Generate SpecializationRelationship arrays for module → refcomp mappings.
+     *
+     * @return array Array of relationship data arrays
+     */
+    private function generateSpecializationRelationships(array $moduleRefMap, string $bronPropDefId): array
+    {
+        $relationships = [];
+
+        foreach ($moduleRefMap as $moduleId => $refCompIds) {
+            $appIdentifier = 'id-swc-app-' . $moduleId;
+
+            foreach ($refCompIds as $refCompIdentifier) {
+                $relIdentifier = 'id-swc-rel-' . $moduleId . '-' . str_replace('id-', '', $refCompIdentifier);
+
+                $relationships[] = [
+                    'identifier' => $relIdentifier,
+                    'xsi_type' => 'SpecializationRelationship',
+                    'source' => $appIdentifier,
+                    'target' => $refCompIdentifier,
+                    'bronPropDefId' => $bronPropDefId,
+                ];
+            }
+        }
+
+        $this->logger->debug('Generated specialization relationships', ['count' => count($relationships)]);
+        return $relationships;
+    }
+
+    /**
+     * Copy qualifying views and inject application nodes inside referentiecomponent nodes.
+     *
+     * @return array Array of enriched view data arrays (XML blob format)
+     */
+    private function copyAndEnrichViews(
+        array $baseObjects,
+        string $orgName,
+        array $moduleRefMap,
+        array $moduleNameMap,
+        array $appElements,
+        array $relationships,
+        string $bronPropDefId
+    ): array {
+        $viewCopies = [];
+
+        // Build a reverse lookup: refCompIdentifier => [(appIdentifier, relIdentifier, moduleName)]
+        $refCompApps = [];
+        foreach ($moduleRefMap as $moduleId => $refCompIds) {
+            $appIdentifier = 'id-swc-app-' . $moduleId;
+            $moduleName = $moduleNameMap[$moduleId] ?? 'Module';
+
+            foreach ($refCompIds as $refCompIdentifier) {
+                $relIdentifier = 'id-swc-rel-' . $moduleId . '-' . str_replace('id-', '', $refCompIdentifier);
+
+                if (!isset($refCompApps[$refCompIdentifier])) {
+                    $refCompApps[$refCompIdentifier] = [];
+                }
+                $refCompApps[$refCompIdentifier][] = [
+                    'appIdentifier' => $appIdentifier,
+                    'relIdentifier' => $relIdentifier,
+                    'name' => $moduleName,
+                ];
+            }
+        }
+
+        // Iterate view objects
+        foreach ($baseObjects as $obj) {
+            if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                $obj = $obj->jsonSerialize();
+            }
+            $section = $obj['section'] ?? '';
+            if ($section !== 'view') continue;
+
+            $xmlData = $obj['xml'] ?? [];
+            if (empty($xmlData)) continue;
+
+            $originalIdentifier = $xmlData['_identifier'] ?? $obj['identifier'] ?? null;
+            if (!$originalIdentifier) continue;
+
+            // Deep-copy the view XML
+            $viewCopy = json_decode(json_encode($xmlData), true);
+
+            // Assign new identifier
+            $newIdentifier = 'id-swc-view-' . str_replace('id-', '', $originalIdentifier);
+            $viewCopy['_identifier'] = $newIdentifier;
+            if (isset($viewCopy['_attributes']['identifier'])) {
+                $viewCopy['_attributes']['identifier'] = $newIdentifier;
+            }
+
+            // Rename view: use Titel view SWC property or fallback to original name
+            $viewName = $this->getViewSwcTitle($viewCopy) ?? $this->getViewName($viewCopy);
+            $viewCopy['name'] = ['_value' => $viewName . ' ' . $orgName];
+
+            // Add Bron property to view
+            $viewCopy = $this->addBronProperty($viewCopy, $bronPropDefId);
+
+            // Inject application nodes and connections
+            $viewCopy = $this->injectApplicationNodesInView($viewCopy, $refCompApps);
+
+            $viewCopies[] = [
+                'identifier' => $newIdentifier,
+                'xml' => $viewCopy,
+                'section' => 'view',
+            ];
+        }
+
+        $this->logger->debug('Copied and enriched views', ['count' => count($viewCopies)]);
+        return $viewCopies;
+    }
+
+    /**
+     * Extract "Titel view SWC" property value from view XML data.
+     */
+    private function getViewSwcTitle(array $viewData): ?string
+    {
+        $properties = $viewData['properties']['property'] ?? $viewData['properties'] ?? [];
+        if (!is_array($properties)) return null;
+        // Normalize to list
+        if (isset($properties['_propertyDefinitionRef'])) {
+            $properties = [$properties];
+        }
+
+        foreach ($properties as $prop) {
+            if (!is_array($prop)) continue;
+            // Check property definition name or ref
+            $value = $prop['value']['_value'] ?? $prop['value'] ?? null;
+            // We look for a property whose name contains "Titel view SWC"
+            // This is stored as the property's propertyDefinitionRef linking to a named definition
+            // For now, check if the property key/label matches
+            $propName = $prop['_name'] ?? $prop['name'] ?? '';
+            if (is_string($propName) && stripos($propName, 'Titel view SWC') !== false && $value) {
+                return is_string($value) ? $value : null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract view name from view XML data.
+     */
+    private function getViewName(array $viewData): string
+    {
+        if (isset($viewData['name']['_value'])) {
+            return $viewData['name']['_value'];
+        }
+        if (isset($viewData['name']) && is_string($viewData['name'])) {
+            return $viewData['name'];
+        }
+        return 'View';
+    }
+
+    /**
+     * Add Bron=Softwarecatalogus property to an XML data array.
+     */
+    private function addBronProperty(array $data, string $bronPropDefId): array
+    {
+        $bronProp = [
+            '_propertyDefinitionRef' => $bronPropDefId,
+            'value' => ['_value' => 'Softwarecatalogus']
+        ];
+
+        if (!isset($data['properties'])) {
+            $data['properties'] = ['property' => [$bronProp]];
+        } elseif (isset($data['properties']['property'])) {
+            if (isset($data['properties']['property']['_propertyDefinitionRef'])) {
+                // Single property, convert to list
+                $data['properties']['property'] = [$data['properties']['property'], $bronProp];
+            } else {
+                $data['properties']['property'][] = $bronProp;
+            }
+        } else {
+            $data['properties']['property'] = [$bronProp];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Walk the view node tree and inject application child nodes.
+     *
+     * For each node whose elementRef matches a referentiecomponent with mapped apps,
+     * add child nodes and connection elements.
+     */
+    private function injectApplicationNodesInView(array $viewData, array $refCompApps): array
+    {
+        // Inject into top-level nodes
+        if (isset($viewData['node']) && is_array($viewData['node'])) {
+            $nodes = $viewData['node'];
+            if (!$this->isList($nodes)) {
+                $nodes = [$nodes];
+            }
+
+            $newConnections = [];
+            $viewData['node'] = $this->processNodesForInjection($nodes, $refCompApps, $newConnections);
+
+            // Add connections to the view
+            if (!empty($newConnections)) {
+                if (!isset($viewData['connection'])) {
+                    $viewData['connection'] = [];
+                } elseif (!$this->isList($viewData['connection'])) {
+                    $viewData['connection'] = [$viewData['connection']];
+                }
+                foreach ($newConnections as $conn) {
+                    $viewData['connection'][] = $conn;
+                }
+            }
+        }
+
+        return $viewData;
+    }
+
+    /**
+     * Recursively process nodes, injecting application child nodes where appropriate.
+     */
+    private function processNodesForInjection(array $nodes, array $refCompApps, array &$newConnections): array
+    {
+        foreach ($nodes as &$node) {
+            if (!is_array($node)) continue;
+
+            $elementRef = $node['_elementRef'] ?? $node['_attributes']['elementRef'] ?? null;
+
+            if ($elementRef && isset($refCompApps[$elementRef])) {
+                $apps = $refCompApps[$elementRef];
+                $parentW = (int)($node['_w'] ?? $node['_attributes']['w'] ?? 120);
+                $parentH = (int)($node['_h'] ?? $node['_attributes']['h'] ?? 80);
+                $parentIdentifier = $node['_identifier'] ?? $node['_attributes']['identifier'] ?? null;
+
+                // Calculate child node positions
+                $childW = max($parentW - 20, 40);
+                $childH = 18;
+                $gap = 2;
+                $childX = 10;
+
+                // Ensure nested nodes array
+                if (!isset($node['node'])) {
+                    $node['node'] = [];
+                } elseif (!$this->isList($node['node'])) {
+                    $node['node'] = [$node['node']];
+                }
+
+                $existingChildCount = count($node['node']);
+
+                foreach ($apps as $index => $app) {
+                    $stackIndex = $existingChildCount + $index;
+                    $childY = $parentH - 5 - (($stackIndex + 1) * ($childH + $gap));
+                    if ($childY < 20) $childY = 20 + ($stackIndex * ($childH + $gap));
+
+                    $childNodeId = 'id-swc-node-' . $app['appIdentifier'] . '-' . str_replace('id-', '', $elementRef);
+
+                    $childNode = [
+                        '_identifier' => $childNodeId,
+                        '_elementRef' => $app['appIdentifier'],
+                        '_xsi__type' => 'Element',
+                        '_x' => (string)$childX,
+                        '_y' => (string)max(20, $childY),
+                        '_w' => (string)$childW,
+                        '_h' => (string)$childH,
+                        'style' => [
+                            'fillColor' => ['_r' => '200', '_g' => '255', '_b' => '200', '_a' => '100'],
+                            'lineColor' => ['_r' => '0', '_g' => '150', '_b' => '0'],
+                            'font' => ['_name' => 'Segoe UI', '_size' => '9']
+                        ]
+                    ];
+
+                    $node['node'][] = $childNode;
+
+                    // Create connection for the relationship
+                    if ($parentIdentifier) {
+                        $connId = 'id-swc-conn-' . str_replace('id-swc-rel-', '', $app['relIdentifier']);
+                        $newConnections[] = [
+                            '_identifier' => $connId,
+                            '_relationshipRef' => $app['relIdentifier'],
+                            '_source' => $childNodeId,
+                            '_target' => $parentIdentifier,
+                            '_xsi__type' => 'Relationship',
+                        ];
+                    }
+                }
+            }
+
+            // Recurse into nested nodes
+            if (isset($node['node']) && is_array($node['node'])) {
+                $nestedNodes = $node['node'];
+                if (!$this->isList($nestedNodes)) {
+                    $nestedNodes = [$nestedNodes];
+                }
+                $node['node'] = $this->processNodesForInjection($nestedNodes, $refCompApps, $newConnections);
+            }
+        }
+        unset($node);
+
+        return $nodes;
+    }
+
+    /**
+     * Build SWC organization folder items.
+     *
+     * @return array Organization items for the SWC folders
+     */
+    private function buildSwcOrganizationFolders(array $appElements, array $relationships, array $viewCopies): array
+    {
+        $appItems = [];
+        foreach ($appElements as $el) {
+            $appItems[] = ['_identifierRef' => $el['identifier']];
+        }
+
+        $relItems = [];
+        foreach ($relationships as $rel) {
+            $relItems[] = ['_identifierRef' => $rel['identifier']];
+        }
+
+        $viewItems = [];
+        foreach ($viewCopies as $vc) {
+            $viewItems[] = ['_identifierRef' => $vc['identifier']];
+        }
+
+        return [
+            'applications' => [
+                'label' => ['_value' => 'Applicaties (Softwarecatalogus)'],
+                'items' => $appItems,
+            ],
+            'relations' => [
+                'label' => ['_value' => 'Relaties (Softwarecatalogus)'],
+                'items' => $relItems,
+            ],
+            'views' => [
+                'label' => ['_value' => 'Views (Softwarecatalogus)'],
+                'items' => $viewItems,
+            ],
+        ];
+    }
+
+    /**
+     * Assemble the final organization-specific ArchiMate XML.
+     */
+    private function assembleOrganizationXml(
+        array $baseObjects,
+        string $orgName,
+        array $appElements,
+        array $relationships,
+        array $viewCopies,
+        array $swcFolders,
+        string $bronPropDefId
+    ): string {
+        // Extract model metadata
+        $modelMetadata = $this->extractModelMetadata($baseObjects);
+        $propertyDefinitionMap = $modelMetadata['propertyDefinitionMap'] ?? [];
+
+        // Create base XML
+        $xml = $this->createCleanArchiMateXml($modelMetadata);
+
+        // Override model name
+        $modelName = 'Softwarecatalogus ' . $orgName;
+        // Remove existing name children and add new one
+        foreach ($xml->children() as $child) {
+            if ($child->getName() === 'name') {
+                $dom = dom_import_simplexml($child);
+                $dom->parentNode->removeChild($dom);
+                break;
+            }
+        }
+        $nameEl = $xml->addChild('name', htmlspecialchars($modelName));
+        $nameEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+
+        // Organize base objects by section
+        $objectsBySection = [];
+        foreach ($baseObjects as $object) {
+            if (is_object($object) && method_exists($object, 'jsonSerialize')) {
+                $object = $object->jsonSerialize();
+            }
+            $sectionName = $object['section'] ?? null;
+            if ($sectionName) {
+                $objectsBySection[$sectionName][] = $object;
+            }
+        }
+
+        // --- Elements section ---
+        $elementsFolder = $xml->addChild('elements');
+        $sectionMapping = ['element' => 'elements'];
+        foreach ($objectsBySection as $dbSection => $objects) {
+            if (($sectionMapping[$dbSection] ?? null) === 'elements') {
+                foreach ($objects as $obj) {
+                    if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                        $obj = $obj->jsonSerialize();
+                    }
+                    $this->addObjectDirectlyToXmlWithProperties($elementsFolder, $obj, 'elements', $propertyDefinitionMap);
+                }
+            }
+        }
+        // Add SWC application elements
+        foreach ($appElements as $appEl) {
+            $elNode = $elementsFolder->addChild('element');
+            $elNode->addAttribute('identifier', $appEl['identifier']);
+            $elNode->addAttribute('xsi:type', $appEl['xsi_type'], 'http://www.w3.org/2001/XMLSchema-instance');
+            $nameChild = $elNode->addChild('name', htmlspecialchars($appEl['name']));
+            $nameChild->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+            // Add Bron property
+            $propsEl = $elNode->addChild('properties');
+            $propEl = $propsEl->addChild('property');
+            $propEl->addAttribute('propertyDefinitionRef', $appEl['bronPropDefId']);
+            $propEl->addChild('value', 'Softwarecatalogus');
+        }
+
+        // --- Relationships section ---
+        $relsFolder = $xml->addChild('relationships');
+        foreach ($objectsBySection as $dbSection => $objects) {
+            if ($dbSection === 'relationship') {
+                foreach ($objects as $obj) {
+                    if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                        $obj = $obj->jsonSerialize();
+                    }
+                    $this->addObjectDirectlyToXmlWithProperties($relsFolder, $obj, 'relationships', $propertyDefinitionMap);
+                }
+            }
+        }
+        // Add SWC relationships
+        foreach ($relationships as $rel) {
+            $relNode = $relsFolder->addChild('relationship');
+            $relNode->addAttribute('identifier', $rel['identifier']);
+            $relNode->addAttribute('xsi:type', $rel['xsi_type'], 'http://www.w3.org/2001/XMLSchema-instance');
+            $relNode->addAttribute('source', $rel['source']);
+            $relNode->addAttribute('target', $rel['target']);
+            $propsEl = $relNode->addChild('properties');
+            $propEl = $propsEl->addChild('property');
+            $propEl->addAttribute('propertyDefinitionRef', $rel['bronPropDefId']);
+            $propEl->addChild('value', 'Softwarecatalogus');
+        }
+
+        // --- Property Definitions section ---
+        $propDefsFolder = $xml->addChild('propertyDefinitions');
+        foreach ($objectsBySection as $dbSection => $objects) {
+            if ($dbSection === 'property_definition') {
+                foreach ($objects as $obj) {
+                    if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                        $obj = $obj->jsonSerialize();
+                    }
+                    $this->addObjectDirectlyToXmlWithProperties($propDefsFolder, $obj, 'property_definitions', $propertyDefinitionMap);
+                }
+            }
+        }
+        // Add Bron property definition if we created it
+        if ($bronPropDefId === 'id-swc-propdef-bron') {
+            $propDefNode = $propDefsFolder->addChild('propertyDefinition');
+            $propDefNode->addAttribute('identifier', $bronPropDefId);
+            $propDefNode->addAttribute('type', 'string');
+            $nameChild = $propDefNode->addChild('name', 'Bron');
+            $nameChild->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+        }
+
+        // --- Organizations section ---
+        $orgsFolder = $xml->addChild('organizations');
+        // Write existing organization tree
+        foreach ($objectsBySection as $dbSection => $objects) {
+            if ($dbSection === 'organization') {
+                foreach ($objects as $obj) {
+                    if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                        $obj = $obj->jsonSerialize();
+                    }
+                    $xmlField = $obj['xml'] ?? [];
+                    if (isset($xmlField['item'])) {
+                        $items = $xmlField['item'];
+                        if (!isset($items[0])) $items = [$items];
+                        foreach ($items as $itemData) {
+                            if (is_array($itemData)) {
+                                $itemNode = $orgsFolder->addChild('item');
+                                $this->addOrganizationItemToXml($itemNode, $itemData);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Add SWC folder: top-level folder named after organization, with sub-folders
+        $orgFolder = $orgsFolder->addChild('item');
+        $orgLabelEl = $orgFolder->addChild('label', htmlspecialchars($orgName));
+        $orgLabelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+        foreach ($swcFolders as $folderData) {
+            $subFolder = $orgFolder->addChild('item');
+            $labelEl = $subFolder->addChild('label', htmlspecialchars($folderData['label']['_value']));
+            $labelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+            foreach ($folderData['items'] as $identifierRefItem) {
+                $childItem = $subFolder->addChild('item');
+                $childItem->addAttribute('identifierRef', $identifierRefItem['_identifierRef']);
+            }
+        }
+
+        // --- Views section ---
+        $viewsSection = $xml->addChild('views');
+        $diagramsFolder = $viewsSection->addChild('diagrams');
+        // Write original views
+        foreach ($objectsBySection as $dbSection => $objects) {
+            if ($dbSection === 'view') {
+                foreach ($objects as $obj) {
+                    if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
+                        $obj = $obj->jsonSerialize();
+                    }
+                    $this->addObjectDirectlyToXmlWithProperties($diagramsFolder, $obj, 'views', $propertyDefinitionMap);
+                }
+            }
+        }
+        // Write enriched view copies
+        foreach ($viewCopies as $vc) {
+            $viewNode = $diagramsFolder->addChild('view');
+            $this->addViewDataToXmlNode($viewNode, $vc['xml']);
+        }
+
+        return $this->formatXmlOutput($xml->asXML());
+    }
 }
 
 
