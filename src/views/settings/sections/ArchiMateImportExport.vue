@@ -347,6 +347,27 @@
 							:disabled="exporting" />
 					</div>
 
+					<div v-if="selectedOrganization" class="control-group">
+						<label>Include in organization export:</label>
+						<div class="checkbox-group">
+							<NcCheckboxRadioSwitch
+								:checked.sync="includeModules"
+								:disabled="exportingOrg">
+								Modules
+							</NcCheckboxRadioSwitch>
+							<NcCheckboxRadioSwitch
+								:checked.sync="includeDeelnames"
+								:disabled="exportingOrg">
+								Deelnames
+							</NcCheckboxRadioSwitch>
+							<NcCheckboxRadioSwitch
+								:checked.sync="includeGebruik"
+								:disabled="exportingOrg">
+								Gebruik
+							</NcCheckboxRadioSwitch>
+						</div>
+					</div>
+
 					<NcButton
 						type="secondary"
 						:disabled="exporting"
@@ -412,6 +433,7 @@ import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 
 // Icons
 import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
@@ -429,6 +451,7 @@ export default {
 		NcNoteCard,
 		NcLoadingIcon,
 		NcSelect,
+		NcCheckboxRadioSwitch,
 		CloudUpload,
 		AlertCircle,
 		Download,
@@ -452,6 +475,9 @@ export default {
 			importResult: null,
 			importError: null,
 			showErrors: false,
+			includeModules: true,
+			includeDeelnames: false,
+			includeGebruik: false,
 			organizationOptions: [
 				{ label: 'Generic', value: null },
 			],
@@ -682,24 +708,28 @@ export default {
 			this.exportingOrg = true
 
 			try {
-				const exportData = {
-					organization: this.selectedOrganization?.value ?? this.selectedOrganization,
-				}
+				const orgUuid = this.selectedOrganization?.value ?? this.selectedOrganization
+
+				// Build query string from checkbox states
+				const params = new URLSearchParams()
+				params.set('modules', String(this.includeModules))
+				params.set('deelnames', String(this.includeDeelnames))
+				params.set('gebruik', String(this.includeGebruik))
+
+				const url = `/index.php/apps/softwarecatalog/api/archimate/export/organization/${encodeURIComponent(orgUuid)}?${params.toString()}`
 
 				await withHeartbeat(async () => {
-					const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export/organization', {
-						method: 'POST',
+					const response = await fetch(url, {
+						method: 'GET',
 						headers: {
-							'Content-Type': 'application/json',
 							'OCS-APIREQUEST': 'true',
 							requesttoken: OC.requestToken,
 						},
-						body: JSON.stringify(exportData),
 					})
 
 					if (response.ok) {
 						const blob = await response.blob()
-						const url = window.URL.createObjectURL(blob)
+						const blobUrl = window.URL.createObjectURL(blob)
 
 						const contentDisposition = response.headers.get('content-disposition')
 						let fileName = 'archimate_org_export.xml'
@@ -711,15 +741,15 @@ export default {
 						}
 
 						const a = document.createElement('a')
-						a.href = url
+						a.href = blobUrl
 						a.download = fileName
 						document.body.appendChild(a)
 						a.click()
-						window.URL.revokeObjectURL(url)
+						window.URL.revokeObjectURL(blobUrl)
 						document.body.removeChild(a)
 
 						const orgLabel = this.organizationOptions.find(
-							opt => opt.value === (this.selectedOrganization?.value ?? this.selectedOrganization),
+							opt => opt.value === orgUuid,
 						)?.label ?? 'Organization'
 						OC.Notification.showTemporary(
 							`Organization ArchiMate file exported for ${orgLabel}`,
@@ -1069,6 +1099,12 @@ export default {
 	font-weight: 500;
 	font-size: 0.9rem;
 	color: var(--color-main-text);
+}
+
+.checkbox-group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.5rem;
 }
 
 @media (max-width: 768px) {

@@ -1117,14 +1117,9 @@ class ArchiMateImportService
         $elementsWithGemmaType = array_filter($objects, fn($o) => ($o['section'] ?? '') === 'element' && !empty($o['gemmaType']));
         $sampleElementWithGemmaType = !empty($elementsWithGemmaType) ? array_values($elementsWithGemmaType)[0] : null;
 
-        $this->logger->error('GEMMA_IMPORT_DEBUG: Objects before save', [
+        $this->logger->debug('Objects before save', [
             'total_objects_to_save' => count($objects),
             'elements_with_gemmaType' => count($elementsWithGemmaType),
-            'sample_element_with_gemmaType' => $sampleElementWithGemmaType ? [
-                'id' => $sampleElementWithGemmaType['@self']['id'] ?? 'no-id',
-                'gemmaType' => $sampleElementWithGemmaType['gemmaType'] ?? 'no-gemmaType',
-                'type' => $sampleElementWithGemmaType['type'] ?? 'no-type'
-            ] : 'no element with gemmaType found'
         ]);
 
 

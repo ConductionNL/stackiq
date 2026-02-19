@@ -1296,29 +1296,21 @@ class SettingsController extends Controller
      *
      * @return Response File download response or JSON error response
      */
-    public function exportOrgArchiMate(): Response
+    public function exportOrgArchiMate(string $organizationUuid): Response
     {
         try {
-            $rawInput = file_get_contents('php://input');
-            $data = json_decode($rawInput, true);
+            // Read boolean query parameters
+            $modules = $this->request->getParam('modules', 'true') === 'true';
+            $deelnames = $this->request->getParam('deelnames', 'false') === 'true';
+            $gebruik = $this->request->getParam('gebruik', 'false') === 'true';
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $data = [
-                    'organization' => $this->request->getParam('organization', null)
-                ];
-            }
+            $options = [
+                'modules' => $modules,
+                'deelnames' => $deelnames,
+                'gebruik' => $gebruik,
+            ];
 
-            $organizationUuid = $data['organization'] ?? null;
-
-            if (empty($organizationUuid)) {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'Organization UUID is required',
-                    'error' => 'MISSING_ORGANIZATION'
-                ], 400);
-            }
-
-            $result = $this->archiMateService->exportOrgArchiMate($organizationUuid);
+            $result = $this->archiMateService->exportOrgArchiMate($organizationUuid, $options);
 
             if (!$result['success']) {
                 $statusCode = 500;

@@ -71,7 +71,7 @@ return [
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
-        ['name' => 'settings#exportOrgArchiMate', 'url' => '/api/archimate/export/organization', 'verb' => 'POST'],
+        ['name' => 'settings#exportOrgArchiMate', 'url' => '/api/archimate/export/organization/{organizationUuid}', 'verb' => 'GET'],
         ['name' => 'settings#downloadArchiMate', 'url' => '/api/archimate/download/{fileName}', 'verb' => 'GET'],
 
         // ArchiMate status management routes (status reading is via main settings endpoint)

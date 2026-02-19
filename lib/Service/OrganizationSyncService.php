@@ -635,12 +635,11 @@ class OrganizationSyncService
             
             $objectData = $organisatieObject->getObject();
 
-            $this->logger->critical('🔍 ENSURING ORGANISATION ENTITY', [
+            $this->logger->debug('Ensuring organisation entity', [
                 'app' => 'softwarecatalog',
                 'organisatieId' => $organisatieId,
                 'naam' => $objectData['naam'] ?? $objectData['name'] ?? 'Unknown',
                 'status' => $objectData['status'] ?? 'Unknown',
-                'objectDataKeys' => array_keys($objectData)
             ]);
 
             // Get configuration for object updates
@@ -658,17 +657,16 @@ class OrganizationSyncService
                 $status = strtolower($objectData['status'] ?? 'actief');
                 $shouldBeActive = in_array($status, ['actief', 'active']);
 
-                $this->logger->critical('📋 EXISTING ENTITY FOUND', [
+                $this->logger->debug('Existing entity found', [
                     'app' => 'softwarecatalog',
                     'organisatieId' => $organisatieId,
                     'entityId' => $organisationEntity->getId(),
-                    'currentActive' => $organisationEntity->getActive(),
                     'shouldBeActive' => $shouldBeActive,
                     'needsUpdate' => $organisationEntity->getActive() !== $shouldBeActive
                 ]);
 
                 if ($organisationEntity->getActive() !== $shouldBeActive) {
-                    $this->logger->critical('🔄 UPDATING ENTITY STATUS', [
+                    $this->logger->debug('Updating entity status', [
                         'app' => 'softwarecatalog',
                         'organisatieId' => $organisatieId,
                         'oldActive' => $organisationEntity->getActive(),
@@ -705,7 +703,7 @@ class OrganizationSyncService
 
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                 // Entity doesn't exist, create it
-                $this->logger->critical('🆕 CREATING NEW ORGANISATION ENTITY', [
+                $this->logger->debug('Creating new organisation entity', [
                     'app' => 'softwarecatalog',
                     'organisatieId' => $organisatieId,
                     'naam' => $objectData['naam'] ?? 'Unknown'
@@ -714,7 +712,7 @@ class OrganizationSyncService
                 $organisationEntity = $this->organisatieService->createOrganisationInOpenRegister($objectData);
                 if ($organisationEntity) {
                     $stats['entitiesCreated']++;
-                    $this->logger->critical('🎊 NEW ORGANISATION ENTITY CREATED', [
+                    $this->logger->debug('New organisation entity created', [
                         'app' => 'softwarecatalog',
                         'organisatieId' => $organisatieId,
                         'entityId' => $organisationEntity->getId(),
@@ -1385,10 +1383,9 @@ class OrganizationSyncService
     private function processRelatedContactPersons(string $organizationUuid, array &$stats): void
     {
         try {
-            $this->logger->critical('🔍 FINDING RELATED CONTACT PERSONS', [
+            $this->logger->debug('Finding related contact persons', [
                 'app' => 'softwarecatalog',
                 'organizationId' => $organizationUuid,
-                'action' => 'find_related_contacts'
             ]);
 
             // Get configuration
@@ -1684,12 +1681,10 @@ class OrganizationSyncService
                                 // Update contactpersoon object owner to user UID
                                 $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema, $organizationUuid);
 
-                                $this->logger->critical('🎉 USER ACCOUNT CREATED SUCCESS', [
+                                $this->logger->info('User account created', [
                                     'app' => 'softwarecatalog',
                                     'contactId' => $contactObject->getUuid(),
                                     'username' => $user->getUID(),
-                                    'email' => $email,
-                                    'displayName' => $user->getDisplayName()
                                 ]);
                             } else {
                                 $this->logger->error('❌ USER ACCOUNT CREATION FAILED', [

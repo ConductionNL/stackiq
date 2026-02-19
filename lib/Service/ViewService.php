@@ -931,15 +931,77 @@ class ViewService
     }
 
     /**
-     * Get deelnames gebruik data for enrichment (placeholder implementation)
-     * 
-     * @return array Deelnames gebruik data
+     * Get deelnames gebruik data for enrichment.
+     * Queries gebruik objects where the current organisation is in the deelnemers field (RBAC off).
+     *
+     * @return array Deelnames gebruik data indexed by elementRef
      */
     private function getDeelnamesGebruikData(): array
     {
-        // TODO: Implement actual deelnames gebruik data retrieval
         $this->logger->debug('Getting deelnames gebruik data for enrichment');
-        return [];
+
+        try {
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                return [];
+            }
+
+            $currentOrg = $this->getCurrentOrganisation();
+            if (!$currentOrg) {
+                return [];
+            }
+
+            $amefConfig = $this->settingsService->getAmefConfig();
+            $registerId = $amefConfig['register_id'] ?? null;
+
+            $gebruikSchemas = [
+                $amefConfig['gebruik_schema'] ?? null,
+                $amefConfig['usage_schema'] ?? null,
+                $amefConfig['statistics_schema'] ?? null
+            ];
+
+            $allDeelnames = [];
+
+            foreach ($gebruikSchemas as $schemaId) {
+                if (!$schemaId) continue;
+
+                try {
+                    $query = [
+                        '@self' => [
+                            'register' => $registerId,
+                            'schema' => $schemaId
+                        ],
+                        'deelnemers' => $currentOrg
+                    ];
+
+                    $deelnamesItems = $objectService->searchObjects($query, _rbac: false);
+                    $this->processGebruikItems($deelnamesItems, $allDeelnames, $currentOrg, 'deelnames');
+
+                    $this->logger->debug('Retrieved deelnames gebruik data', [
+                        'schema_id' => $schemaId,
+                        'deelnames_count' => count($deelnamesItems)
+                    ]);
+                } catch (\Exception $e) {
+                    $this->logger->warning('Failed to get deelnames gebruik data', [
+                        'schema_id' => $schemaId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            $allDeelnames = $this->extendGebruikWithModules($allDeelnames);
+
+            $this->logger->debug('Total deelnames gebruik retrieved', [
+                'total_element_refs' => count($allDeelnames)
+            ]);
+
+            return $allDeelnames;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get deelnames gebruik data', [
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
     }
 
     /**
@@ -1012,16 +1074,27 @@ class ViewService
     }
 
     /**
-     * Get deelnames gebruik for a specific node (placeholder implementation)
-     * 
-     * @param string $modelNodeId The model node identifier
-     * @param array $deelnamesGebruikData Deelnames gebruik data to search in
+     * Get deelnames gebruik for a specific node based on elementRef linkage.
+     *
+     * @param string $modelNodeId The model node identifier (elementRef)
+     * @param array $deelnamesGebruikData Deelnames gebruik data indexed by elementRef
      * @return array Deelnames gebruik related to the node
      */
     private function getNodeDeelnamesGebruik(string $modelNodeId, array $deelnamesGebruikData): array
     {
-        // TODO: Implement actual node deelnames gebruik matching logic
         $this->logger->debug('Getting deelnames gebruik for node', ['model_node_id' => $modelNodeId]);
+
+        if (isset($deelnamesGebruikData[$modelNodeId])) {
+            $deelnamesList = $deelnamesGebruikData[$modelNodeId];
+
+            $this->logger->debug('Found deelnames gebruik for node', [
+                'model_node_id' => $modelNodeId,
+                'deelnames_count' => count($deelnamesList)
+            ]);
+
+            return $deelnamesList;
+        }
+
         return [];
     }
 

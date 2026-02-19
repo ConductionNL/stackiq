@@ -296,13 +296,13 @@ class SoftwareCatalogEventListener implements IEventListener
         $organisatieSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
         
-        $logger->critical('[DEBUG] Got organisation schema ID', [
+        $logger->debug('Got organisation schema ID', [
             'app' => 'softwarecatalog',
             'organisatieSchemaId' => $organisatieSchemaId,
             'organisatieSchemaIdInt' => $organisatieSchemaIdInt
         ]);
-        
-        $logger->critical('[DEBUG] Organization schema check', [
+
+        $logger->debug('Organization schema check', [
             'app' => 'softwarecatalog',
             'objectSchemaId' => $objectSchemaId,
             'objectSchemaIdInt' => $objectSchemaIdInt,
@@ -316,7 +316,7 @@ class SoftwareCatalogEventListener implements IEventListener
             $status = strtolower($objectData['status'] ?? '');
             $oldStatus = $oldObject ? strtolower($oldObject->getObject()['status'] ?? '') : '';
             
-            $logger->critical('[DEBUG] Organization status check', [
+            $logger->debug('Organization status check', [
                 'app' => 'softwarecatalog',
                 'objectId' => $objectId,
                 'status' => $status,

@@ -251,10 +251,11 @@ class ArchiMateService
      * @param string $organizationUuid UUID of the organization to export for
      * @return array Export results with 'success', 'xml', 'file_name'
      */
-    public function exportOrgArchiMate(string $organizationUuid): array
+    public function exportOrgArchiMate(string $organizationUuid, array $options = []): array
     {
         $this->logger->info('Starting organization ArchiMate XML export', [
-            'organization_uuid' => $organizationUuid
+            'organization_uuid' => $organizationUuid,
+            'options' => $options
         ]);
 
         try {
@@ -337,6 +338,57 @@ class ArchiMateService
                 $modulesData = $objectService->searchObjects(query: $modulesQuery, _rbac: false, _multitenancy: false);
             }
 
+            // Query deelname gebruik if enabled (gebruik objects where this org is in deelnemers)
+            $deelnamesData = [];
+            if ($options['deelnames'] ?? false) {
+                if ($gebruikSchemaId) {
+                    $deelnameQuery = [
+                        '@self' => [
+                            'register' => $orgRegisterId,
+                            'schema' => $gebruikSchemaId
+                        ],
+                        'deelnemers' => $organizationUuid,
+                        '_limit' => 10000
+                    ];
+                    $deelnamesData = $objectService->searchObjects(
+                        query: $deelnameQuery, _rbac: false, _multitenancy: false
+                    );
+                    $this->logger->info('Retrieved deelname gebruik for org export', [
+                        'deelnames_count' => count($deelnamesData),
+                        'organization_uuid' => $organizationUuid
+                    ]);
+
+                    // Deelname modules belong to other orgs, so query all modules (without org filter)
+                    // to resolve names for the export
+                    if (!empty($deelnamesData) && $moduleSchemaId) {
+                        $allModulesQuery = [
+                            '@self' => [
+                                'register' => $orgRegisterId,
+                                'schema' => $moduleSchemaId
+                            ],
+                            '_limit' => 10000
+                        ];
+                        $allModules = $objectService->searchObjects(
+                            query: $allModulesQuery, _rbac: false, _multitenancy: false
+                        );
+                        // Merge into modulesData, deduplicating by ID
+                        $existingIds = [];
+                        foreach ($modulesData as $m) {
+                            $mid = is_array($m) ? ($m['id'] ?? $m['@self']['id'] ?? null) : null;
+                            if ($mid) $existingIds[$mid] = true;
+                        }
+                        foreach ($allModules as $mod) {
+                            $modArr = (is_object($mod) && method_exists($mod, 'jsonSerialize')) ? $mod->jsonSerialize() : $mod;
+                            $modId = $modArr['id'] ?? $modArr['@self']['id'] ?? null;
+                            if ($modId && !isset($existingIds[$modId])) {
+                                $modulesData[] = $mod;
+                                $existingIds[$modId] = true;
+                            }
+                        }
+                    }
+                }
+            }
+
             // Delegate to export service
             $xml = $this->exportService->exportOrganizationArchiMateXml(
                 $objectService,
@@ -345,7 +397,9 @@ class ArchiMateService
                 $orgName,
                 $organizationUuid,
                 $gebruikData,
-                $modulesData
+                $modulesData,
+                $deelnamesData,
+                $options
             );
 
             // Generate file name: DD-MM-YYYY_Softwarecatalogus_AMEFF_export_OrgName.xml

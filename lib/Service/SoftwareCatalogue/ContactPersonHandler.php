@@ -241,22 +241,27 @@ class ContactPersonHandler
      */
     public function createUserAccount(object $contactpersoonObject, bool $isFirstContact = false): ?\OCP\IUser
     {
+        // Automatic user creation is disabled - users are now manually activated
+        $this->_logger->info('Automatic user creation is disabled, skipping', [
+            'app' => 'softwarecatalog',
+            'contactId' => $contactpersoonObject->getId(),
+        ]);
+        return null;
+
         $startTime = microtime(true);
-        
+
         try {
             $objectData = $contactpersoonObject->getObject();
             $contactId = $contactpersoonObject->getId();
             $email = $objectData['email'] ?? $objectData['e-mailadres'] ?? '';
             $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
-            $this->_logger->critical('🔥 USER ACCOUNT CREATION STARTED', [
+            $this->_logger->debug('User account creation started', [
                 'app' => 'softwarecatalog',
                 'contactId' => $contactId,
                 'email' => $email,
                 'organizationUuid' => $organizationUuid,
                 'isFirstContact' => $isFirstContact,
-                'timestamp' => date('Y-m-d H:i:s'),
-                'microtime' => microtime(true)
             ]);
 
             if (empty($email)) {

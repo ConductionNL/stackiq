@@ -1920,48 +1920,67 @@ XML;
         string $orgName,
         string $orgUuid,
         array $gebruikData,
-        array $modulesData
+        array $modulesData,
+        array $deelnamesData = [],
+        array $options = []
     ): string {
         $startTime = microtime(true);
         $this->logger->info('Starting organization ArchiMate export', [
             'organization' => $orgName,
             'gebruik_count' => count($gebruikData),
-            'modules_count' => count($modulesData)
+            'modules_count' => count($modulesData),
+            'deelnames_count' => count($deelnamesData),
+            'options' => $options
         ]);
 
         // Step 1: Get all base GEMMA objects
         $baseObjects = $this->getObjectsFromDatabase($objectService, $registerId, $schemaIdMap);
 
-        // Step 2: Build module lookup maps
-        [$moduleRefMap, $moduleNameMap] = $this->buildModuleLookupMaps($gebruikData, $modulesData);
-
-        // Step 3: Ensure Bron property definition
+        // Step 2: Ensure Bron property definition
         $bronPropDefId = $this->ensureBronPropertyDefinition($baseObjects);
 
-        // Step 4: Generate SWC application elements
-        $appElements = $this->generateApplicationElements($moduleRefMap, $moduleNameMap, $bronPropDefId);
+        // Step 3: Build lookup maps and generate elements per data type
+        $gebruiktAppElements = [];
+        $gebruiktRelationships = [];
+        if ($options['modules'] ?? true) {
+            [$moduleRefMap, $moduleNameMap] = $this->buildModuleLookupMaps($gebruikData, $modulesData);
+            $gebruiktAppElements = $this->generateApplicationElements($moduleRefMap, $moduleNameMap, $bronPropDefId);
+            $gebruiktRelationships = $this->generateSpecializationRelationships($moduleRefMap, $bronPropDefId);
+        }
 
-        // Step 5: Generate SpecializationRelationships
-        $relationships = $this->generateSpecializationRelationships($moduleRefMap, $bronPropDefId);
+        $deelnamesAppElements = [];
+        $deelnamesRelationships = [];
+        if (($options['deelnames'] ?? false) && !empty($deelnamesData)) {
+            [$deelnameRefMap, $deelnameNameMap] = $this->buildModuleLookupMaps($deelnamesData, $modulesData);
+            $deelnamesAppElements = $this->generateApplicationElements($deelnameRefMap, $deelnameNameMap, $bronPropDefId, 'deelname');
+            $deelnamesRelationships = $this->generateSpecializationRelationships($deelnameRefMap, $bronPropDefId, 'deelname');
+        }
 
-        // Step 6: Copy and enrich views
+        // Merge all elements and relationships for view enrichment
+        $allAppElements = array_merge($gebruiktAppElements, $deelnamesAppElements);
+        $allRelationships = array_merge($gebruiktRelationships, $deelnamesRelationships);
+
+        // Step 4: Copy and enrich views with all elements
         $viewCopies = $this->copyAndEnrichViews(
-            $baseObjects, $orgName, $moduleRefMap, $moduleNameMap, $appElements, $relationships, $bronPropDefId
+            $baseObjects, $orgName, $allAppElements, $allRelationships, $bronPropDefId
         );
 
-        // Step 7: Build SWC organization folders
-        $swcFolders = $this->buildSwcOrganizationFolders($appElements, $relationships, $viewCopies);
+        // Step 5: Build SWC organization folders with typed structure
+        $swcFolders = $this->buildSwcOrganizationFolders(
+            $gebruiktAppElements, $deelnamesAppElements, $allRelationships, $viewCopies
+        );
 
-        // Step 8: Assemble into XML
+        // Step 6: Assemble into XML
         $xml = $this->assembleOrganizationXml(
-            $baseObjects, $orgName, $appElements, $relationships, $viewCopies, $swcFolders, $bronPropDefId
+            $baseObjects, $orgName, $allAppElements, $allRelationships, $viewCopies, $swcFolders, $bronPropDefId
         );
 
         $totalTime = microtime(true) - $startTime;
         $this->logger->info('Organization ArchiMate export completed', [
             'organization' => $orgName,
-            'app_elements' => count($appElements),
-            'relationships' => count($relationships),
+            'gebruikt_elements' => count($gebruiktAppElements),
+            'deelnames_elements' => count($deelnamesAppElements),
+            'relationships' => count($allRelationships),
             'view_copies' => count($viewCopies),
             'total_time_seconds' => round($totalTime, 3)
         ]);
@@ -2072,12 +2091,13 @@ XML;
      *
      * @return array Array of element data arrays ready for XML generation
      */
-    private function generateApplicationElements(array $moduleRefMap, array $moduleNameMap, string $bronPropDefId): array
+    private function generateApplicationElements(array $moduleRefMap, array $moduleNameMap, string $bronPropDefId, string $prefix = ''): array
     {
         $elements = [];
+        $idPrefix = $prefix ? 'id-swc-' . $prefix . '-app-' : 'id-swc-app-';
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
-            $appIdentifier = 'id-swc-app-' . $moduleId;
+            $appIdentifier = $idPrefix . $moduleId;
             $name = $moduleNameMap[$moduleId] ?? 'Module';
 
             $elements[] = [
@@ -2089,7 +2109,7 @@ XML;
             ];
         }
 
-        $this->logger->debug('Generated application elements', ['count' => count($elements)]);
+        $this->logger->debug('Generated application elements', ['count' => count($elements), 'prefix' => $prefix]);
         return $elements;
     }
 
@@ -2098,15 +2118,17 @@ XML;
      *
      * @return array Array of relationship data arrays
      */
-    private function generateSpecializationRelationships(array $moduleRefMap, string $bronPropDefId): array
+    private function generateSpecializationRelationships(array $moduleRefMap, string $bronPropDefId, string $prefix = ''): array
     {
         $relationships = [];
+        $appIdPrefix = $prefix ? 'id-swc-' . $prefix . '-app-' : 'id-swc-app-';
+        $relIdPrefix = $prefix ? 'id-swc-' . $prefix . '-rel-' : 'id-swc-rel-';
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
-            $appIdentifier = 'id-swc-app-' . $moduleId;
+            $appIdentifier = $appIdPrefix . $moduleId;
 
             foreach ($refCompIds as $refCompIdentifier) {
-                $relIdentifier = 'id-swc-rel-' . $moduleId . '-' . str_replace('id-', '', $refCompIdentifier);
+                $relIdentifier = $relIdPrefix . $moduleId . '-' . str_replace('id-', '', $refCompIdentifier);
 
                 $relationships[] = [
                     'identifier' => $relIdentifier,
@@ -2118,7 +2140,7 @@ XML;
             }
         }
 
-        $this->logger->debug('Generated specialization relationships', ['count' => count($relationships)]);
+        $this->logger->debug('Generated specialization relationships', ['count' => count($relationships), 'prefix' => $prefix]);
         return $relationships;
     }
 
@@ -2130,8 +2152,6 @@ XML;
     private function copyAndEnrichViews(
         array $baseObjects,
         string $orgName,
-        array $moduleRefMap,
-        array $moduleNameMap,
         array $appElements,
         array $relationships,
         string $bronPropDefId
@@ -2139,23 +2159,26 @@ XML;
         $viewCopies = [];
 
         // Build a reverse lookup: refCompIdentifier => [(appIdentifier, relIdentifier, moduleName)]
+        // Derived from the actual generated elements and relationships (handles all prefixes)
+        $appNameMap = [];
+        foreach ($appElements as $el) {
+            $appNameMap[$el['identifier']] = $el['name'];
+        }
         $refCompApps = [];
-        foreach ($moduleRefMap as $moduleId => $refCompIds) {
-            $appIdentifier = 'id-swc-app-' . $moduleId;
-            $moduleName = $moduleNameMap[$moduleId] ?? 'Module';
+        foreach ($relationships as $rel) {
+            $appIdentifier = $rel['source'];
+            $refCompIdentifier = $rel['target'];
+            $relIdentifier = $rel['identifier'];
+            $name = $appNameMap[$appIdentifier] ?? 'Module';
 
-            foreach ($refCompIds as $refCompIdentifier) {
-                $relIdentifier = 'id-swc-rel-' . $moduleId . '-' . str_replace('id-', '', $refCompIdentifier);
-
-                if (!isset($refCompApps[$refCompIdentifier])) {
-                    $refCompApps[$refCompIdentifier] = [];
-                }
-                $refCompApps[$refCompIdentifier][] = [
-                    'appIdentifier' => $appIdentifier,
-                    'relIdentifier' => $relIdentifier,
-                    'name' => $moduleName,
-                ];
+            if (!isset($refCompApps[$refCompIdentifier])) {
+                $refCompApps[$refCompIdentifier] = [];
             }
+            $refCompApps[$refCompIdentifier][] = [
+                'appIdentifier' => $appIdentifier,
+                'relIdentifier' => $relIdentifier,
+                'name' => $name,
+            ];
         }
 
         // Iterate view objects
@@ -2393,37 +2416,61 @@ XML;
      *
      * @return array Organization items for the SWC folders
      */
-    private function buildSwcOrganizationFolders(array $appElements, array $relationships, array $viewCopies): array
-    {
-        $appItems = [];
-        foreach ($appElements as $el) {
-            $appItems[] = ['_identifierRef' => $el['identifier']];
+    private function buildSwcOrganizationFolders(
+        array $gebruiktAppElements,
+        array $deelnamesAppElements,
+        array $relationships,
+        array $viewCopies
+    ): array {
+        $folders = [];
+
+        // Typed application folders — only created when data exists
+        if (!empty($gebruiktAppElements)) {
+            $items = [];
+            foreach ($gebruiktAppElements as $el) {
+                $items[] = ['_identifierRef' => $el['identifier']];
+            }
+            $folders[] = [
+                'label' => ['_value' => 'Gebruikt (Softwarecatalogus)'],
+                'items' => $items,
+            ];
         }
 
-        $relItems = [];
-        foreach ($relationships as $rel) {
-            $relItems[] = ['_identifierRef' => $rel['identifier']];
+        if (!empty($deelnamesAppElements)) {
+            $items = [];
+            foreach ($deelnamesAppElements as $el) {
+                $items[] = ['_identifierRef' => $el['identifier']];
+            }
+            $folders[] = [
+                'label' => ['_value' => 'Deelnames (Softwarecatalogus)'],
+                'items' => $items,
+            ];
         }
 
-        $viewItems = [];
-        foreach ($viewCopies as $vc) {
-            $viewItems[] = ['_identifierRef' => $vc['identifier']];
-        }
-
-        return [
-            'applications' => [
-                'label' => ['_value' => 'Applicaties (Softwarecatalogus)'],
-                'items' => $appItems,
-            ],
-            'relations' => [
+        // Shared folders — always present when data exists
+        if (!empty($relationships)) {
+            $relItems = [];
+            foreach ($relationships as $rel) {
+                $relItems[] = ['_identifierRef' => $rel['identifier']];
+            }
+            $folders[] = [
                 'label' => ['_value' => 'Relaties (Softwarecatalogus)'],
                 'items' => $relItems,
-            ],
-            'views' => [
+            ];
+        }
+
+        if (!empty($viewCopies)) {
+            $viewItems = [];
+            foreach ($viewCopies as $vc) {
+                $viewItems[] = ['_identifierRef' => $vc['identifier']];
+            }
+            $folders[] = [
                 'label' => ['_value' => 'Views (Softwarecatalogus)'],
                 'items' => $viewItems,
-            ],
-        ];
+            ];
+        }
+
+        return $folders;
     }
 
     /**
@@ -2567,16 +2614,18 @@ XML;
             }
         }
         // Add SWC folder: top-level folder named after organization, with sub-folders
-        $orgFolder = $orgsFolder->addChild('item');
-        $orgLabelEl = $orgFolder->addChild('label', htmlspecialchars($orgName));
-        $orgLabelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
-        foreach ($swcFolders as $folderData) {
-            $subFolder = $orgFolder->addChild('item');
-            $labelEl = $subFolder->addChild('label', htmlspecialchars($folderData['label']['_value']));
-            $labelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
-            foreach ($folderData['items'] as $identifierRefItem) {
-                $childItem = $subFolder->addChild('item');
-                $childItem->addAttribute('identifierRef', $identifierRefItem['_identifierRef']);
+        if (!empty($swcFolders)) {
+            $orgFolder = $orgsFolder->addChild('item');
+            $orgLabelEl = $orgFolder->addChild('label', htmlspecialchars($orgName));
+            $orgLabelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+            foreach ($swcFolders as $folderData) {
+                $subFolder = $orgFolder->addChild('item');
+                $labelEl = $subFolder->addChild('label', htmlspecialchars($folderData['label']['_value']));
+                $labelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+                foreach ($folderData['items'] as $identifierRefItem) {
+                    $childItem = $subFolder->addChild('item');
+                    $childItem->addAttribute('identifierRef', $identifierRefItem['_identifierRef']);
+                }
             }
         }
 
