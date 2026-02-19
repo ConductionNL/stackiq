@@ -170,24 +170,24 @@ export default {
 					},
 				}
 
-			// Save the new contactpersoon object.
-			const result = await objectStore.saveObject(newContactpersoonObject, {
-				register: contactpersoonConfig.register,
-				schema: contactpersoonConfig.schema,
-			})
+				// Save the new contactpersoon object.
+				const result = await objectStore.saveObject(newContactpersoonObject, {
+					register: contactpersoonConfig.register,
+					schema: contactpersoonConfig.schema,
+				})
 
-			showSuccess(this.t('softwarecatalog', 'Contactpersoon added successfully'))
+				showSuccess(this.t('softwarecatalog', 'Contactpersoon added successfully'))
 
-			// Emit event to parent component.
-			this.$emit('contactpersoon-added', result.data)
+				// Emit event to parent component.
+				this.$emit('contactpersoon-added', result.data)
 
-			// Close modal.
-			this.closeModal()
+				// Close modal.
+				this.closeModal()
 
-			// Signal that a contactpersoon was added so parent can refresh with current filters.
-			navigationStore.setTransferData({
-				action: 'contactpersoonAdded',
-			})
+				// Signal that a contactpersoon was added so parent can refresh with current filters.
+				navigationStore.setTransferData({
+					action: 'contactpersoonAdded',
+				})
 
 			} catch (error) {
 				console.error('Error adding contactpersoon:', error)

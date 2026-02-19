@@ -425,15 +425,15 @@ import { objectStore, navigationStore } from '../store/store.js'
 				</template>
 			</div>
 
-		<!-- Pagination -->
-		<PaginationComponent
-			:current-page="currentPagination.page || 1"
-			:total-pages="currentPagination.pages || Math.ceil((currentPagination.total || filteredObjects.length) / (currentPagination.limit || 20))"
-			:total-items="currentPagination.total || filteredObjects.length"
-			:current-page-size="currentPagination.limit || 20"
-			:min-items-to-show="0"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged" />
+			<!-- Pagination -->
+			<PaginationComponent
+				:current-page="currentPagination.page || 1"
+				:total-pages="currentPagination.pages || Math.ceil((currentPagination.total || filteredObjects.length) / (currentPagination.limit || 20))"
+				:total-items="currentPagination.total || filteredObjects.length"
+				:current-page-size="currentPagination.limit || 20"
+				:min-items-to-show="0"
+				@page-changed="onPageChanged"
+				@page-size-changed="onPageSizeChanged" />
 		</div>
 	</NcAppContent>
 </template>

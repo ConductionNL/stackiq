@@ -332,34 +332,34 @@ export default {
 						return
 					}
 
-				// Update existing organisation using PATCH - only send changed properties
-				await objectStore.patchObject('organisatie', this.organisation.id, changes)
-				this.successMessage = this.t('softwarecatalog', 'Organisation updated successfully')
-				
-				// Signal that an organization was updated so parent can refresh with current filters.
-				navigationStore.setTransferData({
-					action: 'organisationUpdated',
-					organisationId: this.organisation.id,
-				})
-			} else {
+					// Update existing organisation using PATCH - only send changed properties
+					await objectStore.patchObject('organisatie', this.organisation.id, changes)
+					this.successMessage = this.t('softwarecatalog', 'Organisation updated successfully')
+
+					// Signal that an organization was updated so parent can refresh with current filters.
+					navigationStore.setTransferData({
+						action: 'organisationUpdated',
+						organisationId: this.organisation.id,
+					})
+				} else {
 				// Create new organisation (both create and copy modes)
-				await objectStore.saveObject(this.formData, {
+					await objectStore.saveObject(this.formData, {
 				  register: schemaConfig.register,
 				  schema: schemaConfig.schema,
-				})
-				this.successMessage = this.t('softwarecatalog', 'Organisation created successfully')
-				
-				// Signal that a new organization was created so parent can refresh.
-				navigationStore.setTransferData({
-					action: 'organisationCreated',
-				})
-			}
+					})
+					this.successMessage = this.t('softwarecatalog', 'Organisation created successfully')
 
-			// Show success state
-			this.success = true
+					// Signal that a new organization was created so parent can refresh.
+					navigationStore.setTransferData({
+						action: 'organisationCreated',
+					})
+				}
 
-			// NOTE: We don't fetch here anymore. Instead, we use transferData to signal the parent component
-			// (OrganisatieIndex) so it can refresh with the current search/filter parameters preserved.
+				// Show success state
+				this.success = true
+
+				// NOTE: We don't fetch here anymore. Instead, we use transferData to signal the parent component
+				// (OrganisatieIndex) so it can refresh with the current search/filter parameters preserved.
 
 				// Start countdown timer
 				this.countdown = 3

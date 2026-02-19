@@ -235,19 +235,19 @@ export default {
 					},
 				},
 			],
-		organisatieMassActions: [
-			{
-				id: 'massDelete',
-				label: 'Delete Selected',
-				icon: Delete,
-				handler: () => {
-					navigationStore.setDialog('massDeleteObjects', {
-						objectType: 'organisatie',
-						dialogTitle: 'Organisaties',
-					})
+			organisatieMassActions: [
+				{
+					id: 'massDelete',
+					label: 'Delete Selected',
+					icon: Delete,
+					handler: () => {
+						navigationStore.setDialog('massDeleteObjects', {
+							objectType: 'organisatie',
+							dialogTitle: 'Organisaties',
+						})
+					},
 				},
-			},
-		],
+			],
 			organisatieActions: [
 				{
 					id: 'add',
@@ -342,21 +342,21 @@ export default {
 			if (!state.transferData) {
 				return
 			}
-			
+
 			// Check if transferData was set with an organisation activation.
 			if (state.transferData.action === 'organisationActivated') {
 				const organisationName = state.transferData.organisationName
-				
+
 				// Clear the transfer data FIRST to prevent retriggering.
 				navigationStore.setTransferData(null)
-				
+
 				// Set search query to the organisation name.
 				this.searchQuery = organisationName || ''
-				
+
 				// Set status filter in currentFilters (for the fetch logic).
 				// This must be done BEFORE calling setFilter so onFilterChange has the correct value.
 				this.currentFilters.status = 'Actief'
-				
+
 				// Update the GenericObjectTable filter UI by calling setFilter directly.
 				// This will trigger the onChange callback which calls fetchOrganisatiesWithFilters().
 				// So we don't need to call it manually here.
@@ -366,25 +366,25 @@ export default {
 					// If ref not available yet, fetch manually.
 					this.fetchOrganisatiesWithFilters()
 				}
-				
+
 				// Update URL to reflect the new state.
 				this.updateUrl()
 			}
-			
+
 			// Handle organisation update - refresh with current filters preserved.
 			if (state.transferData.action === 'organisationUpdated' || state.transferData.action === 'organisationCreated') {
 				// Clear the transfer data.
 				navigationStore.setTransferData(null)
-				
+
 				// Refresh with current search and filters to show the updated/new organisation.
 				this.fetchOrganisatiesWithFilters()
 			}
-			
+
 			// Handle contactpersoon added - refresh with current filters preserved.
 			if (state.transferData.action === 'contactpersoonAdded') {
 				// Clear the transfer data.
 				navigationStore.setTransferData(null)
-				
+
 				// Refresh with current search and filters to show the updated organisation.
 				this.fetchOrganisatiesWithFilters()
 			}
@@ -404,17 +404,17 @@ export default {
 
 				const params = new URLSearchParams(hash)
 
-			// Restore search query.
-			if (params.has('search')) {
-				this.searchQuery = params.get('search')
-				console.info('Search query restored from URL:', this.searchQuery)
-			}
+				// Restore search query.
+				if (params.has('search')) {
+					this.searchQuery = params.get('search')
+					console.info('Search query restored from URL:', this.searchQuery)
+				}
 
 				// Restore filters.
 				if (params.has('status')) {
 					const statusValue = params.get('status')
 					this.currentFilters.status = statusValue
-					
+
 					// Also update the GenericObjectTable filter UI if ref is available.
 					this.$nextTick(() => {
 						if (this.$refs.organisatieTable && statusValue !== 'all') {
@@ -425,7 +425,7 @@ export default {
 				if (params.has('type')) {
 					const typeValue = params.get('type')
 					this.currentFilters.type = typeValue
-					
+
 					// Also update the GenericObjectTable filter UI if ref is available.
 					this.$nextTick(() => {
 						if (this.$refs.organisatieTable && typeValue !== 'all') {
@@ -499,16 +499,16 @@ export default {
 				const hash = window.location.hash.substring(1)
 				const params = new URLSearchParams(hash)
 				const page = params.has('page') ? parseInt(params.get('page'), 10) : 1
-			const limit = 20
+				const limit = 20
 
-			// IMPORTANT: Initialize URL parameters FIRST before fetching.
-			// This ensures search queries and filters from deep links are applied.
-			this.initializeFromUrl()
+				// IMPORTANT: Initialize URL parameters FIRST before fetching.
+				// This ensures search queries and filters from deep links are applied.
+				this.initializeFromUrl()
 
-			// Fetch organisaties collection with contactpersonen extended and URL parameters.
-			// At this point, this.searchQuery should already be set from initializeFromUrl().
-			console.info('Fetching organisaties with page:', page, 'search:', this.searchQuery)
-			await this.fetchOrganisatiesWithFilters(page, limit)
+				// Fetch organisaties collection with contactpersonen extended and URL parameters.
+				// At this point, this.searchQuery should already be set from initializeFromUrl().
+				console.info('Fetching organisaties with page:', page, 'search:', this.searchQuery)
+				await this.fetchOrganisatiesWithFilters(page, limit)
 			} catch (error) {
 				console.error('Error initializing OrganisatieIndex:', error)
 				// Show error to user if needed
@@ -571,58 +571,58 @@ export default {
 			this.updateUrl()
 		},
 
-	/**
-	 * Handle filter changes and refetch data.
-	 * @param {string} filterKey - The filter key (status or type).
-	 * @param {string} filterValue - The new filter value.
-	 * @return {Promise<void>}
-	 */
-	async onFilterChange(filterKey, filterValue) {
+		/**
+		 * Handle filter changes and refetch data.
+		 * @param {string} filterKey - The filter key (status or type).
+		 * @param {string} filterValue - The new filter value.
+		 * @return {Promise<void>}
+		 */
+		async onFilterChange(filterKey, filterValue) {
 		// Update the current filter.
-		this.currentFilters[filterKey] = filterValue
+			this.currentFilters[filterKey] = filterValue
 
-		// Reset to first page when filters change.
-		await this.fetchOrganisatiesWithFilters()
+			// Reset to first page when filters change.
+			await this.fetchOrganisatiesWithFilters()
 
-		// Update URL to reflect filter change.
-		this.updateUrl()
-	},
+			// Update URL to reflect filter change.
+			this.updateUrl()
+		},
 
-	/**
-	 * Fetch organisaties with current filters and search.
-	 * @param {number} page - The page number to fetch (defaults to 1).
-	 * @param {number} limit - The page size (defaults to 20).
-	 * @return {Promise<void>}
-	 */
-	async fetchOrganisatiesWithFilters(page = 1, limit = 20) {
-		try {
-			const searchParams = {
-				_extend: '@self.schema,contactpersonen',
-				_page: page,
-				_limit: limit,
+		/**
+		 * Fetch organisaties with current filters and search.
+		 * @param {number} page - The page number to fetch (defaults to 1).
+		 * @param {number} limit - The page size (defaults to 20).
+		 * @return {Promise<void>}
+		 */
+		async fetchOrganisatiesWithFilters(page = 1, limit = 20) {
+			try {
+				const searchParams = {
+					_extend: '@self.schema,contactpersonen',
+					_page: page,
+					_limit: limit,
+				}
+
+				// Add search query if present.
+				if (this.searchQuery.trim()) {
+					searchParams._search = this.searchQuery.trim()
+				}
+
+				// Add status filter if not 'all'.
+				if (this.currentFilters.status !== 'all') {
+					searchParams.status = this.currentFilters.status
+				}
+
+				// Add type filter if not 'all'.
+				if (this.currentFilters.type !== 'all') {
+					searchParams.type = this.currentFilters.type
+				}
+
+				// Fetch organisaties with all parameters.
+				await objectStore.fetchCollection('organisatie', searchParams)
+			} catch (error) {
+				console.error('Error fetching organisaties with filters:', error)
 			}
-
-			// Add search query if present.
-			if (this.searchQuery.trim()) {
-				searchParams._search = this.searchQuery.trim()
-			}
-
-			// Add status filter if not 'all'.
-			if (this.currentFilters.status !== 'all') {
-				searchParams.status = this.currentFilters.status
-			}
-
-			// Add type filter if not 'all'.
-			if (this.currentFilters.type !== 'all') {
-				searchParams.type = this.currentFilters.type
-			}
-
-			// Fetch organisaties with all parameters.
-			await objectStore.fetchCollection('organisatie', searchParams)
-		} catch (error) {
-			console.error('Error fetching organisaties with filters:', error)
-		}
-	},
+		},
 
 		/**
 		 * Handle pagination changes - preserves search and filters

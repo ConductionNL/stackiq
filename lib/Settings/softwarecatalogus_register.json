@@ -1312,7 +1312,7 @@
             "example": "Bijvoorbeeld: Implementatieondersteuning"
           },
           "logo": {
-            "description": "Logo van de dienst",
+            "description": "Het logo van de dienst of de organisatie",
             "type": "file",
             "format": "base64",
             "visible": true,
