@@ -1890,7 +1890,7 @@
         "slug": "organisatie",
         "title": "Organisatie",
         "description": "Een organisatie die voorzieningen aanbiedt",
-        "version": "0.1.1",
+        "version": "0.2.0",
         "summary": "",
         "icon": "OfficeBuildingOutline",
         "required": [
@@ -2201,7 +2201,12 @@
             "type": "string",
             "required": true,
             "visible": true,
-            "facetable": false,
+            "facetable": {
+              "aggregated": false,
+              "title": "Organisatietype",
+              "description": "Type van de organisatie",
+              "order": null
+            },
             "order": 3,
             "minLength": null,
             "maxLength": null,
@@ -2231,22 +2236,6 @@
               "Community"
             ],
             "hideOnCollection": true
-          },
-          "organisatieType": {
-            "description": "Type van de organisatie (Gemeente, Leverancier, Samenwerking)",
-            "title": "Organisatietype",
-            "type": "string",
-            "required": false,
-            "visible": true,
-            "facetable": true,
-            "order": 4,
-            "default": "{{ type }}",
-            "enum": [
-              "Gemeente",
-              "Leverancier",
-              "Samenwerking",
-              "Community"
-            ]
           },
           "status": {
             "description": "Geeft aan of de VNG de organisatie positief beoordeeld heeft voor toegang tot de Softwarecatalogus",
@@ -6421,7 +6410,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.1.6",
+        "version": "0.2.0",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6639,19 +6628,6 @@
             "facetable": false,
             "title": "Type",
             "default": "Applicatie",
-            "enum": [
-              "Applicatie",
-              "Systeemsoftware"
-            ]
-          },
-          "moduleType": {
-            "description": "Het type applicatie (Applicatie of Systeemsoftware)",
-            "type": "string",
-            "visible": true,
-            "order": 12,
-            "facetable": false,
-            "title": "Applicatietype",
-            "default": "{{ type }}",
             "enum": [
               "Applicatie",
               "Systeemsoftware"

@@ -239,14 +239,17 @@ class ContactPersonHandler
      *
      * @return \OCP\IUser|null The created user or null if failed
      */
-    public function createUserAccount(object $contactpersoonObject, bool $isFirstContact = false): ?\OCP\IUser
+    public function createUserAccount(object $contactpersoonObject, bool $isFirstContact = false, bool $manual = false): ?\OCP\IUser
     {
-        // Automatic user creation is disabled - users are now manually activated
-        $this->_logger->info('Automatic user creation is disabled, skipping', [
-            'app' => 'softwarecatalog',
-            'contactId' => $contactpersoonObject->getId(),
-        ]);
-        return null;
+        // Skip automatic user creation (event listeners, cronjobs, sync services).
+        // Only allow manual user creation via the convert-to-user API endpoint.
+        if ($manual === false) {
+            $this->_logger->info('Automatic user creation is disabled, skipping (use manual convert-to-user endpoint)', [
+                'app' => 'softwarecatalog',
+                'contactId' => $contactpersoonObject->getId(),
+            ]);
+            return null;
+        }
 
         $startTime = microtime(true);
 
