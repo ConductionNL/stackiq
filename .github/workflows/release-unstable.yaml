@@ -30,7 +30,7 @@ jobs:
 
           unstable_counter=1
           if [[ $current_version =~ -unstable\.([0-9]+)$ ]]; then
-            current_patch=$(echo $current_version | grep -oP '^[0-9]+\.[0-9]+\.(\d+)' | cut -d. -f3)
+            current_patch=$(echo $current_version | grep -oP '^[0-9]+\.[0-9]+\.[0-9]+' | cut -d. -f3)
             if [ "$current_patch" -eq "$next_patch" ]; then
               unstable_counter=$((BASH_REMATCH[1] + 1))
             fi
@@ -50,6 +50,8 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+
+          # Only commit if there are actual changes
           if git diff --quiet && git diff --cached --quiet; then
             echo "No changes to commit"
           else
