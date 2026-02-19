@@ -836,8 +836,14 @@ class AangebodenGebruikService
                 ];
             }
 
-            // Update the @self.organisation property
-            $gebruikData['@self'] = ['organisation' => $currentOrg];
+            // Update the @self.organisation and @self.owner properties
+            // Both must be set so the accepting user has permission to read/update the object
+            $currentUser = $this->userSession->getUser();
+            $selfData = ['organisation' => $currentOrg];
+            if ($currentUser !== null) {
+                $selfData['owner'] = $currentUser->getUID();
+            }
+            $gebruikData['@self'] = $selfData;
 
             // Save the updated object with RBAC and multitenancy disabled
             // Use register/schema from the found entity for correct table routing
@@ -854,6 +860,7 @@ class AangebodenGebruikService
             $this->logger->info('Successfully updated gebruik @self property', [
                 'gebruik_id' => $gebruikId,
                 'organisation' => $currentOrg,
+                'owner' => $currentUser?->getUID(),
                 'is_afnemer' => $isAfnemer,
                 'is_aanbieder' => $isAanbieder,
                 'afnemer_id' => $afnemerId,
@@ -864,7 +871,7 @@ class AangebodenGebruikService
                 'success' => true,
                 'message' => 'Gebruik @self property updated successfully',
                 'gebruik' => $updatedGebruik->getObject(),
-                'updated_fields' => ['@self.organisation']
+                'updated_fields' => ['@self.organisation', '@self.owner']
             ];
 
         } catch (Exception $e) {

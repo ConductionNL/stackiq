@@ -321,8 +321,14 @@ class AanbodService
                 ];
             }
 
-            // Update the @self.organisation property
-            $aanbodData['@self'] = ['organisation' => $currentOrg];
+            // Update the @self.organisation and @self.owner properties
+            // Both must be set so the accepting user has permission to read/update the object
+            $currentUser = $this->userSession->getUser();
+            $selfData = ['organisation' => $currentOrg];
+            if ($currentUser !== null) {
+                $selfData['owner'] = $currentUser->getUID();
+            }
+            $aanbodData['@self'] = $selfData;
 
             // Save the updated object with RBAC and multitenancy disabled
             $existingAanbod->setObject($aanbodData);
@@ -338,6 +344,7 @@ class AanbodService
             $this->logger->info('Successfully accepted aanbod object', [
                 'aanbod_id' => $aanbodId,
                 'organisation' => $currentOrg,
+                'owner' => $currentUser?->getUID(),
                 'is_afnemer' => $isAfnemer,
                 'is_aanbieder' => $isAanbieder
             ]);
@@ -346,7 +353,7 @@ class AanbodService
                 'success' => true,
                 'message' => 'Aanbod object accepted successfully',
                 'aanbod' => $updatedAanbod->getObject(),
-                'updated_fields' => ['@self.organisation']
+                'updated_fields' => ['@self.organisation', '@self.owner']
             ];
 
         } catch (Exception $e) {
