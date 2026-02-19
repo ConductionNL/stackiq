@@ -1451,7 +1451,7 @@
         "uri": null,
         "slug": "kwetsbaarheid",
         "title": "Kwetsbaarheid",
-        "description": "Schema voor kwetsbaarheden",
+        "description": "Schema voor kwetsbaarheden. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "1.0.19",
         "summary": "",
         "icon": "ShieldAlert",
@@ -2319,12 +2319,13 @@
             ]
           },
           "geregistreerdDoor": {
-            "description": "Het type partij dat dit object heeft geregistreerd",
+            "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 18,
             "facetable": true,
             "title": "Geregistreerd door",
-            "visible": true,
+            "visible": false,
+            "hideOnForm": true,
             "enum": [
               "Gemeente",
               "Applicatie",
@@ -2901,7 +2902,7 @@
         "uri": null,
         "slug": "contract",
         "title": "Contract",
-        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik",
+        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "0.0.11",
         "summary": "",
         "icon": "FileDocumentEdit",
@@ -3373,12 +3374,13 @@
             "inversedBy": "koppelingen"
           },
           "geregistreerdDoor": {
-            "description": "Het type partij dat dit object heeft geregistreerd",
+            "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 16,
             "facetable": true,
             "title": "Geregistreerd door",
             "visible": false,
+            "hideOnForm": true,
             "enum": [
               "Gemeente",
               "Applicatie",
@@ -3466,7 +3468,7 @@
         "uri": null,
         "slug": "beoordeeling",
         "title": "Beoordeeling",
-        "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten",
+        "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "0.1.2",
         "summary": "",
         "icon": "Star",
@@ -6648,38 +6650,6 @@
               "maxSize": 5242880
             }
           },
-          "omvat": {
-            "description": "Andere applicaties die onderdeel zijn van deze applicatie",
-            "type": "array",
-            "visible": false,
-            "order": 19,
-            "facetable": false,
-            "title": "Omvat",
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/module",
-              "inversedBy": "onderdeelVan"
-            }
-          },
-          "onderdeelVan": {
-            "description": "Applicaties waarvan deze applicatie onderdeel is",
-            "type": "array",
-            "visible": false,
-            "order": 20,
-            "facetable": false,
-            "title": "Onderdeel van",
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/module",
-              "inversedBy": "omvat"
-            }
-          },
           "diensten": {
             "description": "De diensten waarvan deze applicatie onderdeel is",
             "type": "array",
@@ -6805,45 +6775,14 @@
               "$ref": "#/components/schemas/gebruik"
             }
           },
-          "beoordelingen": {
-            "description": "De beoordelingen van deze applicatie",
-            "type": "array",
-            "visible": false,
-            "order": 28,
-            "facetable": false,
-            "title": "Beoordelingen",
-            "hideOnForm": true,
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/beoordeeling"
-            }
-          },
-          "kwetsbaarheden": {
-            "description": "De kwetsbaarheden die deze applicatie treffen",
-            "type": "array",
-            "visible": false,
-            "order": 29,
-            "facetable": false,
-            "title": "Kwetsbaarheden",
-            "hideOnForm": true,
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/kwetsbaarheid"
-            }
-          },
           "geregistreerdDoor": {
-            "description": "Het type partij dat dit object heeft geregistreerd",
+            "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 30,
             "facetable": false,
             "title": "Geregistreerd door",
-            "visible": true,
+            "visible": false,
+            "hideOnForm": true,
             "enum": [
               "Gemeente",
               "Applicatie",
@@ -7101,12 +7040,13 @@
             }
           },
           "geregistreerdDoor": {
-            "description": "Het type partij dat dit object heeft geregistreerd",
+            "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 19,
             "facetable": true,
             "title": "Geregistreerd door",
-            "visible": true,
+            "visible": false,
+            "hideOnForm": true,
             "enum": [
               "Gemeente",
               "Applicatie",
