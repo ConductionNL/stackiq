@@ -12,7 +12,9 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IGroupManager;
+use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -75,6 +77,20 @@ class ContactpersonenController extends Controller
     private LoggerInterface $logger;
 
     /**
+     * User session for getting current user
+     *
+     * @var IUserSession
+     */
+    private IUserSession $userSession;
+
+    /**
+     * Container for dependency injection
+     *
+     * @var ContainerInterface
+     */
+    private ContainerInterface $container;
+
+    /**
      * Contactpersoon service for business logic
      */
     private ContactpersoonService $contactpersoonService;
@@ -89,6 +105,8 @@ class ContactpersonenController extends Controller
      * @param ContactpersoonService $contactpersoonService Contactpersoon service
      * @param IUserManager          $userManager          User manager
      * @param IGroupManager         $groupManager         Group manager
+     * @param IUserSession          $userSession          User session
+     * @param ContainerInterface    $container            Container for DI
      * @param ISecureRandom         $secureRandom         Secure random generator
      * @param LoggerInterface       $logger               Logger instance
      */
@@ -100,6 +118,8 @@ class ContactpersonenController extends Controller
         ContactpersoonService $contactpersoonService,
         IUserManager $userManager,
         IGroupManager $groupManager,
+        IUserSession $userSession,
+        ContainerInterface $container,
         ISecureRandom $secureRandom,
         LoggerInterface $logger
     ) {
@@ -109,6 +129,8 @@ class ContactpersonenController extends Controller
         $this->contactpersoonService = $contactpersoonService;
         $this->userManager = $userManager;
         $this->groupManager = $groupManager;
+        $this->userSession = $userSession;
+        $this->container = $container;
         $this->secureRandom = $secureRandom;
         $this->logger = $logger;
     }
@@ -208,9 +230,14 @@ class ContactpersonenController extends Controller
             // Get object service
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // First try to find the object by UUID without register/schema constraints
-            // ObjectService can find objects via ObjectEntityMapper using UUID
-            $contactpersoonObject = $objectService->findByUuid($contactpersoonId);
+            // Find the contactpersoon object
+            $contactpersoonObject = $objectService->find(
+                id: $contactpersoonId,
+                register: 'voorzieningen',
+                schema: 'contactpersoon',
+                _rbac: false,
+                _multitenancy: false
+            );
 
             if (!$contactpersoonObject) {
                 return new JSONResponse([
@@ -236,6 +263,16 @@ class ContactpersonenController extends Controller
                 return new JSONResponse([
                     'success' => false,
                     'message' => 'Contactpersoon already has a user account'
+                ], 400);
+            }
+
+            // Validate email address before attempting user creation
+            $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
+            $emailError = $this->contactPersonHandler->validateEmailForUsername($email);
+            if ($emailError !== null) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => $emailError
                 ], 400);
             }
 
@@ -266,20 +303,46 @@ class ContactpersonenController extends Controller
             }
 
             // Link user to organization entity
-            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $user->getUID());
+            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $user->getUID(), $organizationId);
 
             // Update the contactpersoon object with the username
             $contactData['username'] = $user->getUID();
+
+            // Ensure string fields are properly typed (fixes data stored with incorrect types)
+            $stringFields = ['voornaam', 'tussenvoegsel', 'achternaam', 'functie', 'telefoonnummer', 'email', 'e-mailadres'];
+            foreach ($stringFields as $field) {
+                if (isset($contactData[$field]) && !is_string($contactData[$field])) {
+                    $contactData[$field] = (string)$contactData[$field];
+                }
+            }
+
+            // Handle organisatie field - if it's a string UUID, convert to null to avoid validation errors
+            // The relationship is maintained through the organisation entity's users array
+            if (isset($contactData['organisatie']) && is_string($contactData['organisatie'])) {
+                $this->logger->info('ContactpersonenController: Converting organisatie string to null for validation', [
+                    'originalValue' => $contactData['organisatie']
+                ]);
+                $contactData['organisatie'] = null;
+            }
+            if (isset($contactData['organisation']) && is_string($contactData['organisation'])) {
+                $contactData['organisation'] = null;
+            }
+
             $contactpersoonObject->setObject($contactData);
 
-            // Save the updated contactpersoon object
-            $objectService->saveObject(
-                object: $contactpersoonObject,
-                register: $registerId,
-                schema: $schemaId,
-                rbac: false,
-                multi: false
-            );
+            // Debug logging to understand data types before save
+            $this->logger->info('ContactpersonenController: About to save contactpersoon object', [
+                'contactpersoonId' => $contactpersoonId,
+                'achternaamValue' => $contactData['achternaam'] ?? 'not set',
+                'achternaamType' => isset($contactData['achternaam']) ? gettype($contactData['achternaam']) : 'not set',
+                'registerId' => $registerId,
+                'schemaId' => $schemaId
+            ]);
+
+            // Save using ObjectEntityMapper directly to bypass schema validation
+            // This avoids "Unresolved reference" errors when schema references can't be resolved
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper->update($contactpersoonObject);
 
             $this->logger->info('ContactpersonenController: Updated contactpersoon with username', [
                 'contactpersoonId' => $contactpersoonId,
@@ -356,8 +419,16 @@ class ContactpersonenController extends Controller
                 ], 400);
             }
 
-            // Set new password
-            $user->setPassword($newPassword);
+            // Set new password — setPassword() returns false if the password
+            // is rejected (e.g., compromised password list, policy violation).
+            $result = $user->setPassword($newPassword);
+
+            if ($result === false) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Password was rejected. It may be too common or violate the password policy. Please choose a different password.'
+                ], 400);
+            }
 
             $this->logger->info('Password changed for user', [
                 'username' => $username
@@ -571,8 +642,14 @@ class ContactpersonenController extends Controller
             // Get contactpersoon from OpenRegister
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // First try to find the object by UUID without register/schema constraints
-            $contactObject = $objectService->findByUuid($contactpersoonId);
+            // First try to find the object by UUID
+            $contactObject = $objectService->find(
+                id: $contactpersoonId,
+                register: 'voorzieningen',
+                schema: 'contactpersoon',
+                _rbac: false,
+                _multitenancy: false
+            );
 
             if (!$contactObject) {
                 return new JSONResponse([
@@ -834,5 +911,151 @@ class ContactpersonenController extends Controller
                 'message' => 'Failed to get bulk user info: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get current user profile information
+     *
+     * Returns the current logged-in user's profile including:
+     * - email, firstName, middleName, lastName, functie
+     * - organisations.active (the currently active organisation)
+     * - organisations.all (all organisations the user belongs to)
+     *
+     * @return JSONResponse The user profile data
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function getMe(): JSONResponse
+    {
+        try {
+            // Get current user from session
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => 'Not authenticated'
+                ], 401);
+            }
+
+            $userId = $user->getUID();
+            $userEmail = $user->getEMailAddress() ?? $userId;
+
+            $this->logger->info('ContactpersonenController: Getting /me data for user', [
+                'userId' => $userId,
+                'userEmail' => $userEmail
+            ]);
+
+            // Initialize response with user data from Nextcloud
+            $response = [
+                'email' => $userEmail,
+                'firstName' => '',
+                'middleName' => '',
+                'lastName' => '',
+                'functie' => '',
+                'organisations' => [
+                    'active' => null,
+                    'all' => []
+                ]
+            ];
+
+            // Try to get contactpersoon data for additional profile info
+            try {
+                $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+
+                // Search for contactpersoon by username (which is the email)
+                $searchParams = [
+                    'username' => $userId,
+                    '_limit' => 1,
+                    '_schema' => 'contactpersoon'
+                ];
+
+                $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
+
+                if (!empty($contactpersonen['results'])) {
+                    $contactpersoon = $contactpersonen['results'][0];
+                    $contactData = $contactpersoon->getObject();
+
+                    // Extract name parts
+                    $response['firstName'] = $contactData['voornaam'] ?? $contactData['firstName'] ?? '';
+                    $response['middleName'] = $contactData['tussenvoegsel'] ?? $contactData['middleName'] ?? '';
+                    $response['lastName'] = $contactData['achternaam'] ?? $contactData['lastName'] ?? '';
+                    $response['functie'] = $contactData['functie'] ?? '';
+
+                    // If email not set, try from contact data
+                    if (empty($response['email'])) {
+                        $response['email'] = $contactData['e-mailadres'] ?? $contactData['email'] ?? $userEmail;
+                    }
+                }
+            } catch (\Exception $e) {
+                $this->logger->debug('ContactpersonenController: Could not find contactpersoon for user', [
+                    'userId' => $userId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Get organisation data from OpenRegister
+            try {
+                $organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
+
+                // Get active organisation
+                $activeOrg = $organisationService->getActiveOrganisation();
+                if ($activeOrg !== null) {
+                    $response['organisations']['active'] = [
+                        'uuid' => $activeOrg->getUuid(),
+                        'naam' => $activeOrg->getName(),
+                        'id' => (string)$activeOrg->getId(),
+                        'slug' => $activeOrg->getSlug() ?? $this->createSlug($activeOrg->getName())
+                    ];
+                }
+
+                // Get all user organisations
+                $userOrgs = $organisationService->getUserOrganisations();
+                foreach ($userOrgs as $org) {
+                    $response['organisations']['all'][] = [
+                        'uuid' => $org->getUuid(),
+                        'naam' => $org->getName(),
+                        'id' => (string)$org->getId(),
+                        'slug' => $org->getSlug() ?? $this->createSlug($org->getName())
+                    ];
+                }
+            } catch (\Exception $e) {
+                $this->logger->warning('ContactpersonenController: Could not get organisation data', [
+                    'userId' => $userId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            return new JSONResponse($response);
+
+        } catch (\Exception $e) {
+            $this->logger->error('ContactpersonenController: Failed to get /me data', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return new JSONResponse([
+                'success' => false,
+                'message' => 'Failed to get user profile: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create a URL-friendly slug from a name
+     *
+     * @param string $name The name to convert
+     *
+     * @return string The slug
+     */
+    private function createSlug(string $name): string
+    {
+        // Convert to lowercase
+        $slug = strtolower($name);
+        // Replace spaces and special chars with hyphens
+        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+        // Remove leading/trailing hyphens
+        $slug = trim($slug, '-');
+        return $slug;
     }
 }

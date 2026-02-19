@@ -67,13 +67,10 @@ class GebruikSyncService
             $gebruikData = $gebruikObject->getObject();
             $gebruikUuid = $gebruikObject->getUuid();
 
-            $this->logger->critical('🔄 PROCESSING GEBRUIK OBJECT', [
+            $this->logger->debug('Processing gebruik object', [
                 'app' => 'softwarecatalog',
                 'gebruikId' => $gebruikUuid,
-                'afnemer' => $gebruikData['afnemer']['naam'] ?? 'Unknown',
-                'product' => $gebruikData['product']['naam'] ?? 'Unknown',
                 'currentStatus' => $gebruikData['status'] ?? 'Unknown',
-                'timestamp' => date('Y-m-d H:i:s')
             ]);
 
             // Step 1: Process gebruiktVoorReferentiecomponenten for AMEF elements
@@ -145,7 +142,7 @@ class GebruikSyncService
                 return $stats;
             }
 
-            $this->logger->critical('🔍 PROCESSING REFERENTIECOMPONENTEN', [
+            $this->logger->debug('Processing referentiecomponenten', [
                 'app' => 'softwarecatalog',
                 'gebruikId' => $gebruikUuid,
                 'referentieComponentenCount' => count($referentieComponenten)

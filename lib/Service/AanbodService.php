@@ -155,13 +155,15 @@ class AanbodService
                     // Execute search with RBAC and multitenancy disabled to find cross-organisation objects
                     $searchResult = $objectService->searchObjectsPaginated(
                         query: $query,
-                        rbac: false,
-                        multi: false
+                        _rbac: false,
+                        _multitenancy: false
                     );
 
                     // Filter out objects where @self.organisation equals current org
                     foreach ($searchResult['results'] ?? [] as $result) {
-                        $resultData = is_array($result) ? $result : $result->getObject();
+                        // Use jsonSerialize() instead of getObject() to include @self metadata
+                        // getObject() only returns raw object data without @self.organisation
+                        $resultData = is_array($result) ? $result : $result->jsonSerialize();
                         $selfOrg = $resultData['@self']['organisation'] ?? null;
 
                         // Only include if @self.organisation is NOT set to the current organisation
@@ -268,20 +270,8 @@ class AanbodService
                 ];
             }
 
-            // Get the existing aanbod object with RBAC and multitenancy disabled
-            try {
-                $existingAanbod = $objectService->find(
-                    id: $aanbodId,
-                    rbac: false,
-                    multi: false
-                );
-            } catch (Exception $e) {
-                $this->logger->warning('Failed to find aanbod object', [
-                    'aanbod_id' => $aanbodId,
-                    'error' => $e->getMessage()
-                ]);
-                $existingAanbod = null;
-            }
+            // Find the aanbod object across all possible schemas (gebruik, koppeling, module, dienst)
+            $existingAanbod = $this->findAanbodObject($objectService, $aanbodId);
 
             if (!$existingAanbod) {
                 return [
@@ -332,20 +322,17 @@ class AanbodService
             }
 
             // Update the @self.organisation property
-            $selfData = $aanbodData['@self'] ?? [];
-            $selfData['organisation'] = $currentOrg;
-            $aanbodData['@self'] = $selfData;
+            $aanbodData['@self'] = ['organisation' => $currentOrg];
 
             // Save the updated object with RBAC and multitenancy disabled
-            // ObjectService should be able to determine register and schema from the object itself
             $existingAanbod->setObject($aanbodData);
             $updatedAanbod = $objectService->saveObject(
                 object: $existingAanbod,
                 register: $existingAanbod->getRegister(),
                 schema: $existingAanbod->getSchema(),
                 uuid: $aanbodId,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             $this->logger->info('Successfully accepted aanbod object', [
@@ -417,34 +404,18 @@ class AanbodService
                 ];
             }
 
-            // Get the existing aanbod object with RBAC and multitenancy disabled
-            try {
-                $existingAanbod = $objectService->find(
-                    id: $aanbodId,
-                    rbac: false,
-                    multi: false
-                );
+            // Find the aanbod object across all possible schemas (gebruik, koppeling, module, dienst)
+            $existingAanbod = $this->findAanbodObject($objectService, $aanbodId);
 
-                if ($existingAanbod) {
-                    $aanbodData = $existingAanbod->getObject();
-                } else {
-                    $aanbodData = null;
-                }
-            } catch (Exception $e) {
-                $this->logger->warning('Failed to find aanbod object for deletion', [
-                    'aanbod_id' => $aanbodId,
-                    'error' => $e->getMessage()
-                ]);
-                $aanbodData = null;
-            }
-
-            if (!$aanbodData) {
+            if (!$existingAanbod) {
                 return [
                     'success' => false,
                     'error' => 'Aanbod object not found',
                     'deleted' => false
                 ];
             }
+
+            $aanbodData = $existingAanbod->getObject();
 
             // SECURITY CHECK: Verify that the active organization is either afnemer or aanbieder
             $afnemerInfo = $aanbodData['afnemer'] ?? null;
@@ -495,19 +466,14 @@ class AanbodService
             }
 
             // Delete the object with RBAC and multitenancy disabled
-            // ObjectService should be able to determine register and schema from the UUID
-            $aanbod = $objectService->find(id: $aanbodId, rbac: false,multi: false);
-
-            $objectService->setRegister(register: $aanbod->getRegister());
-            $objectService->setSchema(schema: $aanbod->getSchema());
+            $objectService->setRegister(register: $existingAanbod->getRegister());
+            $objectService->setSchema(schema: $existingAanbod->getSchema());
 
             $deleteResult = $objectService->deleteObject(
                 uuid: $aanbodId,
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
-
-            $objectService->clearCurrents();
 
             $this->logger->info('Successfully denied aanbod object', [
                 'aanbod_id' => $aanbodId,
@@ -537,6 +503,61 @@ class AanbodService
                 'deleted' => false
             ];
         }
+    }
+
+    /**
+     * Find an aanbod object by UUID across all possible schemas
+     *
+     * Searches gebruik, koppeling, module, and dienst schemas because
+     * an aanbod can be any of these types. Register/schema context is
+     * required to find objects stored in magic tables.
+     *
+     * @param ObjectService $objectService The OpenRegister object service
+     * @param string $aanbodId The UUID of the aanbod object
+     * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
+     */
+    private function findAanbodObject(ObjectService $objectService, string $aanbodId): ?\OCA\OpenRegister\Db\ObjectEntity
+    {
+        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+        $registerId = $voorzieningenConfig['register'] ?? null;
+
+        if (!$registerId) {
+            $this->logger->warning('Cannot find aanbod object: no register configured');
+            return null;
+        }
+
+        // Collect all schema IDs to search across
+        $schemasToTry = array_filter([
+            $voorzieningenConfig['gebruik_schema'] ?? null,
+            $voorzieningenConfig['koppeling_schema'] ?? null,
+            $voorzieningenConfig['module_schema'] ?? null,
+            $voorzieningenConfig['dienst_schema'] ?? null,
+        ]);
+
+        foreach ($schemasToTry as $schemaId) {
+            try {
+                $object = $objectService->find(
+                    id: $aanbodId,
+                    register: $registerId,
+                    schema: $schemaId,
+                    _rbac: false,
+                    _multitenancy: false
+                );
+                if ($object) {
+                    return $object;
+                }
+            } catch (Exception $e) {
+                // Object not found in this schema, try next
+                continue;
+            }
+        }
+
+        $this->logger->warning('Aanbod object not found in any schema', [
+            'aanbod_id' => $aanbodId,
+            'schemas_tried' => $schemasToTry
+        ]);
+
+        return null;
     }
 
     /**

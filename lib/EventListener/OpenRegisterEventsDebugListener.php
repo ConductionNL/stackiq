@@ -101,19 +101,14 @@ class OpenRegisterEventsDebugListener implements IEventListener
      */
     public function handle(Event $event): void
     {
-        // CRITICAL: Always log regardless of debug flag to ensure we see if it's called
         $eventClass = get_class($event);
         $eventType = $this->getEventTypeName($eventClass);
-        
-        $this->logger->critical('🔍 SOFTWARECATALOG: OPENREGISTER DEBUG LISTENER TRIGGERED!', [
+
+        $this->logger->debug('OpenRegister debug listener triggered', [
             'app' => 'softwarecatalog',
             'eventType' => $eventType,
             'eventClass' => $eventClass,
-            'listenerClass' => self::class,
             'debugEnabled' => $this->debugEnabled,
-            'timestamp' => date('Y-m-d H:i:s'),
-            'microtime' => microtime(true),
-            'source' => 'OpenRegister',
         ]);
         
 

@@ -3,8 +3,8 @@ import { defineStore } from 'pinia'
 
 export const useNavigationStore = defineStore('ui', {
 	state: () => ({
-		// The currently active menu item, defaults to 'dashboard' which triggers the dashboard
-		selected: 'dashboard',
+		// The currently active menu item, defaults to 'organisaties' since that is the primary page users interact with.
+		selected: 'organisaties',
 		// The currently selected organisatie within 'organisaties'
 		selectedOrganisatie: null,
 		// The currently active modal, managed through the state to ensure that only one modal can be active at the same time

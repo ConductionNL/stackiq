@@ -112,7 +112,7 @@ export default {
 		},
 
 		/**
-		 * Change the organisation status
+		 * Change the organisation status.
 		 * @return {Promise<void>}
 		 */
 		async changeStatus() {
@@ -127,39 +127,37 @@ export default {
 					throw new Error('Organisatie of nieuwe status ontbreekt')
 				}
 
-				// Prepare the patch data - only include changed properties
+				// Prepare the patch data - only include the status property.
 				const patchData = {
 					status: newStatus,
 				}
 
-				// If activating the organisation, set the @self metadata to own itself
-				// This ensures the organisation owns itself immediately upon activation
-				if (newStatus.toLowerCase() === 'actief') {
-					const organisatieUuid = organisatie.id || organisatie.uuid || organisatie['@self']?.id
+				console.info('Changing organisation status:', {
+					organisatieId: organisatie.id,
+					currentStatus: organisatie.status,
+					newStatus,
+				})
 
-					// Set the owner and organisation in @self metadata to the organisation's own UUID
-					patchData['@self'] = {
-						...organisatie['@self'],
-						owner: organisatieUuid,
-						organisation: organisatieUuid,
-					}
-
-					console.info('Setting @self owner and organisation properties to own UUID during activation:', {
-						organisatieId: organisatieUuid,
-						ownerProperty: patchData['@self'].owner,
-						selfOrganisationProperty: patchData['@self'].organisation,
-					})
-				}
-
-				// Update only the status (and @self if activating) using PATCH
+				// Update only the status using PATCH.
 				await objectStore.patchObject('organisatie', organisatie.id, patchData)
 
 				this.success = true
 
-				// Refresh the collection to show the updated status
-				objectStore.fetchCollection('organisatie')
+				// If activating an organisation, store it for search filtering.
+				if (newStatus === 'Actief') {
+					const organisatieNaam = organisatie?.naam || organisatie?.name || organisatie?.['@self']?.name
 
-				// Auto-close after 2 seconds on success
+					// Store the activated organisation info in navigationStore transferData.
+					navigationStore.setTransferData({
+						action: 'organisationActivated',
+						organisationName: organisatieNaam,
+						status: 'Actief',
+					})
+				}
+				// For deactivation, don't fetch - the organisation will just disappear from
+				// the current view if the user has an active filter, which is the expected behavior.
+
+				// Auto-close after 2 seconds on success.
 				setTimeout(() => {
 					this.closeDialog()
 				}, 2000)

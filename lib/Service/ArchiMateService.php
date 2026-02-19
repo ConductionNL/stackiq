@@ -243,8 +243,190 @@ class ArchiMateService
     }
 
     /**
+     * Export organization-specific ArchiMate data to XML
+     *
+     * Produces an enriched AMEFF file with the base GEMMA model plus the
+     * organization's applications plotted on referentiecomponenten in views.
+     *
+     * @param string $organizationUuid UUID of the organization to export for
+     * @return array Export results with 'success', 'xml', 'file_name'
+     */
+    public function exportOrgArchiMate(string $organizationUuid, array $options = []): array
+    {
+        $this->logger->info('Starting organization ArchiMate XML export', [
+            'organization_uuid' => $organizationUuid,
+            'options' => $options
+        ]);
+
+        try {
+            $objectService = $this->getObjectService();
+            if (!$objectService) {
+                throw new \RuntimeException('ObjectService not available');
+            }
+
+            // Look up the organization from Voorzieningen register
+            $voorzConfig = $this->settingsService->getVoorzieningenConfig();
+            $orgRegisterId = !empty($voorzConfig['register']) ? (int)$voorzConfig['register'] : null;
+            $orgSchemaId = !empty($voorzConfig['organisatie_schema']) ? (int)$voorzConfig['organisatie_schema'] : null;
+
+            if (!$orgRegisterId || !$orgSchemaId) {
+                // Fallback to generic lookup
+                $orgRegisterId = $this->settingsService->getVoorzieningenRegisterId();
+                $orgSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+            }
+
+            if (!$orgRegisterId || !$orgSchemaId) {
+                throw new \RuntimeException('Organization register/schema not configured');
+            }
+
+            // Look up the organization directly by UUID
+            try {
+                $orgEntity = $objectService->find(
+                    id: $organizationUuid,
+                    register: $orgRegisterId,
+                    schema: $orgSchemaId,
+                    _rbac: false,
+                    _multitenancy: false
+                );
+            } catch (\Exception $e) {
+                $orgEntity = null;
+            }
+
+            if ($orgEntity === null) {
+                return [
+                    'success' => false,
+                    'error' => 'Organization not found: ' . $organizationUuid
+                ];
+            }
+
+            $organization = $orgEntity->jsonSerialize();
+            $orgName = $organization['naam'] ?? $organization['name'] ?? $organization['@self']['name'] ?? 'Unknown';
+
+            // Get AMEF config and base objects
+            $registerId = $this->getAmefRegisterId();
+            if (!$registerId) {
+                throw new \RuntimeException('AMEF register ID is not configured');
+            }
+            $schemaIdMap = $this->createSchemaIdMap();
+
+            // Query organization's gebruik and modules from Voorzieningen register
+            $gebruikSchemaId = !empty($voorzConfig['gebruik_schema']) ? (int)$voorzConfig['gebruik_schema'] : null;
+            $gebruikData = [];
+            if ($gebruikSchemaId) {
+                $gebruikQuery = [
+                    '@self' => [
+                        'register' => $orgRegisterId,
+                        'schema' => $gebruikSchemaId,
+                        'organisation' => $organizationUuid
+                    ],
+                    '_limit' => 10000
+                ];
+                $gebruikData = $objectService->searchObjects(query: $gebruikQuery, _rbac: false, _multitenancy: false);
+            }
+
+            $moduleSchemaId = !empty($voorzConfig['module_schema']) ? (int)$voorzConfig['module_schema'] : null;
+            $modulesData = [];
+            if ($moduleSchemaId) {
+                $modulesQuery = [
+                    '@self' => [
+                        'register' => $orgRegisterId,
+                        'schema' => $moduleSchemaId,
+                        'organisation' => $organizationUuid
+                    ],
+                    '_limit' => 10000
+                ];
+                $modulesData = $objectService->searchObjects(query: $modulesQuery, _rbac: false, _multitenancy: false);
+            }
+
+            // Query deelname gebruik if enabled (gebruik objects where this org is in deelnemers)
+            $deelnamesData = [];
+            if ($options['deelnames'] ?? false) {
+                if ($gebruikSchemaId) {
+                    $deelnameQuery = [
+                        '@self' => [
+                            'register' => $orgRegisterId,
+                            'schema' => $gebruikSchemaId
+                        ],
+                        'deelnemers' => $organizationUuid,
+                        '_limit' => 10000
+                    ];
+                    $deelnamesData = $objectService->searchObjects(
+                        query: $deelnameQuery, _rbac: false, _multitenancy: false
+                    );
+                    $this->logger->info('Retrieved deelname gebruik for org export', [
+                        'deelnames_count' => count($deelnamesData),
+                        'organization_uuid' => $organizationUuid
+                    ]);
+
+                    // Deelname modules belong to other orgs, so query all modules (without org filter)
+                    // to resolve names for the export
+                    if (!empty($deelnamesData) && $moduleSchemaId) {
+                        $allModulesQuery = [
+                            '@self' => [
+                                'register' => $orgRegisterId,
+                                'schema' => $moduleSchemaId
+                            ],
+                            '_limit' => 10000
+                        ];
+                        $allModules = $objectService->searchObjects(
+                            query: $allModulesQuery, _rbac: false, _multitenancy: false
+                        );
+                        // Merge into modulesData, deduplicating by ID
+                        $existingIds = [];
+                        foreach ($modulesData as $m) {
+                            $mid = is_array($m) ? ($m['id'] ?? $m['@self']['id'] ?? null) : null;
+                            if ($mid) $existingIds[$mid] = true;
+                        }
+                        foreach ($allModules as $mod) {
+                            $modArr = (is_object($mod) && method_exists($mod, 'jsonSerialize')) ? $mod->jsonSerialize() : $mod;
+                            $modId = $modArr['id'] ?? $modArr['@self']['id'] ?? null;
+                            if ($modId && !isset($existingIds[$modId])) {
+                                $modulesData[] = $mod;
+                                $existingIds[$modId] = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Delegate to export service
+            $xml = $this->exportService->exportOrganizationArchiMateXml(
+                $objectService,
+                $registerId,
+                $schemaIdMap,
+                $orgName,
+                $organizationUuid,
+                $gebruikData,
+                $modulesData,
+                $deelnamesData,
+                $options
+            );
+
+            // Generate file name: DD-MM-YYYY_Softwarecatalogus_AMEFF_export_OrgName.xml
+            $fileName = date('d-m-Y') . '_Softwarecatalogus_AMEFF_export_' . str_replace(' ', '_', $orgName) . '.xml';
+
+            return [
+                'success' => true,
+                'xml' => $xml,
+                'file_name' => $fileName
+            ];
+
+        } catch (\Exception $e) {
+            $this->logger->error('Organization ArchiMate export failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Create schema ID mapping for export service
-     * 
+     *
      * @return array Mapping of schema IDs to schema types
      */
     private function createSchemaIdMap(): array

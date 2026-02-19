@@ -551,11 +551,12 @@ class SoftwareCatalogueService
                 'objectId' => $organizationObject->getId()
             ]);
 
-            $newData = $organizationObject->getObject();
-            $oldData = $oldOrganizationObject->getObject();
-            
-            $newBeoordeling = strtolower($newData['beoordeling'] ?? '');
-            $oldBeoordeling = strtolower($oldData['beoordeling'] ?? '');
+        $newData = $organizationObject->getObject();
+        $oldData = $oldOrganizationObject->getObject();
+        
+        // Check both 'beoordeling' and 'status' fields (different schemas use different field names)
+        $newBeoordeling = strtolower($newData['beoordeling'] ?? $newData['status'] ?? '');
+        $oldBeoordeling = strtolower($oldData['beoordeling'] ?? $oldData['status'] ?? '');
             
             // Sync the organization with OpenRegister
             $syncResult = $this->syncOrganizationWithOpenRegister($organizationObject);
@@ -589,8 +590,18 @@ class SoftwareCatalogueService
                 );
                 
                 if ($becameActive) {
-                    // Activate SoftwareCatalog-specific users in this organization
                     $organizationUuid = $newData['id'] ?? $organizationObject->getId();
+                    
+                    $this->_logger->info('SoftwareCatalogueService: Organization became active - creating users from contactpersonen', [
+                        'organizationUuid' => $organizationUuid
+                    ]);
+                    
+                    // Process the organization to create users from contactpersonen.
+                    // This is crucial when an organization is activated for the first time
+                    // and contactpersonen were added before activation.
+                    $this->processOrganization($organizationObject);
+                    
+                    // Activate SoftwareCatalog-specific users in this organization
                     $this->activateSoftwareCatalogUsersForOrganization($organizationUuid);
                     
                     // Send activation email

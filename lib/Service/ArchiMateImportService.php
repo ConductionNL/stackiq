@@ -326,8 +326,9 @@ class ArchiMateImportService
             $totalTime = microtime(true) - $startTime;
             $itemsPerSecond = count($allObjects) / max($totalTime, 0.001);
 
-            // Extract detailed error information from statistics
-            $statistics = $this->calculateOptimizedStatistics($savedObjects);
+            // Use statistics directly from saveObjects result (stored in lastSaveResult).
+            // No need for custom calculation since ObjectService already provides accurate stats.
+            $statistics = $this->buildStatisticsFromSaveResult();
             $detailedErrors = $this->extractDetailedErrors($statistics);
 
             // OPTIMIZED import completed successfully
@@ -776,7 +777,20 @@ class ArchiMateImportService
                 }
             }
             if ($sectionData !== null) {
-                $normalized[$section] = $this->extractSectionDataWithProperties($sectionData, $section, $modelIdentifier, $propertyDefinitionMap);
+                // Organizations are hierarchical folder trees, not flat objects with identifiers.
+                // Store the entire tree as one raw entry so round-trip export can reconstruct it.
+                if ($section === 'organizations') {
+                    $syntheticId = 'org-' . preg_replace('/^id-/', '', $modelIdentifier);
+                    $normalized[$section][$syntheticId] = [
+                        'identifier' => $syntheticId,
+                        'section' => 'organization',
+                        'model_identifier' => $modelIdentifier,
+                        'name' => 'Organizations',
+                        'xml' => $sectionData // complete hierarchy preserved
+                    ];
+                } else {
+                    $normalized[$section] = $this->extractSectionDataWithProperties($sectionData, $section, $modelIdentifier, $propertyDefinitionMap);
+                }
             }
         }
         $this->logger->info('Data normalization completed', [
@@ -814,6 +828,14 @@ class ArchiMateImportService
                         'xml' => $this->extractEssentialXmlData($item) // OPTIMIZATION: Store only essential XML data
                     ];
 
+                    // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent", "Referentiecomponent")
+                    // The xsi:type is stored as _xsi__type or in _attributes['xsi:type']
+                    if (isset($item['_xsi__type'])) {
+                        $object['type'] = $item['_xsi__type'];
+                    } elseif (isset($item['_attributes']['xsi:type'])) {
+                        $object['type'] = $item['_attributes']['xsi:type'];
+                    }
+
                     // Extract name from XML if it exists
                     if (isset($item['name'])) {
                         if (is_array($item['name']) && isset($item['name']['_value'])) {
@@ -823,12 +845,17 @@ class ArchiMateImportService
                         }
                     }
 
-                    // Extract documentation from XML if it exists and set to summary
+                    // Extract documentation from XML if it exists - set both summary and documentation
                     if (isset($item['documentation'])) {
+                        $docValue = null;
                         if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
-                            $object['summary'] = $item['documentation']['_value'];
+                            $docValue = $item['documentation']['_value'];
                         } elseif (is_string($item['documentation'])) {
-                            $object['summary'] = $item['documentation'];
+                            $docValue = $item['documentation'];
+                        }
+                        if ($docValue !== null) {
+                            $object['summary'] = $docValue;
+                            $object['documentation'] = $docValue; // Also set documentation field for schema compatibility
                         }
                     }
 
@@ -962,6 +989,31 @@ class ArchiMateImportService
         $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
         $schemaId = $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException("Schema ID for 'model' not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
 
+        // Extract a plain string name (schema column expects string, not array)
+        $nameString = null;
+        if (isset($metadata['name'])) {
+            if (is_array($metadata['name']) && isset($metadata['name']['_value'])) {
+                $nameString = (string)$metadata['name']['_value'];
+            } elseif (is_string($metadata['name'])) {
+                $nameString = $metadata['name'];
+            }
+        }
+
+        // Build xml field preserving full array structure for round-trip fidelity
+        $xmlData = [];
+        if (isset($metadata['name'])) {
+            $xmlData['name'] = $metadata['name'];
+        }
+        if (isset($metadata['documentation'])) {
+            $xmlData['documentation'] = $metadata['documentation'];
+        }
+        if (isset($metadata['properties'])) {
+            $xmlData['properties'] = $metadata['properties'];
+        }
+        if (isset($metadata['propertyDefinitionMap'])) {
+            $xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
+        }
+
         // Create object with @self structure and metadata at root level (no JSON serialization)
         $object = [
             '@self' => [
@@ -974,11 +1026,17 @@ class ArchiMateImportService
             ],
             'identifier' => $metadata['identifier'] ?? '',
             'section' => 'model',
-            'model_identifier' => $modelIdentifier
+            'model_identifier' => $modelIdentifier,
+            'xml' => $xmlData
         ];
 
-        // Merge metadata directly at root level
-        return array_merge($object, $metadata);
+        // Merge metadata directly at root level, but override name with string version
+        $merged = array_merge($object, $metadata);
+        if ($nameString !== null) {
+            $merged['name'] = $nameString;
+        }
+
+        return $merged;
     }
 
     /**
@@ -1055,15 +1113,13 @@ class ArchiMateImportService
         $saveStartTime = microtime(true);
 
         // DEBUG: Log basic object info before sending to ObjectService
-        $this->logger->info('saveObjectsToDatabase DEBUG', [
+        // Find first element with gemmaType for debugging
+        $elementsWithGemmaType = array_filter($objects, fn($o) => ($o['section'] ?? '') === 'element' && !empty($o['gemmaType']));
+        $sampleElementWithGemmaType = !empty($elementsWithGemmaType) ? array_values($elementsWithGemmaType)[0] : null;
+
+        $this->logger->debug('Objects before save', [
             'total_objects_to_save' => count($objects),
-            'first_object_sample' => !empty($objects) ? [
-                'id' => $objects[0]['@self']['id'] ?? 'no-id',
-                'register' => $objects[0]['@self']['register'] ?? 'no-register',
-                'schema' => $objects[0]['@self']['schema'] ?? 'no-schema',
-                'section' => $objects[0]['section'] ?? 'no-section'
-            ] : null,
-            'object_sections' => array_count_values(array_column($objects, 'section'))
+            'elements_with_gemmaType' => count($elementsWithGemmaType),
         ]);
 
 
@@ -1086,20 +1142,91 @@ class ArchiMateImportService
 
 
 
-        // HYBRID OPTIMIZATION: Choose best strategy based on dataset size
-        // Small datasets: Direct to ObjectService (avoids batching overhead)
-        // Large datasets: Use our intelligent batching (better performance for bulk operations)
+        // MAGIC MAPPING SUPPORT: Group objects by schema first, then save each schema group.
+        // This ensures each batch has a single schema so UnifiedObjectMapper can route to the correct magic table.
         $batchProcessingStartTime = microtime(true);
-        $objectCount = count($objects);
 
-        if ($objectCount < 2000) {
-            // Small dataset: Let ObjectService handle everything directly
-            $result = $this->saveObjectsDirectToService($objects, $objectService, $registerId);
-        } else {
-            // Large dataset: Use our intelligent batching for better performance
-            $result = $this->saveObjectsInParallelBatches($objects, $objectService, $registerId);
+        // Group objects by schema
+        $schemaGroups = [];
+        foreach ($objects as $obj) {
+            $schemaId = $obj['@self']['schema'] ?? 'unknown';
+            $schemaGroups[$schemaId][] = $obj;
         }
+
+        $this->logger->info('ArchiMate import: Grouped objects by schema for magic mapping', [
+            'schemaCount' => count($schemaGroups),
+            'schemas' => array_map('count', $schemaGroups)
+        ]);
+
+        // Process each schema group.
+        $allResults = [];
+        $aggregatedStats = [
+            'saved' => [],
+            'updated' => [],
+            'unchanged' => [],
+            'invalid' => [],
+        ];
+        // Track counts per schema for accurate statistics (serialized objects lose the 'section' field)
+        $countsBySchema = [];
+
+        foreach ($schemaGroups as $schemaId => $schemaObjects) {
+            $schemaObjectCount = count($schemaObjects);
+
+            try {
+                // Save this schema group with the specific schema ID
+                // PERFORMANCE: Disabled validation and events for bulk import (like CSV import pattern)
+                $saveResult = $objectService->saveObjects(
+                    objects: $schemaObjects,
+                    register: $registerId,
+                    schema: $schemaId !== 'unknown' ? (int) $schemaId : null,
+                    _rbac: false,
+                    _multitenancy: false,
+                    validation: false,
+                    events: false
+                );
+
+                // Merge results.
+                $aggregatedStats['saved'] = array_merge($aggregatedStats['saved'], $saveResult['saved'] ?? []);
+                $aggregatedStats['updated'] = array_merge($aggregatedStats['updated'], $saveResult['updated'] ?? []);
+                $aggregatedStats['unchanged'] = array_merge($aggregatedStats['unchanged'], $saveResult['unchanged'] ?? []);
+                $aggregatedStats['invalid'] = array_merge($aggregatedStats['invalid'], $saveResult['invalid'] ?? []);
+
+                // Track per-schema counts for statistics (since serialized objects lose 'section')
+                $countsBySchema[$schemaId] = [
+                    'saved' => count($saveResult['saved'] ?? []),
+                    'updated' => count($saveResult['updated'] ?? []),
+                    'unchanged' => count($saveResult['unchanged'] ?? []),
+                    'invalid' => count($saveResult['invalid'] ?? []),
+                ];
+
+                $allResults = array_merge($allResults, $saveResult['saved'] ?? [], $saveResult['updated'] ?? [], $saveResult['unchanged'] ?? []);
+
+                $this->logger->debug('Schema group saved for magic mapping', [
+                    'schemaId' => $schemaId,
+                    'objectCount' => $schemaObjectCount,
+                    'saved' => count($saveResult['saved'] ?? []),
+                    'updated' => count($saveResult['updated'] ?? []),
+                ]);
+            } catch (\Exception $e) {
+                $this->logger->error('Error saving schema group', [
+                    'schemaId' => $schemaId,
+                    'error' => $e->getMessage(),
+                    'objectCount' => $schemaObjectCount
+                ]);
+            }
+        }
+
+        // Store aggregated result for statistics, including per-schema counts
+        $aggregatedStats['countsBySchema'] = $countsBySchema;
+        $this->lastSaveResult = $aggregatedStats;
+        $result = $allResults;
+
         $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
+
+        // POST-PROCESSING: Fix StandaardVersie standaard field UUIDs
+        // The standaard field was set with ArchiMate identifiers, but we need database UUIDs
+        // for the inversedBy lookup to work correctly.
+        $this->fixStandaardVersieUuids($registerId);
 
         $totalSaveTime = microtime(true) - $saveStartTime;
 
@@ -1108,16 +1235,95 @@ class ArchiMateImportService
         // Database save completed
 
         // Store timing breakdown for performance metrics
+        // FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations
+        $totalSavedCount = count($aggregatedStats['saved'] ?? []) + count($aggregatedStats['updated'] ?? []) + count($aggregatedStats['unchanged'] ?? []);
         $this->lastSaveTimingBreakdown = [
             'total_save_seconds' => round($totalSaveTime, 3),
             'service_init_seconds' => round($serviceInitTime, 3),
             'gemma_processing_seconds' => round($gemmaProcessingTime, 3),
             'batch_processing_seconds' => round($batchProcessingTime, 3),
-            'objects_saved' => count($result),
+            'objects_saved' => $totalSavedCount > 0 ? $totalSavedCount : count($objects),
             'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1)
         ];
 
         return $result;
+    }
+
+    /**
+     * Fix StandaardVersie standaard field UUIDs after import
+     *
+     * The ArchiMate import sets the standaard field with ArchiMate identifiers (e.g., "92b166c5...")
+     * but the inversedBy lookup needs database UUIDs. This method:
+     * 1. Queries all Standaarden to get identifier → uuid mapping
+     * 2. Updates StandaardVersie objects to use the correct database UUIDs
+     *
+     * @param int $registerId The register ID
+     * @return void
+     */
+    private function fixStandaardVersieUuids(int $registerId): void
+    {
+        try {
+            $elementSchemaId = $this->cachedConfig['schemaIds']['element'] ?? null;
+            if ($elementSchemaId === null) {
+                $this->logger->warning('fixStandaardVersieUuids: Element schema ID not found in config');
+                return;
+            }
+
+            // Get database connection
+            $connection = \OC::$server->getDatabaseConnection();
+            $tableName = 'oc_openregister_table_' . $registerId . '_' . $elementSchemaId;
+
+            // Step 1: Build a mapping from ArchiMate identifier to database UUID for Standaarden
+            // The identifier field contains "id-{archimate_id}" and we need the _uuid field
+            $standaardQuery = $connection->executeQuery(
+                "SELECT _uuid, identifier FROM {$tableName} WHERE gemma_type = 'Standaard' AND identifier IS NOT NULL"
+            );
+
+            $identifierToUuid = [];
+            while ($row = $standaardQuery->fetch()) {
+                $identifier = $row['identifier'] ?? '';
+                $uuid = $row['_uuid'] ?? '';
+
+                if ($identifier && $uuid) {
+                    // Store mapping without "id-" prefix for matching
+                    $cleanId = str_replace('id-', '', $identifier);
+                    $identifierToUuid[$cleanId] = $uuid;
+                }
+            }
+
+            $this->logger->info('fixStandaardVersieUuids: Built identifier->uuid mapping', [
+                'standaard_count' => count($identifierToUuid)
+            ]);
+
+            if (empty($identifierToUuid)) {
+                $this->logger->warning('fixStandaardVersieUuids: No Standaarden found to map');
+                return;
+            }
+
+            // Step 2: Update StandaardVersies that have a standaard field with ArchiMate identifiers
+            // We need to replace ArchiMate IDs with database UUIDs
+            $updateCount = 0;
+
+            foreach ($identifierToUuid as $archiMateId => $dbUuid) {
+                // Update all StandaardVersies where standaard matches this ArchiMate ID
+                $result = $connection->executeStatement(
+                    "UPDATE {$tableName} SET standaard = ? WHERE standaard = ? AND gemma_type = 'Standaardversie'",
+                    [$dbUuid, $archiMateId]
+                );
+                $updateCount += $result;
+            }
+
+            $this->logger->info('fixStandaardVersieUuids: Updated StandaardVersie standaard fields', [
+                'updated_count' => $updateCount,
+                'mapping_count' => count($identifierToUuid)
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('fixStandaardVersieUuids: Error fixing UUIDs', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**
@@ -1132,41 +1338,76 @@ class ArchiMateImportService
     private function saveObjectsDirectToService(array $objects, ObjectService $objectService, int $registerId): array
     {
         try {
-            // Single call to ObjectService - let it handle everything
-            $saveResult = $objectService->saveObjects(
-                objects: $objects,
-                register: $registerId,
-                schema: null, // Mixed schemas supported now
-                rbac: true, // Enable proper RBAC
-                multi: true, // Enable multi-processing if available
-                validation: true, // Enable validation
-                events: true // Enable events
-            );
+            // GROUP BY SCHEMA: For magic mapping support, save objects schema by schema.
+            // This ensures each batch has a single schema so UnifiedObjectMapper can route to the correct table.
+            $schemaGroups = [];
+            foreach ($objects as $obj) {
+                $schemaId = $obj['@self']['schema'] ?? 'unknown';
+                $schemaGroups[$schemaId][] = $obj;
+            }
+
+            $this->logger->info('ArchiMate import: Grouped objects by schema', [
+                'schemaCount' => count($schemaGroups),
+                'schemas' => array_map('count', $schemaGroups)
+            ]);
+
+            // Save each schema group separately
+            $allSaved = [];
+            $allUpdated = [];
+            $allUnchanged = [];
+            $allSkipped = [];
+            $allInvalid = [];
+
+            foreach ($schemaGroups as $schemaId => $schemaObjects) {
+                $saveResult = $objectService->saveObjects(
+                    objects: $schemaObjects,
+                    register: $registerId,
+                    schema: $schemaId !== 'unknown' ? (int) $schemaId : null,
+                    _rbac: true,
+                    _multitenancy: true,
+                    validation: true,
+                    events: true
+                );
+
+                // Merge results
+                $allSaved = array_merge($allSaved, $saveResult['saved'] ?? []);
+                $allUpdated = array_merge($allUpdated, $saveResult['updated'] ?? []);
+                $allUnchanged = array_merge($allUnchanged, $saveResult['unchanged'] ?? []);
+                $allSkipped = array_merge($allSkipped, $saveResult['skipped'] ?? []);
+                $allInvalid = array_merge($allInvalid, $saveResult['invalid'] ?? []);
+
+                $this->logger->debug('Schema group saved', [
+                    'schemaId' => $schemaId,
+                    'objectCount' => count($schemaObjects),
+                    'saved' => count($saveResult['saved'] ?? []),
+                    'updated' => count($saveResult['updated'] ?? []),
+                ]);
+            }
+
+            // Combine all results
+            $saveResult = [
+                'saved' => $allSaved,
+                'updated' => $allUpdated,
+                'unchanged' => $allUnchanged,
+                'skipped' => $allSkipped,
+                'invalid' => $allInvalid,
+            ];
 
             // Store result for statistics
             $this->lastSaveResult = $saveResult;
 
-            // DEBUG: Log ObjectService save result to understand skipping behavior
+            // DEBUG: Log ObjectService save result
             $this->logger->info('ObjectService save result DEBUG', [
                 'total_objects_sent' => count($objects),
-                'saved_count' => count($saveResult['saved'] ?? []),
-                'updated_count' => count($saveResult['updated'] ?? []),
-                'unchanged_count' => count($saveResult['unchanged'] ?? []),
-                'skipped_count' => count($saveResult['skipped'] ?? []),
-                'invalid_count' => count($saveResult['invalid'] ?? []),
-                'result_keys' => array_keys($saveResult),
-                'first_unchanged_sample' => isset($saveResult['unchanged'][0]) ? [
-                    'id' => $saveResult['unchanged'][0]->getUuid(),
-                    'object_type' => get_class($saveResult['unchanged'][0])
-                ] : null
+                'saved_count' => count($allSaved),
+                'updated_count' => count($allUpdated),
+                'unchanged_count' => count($allUnchanged),
+                'skipped_count' => count($allSkipped),
+                'invalid_count' => count($allInvalid),
             ]);
 
             // Return combined saved and updated objects
-            return array_merge(
-                $saveResult['saved'] ?? [],
-                $saveResult['updated'] ?? [],
-                $saveResult['unchanged'] ?? []
-            );
+            return array_merge($allSaved, $allUpdated, $allUnchanged);
 
         } catch (\Exception $e) {
             $this->logger->error('Error in direct ObjectService save', [
@@ -1216,8 +1457,8 @@ class ArchiMateImportService
                     objects: $chunk,
                     register: $registerId,
                     schema: null,
-                    rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
-                    multi: self::PERFORMANCE_OPTIMIZATIONS['use_multi'],
+                    _rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
+                    _multitenancy: true,
                     validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
                     events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
                 );
@@ -1297,8 +1538,8 @@ class ArchiMateImportService
             objects: $objects,
             register: $registerId,
             schema: null,
-            rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
-            multi: self::PERFORMANCE_OPTIMIZATIONS['use_multi'],
+            _rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
+            _multitenancy: true,
             validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
             events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
         );
@@ -1667,6 +1908,10 @@ class ArchiMateImportService
         $mapping = [];
 
         foreach ($propertyDefinitionMap as $propertyRef => $originalName) {
+            // Skip non-string values (e.g., empty arrays from incomplete property definitions)
+            if (!is_string($originalName)) {
+                continue;
+            }
             $mapping[$originalName] = $this->convertToCamelCase($originalName);
         }
 
@@ -1718,20 +1963,45 @@ class ArchiMateImportService
     }
 
     /**
-     * Calculate optimized statistics for performance reporting
+     * Build statistics structure from ObjectService save result.
+     * Simply converts the ObjectService result format to ArchiMate statistics format.
      *
-     * @param array $savedObjects Saved objects from ObjectService::saveObjects
-     * @return array Statistics array
+     * @return array Statistics with created, updated, unchanged counts and summary.
      */
-    private function calculateOptimizedStatistics(array $savedObjects): array
+    private function buildStatisticsFromSaveResult(): array
     {
-        // Initialize statistics structure for detailed error extraction
+        // Initialize empty statistics.
         $statistics = [
-            'elements' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'organizations' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'relationships' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'views' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
-            'property_definitions' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []],
+            'elements' => [
+                'created' => 0,
+                'updated' => 0,
+                'unchanged' => 0,
+                'errors' => []
+            ],
+            'relationships' => [
+                'created' => 0,
+                'updated' => 0,
+                'unchanged' => 0,
+                'errors' => []
+            ],
+            'organizations' => [
+                'created' => 0,
+                'updated' => 0,
+                'unchanged' => 0,
+                'errors' => []
+            ],
+            'views' => [
+                'created' => 0,
+                'updated' => 0,
+                'unchanged' => 0,
+                'errors' => []
+            ],
+            'property_definitions' => [
+                'created' => 0,
+                'updated' => 0,
+                'unchanged' => 0,
+                'errors' => []
+            ],
             'summary' => [
                 'total_objects_created' => 0,
                 'total_objects_updated' => 0,
@@ -1741,81 +2011,109 @@ class ArchiMateImportService
             ]
         ];
 
+        // If no save result available, return empty statistics.
+        if ($this->lastSaveResult === null) {
+            return $statistics;
+        }
+
+        $saveResult = $this->lastSaveResult;
+
+        // Use per-schema counts if available (reliable — objects are saved per-schema-group,
+        // so we know which schema each count belongs to without inspecting serialized objects).
+        if (!empty($saveResult['countsBySchema']) && $this->cachedConfig !== null) {
+            $sectionMap = [
+                'model' => 'elements',
+                'element' => 'elements',
+                'relationship' => 'relationships',
+                'organization' => 'organizations',
+                'view' => 'views',
+                'property_definition' => 'property_definitions',
+            ];
+
+            // Build reverse map: schema ID → plural section name
+            $schemaToSection = [];
+            foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
+                $schemaToSection[(int)$schemaId] = $sectionMap[$type] ?? 'elements';
+            }
+
+            foreach ($saveResult['countsBySchema'] as $schemaId => $counts) {
+                $sectionKey = $schemaToSection[(int)$schemaId] ?? 'elements';
+                $statistics[$sectionKey]['created'] += $counts['saved'] ?? 0;
+                $statistics[$sectionKey]['updated'] += $counts['updated'] ?? 0;
+                $statistics[$sectionKey]['unchanged'] += $counts['unchanged'] ?? 0;
+                if (($counts['invalid'] ?? 0) > 0) {
+                    $statistics[$sectionKey]['errors'][] = "{$counts['invalid']} validation error(s)";
+                }
+            }
+        }
+
+        // Calculate summary totals
+        foreach ($statistics as $section => $sectionStats) {
+            if ($section === 'summary') continue;
+            $statistics['summary']['total_objects_created']   += $sectionStats['created'];
+            $statistics['summary']['total_objects_updated']   += $sectionStats['updated'];
+            $statistics['summary']['total_objects_unchanged'] += $sectionStats['unchanged'];
+            $statistics['summary']['total_errors']            += count($sectionStats['errors']);
+        }
+
+        return $statistics;
+    }
+
+    /**
+     * Calculate optimized statistics for performance reporting
+     *
+     * @param array $savedObjects Saved objects from ObjectService::saveObjects
+     * @return array Statistics array
+     */
+    private function calculateOptimizedStatistics(array $savedObjects): array
+    {
+        // Initialize statistics structure for detailed error extraction.
+        $statistics = [
+            'elements' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'organizations' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'relationships' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'views' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'property_definitions' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
+            'summary' => [
+                'total_objects_created' => 0,
+                'total_objects_updated' => 0,
+                'total_objects_deleted' => 0,
+                'total_objects_unchanged' => 0,
+                'total_errors' => 0
+            ]
+        ];
+        
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
-            // Process objects by section type similar to calculateObjectStatistics
-            $allProcessedObjects = array_merge(
-                $saveResult['saved'] ?? [],
-                $saveResult['updated'] ?? [],
-                $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [],
-                // For invalid objects, extract the original object from the error structure
-                array_map(fn($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
-            );
+            // Use per-schema counts if available (reliable — doesn't depend on serialized object fields)
+            if (!empty($saveResult['countsBySchema']) && $this->cachedConfig !== null) {
+                $sectionMap = [
+                    'model' => 'elements',
+                    'element' => 'elements',
+                    'relationship' => 'relationships',
+                    'organization' => 'organizations',
+                    'view' => 'views',
+                    'property_definition' => 'property_definitions',
+                ];
 
-            foreach ($allProcessedObjects as $object) {
-                // Convert ObjectEntity to array if needed
-                if (is_object($object) && method_exists($object, 'jsonSerialize')) {
-                    $object = $object->jsonSerialize();
+                $schemaToSection = [];
+                foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
+                    $schemaToSection[(int)$schemaId] = $sectionMap[$type] ?? 'elements';
                 }
 
-                $sectionType = $object['section'] ?? 'elements'; // Default to elements if section not found
-
-                // Map section types to statistics keys
-                $sectionKey = match($sectionType) {
-                    'elements' => 'elements',
-                    'relationships' => 'relationships',
-                    'organizations' => 'organizations',
-                    'views' => 'views',
-                    'property_definitions' => 'property_definitions',
-                    default => 'elements' // Default fallback
-                };
-
-                if (!isset($statistics[$sectionKey])) {
-                    continue; // Skip unknown section types
-                }
-
-                // Determine if this object was created, updated, or had errors
-                $objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
-
-                // Check if this object is in the saved (created) list
-                $wasCreated = !empty(array_filter($saveResult['saved'] ?? [],
-                    fn($saved) => (is_object($saved) && method_exists($saved, 'getUuid') ? $saved->getUuid() : null) === $objectId));
-
-                // Check if this object is in the updated list
-                $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [],
-                    fn($updated) => (is_object($updated) && method_exists($updated, 'getUuid') ? $updated->getUuid() : null) === $objectId));
-
-                // Check if this object was skipped (no changes)
-                $unchangedObjects = $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [];
-                $wasSkipped = !empty(array_filter($unchangedObjects,
-                    fn($unchanged) => (is_object($unchanged) && method_exists($unchanged, 'getUuid') ? $unchanged->getUuid() : null) === $objectId));
-
-                // Check if this object had validation errors
-                $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
-                    fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)));
-
-                if ($wasCreated) {
-                    $statistics[$sectionKey]['created']++;
-                } elseif ($wasUpdated) {
-                    $statistics[$sectionKey]['updated']++;
-                } elseif ($wasSkipped) {
-                    $statistics[$sectionKey]['skipped']++;
-                } elseif ($hasErrors) {
-                    // Add to errors array for this section
-                    $errorInfo = array_filter($saveResult['invalid'] ?? [],
-                        fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId));
-
-                    if (!empty($errorInfo)) {
-                        $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                foreach ($saveResult['countsBySchema'] as $schemaId => $counts) {
+                    $sectionKey = $schemaToSection[(int)$schemaId] ?? 'elements';
+                    $statistics[$sectionKey]['created'] += $counts['saved'] ?? 0;
+                    $statistics[$sectionKey]['updated'] += $counts['updated'] ?? 0;
+                    $statistics[$sectionKey]['unchanged'] += $counts['unchanged'] ?? 0;
+                    if (($counts['invalid'] ?? 0) > 0) {
+                        $statistics[$sectionKey]['errors'][] = "{$counts['invalid']} validation error(s)";
                     }
-                } else {
-                    // This shouldn't happen, but leave as fallback
-                    $statistics[$sectionKey]['skipped']++;
                 }
             }
 
-            // Calculate summary totals from actual statistics
+            // Calculate summary totals
             $summary = [
                 'total_objects_created' => 0,
                 'total_objects_updated' => 0,
@@ -1825,10 +2123,10 @@ class ArchiMateImportService
             ];
 
             foreach ($statistics as $section => $sectionStats) {
-                if ($section !== 'summary') { // Skip summary section itself
+                if ($section !== 'summary') {
                     $summary['total_objects_created'] += $sectionStats['created'];
                     $summary['total_objects_updated'] += $sectionStats['updated'];
-                    $summary['total_objects_unchanged'] += $sectionStats['skipped'];
+                    $summary['total_objects_unchanged'] += $sectionStats['unchanged'];
                     $summary['total_errors'] += count($sectionStats['errors']);
                 }
             }
@@ -2174,7 +2472,15 @@ class ArchiMateImportService
             }
         }
 
-        // Extract nodes and connections for view objects with element splicing
+        // Preserve original node/connection arrays for views (needed by export's addViewDataToXmlNode)
+        if (isset($item['node'])) {
+            $essential['node'] = $item['node'];
+        }
+        if (isset($item['connection'])) {
+            $essential['connection'] = $item['connection'];
+        }
+
+        // Extract flattened viewNodes/viewRelationships for frontend consumption
         if ($schemaType === 'view') {
             $this->extractViewNodesAndConnections($item, $essential, $elementsLookup);
         } else {
@@ -2360,22 +2666,26 @@ class ArchiMateImportService
                 }
             }
 
+            // Add parent node BEFORE its children so the frontend rendering
+            // engine can look up parents via graph.getCell(parentId).
+            $viewNodes[] = $viewNode;
+
             // Handle child nodes recursively (flatten hierarchy into single array while preserving parent-child relationships)
             if (isset($node['node'])) {
                 $childNodes = $this->extractViewNodesRecursively($node['node'], $elementsLookup);
 
-                // IMPORTANT: Set parent reference for all child nodes to maintain hierarchy
-                // This allows the frontend to reconstruct the nested structure
+                // Set parent reference only for DIRECT children (those with parent === null).
+                // Grandchildren already have their parent set by the recursive call.
                 foreach ($childNodes as &$childNode) {
-                    $childNode['parent'] = $nodeId; // Parent is the current node's ID
+                    if ($childNode['parent'] === null) {
+                        $childNode['parent'] = $nodeId;
+                    }
                 }
                 unset($childNode);
 
                 // Add child nodes to the main flattened array (maintaining parent references)
                 $viewNodes = array_merge($viewNodes, $childNodes);
             }
-
-            $viewNodes[] = $viewNode;
         }
 
         return $viewNodes;
@@ -2609,13 +2919,18 @@ class ArchiMateImportService
             $viewNode['color'] = "rgb($r, $g, $b)";
         }
 
-        // Extract lineColor
+        // Extract lineColor (including alpha for border visibility)
         if (isset($style['lineColor']['_attributes'])) {
             $lineColor = $style['lineColor']['_attributes'];
             $r = isset($lineColor['r']) ? (int)$lineColor['r'] : 0;
             $g = isset($lineColor['g']) ? (int)$lineColor['g'] : 0;
             $b = isset($lineColor['b']) ? (int)$lineColor['b'] : 0;
-            $viewNode['borderColor'] = "rgb($r, $g, $b)";
+            $a = isset($lineColor['a']) ? (int)$lineColor['a'] : 100;
+            if ($a < 100) {
+                $viewNode['borderColor'] = "rgba($r, $g, $b, " . round($a / 100, 2) . ")";
+            } else {
+                $viewNode['borderColor'] = "rgb($r, $g, $b)";
+            }
         }
 
         // Extract font information
@@ -2966,7 +3281,13 @@ class ArchiMateImportService
 
         foreach ($possiblePropertyNames as $propertyName) {
             if (isset($object[$propertyName]) && !empty($object[$propertyName])) {
-                $value = (string) $object[$propertyName];
+                $rawValue = $object[$propertyName];
+                // Handle case where value might be an array (e.g., from XML parsing with _value key)
+                if (is_array($rawValue)) {
+                    $value = $rawValue['_value'] ?? $rawValue[0] ?? '';
+                } else {
+                    $value = (string) $rawValue;
+                }
 
                 // Log the first successful match for debugging
                 if (!isset($this->gemmaTypePropertyFound)) {
@@ -3017,19 +3338,21 @@ class ArchiMateImportService
      */
     private function processGemmaReferenceComponentStandards(array $objects): array
     {
-        $this->logger->info('Processing GEMMA Referentiecomponent-Standaard relationships with optimized single-pass algorithm');
+        $this->logger->info('Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships with optimized single-pass algorithm');
 
         // OPTIMIZATION: Single-pass processing - collect all data types at once
         $referentieComponenten = [];
         $standaarden = [];
+        $standaardVersies = [];
         $gemmaRelationshipMap = [];
+        $standaardVersieRelationshipMap = []; // StandaardVersie -> Standaard mappings
 
         // Debug: Count objects and property variations
         $elementCount = 0;
         $elementsWithGemmaType = 0;
         $gemmaTypeVariations = [];
 
-        // PASS 1: Collect Referentiecomponenten and Standaarden, process relationships immediately
+        // PASS 1: Collect Referentiecomponenten, Standaarden, and StandaardVersies
         foreach ($objects as $index => $object) {
             // Debug: Count elements and GEMMA types
             if (isset($object['section']) && $object['section'] === 'element') {
@@ -3050,13 +3373,21 @@ class ArchiMateImportService
                         $referentieComponenten[$object['identifier']] = $index;
                     } elseif ($gemmaTypeValue === 'Standaard') {
                         $standaarden[$object['identifier']] = $index;
+                    } elseif ($gemmaTypeValue === 'Standaardversie') {
+                        $standaardVersies[$object['identifier']] = $index;
                     }
                 }
             }
+        }
 
-            // Process relationships immediately when found (no separate collection needed)
+        // PASS 2: Process relationships (need all entities collected first for StandaardVersie relationships)
+        foreach ($objects as $object) {
             if (isset($object['section']) && $object['section'] === 'relationship') {
+                // Process Referentiecomponent-Standaard relationships
                 $this->processRelationshipImmediate($object, $referentieComponenten, $standaarden, $gemmaRelationshipMap);
+
+                // Process StandaardVersie-Standaard relationships (Specialization type)
+                $this->processStandaardVersieRelationship($object, $standaardVersies, $standaarden, $standaardVersieRelationshipMap);
             }
         }
 
@@ -3067,7 +3398,9 @@ class ArchiMateImportService
             'gemma_type_variations' => $gemmaTypeVariations,
             'referentiecomponenten_count' => count($referentieComponenten),
             'standaarden_count' => count($standaarden),
-            'processed_relationships' => count($gemmaRelationshipMap)
+            'standaardversies_count' => count($standaardVersies),
+            'processed_relationships' => count($gemmaRelationshipMap),
+            'standaardversie_relationships' => count($standaardVersieRelationshipMap)
         ]);
 
         // STEP 2: Apply the processed relationship mappings to Referentiecomponenten
@@ -3106,7 +3439,122 @@ class ArchiMateImportService
             'total_relationships_processed' => count($gemmaRelationshipMap)
         ]);
 
+        // STEP 3: Apply StandaardVersie-Standaard relationship mappings
+        // Only store 'standaard' on StandaardVersie - use inversedBy for reverse lookup
+        $versieEnhancedCount = 0;
+
+        foreach ($standaardVersieRelationshipMap as $versieId => $standaardId) {
+            // Add standaard reference to StandaardVersie
+            if (isset($standaardVersies[$versieId])) {
+                $versieIndex = $standaardVersies[$versieId];
+                // Convert to UUID format (remove "id-" prefix)
+                $standaardUuid = str_replace('id-', '', $standaardId);
+                $objects[$versieIndex]['standaard'] = $standaardUuid;
+                $versieEnhancedCount++;
+            }
+        }
+
+        $this->logger->info('GEMMA StandaardVersie-Standaard processing completed', [
+            'standaardversies_enhanced' => $versieEnhancedCount,
+            'total_standaardversies' => count($standaardVersies),
+            'total_versie_relationships' => count($standaardVersieRelationshipMap)
+        ]);
+
+        // STEP 4: Add standaardVersies to ReferentieComponenten
+        // This allows querying ?gemmaType=referentiecomponent&_extend[]=gekoppeldeStandaardVersies
+        // to get all referentiecomponenten with their related standaardVersies in one call
+
+        // Build reverse map: Standaard ID -> [StandaardVersie UUIDs]
+        $standaardToVersiesMap = [];
+        foreach ($standaardVersieRelationshipMap as $versieId => $standaardId) {
+            $versieUuid = str_replace('id-', '', $versieId);
+            if (!isset($standaardToVersiesMap[$standaardId])) {
+                $standaardToVersiesMap[$standaardId] = [];
+            }
+            $standaardToVersiesMap[$standaardId][] = $versieUuid;
+        }
+
+        // Add standaardVersies to each ReferentieComponent
+        $refCompWithVersiesCount = 0;
+        foreach ($referentieComponenten as $refCompId => $objectIndex) {
+            $standaardVersiesForRefComp = [];
+
+            // Get all standaarden for this referentiecomponent (combined array)
+            $refCompStandaarden = $objects[$objectIndex]['standaarden'] ?? [];
+
+            // For each standaard, collect its standaardVersies
+            foreach ($refCompStandaarden as $standaardUuid) {
+                // Convert UUID back to identifier format for lookup
+                $standaardIdentifier = 'id-' . $standaardUuid;
+
+                if (isset($standaardToVersiesMap[$standaardIdentifier])) {
+                    $standaardVersiesForRefComp = array_merge(
+                        $standaardVersiesForRefComp,
+                        $standaardToVersiesMap[$standaardIdentifier]
+                    );
+                }
+            }
+
+            // Remove duplicates and add to referentiecomponent
+            // Use 'gekoppeldeStandaardVersies' to avoid conflict with inversedBy on 'standaardVersies'
+            if (!empty($standaardVersiesForRefComp)) {
+                $objects[$objectIndex]['gekoppeldeStandaardVersies'] = array_values(array_unique($standaardVersiesForRefComp));
+                $refCompWithVersiesCount++;
+            }
+        }
+
+        $this->logger->info('GEMMA ReferentieComponent-StandaardVersies processing completed', [
+            'referentiecomponenten_with_versies' => $refCompWithVersiesCount,
+            'total_referentiecomponenten' => count($referentieComponenten),
+            'standaard_to_versies_mappings' => count($standaardToVersiesMap)
+        ]);
+
         return $objects;
+    }
+
+    /**
+     * Process StandaardVersie-Standaard relationships (Specialization type)
+     *
+     * @param array $relationship The relationship object
+     * @param array $standaardVersies Array of StandaardVersie identifiers
+     * @param array $standaarden Array of Standaard identifiers
+     * @param array &$standaardVersieRelationshipMap Map of StandaardVersie -> Standaard (by reference)
+     * @return void
+     */
+    private function processStandaardVersieRelationship(array $relationship, array $standaardVersies, array $standaarden, array &$standaardVersieRelationshipMap): void
+    {
+        // Get source and target from relationship
+        $source = $this->extractRelationshipEndpoint($relationship, 'source');
+        $target = $this->extractRelationshipEndpoint($relationship, 'target');
+
+        if (!$source || !$target) {
+            return;
+        }
+
+        // Get relationship type (looking for Specialization)
+        // Type can be in 'type' (from _xsi__type) or in _attributes['xsi:type']
+        $relationType = $relationship['type'] ?? $relationship['_xsi__type'] ?? $relationship['_attributes']['xsi:type'] ?? null;
+        if ($relationType !== 'Specialization') {
+            return;
+        }
+
+        // Check if one end is a StandaardVersie and the other is a Standaard
+        $versieId = null;
+        $standaardId = null;
+
+        if (isset($standaardVersies[$source]) && isset($standaarden[$target])) {
+            // StandaardVersie -> Standaard
+            $versieId = $source;
+            $standaardId = $target;
+        } elseif (isset($standaarden[$source]) && isset($standaardVersies[$target])) {
+            // Standaard -> StandaardVersie (reverse direction)
+            $versieId = $target;
+            $standaardId = $source;
+        }
+
+        if ($versieId && $standaardId) {
+            $standaardVersieRelationshipMap[$versieId] = $standaardId;
+        }
     }
 
     /**
@@ -3164,10 +3612,12 @@ class ArchiMateImportService
             }
 
             // Add to appropriate array based on Verbindingsrol
+            // Convert identifier to UUID format (remove "id-" prefix) for _extend compatibility
+            $standaardUuid = str_replace('id-', '', $standaardId);
             if (strtolower($verbindingsrol) === 'aanbevolen') {
-                $gemmaRelationshipMap[$refCompId]['aanbevolen'][] = $standaardId;
+                $gemmaRelationshipMap[$refCompId]['aanbevolen'][] = $standaardUuid;
             } elseif (strtolower($verbindingsrol) === 'verplicht') {
-                $gemmaRelationshipMap[$refCompId]['verplicht'][] = $standaardId;
+                $gemmaRelationshipMap[$refCompId]['verplicht'][] = $standaardUuid;
             }
         }
     }
@@ -3411,27 +3861,22 @@ class ArchiMateImportService
                 }
             }
 
+            // Extract type from xsi:type attribute
+            if (isset($item['_xsi__type'])) {
+                $object['type'] = $item['_xsi__type'];
+            } elseif (isset($item['_attributes']['xsi:type'])) {
+                $object['type'] = $item['_attributes']['xsi:type'];
+            }
+
             // Flatten properties efficiently (same as other sections)
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
 
-                // Update ID and slug if objectId is available
-                if (isset($object['objectId'])) {
-                    $object['@self']['id'] = $object['objectId'];
-                    $object['@self']['slug'] = $identifier;
-                } else {
-                    if ($identifier && str_starts_with($identifier, 'id-')) {
-                        $object['@self']['slug'] = substr($identifier, 3);
-                    } else {
-                        $object['@self']['slug'] = $identifier;
-                    }
-                }
+                // Keep @self.id as the full ArchiMate identifier (set above)
+                // so stored IDs match GEMMA Online URLs (id-e0f57689-...).
+                $object['@self']['slug'] = $identifier;
             } else {
-                if ($identifier && str_starts_with($identifier, 'id-')) {
-                    $object['@self']['slug'] = substr($identifier, 3);
-                } else {
-                    $object['@self']['slug'] = $identifier;
-                }
+                $object['@self']['slug'] = $identifier;
             }
 
             // Copy viewNodes and viewRelationships from XML to root level for easy access
@@ -3559,6 +4004,13 @@ class ArchiMateImportService
                     : (is_string($rawItem['documentation']) ? $rawItem['documentation'] : '');
             }
 
+            // Extract type from xsi:type attribute
+            if (isset($rawItem['_xsi__type'])) {
+                $element['type'] = $rawItem['_xsi__type'];
+            } elseif (isset($rawItem['_attributes']['xsi:type'])) {
+                $element['type'] = $rawItem['_attributes']['xsi:type'];
+            }
+
             // Fast properties flattening (only essential properties for splicing)
             if (isset($rawItem['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $props = isset($rawItem['properties']['property'][0])
@@ -3601,19 +4053,52 @@ class ArchiMateImportService
     {
         $organisation = $this->getCurrentOrganisation();
 
-        return [
+        // Extract a plain string name (schema column expects string, not array)
+        $nameString = null;
+        if (isset($metadata['name'])) {
+            if (is_array($metadata['name']) && isset($metadata['name']['_value'])) {
+                $nameString = (string)$metadata['name']['_value'];
+            } elseif (is_string($metadata['name'])) {
+                $nameString = $metadata['name'];
+            }
+        }
+
+        // Build xml field preserving full array structure for round-trip fidelity
+        $xmlData = [];
+        if (isset($metadata['name'])) {
+            $xmlData['name'] = $metadata['name'];
+        }
+        if (isset($metadata['documentation'])) {
+            $xmlData['documentation'] = $metadata['documentation'];
+        }
+        if (isset($metadata['properties'])) {
+            $xmlData['properties'] = $metadata['properties'];
+        }
+        if (isset($metadata['propertyDefinitionMap'])) {
+            $xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
+        }
+
+        $object = [
             '@self' => [
                 'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                 'schema' => $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException("Schema ID for 'model' not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
                 'id' => $modelIdentifier,
                 'owner' => $this->cachedConfig['userId'],
-                'organisation' => $organisation,  // Use the method instead of cached value
+                'organisation' => $organisation,
                 'published' => date('Y-m-d\TH:i:s\Z')
             ],
             'identifier' => $modelIdentifier,
             'section' => 'model',
-            'model_identifier' => $modelIdentifier
+            'model_identifier' => $modelIdentifier,
+            'xml' => $xmlData
         ] + $metadata;
+
+        // Override name with string version so schema column stores it properly
+        if ($nameString !== null) {
+            $object['name'] = $nameString;
+        }
+
+        return $object;
     }
 
     /**
@@ -3732,7 +4217,12 @@ class ArchiMateImportService
                 }
             }
 
-
+            // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent")
+            if (isset($item['_xsi__type'])) {
+                $object['type'] = $item['_xsi__type'];
+            } elseif (isset($item['_attributes']['xsi:type'])) {
+                $object['type'] = $item['_attributes']['xsi:type'];
+            }
 
             // Flatten properties efficiently (if present)
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
@@ -3992,6 +4482,30 @@ class ArchiMateImportService
         ];
 
         foreach ($sections as $sectionName => $schemaType) {
+            // Organizations are hierarchical folder trees — store as one tree object
+            if ($sectionName === 'organizations') {
+                $orgData = $this->findSectionData($xmlData, 'organizations');
+                if (!empty($orgData)) {
+                    $syntheticId = 'org-' . preg_replace('/^id-/', '', $modelIdentifier);
+                    $objects[] = [
+                        '@self' => [
+                            'register' => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration."),
+                            'schema' => $this->cachedConfig['schemaIds']['organization'] ?? throw new \RuntimeException("Schema ID for 'organization' not found."),
+                            'id' => $syntheticId,
+                            'owner' => $this->cachedConfig['userId'],
+                            'organisation' => $this->getCurrentOrganisation(),
+                            'published' => date('Y-m-d\TH:i:s\Z')
+                        ],
+                        'identifier' => $syntheticId,
+                        'section' => 'organization',
+                        'model_identifier' => $modelIdentifier,
+                        'name' => 'Organizations',
+                        'xml' => $orgData
+                    ];
+                }
+                continue;
+            }
+
             if (empty($allLookups[$sectionName])) continue;
 
             $this->logger->debug("SPEED: Bulk processing {$sectionName}", [
@@ -4059,6 +4573,28 @@ class ArchiMateImportService
                 $object['summary'] = is_array($item['documentation']) && isset($item['documentation']['_value'])
                     ? $item['documentation']['_value']
                     : (is_string($item['documentation']) ? $item['documentation'] : '');
+            }
+
+            // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent")
+            if (isset($item['_xsi__type'])) {
+                $object['type'] = $item['_xsi__type'];
+            } elseif (isset($item['_attributes']['xsi:type'])) {
+                $object['type'] = $item['_attributes']['xsi:type'];
+            }
+
+            // For relationships, extract source and target from attributes
+            if ($schemaType === 'relationship') {
+                if (isset($item['_source'])) {
+                    $object['source'] = $item['_source'];
+                } elseif (isset($item['_attributes']['source'])) {
+                    $object['source'] = $item['_attributes']['source'];
+                }
+
+                if (isset($item['_target'])) {
+                    $object['target'] = $item['_target'];
+                } elseif (isset($item['_attributes']['target'])) {
+                    $object['target'] = $item['_attributes']['target'];
+                }
             }
 
             // Fast flatten properties
@@ -4181,22 +4717,22 @@ class ArchiMateImportService
                     : (is_string($item['documentation']) ? $item['documentation'] : '');
             }
 
+            // Extract type from xsi:type attribute
+            if (isset($item['_xsi__type'])) {
+                $object['type'] = $item['_xsi__type'];
+            } elseif (isset($item['_attributes']['xsi:type'])) {
+                $object['type'] = $item['_attributes']['xsi:type'];
+            }
+
             // Fast properties flattening
             if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
                 $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
 
-                if (isset($object['objectId'])) {
-                    $object['@self']['id'] = $object['objectId'];
-                    $object['@self']['slug'] = $identifier;
-                } else {
-                    $object['@self']['slug'] = str_starts_with($identifier, 'id-')
-                        ? substr($identifier, 3)
-                        : $identifier;
-                }
+                // Keep @self.id as the full ArchiMate identifier (set above)
+                // so stored IDs match GEMMA Online URLs (id-e0f57689-...).
+                $object['@self']['slug'] = $identifier;
             } else {
-                $object['@self']['slug'] = str_starts_with($identifier, 'id-')
-                    ? substr($identifier, 3)
-                    : $identifier;
+                $object['@self']['slug'] = $identifier;
             }
 
             // SPEED OPTIMIZATION: Direct copy without checks (we know it exists)
@@ -4388,12 +4924,21 @@ class ArchiMateImportService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
-            // Count objects by section type from the actual processed objects
+            // DEBUG: Log what we got from ObjectService.
+            $this->logger->info('[ArchiMate] Using lastSaveResult for statistics', [
+                'saved_count' => count($saveResult['saved'] ?? []),
+                'updated_count' => count($saveResult['updated'] ?? []),
+                'unchanged_count' => count($saveResult['unchanged'] ?? []),
+                'invalid_count' => count($saveResult['invalid'] ?? []),
+                'keys_present' => array_keys($saveResult)
+            ]);
+
+            // Count objects by section type from the actual processed objects.
             $allProcessedObjects = array_merge(
                 $saveResult['saved'] ?? [],
                 $saveResult['updated'] ?? [],
-                $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [],
-                // For invalid objects, extract the original object from the error structure
+                $saveResult['unchanged'] ?? [],
+                // For invalid objects, extract the original object from the error structure.
                 array_map(fn($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
             );
 
@@ -4403,39 +4948,60 @@ class ArchiMateImportService
                     $object = $object->jsonSerialize();
                 }
 
-                $sectionType = $object['section'] ?? 'elements'; // Default to elements if section not found
+                $sectionType = $object['section'] ?? null;
 
-                // Map section types to statistics keys
+                // Map section types (singular or plural) to statistics keys
                 $sectionKey = match($sectionType) {
-                    'elements' => 'elements',
-                    'relationships' => 'relationships',
-                    'organizations' => 'organizations',
-                    'views' => 'views',
-                    'property_definitions' => 'property_definitions',
-                    default => 'elements' // Default fallback
+                    'elements', 'element', 'model' => 'elements',
+                    'relationships', 'relationship' => 'relationships',
+                    'organizations', 'organization' => 'organizations',
+                    'views', 'view' => 'views',
+                    'property_definitions', 'property_definition' => 'property_definitions',
+                    default => null
                 };
+
+                // Fallback: use @self.schema to determine section
+                if ($sectionKey === null && $this->cachedConfig !== null && isset($this->cachedConfig['schemaIds'])) {
+                    $objSchemaId = $object['@self']['schema'] ?? null;
+                    if ($objSchemaId !== null) {
+                        $singularToPlural = [
+                            'element' => 'elements', 'relationship' => 'relationships',
+                            'organization' => 'organizations', 'view' => 'views',
+                            'property_definition' => 'property_definitions', 'model' => 'elements',
+                        ];
+                        foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
+                            if ((int)$schemaId === (int)$objSchemaId) {
+                                $sectionKey = $singularToPlural[$type] ?? 'elements';
+                                break;
+                            }
+                        }
+                    }
+                    $sectionKey = $sectionKey ?? 'elements';
+                } elseif ($sectionKey === null) {
+                    $sectionKey = 'elements';
+                }
 
                 if (!isset($statistics[$sectionKey])) {
                     continue; // Skip unknown section types
                 }
 
-                // Determine if this object was created, updated, or had errors
+                // Determine if this object was created, updated, or had errors.
                 $objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
 
-                // Check if this object is in the saved (created) list
+                // Check if this object is in the saved (created) list.
                 $wasCreated = !empty(array_filter($saveResult['saved'] ?? [],
                     fn($saved) => ($saved->getUuid() === $objectId)));
 
-                // Check if this object is in the updated list
+                // Check if this object is in the updated list.
                 $wasUpdated = !empty(array_filter($saveResult['updated'] ?? [],
                     fn($updated) => ($updated->getUuid() === $objectId)));
 
-                // Check if this object was unchanged (no changes)
-                $unchangedObjects = $saveResult['unchanged'] ?? $saveResult['skipped'] ?? [];
+                // Check if this object was unchanged (no changes).
+                $unchangedObjects = $saveResult['unchanged'] ?? [];
                 $wasSkipped = !empty(array_filter($unchangedObjects,
                     fn($unchanged) => ($unchanged->getUuid() === $objectId)));
 
-                // Check if this object had validation errors
+                // Check if this object had validation errors.
                 $hasErrors = !empty(array_filter($saveResult['invalid'] ?? [],
                     fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)));
 
@@ -4444,9 +5010,9 @@ class ArchiMateImportService
                 } elseif ($wasUpdated) {
                     $statistics[$sectionKey]['updated']++;
                 } elseif ($wasSkipped) {
-                    $statistics[$sectionKey]['skipped']++;
+                    $statistics[$sectionKey]['unchanged']++;
                 } elseif ($hasErrors) {
-                    // Add to errors array for this section
+                    // Add to errors array for this section.
                     $errorInfo = array_filter($saveResult['invalid'] ?? [],
                         fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId));
 
@@ -4454,8 +5020,8 @@ class ArchiMateImportService
                         $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
                     }
                 } else {
-                    // This shouldn't happen, but leave as fallback
-                    $statistics[$sectionKey]['skipped']++;
+                    // This shouldn't happen, but leave as fallback.
+                    $statistics[$sectionKey]['unchanged']++;
                 }
             }
         } else {
@@ -4470,25 +5036,36 @@ class ArchiMateImportService
             }
         }
 
-        // Calculate summary totals from actual statistics
+        // Calculate summary totals from actual statistics.
         $summary = [
             'total_objects_created' => 0,
             'total_objects_updated' => 0,
             'total_objects_deleted' => 0,
-            'total_objects_skipped' => 0,
+            'total_objects_unchanged' => 0,
             'total_errors' => 0
         ];
 
         foreach ($statistics as $section => $sectionStats) {
-            if ($section !== 'summary') { // Skip summary section itself
+            if ($section !== 'summary') { // Skip summary section itself.
                 $summary['total_objects_created'] += $sectionStats['created'];
                 $summary['total_objects_updated'] += $sectionStats['updated'];
-                $summary['total_objects_skipped'] += $sectionStats['skipped'];
+                $summary['total_objects_unchanged'] += $sectionStats['unchanged'];
                 $summary['total_errors'] += count($sectionStats['errors']);
             }
         }
 
         $statistics['summary'] = $summary;
+
+        // DEBUG: Log the summary statistics to help diagnose the issue.
+        $this->logger->info('[ArchiMate] Statistics summary calculated', [
+            'summary' => $summary,
+            'section_counts' => array_map(fn($s) => [
+                'created' => $s['created'] ?? 0,
+                'updated' => $s['updated'] ?? 0,
+                'unchanged' => $s['unchanged'] ?? 0,
+                'errors' => count($s['errors'] ?? [])
+            ], array_filter($statistics, fn($k) => $k !== 'summary', ARRAY_FILTER_USE_KEY))
+        ]);
 
         return $statistics;
     }

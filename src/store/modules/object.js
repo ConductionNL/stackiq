@@ -783,7 +783,11 @@ export const useObjectStore = defineStore('object', {
 			})
 
 			// Handle _extend parameter - convert comma-separated string to multiple _extend[] parameters
-			const extendValue = params._extend || params.extend || '@self.schema'
+			// Skip _extend for sub-resources (audit-trails, files) as they don't need schema data
+			// For organizations, only extend contactpersonen (not @self.schema)
+			const isSubResource = action && ['logs', 'audit-trails', 'files', 'publish', 'depublish', 'unlock', 'lock', 'revert'].includes(action)
+			const defaultExtend = isSubResource ? null : (type === 'organisatie' ? 'contactpersonen' : '@self.schema')
+			const extendValue = params._extend || params.extend || defaultExtend
 			if (extendValue) {
 				// Split comma-separated extends into individual parameters
 				const extendParts = extendValue.split(',').map(part => part.trim())
@@ -822,45 +826,40 @@ export const useObjectStore = defineStore('object', {
 				}
 
 				// Add _extend parameter if not explicitly set
-				// For organizations, force database queries to ensure fresh data
+				// For organizations, only extend contactpersonen (not @self.schema)
 				const queryParams = {
 					...params,
-					_extend: params._extend || params.extend || '@self.schema',
-					// Force database queries for organizations to bypass any index caching
-					...((type === 'organisatie' || type === 'contactpersoon' || type === 'moduleVersie') && !params._source
-						? { _source: 'database' }
-						: {}),
+					_extend: params._extend || params.extend || (type === 'organisatie' ? 'contactpersonen' : '@self.schema'),
 				}
 
 				// Log the final URL for debugging
 				const apiUrl = this._constructApiUrl(type, null, null, queryParams)
 				console.info('fetchCollection API URL:', apiUrl)
-				if (type === 'organisatie') {
-					console.info('Organization fetch - ensuring database source:', {
-						type,
-						hasSourceParam: queryParams._source === 'database',
-						queryParams,
-					})
-				}
 
 				const response = await fetch(apiUrl)
 				if (!response.ok) throw new Error(`Failed to fetch ${type} collection`)
 
 				const data = await response.json()
 				console.info('API Response:', data)
+				console.info('API Response Pagination:', {
+					total: data.total,
+					page: data.page,
+					pages: data.pages,
+					limit: data.limit,
+					resultsLength: data.results?.length,
+				})
 
 				// Update pagination info - handle both pagination formats
 				const paginationInfo = {
 					total: data.total || 0,
 					page: data.page || 1,
-					pages:
-            data.pages
-            || (data.next ? Math.ceil((data.total || 0) / (data.limit || 20)) : 1),
+					pages: data.pages || Math.ceil((data.total || 0) / (data.limit || 20)),
 					limit: data.limit || 20,
 					next: data.next || null,
 					prev: data.prev || null,
 				}
 
+				console.info('Setting pagination for type:', type, paginationInfo)
 				this.setPagination(type, paginationInfo)
 
 				// Set the collection using the new method
@@ -900,27 +899,15 @@ export const useObjectStore = defineStore('object', {
 				}
 
 				// Add _extend parameter if not explicitly set
-				// For organizations, force database queries to ensure fresh data
+				// For organizations, only extend contactpersonen (not @self.schema)
 				const queryParams = {
 					...params,
-					_extend: params._extend || params.extend || '@self.schema',
-					// Force database queries for organizations to bypass any index caching
-					...(type === 'organisatie' && !params._source
-						? { _source: 'database' }
-						: {}),
+					_extend: params._extend || params.extend || (type === 'organisatie' ? 'contactpersonen' : '@self.schema'),
 				}
 
 				// Log the final URL for debugging
 				const apiUrl = this._constructApiUrl(type, id, null, queryParams)
 				console.info('fetchObject API URL:', apiUrl)
-				if (type === 'organisatie') {
-					console.info('Organization fetch - ensuring database source:', {
-						type,
-						id,
-						hasSourceParam: queryParams._source === 'database',
-						queryParams,
-					})
-				}
 
 				const response = await fetch(apiUrl)
 				if (!response.ok) throw new Error(`Failed to fetch ${type} object`)
@@ -1298,8 +1285,10 @@ export const useObjectStore = defineStore('object', {
 				if (!this.objects[type]) this.objects[type] = {}
 				this.objects[type][id] = updatedObject
 
-				// Refresh the collection to ensure it's up to date
-				await this.fetchCollection(type)
+				// NOTE: We don't automatically refresh the collection here anymore.
+				// Components should handle refreshing with their own filters/search params.
+				// This prevents unfiltered fetches from overwriting filtered results.
+				// await this.fetchCollection(type)
 
 				// If this is the active object, update it
 				if (this.activeObjects[type]?.id === id) {

@@ -111,17 +111,26 @@ class ContactPersonHandler
 
         // Strategy 2: firstname.lastname (fallback)
         if (!empty($voornaam) && !empty($achternaam)) {
-            $username = strtolower($voornaam) . '.' . strtolower($achternaam);
-            if ($this->isValidUsername($username)) {
-                return $username;
+            // Strip spaces and non-alphanumeric chars from name parts
+            $cleanVoornaam = preg_replace('/[^a-z0-9]/', '', strtolower($voornaam));
+            $cleanAchternaam = preg_replace('/[^a-z0-9]/', '', strtolower($achternaam));
+            if (!empty($cleanVoornaam) && !empty($cleanAchternaam)) {
+                $username = $cleanVoornaam . '.' . $cleanAchternaam;
+                if ($this->isValidUsername($username)) {
+                    return $username;
+                }
             }
         }
 
         // Strategy 3: firstnamelastname (fallback)
         if (!empty($voornaam) && !empty($achternaam)) {
-            $username = strtolower($voornaam) . strtolower($achternaam);
-            if ($this->isValidUsername($username)) {
-                return $username;
+            $cleanVoornaam = preg_replace('/[^a-z0-9]/', '', strtolower($voornaam));
+            $cleanAchternaam = preg_replace('/[^a-z0-9]/', '', strtolower($achternaam));
+            if (!empty($cleanVoornaam) && !empty($cleanAchternaam)) {
+                $username = $cleanVoornaam . $cleanAchternaam;
+                if ($this->isValidUsername($username)) {
+                    return $username;
+                }
             }
         }
 
@@ -155,12 +164,49 @@ class ContactPersonHandler
             return false;
         }
 
-        // Only allow alphanumeric, dots, underscores, dashes, and @ symbol (for email addresses)
-        if (!preg_match('/^[a-z0-9._@-]+$/', $username)) {
+        // Only allow alphanumeric, dots, underscores, dashes, and @ (matching Nextcloud's allowed chars)
+        if (!preg_match('/^[a-z0-9._@\-]+$/', $username)) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Validates an email address for use as a Nextcloud username.
+     * Returns null if valid, or an error message string if invalid.
+     *
+     * @param string $email The email address to validate
+     * @return string|null Null if valid, error message if invalid
+     */
+    public function validateEmailForUsername(string $email): ?string
+    {
+        if (empty($email)) {
+            return 'No email address found. The contact person must have a valid email address (in the "email" or "e-mailadres" field) to be activated.';
+        }
+
+        if (strpos($email, '@') === false) {
+            return "The email address \"{$email}\" is not a valid email address (missing @).";
+        }
+
+        $lowered = strtolower($email);
+
+        // Find invalid characters
+        $invalidChars = preg_replace('/[a-z0-9._@\-]/', '', $lowered);
+        if (!empty($invalidChars)) {
+            $uniqueChars = implode(' ', array_unique(str_split($invalidChars)));
+            return "The email address \"{$email}\" contains characters that are not allowed in a Nextcloud username: {$uniqueChars}. Only letters (a-z), numbers (0-9), dots (.), underscores (_), dashes (-) and @ are allowed. Please correct the email address on the contact person before activating.";
+        }
+
+        if (strlen($lowered) < 3) {
+            return "The email address \"{$email}\" is too short to be used as a username (minimum 3 characters).";
+        }
+
+        if (strlen($lowered) > 64) {
+            return "The email address \"{$email}\" is too long to be used as a username (maximum 64 characters).";
+        }
+
+        return null;
     }
 
     /**
@@ -195,22 +241,27 @@ class ContactPersonHandler
      */
     public function createUserAccount(object $contactpersoonObject, bool $isFirstContact = false): ?\OCP\IUser
     {
+        // Automatic user creation is disabled - users are now manually activated
+        $this->_logger->info('Automatic user creation is disabled, skipping', [
+            'app' => 'softwarecatalog',
+            'contactId' => $contactpersoonObject->getId(),
+        ]);
+        return null;
+
         $startTime = microtime(true);
-        
+
         try {
             $objectData = $contactpersoonObject->getObject();
             $contactId = $contactpersoonObject->getId();
             $email = $objectData['email'] ?? $objectData['e-mailadres'] ?? '';
             $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
-            $this->_logger->critical('🔥 USER ACCOUNT CREATION STARTED', [
+            $this->_logger->debug('User account creation started', [
                 'app' => 'softwarecatalog',
                 'contactId' => $contactId,
                 'email' => $email,
                 'organizationUuid' => $organizationUuid,
                 'isFirstContact' => $isFirstContact,
-                'timestamp' => date('Y-m-d H:i:s'),
-                'microtime' => microtime(true)
             ]);
 
             if (empty($email)) {
@@ -255,16 +306,19 @@ class ContactPersonHandler
                         $this->storeUserOrganizationUuid($existingUser, $organizationUuid);
                     }
 
+                    // Store contact name fields for existing user (update if contact data changed)
+                    $this->storeContactNameFields($existingUser, $objectData);
+
                     // Update groups for existing user
                     $this->assignUserGroups($existingUser, $objectData, $isFirstContact);
-                    
+
                     $this->_logger->critical('✅ EXISTING USER UPDATED', [
                         'app' => 'softwarecatalog',
                         'username' => $existingUser->getUID(),
                         'email' => $email,
                         'organizationUuid' => $organizationUuid
                     ]);
-                    
+
                     return $existingUser;
                 }
             }
@@ -286,16 +340,19 @@ class ContactPersonHandler
                     $this->storeUserOrganizationUuid($existingUserByUsername, $organizationUuid);
                 }
 
+                // Store contact name fields for existing user (update if contact data changed)
+                $this->storeContactNameFields($existingUserByUsername, $objectData);
+
                 // Update groups for existing user
                 $this->assignUserGroups($existingUserByUsername, $objectData, $isFirstContact);
-                
+
                 $this->_logger->critical('✅ EXISTING USER UPDATED BY USERNAME', [
                     'app' => 'softwarecatalog',
                     'username' => $username,
                     'email' => $existingUserByUsername->getEMailAddress(),
                     'organizationUuid' => $organizationUuid
                 ]);
-                
+
                 return $existingUserByUsername;
             }
 
@@ -326,12 +383,19 @@ class ContactPersonHandler
                 $user->setEMailAddress($email);
                 $displayName = $this->getDisplayNameFromContactData($objectData);
                 $user->setDisplayName($displayName);
-                
+
+                // Store contact name fields in Nextcloud user config for /me endpoint
+                $this->storeContactNameFields($user, $objectData);
+
                 $this->_logger->critical('📋 USER DETAILS SET', [
                     'app' => 'softwarecatalog',
                     'username' => $username,
                     'email' => $email,
-                    'displayName' => $displayName
+                    'displayName' => $displayName,
+                    'firstName' => $objectData['voornaam'] ?? '',
+                    'middleName' => $objectData['tussenvoegsel'] ?? '',
+                    'lastName' => $objectData['achternaam'] ?? '',
+                    'functie' => $objectData['functie'] ?? ''
                 ]);
 
                 // Store organization UUID in user config for OpenConnector access
@@ -389,7 +453,7 @@ class ContactPersonHandler
             $this->_logger->error('💥 USER CREATION EXCEPTION', [
                 'app' => 'softwarecatalog',
                 'contactpersoonId' => $contactpersoonObject->getId(),
-                'email' => $objectData['email'] ?? 'unknown',
+                'email' => $objectData['email'] ?? $objectData['e-mailadres'] ?? 'unknown',
                 'username' => $username ?? 'unknown',
                 'exception' => $e->getMessage(),
                 'exception_class' => get_class($e),
@@ -411,35 +475,50 @@ class ContactPersonHandler
      *
      * @return void
      */
+    /**
+     * Assign user to appropriate groups based on their role and organization.
+     * 
+     * Users are NOT added to generic groups or organization-specific groups.
+     * Users are tied to organization entities in OpenRegister instead.
+     * 
+     * @param \OCP\IUser $user The user to assign groups to.
+     * @param array $objectData The contactpersoon object data.
+     * @param bool $isFirstContact Whether this is the first contact of the organization.
+     * 
+     * @return void
+     */
     private function assignUserGroups(\OCP\IUser $user, array $objectData, bool $isFirstContact = false): void
     {
         try {
             $roles = $objectData['roles'] ?? [];
             $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
-            // Ensure roles is an array
+            // Ensure roles is an array.
             if (!is_array($roles)) {
                 $roles = [$roles];
             }
 
-            // Get the settings service to access group configurations
+            // Get the settings service to access group configurations.
             $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 
-            // Add user to only truly generic groups (not role-specific groups)
-            $trulyGenericGroups = ['software-catalog-users']; // Only non-role-specific groups
-            foreach ($trulyGenericGroups as $groupName) {
-                $this->addUserToGroupWithCheck($user, $groupName, 'generic-user-group');
-            }
-
-            // Add user to organization admin groups if this is the first contact
+            // Add user to organization admin groups if this is the first contact.
             if ($isFirstContact) {
                 $organizationAdminGroups = $settingsService->getOrganizationAdminGroups();
                 foreach ($organizationAdminGroups as $groupName) {
                     $this->addUserToGroupWithCheck($user, $groupName, 'organization-admin');
                 }
+                
+                $this->_logger->info(
+                    'Assigned organization admin groups to first contact',
+                    [
+                        'username' => $user->getUID(),
+                        'organizationId' => $organizationId,
+                        'adminGroups' => $organizationAdminGroups
+                    ]
+                );
             }
 
-            // Assign role based on organization type instead of configuration
+            // Assign role based on organization type.
             if (!empty($organizationId)) {
                 $organizationType = $this->getOrganizationType((string)$organizationId);
                 $roleGroup = $this->getRoleGroupByOrganizationType($organizationType);
@@ -468,59 +547,18 @@ class ContactPersonHandler
                 }
             }
 
-            // Add user to organization group if available
-            if (!empty($organizationId)) {
-                $organizationGroup = $this->getOrganizationGroup((string)$organizationId);
-
-                if ($organizationGroup && !$organizationGroup->inGroup($user)) {
-                    $organizationGroup->addUser($user);
-
-                    // If this is the first contact, make them a subadmin of the organization group
-                    if ($isFirstContact) {
-                        try {
-                            $subAdminManager = \OC::$server->getSubAdminManager();
-                            $subAdminManager->createSubAdmin($user, $organizationGroup);
-                            $this->_logger->info(
-                                'Added user to organization group as subadmin (first contact)',
-                                [
-                                    'username' => $user->getUID(),
-                                    'organizationId' => $organizationId,
-                                    'groupName' => $organizationGroup->getGID()
-                                ]
-                            );
-                        } catch (\Exception $e) {
-                            $this->_logger->warning(
-                                'Failed to make user subadmin of organization group: ' . $e->getMessage(),
-                                [
-                                    'username' => $user->getUID(),
-                                    'organizationId' => $organizationId,
-                                    'groupName' => $organizationGroup->getGID(),
-                                    'error' => $e->getMessage()
-                                ]
-                            );
-                        }
-                    } else {
-                        $this->_logger->info(
-                            'Added user to organization group',
-                            [
-                                'username' => $user->getUID(),
-                                'organizationId' => $organizationId,
-                                'groupName' => $organizationGroup->getGID()
-                            ]
-                        );
-                    }
-                }
-
-            }
+            // Users are now tied to organisation entities in OpenRegister.
+            // No need to add to organization-specific groups.
 
             $this->_logger->info(
                 'Successfully assigned user groups based on organization type',
                 [
                     'username' => $user->getUID(),
-                    'genericGroups' => $trulyGenericGroups,
                     'isFirstContact' => $isFirstContact,
                     'organizationAdminGroups' => $isFirstContact ? ($organizationAdminGroups ?? []) : [],
-                    'organizationId' => $organizationId
+                    'organizationId' => $organizationId,
+                    'roleGroup' => $roleGroup ?? 'none',
+                    'organizationType' => $organizationType ?? 'unknown'
                 ]
             );
 
@@ -893,80 +931,19 @@ class ContactPersonHandler
      *
      * @return bool True if this is the first contact for the organization
      */
-    private function isFirstContactForOrganization(object $contactObject, array $objectData): bool
+    public function isFirstContactForOrganization(object $contactObject, array $objectData): bool
     {
-        try {
-            $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
-            $currentContactId = $contactObject->getId();
+        // Simplified approach: Default to true so the first contact always gets admin rights
+        // A more sophisticated check can be implemented later if needed to track
+        // whether other contacts already exist for this organization
+        $this->_logger->info('isFirstContactForOrganization: Defaulting to true (simplified)', [
+            'app' => 'softwarecatalog',
+            'contactId' => $contactObject->getId(),
+            'contactUuid' => $contactObject->getUuid()
+        ]);
 
-            if (empty($organizationId)) {
-                $this->_logger->warning('No organization ID found for contact object');
-                return false;
-            }
+        return true;
 
-            $this->_logger->info(
-                'Checking if contact is first for organization',
-                [
-                    'contactId' => $currentContactId,
-                    'organizationId' => $organizationId
-                ]
-            );
-
-            // Simple approach: Check if any OTHER users exist with this organization UUID
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
-                $this->_logger->error('ObjectService not available for first contact check');
-                return false;
-            }
-
-            // Get settings for schema IDs
-            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-            $registerId = $settingsService->getVoorzieningenRegisterId();
-
-            // Check contactpersoon schema
-            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-            if ($contactpersoonSchemaId) {
-                $existingContacts = $objectService->findAll(
-                    ['organisation' => $organizationId],
-                    $registerId,
-                    $contactpersoonSchemaId
-                );
-
-                // Filter out the current contact being processed
-                $otherContacts = array_filter($existingContacts, function ($contact) use ($currentContactId) {
-                    return $contact->getId() !== $currentContactId;
-                });
-
-                $this->_logger->info(
-                    'Found existing contacts for organization',
-                    [
-                        'organizationId' => $organizationId,
-                        'totalContacts' => count($existingContacts),
-                        'otherContacts' => count($otherContacts),
-                        'currentContactId' => $currentContactId,
-                        'isFirstContact' => empty($otherContacts)
-                    ]
-                );
-
-                // If there are any OTHER existing contacts, this is not the first
-                if (!empty($otherContacts)) {
-                    return false;
-                }
-            }
-
-            return true;
-
-        } catch (\Exception $e) {
-            $this->_logger->error(
-                'Failed to determine if first contact: ' . $e->getMessage(),
-                [
-                    'contactId' => $contactObject->getId(),
-                    'exception' => $e
-                ]
-            );
-            // Default to false for safety
-            return false;
-        }
     }
 
     /**
@@ -1054,6 +1031,101 @@ class ContactPersonHandler
         ]);
 
         return implode(' ', $parts) ?: ($contactData['email'] ?? $contactData['e-mailadres'] ?? 'Unknown User');
+    }
+
+    /**
+     * Stores contact person name fields in Nextcloud user config
+     *
+     * This method stores the contact person's name fields (firstName, lastName, middleName)
+     * and functie (role) in the Nextcloud user configuration so they can be retrieved
+     * by the /me endpoint in OpenRegister's UserService.
+     *
+     * @param \OCP\IUser $user        The user to store fields for
+     * @param array      $contactData The contact data containing name fields
+     *
+     * @return void
+     */
+    public function storeContactNameFields(\OCP\IUser $user, array $contactData): void
+    {
+        try {
+            $userId = $user->getUID();
+
+            // Store name fields in Nextcloud user config (core app)
+            // These are read by OpenRegister UserService::getCustomNameFields()
+            $firstName = $contactData['voornaam'] ?? '';
+            $middleName = $contactData['tussenvoegsel'] ?? '';
+            $lastName = $contactData['achternaam'] ?? '';
+            $functie = $contactData['functie'] ?? '';
+
+            if (!empty($firstName)) {
+                $this->config->setUserValue($userId, 'core', 'firstName', $firstName);
+            }
+
+            if (!empty($lastName)) {
+                $this->config->setUserValue($userId, 'core', 'lastName', $lastName);
+            }
+
+            if (!empty($middleName)) {
+                $this->config->setUserValue($userId, 'core', 'middleName', $middleName);
+            }
+
+            // Store functie in AccountManager as 'role' property
+            // This is read by OpenRegister UserService via AccountManager
+            if (!empty($functie)) {
+                try {
+                    $accountManager = $this->_container->get('OCP\Accounts\IAccountManager');
+                    $account = $accountManager->getAccount($user);
+
+                    // Try to set the role property
+                    $roleProperty = $account->getProperty(\OCP\Accounts\IAccountManager::PROPERTY_ROLE);
+                    if ($roleProperty !== null) {
+                        $roleProperty->setValue($functie);
+                        $accountManager->updateAccount($account);
+                    } else {
+                        // Property doesn't exist, create it
+                        $account->setProperty(
+                            \OCP\Accounts\IAccountManager::PROPERTY_ROLE,
+                            $functie,
+                            \OCP\Accounts\IAccountManager::SCOPE_LOCAL,
+                            \OCP\Accounts\IAccountManager::NOT_VERIFIED
+                        );
+                        $accountManager->updateAccount($account);
+                    }
+                } catch (\Exception $e) {
+                    // Fallback: store functie in user config if AccountManager fails
+                    $this->config->setUserValue($userId, 'core', 'functie', $functie);
+                    $this->_logger->warning('Failed to store functie in AccountManager, stored in user config', [
+                        'userId' => $userId,
+                        'functie' => $functie,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // Sync e-mailadres to user's email property.
+            $email = $contactData['e-mailadres'] ?? $contactData['email'] ?? '';
+            if (!empty($email) && $email !== $user->getEMailAddress()) {
+                $user->setEMailAddress($email);
+                $this->_logger->info('Updated user email from contactpersoon', [
+                    'userId' => $userId,
+                    'email' => $email
+                ]);
+            }
+
+            $this->_logger->info('Stored contact name fields in user config', [
+                'userId' => $userId,
+                'firstName' => $firstName,
+                'middleName' => $middleName,
+                'lastName' => $lastName,
+                'functie' => $functie
+            ]);
+
+        } catch (\Exception $e) {
+            $this->_logger->error('Failed to store contact name fields', [
+                'userId' => $user->getUID(),
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -1338,8 +1410,20 @@ class ContactPersonHandler
                 'organizationId' => $organizationId
             ]);
 
-            // Try to find by UUID using the same method as other parts of the code
-            $organizationObject = $objectService->findByUuid($organizationId);
+            // Get voorzieningen config for register and schema
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+            $register = $voorzieningenConfig['register'] ?? '';
+            $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+
+            // Find by UUID - use find() with register and schema
+            $organizationObject = $objectService->find(
+                id: $organizationId,
+                register: $register,
+                schema: $organizationSchema,
+                _rbac: false,
+                _multitenancy: false
+            );
 
             if ($organizationObject) {
                 $organizationData = $organizationObject->getObject();
@@ -1569,7 +1653,8 @@ class ContactPersonHandler
                 $this->ensureContactpersoonInOrganization($contactpersoonObject);
 
                 // Also add user to organization entity (OpenRegister entity, not object)
-                $this->addUserToOrganizationEntity($contactpersoonObject, $username);
+                $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+                $this->addUserToOrganizationEntity($contactpersoonObject, $username, $organizationUuid);
 
                 $this->_logger->info(
                     'Successfully created inactive user and updated contactpersoon',
@@ -2034,14 +2119,17 @@ class ContactPersonHandler
      *
      * @param object $contactpersoonObject The contactpersoon object
      * @param string $username The username to add
+     * @param string|null $organizationUuidOverride Optional organization UUID to use instead of extracting from object
+     *                                              (useful when organisatie field was removed from object data)
      *
      * @return void
      */
-    public function addUserToOrganizationEntity(object $contactpersoonObject, string $username): void
+    public function addUserToOrganizationEntity(object $contactpersoonObject, string $username, ?string $organizationUuidOverride = null): void
     {
         try {
             $objectData = $contactpersoonObject->getObject();
-            $organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+            // Use override if provided (useful when organisatie field was removed from object)
+            $organizationUuid = $organizationUuidOverride ?? $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
             if (empty($organizationUuid)) {
                 $this->_logger->warning('ContactPersonHandler: No organization reference found for contact person', [
@@ -2138,8 +2226,20 @@ class ContactPersonHandler
             // Get the organization object from OpenRegister
             $objectService = $this->_getObjectService();
             
-            // Find the organization object by UUID
-            $organizationObject = $objectService->findByUuid($organizationUuid);
+            // Get voorzieningen config for register and schema
+            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+            $register = $voorzieningenConfig['register'] ?? '';
+            $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
+            
+            // Find the organization object by UUID - use find() with register and schema
+            $organizationObject = $objectService->find(
+                id: $organizationUuid,
+                register: $register,
+                schema: $organizationSchema,
+                _rbac: false,
+                _multitenancy: false
+            );
             
             if (!$organizationObject) {
                 $this->_logger->error('ContactPersonHandler: Organization object not found in OpenRegister', [
@@ -2163,11 +2263,11 @@ class ContactPersonHandler
             $organisationService = $this->_container->get('OCA\\OpenRegister\\Service\\OrganisationService');
             
             // Create organisation with specific UUID, without adding current user (as we're in admin context)
-            $organisation = $organisationService->createOrganisationWithUuid(
-                $organizationName,
-                $organizationDescription,
-                $organizationUuid,
-                false  // Don't add current user (admin) to this organisation
+            $organisation = $organisationService->createOrganisation(
+                name: $organizationName,
+                description: $organizationDescription,
+                addCurrentUser: false,  // Don't add current user (admin) to this organisation
+                uuid: $organizationUuid
             );
             
             $this->_logger->info('ContactPersonHandler: Successfully created organization entity', [

@@ -25,6 +25,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
 use OCA\SoftwareCatalog\EventListener\TestEventListener;
 use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
+use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -32,6 +33,7 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
+use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Event\OrganisationCreatedEvent;
 use OCA\OpenRegister\Event\RegisterCreatedEvent;
 use OCA\OpenRegister\Event\RegisterDeletedEvent;
@@ -137,7 +139,7 @@ class Application extends App implements IBootstrap
 
         // Register TEST event listener for easily triggerable Nextcloud events
         $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
-        
+
         // Register event listeners for OpenRegister events
         $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
@@ -149,6 +151,9 @@ class Application extends App implements IBootstrap
         // Register module compliance subscriber for module updates
         $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
+
+        // Register listener to sync user profile updates to contactpersoon objects
+        $context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
 
 
 
@@ -298,6 +303,23 @@ class Application extends App implements IBootstrap
                 $container->get('Psr\Log\LoggerInterface')
             );
         });
+
+        // Register ContactpersonenController with explicit dependencies for /me endpoint
+        $context->registerService(\OCA\SoftwareCatalog\Controller\ContactpersonenController::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Controller\ContactpersonenController(
+                self::APP_ID,
+                $container->get('OCP\IRequest'),
+                $container->get(SettingsService::class),
+                $container->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
+                $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
+                $container->get('OCP\IUserManager'),
+                $container->get('OCP\IGroupManager'),
+                $container->get('OCP\IUserSession'),
+                $container,
+                $container->get('OCP\Security\ISecureRandom'),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
     }
 
     /**
@@ -309,135 +331,25 @@ class Application extends App implements IBootstrap
      */
     public function boot(IBootContext $context): void
     {
+        // Initialization is now handled by the Repair step (InitializeSettings)
+        // which runs only during app install/upgrade, not on every request.
+        // See lib/Repair/InitializeSettings.php
+
         $container = $context->getServerContainer();
         $logger = $container->get(LoggerInterface::class);
-
-        try {
-            $config = $container->get(IAppConfig::class);
-            $appManager = $container->get(IAppManager::class);
-            $currentAppVersion = $appManager->getAppVersion(self::APP_ID);
-            $lastInitializedVersion = $config->getValueString(self::APP_ID, 'last_initialized_version', '');
-
-            $logger->info('SoftwareCatalog boot: Version check', [
-                'currentVersion' => $currentAppVersion,
-                'lastInitializedVersion' => $lastInitializedVersion,
-                'versionChanged' => $lastInitializedVersion !== $currentAppVersion
-            ]);
-
-            // Skip initialization during cron/CLI context without a user.
-            // RBAC checks require an authenticated user to have proper permissions.
-            $userSession = $container->get(\OCP\IUserSession::class);
-            if ($userSession->getUser() === null) {
-                $logger->debug('SoftwareCatalog boot: Skipping in cron/CLI context (no user)');
-                return;
-            }
-
-            // Check if we actually have a valid configuration, not just version matching
-            $needsInitialization = false;
-            $initReason = '';
-
-            if ($lastInitializedVersion !== $currentAppVersion || empty($lastInitializedVersion)) {
-                $needsInitialization = true;
-                $initReason = empty($lastInitializedVersion) ? 'never_initialized' : 'version_changed';
-            } else {
-                // Even if version matches, check if we have valid configuration
-                $hasValidConfig = $config->getValueString(self::APP_ID, 'voorzieningen_organisatie_schema', '') !== '' ||
-                                  $config->getValueString(self::APP_ID, 'organization_schema', '') !== '';
-
-                if (!$hasValidConfig) {
-                    $needsInitialization = true;
-                    $initReason = 'missing_configuration';
-                    $logger->warning('SoftwareCatalog boot: No valid configuration found despite version match', [
-                        'currentVersion' => $currentAppVersion,
-                        'lastInitializedVersion' => $lastInitializedVersion
-                    ]);
-                }
-            }
-
-            if ($needsInitialization) {
-                $logger->info('SoftwareCatalog boot: Starting initialization', [
-                    'reason' => $initReason,
-                    'currentVersion' => $currentAppVersion,
-                    'lastInitializedVersion' => $lastInitializedVersion
-                ]);
-
-                try {
-                    $settingsService = $container->get(SettingsService::class);
-                    $initResult = $settingsService->initialize();
-
-                    $logger->info('SoftwareCatalog boot: Initialization completed', [
-                        'result' => $initResult,
-                        'hasErrors' => !empty($initResult['errors'])
-                    ]);
-
-                    // Only update version if initialization was actually successful
-                    if (empty($initResult['errors']) &&
-                        ($initResult['autoConfigured'] || $initResult['fullyConfigured'])) {
-                        $config->setValueString(self::APP_ID, 'last_initialized_version', $currentAppVersion);
-                        $logger->info('SoftwareCatalog boot: Version updated to ' . $currentAppVersion . ' (successful init)');
-                    } else {
-                        $logger->warning('SoftwareCatalog boot: Initialization incomplete, not updating version', [
-                            'errors' => $initResult['errors'] ?? [],
-                            'autoConfigured' => $initResult['autoConfigured'] ?? false,
-                            'fullyConfigured' => $initResult['fullyConfigured'] ?? false
-                        ]);
-                    }
-
-                } catch (\RuntimeException $e) {
-                    // Don't update version if OpenRegister is not available
-                    $logger->warning('SoftwareCatalog boot: OpenRegister not available during initialization', [
-                        'exception' => $e->getMessage(),
-                        'initReason' => $initReason
-                    ]);
-                } catch (\Exception $e) {
-                    $logger->error('SoftwareCatalog boot: Initialization failed', [
-                        'exception' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                        'initReason' => $initReason
-                    ]);
-                }
-            } else {
-                $logger->debug('SoftwareCatalog boot: Skipping initialization (version unchanged and config valid)');
-            }
-
-        } catch (\Exception $e) {
-            // Log error but don't fail the boot process
-            $logger->error('SoftwareCatalog boot error during version check: ' . $e->getMessage(), [
-                'exception' => $e,
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
 
         // Register background job for organization contact synchronization
         try {
             $jobList = $container->get('OCP\BackgroundJob\IJobList');
             if (!$jobList->has(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, null)) {
                 $jobList->add(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class);
-                $logger->info('SoftwareCatalog boot: Background job registered');
+                $logger->debug('SoftwareCatalog boot: Background job registered');
             }
         } catch (\Exception $e) {
             $logger->error('SoftwareCatalog boot: Failed to register background job', [
                 'exception' => $e->getMessage()
             ]);
         }
-
-        // Check if initial sync has been done
-        try {
-            $config = $container->get(IAppConfig::class);
-            $initialSyncDone = $config->getValueString(self::APP_ID, 'initial_sync_done', 'false');
-            if ($initialSyncDone === 'false') {
-                // Mark as done to prevent repeated attempts
-                $config->setValueString(self::APP_ID, 'initial_sync_done', 'true');
-                $logger->info('SoftwareCatalog boot: Initial sync flag set');
-            }
-        } catch (\Exception $e) {
-            // Log but don't fail
-            $logger->error('SoftwareCatalog boot error during sync check: ' . $e->getMessage(), [
-                'exception' => $e->getMessage()
-            ]);
-        }
-
-
     }
 
 

@@ -114,7 +114,7 @@ class ModuleComplianceService
             ]);
 
             // Get current standaarden from module
-            $currentStandaarden = $moduleData['standaarden'] ?? [];
+            $currentStandaarden = $moduleData['standaardVersies'] ?? [];
             
             // Ensure currentStandaarden is an array
             if (!is_array($currentStandaarden)) {
@@ -188,9 +188,20 @@ class ModuleComplianceService
         try {
             // Get compliance schema ID from configuration
             $complianceSchemaId = $this->settingsService->getSchemaIdForObjectType('compliancy');
-            
+
             if (!$complianceSchemaId) {
                 $this->logger->warning('ModuleComplianceService: Compliance schema not configured', [
+                    'moduleUuid' => $moduleUuid
+                ]);
+                return [];
+            }
+
+            // Get register ID from voorzieningen config
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $registerId = $voorzieningenConfig['register'] ?? null;
+
+            if (!$registerId) {
+                $this->logger->warning('ModuleComplianceService: Voorzieningen register not configured', [
                     'moduleUuid' => $moduleUuid
                 ]);
                 return [];
@@ -206,6 +217,7 @@ class ModuleComplianceService
             $query = [
                 '@self' => [
                     'schema' => (int) $complianceSchemaId,
+                    'register' => (int) $registerId,
                 ],
                 'module' => $moduleUuid,
             ];
@@ -348,13 +360,13 @@ class ModuleComplianceService
             $moduleData = $moduleObject->getObject();
             
             // Update standaarden property
-            $moduleData['standaarden'] = $standaardversieUuids;
+            $moduleData['standaardVersies'] = $standaardversieUuids;
             
             // Get register ID from module object
             $registerId = $moduleObject->getRegister();
             
             // Save the updated module
-            $objectService->saveObject(
+            $savedObject = $objectService->saveObject(
                 object: $moduleData,
                 extend: [],
                 register: $registerId,
@@ -416,9 +428,24 @@ class ModuleComplianceService
         try {
             // Get compliance schema ID from configuration
             $complianceSchemaId = $this->settingsService->getSchemaIdForObjectType('compliancy');
-            
+
             if (!$complianceSchemaId) {
                 throw new \RuntimeException('Compliance schema not configured');
+            }
+
+            // Get register ID from voorzieningen config
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $registerId = $voorzieningenConfig['register'] ?? null;
+
+            if (!$registerId) {
+                throw new \RuntimeException('Voorzieningen register not configured');
+            }
+
+            // Get module schema ID from configuration
+            $moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
+
+            if (!$moduleSchemaId) {
+                throw new \RuntimeException('Module schema not configured');
             }
 
             // Get object service
@@ -427,10 +454,11 @@ class ModuleComplianceService
                 throw new \RuntimeException('ObjectService not available');
             }
 
-            // Get all compliance objects
+            // Get all compliance objects (both schema AND register are required)
             $query = [
                 '@self' => [
                     'schema' => (int) $complianceSchemaId,
+                    'register' => (int) $registerId,
                 ],
             ];
             $complianceObjects = $objectService->searchObjects($query);
@@ -498,8 +526,12 @@ class ModuleComplianceService
             // Process each module
             foreach ($complianceByModule as $moduleUuid => $moduleComplianceObjects) {
                 try {
-                    // Find the module object
-                    $moduleObject = $objectService->find($moduleUuid);
+                    // Find the module object (must specify register and schema for magic table lookup)
+                    $moduleObject = $objectService->find(
+                        id: $moduleUuid,
+                        register: (int) $registerId,
+                        schema: (int) $moduleSchemaId
+                    );
                     if (!$moduleObject) {
                         $results['modulesNotFound']++;
                         $results['errors'][] = 'Module not found for UUID: ' . $moduleUuid;
@@ -554,7 +586,7 @@ class ModuleComplianceService
                     }
 
                     // Get current standaarden from module
-                    $currentStandaarden = $moduleData['standaarden'] ?? [];
+                    $currentStandaarden = $moduleData['standaardVersies'] ?? [];
                     
                     // Ensure currentStandaarden is an array
                     if (!is_array($currentStandaarden)) {

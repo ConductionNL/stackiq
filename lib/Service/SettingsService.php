@@ -144,6 +144,20 @@ class SettingsService
     }
 
     /**
+     * Get the OpenRegister RegisterService.
+     *
+     * @return \OCA\OpenRegister\Service\RegisterService|null The RegisterService instance or null if not available.
+     */
+    public function getRegisterService(): ?\OCA\OpenRegister\Service\RegisterService
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps())) {
+            return $this->container->get('OCA\OpenRegister\Service\RegisterService');
+        }
+
+        throw new \RuntimeException('OpenRegister RegisterService is not available.');
+    }
+
+    /**
      * Attempts to retrieve the Configuration service from the container
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available
@@ -200,19 +214,73 @@ class SettingsService
             if ($openRegisters !== null) {
                 $data['openRegisters'] = true;
 
-                // Add additional error handling for OpenRegister internal errors
+                // Add additional error handling for OpenRegister internal errors.
                 try {
-                    $rawRegisters = $openRegisters->getRegisters();
+                    $registerService = $this->getRegisterService();
+                    $rawRegisters = $registerService->findAll();
 
+                    // Convert Register entities to arrays first
+                    $rawRegisters = array_map(function($register) {
+                        return is_object($register) && method_exists($register, 'jsonSerialize')
+                            ? $register->jsonSerialize()
+                            : (array)$register;
+                    }, $rawRegisters);
+
+                    // Collect all schema IDs that need to be fetched (batch approach)
+                    $allSchemaIds = [];
+                    foreach ($rawRegisters as $register) {
+                        foreach (($register['schemas'] ?? []) as $schema) {
+                            if (is_int($schema) || is_numeric($schema)) {
+                                $allSchemaIds[] = (int)$schema;
+                            }
+                        }
+                    }
+
+                    // Batch fetch all schemas in one query if we have IDs
+                    $schemaMap = [];
+                    if (!empty($allSchemaIds)) {
+                        try {
+                            $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
+                            $schemas = $schemaMapper->findMultipleOptimized(array_unique($allSchemaIds));
+                            foreach ($schemas as $schema) {
+                                $schemaMap[$schema->getId()] = $schema->jsonSerialize();
+                            }
+                        } catch (\Exception $e) {
+                            $this->logger->warning('Failed to batch fetch schemas', ['error' => $e->getMessage()]);
+                        }
+                    }
+
+                    // Map schema details back to registers
+                    $rawRegisters = array_map(function($register) use ($schemaMap) {
+                        if (isset($register['schemas']) && is_array($register['schemas'])) {
+                            $schemaDetails = [];
+                            foreach ($register['schemas'] as $schema) {
+                                if (is_array($schema) && isset($schema['slug'])) {
+                                    // Schema is already a full object
+                                    $schemaDetails[] = $schema;
+                                } elseif (is_int($schema) || is_numeric($schema)) {
+                                    // Schema is an ID - get from pre-fetched map
+                                    if (isset($schemaMap[(int)$schema])) {
+                                        $schemaDetails[] = $schemaMap[(int)$schema];
+                                    }
+                                }
+                            }
+                            $register['schemas'] = $schemaDetails;
+                        }
+                        return $register;
+                    }, $rawRegisters);
 
                     // Filter schemas to remove properties field for cleaner response
                     $data['availableRegisters'] = array_map(function($register) {
                         if (isset($register['schemas']) && is_array($register['schemas'])) {
                             $register['schemas'] = array_map(function($schema) {
                                 // Keep only essential schema fields, remove properties
-                                return array_filter($schema, function($key) {
-                                    return !in_array($key, ['properties']);
-                                }, ARRAY_FILTER_USE_KEY);
+                                if (is_array($schema)) {
+                                    return array_filter($schema, function($key) {
+                                        return !in_array($key, ['properties']);
+                                    }, ARRAY_FILTER_USE_KEY);
+                                }
+                                return $schema;
                             }, $register['schemas']);
                         }
                         return $register;
@@ -357,7 +425,7 @@ class SettingsService
     }
 
     /**
-     * Auto-configures settings specifically after importing the softwarecatalogus_register.json
+     * Auto-configures settings specifically after importing the softwarecatalogus_register_magic.json
      *
      * This method looks for the voorzieningen register and automatically configures
      * ALL schemas using the new consolidated configuration format, and creates required user groups.
@@ -412,6 +480,20 @@ class SettingsService
                 ]);
             }
 
+            // Step 4: Configure OpenCatalogi app settings for pages/menus/themes
+            $this->logger->info('Running OpenCatalogi auto-configuration');
+            $openCatalogiResult = $this->configureOpenCatalogi();
+
+            if ($openCatalogiResult['success']) {
+                $this->logger->info('OpenCatalogi auto-configuration completed successfully', [
+                    'configured' => $openCatalogiResult['configured'] ?? []
+                ]);
+            } else {
+                $this->logger->info('OpenCatalogi auto-configuration skipped', [
+                    'message' => $openCatalogiResult['message'] ?? 'OpenCatalogi not installed or not needed'
+                ]);
+            }
+
             // Mark auto-configuration as completed
             $this->config->setValueString($this->_appName, 'auto_config_completed', 'true');
             $this->logger->info('Comprehensive auto-configuration marked as completed');
@@ -420,11 +502,150 @@ class SettingsService
             return [
                 'voorzieningen' => $voorzieningenResult,
                 'amef' => $amefResult,
+                'opencatalogi' => $openCatalogiResult,
                 'user_groups_created' => true
             ];
 
         } catch (\Exception $e) {
             throw new \RuntimeException('Failed to auto-configure after import: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Configure OpenCatalogi app settings for pages, menus, and themes
+     *
+     * This method automatically configures the opencatalogi app to use the correct
+     * schema and register IDs for pages, menus, and themes from the publication register.
+     *
+     * @return array Configuration result with success status and configured settings
+     */
+    public function configureOpenCatalogi(): array
+    {
+        $result = [
+            'success' => false,
+            'message' => '',
+            'configured' => []
+        ];
+
+        try {
+            // Check if opencatalogi app is installed
+            if (!in_array('opencatalogi', $this->appManager->getInstalledApps())) {
+                $result['message'] = 'OpenCatalogi app is not installed';
+                return $result;
+            }
+
+            // Get OpenRegister services
+            $schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+            $registerMapper = $this->container->get('OCA\OpenRegister\Db\RegisterMapper');
+
+            // Find the publication register
+            $publicationRegister = null;
+            $registers = $registerMapper->findAll();
+            foreach ($registers as $register) {
+                if ($register->getSlug() === 'publication') {
+                    $publicationRegister = $register;
+                    break;
+                }
+            }
+
+            if ($publicationRegister === null) {
+                $result['message'] = 'Publication register not found';
+                return $result;
+            }
+
+            $registerId = (string) $publicationRegister->getId();
+
+            // Find page, menu, and theme schemas that have data in magic mapper tables
+            // We look for schemas by slug and check if they have associated data
+            $schemas = $schemaMapper->findAll();
+            $pageSchemaId = null;
+            $menuSchemaId = null;
+            $themeSchemaId = null;
+
+            foreach ($schemas as $schema) {
+                $slug = $schema->getSlug();
+                $schemaId = $schema->getId();
+
+                // Check if this schema has a magic mapper table with data for register 1
+                $tableName = 'oc_openregister_table_' . $registerId . '_' . $schemaId;
+
+                // Try to find schemas that have actual data
+                if ($slug === 'page' && $pageSchemaId === null) {
+                    if ($this->tableHasData($tableName)) {
+                        $pageSchemaId = (string) $schemaId;
+                    }
+                } elseif ($slug === 'menu' && $menuSchemaId === null) {
+                    if ($this->tableHasData($tableName)) {
+                        $menuSchemaId = (string) $schemaId;
+                    }
+                } elseif ($slug === 'theme' && $themeSchemaId === null) {
+                    if ($this->tableHasData($tableName)) {
+                        $themeSchemaId = (string) $schemaId;
+                    }
+                }
+            }
+
+            // Set the opencatalogi app configuration
+            $configured = [];
+
+            if ($pageSchemaId !== null) {
+                $this->config->setValueString('opencatalogi', 'page_schema', $pageSchemaId);
+                $this->config->setValueString('opencatalogi', 'page_register', $registerId);
+                $configured['page_schema'] = $pageSchemaId;
+                $configured['page_register'] = $registerId;
+            }
+
+            if ($menuSchemaId !== null) {
+                $this->config->setValueString('opencatalogi', 'menu_schema', $menuSchemaId);
+                $this->config->setValueString('opencatalogi', 'menu_register', $registerId);
+                $configured['menu_schema'] = $menuSchemaId;
+                $configured['menu_register'] = $registerId;
+            }
+
+            if ($themeSchemaId !== null) {
+                $this->config->setValueString('opencatalogi', 'theme_schema', $themeSchemaId);
+                $this->config->setValueString('opencatalogi', 'theme_register', $registerId);
+                $configured['theme_schema'] = $themeSchemaId;
+                $configured['theme_register'] = $registerId;
+            }
+
+            if (!empty($configured)) {
+                $result['success'] = true;
+                $result['configured'] = $configured;
+                $result['message'] = 'OpenCatalogi configured successfully';
+                $this->logger->info('OpenCatalogi configuration set', $configured);
+            } else {
+                $result['message'] = 'No page/menu/theme schemas with data found';
+            }
+
+        } catch (\Exception $e) {
+            $result['message'] = 'Failed to configure OpenCatalogi: ' . $e->getMessage();
+            $this->logger->error('OpenCatalogi configuration failed', [
+                'exception' => $e->getMessage()
+            ]);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check if a database table exists and has data
+     *
+     * @param string $tableName The table name to check
+     *
+     * @return bool True if table exists and has data
+     */
+    private function tableHasData(string $tableName): bool
+    {
+        try {
+            $connection = $this->container->get('OCP\IDBConnection');
+            $sql = "SELECT COUNT(*) as cnt FROM {$tableName} WHERE _deleted IS NULL LIMIT 1";
+            $stmt = $connection->executeQuery($sql);
+            $row = $stmt->fetch();
+            return ($row && (int) $row['cnt'] > 0);
+        } catch (\Exception $e) {
+            // Table doesn't exist or other error
+            return false;
         }
     }
 
@@ -494,6 +715,7 @@ class SettingsService
         $voorzieningenKeyMap = [
             'module' => 'module_schema',
             'compliancy' => 'compliancy_schema',
+            'moduleVersie' => 'moduleVersie_schema',
         ];
 
         // Only check voorzieningen config if object type exists in the key map
@@ -584,9 +806,29 @@ class SettingsService
             return $cachedValue;
         }
 
-        // Perform the actual lookup
-        $registerId = $this->config->getValueString($this->_appName, "{$objectType}_register", '');
-        $result = $registerId ? (int) $registerId : null;
+        $result = null;
+
+        // Check AMEF register for organization
+        if ($objectType === 'organization') {
+            $amefConfig = $this->getAmefConfig();
+            if (isset($amefConfig['register']) && !empty($amefConfig['register'])) {
+                $result = (int) $amefConfig['register'];
+            }
+        }
+
+        // Check Voorzieningen register for organisatie/organization and contactpersoon/contact
+        if ($result === null && in_array($objectType, ['organisatie', 'organization', 'contactpersoon', 'contact'], true)) {
+            $voorzieningenConfig = $this->getVoorzieningenConfig();
+            if (isset($voorzieningenConfig['register']) && !empty($voorzieningenConfig['register'])) {
+                $result = (int) $voorzieningenConfig['register'];
+            }
+        }
+
+        // Fallback to legacy per-object-type register config
+        if ($result === null) {
+            $registerId = $this->config->getValueString($this->_appName, "{$objectType}_register", '');
+            $result = $registerId ? (int) $registerId : null;
+        }
 
         // Cache the result (even if null) to avoid repeated lookups
         $this->registerIdCache[$objectType] = $result;
@@ -712,7 +954,8 @@ class SettingsService
      */
     public function isFullyConfigured(): bool
     {
-        $objectTypes = ['organization', 'contact'];
+        // Use contactpersoon instead of contact to match the actual schema naming
+        $objectTypes = ['organization', 'contactpersoon'];
 
         foreach ($objectTypes as $type) {
             $schemaId = $this->getSchemaIdForObjectType($type);
@@ -731,19 +974,27 @@ class SettingsService
      */
     public function getConfigurationStatus(): array
     {
-        $objectTypes = ['organization', 'contact'];
+        // Use the correct object type names that match the schema configuration
+        $objectTypes = ['organization', 'organisatie', 'contact', 'contactpersoon'];
         $status = [];
 
-        foreach ($objectTypes as $type) {
-            $schemaId = $this->getSchemaIdForObjectType($type);
-            $registerId = $this->getRegisterIdForObjectType($type);
+        // Check organization (can be in AMEF as 'organization' or Voorzieningen as 'organisatie')
+        $orgSchemaId = $this->getSchemaIdForObjectType('organization');
+        $orgRegisterId = $this->getRegisterIdForObjectType('organization');
+        $status['organization'] = [
+            'configured' => !empty($orgSchemaId) && !empty($orgRegisterId),
+            'schemaId' => $orgSchemaId,
+            'registerId' => $orgRegisterId,
+        ];
 
-            $status[$type] = [
-                'configured' => !empty($schemaId) && !empty($registerId),
-                'schemaId' => $schemaId,
-                'registerId' => $registerId,
-            ];
-        }
+        // Check contact (stored as 'contactpersoon' in Voorzieningen)
+        $contactSchemaId = $this->getSchemaIdForObjectType('contactpersoon');
+        $contactRegisterId = $this->getRegisterIdForObjectType('contactpersoon');
+        $status['contact'] = [
+            'configured' => !empty($contactSchemaId) && !empty($contactRegisterId),
+            'schemaId' => $contactSchemaId,
+            'registerId' => $contactRegisterId,
+        ];
 
         return $status;
     }
@@ -911,7 +1162,7 @@ class SettingsService
         $results = [];
 
         try {
-            // Load settings from merged softwarecatalogus_register.json
+            // Load settings from merged softwarecatalogus_register.json (magic mapper enabled for performance)
             $softwareCatalogPath = __DIR__ . '/../Settings/softwarecatalogus_register.json';
             if (file_exists($softwareCatalogPath)) {
                 $softwareCatalogContent = file_get_contents($softwareCatalogPath);
@@ -924,14 +1175,15 @@ class SettingsService
                     try {
                         $configurationService = $this->getConfigurationService();
 
-                        // Get the current app version dynamically
-                        $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+                        // Use the configuration file's own version (from info.version) for change detection.
+                        // This ensures changes to the JSON file trigger re-import even if app version is unchanged.
+                        $configVersion = $softwareCatalogSettings['info']['version'] ?? '0.0.0';
 
                         // Log the import attempt for debugging
                         $this->logger->info('SettingsService: Attempting to import softwarecatalogus_register.json', [
                             'force' => $force,
                             'app_id' => \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
-                            'current_version' => $currentAppVersion,
+                            'config_version' => $configVersion,
                             'data_size' => strlen(json_encode($softwareCatalogSettings))
                         ]);
 
@@ -939,7 +1191,7 @@ class SettingsService
                         $importResult = $configurationService->importFromApp(
                             appId: \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
                             data: $softwareCatalogSettings,
-                            version: $currentAppVersion,
+                            version: $configVersion,
                             force: $force
                         );
 
@@ -1025,17 +1277,10 @@ class SettingsService
      */
     public function getOrganizationAdminGroups(): array
     {
-        $groupsJson = $this->config->getValueString($this->_appName, 'organization_admin_groups', '');
-
-        if (empty($groupsJson)) {
-            // Return default groups if no configuration exists
-            return [
-                'organisaties-beheerder'
-            ];
-        }
-
-        $groups = json_decode($groupsJson, true);
-        return is_array($groups) ? $groups : [];
+        // DISABLED: No automatic group assignment for organization admins
+        // Users should be assigned groups explicitly via the admin UI
+        // Previously this returned ['organisaties-beheerder', 'organisatie-beheerder'] by default
+        return [];
     }
 
     /**
@@ -1207,10 +1452,8 @@ class SettingsService
                 'software-catalog-users'
             ]);
 
-            $this->setOrganizationAdminGroups([
-                'organisaties-beheerder',
-                'organisatie-beheerder'
-            ]);
+            // No automatic organization admin groups - can be configured via settings
+            $this->setOrganizationAdminGroups([]);
 
             $this->setSuperUserGroups([
                 'admin', // Keep existing admin group
@@ -1320,10 +1563,8 @@ class SettingsService
                 'software-catalog-users'
             ]);
 
-            $this->setOrganizationAdminGroups([
-                'organisaties-beheerder',
-                'organisatie-beheerder'
-            ]);
+            // No automatic organization admin groups - can be configured via settings
+            $this->setOrganizationAdminGroups([]);
 
             $this->setSuperUserGroups([
                 'admin', // Keep existing admin group
@@ -1743,8 +1984,8 @@ class SettingsService
 
             if ($debugInfo['openRegister']['installed'] && $debugInfo['openRegister']['enabled']) {
                 try {
-                    $objectService = $this->getObjectService();
-                    $debugInfo['openRegister']['availableRegisters'] = $objectService->getRegisters();
+                    $registerService = $this->getRegisterService();
+                    $debugInfo['openRegister']['availableRegisters'] = $registerService->findAll();
                 } catch (\Exception $e) {
                     $debugInfo['openRegister']['error'] = $e->getMessage();
                 }
@@ -2346,19 +2587,30 @@ class SettingsService
             $finalVersionInfo = $this->getVersionInfo();
             $finalConfigStatus = $this->getConfigurationStatus();
 
-            $success = $finalVersionInfo['versionsMatch'] || !$finalVersionInfo['needsUpdate'];
+            // For force update, if import succeeded, consider it successful
+            // Version matching is less critical since we forced the update
+            $success = $importResult['success'] && ($finalVersionInfo['isFullyConfigured'] || $finalVersionInfo['versionsMatch']);
 
             $this->logger->info('SettingsService: Force update completed', [
                 'success' => $success,
+                'import_success' => $importResult['success'],
                 'final_version_info' => $finalVersionInfo,
                 'final_config_status' => $finalConfigStatus
             ]);
 
+            // Return concise response to avoid serialization issues with large nested structures
             return [
                 'success' => $success,
-                'message' => $success ? 'Force update completed successfully' : 'Force update completed but configuration may need attention',
-                'importResult' => $importResult,
-                'finalVersionInfo' => $finalVersionInfo,
+                'message' => $success ? 'Force update completed successfully' : 'Force update completed but configuration needs attention',
+                'importSuccess' => $importResult['success'] ?? false,
+                'importMessage' => $importResult['message'] ?? '',
+                'finalVersionInfo' => [
+                    'appVersion' => $finalVersionInfo['appVersion'] ?? null,
+                    'configuredVersion' => $finalVersionInfo['configuredVersion'] ?? null,
+                    'versionsMatch' => $finalVersionInfo['versionsMatch'] ?? false,
+                    'needsUpdate' => $finalVersionInfo['needsUpdate'] ?? false,
+                    'isFullyConfigured' => $finalVersionInfo['isFullyConfigured'] ?? false
+                ],
                 'finalConfigStatus' => $finalConfigStatus
             ];
 
@@ -2656,9 +2908,10 @@ class SettingsService
             }
 
             try {
-                $registers = $objectService->getRegisters();
+                $registerService = $this->getRegisterService();
+                $registers = $registerService->findAll();
             } catch (\TypeError | \Exception $e) {
-                $this->logger->warning('OpenRegister getRegisters() failed in configureVoorzieningen', [
+                $this->logger->warning('OpenRegister RegisterService->findAll() failed in configureVoorzieningen', [
                     'exception' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine()
@@ -2676,6 +2929,14 @@ class SettingsService
                 ];
             }
 
+            // Get schema mapper to fetch schema details if needed
+            $schemaMapper = null;
+            try {
+                $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
+            } catch (\Exception $e) {
+                $this->logger->warning('SchemaMapper not available for Voorzieningen detection', ['error' => $e->getMessage()]);
+            }
+
             // Find the voorzieningen register by slug OR by presence of expected schema slugs
             $targetRegister = null;
             $expectedSlugs = [
@@ -2684,15 +2945,72 @@ class SettingsService
             ];
 
             foreach ($registers as $register) {
+                // Convert Register entity to array if needed
+                if ($register instanceof \OCA\OpenRegister\Db\Register) {
+                    $register = $register->jsonSerialize();
+                }
                 $slug = strtolower($register['slug'] ?? '');
                 if ($slug === 'voorzieningen') {
+                    // Fetch full schema details for the register
+                    $schemas = $register['schemas'] ?? [];
+                    $schemaDetails = [];
+                    foreach ($schemas as $schema) {
+                        if (is_array($schema) && isset($schema['slug'])) {
+                            // Schema is already a full object
+                            $schemaDetails[] = $schema;
+                        } elseif ((is_int($schema) || is_numeric($schema)) && $schemaMapper !== null) {
+                            // Schema is an ID - fetch details using SchemaMapper
+                            try {
+                                $schemaEntity = $schemaMapper->find((int)$schema);
+                                if ($schemaEntity !== null) {
+                                    $schemaDetails[] = $schemaEntity->jsonSerialize();
+                                }
+                            } catch (\Exception $e) {
+                                $this->logger->warning('Failed to fetch schema details', ['schemaId' => $schema, 'error' => $e->getMessage()]);
+                            }
+                        }
+                    }
+                    $register['schemas'] = $schemaDetails;
                     $targetRegister = $register;
                     break;
                 }
                 // Heuristic: count matching schemas
-                $schemas = array_map(static function ($s) { return strtolower($s['slug'] ?? ''); }, $register['schemas'] ?? []);
-                $matches = array_intersect($expectedSlugs, $schemas);
+                $schemaSlugs = [];
+                foreach (($register['schemas'] ?? []) as $schema) {
+                    if (is_array($schema) && isset($schema['slug'])) {
+                        $schemaSlugs[] = strtolower($schema['slug']);
+                    } elseif ((is_int($schema) || is_numeric($schema)) && $schemaMapper !== null) {
+                        try {
+                            $schemaEntity = $schemaMapper->find((int)$schema);
+                            if ($schemaEntity !== null) {
+                                $schemaArray = $schemaEntity->jsonSerialize();
+                                $schemaSlugs[] = strtolower($schemaArray['slug'] ?? '');
+                            }
+                        } catch (\Exception $e) {
+                            // Skip schemas that can't be fetched
+                        }
+                    }
+                }
+                $matches = array_intersect($expectedSlugs, $schemaSlugs);
                 if (count($matches) >= 6) { // good confidence
+                    // Fetch full schema details
+                    $schemas = $register['schemas'] ?? [];
+                    $schemaDetails = [];
+                    foreach ($schemas as $schema) {
+                        if (is_array($schema) && isset($schema['slug'])) {
+                            $schemaDetails[] = $schema;
+                        } elseif ((is_int($schema) || is_numeric($schema)) && $schemaMapper !== null) {
+                            try {
+                                $schemaEntity = $schemaMapper->find((int)$schema);
+                                if ($schemaEntity !== null) {
+                                    $schemaDetails[] = $schemaEntity->jsonSerialize();
+                                }
+                            } catch (\Exception $e) {
+                                // Skip
+                            }
+                        }
+                    }
+                    $register['schemas'] = $schemaDetails;
                     $targetRegister = $register;
                 }
             }
@@ -2806,9 +3124,10 @@ class SettingsService
             }
 
             try {
-                $registers = $objectService->getRegisters();
+                $registerService = $this->getRegisterService();
+                $registers = $registerService->findAll();
             } catch (\TypeError | \Exception $e) {
-                $this->logger->warning('OpenRegister getRegisters() failed in configureAmef', [
+                $this->logger->warning('OpenRegister RegisterService->findAll() failed in configureAmef', [
                     'exception' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine()
@@ -2829,8 +3148,62 @@ class SettingsService
             // Detect AMEF register by presence of core AMEF schemas (not by slug)
             $candidate = null;
             $amefCoreSlugs = ['model', 'element', 'relation', 'view', 'organization', 'property', 'property-definition'];
+
+            // Convert all registers to arrays first
+            $registers = array_map(function($register) {
+                return ($register instanceof \OCA\OpenRegister\Db\Register)
+                    ? $register->jsonSerialize()
+                    : (array)$register;
+            }, $registers);
+
+            // Collect all schema IDs for batch fetch
+            $allSchemaIds = [];
             foreach ($registers as $register) {
-                $schemaSlugs = array_map(static function ($s) { return strtolower($s['slug'] ?? ''); }, $register['schemas'] ?? []);
+                foreach (($register['schemas'] ?? []) as $schema) {
+                    if (is_int($schema) || is_numeric($schema)) {
+                        $allSchemaIds[] = (int)$schema;
+                    }
+                }
+            }
+
+            // Batch fetch all schemas in one query
+            $schemaMap = [];
+            if (!empty($allSchemaIds)) {
+                try {
+                    $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
+                    $schemas = $schemaMapper->findMultipleOptimized(array_unique($allSchemaIds));
+                    foreach ($schemas as $schema) {
+                        $schemaMap[$schema->getId()] = $schema->jsonSerialize();
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->warning('SchemaMapper not available for AMEF detection', ['error' => $e->getMessage()]);
+                }
+            }
+
+            foreach ($registers as $register) {
+                // Handle schemas - they might be IDs (integers) or full objects
+                $schemas = $register['schemas'] ?? [];
+                $schemaSlugs = [];
+                $schemaDetails = [];
+
+                foreach ($schemas as $schema) {
+                    if (is_array($schema) && isset($schema['slug'])) {
+                        // Schema is already a full object
+                        $schemaSlugs[] = strtolower($schema['slug']);
+                        $schemaDetails[] = $schema;
+                    } elseif (is_int($schema) || is_numeric($schema)) {
+                        // Schema is an ID - get from pre-fetched map
+                        if (isset($schemaMap[(int)$schema])) {
+                            $schemaArray = $schemaMap[(int)$schema];
+                            $schemaSlugs[] = strtolower($schemaArray['slug'] ?? '');
+                            $schemaDetails[] = $schemaArray;
+                        }
+                    }
+                }
+
+                // Store schema details back for later use
+                $register['schemas'] = $schemaDetails;
+
                 $matches = array_intersect($amefCoreSlugs, $schemaSlugs);
                 if (count($matches) >= 3) { // threshold: at least model + 2 others
                     $candidate = $register;
@@ -3807,9 +4180,28 @@ class SettingsService
 
             $versionInfo = $this->getVersionInfo();
 
+            // Get voorzieningen config (lightweight - just reads from config storage)
+            $voorzieningenConfig = $this->getVoorzieningenConfig();
+
+            // Get amef config directly from config storage (avoid heavy ArchiMateService call)
+            $amefConfigJson = $this->config->getValueString($this->_appName, 'amef_config', '{}');
+            $amefConfig = json_decode($amefConfigJson, true);
+            if (!is_array($amefConfig)) {
+                $amefConfig = [
+                    'register' => $this->config->getValueString($this->_appName, 'amef_register_id', ''),
+                    'organization_schema' => $this->config->getValueString($this->_appName, 'amef_organizations_schema', ''),
+                    'element_schema' => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
+                    'relation_schema' => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
+                    'view_schema' => $this->config->getValueString($this->_appName, 'amef_views_schema', ''),
+                    'model_schema' => $this->config->getValueString($this->_appName, 'amef_models_schema', '')
+                ];
+            }
+
             $result = [
                 'availableRegisters' => $base['availableRegisters'] ?? [],
                 'versionInfo' => $versionInfo,
+                'voorzieningenConfig' => $voorzieningenConfig,
+                'amefConfig' => $amefConfig,
                 'timestamp' => time(),
             ];
 
@@ -4241,11 +4633,13 @@ class SettingsService
             if ($targetRegisterId !== '') {
                 $objectService = $this->getObjectService();
                 if ($objectService !== null) {
-                    // Build a set of schema ids for the chosen register
+                    // Build a set of schema ids for the chosen register.
                     try {
-                        $registers = $objectService->getRegisters();
+                        $registerService = $this->getRegisterService();
+                        $registers = $registerService->findAll();
                         $schemaIdSet = [];
                         foreach ($registers as $register) {
+                            $register = $register->jsonSerialize();
                             if ((string)($register['id'] ?? '') === $targetRegisterId) {
                                 foreach (($register['schemas'] ?? []) as $schema) {
                                     $schemaIdSet[(string)$schema['id']] = true;
@@ -4254,7 +4648,7 @@ class SettingsService
                             }
                         }
                     } catch (\TypeError | \Exception $e) {
-                        $this->logger->warning('OpenRegister getRegisters() failed in updateAmefConfig', [
+                        $this->logger->warning('OpenRegister RegisterService->findAll() failed in updateAmefConfig', [
                             'exception' => $e->getMessage(),
                             'file' => $e->getFile(),
                             'line' => $e->getLine()
@@ -4587,8 +4981,8 @@ class SettingsService
                     ],
                     '_limit' => 10000 // Get all existing
                 ],
-                rbac: false,
-                multi: false
+                _rbac: false,
+                _multitenancy: false
             );
 
             $this->logger->info('Retrieved existing organisaties from voorzieningen register', [
@@ -4698,8 +5092,8 @@ class SettingsService
                         objects: $batch,
                         register: $voorzieningenConfig['register'],
                         schema: $voorzieningenConfig['organisatie_schema'],
-                        rbac: false,
-                        multi: false,
+                        _rbac: false,
+                        _multitenancy: false,
                         validation: false, // Skip validation for performance
                         events: false      // Skip events for performance
                     );

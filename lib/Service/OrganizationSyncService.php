@@ -113,6 +113,60 @@ class OrganizationSyncService
         $this->settingsService = $settingsService;
     }
 
+    /**
+     * Create a database-agnostic JSON extraction expression
+     *
+     * Returns the appropriate SQL function for extracting a value from a JSON column
+     * based on the database platform (MySQL vs PostgreSQL).
+     *
+     * @param string $column The column name containing JSON data
+     * @param string $path   The JSON path to extract (e.g., '$.status' or 'status')
+     *
+     * @return string The SQL expression for JSON extraction
+     */
+    private function jsonExtract(string $column, string $path): string
+    {
+        $platform = $this->db->getDatabasePlatform();
+        $isPostgres = $platform->getName() === 'postgresql';
+
+        // Normalize path - remove '$.' prefix if present for PostgreSQL
+        $cleanPath = ltrim($path, '$.');
+
+        if ($isPostgres) {
+            // PostgreSQL: Use ->> operator for text extraction
+            // Cast to json first if needed, then extract
+            return "({$column}::json->>'{$cleanPath}')";
+        }
+
+        // MySQL/MariaDB: Use json_unquote(json_extract())
+        $jsonPath = str_starts_with($path, '$.') ? $path : '$.'. $path;
+        return "json_unquote(json_extract({$column}, '{$jsonPath}'))";
+    }
+
+    /**
+     * Create a database-agnostic JSON contains expression
+     *
+     * Returns the appropriate SQL for checking if a JSON array contains a value.
+     *
+     * @param string $column The column name containing JSON array
+     * @param string $value  The value to check for
+     *
+     * @return string The SQL expression for JSON contains check
+     */
+    private function jsonContains(string $column, string $value): string
+    {
+        $platform = $this->db->getDatabasePlatform();
+        $isPostgres = $platform->getName() === 'postgresql';
+
+        if ($isPostgres) {
+            // PostgreSQL: Use @> operator with jsonb
+            return "({$column}::jsonb @> '\"{$value}\"'::jsonb)";
+        }
+
+        // MySQL/MariaDB: Use JSON_CONTAINS
+        return "json_contains({$column}, '\"{$value}\"')";
+    }
+
     public function performOrganizationsSync(int $batchSize = 50, int $maxExecutionSeconds = 45): array
     {
         // Check configuration
@@ -144,12 +198,13 @@ class OrganizationSyncService
         // Note: The 'active' column was removed as it doesn't exist in the openregister_organisations table.
         // Now syncs all non-Concept organizations that either don't have an organisation entity yet,
         // or need to be re-synced based on their updated timestamp.
-        $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(o.object, \'$.status\')) as status'), 'o2.uuid as oreg_uuid')
+        $statusExtract = $this->jsonExtract('o.object', '$.status');
+        $qb->select('o.uuid', $qb->createFunction("{$statusExtract} as status"), 'o2.uuid as oreg_uuid')
             ->from(from: 'openregister_objects', alias: 'o')
             ->leftJoin(fromAlias:'o', join: 'openregister_organisations', alias: 'o2', condition: 'o.uuid = o2.uuid')
             ->where($qb->expr()->eq('o.schema', $qb->createNamedParameter($organizationSchema)))
             ->andWhere($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
-            ->andWhere($qb->expr()->neq($qb->createFunction('LOWER(json_unquote(json_extract(o.object, \'$.status\')))'), $qb->createNamedParameter('Concept')))
+            ->andWhere($qb->expr()->neq($qb->createFunction("LOWER({$statusExtract})"), $qb->createNamedParameter('concept')))
             ->orderBy('o.updated', 'ASC')  // Process oldest first for consistency.
             ->setMaxResults($batchSize);  // Limit batch size.
 
@@ -213,11 +268,15 @@ class OrganizationSyncService
 
         $qb = $this->db->getQueryBuilder();
 
+        $emailExtract = $this->jsonExtract('o.object', '$.e-mailadres');
+        $usernameExtract = $this->jsonExtract('o.object', '$.username');
+        $organisatieExtract = $this->jsonExtract('o.object', '$.organisatie');
+
         $qb->select(
             'o.uuid',
             'a.uid',
-            $qb->createFunction('json_unquote(json_extract(o.object, \'$.e-mailadres\')) as email'),
-            $qb->createFunction('json_unquote(json_extract(o.object, \'$.username\')) as username'),
+            $qb->createFunction("{$emailExtract} as email"),
+            $qb->createFunction("{$usernameExtract} as username"),
             'oo.uuid as organisation'
         )
             ->from('openregister_objects', 'o')
@@ -225,16 +284,16 @@ class OrganizationSyncService
                 fromAlias: 'o',
                 join: 'accounts_data',
                 alias: 'a',
-                condition: 'json_unquote(json_extract(o.object, \'$.e-mailadres\')) = a.value')
+                condition: "{$emailExtract} = a.value")
             ->leftJoin(
                 fromAlias: 'o',
                 join: 'openregister_organisations',
                 alias: 'oo',
-                condition: 'oo.uuid = json_unquote(json_extract(o.object, \'$.organisatie\'))'
+                condition: "oo.uuid = {$organisatieExtract}"
             )
             ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
             ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
-            ->andWhere($qb->expr()->isNull($qb->createFunction('json_unquote(json_extract(o.object, \'$.username\'))')))
+            ->andWhere($qb->expr()->isNull($qb->createFunction($usernameExtract)))
             ->orderBy('o.updated', 'ASC')  // Process oldest first
             ->setMaxResults($batchSize);   // Limit batch size
 
@@ -278,8 +337,12 @@ class OrganizationSyncService
                 }
             }
 
+            // Remove organisatie field to avoid validation error
+            // (it's stored as UUID string but schema expects object type)
+            unset($contactEntityObject['organisatie']);
+
             $contactEntity->setObject($contactEntityObject);
-            $objectService->saveObject(object: $contactEntity, register: $register, schema: $contactSchema, rbac: false, multi: false);
+            $objectService->saveObject(object: $contactEntity, register: $register, schema: $contactSchema, _rbac: false, _multitenancy: false);
 
             $stats['contactPersonsProcessed']++;
         }
@@ -297,12 +360,27 @@ class OrganizationSyncService
 
 
         $qb = $this->db->getQueryBuilder();
-        $qb->select('o.uuid', $qb->createFunction('json_unquote(json_extract(`o`.`object`, \'$.username\')) as username'), $qb->createFunction('json_unquote(json_extract(o.object, \'$.organisatie\')) as organisation'), 'oo.users')
+        $usernameExtract2 = $this->jsonExtract('o.object', '$.username');
+        $organisatieExtract2 = $this->jsonExtract('o.object', '$.organisatie');
+
+        // Build JSON contains check - this is complex and platform-specific
+        $platform = $this->db->getDatabasePlatform();
+        $isPostgres = $platform->getName() === 'postgresql';
+
+        if ($isPostgres) {
+            // PostgreSQL: Check if username is NOT in the users array
+            $jsonContainsCheck = "NOT (oo.users::jsonb @> to_jsonb({$usernameExtract2}))";
+        } else {
+            // MySQL: Use JSON_CONTAINS
+            $jsonContainsCheck = "json_contains(oo.users, json_extract(o.object, '$.username')) = 0";
+        }
+
+        $qb->select('o.uuid', $qb->createFunction("{$usernameExtract2} as username"), $qb->createFunction("{$organisatieExtract2} as organisation"), 'oo.users')
             ->from(from:'openregister_objects', alias: 'o')
-            ->leftJoin(fromAlias: 'o', join: 'openregister_organisations', alias: 'oo', condition: 'oo.uuid = json_unquote(json_extract(o.object, \'$.organisatie\'))')
+            ->leftJoin(fromAlias: 'o', join: 'openregister_organisations', alias: 'oo', condition: "oo.uuid = {$organisatieExtract2}")
             ->where($qb->expr()->eq('o.register', $qb->createNamedParameter($register)))
-            ->andWhere($qb->expr()->orX('o.schema', $qb->createNamedParameter($contactSchema)))
-            ->andWhere($qb->expr()->eq($qb->createFunction('json_contains(oo.users, json_extract(`o`.`object`, \'$.username\'))'), $qb->createNamedParameter(0)));
+            ->andWhere($qb->expr()->eq('o.schema', $qb->createNamedParameter($contactSchema)))
+            ->andWhere($qb->createFunction($jsonContainsCheck));
 
         $sql = $qb->getSQL();
         $users = $qb->execute()->fetchAll();
@@ -534,14 +612,34 @@ class OrganizationSyncService
     private function ensureOrganisationEntity(object $organisatieObject, array &$stats): ?object
     {
         try {
+            // Get the full object data - the passed object might not have all fields populated
+            $organisatieId = $organisatieObject->getUuid();
+            
+            // Fetch the complete object from the database to ensure we have all data
+            try {
+                $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                $fullObject = $objectService->find(
+                    id: $organisatieId,
+                    register: $organisatieObject->getRegister(),
+                    schema: $organisatieObject->getSchema()
+                );
+                if ($fullObject) {
+                    $organisatieObject = $fullObject;
+                }
+            } catch (\Exception $e) {
+                $this->logger->warning('Could not fetch full organisation object, using provided object', [
+                    'organisatieId' => $organisatieId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
             $objectData = $organisatieObject->getObject();
-            $organisatieId = $objectData['id'] ?? $organisatieObject->getId();
 
-            $this->logger->critical('🔍 ENSURING ORGANISATION ENTITY', [
+            $this->logger->debug('Ensuring organisation entity', [
                 'app' => 'softwarecatalog',
                 'organisatieId' => $organisatieId,
-                'naam' => $objectData['naam'] ?? 'Unknown',
-                'status' => $objectData['status'] ?? 'Unknown'
+                'naam' => $objectData['naam'] ?? $objectData['name'] ?? 'Unknown',
+                'status' => $objectData['status'] ?? 'Unknown',
             ]);
 
             // Get configuration for object updates
@@ -559,17 +657,16 @@ class OrganizationSyncService
                 $status = strtolower($objectData['status'] ?? 'actief');
                 $shouldBeActive = in_array($status, ['actief', 'active']);
 
-                $this->logger->critical('📋 EXISTING ENTITY FOUND', [
+                $this->logger->debug('Existing entity found', [
                     'app' => 'softwarecatalog',
                     'organisatieId' => $organisatieId,
                     'entityId' => $organisationEntity->getId(),
-                    'currentActive' => $organisationEntity->getActive(),
                     'shouldBeActive' => $shouldBeActive,
                     'needsUpdate' => $organisationEntity->getActive() !== $shouldBeActive
                 ]);
 
                 if ($organisationEntity->getActive() !== $shouldBeActive) {
-                    $this->logger->critical('🔄 UPDATING ENTITY STATUS', [
+                    $this->logger->debug('Updating entity status', [
                         'app' => 'softwarecatalog',
                         'organisatieId' => $organisatieId,
                         'oldActive' => $organisationEntity->getActive(),
@@ -606,7 +703,7 @@ class OrganizationSyncService
 
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                 // Entity doesn't exist, create it
-                $this->logger->critical('🆕 CREATING NEW ORGANISATION ENTITY', [
+                $this->logger->debug('Creating new organisation entity', [
                     'app' => 'softwarecatalog',
                     'organisatieId' => $organisatieId,
                     'naam' => $objectData['naam'] ?? 'Unknown'
@@ -615,7 +712,7 @@ class OrganizationSyncService
                 $organisationEntity = $this->organisatieService->createOrganisationInOpenRegister($objectData);
                 if ($organisationEntity) {
                     $stats['entitiesCreated']++;
-                    $this->logger->critical('🎊 NEW ORGANISATION ENTITY CREATED', [
+                    $this->logger->debug('New organisation entity created', [
                         'app' => 'softwarecatalog',
                         'organisatieId' => $organisatieId,
                         'entityId' => $organisationEntity->getId(),
@@ -764,7 +861,8 @@ class OrganizationSyncService
     {
         try {
             $contactData = $contactPerson->getObject();
-            $email = $contactData['email'] ?? '';
+            // Schema uses 'e-mailadres' but some data may use 'email'
+            $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
             $existingUsername = $contactData['username'] ?? '';
 
             if (empty($email)) {
@@ -1113,6 +1211,14 @@ class OrganizationSyncService
                     'entitiesUpdated' => $stats['entitiesUpdated']
                 ]);
 
+                // Step 1.5: Process nested contact persons (from registration form data)
+                $this->logger->info('[FLOW] Step 1.5: Processing nested contactpersonen from organization data', [
+                    'organizationId' => $organizationUuid,
+                    'action' => 'process_nested_contactpersonen'
+                ]);
+
+                $this->processNestedContactPersons($organizationObject, $stats);
+
                 // Step 2: Find and process related contactpersonen objects (separate objects, not nested)
                 $this->logger->info('[FLOW] Step 2: Finding related contactpersoon objects', [
                     'organizationId' => $organizationUuid,
@@ -1202,6 +1308,43 @@ class OrganizationSyncService
 
             foreach ($contactPersons as $index => $contactData) {
                 try {
+                    // Handle UUID references - if contactData is a string (UUID), fetch the actual object
+                    if (is_string($contactData)) {
+                        $this->logger->info('[FLOW] Contact person is a UUID reference, fetching object', [
+                            'organizationId' => $organizationUuid,
+                            'contactIndex' => $index,
+                            'contactUuid' => $contactData
+                        ]);
+
+                        // Fetch the contact person object using the UUID
+                        $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                        $contactObject = $objectService->find(
+                            id: $contactData,
+                            register: $register,
+                            schema: $contactSchema,
+                            _rbac: false,
+                            _multitenancy: false
+                        );
+
+                        if ($contactObject === null) {
+                            $this->logger->warning('[FLOW] Contact person not found by UUID', [
+                                'organizationId' => $organizationUuid,
+                                'contactUuid' => $contactData
+                            ]);
+                            continue;
+                        }
+
+                        // Get the object data as array
+                        $contactData = $contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity
+                            ? $contactObject->getObject()
+                            : (is_array($contactObject) ? $contactObject : []);
+
+                        // Add the UUID if not present
+                        if (!isset($contactData['id']) && $contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
+                            $contactData['id'] = $contactObject->getUuid();
+                        }
+                    }
+
                     $this->logger->info('[FLOW] Processing nested contact person', [
                         'organizationId' => $organizationUuid,
                         'contactIndex' => $index,
@@ -1240,10 +1383,9 @@ class OrganizationSyncService
     private function processRelatedContactPersons(string $organizationUuid, array &$stats): void
     {
         try {
-            $this->logger->critical('🔍 FINDING RELATED CONTACT PERSONS', [
+            $this->logger->debug('Finding related contact persons', [
                 'app' => 'softwarecatalog',
                 'organizationId' => $organizationUuid,
-                'action' => 'find_related_contacts'
             ]);
 
             // Get configuration
@@ -1264,6 +1406,7 @@ class OrganizationSyncService
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
             // Search for contactpersoon objects with this organization reference
+            // Try both 'organisatie' and 'organisation' field names
             $query = [
                 '@self' => [
                     'register' => (int) $register,
@@ -1272,12 +1415,27 @@ class OrganizationSyncService
                 'organisatie' => $organizationUuid
             ];
 
-            $this->logger->info('[FLOW] Searching for related contact persons', [
+            $this->logger->critical('[FLOW] Searching for related contact persons with organisatie field', [
                 'organizationId' => $organizationUuid,
+                'register' => $register,
+                'contactSchema' => $contactSchema,
                 'query' => $query
             ]);
 
             $relatedContacts = $objectService->searchObjects($query);
+            
+            // If not found, try with 'organisation' field
+            if (empty($relatedContacts)) {
+                $query['organisation'] = $organizationUuid;
+                unset($query['organisatie']);
+                
+                $this->logger->critical('[FLOW] Retrying search with organisation field', [
+                    'organizationId' => $organizationUuid,
+                    'query' => $query
+                ]);
+                
+                $relatedContacts = $objectService->searchObjects($query);
+            }
 
             if (empty($relatedContacts)) {
                 $this->logger->info('[FLOW] No related contact persons found', [
@@ -1297,10 +1455,41 @@ class OrganizationSyncService
                     $contactUuid = $contactObject->getUuid();
                     $contactData = $contactObject->getObject();
 
+                    // Check if contact data is complete (has email)
+                    $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
+                    if (empty($email) && !empty($contactUuid)) {
+                        // Re-fetch the full contact object if email is missing
+                        $this->logger->info('[FLOW] Contact data incomplete, re-fetching full object', [
+                            'organizationId' => $organizationUuid,
+                            'contactId' => $contactUuid
+                        ]);
+
+                        try {
+                            $fullContactObject = $objectService->find(
+                                id: $contactUuid,
+                                register: $register,
+                                schema: $contactSchema,
+                                _rbac: false,
+                                _multitenancy: false
+                            );
+                            if ($fullContactObject !== null) {
+                                $contactObject = $fullContactObject;
+                                $contactData = $contactObject->getObject();
+                                $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
+                            }
+                        } catch (\Exception $e) {
+                            $this->logger->warning('[FLOW] Failed to re-fetch contact object', [
+                                'organizationId' => $organizationUuid,
+                                'contactId' => $contactUuid,
+                                'exception' => $e->getMessage()
+                            ]);
+                        }
+                    }
+
                     $this->logger->info('[FLOW] Processing related contact person', [
                         'organizationId' => $organizationUuid,
                         'contactId' => $contactUuid,
-                        'contactEmail' => $contactData['email'] ?? $contactData['e-mailadres'] ?? 'unknown'
+                        'contactEmail' => $email ?: 'unknown'
                     ]);
 
                     // Process the contact person through processSpecificContactPerson
@@ -1348,8 +1537,7 @@ class OrganizationSyncService
     private function createOrUpdateContactPersonObject(array $contactData, string $organizationUuid, string $register, string $contactSchema, array &$stats): void
     {
         try {
-            // Ensure contact data has organization reference
-            $contactData['organisatie'] = $organizationUuid;
+            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
             $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
             if (empty($email)) {
@@ -1360,31 +1548,69 @@ class OrganizationSyncService
                 return;
             }
 
-            $this->logger->critical('📧 CREATING CONTACT PERSON OBJECT', [
-                'app' => 'softwarecatalog',
-                'organizationId' => $organizationUuid,
-                'email' => $email,
-                'name' => ($contactData['voornaam'] ?? '') . ' ' . ($contactData['achternaam'] ?? '')
-            ]);
+            // Check if contact already exists (has id from cascading or previous creation)
+            $existingContactId = $contactData['id'] ?? $contactData['uuid'] ?? null;
+            $contactObject = null;
 
-            // Create the contact person object in OpenRegister
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            $contactObject = $objectService->saveObject(
-                object: $contactData,
-                register: $register,
-                schema: $contactSchema,
-                rbac: false,
-                multi: false
-            );
+            if ($existingContactId) {
+                // Contact already exists - fetch it instead of trying to re-create
+                $this->logger->info('📧 FETCHING EXISTING CONTACT PERSON', [
+                    'app' => 'softwarecatalog',
+                    'organizationId' => $organizationUuid,
+                    'contactId' => $existingContactId,
+                    'email' => $email
+                ]);
+
+                try {
+                    $contactObject = $objectService->find(
+                        id: $existingContactId,
+                        register: $register,
+                        schema: $contactSchema,
+                        _rbac: false,
+                        _multitenancy: false
+                    );
+                } catch (\Exception $e) {
+                    $this->logger->warning('[FLOW] Could not fetch existing contact, will create new', [
+                        'organizationId' => $organizationUuid,
+                        'contactId' => $existingContactId,
+                        'exception' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // If contact doesn't exist, create it (but don't set organisatie as string - it's handled by inversedBy)
+            if ($contactObject === null) {
+                $this->logger->critical('📧 CREATING NEW CONTACT PERSON OBJECT', [
+                    'app' => 'softwarecatalog',
+                    'organizationId' => $organizationUuid,
+                    'email' => $email,
+                    'name' => ($contactData['voornaam'] ?? '') . ' ' . ($contactData['achternaam'] ?? '')
+                ]);
+
+                // Remove organisatie from contactData to avoid validation error
+                // The relationship is handled by the inversedBy configuration
+                unset($contactData['organisatie']);
+                unset($contactData['id']);
+                unset($contactData['uuid']);
+
+                $contactObject = $objectService->saveObject(
+                    object: $contactData,
+                    register: $register,
+                    schema: $contactSchema,
+                    _rbac: false,
+                    _multitenancy: false
+                );
+            }
 
             if ($contactObject) {
                 $stats['contactPersonsProcessed']++;
 
-                $this->logger->critical('✅ CONTACT PERSON OBJECT CREATED', [
+                $this->logger->info('✅ CONTACT PERSON OBJECT READY', [
                     'app' => 'softwarecatalog',
                     'organizationId' => $organizationUuid,
                     'contactId' => $contactObject->getUuid(),
-                    'email' => $email
+                    'email' => $email,
+                    'wasExisting' => !empty($existingContactId)
                 ]);
 
                 // Create user account if username is missing AND organization is active
@@ -1396,41 +1622,69 @@ class OrganizationSyncService
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
 
                         if ($organisationEntity && $organisationEntity->getActive()) {
+                            // Determine if this is the first contact for the organization
+                            $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization($contactObject, $contactObjectData);
+
                             $this->logger->critical('👤 CREATING USER ACCOUNT (org is active)', [
                                 'app' => 'softwarecatalog',
                                 'contactId' => $contactObject->getUuid(),
                                 'organizationId' => $organizationUuid,
                                 'organizationActive' => true,
-                                'email' => $email
+                                'email' => $email,
+                                'isFirstContact' => $isFirstContact
                             ]);
 
-                            $user = $this->contactpersonHandler->createUserAccount($contactObject);
+                            $user = $this->contactpersonHandler->createUserAccount($contactObject, $isFirstContact);
                             if ($user) {
                                 $stats['usersCreated']++;
                                 $contactObjectData['username'] = $user->getUID();
 
-                                // Update the contact object with username
-                                $contactObject->setObject($contactObjectData);
-                                $objectService->saveObject(
-                                    object: $contactObject,
-                                    register: $register,
-                                    schema: $contactSchema,
-                                    rbac: false,
-                                    multi: false
-                                );
+                                // Remove organisatie field to avoid validation error
+                                // (it's stored as UUID string but schema expects object type)
+                                unset($contactObjectData['organisatie']);
 
-                                // Add user to organization entity in database
-                                $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
-
-                                // Update contactpersoon object owner to user UID
-                                $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
-
-                                $this->logger->critical('🎉 USER ACCOUNT CREATED SUCCESS', [
+                                $this->logger->critical('💾 ABOUT TO SAVE CONTACT WITH USERNAME', [
                                     'app' => 'softwarecatalog',
                                     'contactId' => $contactObject->getUuid(),
                                     'username' => $user->getUID(),
-                                    'email' => $email,
-                                    'displayName' => $user->getDisplayName()
+                                    'contactDataKeys' => array_keys($contactObjectData),
+                                    'hasOrganisatie' => isset($contactObjectData['organisatie'])
+                                ]);
+
+                                // Update the contact object with username
+                                $contactObject->setObject($contactObjectData);
+                                try {
+                                    $objectService->saveObject(
+                                        object: $contactObject,
+                                        register: $register,
+                                        schema: $contactSchema,
+                                        _rbac: false,
+                                        _multitenancy: false
+                                    );
+                                    $this->logger->critical('✅ CONTACT SAVED WITH USERNAME', [
+                                        'app' => 'softwarecatalog',
+                                        'contactId' => $contactObject->getUuid(),
+                                        'username' => $user->getUID()
+                                    ]);
+                                } catch (\Exception $saveEx) {
+                                    $this->logger->error('❌ FAILED TO SAVE CONTACT WITH USERNAME', [
+                                        'app' => 'softwarecatalog',
+                                        'contactId' => $contactObject->getUuid(),
+                                        'error' => $saveEx->getMessage(),
+                                        'trace' => $saveEx->getTraceAsString()
+                                    ]);
+                                }
+
+                                // Add user to organization entity in database
+                                $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID(), $organizationUuid);
+
+                                // Update contactpersoon object owner to user UID
+                                $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema, $organizationUuid);
+
+                                $this->logger->info('User account created', [
+                                    'app' => 'softwarecatalog',
+                                    'contactId' => $contactObject->getUuid(),
+                                    'username' => $user->getUID(),
                                 ]);
                             } else {
                                 $this->logger->error('❌ USER ACCOUNT CREATION FAILED', [
@@ -1464,7 +1718,7 @@ class OrganizationSyncService
         } catch (\Exception $e) {
             $this->logger->error('[FLOW] Failed to create/update contact person object', [
                 'organizationId' => $organizationUuid,
-                'email' => $contactData['email'] ?? 'unknown',
+                'email' => $contactData['email'] ?? $contactData['e-mailadres'] ?? 'unknown',
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -1521,17 +1775,25 @@ class OrganizationSyncService
                     $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
 
                     if ($organisationEntity && $organisationEntity->getActive()) {
+                        // Determine if this is the first contact for the organization
+                        $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization($contactObject, $contactEntityObject);
+
                         $this->logger->info('[EVENT] OrganizationSyncService: Creating user account for contact person (org is active)', [
                             'contactId' => $contactObject->getUuid(),
                             'organizationId' => $organizationUuid,
                             'organizationActive' => true,
-                            'email' => $contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown'
+                            'email' => $contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown',
+                            'isFirstContact' => $isFirstContact
                         ]);
 
-                        $user = $this->contactpersonHandler->createUserAccount($contactObject);
+                        $user = $this->contactpersonHandler->createUserAccount($contactObject, $isFirstContact);
                         // Check if user was created successfully (can be null if no email).
                         if ($user !== null) {
                             $contactEntityObject['username'] = $user->getUID();
+
+                            // Remove organisatie field to avoid validation error
+                            // (it's stored as UUID string but schema expects object type)
+                            unset($contactEntityObject['organisatie']);
 
                             // Update the contact object with the username (using RBAC bypass).
                             $contactObject->setObject($contactEntityObject);
@@ -1540,15 +1802,15 @@ class OrganizationSyncService
                                 object: $contactObject,
                                 register: $register,
                                 schema: $contactSchema,
-                                rbac: false,
-                                multi: false
+                                _rbac: false,
+                                _multitenancy: false
                             );
 
                             // Add user to organization entity in database.
-                            $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID());
+                            $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID(), $organizationUuid);
 
                             // Update contactpersoon object owner to user UID.
-                            $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema);
+                            $this->updateContactpersoonObjectOwner($contactObject, $user->getUID(), $register, $contactSchema, $organizationUuid);
 
                             $stats['usersCreated']++;
                         } else {
@@ -1898,6 +2160,9 @@ class OrganizationSyncService
             // Update the owner field in @self metadata to the organisation entity UUID
             $selfMetadata['owner'] = $organisationEntityUuid;
 
+            // Update the organisation field in @self metadata (so organisation owns itself)
+            $selfMetadata['organisation'] = $organisationEntityUuid;
+
             // Update the organisation property to the organisation entity UUID (so organisation owns itself)
             $currentObject['organisation'] = $organisationEntityUuid;
 
@@ -1905,15 +2170,14 @@ class OrganizationSyncService
             $currentObject['@self'] = $selfMetadata;
             $organisatieObject->setObject($currentObject);
 
-            // Save the updated object using ObjectService
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            $objectService->saveObject(
-                object: $organisatieObject,
-                register: $register,
-                schema: $organizationSchema,
-                rbac: false,
-                multi: false
-            );
+            // Also update the entity's owner and organisation fields directly
+            // These are separate from the object data and control multi-tenancy
+            $organisatieObject->setOwner($organisationEntityUuid);
+            $organisatieObject->setOrganisation($organisationEntityUuid);
+
+            // Save using ObjectEntityMapper directly to bypass validation and ensure metadata is persisted
+            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper->update($organisatieObject);
 
             $this->logger->info('OrganizationSyncService: Successfully updated organisatie object owner and organisation', [
                 'organisatieId' => $organisatieId,
@@ -1940,9 +2204,10 @@ class OrganizationSyncService
      * @param string $userUID The user UID to set as owner
      * @param string $register The register ID
      * @param string $contactSchema The contact schema ID
+     * @param string|null $organizationUuidOverride Optional organization UUID to use (from caller context)
      * @return void
      */
-    private function updateContactpersoonObjectOwner(object $contactObject, string $userUID, string $register, string $contactSchema): void
+    private function updateContactpersoonObjectOwner(object $contactObject, string $userUID, string $register, string $contactSchema, ?string $organizationUuidOverride = null): void
     {
         try {
             $contactId = $contactObject->getUuid();
@@ -1951,7 +2216,8 @@ class OrganizationSyncService
                 'contactId' => $contactId,
                 'userUID' => $userUID,
                 'register' => $register,
-                'schema' => $contactSchema
+                'schema' => $contactSchema,
+                'organizationUuidOverride' => $organizationUuidOverride
             ]);
 
             // Get the current object data
@@ -1964,13 +2230,14 @@ class OrganizationSyncService
             $selfMetadata['owner'] = $userUID;
 
             // Set the organisation field in @self metadata to the organization UUID
-            // This ensures the contact person is properly linked to their organization
-            $organizationUuid = $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '';
+            // Use override if provided, otherwise try to get from object data
+            $organizationUuid = $organizationUuidOverride ?? $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '';
             if (!empty($organizationUuid)) {
                 $selfMetadata['organisation'] = $organizationUuid;
                 $this->logger->info('OrganizationSyncService: Setting @self.organisation metadata', [
                     'contactId' => $contactId,
-                    'organizationUuid' => $organizationUuid
+                    'organizationUuid' => $organizationUuid,
+                    'source' => $organizationUuidOverride ? 'override' : 'object'
                 ]);
             } else {
                 $this->logger->warning('OrganizationSyncService: No organization UUID found for contact person', [
@@ -1983,15 +2250,16 @@ class OrganizationSyncService
             $currentObject['@self'] = $selfMetadata;
             $contactObject->setObject($currentObject);
 
-            // Save the updated object using ObjectService
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-            $objectService->saveObject(
-                object: $contactObject,
-                register: $register,
-                schema: $contactSchema,
-                rbac: false,
-                multi: false
-            );
+            // Also update the entity's owner and organisation fields directly
+            // These are separate from the object data and control multi-tenancy
+            $contactObject->setOwner($userUID);
+            if (!empty($organizationUuid)) {
+                $contactObject->setOrganisation($organizationUuid);
+            }
+
+            // Save using ObjectEntityMapper directly to bypass validation and ensure metadata is persisted
+            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper->update($contactObject);
 
             $this->logger->info('OrganizationSyncService: Successfully updated contactpersoon object owner and organisation', [
                 'contactId' => $contactId,
