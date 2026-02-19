@@ -111,17 +111,26 @@ class ContactPersonHandler
 
         // Strategy 2: firstname.lastname (fallback)
         if (!empty($voornaam) && !empty($achternaam)) {
-            $username = strtolower($voornaam) . '.' . strtolower($achternaam);
-            if ($this->isValidUsername($username)) {
-                return $username;
+            // Strip spaces and non-alphanumeric chars from name parts
+            $cleanVoornaam = preg_replace('/[^a-z0-9]/', '', strtolower($voornaam));
+            $cleanAchternaam = preg_replace('/[^a-z0-9]/', '', strtolower($achternaam));
+            if (!empty($cleanVoornaam) && !empty($cleanAchternaam)) {
+                $username = $cleanVoornaam . '.' . $cleanAchternaam;
+                if ($this->isValidUsername($username)) {
+                    return $username;
+                }
             }
         }
 
         // Strategy 3: firstnamelastname (fallback)
         if (!empty($voornaam) && !empty($achternaam)) {
-            $username = strtolower($voornaam) . strtolower($achternaam);
-            if ($this->isValidUsername($username)) {
-                return $username;
+            $cleanVoornaam = preg_replace('/[^a-z0-9]/', '', strtolower($voornaam));
+            $cleanAchternaam = preg_replace('/[^a-z0-9]/', '', strtolower($achternaam));
+            if (!empty($cleanVoornaam) && !empty($cleanAchternaam)) {
+                $username = $cleanVoornaam . $cleanAchternaam;
+                if ($this->isValidUsername($username)) {
+                    return $username;
+                }
             }
         }
 
@@ -155,12 +164,49 @@ class ContactPersonHandler
             return false;
         }
 
-        // Only allow alphanumeric, dots, underscores, dashes, and @ symbol (for email addresses)
-        if (!preg_match('/^[a-z0-9._@-]+$/', $username)) {
+        // Only allow alphanumeric, dots, underscores, dashes, and @ (matching Nextcloud's allowed chars)
+        if (!preg_match('/^[a-z0-9._@\-]+$/', $username)) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Validates an email address for use as a Nextcloud username.
+     * Returns null if valid, or an error message string if invalid.
+     *
+     * @param string $email The email address to validate
+     * @return string|null Null if valid, error message if invalid
+     */
+    public function validateEmailForUsername(string $email): ?string
+    {
+        if (empty($email)) {
+            return 'No email address found. The contact person must have a valid email address (in the "email" or "e-mailadres" field) to be activated.';
+        }
+
+        if (strpos($email, '@') === false) {
+            return "The email address \"{$email}\" is not a valid email address (missing @).";
+        }
+
+        $lowered = strtolower($email);
+
+        // Find invalid characters
+        $invalidChars = preg_replace('/[a-z0-9._@\-]/', '', $lowered);
+        if (!empty($invalidChars)) {
+            $uniqueChars = implode(' ', array_unique(str_split($invalidChars)));
+            return "The email address \"{$email}\" contains characters that are not allowed in a Nextcloud username: {$uniqueChars}. Only letters (a-z), numbers (0-9), dots (.), underscores (_), dashes (-) and @ are allowed. Please correct the email address on the contact person before activating.";
+        }
+
+        if (strlen($lowered) < 3) {
+            return "The email address \"{$email}\" is too short to be used as a username (minimum 3 characters).";
+        }
+
+        if (strlen($lowered) > 64) {
+            return "The email address \"{$email}\" is too long to be used as a username (maximum 64 characters).";
+        }
+
+        return null;
     }
 
     /**

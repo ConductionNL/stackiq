@@ -122,19 +122,15 @@ export const useOrganisatieStore = defineStore('organisatie', {
 					},
 				})
 
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
-				}
-
 				const data = await response.json()
 
-				if (data.success) {
-					// Return the full response data including the updated contactpersoon object
-					// The component will handle updating the local data
-					return data
-				} else {
-					throw new Error(data.message || 'Failed to convert to user')
+				if (!response.ok || !data.success) {
+					throw new Error(data.message || `HTTP error! status: ${response.status}`)
 				}
+
+				// Return the full response data including the updated contactpersoon object
+				// The component will handle updating the local data
+				return data
 			} catch (error) {
 				console.error('Error converting to user:', error)
 				this.error = error.message

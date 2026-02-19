@@ -266,6 +266,16 @@ class ContactpersonenController extends Controller
                 ], 400);
             }
 
+            // Validate email address before attempting user creation
+            $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
+            $emailError = $this->contactPersonHandler->validateEmailForUsername($email);
+            if ($emailError !== null) {
+                return new JSONResponse([
+                    'success' => false,
+                    'message' => $emailError
+                ], 400);
+            }
+
             // Create user account using ContactPersonHandler
             $user = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
 

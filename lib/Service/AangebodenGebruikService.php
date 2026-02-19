@@ -784,22 +784,10 @@ class AangebodenGebruikService
                 ];
             }
 
-            // Get the existing gebruik or koppeling object with RBAC and multitenancy disabled
-            // since the object might be owned by a different organisation (leverancier)
-            try {
-                $existingGebruik = $objectService->find(
-                    id: $gebruikId,
-                    _rbac: false,  // Disable RBAC to access cross-organisation objects
-                    _multitenancy: false  // Disable multitenancy to access objects from other organisations
-                );
-            } catch (Exception $e) {
-                $this->logger->warning('Failed to find gebruik object', [
-                    'gebruik_id' => $gebruikId,
-                    'error' => $e->getMessage()
-                ]);
-                $existingGebruik = null;
-            }
-            
+            // Find the gebruik or koppeling object across possible schemas
+            // Register/schema context is required to search magic tables
+            $existingGebruik = $this->findGebruikOrKoppeling($objectService, $gebruikId);
+
             if (!$existingGebruik) {
                 return [
                     'success' => false,
@@ -812,7 +800,7 @@ class AangebodenGebruikService
             $gebruikData = $existingGebruik->getObject();
             $afnemerInfo = $gebruikData['afnemer'] ?? null;
             $aanbiederInfo = $gebruikData['aanbieder'] ?? null;
-            
+
             // Check various ways the afnemer might be stored (UUID, object, or string)
             $afnemerId = null;
             if (is_array($afnemerInfo) && isset($afnemerInfo['id'])) {
@@ -820,7 +808,7 @@ class AangebodenGebruikService
             } elseif (is_string($afnemerInfo)) {
                 $afnemerId = $afnemerInfo;
             }
-            
+
             // Check various ways the aanbieder might be stored (UUID, object, or string)
             $aanbiederId = null;
             if (is_array($aanbiederInfo) && isset($aanbiederInfo['id'])) {
@@ -832,7 +820,7 @@ class AangebodenGebruikService
             // Allow operation if current org is either afnemer or aanbieder
             $isAfnemer = ($afnemerId && $afnemerId === $currentOrg);
             $isAanbieder = ($aanbiederId && $aanbiederId === $currentOrg);
-            
+
             if (!$isAfnemer && !$isAanbieder) {
                 return [
                     'success' => false,
@@ -849,21 +837,18 @@ class AangebodenGebruikService
             }
 
             // Update the @self.organisation property
-            $selfData = $gebruikData['@self'] ?? [];
-            $selfData['organisation'] = $currentOrg;
-            $gebruikData['@self'] = $selfData;
+            $gebruikData['@self'] = ['organisation' => $currentOrg];
 
             // Save the updated object with RBAC and multitenancy disabled
-            // since we're updating an object that was originally created by another organisation
+            // Use register/schema from the found entity for correct table routing
             $existingGebruik->setObject($gebruikData);
-            $gebruiksConfig = $this->getGebruiksConfiguration();
             $updatedGebruik = $objectService->saveObject(
                 object: $existingGebruik,
-                register: $gebruiksConfig['register_id'],  // Provide register context
-                schema: $gebruiksConfig['schemas'][0],     // Provide schema context
-                uuid: $gebruikId,                          // Provide UUID for update
-                _rbac: false,  // Disable RBAC to allow cross-organisation updates
-                _multitenancy: false  // Disable multitenancy to allow updates from different organisations
+                register: $existingGebruik->getRegister(),
+                schema: $existingGebruik->getSchema(),
+                uuid: $gebruikId,
+                _rbac: false,
+                _multitenancy: false
             );
 
             $this->logger->info('Successfully updated gebruik @self property', [
@@ -898,8 +883,61 @@ class AangebodenGebruikService
     }
 
     /**
+     * Find a gebruik or koppeling object by UUID across possible schemas
+     *
+     * Searches gebruik and koppeling schemas because the object could be
+     * either type. Register/schema context is required to find objects
+     * stored in magic tables.
+     *
+     * @param ObjectService $objectService The OpenRegister object service
+     * @param string $objectId The UUID of the object to find
+     * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
+     */
+    private function findGebruikOrKoppeling(ObjectService $objectService, string $objectId): ?\OCA\OpenRegister\Db\ObjectEntity
+    {
+        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+        $registerId = $voorzieningenConfig['register'] ?? null;
+
+        if (!$registerId) {
+            $this->logger->warning('Cannot find object: no register configured');
+            return null;
+        }
+
+        // Search across gebruik and koppeling schemas
+        $schemasToTry = array_filter([
+            $voorzieningenConfig['gebruik_schema'] ?? null,
+            $voorzieningenConfig['koppeling_schema'] ?? null,
+        ]);
+
+        foreach ($schemasToTry as $schemaId) {
+            try {
+                $object = $objectService->find(
+                    id: $objectId,
+                    register: $registerId,
+                    schema: $schemaId,
+                    _rbac: false,
+                    _multitenancy: false
+                );
+                if ($object) {
+                    return $object;
+                }
+            } catch (Exception $e) {
+                // Object not found in this schema, try next
+                continue;
+            }
+        }
+
+        $this->logger->warning('Object not found in any gebruik/koppeling schema', [
+            'object_id' => $objectId,
+            'schemas_tried' => $schemasToTry
+        ]);
+
+        return null;
+    }
+
+    /**
      * Get current active organisation for filtering
-     * 
+     *
      * @return string|null Current organisation identifier or null if no user session
      */
     private function getCurrentOrganisation(): ?string
@@ -1380,42 +1418,19 @@ class AangebodenGebruikService
                 ];
             }
 
-            // Get the existing gebruik or koppeling object with RBAC and multitenancy disabled
-            // since the object might be owned by a different organisation (leverancier)
-            $gebruiksConfig = $this->getGebruiksConfiguration();
-            
-            try {
-                $existingGebruik = $objectService->find(
-                    id: $gebruikId,
-                    _rbac: false,  // Disable RBAC to access cross-organisation objects
-                    _multitenancy: false  // Disable multitenancy to access objects from other organisations
-                );
-                
-                if ($existingGebruik) {
-                    $gebruikData = $existingGebruik->getObject();
-                    $this->logger->debug('Found gebruik object for deletion', [
-                        'gebruik_id' => $gebruikId,
-                        'afnemer' => $gebruikData['afnemer'] ?? 'unknown',
-                        'aanbieder' => $gebruikData['aanbieder'] ?? 'unknown'
-                    ]);
-                } else {
-                    $gebruikData = null;
-                }
-            } catch (Exception $e) {
-                $this->logger->warning('Failed to find gebruik object for deletion', [
-                    'gebruik_id' => $gebruikId,
-                    'error' => $e->getMessage()
-                ]);
-                $gebruikData = null;
-            }
-            
-            if (!$gebruikData) {
+            // Find the gebruik or koppeling object across possible schemas
+            // Register/schema context is required to search magic tables
+            $existingGebruik = $this->findGebruikOrKoppeling($objectService, $gebruikId);
+
+            if (!$existingGebruik) {
                 return [
                     'success' => false,
                     'error' => 'Gebruik object not found',
                     'deleted' => false
                 ];
             }
+
+            $gebruikData = $existingGebruik->getObject();
 
             // SECURITY CHECK: Verify that the active organization is either the afnemer or aanbieder
             // This is critical since we're bypassing RBAC
@@ -1467,10 +1482,9 @@ class AangebodenGebruikService
             }
 
             // Delete the object with RBAC and multitenancy disabled
-            // We need to disable these since the object might be owned by another organisation
-            // First set the register and schema context
-            $objectService->setRegister($gebruiksConfig['register_id']);
-            $objectService->setSchema($gebruiksConfig['schemas'][0]);
+            // Use register/schema from the found entity for correct table routing
+            $objectService->setRegister($existingGebruik->getRegister());
+            $objectService->setSchema($existingGebruik->getSchema());
             
             $deleteResult = $objectService->deleteObject(
                 uuid: $gebruikId,
