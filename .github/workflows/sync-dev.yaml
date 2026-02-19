@@ -52,8 +52,8 @@ jobs:
             sed -i "s|<version>.*</version>|<version>${DEV_RELEASE_VERSION}</version>|" appinfo/info.xml
             git add appinfo/info.xml
             git commit -m "${COMMIT_MSG}
-
-            Restored development-release version to ${DEV_RELEASE_VERSION} [skip ci]"
+            
+            Restored development-release version to ${DEV_RELEASE_VERSION}"
           fi
 
           git push -f origin development-release
