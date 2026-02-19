@@ -323,18 +323,13 @@ class OrganizationSyncService
             $contactEntityObject['username'] = $contact['uid'];
 
             if ($contact['uid'] === null) {
-                $user = $this->contactpersonHandler->createUserAccount($contactEntity);
-                // Check if user was created successfully (can be null if no email).
-                if ($user !== null) {
-                    $contactEntityObject['username'] = $user->getUID();
-                } else {
-                    // Skip this contact if user couldn't be created.
-                    $this->logger->debug('Skipping contact - user account creation failed (likely no email)', [
-                        'app' => 'softwarecatalog',
-                        'contactId' => $contactEntity->getId()
-                    ]);
-                    continue;
-                }
+                // Skip user creation in cron sync — users should be created manually
+                // via the convert-to-user endpoint or automatically via event listeners.
+                $this->logger->debug('Skipping user creation in cron sync — use convert-to-user endpoint or event listener', [
+                    'app' => 'softwarecatalog',
+                    'contactId' => $contactEntity->getId()
+                ]);
+                continue;
             }
 
             // Remove organisatie field to avoid validation error

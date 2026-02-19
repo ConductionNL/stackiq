@@ -276,8 +276,8 @@ class ContactpersonenController extends Controller
                 ], 400);
             }
 
-            // Create user account using ContactPersonHandler (manual: true bypasses auto-creation guard)
-            $user = $this->contactPersonHandler->createUserAccount($contactpersoonObject, manual: true);
+            // Create user account using ContactPersonHandler
+            $user = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
 
             if (!$user) {
                 return new JSONResponse([
