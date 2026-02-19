@@ -25,6 +25,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
 use OCA\SoftwareCatalog\EventListener\TestEventListener;
 use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
+use OCA\SoftwareCatalog\EventListener\ModuleRegistrationSubscriber;
 use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -152,6 +153,10 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
 
+        // Register module registration subscriber for auto-setting geregistreerdDoor
+        $context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
+
         // Register listener to sync user profile updates to contactpersoon objects
         $context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
 
@@ -233,6 +238,15 @@ class Application extends App implements IBootstrap
         // Register module compliance service
         $context->registerService(\OCA\SoftwareCatalog\Service\ModuleComplianceService::class, function ($container) {
             return new \OCA\SoftwareCatalog\Service\ModuleComplianceService(
+                $container,
+                $container->get(SettingsService::class),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
+
+        // Register module registration service (auto-sets geregistreerdDoor)
+        $context->registerService(\OCA\SoftwareCatalog\Service\ModuleRegistrationService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ModuleRegistrationService(
                 $container,
                 $container->get(SettingsService::class),
                 $container->get('Psr\Log\LoggerInterface')

@@ -241,13 +241,6 @@ class ContactPersonHandler
      */
     public function createUserAccount(object $contactpersoonObject, bool $isFirstContact = false): ?\OCP\IUser
     {
-        // Automatic user creation is disabled - users are now manually activated
-        $this->_logger->info('Automatic user creation is disabled, skipping', [
-            'app' => 'softwarecatalog',
-            'contactId' => $contactpersoonObject->getId(),
-        ]);
-        return null;
-
         $startTime = microtime(true);
 
         try {
