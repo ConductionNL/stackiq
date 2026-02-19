@@ -52,35 +52,63 @@
             }
           },
           {
-            "title": "Welkom",
+            "title": "Home",
             "slug": "home",
             "contents": [
               {
-                "id": 1,
+                "id": "hero1",
                 "type": "RichText",
+                "order": 0,
                 "data": {
-                  "content": "<h2><span>Over de Softwarecatalogus</span></h2>"
+                  "content": "DE PLEK WAAR GEMEENTEN EN LEVERANCIERS ELKAAR VINDEN"
                 }
               },
               {
-                "id": 2,
+                "id": "ph1",
                 "type": "RichText",
+                "order": 1,
                 "data": {
-                  "content": "<p>De Softwarecatalogus biedt een overzicht van software die wordt gebruikt binnen de Nederlandse gemeenten. Leveranciers en gemeenten werken hierin samen aan het (door)ontwikkelen van procesmatige en technische standaarden.</p><p>Op deze website vindt u informatie over softwarepakketten, leveranciers, standaarden en het gebruik daarvan door gemeenten. Zo willen we transparant zijn over de softwaremarkt voor de overheid.</p>"
+                  "content": ""
                 }
               },
               {
-                "id": 3,
+                "id": "ph2",
                 "type": "RichText",
+                "order": 2,
                 "data": {
-                  "content": "<ul><li><p>Zoek en vergelijk software voor gemeenten</p></li><li><p>Bekijk welke organisaties welke software gebruiken</p></li><li><p>Inzicht in standaarden en compliance</p></li></ul>"
+                  "content": ""
                 }
               },
               {
-                "id": 4,
+                "id": "about-title",
                 "type": "RichText",
+                "order": 3,
                 "data": {
-                  "content": "<p><a href=\"/over-ons\" class=\"utrecht-link\">Meer weten over de Softwarecatalogus?</a></p>"
+                  "content": "Over de softwarecatalogus"
+                }
+              },
+              {
+                "id": "about-text",
+                "type": "RichText",
+                "order": 4,
+                "data": {
+                  "content": "<p>De GEMMA Softwarecatalogus biedt gemeenten en leveranciers inzicht in het actuele en toekomstige softwareaanbod. Vergelijk gebruikte software met andere gemeenten, vind leveranciers en orienteer u op de markt.</p><ul><li>Vergelijk software met andere gemeenten</li><li>Vind leveranciers en hun aanbod</li><li>Inzicht in standaarden en referentiecomponenten</li></ul>"
+                }
+              },
+              {
+                "id": "about-link",
+                "type": "RichText",
+                "order": 5,
+                "data": {
+                  "content": "<p><a href=/about>Meer weten over de softwarecatalogus?</a></p>"
+                }
+              },
+              {
+                "id": "about-img",
+                "type": "Image",
+                "order": 6,
+                "data": {
+                  "url": "https://placehold.co/550x335/003580/ffffff?text=Softwarecatalogus"
                 }
               }
             ],
@@ -89,7 +117,7 @@
               "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "page",
-              "version": "0.0.4"
+              "version": "0.0.5"
             }
           },
           {
@@ -415,6 +443,62 @@
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
+            }
+          }
+        ],
+        "theme": [
+          {
+            "title": "Voor 342 gemeenten",
+            "summary": "Vergelijk applicaties, vind leveranciers, versterk digitale kracht.",
+            "description": "",
+            "image": "",
+            "content": "",
+            "link": "Vind een applicatie",
+            "url": "/zoeken",
+            "icon": "search",
+            "isExternal": false,
+            "sort": 1,
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "theme",
+              "version": "0.0.4"
+            }
+          },
+          {
+            "title": "Voor 336 leveranciers",
+            "summary": "Zet uw software in de etalage voor gemeenten.",
+            "description": "",
+            "image": "",
+            "content": "",
+            "link": "Meld je aan",
+            "url": "/register",
+            "icon": "document",
+            "isExternal": false,
+            "sort": 2,
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "theme",
+              "version": "0.0.4"
+            }
+          },
+          {
+            "title": "Voor 15 community's",
+            "summary": "Community's van gemeenten delen hun kennis en producten.",
+            "description": "",
+            "image": "",
+            "content": "",
+            "link": "Ontdek community's",
+            "url": "/zoeken?_schema=community",
+            "icon": "world",
+            "isExternal": false,
+            "sort": 3,
+            "@self": {
+              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "theme",
+              "version": "0.0.4"
             }
           }
         ],
