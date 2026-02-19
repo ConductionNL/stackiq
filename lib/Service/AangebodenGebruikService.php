@@ -845,6 +845,9 @@ class AangebodenGebruikService
             }
             $gebruikData['@self'] = $selfData;
 
+            // Update geregistreerdDoor based on the accepting organisation's type
+            $gebruikData = $this->updateGeregistreerdDoor($objectService, $gebruikData, $currentOrg);
+
             // Save the updated object with RBAC and multitenancy disabled
             // Use register/schema from the found entity for correct table routing
             $existingGebruik->setObject($gebruikData);
@@ -1325,11 +1328,80 @@ class AangebodenGebruikService
     }
 
     /**
+     * Mapping from organisatie.type to geregistreerdDoor value
+     */
+    private const TYPE_MAP = [
+        'Gemeente'     => 'Gemeente',
+        'Leverancier'  => 'Leverancier',
+        'Samenwerking' => 'Samenwerking',
+        'Community'    => 'Community',
+    ];
+
+    /**
+     * Update geregistreerdDoor on object data based on the organisation's type
+     *
+     * Looks up the organisation object by UUID, reads its type, and maps it
+     * to the appropriate geregistreerdDoor value using TYPE_MAP.
+     *
+     * @param ObjectService $objectService The OpenRegister object service
+     * @param array $objectData The object data to update
+     * @param string $organisationUuid The UUID of the organisation to look up
+     * @return array The updated object data
+     */
+    private function updateGeregistreerdDoor(
+        ObjectService $objectService,
+        array $objectData,
+        string $organisationUuid
+    ): array {
+        try {
+            $organisatieSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $registerId = $voorzieningenConfig['register'] ?? null;
+
+            if ($organisatieSchemaId === null || $registerId === null) {
+                return $objectData;
+            }
+
+            $organisatieObject = $objectService->find(
+                id: $organisationUuid,
+                register: (int) $registerId,
+                schema: (int) $organisatieSchemaId,
+                _rbac: false,
+                _multitenancy: false
+            );
+
+            if ($organisatieObject === null) {
+                return $objectData;
+            }
+
+            $organisatieData = $organisatieObject->getObject();
+            $orgType = $organisatieData['type'] ?? null;
+
+            if ($orgType !== null && isset(self::TYPE_MAP[$orgType])) {
+                $objectData['geregistreerdDoor'] = self::TYPE_MAP[$orgType];
+
+                $this->logger->info('Updated geregistreerdDoor during transfer', [
+                    'organisationUuid' => $organisationUuid,
+                    'orgType' => $orgType,
+                    'geregistreerdDoor' => self::TYPE_MAP[$orgType],
+                ]);
+            }
+        } catch (Exception $e) {
+            $this->logger->warning('Failed to update geregistreerdDoor during transfer', [
+                'organisationUuid' => $organisationUuid,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $objectData;
+    }
+
+    /**
      * Add query filters from options to the base query
-     * 
+     *
      * This method processes additional filter options and adds them to the query.
      * Supported filters: limit, offset, status, suite, etc.
-     * 
+     *
      * @param array $baseQuery The base query to extend
      * @param array $options Filter options to apply
      * @return array Extended query with additional filters

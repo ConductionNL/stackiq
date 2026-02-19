@@ -21,7 +21,7 @@ class ModuleRegistrationService
         'Gemeente'     => 'Gemeente',
         'Leverancier'  => 'Leverancier',
         'Samenwerking' => 'Samenwerking',
-        'Community'    => 'Applicatie',
+        'Community'    => 'Community',
     ];
 
     public function __construct(
