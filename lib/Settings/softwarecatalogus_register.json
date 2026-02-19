@@ -1167,7 +1167,7 @@
         "slug": "dienst",
         "title": "Dienst",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
-        "version": "0.1.5",
+        "version": "0.1.6",
         "summary": "",
         "icon": "Handshake",
         "required": [
@@ -1333,7 +1333,7 @@
           "koppelingen": {
             "description": "Koppelingen die gebruikt worden door deze dienst",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 8,
             "facetable": false,
             "title": "Koppelingen",
@@ -1604,7 +1604,7 @@
         "slug": "contactpersoon",
         "title": "Contactpersoon",
         "description": "Contactgegevens van een persoon",
-        "version": "0.0.25",
+        "version": "0.0.26",
         "summary": "",
         "icon": "AccountMultiple",
         "required": [
@@ -1723,6 +1723,7 @@
             "title": "Notificaties",
             "description": "Lijst van notificaties voor deze contactpersoon",
             "facetable": false,
+            "visible": false,
             "hideOnCollection": true,
             "items": {
               "type": "string",
@@ -2433,7 +2434,7 @@
         "slug": "gebruik",
         "title": "Gebruik",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.1.4",
+        "version": "1.1.5",
         "summary": "",
         "icon": "Usage",
         "required": [
@@ -2457,6 +2458,7 @@
             "title": "Aanbieder",
             "description": "De organisatie die aanbieder is van de applicatie",
             "facetable": false,
+            "visible": false,
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -2468,6 +2470,7 @@
             "type": "object",
             "description": "De contactpersoon voor dit gebruik",
             "facetable": false,
+            "visible": false,
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -2760,7 +2763,7 @@
           "amefElements": {
             "description": "Ids van AMEF elementen waarvoor dit product wordt gebruikt",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 22,
             "facetable": false,
             "title": "Amef elementen",
@@ -3137,7 +3140,7 @@
         "slug": "koppeling",
         "title": "Koppeling",
         "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet óf ApplicatieB óf buitengemeentelijkVoorziening gevuld zijn.",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "summary": "",
         "icon": "Link",
         "required": [
@@ -3194,17 +3197,6 @@
               "api"
             ],
             "example": "Bijvoorbeeld: api"
-          },
-          "koppelingType": {
-            "description": "Het type koppeling (intern of extern)",
-            "type": "string",
-            "order": 2,
-            "facetable": true,
-            "title": "Koppelingtype",
-            "enum": [
-              "intern",
-              "extern"
-            ]
           },
           "status": {
             "description": "Geef de status van de koppeling aan, default 'in gebruik'",
@@ -3316,6 +3308,7 @@
             "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
             "type": "object",
             "order": 11,
+            "visible": false,
             "facetable": false,
             "title": "Buitengemeentelijke Voorziening",
             "objectConfiguration": {
@@ -3354,7 +3347,7 @@
           "aanbieder": {
             "description": "De aanbieder van deze koppeling",
             "type": "object",
-            "visible": true,
+            "visible": false,
             "order": 14,
             "table": {
               "default": true
@@ -3369,7 +3362,7 @@
           "dienst": {
             "description": "De dienst die deze koppeling gebruikt",
             "type": "object",
-            "visible": true,
+            "visible": false,
             "order": 15,
             "facetable": false,
             "title": "Dienst",
@@ -3385,7 +3378,7 @@
             "order": 16,
             "facetable": true,
             "title": "Geregistreerd door",
-            "visible": true,
+            "visible": false,
             "enum": [
               "Gemeente",
               "Applicatie",
@@ -6410,7 +6403,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.2.0",
+        "version": "0.2.1",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6658,7 +6651,7 @@
           "omvat": {
             "description": "Andere applicaties die onderdeel zijn van deze applicatie",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 19,
             "facetable": false,
             "title": "Omvat",
@@ -6674,7 +6667,7 @@
           "onderdeelVan": {
             "description": "Applicaties waarvan deze applicatie onderdeel is",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 20,
             "facetable": false,
             "title": "Onderdeel van",
@@ -6741,7 +6734,7 @@
           "standaarden": {
             "description": "Een array van amef id's van standaarden die deze applicatie implementeert",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 24,
             "facetable": false,
             "title": "Standaarden AMEF",
@@ -6753,7 +6746,7 @@
           "standaardenGemma": {
             "description": "Een array van gemma id's van standaarden die deze applicatie implementeert",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 25,
             "facetable": false,
             "title": "Standaarden Gemma",
@@ -6815,7 +6808,7 @@
           "beoordelingen": {
             "description": "De beoordelingen van deze applicatie",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 28,
             "facetable": false,
             "title": "Beoordelingen",
@@ -6831,7 +6824,7 @@
           "kwetsbaarheden": {
             "description": "De kwetsbaarheden die deze applicatie treffen",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 29,
             "facetable": false,
             "title": "Kwetsbaarheden",
@@ -6848,7 +6841,7 @@
             "description": "Het type partij dat dit object heeft geregistreerd",
             "type": "string",
             "order": 30,
-            "facetable": true,
+            "facetable": false,
             "title": "Geregistreerd door",
             "visible": true,
             "enum": [
