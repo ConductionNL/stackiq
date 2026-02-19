@@ -20,48 +20,13 @@ jobs:
         run: |
           echo "APP_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
 
-      - name: Get current version and append unstable suffix
-        id: increment_version
+      - name: Get version from info.xml
+        id: get_version
         run: |
-          git fetch origin main
-          main_version=$(git show origin/main:appinfo/info.xml | grep -oP '(?<=<version>)[^<]+' || echo "")
           current_version=$(grep -oP '(?<=<version>)[^<]+' appinfo/info.xml || echo "")
-
-          IFS='.' read -ra main_version_parts <<< "$main_version"
-          next_patch=$((main_version_parts[2] + 1))
-
-          unstable_counter=1
-          if [[ $current_version =~ -unstable\.([0-9]+)$ ]]; then
-            current_patch=$(echo $current_version | grep -oP '^[0-9]+\.[0-9]+\.(\d+)' | cut -d. -f3)
-            if [ "$current_patch" -eq "$next_patch" ]; then
-              unstable_counter=$((BASH_REMATCH[1] + 1))
-            fi
-          fi
-
-          unstable_version="${main_version_parts[0]}.${main_version_parts[1]}.${next_patch}-unstable.${unstable_counter}"
-
-          echo "NEW_VERSION=$unstable_version" >> $GITHUB_ENV
-          echo "new_version=$unstable_version" >> $GITHUB_OUTPUT
-          echo "Main version: $main_version"
-          echo "Current version: $current_version"
-          echo "Using unstable version: $unstable_version"
-
-      - name: Update version in info.xml
-        run: |
-          sed -i "s|<version>.*</version>|<version>${{ env.NEW_VERSION }}</version>|" appinfo/info.xml
-
-      - name: Commit version update
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-          if git diff --quiet && git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git add appinfo/info.xml
-            git commit -m "Bump unstable version to ${{ env.NEW_VERSION }} [skip ci]"
-            git push
-          fi
+          echo "NEW_VERSION=$current_version" >> $GITHUB_ENV
+          echo "new_version=$current_version" >> $GITHUB_OUTPUT
+          echo "Using version from info.xml: $current_version"
 
       - name: Prepare Signing Certificate and Key
         run: |
