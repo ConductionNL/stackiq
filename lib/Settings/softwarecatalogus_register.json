@@ -1927,17 +1927,16 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
             "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger"
+            "gebruik-raadpleger",
+            { "group": "aanbod-beheerder", "match": { "_organisation": "$organisation" } },
+            { "group": "ambtenaar", "match": { "_organisation": "$organisation" } },
+            { "group": "functioneel-beheerder", "match": { "_organisation": "$organisation" } },
+            { "group": "organisatie-beheerder", "match": { "_organisation": "$organisation" } },
+            { "group": "organisaties-beheerder", "match": { "_organisation": "$organisation" } },
+            { "group": "software-catalog-users", "match": { "_organisation": "$organisation" } },
+            { "group": "software-catalog-admins", "match": { "_organisation": "$organisation" } },
+            { "group": "vng-raadpleger", "match": { "_organisation": "$organisation" } }
           ],
           "update": [
             "aanbod-beheerder",
