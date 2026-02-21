@@ -78,10 +78,10 @@ class ModuleComplianceService
                 throw new \RuntimeException('ObjectService not available');
             }
 
-            // Get module data
+            // Get module UUID from entity
+            $moduleUuid = $moduleObject->getUuid();
             $moduleData = $moduleObject->getObject();
-            $moduleUuid = $moduleData['uuid'] ?? null;
-            
+
             if (!$moduleUuid) {
                 $this->logger->warning('ModuleComplianceService: Module object has no UUID', [
                     'moduleId' => $moduleId
