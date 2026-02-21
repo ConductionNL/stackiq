@@ -3238,7 +3238,7 @@
             "required": true,
             "facetable": false,
             "title": "Naam",
-            "default": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB }}",
+            "default": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
             "defaultBehavior": "falsy",
             "table": {
               "default": true
@@ -3475,6 +3475,21 @@
               "indexed": false,
               "searchable": false
             }
+          },
+          "koppelingType": {
+            "description": "Afgeleid gegeven: extern als de koppeling met een buitengemeentelijke voorziening is, anders intern",
+            "type": "string",
+            "order": 17,
+            "facetable": true,
+            "title": "Type koppeling",
+            "visible": false,
+            "hideOnForm": true,
+            "default": "{{ buitengemeentelijkVoorziening | ifFilled: extern, intern }}",
+            "defaultBehavior": "always",
+            "enum": [
+              "extern",
+              "intern"
+            ]
           }
         },
         "archive": [],
@@ -3542,7 +3557,7 @@
         },
         "configuration": {
           "autoPublish": false,
-          "objectNameField": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB }}",
+          "objectNameField": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang"
         }
