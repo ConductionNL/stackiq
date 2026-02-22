@@ -369,6 +369,34 @@ class ContactPersonHandler
                     'userId' => $user->getUID()
                 ]);
 
+                // Fire-and-forget filesystem pre-warm in a background process.
+                // This replicates Session::prepareUserLogin() (setupFS, copySkeleton,
+                // updateLastLoginTimestamp) so the user's first login is instant.
+                // Uses exec('... &') for true async — returns immediately, the forked
+                // process does the ~5s work without blocking the admin's request.
+                try {
+                    $phpBin = PHP_BINARY ?: 'php';
+                    $serverRoot = \OC::$SERVERROOT;
+                    $safeUser = escapeshellarg($username);
+                    $cmd = sprintf(
+                        '%s -r %s > /dev/null 2>&1 &',
+                        escapeshellarg($phpBin),
+                        escapeshellarg(
+                            'require "' . $serverRoot . '/lib/base.php";'
+                            . ' \OC_Util::setupFS(' . var_export($username, true) . ');'
+                            . ' $f = \OC::$server->getUserFolder(' . var_export($username, true) . ');'
+                            . ' \OC_Util::copySkeleton(' . var_export($username, true) . ', $f);'
+                            . ' \OC::$server->get(\OCP\IUserManager::class)->get(' . var_export($username, true) . ')->updateLastLoginTimestamp();'
+                        )
+                    );
+                    exec($cmd);
+                } catch (\Exception $e) {
+                    $this->_logger->warning('Filesystem pre-warm exec failed for ' . $username, [
+                        'app' => 'softwarecatalog',
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
                 // Set user details
                 $this->_logger->info('[USER] Step 4: Setting user details', [
                     'username' => $username
