@@ -353,7 +353,9 @@ class OrganizationSyncService
                 $contactEntityObject = $contactEntity->getObject();
                 $contactEntityObject['username'] = $contact['uid'];
 
-                // Remove organisatie field to avoid validation error
+                // Temporarily remove organisatie field to avoid validation error
+                // (schema expects object type but field stores a UUID string)
+                $savedOrganisatie = $contactEntityObject['organisatie'] ?? null;
                 unset($contactEntityObject['organisatie']);
 
                 $contactEntity->setObject($contactEntityObject);
@@ -364,6 +366,16 @@ class OrganizationSyncService
                     _rbac: false,
                     _multitenancy: false
                 );
+
+                // Restore the organisatie field so the link is preserved
+                if ($savedOrganisatie !== null) {
+                    $restoredData = $contactEntity->getObject();
+                    $restoredData['organisatie'] = $savedOrganisatie;
+                    $contactEntity->setObject($restoredData);
+                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                    $objectMapper->update($contactEntity);
+                }
+
                 $stats['contactPersonsProcessed']++;
             } catch (\Exception $e) {
                 $stats['errors'][] = $contact['uuid'] . ': ' . $e->getMessage();
@@ -753,7 +765,35 @@ class OrganizationSyncService
                 return $organisationEntity;
 
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-                // Entity doesn't exist, create it
+                // Entity not found by UUID — try finding by slug before creating
+                // This handles the case where the entity exists but with a different UUID (e.g. from slug collision)
+                $orgName = $objectData['naam'] ?? $objectData['name'] ?? '';
+                if (!empty($orgName)) {
+                    $slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', strtolower($orgName)));
+                    $slug = trim($slug, '-');
+                    try {
+                        $organisationEntity = $organisationMapper->findBySlug($slug);
+                        $this->logger->info('OrganizationSyncService: Found existing entity by slug, updating UUID to match object', [
+                            'app' => 'softwarecatalog',
+                            'organisatieId' => $organisatieId,
+                            'oldEntityUuid' => $organisationEntity->getUuid(),
+                            'slug' => $slug
+                        ]);
+
+                        // Update the entity's UUID to match the object UUID so future lookups work
+                        $organisationEntity->setUuid($organisatieId);
+                        $organisationMapper->save($organisationEntity);
+                        $stats['entitiesUpdated']++;
+
+                        // Update organisatie object owner to this entity
+                        $this->updateOrganisatieObjectOwner($organisatieObject, $organisationEntity, $register, $organizationSchema);
+
+                        return $organisationEntity;
+                    } catch (\OCP\AppFramework\Db\DoesNotExistException $slugEx) {
+                        // Not found by slug either — proceed with creation
+                    }
+                }
+
                 $this->logger->debug('Creating new organisation entity', [
                     'app' => 'softwarecatalog',
                     'organisatieId' => $organisatieId,
@@ -1232,7 +1272,7 @@ class OrganizationSyncService
             $objectData = $organizationObject->getObject();
             $organizationUuid = $organizationObject->getUuid();
 
-            $this->logger->critical('🏢 ORGANIZATION PROCESSING STARTED', [
+            $this->logger->info('🏢 ORGANIZATION PROCESSING STARTED', [
                 'app' => 'softwarecatalog',
                 'trigger' => 'ObjectCreatedEvent',
                 'organizationId' => $organizationUuid,
@@ -1255,7 +1295,7 @@ class OrganizationSyncService
             if ($organisationEntity) {
                 $stats['organizationsProcessed']++;
 
-                $this->logger->critical('✅ ORGANISATION ENTITY CREATED/UPDATED', [
+                $this->logger->info('✅ ORGANISATION ENTITY CREATED/UPDATED', [
                     'app' => 'softwarecatalog',
                     'organizationUuid' => $organizationUuid,
                     'entityId' => $organisationEntity->getId(),
@@ -1278,7 +1318,7 @@ class OrganizationSyncService
                     'action' => 'process_related_contactpersonen'
                 ]);
 
-                $this->processRelatedContactPersons($organizationUuid, $stats);
+                $this->processRelatedContactPersons($organizationUuid, $organizationObject, $stats);
 
             } else {
                 $this->logger->error('❌ ORGANISATION ENTITY FAILED', [
@@ -1292,7 +1332,7 @@ class OrganizationSyncService
             $stats['endTime'] = date('Y-m-d H:i:s');
             $stats['duration'] = round(microtime(true) - $startTime, 3);
 
-            $this->logger->critical('🏁 ORGANIZATION PROCESSING COMPLETED', [
+            $this->logger->info('🏁 ORGANIZATION PROCESSING COMPLETED', [
                 'app' => 'softwarecatalog',
                 'organizationId' => $organizationUuid,
                 'stats' => $stats,
@@ -1339,7 +1379,7 @@ class OrganizationSyncService
                 return;
             }
 
-            $this->logger->critical('👥 PROCESSING NESTED CONTACT PERSONS', [
+            $this->logger->info('👥 PROCESSING NESTED CONTACT PERSONS', [
                 'app' => 'softwarecatalog',
                 'organizationId' => $organizationUuid,
                 'contactCount' => count($contactPersons)
@@ -1430,10 +1470,11 @@ class OrganizationSyncService
      * Process related contactpersoon objects that have this organization in their organisation property
      *
      * @param string $organizationUuid The organization UUID to find related contacts for
+     * @param \OCA\OpenRegister\Db\ObjectEntity $organizationObject The organization object
      * @param array $stats The statistics array to update
      * @return void
      */
-    private function processRelatedContactPersons(string $organizationUuid, array &$stats): void
+    private function processRelatedContactPersons(string $organizationUuid, $organizationObject, array &$stats): void
     {
         try {
             $this->logger->debug('Finding related contact persons', [
@@ -1468,7 +1509,7 @@ class OrganizationSyncService
                 'organisatie' => $organizationUuid
             ];
 
-            $this->logger->critical('[FLOW] Searching for related contact persons with organisatie field', [
+            $this->logger->info('[FLOW] Searching for related contact persons with organisatie field', [
                 'organizationId' => $organizationUuid,
                 'register' => $register,
                 'contactSchema' => $contactSchema,
@@ -1482,7 +1523,7 @@ class OrganizationSyncService
                 $query['organisation'] = $organizationUuid;
                 unset($query['organisatie']);
                 
-                $this->logger->critical('[FLOW] Retrying search with organisation field', [
+                $this->logger->info('[FLOW] Retrying search with organisation field', [
                     'organizationId' => $organizationUuid,
                     'query' => $query
                 ]);
@@ -1491,13 +1532,77 @@ class OrganizationSyncService
             }
 
             if (empty($relatedContacts)) {
-                $this->logger->info('[FLOW] No related contact persons found', [
+                // Fallback: fetch contacts by UUID from the org's contactpersonen array
+                // This handles the case where contacts were linked via inversedBy (org → contact)
+                // but the contact's own organisatie field was never set
+                $this->logger->info('[FLOW] No contacts found by organisatie field, checking org contactpersonen array', [
                     'organizationId' => $organizationUuid
                 ]);
-                return;
+
+                // Re-fetch the org object without _extend to get raw UUIDs
+                try {
+                    $voorzieningenConfig2 = $this->settingsService->getVoorzieningenConfig();
+                    $orgRegister = $voorzieningenConfig2['register'] ?? '';
+                    $orgSchema = $voorzieningenConfig2['organisatie_schema'] ?? '';
+
+                    $rawOrgObject = $objectService->find(
+                        id: $organizationUuid,
+                        register: $orgRegister,
+                        schema: $orgSchema,
+                        _rbac: false,
+                        _multitenancy: false
+                    );
+
+                    $rawOrgData = $rawOrgObject ? $rawOrgObject->getObject() : [];
+                    $contactUuids = $rawOrgData['contactpersonen'] ?? [];
+
+                    $this->logger->info('[FLOW] Raw org contactpersonen array', [
+                        'organizationId' => $organizationUuid,
+                        'contactpersonen' => $contactUuids,
+                        'count' => count($contactUuids)
+                    ]);
+
+                    if (!empty($contactUuids)) {
+                        foreach ($contactUuids as $contactUuid) {
+                            if (!is_string($contactUuid) || empty($contactUuid)) {
+                                continue;
+                            }
+                            try {
+                                $contactObj = $objectService->find(
+                                    id: $contactUuid,
+                                    register: $register,
+                                    schema: $contactSchema,
+                                    _rbac: false,
+                                    _multitenancy: false
+                                );
+                                if ($contactObj !== null) {
+                                    $relatedContacts[] = $contactObj;
+                                }
+                            } catch (\Exception $fetchEx) {
+                                $this->logger->warning('[FLOW] Could not fetch contact from contactpersonen array', [
+                                    'organizationId' => $organizationUuid,
+                                    'contactUuid' => $contactUuid,
+                                    'exception' => $fetchEx->getMessage()
+                                ]);
+                            }
+                        }
+                    }
+                } catch (\Exception $orgEx) {
+                    $this->logger->warning('[FLOW] Could not re-fetch org for contactpersonen fallback', [
+                        'organizationId' => $organizationUuid,
+                        'exception' => $orgEx->getMessage()
+                    ]);
+                }
+
+                if (empty($relatedContacts)) {
+                    $this->logger->info('[FLOW] No related contact persons found (including contactpersonen fallback)', [
+                        'organizationId' => $organizationUuid
+                    ]);
+                    return;
+                }
             }
 
-            $this->logger->critical('👥 PROCESSING RELATED CONTACT PERSONS', [
+            $this->logger->info('👥 PROCESSING RELATED CONTACT PERSONS', [
                 'app' => 'softwarecatalog',
                 'organizationId' => $organizationUuid,
                 'contactCount' => count($relatedContacts)
@@ -1537,6 +1642,19 @@ class OrganizationSyncService
                                 'exception' => $e->getMessage()
                             ]);
                         }
+                    }
+
+                    // Ensure the contact has the organisatie field set before processing
+                    // (may be missing when contacts were linked via inversedBy from the org side)
+                    if (empty($contactData['organisatie'])) {
+                        $contactData['organisatie'] = $organizationUuid;
+                        $contactObject->setObject($contactData);
+                        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                        $objectMapper->update($contactObject);
+                        $this->logger->info('[FLOW] Set missing organisatie field on related contact', [
+                            'contactId' => $contactUuid,
+                            'organizationUuid' => $organizationUuid
+                        ]);
                     }
 
                     $this->logger->info('[FLOW] Processing related contact person', [
@@ -1633,15 +1751,16 @@ class OrganizationSyncService
 
             // If contact doesn't exist, create it (but don't set organisatie as string - it's handled by inversedBy)
             if ($contactObject === null) {
-                $this->logger->critical('📧 CREATING NEW CONTACT PERSON OBJECT', [
+                $this->logger->info('📧 CREATING NEW CONTACT PERSON OBJECT', [
                     'app' => 'softwarecatalog',
                     'organizationId' => $organizationUuid,
                     'email' => $email,
                     'name' => ($contactData['voornaam'] ?? '') . ' ' . ($contactData['achternaam'] ?? '')
                 ]);
 
-                // Remove organisatie from contactData to avoid validation error
-                // The relationship is handled by the inversedBy configuration
+                // Temporarily remove organisatie from contactData to avoid validation error
+                // (schema expects object type but field stores a UUID string)
+                $savedOrganisatie = $contactData['organisatie'] ?? null;
                 unset($contactData['organisatie']);
                 unset($contactData['id']);
                 unset($contactData['uuid']);
@@ -1653,10 +1772,33 @@ class OrganizationSyncService
                     _rbac: false,
                     _multitenancy: false
                 );
+
+                // Restore the organisatie field so the link to the organisation is preserved
+                if ($contactObject && $savedOrganisatie !== null) {
+                    $restoredData = $contactObject->getObject();
+                    $restoredData['organisatie'] = $savedOrganisatie;
+                    $contactObject->setObject($restoredData);
+                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                    $objectMapper->update($contactObject);
+                }
             }
 
             if ($contactObject) {
                 $stats['contactPersonsProcessed']++;
+
+                // Ensure the contact has the organisatie field set (may be missing when linked via inversedBy)
+                $contactObjectData = $contactObject->getObject();
+                if (empty($contactObjectData['organisatie']) && !empty($organizationUuid)) {
+                    $contactObjectData['organisatie'] = $organizationUuid;
+                    $contactObject->setObject($contactObjectData);
+                    $contactObject->setOrganisation($organizationUuid);
+                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                    $objectMapper->update($contactObject);
+                    $this->logger->info('[FLOW] Set missing organisatie field on contact person', [
+                        'contactId' => $contactObject->getUuid(),
+                        'organizationUuid' => $organizationUuid
+                    ]);
+                }
 
                 $this->logger->info('✅ CONTACT PERSON OBJECT READY', [
                     'app' => 'softwarecatalog',
@@ -1667,7 +1809,6 @@ class OrganizationSyncService
                 ]);
 
                 // Create user account if username is missing AND organization is active
-                $contactObjectData = $contactObject->getObject();
                 if (empty($contactObjectData['username'])) {
                     // Check if organization exists in organisation entity table
                     $organisationEntity = null;
@@ -1718,14 +1859,17 @@ class OrganizationSyncService
                                 $stats['usersCreated']++;
                                 $contactObjectData['username'] = $user->getUID();
 
-                                // Remove organisatie field to avoid validation error
+                                // Temporarily remove organisatie field to avoid validation error
                                 // (it's stored as UUID string but schema expects object type)
+                                // Save the value so we can restore it after the save
+                                $savedOrganisatie = $contactObjectData['organisatie'] ?? null;
                                 unset($contactObjectData['organisatie']);
 
                                 $this->logger->debug('Saving contact with username', [
                                     'app' => 'softwarecatalog',
                                     'contactId' => $contactObject->getUuid(),
                                     'username' => $user->getUID(),
+                                    'savedOrganisatie' => $savedOrganisatie,
                                 ]);
 
                                 // Update the contact object with username
@@ -1896,8 +2040,10 @@ class OrganizationSyncService
                         if ($user !== null) {
                             $contactEntityObject['username'] = $user->getUID();
 
-                            // Remove organisatie field to avoid validation error
+                            // Temporarily remove organisatie field to avoid validation error
                             // (it's stored as UUID string but schema expects object type)
+                            // Save the value so we can restore it after the save
+                            $savedOrganisatie = $contactEntityObject['organisatie'] ?? null;
                             unset($contactEntityObject['organisatie']);
 
                             // Update the contact object with the username (using RBAC bypass).
@@ -2356,6 +2502,16 @@ class OrganizationSyncService
                 $this->logger->warning('OrganizationSyncService: No organization UUID found for contact person', [
                     'contactId' => $contactId,
                     'contactData' => $currentObject
+                ]);
+            }
+
+            // Restore the organisatie field if it was removed during username save
+            // This is the safety net that ensures the contact→org link is never lost
+            if (!empty($organizationUuid) && empty($currentObject['organisatie'])) {
+                $currentObject['organisatie'] = $organizationUuid;
+                $this->logger->info('OrganizationSyncService: Restored missing organisatie field on contact person', [
+                    'contactId' => $contactId,
+                    'organizationUuid' => $organizationUuid
                 ]);
             }
 
