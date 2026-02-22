@@ -113,10 +113,52 @@ class ContactpersoonService
                 $organizationUuid = $contactData['organisation'] ?? $contactData['organisatie'] ?? '';
                 
                 if (!empty($organizationUuid)) {
+                    // Look up organization entity, creating backup if missing
+                    $organisationEntity = null;
                     try {
                         $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
-                        
+                    } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                        // Org entity missing — try backup creation from org object
+                        $this->logger->info('ContactpersoonService: Organisation entity missing, attempting backup creation', [
+                            'contactId' => $contactId,
+                            'organizationUuid' => $organizationUuid,
+                        ]);
+                        try {
+                            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                            $settingsService = \OC::$server->get('OCA\SoftwareCatalog\Service\SettingsService');
+                            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+                            $orgObject = $objectService->find(
+                                id: $organizationUuid,
+                                register: $voorzieningenConfig['register'] ?? '',
+                                schema: $voorzieningenConfig['organisatie_schema'] ?? '',
+                                _rbac: false,
+                                _multitenancy: false
+                            );
+                            if ($orgObject) {
+                                $orgData = $orgObject->getObject();
+                                $orgStatus = strtolower($orgData['status'] ?? '');
+                                if (in_array($orgStatus, ['actief', 'active'])) {
+                                    $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+                                    $backupStats = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+                                    $organisationEntity = $organizationSyncService->ensureOrganisationEntityPublic($orgObject, $backupStats);
+                                    $this->logger->info('ContactpersoonService: Backup entity created', [
+                                        'contactId' => $contactId,
+                                        'organizationUuid' => $organizationUuid,
+                                        'entityCreated' => $organisationEntity !== null,
+                                    ]);
+                                }
+                            }
+                        } catch (\Exception $backupEx) {
+                            $this->logger->error('ContactpersoonService: Backup entity creation failed', [
+                                'contactId' => $contactId,
+                                'organizationUuid' => $organizationUuid,
+                                'error' => $backupEx->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    try {
                         if ($organisationEntity && $organisationEntity->getActive()) {
                             // Determine if this is the first contact for the organization
                             $isFirstContact = $this->contactPersonHandler->isFirstContactForOrganization($contactpersoonObject, $contactData);
@@ -126,7 +168,6 @@ class ContactpersoonService
                                 'contactId' => $contactId,
                                 'username' => $username,
                                 'organizationUuid' => $organizationUuid,
-                                'organizationActive' => true,
                                 'isFirstContact' => $isFirstContact
                             ]);
 
@@ -146,7 +187,7 @@ class ContactpersoonService
                                 'username' => $username
                             ]);
                         } else {
-                            $this->logger->info('ContactpersoonService: Skipping user creation - organization not active or not found', [
+                            $this->logger->info('ContactpersoonService: Skipping user creation - organization not active or entity not found', [
                                 'contactId' => $contactId,
                                 'organizationUuid' => $organizationUuid,
                                 'organizationFound' => $organisationEntity !== null,
@@ -155,10 +196,10 @@ class ContactpersoonService
                             return false;
                         }
                     } catch (\Exception $e) {
-                        $this->logger->info('ContactpersoonService: Skipping user creation - organization not found in entity table (not active)', [
+                        $this->logger->error('ContactpersoonService: User creation failed', [
                             'contactId' => $contactId,
                             'organizationUuid' => $organizationUuid,
-                            'reason' => 'Organization not found in entity table'
+                            'error' => $e->getMessage(),
                         ]);
                         return false;
                     }

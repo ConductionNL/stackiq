@@ -651,6 +651,15 @@ class OrganizationSyncService
      *
      * @return object|null The organisation entity or null on failure
      */
+    /**
+     * Public wrapper for ensureOrganisationEntity, used by ContactpersoonService
+     * for backup entity creation when org entity is missing.
+     */
+    public function ensureOrganisationEntityPublic(object $organisatieObject, array &$stats, bool $sendEmails = true): ?object
+    {
+        return $this->ensureOrganisationEntity($organisatieObject, $stats, $sendEmails);
+    }
+
     private function ensureOrganisationEntity(object $organisatieObject, array &$stats, bool $sendEmails = true): ?object
     {
         try {

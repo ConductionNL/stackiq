@@ -264,8 +264,8 @@ class OrganisatieService
         // Use OrganisationService to create the entity.
         // NOTE: Don't call save() afterwards as it causes UUID/ID issues in the mapper.
         $organisationEntity = $organisationService->createOrganisation(
-            $mappedData['naam'],           // name (string)
-            $mappedData['type'] ?? '',     // description (string)
+            (string) $mappedData['naam'],           // name (string)
+            (string) ($mappedData['type'] ?? ''),   // description (string)
             false,                         // addCurrentUser (bool) - don't auto-add current user
             $organizationUuid              // uuid (string)
         );
