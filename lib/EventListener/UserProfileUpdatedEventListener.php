@@ -98,7 +98,7 @@ class UserProfileUpdatedEventListener implements IEventListener
     }
 
     /**
-     * Find the contactpersoon object by username and update its fields.
+     * Find the contactpersoon object by username (with email fallback) and update its fields.
      *
      * @param UserProfileUpdatedEvent $event  The profile updated event.
      * @param LoggerInterface         $logger The logger.
@@ -121,23 +121,14 @@ class UserProfileUpdatedEventListener implements IEventListener
         }
 
         $userId = $event->getUserId();
-
-        // Find contactpersoon by username field using searchObjects.
-        $query = [
-            '@self' => [
-                'register' => (int) $register,
-                'schema'   => (int) $contactpersoonSchema,
-            ],
-            'username' => $userId,
+        $selfQuery = [
+            'register' => (int) $register,
+            'schema'   => (int) $contactpersoonSchema,
         ];
 
-        $results = $objectService->searchObjects(
-            query: $query,
-            _rbac: false,
-            _multitenancy: false
-        );
+        $contactpersoon = $this->findContactpersoon($objectService, $selfQuery, $userId, $event, $logger);
 
-        if (empty($results) === true || (is_array($results) === true && count($results) === 0)) {
+        if ($contactpersoon === null) {
             $logger->info('[UserProfileUpdatedEventListener] No contactpersoon found for user', [
                 'userId'   => $userId,
                 'register' => $register,
@@ -145,9 +136,6 @@ class UserProfileUpdatedEventListener implements IEventListener
             ]);
             return;
         }
-
-        // Get the first matching contactpersoon.
-        $contactpersoon = is_array($results) === true ? reset($results) : $results;
         $contactData = $contactpersoon->getObject();
         $newData = $event->getNewData();
         $changes = $event->getChanges();
@@ -163,6 +151,15 @@ class UserProfileUpdatedEventListener implements IEventListener
             $patch[$contactField] = $newValue ?? '';
         }
 
+        // Backfill the username field if it was missing (found via email fallback).
+        if (empty($contactData['username']) === true) {
+            $patch['username'] = $userId;
+            $logger->info('[UserProfileUpdatedEventListener] Backfilling username on contactpersoon', [
+                'userId'           => $userId,
+                'contactpersoonId' => $contactpersoon->getUuid(),
+            ]);
+        }
+
         if (empty($patch) === true) {
             $logger->debug('[UserProfileUpdatedEventListener] No fields to patch on contactpersoon', [
                 'userId' => $userId,
@@ -176,21 +173,84 @@ class UserProfileUpdatedEventListener implements IEventListener
             'patch'            => $patch,
         ]);
 
-        // Only save the changed fields to avoid property authorization issues
-        // with protected fields like 'rollen'.
-        $objectService->saveObject(
-            register: $contactpersoon->getRegister(),
-            schema: $contactpersoon->getSchema(),
-            object: $patch,
-            _rbac: false,
-            _multitenancy: false,
-            uuid: $contactpersoon->getUuid()
-        );
+        // Merge the patch into existing data and save directly via mapper to skip schema validation.
+        // Schema validation can reject existing data with legacy values (e.g. notificaties enum).
+        $mergedObject = array_merge($contactData, $patch);
+        $contactpersoon->setObject($mergedObject);
+        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+        $objectMapper->update($contactpersoon);
 
         $logger->info('[UserProfileUpdatedEventListener] Successfully synced user profile to contactpersoon', [
             'userId'           => $userId,
             'contactpersoonId' => $contactpersoon->getUuid(),
             'patchedFields'    => array_keys($patch),
         ]);
+    }
+
+    /**
+     * Find a contactpersoon by username, falling back to a case-insensitive email search.
+     *
+     * @param object                  $objectService The OpenRegister ObjectService.
+     * @param array                   $selfQuery     The @self register/schema filter.
+     * @param string                  $userId        The Nextcloud user ID.
+     * @param UserProfileUpdatedEvent $event         The profile updated event.
+     * @param LoggerInterface         $logger        The logger.
+     *
+     * @return object|null The contactpersoon entity or null if not found.
+     */
+    private function findContactpersoon(
+        object $objectService,
+        array $selfQuery,
+        string $userId,
+        UserProfileUpdatedEvent $event,
+        LoggerInterface $logger
+    ): ?object {
+        // 1. Search by username = userId (the Nextcloud UID).
+        $results = $objectService->searchObjects(
+            query: ['@self' => $selfQuery, 'username' => $userId],
+            _rbac: false,
+            _multitenancy: false
+        );
+
+        if (empty($results) === false && (is_array($results) === false || count($results) > 0)) {
+            return is_array($results) === true ? reset($results) : $results;
+        }
+
+        // 2. Fallback: case-insensitive email search using _search (ILIKE).
+        //    Try the user's email first, then the userId (which may itself be an email).
+        $emailCandidates = array_filter(array_unique([
+            $event->getUser()->getEMailAddress(),
+            $userId,
+        ]));
+
+        foreach ($emailCandidates as $emailCandidate) {
+            if (empty($emailCandidate) === true) {
+                continue;
+            }
+
+            $logger->debug('[UserProfileUpdatedEventListener] Username lookup failed, trying email fallback', [
+                'userId'         => $userId,
+                'emailCandidate' => $emailCandidate,
+            ]);
+
+            // Use _search for case-insensitive matching, then verify the email field in PHP.
+            $results = $objectService->searchObjects(
+                query: ['@self' => $selfQuery, '_search' => $emailCandidate],
+                _rbac: false,
+                _multitenancy: false
+            );
+
+            if (is_array($results) === true) {
+                foreach ($results as $result) {
+                    $data = $result->getObject();
+                    $storedEmail = $data['e-mailadres'] ?? $data['email'] ?? '';
+                    if (strcasecmp($storedEmail, $emailCandidate) === 0) {
+                        return $result;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }
