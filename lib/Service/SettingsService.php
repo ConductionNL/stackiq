@@ -4992,6 +4992,9 @@ class SettingsService
             // 4. MEMORY-EFFICIENT: Build lookup set for existing UUIDs
             // Now we can compare by UUID since we force UUIDs to match OpenRegister organisation UUIDs
             $existingUuids = array_flip(array_map(function($org) {
+                if ($org instanceof \OCA\OpenRegister\Db\ObjectEntity) {
+                    return $org->getUuid() ?? '';
+                }
                 return $org['@self']['id'] ?? '';
             }, $existingOrganisaties['results'] ?? []));
 
