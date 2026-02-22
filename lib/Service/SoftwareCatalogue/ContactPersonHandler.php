@@ -2244,15 +2244,28 @@ class ContactPersonHandler
     private function ensureOrganizationEntity(string $organizationUuid): ?\OCA\OpenRegister\Db\Organisation
     {
         try {
+            // First check if an entity with this UUID already exists (defensive double-check).
+            $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+            try {
+                $existing = $organisationMapper->findByUuid($organizationUuid);
+                $this->_logger->info('ContactPersonHandler: Organization entity already exists (found by UUID)', [
+                    'organizationUuid' => $organizationUuid,
+                    'organizationName' => $existing->getName()
+                ]);
+                return $existing;
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                // Expected — continue to create.
+            }
+
             // Get the organization object from OpenRegister
             $objectService = $this->_getObjectService();
-            
+
             // Get voorzieningen config for register and schema
             $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
             $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
             $register = $voorzieningenConfig['register'] ?? '';
             $organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
-            
+
             // Find the organization object by UUID - use find() with register and schema
             $organizationObject = $objectService->find(
                 id: $organizationUuid,
@@ -2261,28 +2274,44 @@ class ContactPersonHandler
                 _rbac: false,
                 _multitenancy: false
             );
-            
+
             if (!$organizationObject) {
                 $this->_logger->error('ContactPersonHandler: Organization object not found in OpenRegister', [
                     'organizationUuid' => $organizationUuid
                 ]);
                 return null;
             }
-            
+
             $organizationData = $organizationObject->getObject();
-            
+
             // Get organization name and description
             $organizationName = $organizationData['naam'] ?? $organizationData['name'] ?? 'Unknown Organization';
             $organizationDescription = $organizationData['beschrijving'] ?? $organizationData['beschrijvingLang'] ?? $organizationData['description'] ?? '';
-            
+
+            // Check if an entity with the same slug already exists (prevents unique constraint violation).
+            try {
+                $slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', strtolower($organizationName)));
+                $slug = trim($slug, '-');
+                $existingBySlug = $organisationMapper->findBySlug($slug);
+                $this->_logger->info('ContactPersonHandler: Organization entity already exists (found by slug)', [
+                    'organizationUuid' => $organizationUuid,
+                    'slug' => $slug,
+                    'existingUuid' => $existingBySlug->getUuid(),
+                    'existingName' => $existingBySlug->getName()
+                ]);
+                return $existingBySlug;
+            } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+                // No existing entity by slug — proceed with creation.
+            }
+
             $this->_logger->info('ContactPersonHandler: Creating organization entity from object data', [
                 'organizationUuid' => $organizationUuid,
                 'organizationName' => $organizationName
             ]);
-            
+
             // Create the organization entity using OrganisationService
             $organisationService = $this->_container->get('OCA\\OpenRegister\\Service\\OrganisationService');
-            
+
             // Create organisation with specific UUID, without adding current user (as we're in admin context)
             $organisation = $organisationService->createOrganisation(
                 name: $organizationName,
@@ -2290,13 +2319,13 @@ class ContactPersonHandler
                 addCurrentUser: false,  // Don't add current user (admin) to this organisation
                 uuid: $organizationUuid
             );
-            
+
             $this->_logger->info('ContactPersonHandler: Successfully created organization entity', [
                 'organizationUuid' => $organizationUuid,
                 'organizationName' => $organizationName,
                 'organizationId' => $organisation->getId()
             ]);
-            
+
             return $organisation;
             
         } catch (\Exception $e) {
