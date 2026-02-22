@@ -345,25 +345,9 @@ class Application extends App implements IBootstrap
      */
     public function boot(IBootContext $context): void
     {
-        // Initialization is now handled by the Repair step (InitializeSettings)
-        // which runs only during app install/upgrade, not on every request.
-        // See lib/Repair/InitializeSettings.php
-
-        $container = $context->getServerContainer();
-        $logger = $container->get(LoggerInterface::class);
-
-        // Register background job for organization contact synchronization
-        try {
-            $jobList = $container->get('OCP\BackgroundJob\IJobList');
-            if (!$jobList->has(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class, null)) {
-                $jobList->add(\OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class);
-                $logger->debug('SoftwareCatalog boot: Background job registered');
-            }
-        } catch (\Exception $e) {
-            $logger->error('SoftwareCatalog boot: Failed to register background job', [
-                'exception' => $e->getMessage()
-            ]);
-        }
+        // Background jobs are registered declaratively in appinfo/info.xml.
+        // Initialization is handled by the Repair step (InitializeSettings).
+        // No per-request work needed here.
     }
 
 
