@@ -76,14 +76,27 @@ class ContactpersoonService
      * @return bool True if processing was successful
      * @throws \Exception If processing fails
      */
+    /**
+     * Tracks contact UUIDs currently being processed to prevent event recursion.
+     * When saveObject() is called to update the username, it triggers ObjectUpdatedEvent
+     * which re-enters this method — this guard breaks that loop.
+     */
+    private static array $processingContacts = [];
+
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate = false): bool
     {
         $startTime = microtime(true);
-        
+
         try {
             $contactData = $contactpersoonObject->getObject();
             $contactId = $contactpersoonObject->getId();
-            
+
+            // Recursion guard: saveObject triggers ObjectUpdatedEvent which re-enters here
+            if (isset(self::$processingContacts[$contactId])) {
+                return true;
+            }
+            self::$processingContacts[$contactId] = true;
+
             $this->logger->info('ContactpersoonService: Starting contactpersoon processing', [
                 'contactId' => $contactId,
                 'isUpdate' => $isUpdate,
@@ -246,6 +259,8 @@ class ContactpersoonService
                 'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
             ]);
             throw $e;
+        } finally {
+            unset(self::$processingContacts[$contactId]);
         }
     }
 
