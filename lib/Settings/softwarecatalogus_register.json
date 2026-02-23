@@ -6503,7 +6503,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.2.1",
+        "version": "0.2.2",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6716,7 +6716,7 @@
           "type": {
             "description": "Het type applicatie zoals geregistreerd in de catalogus",
             "type": "string",
-            "visible": true,
+            "visible": false,
             "order": 11,
             "facetable": false,
             "title": "Type",
@@ -6860,7 +6860,7 @@
           "gebruiken": {
             "description": "Het gebruik van deze applicatie",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 27,
             "facetable": false,
             "title": "Gebruik",
