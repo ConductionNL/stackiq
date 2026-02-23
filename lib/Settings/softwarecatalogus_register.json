@@ -1257,8 +1257,7 @@
         "required": [
           "naam",
           "aanbieder",
-          "type",
-          "dienstType"
+          "type"
         ],
         "properties": {
           "naam": {
@@ -1391,7 +1390,10 @@
             "table": {
               "default": true
             },
-            "facetable": false,
+            "facetable": {
+              "title": "Diensttype",
+              "aggregated": false
+            },
             "title": "Diensttype",
             "example": "Bijvoorbeeld: Implementatieondersteuning"
           },
@@ -1429,32 +1431,6 @@
               "$ref": "#/components/schemas/koppeling",
               "inversedBy": "dienst"
             }
-          },
-          "dienstType": {
-            "description": "Het type dienst dat wordt aangeboden",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "Functioneel beheer",
-                "Applicatiebeheer",
-                "Technisch beheer",
-                "Implementatieondersteuning",
-                "Opleidingen",
-                "Licentiereseller"
-              ]
-            },
-            "required": true,
-            "visible": true,
-            "order": 4,
-            "table": {
-              "default": true
-            },
-            "facetable": {
-              "title": "Diensttype"
-            },
-            "title": "Diensttype",
-            "example": "Bijvoorbeeld: Implementatieondersteuning"
           }
         },
         "archive": [],
