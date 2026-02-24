@@ -64,19 +64,42 @@
                 }
               },
               {
-                "id": "ph1",
-                "type": "RichText",
+                "id": "quote",
+                "type": "Quote",
                 "order": 1,
                 "data": {
-                  "content": ""
+                  "title": "Samen bouwen aan een transparant softwarelandschap voor gemeenten",
+                  "subtitle": "De GEMMA Softwarecatalogus verbindt gemeenten en leveranciers voor beter inzicht in het gemeentelijke ICT-landschap."
                 }
               },
               {
-                "id": "ph2",
-                "type": "RichText",
+                "id": "content-blocks",
+                "type": "ContentBlocks",
                 "order": 2,
                 "data": {
-                  "content": ""
+                  "blocks": [
+                    {
+                      "icon": "search",
+                      "title": "Vergelijk software",
+                      "text": "Bekijk welke software andere gemeenten gebruiken en vergelijk dit met uw eigen applicatielandschap.",
+                      "linkUrl": "/zoeken",
+                      "linkTitle": "Start met zoeken"
+                    },
+                    {
+                      "icon": "cubes",
+                      "title": "Beheer uw aanbod",
+                      "text": "Als leverancier registreert u eenvoudig uw producten, diensten en modules in de catalogus.",
+                      "linkUrl": "/beheer",
+                      "linkTitle": "Naar beheer"
+                    },
+                    {
+                      "icon": "building",
+                      "title": "Ontdek leveranciers",
+                      "text": "Vind leveranciers die passen bij uw behoeften en bekijk hun complete aanbod van software en diensten.",
+                      "linkUrl": "/zoeken?_schemas=organisatie",
+                      "linkTitle": "Bekijk leveranciers"
+                    }
+                  ]
                 }
               },
               {
