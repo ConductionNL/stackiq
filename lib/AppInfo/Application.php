@@ -253,6 +253,15 @@ class Application extends App implements IBootstrap
             );
         });
 
+        // Register module version service (creates default 1.0.0 version for new modules)
+        $context->registerService(\OCA\SoftwareCatalog\Service\ModuleVersionService::class, function ($container) {
+            return new \OCA\SoftwareCatalog\Service\ModuleVersionService(
+                $container,
+                $container->get(SettingsService::class),
+                $container->get('Psr\Log\LoggerInterface')
+            );
+        });
+
         // Register ArchiMate import service
         $context->registerService(\OCA\SoftwareCatalog\Service\ArchiMateImportService::class, function ($container) {
             return new \OCA\SoftwareCatalog\Service\ArchiMateImportService(
