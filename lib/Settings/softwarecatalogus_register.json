@@ -3248,7 +3248,7 @@
         "uri": null,
         "slug": "koppeling",
         "title": "Koppeling",
-        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet óf ApplicatieB óf buitengemeentelijkVoorziening gevuld zijn.",
+        "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
         "version": "0.1.1",
         "summary": "",
         "icon": "Link",
@@ -3387,25 +3387,13 @@
             "inversedBy": "koppeling"
           },
           "moduleB": {
-            "description": "Kies de applicatie of buitengemeentelijke voorziening waarmee gekoppeld wordt.",
+            "description": "Kies de applicatie waarmee gekoppeld wordt.",
             "type": "object",
             "required": false,
-            "items": {
-              "oneOf": [
-                {
-                  "objectConfiguration": {
-                    "handling": "related-object"
-                  },
-                  "$ref": "#/components/schemas/module"
-                },
-                {
-                  "objectConfiguration": {
-                    "handling": "related-object"
-                  },
-                  "$ref": "#/components/schemas/element"
-                }
-              ]
+            "objectConfiguration": {
+              "handling": "related-object"
             },
+            "$ref": "#/components/schemas/module",
             "order": 10,
             "facetable": false,
             "table": {
@@ -3417,8 +3405,10 @@
             "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
             "type": "object",
             "order": 11,
-            "visible": false,
             "facetable": false,
+            "table": {
+              "default": true
+            },
             "title": "Buitengemeentelijke Voorziening",
             "objectConfiguration": {
               "handling": "related-object",
