@@ -177,8 +177,44 @@ class UserProfileUpdatedEventListener implements IEventListener
         // Schema validation can reject existing data with legacy values (e.g. notificaties enum).
         $mergedObject = array_merge($contactData, $patch);
         $contactpersoon->setObject($mergedObject);
+
+        // Regenerate _name metadata from the schema's objectNameField template
+        // (e.g. "{{ voornaam }} {{ tussenvoegsel }} {{ achternaam }}").
+        // Without this, _name stays stale after field updates because we bypass the full saveObject flow.
+        $schemaMapper = \OC::$server->get('OCA\OpenRegister\Db\SchemaMapper');
+        $registerMapper = \OC::$server->get('OCA\OpenRegister\Db\RegisterMapper');
+        $metaHydrationHandler = \OC::$server->get('OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler');
+
+        $schemaEntity = null;
+        $registerEntity = null;
+        try {
+            $schemaEntity = $schemaMapper->find(
+                id: (int) $contactpersoonSchema,
+                _rbac: false,
+                _multitenancy: false
+            );
+            $registerEntity = $registerMapper->find(
+                id: (int) $register,
+                _rbac: false,
+                _multitenancy: false
+            );
+        } catch (\Exception $e) {
+            $logger->warning('[UserProfileUpdatedEventListener] Could not load schema/register entities for _name hydration', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        if ($schemaEntity !== null) {
+            $metaHydrationHandler->hydrateObjectMetadata(entity: $contactpersoon, schema: $schemaEntity);
+            $logger->debug('[UserProfileUpdatedEventListener] Regenerated _name metadata', [
+                'newName' => $contactpersoon->getName(),
+            ]);
+        }
+
+        // Pass register and schema so the magic mapper route is triggered and the
+        // per-schema magic table is updated (not just the blob table).
         $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
-        $objectMapper->update($contactpersoon);
+        $objectMapper->update(entity: $contactpersoon, register: $registerEntity, schema: $schemaEntity);
 
         $logger->info('[UserProfileUpdatedEventListener] Successfully synced user profile to contactpersoon', [
             'userId'           => $userId,

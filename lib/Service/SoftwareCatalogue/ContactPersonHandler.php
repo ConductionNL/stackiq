@@ -101,10 +101,11 @@ class ContactPersonHandler
         $email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
 
 
-        // Strategy 1: full email address (PRIORITY)
-        if (!empty($email) && strpos($email, '@') !== false) {
-            $username = strtolower($email);
-            if ($this->isValidUsername($username)) {
+        // Strategy 1: full email address (PRIORITY).
+        // Sanitize the email first to strip subaddressing (+tag) and invalid chars.
+        if (empty($email) === false && strpos($email, '@') !== false) {
+            $username = $this->sanitizeEmailForUsername($email);
+            if ($this->isValidUsername($username) === true) {
                 return $username;
             }
         }
@@ -173,41 +174,81 @@ class ContactPersonHandler
     }
 
     /**
+     * Sanitizes an email address for use as a Nextcloud username.
+     *
+     * Strips subaddressing (the +tag part) from the local part of the email,
+     * since Nextcloud does not allow + in usernames. For example,
+     * "user+tag@example.com" becomes "user@example.com".
+     *
+     * @param string $email The email address to sanitize.
+     *
+     * @return string The sanitized email suitable for use as a username.
+     */
+    public function sanitizeEmailForUsername(string $email): string
+    {
+        $lowered = strtolower(trim($email));
+
+        // Strip subaddressing (+tag) from the local part of the email.
+        if (strpos($lowered, '+') !== false && strpos($lowered, '@') !== false) {
+            $parts     = explode(separator: '@', string: $lowered, limit: 2);
+            $localPart = preg_replace(pattern: '/\+.*$/', replacement: '', subject: $parts[0]);
+            $lowered   = $localPart.'@'.$parts[1];
+        }
+
+        // Remove any remaining characters not allowed in Nextcloud usernames.
+        $lowered = preg_replace(pattern: '/[^a-z0-9._@\-]/', replacement: '', subject: $lowered);
+
+        return $lowered;
+
+    }//end sanitizeEmailForUsername()
+
+
+    /**
      * Validates an email address for use as a Nextcloud username.
      * Returns null if valid, or an error message string if invalid.
      *
-     * @param string $email The email address to validate
-     * @return string|null Null if valid, error message if invalid
+     * If the email contains subaddressing (a +tag), it is stripped before
+     * validation since Nextcloud does not support + in usernames. The
+     * sanitized form will be used as the actual username.
+     *
+     * @param string $email The email address to validate.
+     *
+     * @return string|null Null if valid, error message if invalid.
      */
     public function validateEmailForUsername(string $email): ?string
     {
-        if (empty($email)) {
-            return 'No email address found. The contact person must have a valid email address (in the "email" or "e-mailadres" field) to be activated.';
+        if (empty($email) === true) {
+            return 'No email address found on the contact person.';
         }
 
-        if (strpos($email, '@') === false) {
+        if (strpos(haystack: $email, needle: '@') === false) {
             return "The email address \"{$email}\" is not a valid email address (missing @).";
         }
 
-        $lowered = strtolower($email);
+        // Sanitize the email by stripping subaddressing and removing invalid chars.
+        $sanitized = $this->sanitizeEmailForUsername(email: $email);
 
-        // Find invalid characters
-        $invalidChars = preg_replace('/[a-z0-9._@\-]/', '', $lowered);
-        if (!empty($invalidChars)) {
-            $uniqueChars = implode(' ', array_unique(str_split($invalidChars)));
-            return "The email address \"{$email}\" contains characters that are not allowed in a Nextcloud username: {$uniqueChars}. Only letters (a-z), numbers (0-9), dots (.), underscores (_), dashes (-) and @ are allowed. Please correct the email address on the contact person before activating.";
-        }
-
-        if (strlen($lowered) < 3) {
+        if (strlen($sanitized) < 3) {
             return "The email address \"{$email}\" is too short to be used as a username (minimum 3 characters).";
         }
 
-        if (strlen($lowered) > 64) {
+        if (strlen($sanitized) > 64) {
             return "The email address \"{$email}\" is too long to be used as a username (maximum 64 characters).";
         }
 
+        // Validate the sanitized result has no remaining invalid characters.
+        $invalidChars = preg_replace(pattern: '/[a-z0-9._@\-]/', replacement: '', subject: $sanitized);
+        if (empty($invalidChars) === false) {
+            $uniqueChars = implode(
+                separator: ' ',
+                array: array_unique(str_split($invalidChars)),
+            );
+            return "Invalid username characters: {$uniqueChars}.";
+        }
+
         return null;
-    }
+
+    }//end validateEmailForUsername()
 
     /**
      * Ensures username is unique by adding counter if needed
@@ -433,10 +474,21 @@ class ContactPersonHandler
                     'username' => $username,
                     'isFirstContact' => $isFirstContact
                 ]);
-                $this->assignUserGroups($user, $objectData, $isFirstContact);
+                $assignedRole = $this->assignUserGroups($user, $objectData, $isFirstContact);
 
-                // Update contactpersoon with username
+                // Update contactpersoon with username and auto-assigned role
                 $objectData['username'] = $username;
+
+                // Populate the rollen field if a role was assigned and rollen is empty
+                $currentRollen = $objectData['rollen'] ?? [];
+                if (!empty($assignedRole) && (empty($currentRollen) || !is_array($currentRollen))) {
+                    $objectData['rollen'] = [$assignedRole];
+                    $this->_logger->info('Auto-populated rollen field on contactpersoon', [
+                        'username' => $username,
+                        'assignedRole' => $assignedRole,
+                    ]);
+                }
+
                 $contactpersoonObject->setObject($objectData);
 
                 // Send user creation email
@@ -508,10 +560,12 @@ class ContactPersonHandler
      * 
      * @return void
      */
-    private function assignUserGroups(\OCP\IUser $user, array $objectData, bool $isFirstContact = false): void
+    private function assignUserGroups(\OCP\IUser $user, array $objectData, bool $isFirstContact = false): string
     {
+        $assignedRole = '';
+
         try {
-            $roles = $objectData['roles'] ?? [];
+            $roles = $objectData['rollen'] ?? $objectData['roles'] ?? [];
             $organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
             // Ensure roles is an array.
@@ -528,7 +582,7 @@ class ContactPersonHandler
                 foreach ($organizationAdminGroups as $groupName) {
                     $this->addUserToGroupWithCheck($user, $groupName, 'organization-admin');
                 }
-                
+
                 $this->_logger->info(
                     'Assigned organization admin groups to first contact',
                     [
@@ -543,17 +597,21 @@ class ContactPersonHandler
             if (!empty($organizationId)) {
                 $organizationType = $this->getOrganizationType((string)$organizationId);
                 $roleGroup = $this->getRoleGroupByOrganizationType($organizationType);
-                
+
                 if (!empty($roleGroup)) {
                     $this->addUserToGroupWithCheck($user, $roleGroup, 'organization-type-role');
-                    
+
+                    // Map the lowercase group name to the title-case enum value for the rollen field
+                    $assignedRole = $this->mapGroupNameToRollenEnum($roleGroup);
+
                     $this->_logger->info(
                         'Assigned role based on organization type',
                         [
                             'username' => $user->getUID(),
                             'organizationId' => $organizationId,
                             'organizationType' => $organizationType,
-                            'assignedRole' => $roleGroup
+                            'assignedRole' => $roleGroup,
+                            'rollenEnumValue' => $assignedRole
                         ]
                     );
                 } else {
@@ -579,7 +637,8 @@ class ContactPersonHandler
                     'organizationAdminGroups' => $isFirstContact ? ($organizationAdminGroups ?? []) : [],
                     'organizationId' => $organizationId,
                     'roleGroup' => $roleGroup ?? 'none',
-                    'organizationType' => $organizationType ?? 'unknown'
+                    'organizationType' => $organizationType ?? 'unknown',
+                    'assignedRollenEnum' => $assignedRole
                 ]
             );
 
@@ -592,7 +651,32 @@ class ContactPersonHandler
                 ]
             );
         }
-    }
+
+        return $assignedRole;
+    }//end assignUserGroups()
+
+    /**
+     * Maps a lowercase group name to the title-case rollen enum value
+     *
+     * The contactpersoon schema uses title-case enum values (e.g., "Gebruik-beheerder")
+     * while Nextcloud groups use lowercase (e.g., "gebruik-beheerder").
+     *
+     * @param string $groupName The lowercase group name
+     *
+     * @return string The title-case enum value for the rollen field
+     */
+    private function mapGroupNameToRollenEnum(string $groupName): string
+    {
+        $mapping = [
+            'aanbod-beheerder' => 'Aanbod-beheerder',
+            'gebruik-beheerder' => 'Gebruik-beheerder',
+            'gebruik-raadpleger' => 'Gebruik-raadpleger',
+            'functioneel-beheerder' => 'Functioneel-beheerder',
+            'organisatie-beheerder' => 'Organisatie-beheerder',
+        ];
+
+        return $mapping[strtolower(trim($groupName))] ?? '';
+    }//end mapGroupNameToRollenEnum()
 
     /**
      * Gets the mapping of allowed roles to group names
