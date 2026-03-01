@@ -3,7 +3,7 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.1.1"
+    "version": "2.2.0"
   },
   "x-openregister": {
     "type": "application",
@@ -799,7 +799,7 @@
         "created": "2025-05-09T12:14:18+00:00",
         "owner": "1",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "authorization": null,
         "groups": null,
         "deleted": null,
@@ -1811,12 +1811,7 @@
             "visible": false,
             "hideOnCollection": true,
             "items": {
-              "type": "string",
-              "enum": [
-                "Nieuw in organisatie",
-                "Nieuw buiten de organisatie",
-                "Gewijzigd in de organisatie"
-              ]
+              "type": "string"
             },
             "order": 11,
             "example": "Bijvoorbeeld: ['Nieuw in organisatie', 'Gewijzigd in de organisatie']"
@@ -1845,6 +1840,7 @@
               "enum": [
                 "Aanbod-beheerder",
                 "Gebruik-beheerder",
+                "Gebruik-raadpleger",
                 "Functioneel-beheerder",
                 "Organisatie-beheerder"
               ]
@@ -1860,7 +1856,6 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "enum": [],
             "example": "Bijvoorbeeld: [\"Aanbod-beheerder\", \"Functioneel-beheerder\"]",
             "authorization": {
               "update": [
@@ -2115,7 +2110,12 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Contactpersonen"
+            "title": "Contactpersonen",
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
           },
           "e-mailadres": {
             "description": "Het e-mailadres van de contactpersoon of de organisatie",
@@ -2144,7 +2144,12 @@
             "oneOf": [],
             "facetable": false,
             "title": "E-mailadres",
-            "example": "contact@organisatie.nl"
+            "example": "contact@organisatie.nl",
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
           },
           "website": {
             "description": "URL van de website van de organisatie",
@@ -2203,7 +2208,12 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
           },
           "deelnames": {
             "description": "Deelnames van deze organisatie in andere organisaties",
@@ -6771,6 +6781,9 @@
             "facetable": false,
             "title": "Diensten",
             "hideOnForm": true,
+            "table": {
+              "default": true
+            },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -6846,6 +6859,9 @@
             "facetable": true,
             "title": "Standaardversies",
             "hideOnForm": true,
+            "table": {
+              "default": true
+            },
             "items": {
               "type": "object",
               "objectConfiguration": {
