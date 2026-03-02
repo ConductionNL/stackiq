@@ -2522,8 +2522,8 @@ class OrganizationSyncService
             $allResults['contactPersonsProcessed'] += $contactResults['contactPersonsProcessed'];
             $allResults['entitiesCreated']         += $orgResults['entitiesCreated'];
             $allResults['entitiesUpdated']         += $orgResults['entitiesUpdated'];
-            $allResults['usersCreated']            += $contactResults['usersCreated'];
-            $allResults['usersUpdated']            += $contactResults['usersUpdated'];
+            $allResults['usersCreated']            += $contactResults['usersCreated'] ?? 0;
+            $allResults['usersUpdated']            += $contactResults['usersUpdated'] ?? 0;
 
             $roundTime                       = (time() - $roundStartTime);
             $allResults['roundsCompleted'][] = [
@@ -2615,14 +2615,12 @@ class OrganizationSyncService
             $this->logger->info(
                 '[CRONJOB] OrganizationSyncService: Scheduled synchronization completed',
                 [
-                    'organizationsProcessed'  => $syncResults['organizationsProcessed'],
-                    'entitiesCreated'         => $syncResults['entitiesCreated'],
-                    'entitiesUpdated'         => $syncResults['entitiesUpdated'],
-                    'contactPersonsProcessed' => $syncResults['contactPersonsProcessed'],
-                    'usersCreated'            => $syncResults['usersCreated'],
-                    'usersUpdated'            => $syncResults['usersUpdated'],
-                    'errorCount'              => count($syncResults['errors']),
-                    'duration'                => $syncResults['duration'],
+                    'organizationsProcessed'  => $syncResults['organizationsProcessed'] ?? 0,
+                    'entitiesCreated'         => $syncResults['entitiesCreated'] ?? 0,
+                    'entitiesUpdated'         => $syncResults['entitiesUpdated'] ?? 0,
+                    'contactPersonsProcessed' => $syncResults['contactPersonsProcessed'] ?? 0,
+                    'errorCount'              => count($syncResults['errors'] ?? []),
+                    'duration'                => $syncResults['duration'] ?? 0,
                 ]
             );
 

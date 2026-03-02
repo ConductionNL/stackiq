@@ -106,8 +106,7 @@ class OrganisatieService
         } catch (\Exception $e) {
             $this->logger->error('OrganisatieService: Error creating organization entity', [
                 'error' => $e->getMessage(),
-                'objectData' => $objectData,
-                'trace' => $e->getTraceAsString()
+                'organizationUuid' => $objectData['id'] ?? 'unknown',
             ]);
             return null;
         }
