@@ -2643,14 +2643,13 @@ class SettingsController extends Controller
     }
 
     // ========================================================================
-    // CRONJOB CONFIGURATION ENDPOINTS
+    // CRONJOB CONFIGURATION ENDPOINTS (deprecated — sync now uses _rbac: false)
     // ========================================================================
 
     /**
      * Get cronjob configuration
      *
-     * Returns configuration for all registered cronjobs including their
-     * user and organisation context settings.
+     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -2676,7 +2675,7 @@ class SettingsController extends Controller
     /**
      * Update cronjob configuration
      *
-     * Updates the user and organisation context for a specific cronjob.
+     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
      *
      * @NoCSRFRequired
      *
@@ -2705,7 +2704,7 @@ class SettingsController extends Controller
     /**
      * Get available users for cronjob configuration
      *
-     * Returns a list of users that can be selected for running cronjobs.
+     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -2732,7 +2731,7 @@ class SettingsController extends Controller
     /**
      * Get available organisations for cronjob configuration
      *
-     * Returns a list of organisations that can be selected for running cronjobs.
+     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
      *
      * @NoAdminRequired
      * @NoCSRFRequired

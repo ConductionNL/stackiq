@@ -267,7 +267,9 @@ class OrganizationSyncService
                 $object = $objectService->find(
                     id: $row['uuid'],
                     register: $register,
-                    schema: $organizationSchema
+                    schema: $organizationSchema,
+                    _rbac: false,
+                    _multitenancy: false
                 );
 
                 $this->ensureOrganisationEntity($object, $stats, false);
@@ -635,7 +637,7 @@ class OrganizationSyncService
             }//end if
 
             // Use searchObjects method for filtering
-            $objects = $objectService->searchObjects($query);
+            $objects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
 
             $this->logger->debug(
                 'OrganizationSyncService: Retrieved organisatie objects with searchObjects',
@@ -758,7 +760,9 @@ class OrganizationSyncService
                 $fullObject    = $objectService->find(
                     id: $organisatieId,
                     register: $organisatieObject->getRegister(),
-                    schema: $organisatieObject->getSchema()
+                    schema: $organisatieObject->getSchema(),
+                    _rbac: false,
+                    _multitenancy: false
                 );
                 if ($fullObject) {
                     $organisatieObject = $fullObject;
@@ -1038,7 +1042,7 @@ class OrganizationSyncService
                 'organisatie' => $organisatieId,
             ];
 
-            $contactPersons = $objectService->searchObjects($query);
+            $contactPersons = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
 
             $this->logger->debug(
                 'OrganizationSyncService: Retrieved contact persons on-demand',

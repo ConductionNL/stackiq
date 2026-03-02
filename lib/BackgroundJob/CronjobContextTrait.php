@@ -3,9 +3,10 @@
 /**
  * Cronjob Context Trait
  *
- * This trait provides functionality for background jobs to set and clear
- * user and organisation context during execution. This allows cronjobs
- * to run with proper RBAC permissions based on configured settings.
+ * @deprecated Since all sync operations now use _rbac: false and _multitenancy: false,
+ *             this trait is no longer needed. Background jobs are system-level operations
+ *             that do not require user context. Will be removed in a future version.
+ *             See OrganizationContactSyncJob for the simplified approach.
  *
  * @category Trait
  * @package  OCA\SoftwareCatalog\BackgroundJob

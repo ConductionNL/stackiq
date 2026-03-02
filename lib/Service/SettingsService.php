@@ -5186,8 +5186,8 @@ class SettingsService
     /**
      * Get all cronjob configurations.
      *
-     * Returns configuration for all registered cronjobs including their
-     * user and organisation context settings.
+     * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
+     *             Will be removed in a future version.
      *
      * @return array The cronjob configurations indexed by job name
      */
@@ -5239,6 +5239,8 @@ class SettingsService
     /**
      * Get list of available cronjobs with their metadata.
      *
+     * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
+     *
      * @return array List of cronjob definitions
      */
     private function getAvailableCronjobs(): array
@@ -5255,6 +5257,9 @@ class SettingsService
 
     /**
      * Update cronjob configuration.
+     *
+     * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
+     *             Will be removed in a future version.
      *
      * @param array $data The cronjob configuration data
      * @return array Result of the update operation
@@ -5328,7 +5333,8 @@ class SettingsService
     /**
      * Get cronjob context for a specific job.
      *
-     * This is used by the cronjob itself to get its configured user and organisation.
+     * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
+     *             Will be removed in a future version.
      *
      * @param string $jobId The cronjob identifier
      * @return array|null The context configuration or null if not configured
@@ -5368,8 +5374,8 @@ class SettingsService
     /**
      * Get available users for cronjob configuration.
      *
-     * Returns a list of users that can be selected for running cronjobs.
-     * Typically limited to admin users or users in specific groups.
+     * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
+     *             Will be removed in a future version.
      *
      * @return array List of users with id and display name
      */
@@ -5432,7 +5438,8 @@ class SettingsService
     /**
      * Get available organisations for cronjob configuration.
      *
-     * Returns a list of organisations that can be selected for running cronjobs.
+     * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
+     *             Will be removed in a future version.
      *
      * @return array List of organisations with uuid and name
      */
