@@ -893,7 +893,7 @@ XML;
     /**
      * Create section element in XML (matching original ArchiMate structure)
      */
-    private function createSectionFolder(\SimpleXMLElement $xml, string $sectionName): \SimpleXMLElement
+    private function createSectionFolder(\SimpleXMLElement $xml, string $sectionName): ?\SimpleXMLElement
     {
         // Map our section names to proper ArchiMate XML elements
         $sectionMapping = [
@@ -1515,7 +1515,7 @@ XML;
             }
 
             if (isset($object['section']) && $object['section'] === 'model') {
-                return $object;
+                return (array) $object;
             }
         }
 

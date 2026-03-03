@@ -126,17 +126,14 @@
         <TypeDoesNotContainType errorLevel="suppress"/>
         <InvalidArrayOffset errorLevel="suppress"/>
         <InvalidArrayAccess errorLevel="suppress"/>
-        <InvalidCast errorLevel="suppress"/>
-        <InvalidArgument errorLevel="suppress"/>
-        <InvalidReturnType errorLevel="suppress"/>
-        <InvalidReturnStatement errorLevel="suppress"/>
+
         <MismatchingDocblockReturnType errorLevel="suppress"/>
         <EmptyArrayAccess errorLevel="suppress"/>
         <ImplementedReturnTypeMismatch errorLevel="suppress"/>
-        <InvalidMethodCall errorLevel="suppress"/>
         <MissingTemplateParam errorLevel="suppress"/>
         <UndefinedInterfaceMethod errorLevel="suppress"/>
         <UnusedMethodCall errorLevel="suppress"/>
+        <UnusedReturnValue errorLevel="suppress"/>
         <NullableReturnStatement errorLevel="suppress"/>
     </issueHandlers>
 </psalm>

@@ -614,7 +614,7 @@ class ContactPersonHandler
      * @param array      $objectData     The contactpersoon object data.
      * @param bool       $isFirstContact Whether this is the first contact of the organization.
      *
-     * @return void
+     * @return string
      */
     private function assignUserGroups(\OCP\IUser $user, array $objectData, bool $isFirstContact=false): string
     {
