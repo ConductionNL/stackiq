@@ -18,7 +18,7 @@ class ArchiMateExportService
     public function __construct(
         private readonly LoggerInterface $logger
     ) {
-    }
+    }//end __construct()
 
     /**
      * Convert an associative array into a SimpleXMLElement tree.
@@ -34,8 +34,8 @@ class ArchiMateExportService
     public function arrayToXml(array $data, \SimpleXMLElement $xml): \SimpleXMLElement
     {
         // First pass: attributes and text content
-        $addedAttributes = []; // Track attributes to avoid duplicates
-        
+        $addedAttributes = [];
+        // Track attributes to avoid duplicates
         foreach ($data as $key => $value) {
             if ($key === '_value' || $key === '_text') {
                 $xml[0] = (string) $value;
@@ -45,28 +45,28 @@ class ArchiMateExportService
             if (is_string($key) && str_starts_with($key, '_') && $key !== '_attributes') {
                 // Skip legacy _attributes bag, handle individual underscored keys as attributes
                 $attrKey = substr($key, 1);
-                
+
                 // Skip malformed attribute keys that would create invalid XML (e.g., __propertyDefinitionRef -> :propertyDefinitionRef)
                 if (str_starts_with($attrKey, '__') || $attrKey === '') {
                     continue;
                 }
-                
+
                 // Fix double underscores to colons (e.g., xml__lang -> xml:lang)
                 $attrKey = str_replace('__', ':', $attrKey);
-                
+
                 // Skip if this attribute was already added
                 if (in_array($attrKey, $addedAttributes)) {
                     continue;
                 }
-                
+
                 [$nsPrefix, $local] = $this->splitNamespacedKey($attrKey);
 
                 if ($nsPrefix !== null) {
                     // Namespaced attribute, ensure namespace is declared on element
                     $nsUri = $this->getNamespaceUri($xml, $nsPrefix);
                     if ($nsUri) {
-                        $xml->addAttribute($nsPrefix . ':' . $local, (string) $value, $nsUri);
-                        $addedAttributes[] = $nsPrefix . ':' . $local;
+                        $xml->addAttribute($nsPrefix.':'.$local, (string) $value, $nsUri);
+                        $addedAttributes[] = $nsPrefix.':'.$local;
                     } else {
                         // Fallback to non-namespaced if namespace not found
                         $xml->addAttribute($attrKey, (string) $value);
@@ -76,8 +76,8 @@ class ArchiMateExportService
                     $xml->addAttribute($local, (string) $value);
                     $addedAttributes[] = $local;
                 }
-            }
-        }
+            }//end if
+        }//end foreach
 
         // Handle legacy _attributes array with duplicate filtering
         if (isset($data['_attributes']) && is_array($data['_attributes'])) {
@@ -100,22 +100,23 @@ class ArchiMateExportService
                 if ($nsPrefix !== null) {
                     $nsUri = $this->getNamespaceUri($xml, $nsPrefix);
                     if ($nsUri) {
-                        $xml->addAttribute($nsPrefix . ':' . $local, (string) $attrValue, $nsUri);
-                        $addedAttributes[] = $nsPrefix . ':' . $local;
+                        $xml->addAttribute($nsPrefix.':'.$local, (string) $attrValue, $nsUri);
+                        $addedAttributes[] = $nsPrefix.':'.$local;
                         continue;
                     }
                 }
 
                 $xml->addAttribute($cleanAttrKey, (string) $attrValue);
                 $addedAttributes[] = $cleanAttrKey;
-            }
-        }
+            }//end foreach
+        }//end if
 
         // Second pass: children
         foreach ($data as $key => $value) {
             if ($key === '_value' || $key === '_text' || $key === '_attributes') {
                 continue;
             }
+
             if (is_string($key) && str_starts_with($key, '_')) {
                 // Already handled as attribute
                 continue;
@@ -134,13 +135,19 @@ class ArchiMateExportService
             // Skip property-like fields that should be handled by specialized property methods
             // These fields often appear as direct data but should only be in <properties> structure
             $propertyLikeFields = [
-                'beschikbaarheid', 'integriteit', 'vertrouwelijkheid', 'gemmaType',
-                'objectId', 'bivScoreBbn', 'belangrijksteReden'
+                'beschikbaarheid',
+                'integriteit',
+                'vertrouwelijkheid',
+                'gemmaType',
+                'objectId',
+                'bivScoreBbn',
+                'belangrijksteReden',
             ];
             if (in_array($key, $propertyLikeFields, true)) {
-                continue; // Skip these - they should only appear in proper <properties><property> structure
+                continue;
+                // Skip these - they should only appear in proper <properties><property> structure
             }
-            
+
             // Special handling for elementProperties and other nested structures - filter out problematic fields
             if (($key === 'elementProperties' || $key === 'properties' || $key === 'viewNodes') && is_array($value)) {
                 $value = $this->filterProblematicFields($value, $propertyLikeFields);
@@ -166,18 +173,18 @@ class ArchiMateExportService
                 }
             } else {
                 // Scalar child node
-                $child = $xml->addChild($tagName);
+                $child    = $xml->addChild($tagName);
                 $child[0] = (string) $value;
             }
-        }
+        }//end foreach
 
         return $xml;
-    }
+    }//end arrayToXml()
 
     private function isList(array $arr): bool
     {
         return $arr === [] || array_keys($arr) === range(0, count($arr) - 1);
-    }
+    }//end isList()
 
     private function splitNamespacedKey(string $key): array
     {
@@ -188,6 +195,7 @@ class ArchiMateExportService
                 return [$parts[0], $parts[1]];
             }
         }
+
         // Also handle already-converted colon notation (e.g., 'xml:lang')
         if (str_contains($key, ':')) {
             $parts = explode(':', $key, 2);
@@ -195,32 +203,33 @@ class ArchiMateExportService
                 return [$parts[0], $parts[1]];
             }
         }
+
         return [null, $key];
-    }
+    }//end splitNamespacedKey()
 
     /**
      * Recursively filter out problematic fields from nested data structures
-     * 
-     * @param array $data The data structure to filter
-     * @param array $fieldsToRemove List of field names to remove
+     *
+     * @param  array $data           The data structure to filter
+     * @param  array $fieldsToRemove List of field names to remove
      * @return array Filtered data structure
      */
     private function filterProblematicFields(array $data, array $fieldsToRemove): array
     {
         $filtered = [];
-        
+
         foreach ($data as $key => $value) {
             if (is_string($key) === false) {
                 continue;
             }
 
             $shouldSkip = false;
-            
+
             // Skip exact matches
             if (in_array($key, $fieldsToRemove, true)) {
                 $shouldSkip = true;
             }
-            
+
             // Skip fields that start with problematic patterns (e.g., "beschikbaarheid(belangrijksteReden)")
             foreach ($fieldsToRemove as $fieldPattern) {
                 if (str_starts_with($key, $fieldPattern)) {
@@ -228,26 +237,26 @@ class ArchiMateExportService
                     break;
                 }
             }
-            
+
             // Skip fields with invalid XML tag name characters (parentheses, etc.)
             if (preg_match('/[(),<>\/\\\]/', $key)) {
                 $shouldSkip = true;
             }
-            
+
             if ($shouldSkip) {
                 continue;
             }
-            
+
             // Recursively filter nested arrays
             if (is_array($value)) {
                 $filtered[$key] = $this->filterProblematicFields($value, $fieldsToRemove);
             } else {
                 $filtered[$key] = $value;
             }
-        }
-        
+        }//end foreach
+
         return $filtered;
-    }
+    }//end filterProblematicFields()
 
     private function getNamespaceUri(\SimpleXMLElement $xml, string $prefix): string
     {
@@ -263,18 +272,18 @@ class ArchiMateExportService
 
         $namespaces = $xml->getDocNamespaces(true) ?: [];
         return $namespaces[$prefix] ?? '';
-    }
+    }//end getNamespaceUri()
 
     /**
      * Create a clean ArchiMate XML structure with proper namespaces
      *
-     * @param array $modelMetadata Model metadata from the database
+     * @param  array $modelMetadata Model metadata from the database
      * @return \SimpleXMLElement Root XML element ready for population
      */
     public function createCleanArchiMateXml(array $modelMetadata): \SimpleXMLElement
     {
         $modelName = $modelMetadata['name'] ?? 'ArchiMate Model';
-        $modelId = $modelMetadata['identifier'] ?? 'model-' . uniqid();
+        $modelId   = $modelMetadata['identifier'] ?? 'model-'.uniqid();
 
         $xmlString = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
@@ -292,26 +301,26 @@ XML;
         }
 
         return $xml;
-    }
+    }//end createCleanArchiMateXml()
 
     /**
      * Generic method to add any collection of objects to XML
      *
-     * @param \SimpleXMLElement $xml Root XML element
-     * @param array $objects Array of objects from database
-     * @param string $folderName Name for the folder
-     * @param string $folderId ID for the folder
-     * @param string $folderType Type attribute for the folder
-     * @param string $childTagName Tag name for child elements (default: 'element')
+     * @param  \SimpleXMLElement $xml          Root XML element
+     * @param  array             $objects      Array of objects from database
+     * @param  string            $folderName   Name for the folder
+     * @param  string            $folderId     ID for the folder
+     * @param  string            $folderType   Type attribute for the folder
+     * @param  string            $childTagName Tag name for child elements (default: 'element')
      * @return void
      */
     public function addObjectsToXml(
-        \SimpleXMLElement $xml, 
-        array $objects, 
-        string $folderName, 
-        string $folderId, 
-        string $folderType, 
-        string $childTagName = 'element'
+        \SimpleXMLElement $xml,
+        array $objects,
+        string $folderName,
+        string $folderId,
+        string $folderType,
+        string $childTagName='element'
     ): void {
         if (empty($objects)) {
             return;
@@ -325,7 +334,7 @@ XML;
         foreach ($objects as $object) {
             $this->addObjectToFolder($folder, $object, $childTagName);
         }
-    }
+    }//end addObjectsToXml()
 
     /**
      * Convenience method for elements
@@ -333,7 +342,7 @@ XML;
     public function addElementsToXml(\SimpleXMLElement $xml, array $elements): void
     {
         $this->addObjectsToXml($xml, $elements, 'Application', 'folder-elements', 'application', 'element');
-    }
+    }//end addElementsToXml()
 
     /**
      * Convenience method for relationships
@@ -341,18 +350,21 @@ XML;
     public function addRelationshipsToXml(\SimpleXMLElement $xml, array $relationships): void
     {
         $this->addObjectsToXml($xml, $relationships, 'Relations', 'folder-relations', 'relations', 'element');
-    }
+    }//end addRelationshipsToXml()
 
     /**
      * Specialized method for views with custom node handling
      */
     public function addViewsToXml(\SimpleXMLElement $xml, array $views): void
     {
-        $this->logger->debug('Adding views to XML', [
-            'view_count' => count($views),
-            'view_keys' => array_keys($views)
-        ]);
-        
+        $this->logger->debug(
+                'Adding views to XML',
+                [
+                    'view_count' => count($views),
+                    'view_keys'  => array_keys($views),
+                ]
+                );
+
         if (empty($views)) {
             $this->logger->warning('No views to process');
             return;
@@ -366,7 +378,7 @@ XML;
         foreach ($views as $view) {
             $this->addViewToFolder($folder, $view);
         }
-    }
+    }//end addViewsToXml()
 
     /**
      * Convenience method for organizations
@@ -374,7 +386,7 @@ XML;
     public function addOrganizationsToXml(\SimpleXMLElement $xml, array $organizations): void
     {
         $this->addObjectsToXml($xml, $organizations, 'Organizations', 'folder-organizations', 'business', 'item');
-    }
+    }//end addOrganizationsToXml()
 
     /**
      * Specialized method to add a view to the views folder with custom node handling
@@ -385,35 +397,44 @@ XML;
 
         // Extract view data from different formats
         $viewData = $this->extractViewData($view);
-        
+
         if (!$viewData) {
-            $this->logger->warning('No valid view data found', [
-                'view_keys' => array_keys($view),
-                'view_structure' => $view
-            ]);
+            $this->logger->warning(
+                    'No valid view data found',
+                    [
+                        'view_keys'      => array_keys($view),
+                        'view_structure' => $view,
+                    ]
+                    );
             return;
         }
 
         // DEBUG: Check if this is our target view with nodes
         if (isset($viewData['_identifier']) && $viewData['_identifier'] === 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af') {
-            $this->logger->debug('Found target view with specific ID', [
-                'identifier' => $viewData['_identifier'],
-                'raw_view' => $view,
-                'extracted_view_data' => $viewData,
-                'node_analysis' => [
-                    'has_node' => isset($viewData['node']),
-                    'node_count' => is_array($viewData['node'] ?? null) ? count($viewData['node']) : 0,
-                    'node_sample' => isset($viewData['node'][0]) ? $viewData['node'][0] : 'NO FIRST NODE'
-                ]
-            ]);
+            $this->logger->debug(
+                    'Found target view with specific ID',
+                    [
+                        'identifier'          => $viewData['_identifier'],
+                        'raw_view'            => $view,
+                        'extracted_view_data' => $viewData,
+                        'node_analysis'       => [
+                            'has_node'    => isset($viewData['node']),
+                            'node_count'  => is_array($viewData['node'] ?? null) ? count($viewData['node']) : 0,
+                            'node_sample' => isset($viewData['node'][0]) ? $viewData['node'][0] : 'NO FIRST NODE',
+                        ],
+                    ]
+                    );
         }
 
-        $this->logger->debug('Processing view with custom logic', [
-            'has_node' => isset($viewData['node']),
-            'node_count' => is_array($viewData['node'] ?? null) ? count($viewData['node']) : 0,
-            'has_connection' => isset($viewData['connection']),
-            'connection_count' => is_array($viewData['connection'] ?? null) ? count($viewData['connection']) : 0
-        ]);
+        $this->logger->debug(
+                'Processing view with custom logic',
+                [
+                    'has_node'         => isset($viewData['node']),
+                    'node_count'       => is_array($viewData['node'] ?? null) ? count($viewData['node']) : 0,
+                    'has_connection'   => isset($viewData['connection']),
+                    'connection_count' => is_array($viewData['connection'] ?? null) ? count($viewData['connection']) : 0,
+                ]
+                );
 
         // Process view attributes and basic properties
         $this->addViewBasicData($viewNode, $viewData);
@@ -427,7 +448,7 @@ XML;
         if (isset($viewData['connection']) && is_array($viewData['connection'])) {
             $this->addViewConnections($viewNode, $viewData['connection']);
         }
-    }
+    }//end addViewToFolder()
 
     /**
      * Extract view data from different possible formats
@@ -436,23 +457,19 @@ XML;
     {
         // Format 1: OpenRegister object format with properties.xml_data
         if (isset($view['properties']['xml_data'])) {
-            $xmlData = is_string($view['properties']['xml_data']) ? 
-                json_decode($view['properties']['xml_data'], true) : 
-                $view['properties']['xml_data'];
+            $xmlData = is_string($view['properties']['xml_data']) ? json_decode($view['properties']['xml_data'], true) : $view['properties']['xml_data'];
             return is_array($xmlData) ? $xmlData : null;
         }
-        
+
         // Format 2: Object with xml_data field (from database)
         if (isset($view['xml_data'])) {
-            $xmlData = is_string($view['xml_data']) ? 
-                json_decode($view['xml_data'], true) : 
-                $view['xml_data'];
+            $xmlData = is_string($view['xml_data']) ? json_decode($view['xml_data'], true) : $view['xml_data'];
             return is_array($xmlData) ? $xmlData : null;
         }
-        
+
         // Format 3: Direct XML data (from convertFromOpenRegisterObjects)
         return $view;
-    }
+    }//end extractViewData()
 
     /**
      * Add basic view data (attributes, name, documentation, properties) to view node
@@ -463,22 +480,24 @@ XML;
         if (isset($viewData['_attributes'])) {
             foreach ($viewData['_attributes'] as $attrKey => $attrValue) {
                 if (str_starts_with($attrKey, ':')) {
-                    continue; // Skip duplicate attributes with colon prefix
+                    continue;
+                    // Skip duplicate attributes with colon prefix
                 }
-                $viewNode->addAttribute($attrKey, (string)$attrValue);
+
+                $viewNode->addAttribute($attrKey, (string) $attrValue);
             }
         }
 
         // Add identifier directly if present
         if (isset($viewData['_identifier']) || isset($viewData['identifier'])) {
             $identifier = $viewData['_identifier'] ?? $viewData['identifier'];
-            $viewNode->addAttribute('identifier', (string)$identifier);
+            $viewNode->addAttribute('identifier', (string) $identifier);
         }
 
         // Add xsi:type if present
         foreach (['_xsi__type', 'xsi:type', '_xsi:type'] as $typeKey) {
             if (isset($viewData[$typeKey])) {
-                $viewNode->addAttribute('xsi:type', (string)$viewData[$typeKey]);
+                $viewNode->addAttribute('xsi:type', (string) $viewData[$typeKey]);
                 break;
             }
         }
@@ -487,7 +506,7 @@ XML;
         // but exclude node and connection arrays to handle them separately
         $basicData = array_diff_key($viewData, ['node' => true, 'connection' => true]);
         $this->arrayToXml($basicData, $viewNode);
-    }
+    }//end addViewBasicData()
 
     /**
      * Add view nodes with proper nested structure handling
@@ -498,7 +517,7 @@ XML;
             $node = $viewNode->addChild('node');
             $this->arrayToXml($nodeData, $node);
         }
-    }
+    }//end addViewNodes()
 
     /**
      * Add view connections with proper nested structure handling
@@ -509,35 +528,30 @@ XML;
             $connection = $viewNode->addChild('connection');
             $this->arrayToXml($connectionData, $connection);
         }
-    }
+    }//end addViewConnections()
 
     /**
      * Generic method to add any object to a folder - determines everything from the JSON data
      */
-    private function addObjectToFolder(\SimpleXMLElement $folder, array $object, string $childTagName = 'element'): void
+    private function addObjectToFolder(\SimpleXMLElement $folder, array $object, string $childTagName='element'): void
     {
         $objectNode = $folder->addChild($childTagName);
-        
+
         // Handle different data formats:
         // 1. OpenRegister object format with properties.xml_data
-        // 2. Direct XML data from convertFromOpenRegisterObjects 
+        // 2. Direct XML data from convertFromOpenRegisterObjects
         // 3. Raw object data as fallback
-        
         if (isset($object['properties']['xml_data'])) {
             // Format 1: OpenRegister object format
-            $xmlData = is_string($object['properties']['xml_data']) ? 
-                json_decode($object['properties']['xml_data'], true) : 
-                $object['properties']['xml_data'];
-            
+            $xmlData = is_string($object['properties']['xml_data']) ? json_decode($object['properties']['xml_data'], true) : $object['properties']['xml_data'];
+
             if (is_array($xmlData)) {
                 $this->arrayToXml($xmlData, $objectNode);
             }
-        } elseif (isset($object['xml_data'])) {
+        } else if (isset($object['xml_data'])) {
             // Format 2: Object with xml_data field (from database)
-            $xmlData = is_string($object['xml_data']) ? 
-                json_decode($object['xml_data'], true) : 
-                $object['xml_data'];
-            
+            $xmlData = is_string($object['xml_data']) ? json_decode($object['xml_data'], true) : $object['xml_data'];
+
             if (is_array($xmlData)) {
                 $this->arrayToXml($xmlData, $objectNode);
             }
@@ -545,8 +559,8 @@ XML;
             // Format 3: Direct XML data (from convertFromOpenRegisterObjects)
             // This handles the case where $archiMateData['views'][$identifier] = $xmlData
             $this->arrayToXml($object, $objectNode);
-        }
-    }
+        }//end if
+    }//end addObjectToFolder()
 
     /**
      * Get all objects from the AMEF register
@@ -555,39 +569,42 @@ XML;
      * requires both register AND schema in the query. Without schema, the query
      * falls back to the generic objects table (which is empty for magic-table registers).
      *
-     * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService
-     * @param int $registerId AMEF register ID
-     * @param array $schemaIdMap Mapping of schema IDs to schema types
+     * @param  \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService
+     * @param  int                                     $registerId    AMEF register ID
+     * @param  array                                   $schemaIdMap   Mapping of schema IDs to schema types
      * @return array Array of objects from all schemas in the register
      * @throws \RuntimeException If retrieval fails
      */
-    public function getObjectsFromDatabase(\OCA\OpenRegister\Service\ObjectService $objectService, int $registerId, array $schemaIdMap = []): array
+    public function getObjectsFromDatabase(\OCA\OpenRegister\Service\ObjectService $objectService, int $registerId, array $schemaIdMap=[]): array
     {
-        $this->logger->info('Retrieving all objects from AMEF register', [
-            'register_id' => $registerId,
-            'schema_count' => count($schemaIdMap)
-        ]);
+        $this->logger->info(
+                'Retrieving all objects from AMEF register',
+                [
+                    'register_id'  => $registerId,
+                    'schema_count' => count($schemaIdMap),
+                ]
+                );
 
         $allObjects = [];
 
         // Map schema types (singular) to section names used in XML generation
         $sectionNameMap = [
-            'element' => 'element',
-            'relationship' => 'relationship',
-            'view' => 'view',
-            'organization' => 'organization',
+            'element'             => 'element',
+            'relationship'        => 'relationship',
+            'view'                => 'view',
+            'organization'        => 'organization',
             'property_definition' => 'property_definition',
-            'model' => 'model'
+            'model'               => 'model',
         ];
 
         // Query each schema separately (required for magic table routing)
         foreach ($schemaIdMap as $schemaId => $schemaType) {
             $query = [
-                '@self' => [
+                '@self'  => [
                     'register' => $registerId,
-                    'schema' => (int) $schemaId
+                    'schema'   => (int) $schemaId,
                 ],
-                '_limit' => 10000
+                '_limit' => 10000,
             ];
 
             try {
@@ -599,55 +616,67 @@ XML;
                     if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
                         $obj = $obj->jsonSerialize();
                     }
+
                     if (!isset($obj['section'])) {
                         $obj['section'] = $sectionName;
                     }
                 }
+
                 unset($obj);
 
-                $this->logger->info("Objects retrieved for schema", [
-                    'schema_id' => $schemaId,
-                    'schema_type' => $schemaType,
-                    'count' => count($schemaObjects)
-                ]);
+                $this->logger->info(
+                        "Objects retrieved for schema",
+                        [
+                            'schema_id'   => $schemaId,
+                            'schema_type' => $schemaType,
+                            'count'       => count($schemaObjects),
+                        ]
+                        );
 
                 $allObjects = array_merge($allObjects, $schemaObjects);
             } catch (\Exception $e) {
-                $this->logger->warning("Failed to retrieve objects for schema", [
-                    'schema_id' => $schemaId,
-                    'schema_type' => $schemaType,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        }
+                $this->logger->warning(
+                        "Failed to retrieve objects for schema",
+                        [
+                            'schema_id'   => $schemaId,
+                            'schema_type' => $schemaType,
+                            'error'       => $e->getMessage(),
+                        ]
+                        );
+            }//end try
+        }//end foreach
 
         // Fallback: if no schemaIdMap provided, try querying register directly
         if (empty($schemaIdMap)) {
             $query = [
-                '@self' => ['register' => $registerId],
-                '_limit' => 10000
+                '@self'  => ['register' => $registerId],
+                '_limit' => 10000,
             ];
 
             try {
                 $allObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
             } catch (\Exception $e) {
-                $this->logger->error("Failed to retrieve objects from AMEF register", [
-                    'register_id' => $registerId,
-                    'error' => $e->getMessage()
-                ]);
-                throw new \RuntimeException("Failed to retrieve objects from database: " . $e->getMessage());
+                $this->logger->error(
+                        "Failed to retrieve objects from AMEF register",
+                        [
+                            'register_id' => $registerId,
+                            'error'       => $e->getMessage(),
+                        ]
+                        );
+                throw new \RuntimeException("Failed to retrieve objects from database: ".$e->getMessage());
             }
         }
 
-        $this->logger->info('Objects retrieved successfully from AMEF register', [
-            'total_retrieved_count' => count($allObjects),
-            'register_id' => $registerId
-        ]);
+        $this->logger->info(
+                'Objects retrieved successfully from AMEF register',
+                [
+                    'total_retrieved_count' => count($allObjects),
+                    'register_id'           => $registerId,
+                ]
+                );
 
         return $allObjects;
-    }
-
-
+    }//end getObjectsFromDatabase()
 
     /**
      * Add property definitions to XML
@@ -655,91 +684,100 @@ XML;
     public function addPropertyDefinitionsToXml(\SimpleXMLElement $xml, array $propertyDefinitions): void
     {
         $this->addObjectsToXml($xml, $propertyDefinitions, 'Property Definitions', 'folder-property-definitions', 'other', 'propertyDefinition');
-    }
+    }//end addPropertyDefinitionsToXml()
 
     /**
      * Complete export process: get all objects from database and render XML in one go
-     * 
+     *
      * OPTIMIZED VERSION: This method processes 8000+ objects efficiently by:
      * 1. Single database query to get all objects
      * 2. Single pass through objects using section property directly
      * 3. Direct XML generation without intermediate arrays
      * 4. No JSON serialization overhead
-     * 
-     * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService
-     * @param int $registerId AMEF register ID
-     * @param array $schemaIdMap Mapping of schema IDs to schema types (unused, kept for compatibility)
-     * @param string|null $organization Organization filter (optional)
+     *
+     * @param  \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService
+     * @param  int                                     $registerId    AMEF register ID
+     * @param  array                                   $schemaIdMap   Mapping of schema IDs to schema types (unused, kept for compatibility)
+     * @param  string|null                             $organization  Organization filter (optional)
      * @return string Generated XML
      */
     public function exportArchiMateXml(
-        \OCA\OpenRegister\Service\ObjectService $objectService, 
-        int $registerId, 
-        array $schemaIdMap, 
-        ?string $organization = null
+        \OCA\OpenRegister\Service\ObjectService $objectService,
+        int $registerId,
+        array $schemaIdMap,
+        ?string $organization=null
     ): string {
 
         $startTime = microtime(true);
-        $this->logger->info('Starting OPTIMIZED ArchiMate XML export process (using section property)', [
-            'register_id' => $registerId,
-            'organization_filter' => $organization
-        ]);
+        $this->logger->info(
+                'Starting OPTIMIZED ArchiMate XML export process (using section property)',
+                [
+                    'register_id'         => $registerId,
+                    'organization_filter' => $organization,
+                ]
+                );
 
         // Step 1: Get all objects from database (queries each schema separately for magic table support)
         $objects = $this->getObjectsFromDatabase($objectService, $registerId, $schemaIdMap);
-        $dbTime = microtime(true) - $startTime;
-        
+        $dbTime  = microtime(true) - $startTime;
+
         // Step 2: Process and generate XML in single optimized pass (no schema mapping needed)
         $xml = $this->generateXmlDirectly($objects, []);
-        
+
         // Step 3: Run Quality Assurance checks on generated XML
         $this->runQualityAssuranceChecks($xml, $objects);
-        
+
         $totalTime = microtime(true) - $startTime;
-        
-        $this->logger->info('OPTIMIZED ArchiMate XML export completed', [
-            'total_objects' => count($objects),
-            'xml_length' => strlen($xml),
-            'db_time_seconds' => round($dbTime, 3),
-            'total_time_seconds' => round($totalTime, 3),
-            'objects_per_second' => round(count($objects) / $totalTime, 0)
-        ]);
+
+        $this->logger->info(
+                'OPTIMIZED ArchiMate XML export completed',
+                [
+                    'total_objects'      => count($objects),
+                    'xml_length'         => strlen($xml),
+                    'db_time_seconds'    => round($dbTime, 3),
+                    'total_time_seconds' => round($totalTime, 3),
+                    'objects_per_second' => round(count($objects) / $totalTime, 0),
+                ]
+                );
 
         return $xml;
-    }
+    }//end exportArchiMateXml()
 
     /**
      * Generate XML directly from objects using section-based organization
-     * 
-     * ULTRA-OPTIMIZED VERSION: 
+     *
+     * ULTRA-OPTIMIZED VERSION:
      * - Single pass to organize objects by section
      * - Direct XML generation per section
      * - No unnecessary loops or checks
-     * 
-     * @param array $objects Raw objects from database
-     * @param array $schemaIdMap Schema ID to type mapping (unused)
+     *
+     * @param  array $objects     Raw objects from database
+     * @param  array $schemaIdMap Schema ID to type mapping (unused)
      * @return string Generated XML
      */
     private function generateXmlDirectly(array $objects, array $schemaIdMap): string
     {
-        $this->logger->info('Starting section-based XML generation from objects', [
-            'object_count' => count($objects)
-        ]);
+        $this->logger->info(
+                'Starting section-based XML generation from objects',
+                [
+                    'object_count' => count($objects),
+                ]
+                );
 
         // Create base XML structure with model metadata
-        $modelMetadata = $this->extractModelMetadata($objects);
+        $modelMetadata         = $this->extractModelMetadata($objects);
         $propertyDefinitionMap = $modelMetadata['propertyDefinitionMap'] ?? [];
         $xml = $this->createCleanArchiMateXml($modelMetadata);
-        
+
         // Add model name and properties if available
         if (!empty($modelMetadata)) {
             $this->addModelMetadataToXml($xml, $modelMetadata);
         }
-        
+
         // Step 1: Organize objects by section in single pass
         $objectsBySection = [];
-        $unmatchedCount = 0;
-        
+        $unmatchedCount   = 0;
+
         foreach ($objects as $object) {
             // Serialize object if needed
             if (is_object($object) && method_exists($object, 'jsonSerialize')) {
@@ -747,30 +785,31 @@ XML;
             }
 
             $sectionName = $object['section'] ?? null;
-            
+
             if ($sectionName) {
                 if (!isset($objectsBySection[$sectionName])) {
                     $objectsBySection[$sectionName] = [];
                 }
+
                 $objectsBySection[$sectionName][] = $object;
             } else {
                 $unmatchedCount++;
             }
         }
-        
+
         // Step 2: Generate XML sections directly
         $validSections = ['elements', 'relationships', 'organizations', 'property_definitions', 'views'];
         $sectionCounts = [];
-        
+
         // Map singular section names to plural for XML generation
         $sectionMapping = [
-            'element' => 'elements',
-            'relationship' => 'relationships',
-            'view' => 'views',
-            'organization' => 'organizations',
-            'property_definition' => 'property_definitions'
+            'element'             => 'elements',
+            'relationship'        => 'relationships',
+            'view'                => 'views',
+            'organization'        => 'organizations',
+            'property_definition' => 'property_definitions',
         ];
-        
+
         foreach ($validSections as $sectionName) {
             // Check both singular and plural section names
             $sectionObjects = [];
@@ -779,7 +818,7 @@ XML;
                     $sectionObjects = array_merge($sectionObjects, $objects);
                 }
             }
-            
+
             if (!empty($sectionObjects)) {
                 $sectionCounts[$sectionName] = count($sectionObjects);
 
@@ -791,6 +830,7 @@ XML;
                         if (is_object($object) && method_exists($object, 'jsonSerialize')) {
                             $object = $object->jsonSerialize();
                         }
+
                         $xmlField = $object['xml'] ?? [];
                         // The xml field contains the raw organizations data with 'item' array
                         if (isset($xmlField['item'])) {
@@ -799,6 +839,7 @@ XML;
                             if (!isset($items[0])) {
                                 $items = [$items];
                             }
+
                             foreach ($items as $itemData) {
                                 if (is_array($itemData)) {
                                     $itemNode = $orgFolder->addChild('item');
@@ -806,12 +847,16 @@ XML;
                                 }
                             }
                         }
-                    }
-                    $this->logger->debug("Generated XML section: {$sectionName} (tree mode)", [
-                        'object_count' => count($sectionObjects)
-                    ]);
+                    }//end foreach
+
+                    $this->logger->debug(
+                            "Generated XML section: {$sectionName} (tree mode)",
+                            [
+                                'object_count' => count($sectionObjects),
+                            ]
+                            );
                     continue;
-                }
+                }//end if
 
                 // Create section folder
                 $sectionFolder = $this->createSectionFolder($xml, $sectionName);
@@ -821,23 +866,29 @@ XML;
                     $this->addObjectDirectlyToXmlWithProperties($sectionFolder, $object, $sectionName, $propertyDefinitionMap);
                 }
 
-                $this->logger->debug("Generated XML section: {$sectionName}", [
-                    'object_count' => count($sectionObjects)
-                ]);
-            }
-        }
-        
+                $this->logger->debug(
+                        "Generated XML section: {$sectionName}",
+                        [
+                            'object_count' => count($sectionObjects),
+                        ]
+                        );
+            }//end if
+        }//end foreach
+
         // Debug logging
-        $this->logger->info('Section-based XML generation completed', [
-            'sections_found' => array_keys($objectsBySection),
-            'section_counts' => $sectionCounts,
-            'unmatched_objects' => $unmatchedCount,
-            'total_objects_processed' => count($objects),
-            'sections_with_data' => array_keys($sectionCounts)
-        ]);
+        $this->logger->info(
+                'Section-based XML generation completed',
+                [
+                    'sections_found'          => array_keys($objectsBySection),
+                    'section_counts'          => $sectionCounts,
+                    'unmatched_objects'       => $unmatchedCount,
+                    'total_objects_processed' => count($objects),
+                    'sections_with_data'      => array_keys($sectionCounts),
+                ]
+                );
 
         return $this->formatXmlOutput($xml->asXML());
-    }
+    }//end generateXmlDirectly()
 
     /**
      * Create section element in XML (matching original ArchiMate structure)
@@ -846,30 +897,30 @@ XML;
     {
         // Map our section names to proper ArchiMate XML elements
         $sectionMapping = [
-            'elements' => 'elements',
-            'relationships' => 'relationships', 
-            'views' => 'views',
-            'organizations' => 'organizations',
-            'property_definitions' => 'propertyDefinitions'
+            'elements'             => 'elements',
+            'relationships'        => 'relationships',
+            'views'                => 'views',
+            'organizations'        => 'organizations',
+            'property_definitions' => 'propertyDefinitions',
         ];
 
         $xmlElementName = $sectionMapping[$sectionName] ?? $sectionName;
         $sectionElement = $xml->addChild($xmlElementName);
-        
+
         // Views need a <diagrams> wrapper element according to ArchiMate standard
         if ($sectionName === 'views') {
             return $sectionElement->addChild('diagrams');
         }
-        
+
         return $sectionElement;
-    }
+    }//end createSectionFolder()
 
     /**
      * Add object directly to XML with properties from root fields
      */
     private function addObjectDirectlyToXmlWithProperties(\SimpleXMLElement $folder, array $object, string $sectionName, array $propertyDefinitionMap): void
     {
-        $tagName = match($sectionName) {
+        $tagName = match ($sectionName) {
             'organizations' => 'item',
             'property_definitions' => 'propertyDefinition',
             'views' => 'view',
@@ -877,6 +928,7 @@ XML;
             'elements' => 'element',
             default => 'element'
         };
+
         $objectNode = $folder->addChild($tagName);
         // Prefer the 'xml' field (original ArchiMate structure preserved during import)
         // over cleanObjectDataForXml which loses array structure for name/documentation
@@ -886,6 +938,7 @@ XML;
         } else {
             $xmlData = $this->cleanObjectDataForXml($object, $propertyDefinitionMap);
         }
+
         if (is_array($xmlData) && !empty($xmlData)) {
             if ($sectionName === 'views') {
                 $this->addViewDataToXmlNode($objectNode, $xmlData);
@@ -893,7 +946,7 @@ XML;
                 $this->addCleanDataToXmlNode($objectNode, $xmlData, $sectionName, $propertyDefinitionMap);
             }
         }
-    }
+    }//end addObjectDirectlyToXmlWithProperties()
 
     /**
      * Add view data to XML node with specialized handling for nodes and connections
@@ -904,31 +957,34 @@ XML;
         if (isset($viewData['_attributes'])) {
             foreach ($viewData['_attributes'] as $attrKey => $attrValue) {
                 if (str_starts_with($attrKey, ':')) {
-                    continue; // Skip duplicate attributes with colon prefix
+                    continue;
+                    // Skip duplicate attributes with colon prefix
                 }
+
                 // Handle namespaced attributes (e.g., xsi:type)
                 [$nsPrefix, $local] = $this->splitNamespacedKey($attrKey);
                 if ($nsPrefix !== null) {
                     $nsUri = $this->getNamespaceUri($viewNode, $nsPrefix);
                     if ($nsUri) {
-                        $viewNode->addAttribute($nsPrefix . ':' . $local, (string)$attrValue, $nsUri);
+                        $viewNode->addAttribute($nsPrefix.':'.$local, (string) $attrValue, $nsUri);
                         continue;
                     }
                 }
-                $viewNode->addAttribute($attrKey, (string)$attrValue);
+
+                $viewNode->addAttribute($attrKey, (string) $attrValue);
             }
         }
 
         // Add identifier directly if present
         if (isset($viewData['_identifier']) || isset($viewData['identifier'])) {
             $identifier = $viewData['_identifier'] ?? $viewData['identifier'];
-            $viewNode->addAttribute('identifier', (string)$identifier);
+            $viewNode->addAttribute('identifier', (string) $identifier);
         }
 
         // Add xsi:type if present
         foreach (['_xsi__type', 'xsi:type', '_xsi:type'] as $typeKey) {
             if (isset($viewData[$typeKey])) {
-                $viewNode->addAttribute('xsi:type', (string)$viewData[$typeKey], 'http://www.w3.org/2001/XMLSchema-instance');
+                $viewNode->addAttribute('xsi:type', (string) $viewData[$typeKey], 'http://www.w3.org/2001/XMLSchema-instance');
                 break;
             }
         }
@@ -946,6 +1002,7 @@ XML;
             if (!$this->isList($nodes)) {
                 $nodes = [$nodes];
             }
+
             foreach ($nodes as $nodeData) {
                 if (is_array($nodeData)) {
                     $nodeElement = $viewNode->addChild('node');
@@ -960,6 +1017,7 @@ XML;
             if (!$this->isList($connections)) {
                 $connections = [$connections];
             }
+
             foreach ($connections as $connectionData) {
                 if (is_array($connectionData)) {
                     $connectionElement = $viewNode->addChild('connection');
@@ -967,7 +1025,7 @@ XML;
                 }
             }
         }
-    }
+    }//end addViewDataToXmlNode()
 
     /**
      * Add node data to XML element with specialized handling for node attributes and nested elements
@@ -977,14 +1035,14 @@ XML;
         // Add node attributes first - these are the positioning and identification attributes
         $nodeAttributes = [
             '_identifier' => 'identifier',
-            '_x' => 'x', 
-            '_y' => 'y',
-            '_w' => 'w',
-            '_h' => 'h',
+            '_x'          => 'x',
+            '_y'          => 'y',
+            '_w'          => 'w',
+            '_h'          => 'h',
             '_elementRef' => 'elementRef',
-            '_xsi__type' => 'xsi:type'
+            '_xsi__type'  => 'xsi:type',
         ];
-        
+
         $addedNodeAttrs = [];
         foreach ($nodeAttributes as $dataKey => $xmlAttr) {
             if (isset($nodeData[$dataKey])) {
@@ -993,12 +1051,13 @@ XML;
                 if ($nsPrefix !== null) {
                     $nsUri = $this->getNamespaceUri($nodeElement, $nsPrefix);
                     if ($nsUri) {
-                        $nodeElement->addAttribute($nsPrefix . ':' . $local, (string)$nodeData[$dataKey], $nsUri);
-                        $addedNodeAttrs[] = $nsPrefix . ':' . $local;
+                        $nodeElement->addAttribute($nsPrefix.':'.$local, (string) $nodeData[$dataKey], $nsUri);
+                        $addedNodeAttrs[] = $nsPrefix.':'.$local;
                         continue;
                     }
                 }
-                $nodeElement->addAttribute($xmlAttr, (string)$nodeData[$dataKey]);
+
+                $nodeElement->addAttribute($xmlAttr, (string) $nodeData[$dataKey]);
                 $addedNodeAttrs[] = $xmlAttr;
             }
         }
@@ -1007,25 +1066,29 @@ XML;
         if (isset($nodeData['_attributes'])) {
             foreach ($nodeData['_attributes'] as $attrKey => $attrValue) {
                 if (str_starts_with($attrKey, ':')) {
-                    continue; // Skip duplicate attributes with colon prefix
+                    continue;
+                    // Skip duplicate attributes with colon prefix
                 }
+
                 // Skip if we already added this attribute from the direct keys
                 if (in_array($attrKey, ['identifier', 'x', 'y', 'w', 'h', 'elementRef', 'xsi:type']) || in_array($attrKey, $addedNodeAttrs)) {
                     continue;
                 }
+
                 // Handle namespaced attributes
                 [$nsPrefix, $local] = $this->splitNamespacedKey($attrKey);
                 if ($nsPrefix !== null) {
                     $nsUri = $this->getNamespaceUri($nodeElement, $nsPrefix);
                     if ($nsUri) {
-                        $nodeElement->addAttribute($nsPrefix . ':' . $local, (string)$attrValue, $nsUri);
+                        $nodeElement->addAttribute($nsPrefix.':'.$local, (string) $attrValue, $nsUri);
                         continue;
                     }
                 }
-                $nodeElement->addAttribute($attrKey, (string)$attrValue);
-            }
-        }
-        
+
+                $nodeElement->addAttribute($attrKey, (string) $attrValue);
+            }//end foreach
+        }//end if
+
         // XSD-required order for ViewNodeType: label → style → viewRef → node (nested)
         // Label (used in Label nodes)
         if (isset($nodeData['label'])) {
@@ -1034,15 +1097,15 @@ XML;
                 $labelElement = $nodeElement->addChild('label');
                 $this->arrayToXml($labelData, $labelElement);
             } else {
-                $labelElement = $nodeElement->addChild('label');
-                $labelElement[0] = (string)$labelData;
+                $labelElement    = $nodeElement->addChild('label');
+                $labelElement[0] = (string) $labelData;
             }
         }
 
         // Style (lineColor → fillColor → font per XSD StyleType order)
         if (isset($nodeData['style']) && is_array($nodeData['style'])) {
             $styleElement = $nodeElement->addChild('style');
-            $styleData = $nodeData['style'];
+            $styleData    = $nodeData['style'];
             // Enforce StyleType order: lineColor → fillColor → font
             foreach (['lineColor', 'fillColor', 'font'] as $styleKey) {
                 if (isset($styleData[$styleKey]) && is_array($styleData[$styleKey])) {
@@ -1067,6 +1130,7 @@ XML;
             if (!$this->isList($nestedNodes)) {
                 $nestedNodes = [$nestedNodes];
             }
+
             foreach ($nestedNodes as $nestedNodeData) {
                 if (is_array($nestedNodeData)) {
                     $nestedNodeElement = $nodeElement->addChild('node');
@@ -1074,7 +1138,7 @@ XML;
                 }
             }
         }
-    }
+    }//end addNodeDataToXmlElement()
 
     /**
      * Add organization item to XML with XSD-required child order: label → documentation → item
@@ -1083,9 +1147,9 @@ XML;
     {
         // Add identifierRef attribute if present
         if (isset($itemData['_identifierRef'])) {
-            $itemNode->addAttribute('identifierRef', (string)$itemData['_identifierRef']);
-        } elseif (isset($itemData['_attributes']['identifierRef'])) {
-            $itemNode->addAttribute('identifierRef', (string)$itemData['_attributes']['identifierRef']);
+            $itemNode->addAttribute('identifierRef', (string) $itemData['_identifierRef']);
+        } else if (isset($itemData['_attributes']['identifierRef'])) {
+            $itemNode->addAttribute('identifierRef', (string) $itemData['_attributes']['identifierRef']);
         }
 
         // XSD order: label → documentation → item
@@ -1093,23 +1157,25 @@ XML;
         if (isset($itemData['label'])) {
             $labels = $itemData['label'];
             if (is_array($labels) && !$this->isList($labels)) {
-                $labels = [$labels]; // Single label → list
+                $labels = [$labels];
+                // Single label → list
             }
+
             if (is_array($labels)) {
                 foreach ($labels as $labelData) {
                     if (is_array($labelData)) {
                         $labelElement = $itemNode->addChild('label');
                         $this->arrayToXml($labelData, $labelElement);
-                    } elseif (is_string($labelData)) {
-                        $labelElement = $itemNode->addChild('label');
+                    } else if (is_string($labelData)) {
+                        $labelElement    = $itemNode->addChild('label');
                         $labelElement[0] = $labelData;
                     }
                 }
-            } elseif (is_string($labels)) {
-                $labelElement = $itemNode->addChild('label');
+            } else if (is_string($labels)) {
+                $labelElement    = $itemNode->addChild('label');
                 $labelElement[0] = $labels;
             }
-        }
+        }//end if
 
         // Documentation
         $this->addLangTextChild($itemNode, 'documentation', $itemData['documentation'] ?? null);
@@ -1120,6 +1186,7 @@ XML;
             if (is_array($items) && !$this->isList($items)) {
                 $items = [$items];
             }
+
             if (is_array($items)) {
                 foreach ($items as $childItemData) {
                     if (is_array($childItemData)) {
@@ -1129,7 +1196,7 @@ XML;
                 }
             }
         }
-    }
+    }//end addOrganizationItemToXml()
 
     /**
      * Format XML output with proper indentation and line breaks for readability
@@ -1139,29 +1206,29 @@ XML;
         // Use DOMDocument to format the XML with proper indentation
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->preserveWhiteSpace = false;
-        $dom->formatOutput = true;
-        
+        $dom->formatOutput       = true;
+
         // Load the XML string
         if ($dom->loadXML($xmlString)) {
             return $dom->saveXML();
         }
-        
+
         // If formatting fails, return original string
         return $xmlString;
-    }
+    }//end formatXmlOutput()
 
     /**
      * Clean object data for XML export - remove metadata and duplicate attributes
      */
-    private function cleanObjectDataForXml(array $object, array $propertyDefinitionMap = []): array
+    private function cleanObjectDataForXml(array $object, array $propertyDefinitionMap=[]): array
     {
         // Remove our metadata fields
-        $cleanData = $object;
+        $cleanData      = $object;
         $metadataFields = ['section', 'identifier', 'model_identifier', '@self', 'extracted_at'];
         foreach ($metadataFields as $field) {
             unset($cleanData[$field]);
         }
-        
+
         // Remove duplicate underscore fields that were created during parsing
         // Keep only the clean attribute names
         $fieldsToRemove = [];
@@ -1171,86 +1238,91 @@ XML;
                 $fieldsToRemove[] = $key;
             }
             // Remove single underscore fields that have clean equivalents
-            elseif (is_string($key) && str_starts_with($key, '_') && $key !== '_attributes' && $key !== '_value' && $key !== '_text' && $key !== '_xsi__type') {
+            else if (is_string($key) && str_starts_with($key, '_') && $key !== '_attributes' && $key !== '_value' && $key !== '_text' && $key !== '_xsi__type') {
                 $cleanKey = substr($key, 1);
                 if (isset($cleanData[$cleanKey])) {
                     $fieldsToRemove[] = $key;
                 }
             }
         }
-        
+
         foreach ($fieldsToRemove as $field) {
             unset($cleanData[$field]);
         }
-        
+
         // Remove flattened properties that will be reconstructed separately
         if (!empty($propertyDefinitionMap)) {
             foreach ($propertyDefinitionMap as $propRef => $propName) {
                 unset($cleanData[$propName]);
             }
         }
-        
+
         return $cleanData;
-    }
+    }//end cleanObjectDataForXml()
 
     /**
      * Add clean data to XML node with proper ArchiMate structure
      */
-    private function addCleanDataToXmlNode(\SimpleXMLElement $node, array $data, ?string $sectionName = null, array $propertyDefinitionMap = []): void
+    private function addCleanDataToXmlNode(\SimpleXMLElement $node, array $data, ?string $sectionName=null, array $propertyDefinitionMap=[]): void
     {
         // Extract attributes from various possible locations
         $attributes = [];
         if (isset($data['identifier'])) {
-            $attributes['identifier'] = (string)$data['identifier'];
+            $attributes['identifier'] = (string) $data['identifier'];
         }
+
         if (isset($data['_attributes']) && is_array($data['_attributes'])) {
             foreach ($data['_attributes'] as $attrKey => $attrValue) {
                 // Skip colon-prefixed duplicate keys
                 if (str_starts_with($attrKey, ':')) {
                     continue;
                 }
+
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
                 if ($attrKey === 'xsi:type') {
                     if ($isPropertyDefinition) {
-                        $attributes['type'] = (string)$attrValue;
+                        $attributes['type'] = (string) $attrValue;
                     } else {
-                        $attributes['xsi:type'] = (string)$attrValue;
+                        $attributes['xsi:type'] = (string) $attrValue;
                     }
-                } elseif (in_array($attrKey, ['identifier', 'source', 'target', 'accessType', 'isDirected', 'type'])) {
+                } else if (in_array($attrKey, ['identifier', 'source', 'target', 'accessType', 'isDirected', 'type'])) {
                     if ($attrKey === 'type' && !$isPropertyDefinition) {
-                        $attributes['xsi:type'] = (string)$attrValue;
+                        $attributes['xsi:type'] = (string) $attrValue;
                     } else {
-                        $attributes[$attrKey] = (string)$attrValue;
+                        $attributes[$attrKey] = (string) $attrValue;
                     }
                 }
-            }
-        }
+            }//end foreach
+        }//end if
+
         foreach (['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type', '_type'] as $typeKey) {
             if (isset($data[$typeKey])) {
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
                 if ($typeKey === '_type' && $isPropertyDefinition && !isset($attributes['type'])) {
-                    $attributes['type'] = (string)$data[$typeKey];
+                    $attributes['type'] = (string) $data[$typeKey];
                     break;
-                } elseif (in_array($typeKey, ['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type']) && !isset($attributes['xsi:type'])) {
-                    $attributes['xsi:type'] = (string)$data[$typeKey];
+                } else if (in_array($typeKey, ['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type']) && !isset($attributes['xsi:type'])) {
+                    $attributes['xsi:type'] = (string) $data[$typeKey];
                     break;
                 }
             }
         }
+
         foreach (['source', 'target', 'accessType', 'isDirected', 'type'] as $attrName) {
             if (isset($data[$attrName]) && !isset($attributes[$attrName])) {
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
                 if ($attrName === 'type') {
                     if ($isPropertyDefinition) {
-                        $attributes['type'] = (string)$data[$attrName];
-                    } elseif (!isset($attributes['xsi:type'])) {
-                        $attributes['xsi:type'] = (string)$data[$attrName];
+                        $attributes['type'] = (string) $data[$attrName];
+                    } else if (!isset($attributes['xsi:type'])) {
+                        $attributes['xsi:type'] = (string) $data[$attrName];
                     }
                 } else {
-                    $attributes[$attrName] = (string)$data[$attrName];
+                    $attributes[$attrName] = (string) $data[$attrName];
                 }
             }
         }
+
         foreach ($attributes as $attrName => $attrValue) {
             if ($attrName === 'xsi:type') {
                 $node->addAttribute('xsi:type', $attrValue, 'http://www.w3.org/2001/XMLSchema-instance');
@@ -1258,6 +1330,7 @@ XML;
                 $node->addAttribute($attrName, $attrValue);
             }
         }
+
         // Handle child elements in XSD-required order (xs:sequence):
         // NamedReferenceableType: name → documentation → properties
         $this->addLangTextChild($node, 'name', $data['name'] ?? null);
@@ -1265,18 +1338,19 @@ XML;
         if (isset($data['properties']) && is_array($data['properties'])) {
             $this->addPropertiesToXml($node, $data['properties']);
         }
+
         // Add properties from root fields using propertyDefinitionMap ONLY if no properties were already processed
         if (!empty($propertyDefinitionMap) && !isset($data['properties'])) {
             $this->addPropertiesFromRootFields($node, $data, $propertyDefinitionMap);
         }
-    }
+    }//end addCleanDataToXmlNode()
 
     /**
      * Add properties to XML node using propertyDefinitionMap from model
      *
-     * @param \SimpleXMLElement $node XML node to add properties to
-     * @param array $object The object with root-level properties
-     * @param array $propertyDefinitionMap Map of property name => propertyDefinitionRef
+     * @param \SimpleXMLElement $node                  XML node to add properties to
+     * @param array             $object                The object with root-level properties
+     * @param array             $propertyDefinitionMap Map of property name => propertyDefinitionRef
      */
     private function addPropertiesFromRootFields(
         \SimpleXMLElement $node,
@@ -1289,20 +1363,21 @@ XML;
             if (isset($object[$propName])) {
                 $properties[] = [
                     'propertyDefinitionRef' => $propRef,
-                    'value' => $object[$propName],
+                    'value'                 => $object[$propName],
                 ];
             }
         }
+
         if (!empty($properties)) {
             $propertiesNode = $node->addChild('properties');
             foreach ($properties as $property) {
                 $propertyNode = $propertiesNode->addChild('property');
                 $propertyNode->addAttribute('propertyDefinitionRef', $property['propertyDefinitionRef']);
-                $valueNode = $propertyNode->addChild('value');
-                $valueNode[0] = (string)$property['value'];
+                $valueNode    = $propertyNode->addChild('value');
+                $valueNode[0] = (string) $property['value'];
             }
         }
-    }
+    }//end addPropertiesFromRootFields()
 
     /**
      * Add properties section to XML
@@ -1314,7 +1389,7 @@ XML;
         }
 
         $propertiesNode = $node->addChild('properties');
-        
+
         // Handle the nested structure from import service: properties.property[]
         $propList = [];
         if (isset($properties['property'])) {
@@ -1326,39 +1401,40 @@ XML;
                 // Single property as object - wrap in array
                 $propList = [$properties['property']];
             }
-        } elseif ($this->isList($properties)) {
+        } else if ($this->isList($properties)) {
             // Direct array of properties
             $propList = $properties;
         } else {
             // Single property object
             $propList = [$properties];
         }
-        
+
         foreach ($propList as $property) {
             if (!is_array($property)) {
                 continue;
             }
-            
+
             $propertyNode = $propertiesNode->addChild('property');
-            
+
             // Look for propertyDefinitionRef in various forms (including double underscore from import service)
             $propDefRef = null;
             foreach (['propertyDefinitionRef', '_propertyDefinitionRef', '___propertyDefinitionRef'] as $refKey) {
                 if (isset($property[$refKey])) {
-                    $propDefRef = (string)$property[$refKey];
+                    $propDefRef = (string) $property[$refKey];
                     break;
                 }
             }
-            
+
             // Also check in _attributes, but avoid duplicate if we already found one
             if (!$propDefRef && isset($property['_attributes']['propertyDefinitionRef'])) {
-                $propDefRef = (string)$property['_attributes']['propertyDefinitionRef'];
+                $propDefRef = (string) $property['_attributes']['propertyDefinitionRef'];
             }
-            
+
             // Skip and clean up malformed attributes that would create invalid XML
             if (isset($property['_attributes'][':propertyDefinitionRef'])) {
                 unset($property['_attributes'][':propertyDefinitionRef']);
             }
+
             // Also check for other malformed attribute patterns
             $badAttrs = [];
             foreach ($property['_attributes'] ?? [] as $attrName => $attrValue) {
@@ -1366,24 +1442,25 @@ XML;
                     $badAttrs[] = $attrName;
                 }
             }
+
             foreach ($badAttrs as $badAttr) {
                 unset($property['_attributes'][$badAttr]);
             }
-            
+
             if ($propDefRef) {
                 $propertyNode->addAttribute('propertyDefinitionRef', $propDefRef);
             }
-            
+
             // Handle value in various forms
             if (isset($property['value'])) {
                 if (is_array($property['value'])) {
                     $valueNode = $propertyNode->addChild('value');
                     if (isset($property['value']['_value'])) {
-                        $valueNode[0] = (string)$property['value']['_value'];
-                    } elseif (isset($property['value']['value'])) {
-                        $valueNode[0] = (string)$property['value']['value'];
+                        $valueNode[0] = (string) $property['value']['_value'];
+                    } else if (isset($property['value']['value'])) {
+                        $valueNode[0] = (string) $property['value']['value'];
                     }
-                    
+
                     // Add xml:lang if present in various forms (including double underscore from import service)
                     foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                         if (isset($property['value'][$langKey])) {
@@ -1393,12 +1470,12 @@ XML;
                     }
                 } else {
                     // Simple string value
-                    $valueNode = $propertyNode->addChild('value');
-                    $valueNode[0] = (string)$property['value'];
+                    $valueNode    = $propertyNode->addChild('value');
+                    $valueNode[0] = (string) $property['value'];
                 }
-            }
-        }
-    }
+            }//end if
+        }//end foreach
+    }//end addPropertiesToXml()
 
     /**
      * Add a child element with text content and optional xml:lang attribute
@@ -1408,22 +1485,24 @@ XML;
         if ($data === null) {
             return;
         }
+
         if (is_array($data)) {
             $childNode = $parent->addChild($tagName);
             if (isset($data['_value'])) {
-                $childNode[0] = (string)$data['_value'];
+                $childNode[0] = (string) $data['_value'];
             }
+
             foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                 if (isset($data[$langKey])) {
                     $childNode->addAttribute('xml:lang', $data[$langKey], 'http://www.w3.org/XML/1998/namespace');
                     break;
                 }
             }
-        } elseif (is_string($data) && $data !== '') {
-            $childNode = $parent->addChild($tagName);
+        } else if (is_string($data) && $data !== '') {
+            $childNode    = $parent->addChild($tagName);
             $childNode[0] = $data;
         }
-    }
+    }//end addLangTextChild()
 
     /**
      * Extract model metadata from objects
@@ -1434,14 +1513,14 @@ XML;
             if (is_object($object) && method_exists($object, 'jsonSerialize')) {
                 $object = $object->jsonSerialize();
             }
-            
+
             if (isset($object['section']) && $object['section'] === 'model') {
                 return $object;
             }
         }
-        
+
         return [];
-    }
+    }//end extractModelMetadata()
 
     /**
      * Add model metadata (name, documentation, properties) to XML root
@@ -1456,14 +1535,14 @@ XML;
         if ($nameData !== null) {
             $nameNode = $xml->addChild('name');
             if (is_array($nameData) && isset($nameData['_value'])) {
-                $nameNode[0] = (string)$nameData['_value'];
+                $nameNode[0] = (string) $nameData['_value'];
                 foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                     if (isset($nameData[$langKey])) {
                         $nameNode->addAttribute('xml:lang', $nameData[$langKey], 'http://www.w3.org/XML/1998/namespace');
                         break;
                     }
                 }
-            } elseif (is_string($nameData)) {
+            } else if (is_string($nameData)) {
                 $nameNode[0] = $nameData;
             }
         }
@@ -1473,14 +1552,14 @@ XML;
         if ($docData !== null) {
             $docNode = $xml->addChild('documentation');
             if (is_array($docData) && isset($docData['_value'])) {
-                $docNode[0] = (string)$docData['_value'];
+                $docNode[0] = (string) $docData['_value'];
                 foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                     if (isset($docData[$langKey])) {
                         $docNode->addAttribute('xml:lang', $docData[$langKey], 'http://www.w3.org/XML/1998/namespace');
                         break;
                     }
                 }
-            } elseif (is_string($docData)) {
+            } else if (is_string($docData)) {
                 $docNode[0] = $docData;
             }
         }
@@ -1490,7 +1569,7 @@ XML;
         if ($propsData !== null && is_array($propsData)) {
             $this->addPropertiesToXml($xml, $propsData);
         }
-    }
+    }//end addModelMetadataToXml()
 
     /**
      * Optimized method to add data to XML node
@@ -1500,13 +1579,13 @@ XML;
         // Add attributes first
         if (isset($data['_attributes']) && is_array($data['_attributes'])) {
             foreach ($data['_attributes'] as $attrName => $attrValue) {
-                $node->addAttribute($attrName, (string)$attrValue);
+                $node->addAttribute($attrName, (string) $attrValue);
             }
         }
 
         // Add text content
         if (isset($data['_value'])) {
-            $node[0] = (string)$data['_value'];
+            $node[0] = (string) $data['_value'];
         }
 
         // Add child elements
@@ -1523,7 +1602,7 @@ XML;
                         if (is_array($item)) {
                             $this->addDataToXmlNode($child, $item);
                         } else {
-                            $child[0] = (string)$item;
+                            $child[0] = (string) $item;
                         }
                     }
                 } else {
@@ -1533,80 +1612,95 @@ XML;
                 }
             } else {
                 // Scalar value
-                $child = $node->addChild($key);
-                $child[0] = (string)$value;
-            }
-        }
-    }
+                $child    = $node->addChild($key);
+                $child[0] = (string) $value;
+            }//end if
+        }//end foreach
+    }//end addDataToXmlNode()
 
     /**
      * Convert OpenRegister objects back to ArchiMate format
-     * 
-     * @param array $objects OpenRegister objects from all schemas
-     * @param array $schemaIdMap Mapping of schema IDs to schema types
+     *
+     * @param  array $objects     OpenRegister objects from all schemas
+     * @param  array $schemaIdMap Mapping of schema IDs to schema types
      * @return array ArchiMate data structure
      */
     public function convertFromOpenRegisterObjects(array $objects, array $schemaIdMap): array
     {
-        $this->logger->info('Converting from OpenRegister objects back to ArchiMate format', [
-            'total_objects' => count($objects)
-        ]);
+        $this->logger->info(
+                'Converting from OpenRegister objects back to ArchiMate format',
+                [
+                    'total_objects' => count($objects),
+                ]
+                );
 
         // First, organize objects by schema type based on their schema ID
         $organizedObjects = $this->organizeObjectsBySchemaType($objects, $schemaIdMap);
-        
+
         $archiMateData = [
-            'model_metadata' => [],
-            'elements' => [],
-            'relationships' => [],
-            'organizations' => [],
-            'views' => [],
-            'property_definitions' => []
+            'model_metadata'       => [],
+            'elements'             => [],
+            'relationships'        => [],
+            'organizations'        => [],
+            'views'                => [],
+            'property_definitions' => [],
         ];
 
         // Process organized objects by schema type
         foreach ($organizedObjects as $schemaType => $schemaObjects) {
-            $this->logger->debug("Processing objects for schema type", [
-                'schema_type' => $schemaType,
-                'object_count' => count($schemaObjects)
-            ]);
+            $this->logger->debug(
+                    "Processing objects for schema type",
+                    [
+                        'schema_type'  => $schemaType,
+                        'object_count' => count($schemaObjects),
+                    ]
+                    );
 
             foreach ($schemaObjects as $object) {
-                $section = $this->mapSchemaTypeToSection($schemaType);
+                $section    = $this->mapSchemaTypeToSection($schemaType);
                 $identifier = $object['identifier'] ?? '';
-                $xmlData = json_decode($object['xml_data'] ?? '{}', true);
+                $xmlData    = json_decode($object['xml_data'] ?? '{}', true);
 
                 if ($section === 'model_metadata') {
                     $archiMateData['model_metadata'] = $xmlData;
-                    $this->logger->debug('Added model metadata', [
-                        'identifier' => $identifier
-                    ]);
+                    $this->logger->debug(
+                            'Added model metadata',
+                            [
+                                'identifier' => $identifier,
+                            ]
+                            );
                 } else {
                     $archiMateData[$section][$identifier] = $xmlData;
-                    $this->logger->debug('Added section object', [
-                        'section' => $section,
-                        'identifier' => $identifier,
-                        'schema_type' => $schemaType
-                    ]);
+                    $this->logger->debug(
+                            'Added section object',
+                            [
+                                'section'     => $section,
+                                'identifier'  => $identifier,
+                                'schema_type' => $schemaType,
+                            ]
+                            );
                 }
-            }
-        }
+            }//end foreach
+        }//end foreach
 
         // Reconstruct the proper nested XML structure for export
         $archiMateData = $this->reconstructNestedXmlStructure($archiMateData);
 
-        $this->logger->info('Conversion completed', [
-            'sections' => array_keys($archiMateData)
-        ]);
+        $this->logger->info(
+                'Conversion completed',
+                [
+                    'sections' => array_keys($archiMateData),
+                ]
+                );
 
         return $archiMateData;
-    }
+    }//end convertFromOpenRegisterObjects()
 
     /**
      * Organize objects by schema type based on their schema ID
-     * 
-     * @param array $objects Raw objects from database
-     * @param array $schemaIdMap Mapping of schema IDs to schema types
+     *
+     * @param  array $objects     Raw objects from database
+     * @param  array $schemaIdMap Mapping of schema IDs to schema types
      * @return array Objects organized by schema type
      */
     private function organizeObjectsBySchemaType(array $objects, array $schemaIdMap): array
@@ -1621,45 +1715,45 @@ XML;
             }
 
             $schemaId = $object['@self']['schema'] ?? null;
-            
+
             if ($schemaId && isset($schemaIdMap[$schemaId])) {
                 $schemaType = $schemaIdMap[$schemaId];
-                
+
                 if (!isset($organizedObjects[$schemaType])) {
                     $organizedObjects[$schemaType] = [];
                 }
-                
+
                 $organizedObjects[$schemaType][] = $object;
             }
         }
 
         return $organizedObjects;
-    }
+    }//end organizeObjectsBySchemaType()
 
     /**
      * Map schema type to ArchiMate section name
-     * 
-     * @param string $schemaType Schema type from AMEF config
+     *
+     * @param  string $schemaType Schema type from AMEF config
      * @return string Section name for ArchiMate data structure
      */
     private function mapSchemaTypeToSection(string $schemaType): string
     {
         $mapping = [
-            'model' => 'model_metadata',
-            'element' => 'elements',
-            'relationship' => 'relationships',
-            'view' => 'views',
-            'organization' => 'organizations',
-            'property_definition' => 'property_definitions'
+            'model'               => 'model_metadata',
+            'element'             => 'elements',
+            'relationship'        => 'relationships',
+            'view'                => 'views',
+            'organization'        => 'organizations',
+            'property_definition' => 'property_definitions',
         ];
 
         return $mapping[$schemaType] ?? $schemaType;
-    }
+    }//end mapSchemaTypeToSection()
 
     /**
      * Reconstruct the proper nested XML structure for export
-     * 
-     * @param array $archiMateData Flattened ArchiMate data
+     *
+     * @param  array $archiMateData Flattened ArchiMate data
      * @return array Properly nested XML structure
      */
     private function reconstructNestedXmlStructure(array $archiMateData): array
@@ -1667,7 +1761,7 @@ XML;
         // Reconstruct views with diagrams wrapper
         if (!empty($archiMateData['views']) && is_array($archiMateData['views'])) {
             $archiMateData['views'] = [
-                'diagrams' => $archiMateData['views']
+                'diagrams' => $archiMateData['views'],
             ];
         }
 
@@ -1677,133 +1771,134 @@ XML;
             foreach ($archiMateData['organizations'] as $org) {
                 $items[] = $org;
             }
+
             $archiMateData['organizations'] = [
-                'item' => $items
+                'item' => $items,
             ];
         }
 
         return $archiMateData;
-    }
+    }//end reconstructNestedXmlStructure()
 
     /**
      * Run comprehensive Quality Assurance checks on exported XML
-     * 
-     * @param string $xmlString The generated XML string
-     * @param array $sourceData The original source data for reference
+     *
+     * @param  string $xmlString  The generated XML string
+     * @param  array  $sourceData The original source data for reference
      * @throws \InvalidArgumentException If any QA check fails
      */
     private function runQualityAssuranceChecks(string $xmlString, array $sourceData): void
     {
         $this->logger->info('Running Quality Assurance checks on exported XML');
-        
+
         // DEBUG: Save XML to file for inspection
         $debugPath = '/tmp/debug_export.xml';
         file_put_contents($debugPath, $xmlString);
-        $this->logger->info('DEBUG: Raw XML saved to ' . $debugPath . ' (size: ' . strlen($xmlString) . ' bytes)');
-        
+        $this->logger->info('DEBUG: Raw XML saved to '.$debugPath.' (size: '.strlen($xmlString).' bytes)');
+
         try {
             $xml = new \SimpleXMLElement($xmlString);
-            
+
             // QA Check 1: Every <element> has xsi:type and unique identifier
             $this->validateElementsHaveTypeAndIdentifier($xml);
-            
+
             // QA Check 2: Every <relationship> has xsi:type, source, target with valid references
             $this->validateRelationshipsHaveSourceTarget($xml);
-            
+
             // QA Check 3: No empty <property/> tags; all have propertyDefinitionRef and <value>
             $this->validatePropertiesAreNotEmpty($xml);
-            
+
             // QA Check 4: propid-2 exists for all elements and value == identifier
             $this->validateObjectIdProperty($xml);
-            
+
             // QA Check 5: name/documentation are trimmed and whitespace normalized
             $this->validateTextContentNormalized($xml);
-            
+
             $this->logger->info('All Quality Assurance checks passed successfully');
-            
         } catch (\Exception $e) {
-            $this->logger->error('Quality Assurance check failed: ' . $e->getMessage());
-            throw new \InvalidArgumentException('Export QA validation failed: ' . $e->getMessage());
-        }
-    }
+            $this->logger->error('Quality Assurance check failed: '.$e->getMessage());
+            throw new \InvalidArgumentException('Export QA validation failed: '.$e->getMessage());
+        }//end try
+    }//end runQualityAssuranceChecks()
 
     /**
      * Validate that every element has xsi:type and unique identifier
      */
     private function validateElementsHaveTypeAndIdentifier(\SimpleXMLElement $xml): void
     {
-        $elements = $xml->xpath('//element');
+        $elements    = $xml->xpath('//element');
         $identifiers = [];
-        
+
         foreach ($elements as $element) {
             $attributes = $element->attributes();
-            
+
             // Check xsi:type exists
             $xsiType = $element->attributes('http://www.w3.org/2001/XMLSchema-instance');
             if (!isset($xsiType['type'])) {
-                throw new \InvalidArgumentException("Element missing xsi:type: " . (string)$attributes['identifier']);
+                throw new \InvalidArgumentException("Element missing xsi:type: ".(string) $attributes['identifier']);
             }
-            
+
             // Check identifier exists and is unique
             if (!isset($attributes['identifier'])) {
                 throw new \InvalidArgumentException("Element missing identifier");
             }
-            
-            $identifier = (string)$attributes['identifier'];
+
+            $identifier = (string) $attributes['identifier'];
             if (in_array($identifier, $identifiers)) {
-                throw new \InvalidArgumentException("Duplicate identifier found: " . $identifier);
+                throw new \InvalidArgumentException("Duplicate identifier found: ".$identifier);
             }
+
             $identifiers[] = $identifier;
-        }
-        
-        $this->logger->debug("Validated " . count($elements) . " elements with unique identifiers and xsi:type");
-    }
+        }//end foreach
+
+        $this->logger->debug("Validated ".count($elements)." elements with unique identifiers and xsi:type");
+    }//end validateElementsHaveTypeAndIdentifier()
 
     /**
      * Validate that every relationship has xsi:type, source, target with valid references
      */
     private function validateRelationshipsHaveSourceTarget(\SimpleXMLElement $xml): void
     {
-        $relationships = $xml->xpath('//relationship');
+        $relationships  = $xml->xpath('//relationship');
         $allIdentifiers = [];
-        
+
         // Collect all valid identifiers from elements and relationships
         foreach ($xml->xpath('//*[@identifier]') as $node) {
-            $allIdentifiers[] = (string)$node->attributes()['identifier'];
+            $allIdentifiers[] = (string) $node->attributes()['identifier'];
         }
-        
+
         foreach ($relationships as $relationship) {
             $attributes = $relationship->attributes();
-            
+
             // Check xsi:type exists
             $xsiType = $relationship->attributes('http://www.w3.org/2001/XMLSchema-instance');
             if (!isset($xsiType['type'])) {
-                throw new \InvalidArgumentException("Relationship missing xsi:type: " . (string)$attributes['identifier']);
+                throw new \InvalidArgumentException("Relationship missing xsi:type: ".(string) $attributes['identifier']);
             }
-            
+
             // Check source exists and references valid identifier
             if (!isset($attributes['source'])) {
-                throw new \InvalidArgumentException("Relationship missing source: " . (string)$attributes['identifier']);
+                throw new \InvalidArgumentException("Relationship missing source: ".(string) $attributes['identifier']);
             }
-            
-            $source = (string)$attributes['source'];
+
+            $source = (string) $attributes['source'];
             if (!in_array($source, $allIdentifiers)) {
-                throw new \InvalidArgumentException("Relationship source references non-existent identifier: " . $source);
+                throw new \InvalidArgumentException("Relationship source references non-existent identifier: ".$source);
             }
-            
+
             // Check target exists and references valid identifier
             if (!isset($attributes['target'])) {
-                throw new \InvalidArgumentException("Relationship missing target: " . (string)$attributes['identifier']);
+                throw new \InvalidArgumentException("Relationship missing target: ".(string) $attributes['identifier']);
             }
-            
-            $target = (string)$attributes['target'];
+
+            $target = (string) $attributes['target'];
             if (!in_array($target, $allIdentifiers)) {
-                throw new \InvalidArgumentException("Relationship target references non-existent identifier: " . $target);
+                throw new \InvalidArgumentException("Relationship target references non-existent identifier: ".$target);
             }
-        }
-        
-        $this->logger->debug("Validated " . count($relationships) . " relationships with valid source/target references");
-    }
+        }//end foreach
+
+        $this->logger->debug("Validated ".count($relationships)." relationships with valid source/target references");
+    }//end validateRelationshipsHaveSourceTarget()
 
     /**
      * Validate that no properties are empty; all have propertyDefinitionRef and value
@@ -1811,29 +1906,29 @@ XML;
     private function validatePropertiesAreNotEmpty(\SimpleXMLElement $xml): void
     {
         $properties = $xml->xpath('//property');
-        
+
         foreach ($properties as $property) {
             $attributes = $property->attributes();
-            
+
             // Check propertyDefinitionRef exists
             if (!isset($attributes['propertyDefinitionRef'])) {
                 throw new \InvalidArgumentException("Property missing propertyDefinitionRef");
             }
-            
+
             // Check value element exists and has content
             $valueElements = $property->xpath('value');
             if (empty($valueElements)) {
-                throw new \InvalidArgumentException("Property missing value element: " . (string)$attributes['propertyDefinitionRef']);
+                throw new \InvalidArgumentException("Property missing value element: ".(string) $attributes['propertyDefinitionRef']);
             }
-            
-            $value = trim((string)$valueElements[0]);
+
+            $value = trim((string) $valueElements[0]);
             if (empty($value)) {
-                throw new \InvalidArgumentException("Property has empty value: " . (string)$attributes['propertyDefinitionRef']);
+                throw new \InvalidArgumentException("Property has empty value: ".(string) $attributes['propertyDefinitionRef']);
             }
         }
-        
-        $this->logger->debug("Validated " . count($properties) . " properties have propertyDefinitionRef and non-empty values");
-    }
+
+        $this->logger->debug("Validated ".count($properties)." properties have propertyDefinitionRef and non-empty values");
+    }//end validatePropertiesAreNotEmpty()
 
     /**
      * Validate that propid-2 exists for all elements and value equals identifier
@@ -1841,31 +1936,31 @@ XML;
     private function validateObjectIdProperty(\SimpleXMLElement $xml): void
     {
         $elements = $xml->xpath('//element');
-        
+
         foreach ($elements as $element) {
-            $identifier = (string)$element->attributes()['identifier'];
-            
+            $identifier = (string) $element->attributes()['identifier'];
+
             // Find propid-2 property
             $objectIdProps = $element->xpath('properties/property[@propertyDefinitionRef="propid-2"]');
             if (empty($objectIdProps)) {
-                throw new \InvalidArgumentException("Element missing propid-2 property: " . $identifier);
+                throw new \InvalidArgumentException("Element missing propid-2 property: ".$identifier);
             }
-            
+
             $valueElements = $objectIdProps[0]->xpath('value');
             if (empty($valueElements)) {
-                throw new \InvalidArgumentException("Element propid-2 missing value: " . $identifier);
+                throw new \InvalidArgumentException("Element propid-2 missing value: ".$identifier);
             }
-            
-            $objectIdValue = trim((string)$valueElements[0]);
-            $expectedValue = str_replace('id-', '', $identifier); // Remove 'id-' prefix for comparison
-            
+
+            $objectIdValue = trim((string) $valueElements[0]);
+            $expectedValue = str_replace('id-', '', $identifier);
+            // Remove 'id-' prefix for comparison
             if ($objectIdValue !== $expectedValue) {
-                throw new \InvalidArgumentException("Element propid-2 value mismatch. Expected: " . $expectedValue . ", Got: " . $objectIdValue . " (Element: " . $identifier . ")");
+                throw new \InvalidArgumentException("Element propid-2 value mismatch. Expected: ".$expectedValue.", Got: ".$objectIdValue." (Element: ".$identifier.")");
             }
-        }
-        
-        $this->logger->debug("Validated propid-2 property for " . count($elements) . " elements");
-    }
+        }//end foreach
+
+        $this->logger->debug("Validated propid-2 property for ".count($elements)." elements");
+    }//end validateObjectIdProperty()
 
     /**
      * Validate that name/documentation text content is trimmed and whitespace normalized
@@ -1873,24 +1968,25 @@ XML;
     private function validateTextContentNormalized(\SimpleXMLElement $xml): void
     {
         $textElements = $xml->xpath('//name | //documentation | //value');
-        
+
         foreach ($textElements as $element) {
-            $content = (string)$element;
-            $trimmed = trim($content);
-            $normalized = preg_replace('/\s+/', ' ', $trimmed); // Normalize multiple whitespace to single space
-            
+            $content    = (string) $element;
+            $trimmed    = trim($content);
+            $normalized = preg_replace('/\s+/', ' ', $trimmed);
+            // Normalize multiple whitespace to single space
             if ($content !== $normalized) {
-                $tagName = $element->getName();
+                $tagName  = $element->getName();
                 $parentId = '';
                 if ($element->xpath('../@identifier')) {
-                    $parentId = ' (Parent: ' . (string)$element->xpath('../@identifier')[0] . ')';
+                    $parentId = ' (Parent: '.(string) $element->xpath('../@identifier')[0].')';
                 }
-                throw new \InvalidArgumentException("Text content not normalized in <" . $tagName . ">" . $parentId . ". Expected: '" . $normalized . "', Got: '" . $content . "'");
+
+                throw new \InvalidArgumentException("Text content not normalized in <".$tagName.">".$parentId.". Expected: '".$normalized."', Got: '".$content."'");
             }
         }
-        
-        $this->logger->debug("Validated " . count($textElements) . " text elements are properly trimmed and normalized");
-    }
+
+        $this->logger->debug("Validated ".count($textElements)." text elements are properly trimmed and normalized");
+    }//end validateTextContentNormalized()
 
     // =========================================================================
     // Organization-specific ArchiMate export
@@ -1904,13 +2000,14 @@ XML;
      * referentiecomponenten, copies views with applications plotted inside, and
      * adds SWC-specific organization folders.
      *
-     * @param \OCA\OpenRegister\Service\ObjectService $objectService
-     * @param int    $registerId    AMEF register ID
-     * @param array  $schemaIdMap   Schema ID → type mapping
-     * @param string $orgName       Human-readable organization name
-     * @param string $orgUuid       Organization UUID
-     * @param array  $gebruikData   Usage objects for this organization
-     * @param array  $modulesData   Module objects for this organization
+     * @param  \OCA\OpenRegister\Service\ObjectService $objectService
+     * @param  int                                     $registerId    AMEF register ID
+     * @param  array                                   $schemaIdMap   Schema ID → type
+     *                                                                mapping
+     * @param  string                                  $orgName       Human-readable organization name
+     * @param  string                                  $orgUuid       Organization UUID
+     * @param  array                                   $gebruikData   Usage objects for this organization
+     * @param  array                                   $modulesData   Module objects for this organization
      * @return string Generated XML
      */
     public function exportOrganizationArchiMateXml(
@@ -1921,17 +2018,20 @@ XML;
         string $orgUuid,
         array $gebruikData,
         array $modulesData,
-        array $deelnamesData = [],
-        array $options = []
+        array $deelnamesData=[],
+        array $options=[]
     ): string {
         $startTime = microtime(true);
-        $this->logger->info('Starting organization ArchiMate export', [
-            'organization' => $orgName,
-            'gebruik_count' => count($gebruikData),
-            'modules_count' => count($modulesData),
-            'deelnames_count' => count($deelnamesData),
-            'options' => $options
-        ]);
+        $this->logger->info(
+                'Starting organization ArchiMate export',
+                [
+                    'organization'    => $orgName,
+                    'gebruik_count'   => count($gebruikData),
+                    'modules_count'   => count($modulesData),
+                    'deelnames_count' => count($deelnamesData),
+                    'options'         => $options,
+                ]
+                );
 
         // Step 1: Get all base GEMMA objects
         $baseObjects = $this->getObjectsFromDatabase($objectService, $registerId, $schemaIdMap);
@@ -1940,53 +2040,69 @@ XML;
         $bronPropDefId = $this->ensureBronPropertyDefinition($baseObjects);
 
         // Step 3: Build lookup maps and generate elements per data type
-        $gebruiktAppElements = [];
+        $gebruiktAppElements   = [];
         $gebruiktRelationships = [];
         if ($options['modules'] ?? true) {
             [$moduleRefMap, $moduleNameMap] = $this->buildModuleLookupMaps($gebruikData, $modulesData);
-            $gebruiktAppElements = $this->generateApplicationElements($moduleRefMap, $moduleNameMap, $bronPropDefId);
-            $gebruiktRelationships = $this->generateSpecializationRelationships($moduleRefMap, $bronPropDefId);
+            $gebruiktAppElements            = $this->generateApplicationElements($moduleRefMap, $moduleNameMap, $bronPropDefId);
+            $gebruiktRelationships          = $this->generateSpecializationRelationships($moduleRefMap, $bronPropDefId);
         }
 
-        $deelnamesAppElements = [];
+        $deelnamesAppElements   = [];
         $deelnamesRelationships = [];
         if (($options['deelnames'] ?? false) && !empty($deelnamesData)) {
             [$deelnameRefMap, $deelnameNameMap] = $this->buildModuleLookupMaps($deelnamesData, $modulesData);
-            $deelnamesAppElements = $this->generateApplicationElements($deelnameRefMap, $deelnameNameMap, $bronPropDefId, 'deelname');
+            $deelnamesAppElements   = $this->generateApplicationElements($deelnameRefMap, $deelnameNameMap, $bronPropDefId, 'deelname');
             $deelnamesRelationships = $this->generateSpecializationRelationships($deelnameRefMap, $bronPropDefId, 'deelname');
         }
 
         // Merge all elements and relationships for view enrichment
-        $allAppElements = array_merge($gebruiktAppElements, $deelnamesAppElements);
+        $allAppElements   = array_merge($gebruiktAppElements, $deelnamesAppElements);
         $allRelationships = array_merge($gebruiktRelationships, $deelnamesRelationships);
 
         // Step 4: Copy and enrich views with all elements
         $viewCopies = $this->copyAndEnrichViews(
-            $baseObjects, $orgName, $allAppElements, $allRelationships, $bronPropDefId
+            $baseObjects,
+                $orgName,
+                $allAppElements,
+                $allRelationships,
+                $bronPropDefId
         );
 
         // Step 5: Build SWC organization folders with typed structure
         $swcFolders = $this->buildSwcOrganizationFolders(
-            $gebruiktAppElements, $deelnamesAppElements, $allRelationships, $viewCopies
+            $gebruiktAppElements,
+                $deelnamesAppElements,
+                $allRelationships,
+                $viewCopies
         );
 
         // Step 6: Assemble into XML
         $xml = $this->assembleOrganizationXml(
-            $baseObjects, $orgName, $allAppElements, $allRelationships, $viewCopies, $swcFolders, $bronPropDefId
+            $baseObjects,
+                $orgName,
+                $allAppElements,
+                $allRelationships,
+                $viewCopies,
+                $swcFolders,
+                $bronPropDefId
         );
 
         $totalTime = microtime(true) - $startTime;
-        $this->logger->info('Organization ArchiMate export completed', [
-            'organization' => $orgName,
-            'gebruikt_elements' => count($gebruiktAppElements),
-            'deelnames_elements' => count($deelnamesAppElements),
-            'relationships' => count($allRelationships),
-            'view_copies' => count($viewCopies),
-            'total_time_seconds' => round($totalTime, 3)
-        ]);
+        $this->logger->info(
+                'Organization ArchiMate export completed',
+                [
+                    'organization'       => $orgName,
+                    'gebruikt_elements'  => count($gebruiktAppElements),
+                    'deelnames_elements' => count($deelnamesAppElements),
+                    'relationships'      => count($allRelationships),
+                    'view_copies'        => count($viewCopies),
+                    'total_time_seconds' => round($totalTime, 3),
+                ]
+                );
 
         return $xml;
-    }
+    }//end exportOrganizationArchiMateXml()
 
     /**
      * Build lookup maps from gebruik and modules data.
@@ -1997,15 +2113,17 @@ XML;
      */
     private function buildModuleLookupMaps(array $gebruikData, array $modulesData): array
     {
-        $moduleRefMap = [];   // moduleId => [refCompIdentifiers]
-        $moduleNameMap = [];  // moduleId => name
-
+        $moduleRefMap = [];
+        // moduleId => [refCompIdentifiers]
+        $moduleNameMap = [];
+        // moduleId => name
         // Build name map from modules data
         foreach ($modulesData as $module) {
             if (is_object($module) && method_exists($module, 'jsonSerialize')) {
                 $module = $module->jsonSerialize();
             }
-            $id = $module['id'] ?? $module['@self']['id'] ?? null;
+
+            $id   = $module['id'] ?? $module['@self']['id'] ?? null;
             $name = $module['naam'] ?? $module['name'] ?? $module['@self']['name'] ?? null;
             if ($id && $name) {
                 $moduleNameMap[$id] = $name;
@@ -2019,7 +2137,9 @@ XML;
             }
 
             $moduleId = $gebruik['module'] ?? null;
-            if (!$moduleId) continue;
+            if (!$moduleId) {
+                continue;
+            }
 
             // Get module name from gebruik if not already known
             if (!isset($moduleNameMap[$moduleId])) {
@@ -2028,31 +2148,39 @@ XML;
 
             // Get referentiecomponenten UUIDs
             $refComps = $gebruik['gebruiktVoorReferentiecomponenten'] ?? [];
-            if (!is_array($refComps)) continue;
+            if (!is_array($refComps)) {
+                continue;
+            }
 
             foreach ($refComps as $refComp) {
                 $refCompUuid = is_string($refComp) ? $refComp : ($refComp['id'] ?? $refComp['uuid'] ?? null);
-                if (!$refCompUuid) continue;
+                if (!$refCompUuid) {
+                    continue;
+                }
 
                 // Build the ArchiMate identifier (id-{uuid})
-                $refCompIdentifier = 'id-' . $refCompUuid;
+                $refCompIdentifier = 'id-'.$refCompUuid;
 
                 if (!isset($moduleRefMap[$moduleId])) {
                     $moduleRefMap[$moduleId] = [];
                 }
+
                 if (!in_array($refCompIdentifier, $moduleRefMap[$moduleId])) {
                     $moduleRefMap[$moduleId][] = $refCompIdentifier;
                 }
             }
-        }
+        }//end foreach
 
-        $this->logger->debug('Module lookup maps built', [
-            'modules_with_refs' => count($moduleRefMap),
-            'modules_with_names' => count($moduleNameMap)
-        ]);
+        $this->logger->debug(
+                'Module lookup maps built',
+                [
+                    'modules_with_refs'  => count($moduleRefMap),
+                    'modules_with_names' => count($moduleNameMap),
+                ]
+                );
 
         return [$moduleRefMap, $moduleNameMap];
-    }
+    }//end buildModuleLookupMaps()
 
     /**
      * Check if a Bron property definition exists in base objects, add one if not.
@@ -2068,9 +2196,10 @@ XML;
             if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
                 $obj = $obj->jsonSerialize();
             }
+
             $section = $obj['section'] ?? '';
             if ($section === 'property_definition') {
-                $xml = $obj['xml'] ?? [];
+                $xml  = $obj['xml'] ?? [];
                 $name = $xml['name']['_value'] ?? $xml['name'] ?? null;
                 if ($name === 'Bron') {
                     $existingId = $xml['_identifier'] ?? $obj['identifier'] ?? null;
@@ -2084,57 +2213,57 @@ XML;
 
         $this->logger->debug('Bron property definition not found, will create', ['id' => $bronId]);
         return $bronId;
-    }
+    }//end ensureBronPropertyDefinition()
 
     /**
      * Generate ApplicationComponent element arrays for each module.
      *
      * @return array Array of element data arrays ready for XML generation
      */
-    private function generateApplicationElements(array $moduleRefMap, array $moduleNameMap, string $bronPropDefId, string $prefix = ''): array
+    private function generateApplicationElements(array $moduleRefMap, array $moduleNameMap, string $bronPropDefId, string $prefix=''): array
     {
         $elements = [];
-        $idPrefix = $prefix ? 'id-swc-' . $prefix . '-app-' : 'id-swc-app-';
+        $idPrefix = $prefix ? 'id-swc-'.$prefix.'-app-' : 'id-swc-app-';
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
-            $appIdentifier = $idPrefix . $moduleId;
-            $name = $moduleNameMap[$moduleId] ?? 'Module';
+            $appIdentifier = $idPrefix.$moduleId;
+            $name          = $moduleNameMap[$moduleId] ?? 'Module';
 
             $elements[] = [
-                'identifier' => $appIdentifier,
-                'name' => $name,
-                'xsi_type' => 'ApplicationComponent',
+                'identifier'    => $appIdentifier,
+                'name'          => $name,
+                'xsi_type'      => 'ApplicationComponent',
                 'bronPropDefId' => $bronPropDefId,
-                'moduleId' => $moduleId,
+                'moduleId'      => $moduleId,
             ];
         }
 
         $this->logger->debug('Generated application elements', ['count' => count($elements), 'prefix' => $prefix]);
         return $elements;
-    }
+    }//end generateApplicationElements()
 
     /**
      * Generate SpecializationRelationship arrays for module → refcomp mappings.
      *
      * @return array Array of relationship data arrays
      */
-    private function generateSpecializationRelationships(array $moduleRefMap, string $bronPropDefId, string $prefix = ''): array
+    private function generateSpecializationRelationships(array $moduleRefMap, string $bronPropDefId, string $prefix=''): array
     {
         $relationships = [];
-        $appIdPrefix = $prefix ? 'id-swc-' . $prefix . '-app-' : 'id-swc-app-';
-        $relIdPrefix = $prefix ? 'id-swc-' . $prefix . '-rel-' : 'id-swc-rel-';
+        $appIdPrefix   = $prefix ? 'id-swc-'.$prefix.'-app-' : 'id-swc-app-';
+        $relIdPrefix   = $prefix ? 'id-swc-'.$prefix.'-rel-' : 'id-swc-rel-';
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
-            $appIdentifier = $appIdPrefix . $moduleId;
+            $appIdentifier = $appIdPrefix.$moduleId;
 
             foreach ($refCompIds as $refCompIdentifier) {
-                $relIdentifier = $relIdPrefix . $moduleId . '-' . str_replace('id-', '', $refCompIdentifier);
+                $relIdentifier = $relIdPrefix.$moduleId.'-'.str_replace('id-', '', $refCompIdentifier);
 
                 $relationships[] = [
-                    'identifier' => $relIdentifier,
-                    'xsi_type' => 'SpecializationRelationship',
-                    'source' => $appIdentifier,
-                    'target' => $refCompIdentifier,
+                    'identifier'    => $relIdentifier,
+                    'xsi_type'      => 'SpecializationRelationship',
+                    'source'        => $appIdentifier,
+                    'target'        => $refCompIdentifier,
                     'bronPropDefId' => $bronPropDefId,
                 ];
             }
@@ -2142,7 +2271,7 @@ XML;
 
         $this->logger->debug('Generated specialization relationships', ['count' => count($relationships), 'prefix' => $prefix]);
         return $relationships;
-    }
+    }//end generateSpecializationRelationships()
 
     /**
      * Copy qualifying views and inject application nodes inside referentiecomponent nodes.
@@ -2164,20 +2293,22 @@ XML;
         foreach ($appElements as $el) {
             $appNameMap[$el['identifier']] = $el['name'];
         }
+
         $refCompApps = [];
         foreach ($relationships as $rel) {
-            $appIdentifier = $rel['source'];
+            $appIdentifier     = $rel['source'];
             $refCompIdentifier = $rel['target'];
-            $relIdentifier = $rel['identifier'];
+            $relIdentifier     = $rel['identifier'];
             $name = $appNameMap[$appIdentifier] ?? 'Module';
 
             if (!isset($refCompApps[$refCompIdentifier])) {
                 $refCompApps[$refCompIdentifier] = [];
             }
+
             $refCompApps[$refCompIdentifier][] = [
                 'appIdentifier' => $appIdentifier,
                 'relIdentifier' => $relIdentifier,
-                'name' => $name,
+                'name'          => $name,
             ];
         }
 
@@ -2186,28 +2317,35 @@ XML;
             if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
                 $obj = $obj->jsonSerialize();
             }
+
             $section = $obj['section'] ?? '';
-            if ($section !== 'view') continue;
+            if ($section !== 'view') {
+                continue;
+            }
 
             $xmlData = $obj['xml'] ?? [];
-            if (empty($xmlData)) continue;
+            if (empty($xmlData)) {
+                continue;
+            }
 
             $originalIdentifier = $xmlData['_identifier'] ?? $obj['identifier'] ?? null;
-            if (!$originalIdentifier) continue;
+            if (!$originalIdentifier) {
+                continue;
+            }
 
             // Deep-copy the view XML
             $viewCopy = json_decode(json_encode($xmlData), true);
 
             // Assign new identifier
-            $newIdentifier = 'id-swc-view-' . str_replace('id-', '', $originalIdentifier);
+            $newIdentifier           = 'id-swc-view-'.str_replace('id-', '', $originalIdentifier);
             $viewCopy['_identifier'] = $newIdentifier;
             if (isset($viewCopy['_attributes']['identifier'])) {
                 $viewCopy['_attributes']['identifier'] = $newIdentifier;
             }
 
             // Rename view: use Titel view SWC property or fallback to original name
-            $viewName = $this->getViewSwcTitle($viewCopy) ?? $this->getViewName($viewCopy);
-            $viewCopy['name'] = ['_value' => $viewName . ' ' . $orgName];
+            $viewName         = $this->getViewSwcTitle($viewCopy) ?? $this->getViewName($viewCopy);
+            $viewCopy['name'] = ['_value' => $viewName.' '.$orgName];
 
             // Add Bron property to view
             $viewCopy = $this->addBronProperty($viewCopy, $bronPropDefId);
@@ -2217,14 +2355,14 @@ XML;
 
             $viewCopies[] = [
                 'identifier' => $newIdentifier,
-                'xml' => $viewCopy,
-                'section' => 'view',
+                'xml'        => $viewCopy,
+                'section'    => 'view',
             ];
-        }
+        }//end foreach
 
         $this->logger->debug('Copied and enriched views', ['count' => count($viewCopies)]);
         return $viewCopies;
-    }
+    }//end copyAndEnrichViews()
 
     /**
      * Extract "Titel view SWC" property value from view XML data.
@@ -2232,14 +2370,20 @@ XML;
     private function getViewSwcTitle(array $viewData): ?string
     {
         $properties = $viewData['properties']['property'] ?? $viewData['properties'] ?? [];
-        if (!is_array($properties)) return null;
+        if (!is_array($properties)) {
+            return null;
+        }
+
         // Normalize to list
         if (isset($properties['_propertyDefinitionRef'])) {
             $properties = [$properties];
         }
 
         foreach ($properties as $prop) {
-            if (!is_array($prop)) continue;
+            if (!is_array($prop)) {
+                continue;
+            }
+
             // Check property definition name or ref
             $value = $prop['value']['_value'] ?? $prop['value'] ?? null;
             // We look for a property whose name contains "Titel view SWC"
@@ -2252,7 +2396,7 @@ XML;
         }
 
         return null;
-    }
+    }//end getViewSwcTitle()
 
     /**
      * Extract view name from view XML data.
@@ -2262,11 +2406,13 @@ XML;
         if (isset($viewData['name']['_value'])) {
             return $viewData['name']['_value'];
         }
+
         if (isset($viewData['name']) && is_string($viewData['name'])) {
             return $viewData['name'];
         }
+
         return 'View';
-    }
+    }//end getViewName()
 
     /**
      * Add Bron=Softwarecatalogus property to an XML data array.
@@ -2275,12 +2421,12 @@ XML;
     {
         $bronProp = [
             '_propertyDefinitionRef' => $bronPropDefId,
-            'value' => ['_value' => 'Softwarecatalogus']
+            'value'                  => ['_value' => 'Softwarecatalogus'],
         ];
 
         if (!isset($data['properties'])) {
             $data['properties'] = ['property' => [$bronProp]];
-        } elseif (isset($data['properties']['property'])) {
+        } else if (isset($data['properties']['property'])) {
             if (isset($data['properties']['property']['_propertyDefinitionRef'])) {
                 // Single property, convert to list
                 $data['properties']['property'] = [$data['properties']['property'], $bronProp];
@@ -2292,7 +2438,7 @@ XML;
         }
 
         return $data;
-    }
+    }//end addBronProperty()
 
     /**
      * Walk the view node tree and inject application child nodes.
@@ -2309,24 +2455,25 @@ XML;
                 $nodes = [$nodes];
             }
 
-            $newConnections = [];
+            $newConnections   = [];
             $viewData['node'] = $this->processNodesForInjection($nodes, $refCompApps, $newConnections);
 
             // Add connections to the view
             if (!empty($newConnections)) {
                 if (!isset($viewData['connection'])) {
                     $viewData['connection'] = [];
-                } elseif (!$this->isList($viewData['connection'])) {
+                } else if (!$this->isList($viewData['connection'])) {
                     $viewData['connection'] = [$viewData['connection']];
                 }
+
                 foreach ($newConnections as $conn) {
                     $viewData['connection'][] = $conn;
                 }
             }
-        }
+        }//end if
 
         return $viewData;
-    }
+    }//end injectApplicationNodesInView()
 
     /**
      * Recursively process nodes, injecting application child nodes where appropriate.
@@ -2334,26 +2481,28 @@ XML;
     private function processNodesForInjection(array $nodes, array $refCompApps, array &$newConnections): array
     {
         foreach ($nodes as &$node) {
-            if (!is_array($node)) continue;
+            if (!is_array($node)) {
+                continue;
+            }
 
             $elementRef = $node['_elementRef'] ?? $node['_attributes']['elementRef'] ?? null;
 
             if ($elementRef && isset($refCompApps[$elementRef])) {
-                $apps = $refCompApps[$elementRef];
-                $parentW = (int)($node['_w'] ?? $node['_attributes']['w'] ?? 120);
-                $parentH = (int)($node['_h'] ?? $node['_attributes']['h'] ?? 80);
+                $apps    = $refCompApps[$elementRef];
+                $parentW = (int) ($node['_w'] ?? $node['_attributes']['w'] ?? 120);
+                $parentH = (int) ($node['_h'] ?? $node['_attributes']['h'] ?? 80);
                 $parentIdentifier = $node['_identifier'] ?? $node['_attributes']['identifier'] ?? null;
 
                 // Calculate child node positions
                 $childW = max($parentW - 20, 40);
                 $childH = 18;
-                $gap = 2;
+                $gap    = 2;
                 $childX = 10;
 
                 // Ensure nested nodes array
                 if (!isset($node['node'])) {
                     $node['node'] = [];
-                } elseif (!$this->isList($node['node'])) {
+                } else if (!$this->isList($node['node'])) {
                     $node['node'] = [$node['node']];
                 }
 
@@ -2361,41 +2510,43 @@ XML;
 
                 foreach ($apps as $index => $app) {
                     $stackIndex = $existingChildCount + $index;
-                    $childY = $parentH - 5 - (($stackIndex + 1) * ($childH + $gap));
-                    if ($childY < 20) $childY = 20 + ($stackIndex * ($childH + $gap));
+                    $childY     = $parentH - 5 - (($stackIndex + 1) * ($childH + $gap));
+                    if ($childY < 20) {
+                        $childY = 20 + ($stackIndex * ($childH + $gap));
+                    }
 
-                    $childNodeId = 'id-swc-node-' . $app['appIdentifier'] . '-' . str_replace('id-', '', $elementRef);
+                    $childNodeId = 'id-swc-node-'.$app['appIdentifier'].'-'.str_replace('id-', '', $elementRef);
 
                     $childNode = [
                         '_identifier' => $childNodeId,
                         '_elementRef' => $app['appIdentifier'],
-                        '_xsi__type' => 'Element',
-                        '_x' => (string)$childX,
-                        '_y' => (string)max(20, $childY),
-                        '_w' => (string)$childW,
-                        '_h' => (string)$childH,
-                        'style' => [
+                        '_xsi__type'  => 'Element',
+                        '_x'          => (string) $childX,
+                        '_y'          => (string) max(20, $childY),
+                        '_w'          => (string) $childW,
+                        '_h'          => (string) $childH,
+                        'style'       => [
                             'fillColor' => ['_r' => '200', '_g' => '255', '_b' => '200', '_a' => '100'],
                             'lineColor' => ['_r' => '0', '_g' => '150', '_b' => '0'],
-                            'font' => ['_name' => 'Segoe UI', '_size' => '9']
-                        ]
+                            'font'      => ['_name' => 'Segoe UI', '_size' => '9'],
+                        ],
                     ];
 
                     $node['node'][] = $childNode;
 
                     // Create connection for the relationship
                     if ($parentIdentifier) {
-                        $connId = 'id-swc-conn-' . str_replace('id-swc-rel-', '', $app['relIdentifier']);
+                        $connId           = 'id-swc-conn-'.str_replace('id-swc-rel-', '', $app['relIdentifier']);
                         $newConnections[] = [
-                            '_identifier' => $connId,
+                            '_identifier'      => $connId,
                             '_relationshipRef' => $app['relIdentifier'],
-                            '_source' => $childNodeId,
-                            '_target' => $parentIdentifier,
-                            '_xsi__type' => 'Relationship',
+                            '_source'          => $childNodeId,
+                            '_target'          => $parentIdentifier,
+                            '_xsi__type'       => 'Relationship',
                         ];
                     }
-                }
-            }
+                }//end foreach
+            }//end if
 
             // Recurse into nested nodes
             if (isset($node['node']) && is_array($node['node'])) {
@@ -2403,13 +2554,15 @@ XML;
                 if (!$this->isList($nestedNodes)) {
                     $nestedNodes = [$nestedNodes];
                 }
+
                 $node['node'] = $this->processNodesForInjection($nestedNodes, $refCompApps, $newConnections);
             }
-        }
+        }//end foreach
+
         unset($node);
 
         return $nodes;
-    }
+    }//end processNodesForInjection()
 
     /**
      * Build SWC organization folder items.
@@ -2430,6 +2583,7 @@ XML;
             foreach ($gebruiktAppElements as $el) {
                 $items[] = ['_identifierRef' => $el['identifier']];
             }
+
             $folders[] = [
                 'label' => ['_value' => 'Gebruikt (Softwarecatalogus)'],
                 'items' => $items,
@@ -2441,6 +2595,7 @@ XML;
             foreach ($deelnamesAppElements as $el) {
                 $items[] = ['_identifierRef' => $el['identifier']];
             }
+
             $folders[] = [
                 'label' => ['_value' => 'Deelnames (Softwarecatalogus)'],
                 'items' => $items,
@@ -2453,6 +2608,7 @@ XML;
             foreach ($relationships as $rel) {
                 $relItems[] = ['_identifierRef' => $rel['identifier']];
             }
+
             $folders[] = [
                 'label' => ['_value' => 'Relaties (Softwarecatalogus)'],
                 'items' => $relItems,
@@ -2464,6 +2620,7 @@ XML;
             foreach ($viewCopies as $vc) {
                 $viewItems[] = ['_identifierRef' => $vc['identifier']];
             }
+
             $folders[] = [
                 'label' => ['_value' => 'Views (Softwarecatalogus)'],
                 'items' => $viewItems,
@@ -2471,7 +2628,7 @@ XML;
         }
 
         return $folders;
-    }
+    }//end buildSwcOrganizationFolders()
 
     /**
      * Assemble the final organization-specific ArchiMate XML.
@@ -2486,14 +2643,14 @@ XML;
         string $bronPropDefId
     ): string {
         // Extract model metadata
-        $modelMetadata = $this->extractModelMetadata($baseObjects);
+        $modelMetadata         = $this->extractModelMetadata($baseObjects);
         $propertyDefinitionMap = $modelMetadata['propertyDefinitionMap'] ?? [];
 
         // Create base XML
         $xml = $this->createCleanArchiMateXml($modelMetadata);
 
         // Override model name
-        $modelName = 'Softwarecatalogus ' . $orgName;
+        $modelName = 'Softwarecatalogus '.$orgName;
         // Remove existing name children and add new one
         foreach ($xml->children() as $child) {
             if ($child->getName() === 'name') {
@@ -2502,6 +2659,7 @@ XML;
                 break;
             }
         }
+
         $nameEl = $xml->addChild('name', htmlspecialchars($modelName));
         $nameEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
 
@@ -2511,6 +2669,7 @@ XML;
             if (is_object($object) && method_exists($object, 'jsonSerialize')) {
                 $object = $object->jsonSerialize();
             }
+
             $sectionName = $object['section'] ?? null;
             if ($sectionName) {
                 $objectsBySection[$sectionName][] = $object;
@@ -2526,10 +2685,12 @@ XML;
                     if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
                         $obj = $obj->jsonSerialize();
                     }
+
                     $this->addObjectDirectlyToXmlWithProperties($elementsFolder, $obj, 'elements', $propertyDefinitionMap);
                 }
             }
         }
+
         // Add SWC application elements
         foreach ($appElements as $appEl) {
             $elNode = $elementsFolder->addChild('element');
@@ -2539,7 +2700,7 @@ XML;
             $nameChild->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
             // Add Bron property
             $propsEl = $elNode->addChild('properties');
-            $propEl = $propsEl->addChild('property');
+            $propEl  = $propsEl->addChild('property');
             $propEl->addAttribute('propertyDefinitionRef', $appEl['bronPropDefId']);
             $propEl->addChild('value', 'Softwarecatalogus');
         }
@@ -2552,10 +2713,12 @@ XML;
                     if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
                         $obj = $obj->jsonSerialize();
                     }
+
                     $this->addObjectDirectlyToXmlWithProperties($relsFolder, $obj, 'relationships', $propertyDefinitionMap);
                 }
             }
         }
+
         // Add SWC relationships
         foreach ($relationships as $rel) {
             $relNode = $relsFolder->addChild('relationship');
@@ -2564,7 +2727,7 @@ XML;
             $relNode->addAttribute('source', $rel['source']);
             $relNode->addAttribute('target', $rel['target']);
             $propsEl = $relNode->addChild('properties');
-            $propEl = $propsEl->addChild('property');
+            $propEl  = $propsEl->addChild('property');
             $propEl->addAttribute('propertyDefinitionRef', $rel['bronPropDefId']);
             $propEl->addChild('value', 'Softwarecatalogus');
         }
@@ -2577,10 +2740,12 @@ XML;
                     if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
                         $obj = $obj->jsonSerialize();
                     }
+
                     $this->addObjectDirectlyToXmlWithProperties($propDefsFolder, $obj, 'property_definitions', $propertyDefinitionMap);
                 }
             }
         }
+
         // Add Bron property definition if we created it
         if ($bronPropDefId === 'id-swc-propdef-bron') {
             $propDefNode = $propDefsFolder->addChild('propertyDefinition');
@@ -2599,10 +2764,14 @@ XML;
                     if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
                         $obj = $obj->jsonSerialize();
                     }
+
                     $xmlField = $obj['xml'] ?? [];
                     if (isset($xmlField['item'])) {
                         $items = $xmlField['item'];
-                        if (!isset($items[0])) $items = [$items];
+                        if (!isset($items[0])) {
+                            $items = [$items];
+                        }
+
                         foreach ($items as $itemData) {
                             if (is_array($itemData)) {
                                 $itemNode = $orgsFolder->addChild('item');
@@ -2611,16 +2780,17 @@ XML;
                         }
                     }
                 }
-            }
-        }
+            }//end if
+        }//end foreach
+
         // Add SWC folder: top-level folder named after organization, with sub-folders
         if (!empty($swcFolders)) {
-            $orgFolder = $orgsFolder->addChild('item');
+            $orgFolder  = $orgsFolder->addChild('item');
             $orgLabelEl = $orgFolder->addChild('label', htmlspecialchars($orgName));
             $orgLabelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
             foreach ($swcFolders as $folderData) {
                 $subFolder = $orgFolder->addChild('item');
-                $labelEl = $subFolder->addChild('label', htmlspecialchars($folderData['label']['_value']));
+                $labelEl   = $subFolder->addChild('label', htmlspecialchars($folderData['label']['_value']));
                 $labelEl->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
                 foreach ($folderData['items'] as $identifierRefItem) {
                     $childItem = $subFolder->addChild('item');
@@ -2630,7 +2800,7 @@ XML;
         }
 
         // --- Views section ---
-        $viewsSection = $xml->addChild('views');
+        $viewsSection   = $xml->addChild('views');
         $diagramsFolder = $viewsSection->addChild('diagrams');
         // Write original views
         foreach ($objectsBySection as $dbSection => $objects) {
@@ -2639,10 +2809,12 @@ XML;
                     if (is_object($obj) && method_exists($obj, 'jsonSerialize')) {
                         $obj = $obj->jsonSerialize();
                     }
+
                     $this->addObjectDirectlyToXmlWithProperties($diagramsFolder, $obj, 'views', $propertyDefinitionMap);
                 }
             }
         }
+
         // Write enriched view copies
         foreach ($viewCopies as $vc) {
             $viewNode = $diagramsFolder->addChild('view');
@@ -2650,7 +2822,5 @@ XML;
         }
 
         return $this->formatXmlOutput($xml->asXML());
-    }
-}
-
-
+    }//end assembleOrganizationXml()
+}//end class

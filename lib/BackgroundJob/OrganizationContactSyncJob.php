@@ -6,13 +6,13 @@
  * This file contains the background job class for synchronizing organizations and contact persons
  * between SoftwareCatalog objects and OpenRegister entities.
  *
- * @category BackgroundJob
- * @package  OCA\SoftwareCatalog\BackgroundJob
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  BackgroundJob
+ * @package   OCA\SoftwareCatalog\BackgroundJob
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   1.0.0
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -71,7 +71,8 @@ class OrganizationContactSyncJob extends TimedJob
         LoggerInterface $logger
     ) {
         parent::__construct($timeFactory);
-        $this->setInterval(300); // 5 minutes.
+        $this->setInterval(300);
+        // 5 minutes.
         $this->organizationSyncService = $organizationSyncService;
         $this->logger = $logger;
     }//end __construct()
@@ -91,5 +92,4 @@ class OrganizationContactSyncJob extends TimedJob
     {
         $this->organizationSyncService->performScheduledSync();
     }//end run()
-
 }//end class

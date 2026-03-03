@@ -10,11 +10,10 @@ use OCP\AppFramework\Http\ContentSecurityPolicy;
 
 class DashboardController extends Controller
 {
-
     public function __construct($appName, IRequest $request)
     {
         parent::__construct($appName, $request);
-    }
+    }//end __construct()
 
     /**
      * @NoAdminRequired
@@ -23,12 +22,12 @@ class DashboardController extends Controller
     public function page(?string $getParameter)
     {
         try {
-            $response =new TemplateResponse(
+            $response = new TemplateResponse(
                 $this->appName,
                 'index',
                 []
             );
-            
+
             $csp = new ContentSecurityPolicy();
             $csp->addAllowedConnectDomain('*');
             $response->setContentSecurityPolicy($csp);
@@ -42,7 +41,7 @@ class DashboardController extends Controller
                 '500'
             );
         }
-    }
+    }//end page()
 
     /**
      * @NoAdminRequired
@@ -51,10 +50,10 @@ class DashboardController extends Controller
     public function index(): JSONResponse
     {
         try {
-            $results = ["results" => self::TEST_ARRAY];
+            $results = ['results' => []];
             return new JSONResponse($results);
         } catch (\Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }
-    }
-}
+    }//end index()
+}//end class

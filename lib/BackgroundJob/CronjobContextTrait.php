@@ -8,13 +8,13 @@
  *             that do not require user context. Will be removed in a future version.
  *             See OrganizationContactSyncJob for the simplified approach.
  *
- * @category Trait
- * @package  OCA\SoftwareCatalog\BackgroundJob
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Trait
+ * @package   OCA\SoftwareCatalog\BackgroundJob
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   1.0.0
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -40,6 +40,7 @@ use Psr\Log\LoggerInterface;
  */
 trait CronjobContextTrait
 {
+
     /**
      * The user that was set for this cronjob session
      *
@@ -57,7 +58,7 @@ trait CronjobContextTrait
     /**
      * Whether the context was successfully set
      *
-     * @var bool
+     * @var boolean
      */
     private bool $contextSet = false;
 
@@ -77,35 +78,44 @@ trait CronjobContextTrait
         try {
             // Get the settings service to retrieve configuration.
             $settingsService = \OC::$server->get(\OCA\SoftwareCatalog\Service\SettingsService::class);
-            $context = $settingsService->getCronjobContext($jobId);
+            $context         = $settingsService->getCronjobContext($jobId);
 
             if ($context === null) {
-                $this->getLogger()->warning('[CRONJOB] No context configured for cronjob', [
-                    'jobId' => $jobId
-                ]);
+                $this->getLogger()->warning(
+                        '[CRONJOB] No context configured for cronjob',
+                        [
+                            'jobId' => $jobId,
+                        ]
+                        );
                 return false;
             }
 
             // Check if job is enabled.
             if (!($context['enabled'] ?? true)) {
-                $this->getLogger()->info('[CRONJOB] Cronjob is disabled', [
-                    'jobId' => $jobId
-                ]);
+                $this->getLogger()->info(
+                        '[CRONJOB] Cronjob is disabled',
+                        [
+                            'jobId' => $jobId,
+                        ]
+                        );
                 return false;
             }
 
-            $userId = $context['userId'];
+            $userId           = $context['userId'];
             $organisationUuid = $context['organisationUuid'];
 
             // Get the user.
             $userManager = \OC::$server->get(IUserManager::class);
-            $user = $userManager->get($userId);
+            $user        = $userManager->get($userId);
 
             if ($user === null) {
-                $this->getLogger()->error('[CRONJOB] Configured user not found', [
-                    'jobId' => $jobId,
-                    'userId' => $userId
-                ]);
+                $this->getLogger()->error(
+                        '[CRONJOB] Configured user not found',
+                        [
+                            'jobId'  => $jobId,
+                            'userId' => $userId,
+                        ]
+                        );
                 return false;
             }
 
@@ -129,32 +139,39 @@ trait CronjobContextTrait
                         $organisationUuid
                     );
 
-                    $this->getLogger()->info('[CRONJOB] Context set successfully', [
-                        'jobId' => $jobId,
-                        'userId' => $userId,
-                        'organisationUuid' => $organisationUuid
-                    ]);
-
+                    $this->getLogger()->info(
+                            '[CRONJOB] Context set successfully',
+                            [
+                                'jobId'            => $jobId,
+                                'userId'           => $userId,
+                                'organisationUuid' => $organisationUuid,
+                            ]
+                            );
                 } catch (\Exception $e) {
-                    $this->getLogger()->warning('[CRONJOB] Failed to set active organisation', [
-                        'jobId' => $jobId,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            }
+                    $this->getLogger()->warning(
+                            '[CRONJOB] Failed to set active organisation',
+                            [
+                                'jobId' => $jobId,
+                                'error' => $e->getMessage(),
+                            ]
+                            );
+                }//end try
+            }//end if
 
             $this->contextSet = true;
             return true;
-
         } catch (\Exception $e) {
-            $this->getLogger()->error('[CRONJOB] Failed to set cronjob context', [
-                'jobId' => $jobId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->getLogger()->error(
+                    '[CRONJOB] Failed to set cronjob context',
+                    [
+                        'jobId' => $jobId,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]
+                    );
             return false;
-        }
-    }
+        }//end try
+    }//end setCronjobContext()
 
     /**
      * Clear the cronjob context after execution.
@@ -177,21 +194,26 @@ trait CronjobContextTrait
             $userSession = \OC::$server->get(IUserSession::class);
             $userSession->setUser(null);
 
-            $this->getLogger()->debug('[CRONJOB] Context cleared', [
-                'jobId' => $jobId
-            ]);
+            $this->getLogger()->debug(
+                    '[CRONJOB] Context cleared',
+                    [
+                        'jobId' => $jobId,
+                    ]
+                    );
 
             $this->cronjobUser = null;
             $this->cronjobOrganisationUuid = null;
             $this->contextSet = false;
-
         } catch (\Exception $e) {
-            $this->getLogger()->warning('[CRONJOB] Failed to clear cronjob context', [
-                'jobId' => $jobId,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
+            $this->getLogger()->warning(
+                    '[CRONJOB] Failed to clear cronjob context',
+                    [
+                        'jobId' => $jobId,
+                        'error' => $e->getMessage(),
+                    ]
+                    );
+        }//end try
+    }//end clearCronjobContext()
 
     /**
      * Check if context is set for this cronjob session.
@@ -201,7 +223,7 @@ trait CronjobContextTrait
     protected function hasContext(): bool
     {
         return $this->contextSet;
-    }
+    }//end hasContext()
 
     /**
      * Get the current cronjob user.
@@ -211,7 +233,7 @@ trait CronjobContextTrait
     protected function getCronjobUser(): ?\OCP\IUser
     {
         return $this->cronjobUser;
-    }
+    }//end getCronjobUser()
 
     /**
      * Get the current cronjob organisation UUID.
@@ -221,7 +243,7 @@ trait CronjobContextTrait
     protected function getCronjobOrganisationUuid(): ?string
     {
         return $this->cronjobOrganisationUuid;
-    }
+    }//end getCronjobOrganisationUuid()
 
     /**
      * Get the logger instance.
@@ -231,7 +253,4 @@ trait CronjobContextTrait
      * @return LoggerInterface
      */
     abstract protected function getLogger(): LoggerInterface;
-}
-
-
-
+}//end trait

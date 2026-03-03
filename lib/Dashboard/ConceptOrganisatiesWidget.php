@@ -11,15 +11,12 @@ use OCA\SoftwareCatalog\AppInfo\Application;
 
 class ConceptOrganisatiesWidget implements IWidget
 {
-
-
     public function __construct(
         private IL10N $l10n,
         private IURLGenerator $url
     ) {
 
     }//end __construct()
-
 
     /**
      * @inheritDoc
@@ -30,7 +27,6 @@ class ConceptOrganisatiesWidget implements IWidget
 
     }//end getId()
 
-
     /**
      * @inheritDoc
      */
@@ -39,7 +35,6 @@ class ConceptOrganisatiesWidget implements IWidget
         return $this->l10n->t('Concept organisaties');
 
     }//end getTitle()
-
 
     /**
      * @inheritDoc
@@ -50,7 +45,6 @@ class ConceptOrganisatiesWidget implements IWidget
 
     }//end getOrder()
 
-
     /**
      * @inheritDoc
      */
@@ -59,7 +53,6 @@ class ConceptOrganisatiesWidget implements IWidget
         return 'icon-softwarecatalog-widget';
 
     }//end getIconClass()
-
 
     /**
      * @inheritDoc
@@ -70,7 +63,6 @@ class ConceptOrganisatiesWidget implements IWidget
 
     }//end getUrl()
 
-
     /**
      * @inheritDoc
      */
@@ -80,6 +72,4 @@ class ConceptOrganisatiesWidget implements IWidget
         Util::addStyle(Application::APP_ID, 'dashboardWidgets');
 
     }//end load()
-
-
 }//end class

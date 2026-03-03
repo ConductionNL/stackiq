@@ -41,11 +41,11 @@ class OrganizationHandler
     /**
      * OrganizationHandler constructor
      *
-     * @param IGroupManager          $_groupManager  Group manager interface
-     * @param IUserManager           $_userManager   User manager interface
-     * @param ContainerInterface     $_container     Container interface
-     * @param IAppManager            $_appManager    App manager interface
-     * @param LoggerInterface        $_logger        Logger interface
+     * @param IGroupManager      $_groupManager Group manager interface
+     * @param IUserManager       $_userManager  User manager interface
+     * @param ContainerInterface $_container    Container interface
+     * @param IAppManager        $_appManager   App manager interface
+     * @param LoggerInterface    $_logger       Logger interface
      */
     public function __construct(
         private readonly IGroupManager $_groupManager,
@@ -54,7 +54,7 @@ class OrganizationHandler
         private readonly IAppManager $_appManager,
         private readonly LoggerInterface $_logger,
     ) {
-    }
+    }//end __construct()
 
     /**
      * Gets the OpenRegister ObjectService if available
@@ -69,25 +69,28 @@ class OrganizationHandler
         }
 
         throw new \RuntimeException('OpenRegister service is not available.');
-    }
+    }//end _getObjectService()
 
     /**
      * Processes organization groups and ensures proper group assignment
      *
      * @param object $organizationObject The organization object to process
-     * 
+     *
      * @return bool True if processing was successful
      * @throws \Exception If processing fails
      */
     public function processOrganization(object $organizationObject): bool
     {
         try {
-            $this->_logger->info('Processing organization object', [
-                'objectId' => $organizationObject->getId()
-            ]);
+            $this->_logger->info(
+                    'Processing organization object',
+                    [
+                        'objectId' => $organizationObject->getId(),
+                    ]
+                    );
 
             $objectData = $organizationObject->getObject();
-            
+
             // Check if organization is active (beoordeling = "actief" or "Actief")
             $beoordeling = strtolower($objectData['beoordeling'] ?? '');
             if ($beoordeling !== 'actief') {
@@ -95,72 +98,72 @@ class OrganizationHandler
                     'Organization not active, skipping processing',
                     [
                         'organizationId' => $organizationObject->getId(),
-                        'beoordeling' => $beoordeling
+                        'beoordeling'    => $beoordeling,
                     ]
                 );
-                return true; // Not an error, just not ready for processing
+                return true;
+                // Not an error, just not ready for processing
             }
-            
+
             // Ensure organization has a unique group
             $groupId = $this->ensureOrganizationGroup($organizationObject, $objectData);
-            
+
             if ($groupId) {
                 $this->_logger->info(
-                    'Successfully processed organization group', 
+                    'Successfully processed organization group',
                     [
                         'organizationId' => $organizationObject->getId(),
-                        'groupId' => $groupId
+                        'groupId'        => $groupId,
                     ]
                 );
             }
-            
+
             return true;
-            
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to process organization object: ' . $e->getMessage(), 
+                'Failed to process organization object: '.$e->getMessage(),
                 [
                     'exception' => $e,
-                    'objectId' => $organizationObject->getId() ?? 'unknown'
+                    'objectId'  => $organizationObject->getId() ?? 'unknown',
                 ]
             );
             throw $e;
-        }
-    }
+        }//end try
+    }//end processOrganization()
 
     /**
      * Ensures an organization has a unique group and returns the group ID
      *
-     * @param object $organizationObject  The organization object
-     * @param array  $objectData          The organization data
-     * 
+     * @param object $organizationObject The organization object
+     * @param array  $objectData         The organization data
+     *
      * @return string|null The group ID or null if failed
      */
     public function ensureOrganizationGroup(object $organizationObject, array &$objectData): ?string
     {
         $groupProperty = $objectData['group'] ?? '';
-        
+
         if (empty($groupProperty)) {
             // Create group with organization name
             $organizationName = $objectData['naam'] ?? $objectData['name'] ?? 'Organization';
-            $groupName = $this->sanitizeGroupName($organizationName);
-            
+            $groupName        = $this->sanitizeGroupName($organizationName);
+
             // Ensure group name is unique
             $groupName = $this->ensureUniqueGroupName($groupName);
-            
+
             $group = $this->createGroupIfNotExists($groupName);
-            
+
             if ($group) {
                 // Set the group ID in the organization object
                 $objectData['group'] = $group->getGID();
                 $organizationObject->setObject($objectData);
-                
+
                 // Save the updated organization with correct register/schema IDs
-                $objectService = $this->_getObjectService();
-                $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-                $registerId = $settingsService->getVoorzieningenRegisterId();
+                $objectService        = $this->_getObjectService();
+                $settingsService      = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                $registerId           = $settingsService->getVoorzieningenRegisterId();
                 $organizationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
-                
+
                 if ($registerId && $organizationSchemaId) {
                     $objectService->saveObject(
                         $organizationObject,
@@ -173,89 +176,89 @@ class OrganizationHandler
                     $this->_logger->warning(
                         'Missing register or schema ID for organization, using fallback save method',
                         [
-                            'registerId' => $registerId,
-                            'organizationSchemaId' => $organizationSchemaId
+                            'registerId'           => $registerId,
+                            'organizationSchemaId' => $organizationSchemaId,
                         ]
                     );
                     $objectService->saveObject($organizationObject);
                 }
-                
+
                 $this->_logger->info(
                     'Created and assigned unique group to organization',
                     [
                         'organizationId' => $organizationObject->getId(),
-                        'groupName' => $groupName,
-                        'groupId' => $group->getGID()
+                        'groupName'      => $groupName,
+                        'groupId'        => $group->getGID(),
                     ]
                 );
-                
+
                 return $group->getGID();
-            }
-        }
-        
+            }//end if
+        }//end if
+
         return $groupProperty ?: null;
-    }
+    }//end ensureOrganizationGroup()
 
     /**
      * Ensures a group name is unique by appending a counter if necessary
      *
-     * @param string $baseName  The base group name
-     * 
+     * @param string $baseName The base group name
+     *
      * @return string A unique group name
      */
     private function ensureUniqueGroupName(string $baseName): string
     {
         $groupName = $baseName;
-        $counter = 1;
-        
+        $counter   = 1;
+
         while ($this->_groupManager->get($groupName) !== null) {
-            $groupName = $baseName . '_' . $counter;
+            $groupName = $baseName.'_'.$counter;
             $counter++;
         }
-        
+
         return $groupName;
-    }
+    }//end ensureUniqueGroupName()
 
     /**
      * Creates a group if it doesn't exist
      *
-     * @param string $groupName  The group name to create
-     * 
+     * @param string $groupName The group name to create
+     *
      * @return IGroup|null The created or existing group
      */
     public function createGroupIfNotExists(string $groupName): ?IGroup
     {
         $group = $this->_groupManager->get($groupName);
-        
+
         if (!$group) {
             try {
                 $group = $this->_groupManager->createGroup($groupName);
                 $this->_logger->info(
                     'Created new group',
                     [
-                        'groupName' => $groupName
+                        'groupName' => $groupName,
                     ]
                 );
             } catch (\Exception $e) {
                 $this->_logger->error(
-                    'Failed to create group: ' . $e->getMessage(),
+                    'Failed to create group: '.$e->getMessage(),
                     [
                         'groupName' => $groupName,
-                        'exception' => $e
+                        'exception' => $e,
                     ]
                 );
                 return null;
             }
         }
-        
+
         return $group;
-    }
+    }//end createGroupIfNotExists()
 
     /**
      * Sanitizes a group name for safe usage
      *
-     * @param string $name  The name to sanitize
-     * 
+     * @param string $name The name to sanitize
+     *
      * @return string The sanitized group name
      */
     public function sanitizeGroupName(string $name): string
@@ -265,35 +268,38 @@ class OrganizationHandler
         $sanitized = preg_replace('/[^a-z0-9._-]/', '_', $sanitized);
         $sanitized = preg_replace('/_{2,}/', '_', $sanitized);
         $sanitized = trim($sanitized, '_');
-        
+
         // Ensure it's not empty
         if (empty($sanitized)) {
-            $sanitized = 'organization_' . time();
+            $sanitized = 'organization_'.time();
         }
-        
+
         return $sanitized;
-    }
+    }//end sanitizeGroupName()
 
     /**
      * Processes contactpersonen from organization data into Contactgegevens objects
      *
      * @param object $organizationObject The organization object
-     * 
+     *
      * @return array Array of created or updated contactgegevens objects
      */
     public function processContactpersonen(object $organizationObject): array
     {
         try {
-            $objectData = $organizationObject->getObject();
+            $objectData      = $organizationObject->getObject();
             $contactpersonen = $objectData['contactpersonen'] ?? [];
             // Get the actual UUID from object data instead of database ID
-            $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
+            $organizationUuid  = $objectData['id'] ?? $organizationObject->getId();
             $processedContacts = [];
 
             if (!is_array($contactpersonen) || empty($contactpersonen)) {
-                $this->_logger->info('No contactpersonen found in organization', [
-                    'organizationId' => $organizationUuid
-                ]);
+                $this->_logger->info(
+                        'No contactpersonen found in organization',
+                        [
+                            'organizationId' => $organizationUuid,
+                        ]
+                        );
                 return $processedContacts;
             }
 
@@ -302,50 +308,55 @@ class OrganizationHandler
             foreach ($contactpersonen as $index => $contactpersoon) {
                 try {
                     // Get the contactgegevens schema ID from settings
-                    $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+                    $settingsService         = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
                     $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
                     $registerId = $settingsService->getVoorzieningenRegisterId();
-                    
+
                     if (!$registerId) {
                         throw new \Exception('Voorzieningen register ID not configured');
                     }
-                    
+
                     $contactEmail = $contactpersoon['email'] ?? $contactpersoon['e-mailadres'] ?? '';
-                    
+
                     // Check if contactgegevens object already exists for this email + organization
                     $existingContactgegevens = $this->findExistingContactgegevens($contactEmail, $organizationUuid, $objectService, $registerId, $contactgegevensSchemaId);
-                    
+
                     $this->_logger->info(
                         $existingContactgegevens ? 'Updating existing contactgegevens object' : 'Creating new contactgegevens object',
                         [
                             'contactgegevensSchemaId' => $contactgegevensSchemaId,
-                            'organizationUuid' => $organizationUuid,
-                            'contactpersoonIndex' => $index,
-                            'email' => $contactEmail,
-                            'existingId' => $existingContactgegevens ? $existingContactgegevens->getUuid() : null
+                            'organizationUuid'        => $organizationUuid,
+                            'contactpersoonIndex'     => $index,
+                            'email'                   => $contactEmail,
+                            'existingId'              => $existingContactgegevens ? $existingContactgegevens->getUuid() : null,
                         ]
                     );
-                    
+
                     // Generate title from name components
-                    $titleParts = array_filter([
-                        $contactpersoon['voornaam'] ?? '',
-                        $contactpersoon['tussenvoegsel'] ?? '',
-                        $contactpersoon['achternaam'] ?? ''
-                    ]);
-                    $title = !empty($titleParts) ? implode(' ', $titleParts) : ($contactpersoon['email'] ?? 'Contact Person');
-                    
+                    $titleParts = array_filter(
+                            [
+                                $contactpersoon['voornaam'] ?? '',
+                                $contactpersoon['tussenvoegsel'] ?? '',
+                                $contactpersoon['achternaam'] ?? '',
+                            ]
+                            );
+                    $title      = !empty($titleParts) ? implode(' ', $titleParts) : ($contactpersoon['email'] ?? 'Contact Person');
+
                     // Create contactgegevens object with proper schema
                     $contactgegevensData = [
-                        'title' => $title, // Required by OpenRegister
-                        'voornaam' => $contactpersoon['voornaam'] ?? '',
+                        'title'         => $title,
+                    // Required by OpenRegister
+                        'voornaam'      => $contactpersoon['voornaam'] ?? '',
                         'tussenvoegsel' => $contactpersoon['tussenvoegsel'] ?? '',
-                        'achternaam' => $contactpersoon['achternaam'] ?? '',
-                        'telefoon' => $contactpersoon['telefoon'] ?? '',
-                        'email' => $contactEmail,
-                        'functie' => $contactpersoon['functie'] ?? '',
-                        'organisation' => $organizationUuid, // Link to organization
-                        'roles' => $this->mapFunctieToRoles($contactpersoon['functie'] ?? '', $index === 0),
-                        'username' => '', // Will be set when user is created
+                        'achternaam'    => $contactpersoon['achternaam'] ?? '',
+                        'telefoon'      => $contactpersoon['telefoon'] ?? '',
+                        'email'         => $contactEmail,
+                        'functie'       => $contactpersoon['functie'] ?? '',
+                        'organisation'  => $organizationUuid,
+                    // Link to organization
+                        'roles'         => $this->mapFunctieToRoles($contactpersoon['functie'] ?? '', $index === 0),
+                        'username'      => '',
+                    // Will be set when user is created
                     ];
 
                     // If updating existing contactgegevens, preserve the username if it exists
@@ -360,71 +371,74 @@ class OrganizationHandler
                         $contactgegevensObject = $objectService->saveObject(
                             $contactgegevensData,
                             [],
-                            $registerId, // Dynamic register ID from configuration
-                            $contactgegevensSchemaId, // Schema ID from configuration  
-                            $existingContactgegevens->getUuid() // Pass existing UUID to update
+                            $registerId,
+                        // Dynamic register ID from configuration
+                            $contactgegevensSchemaId,
+                        // Schema ID from configuration
+                            $existingContactgegevens->getUuid()
+                        // Pass existing UUID to update
                         );
                     } else {
                         // Create new contactgegevens object
                         $contactgegevensObject = $objectService->saveObject(
                             $contactgegevensData,
                             [],
-                            $registerId, // Dynamic register ID from configuration
-                            $contactgegevensSchemaId // Schema ID from configuration
+                            $registerId,
+                        // Dynamic register ID from configuration
+                            $contactgegevensSchemaId
+                        // Schema ID from configuration
                         );
-                    }
-                    
+                    }//end if
+
                     if ($contactgegevensObject) {
                         $processedContacts[] = $contactgegevensObject;
-                        
+
                         $this->_logger->info(
                             $existingContactgegevens ? 'Updated existing contactgegevens from contactpersoon' : 'Created new contactgegevens from contactpersoon',
                             [
-                                'organizationId' => $organizationUuid,
-                                'contactgegevensId' => $contactgegevensObject->getId(),
+                                'organizationId'      => $organizationUuid,
+                                'contactgegevensId'   => $contactgegevensObject->getId(),
                                 'contactpersoonIndex' => $index,
-                                'email' => $contactgegevensData['email'],
-                                'action' => $existingContactgegevens ? 'update' : 'create'
+                                'email'               => $contactgegevensData['email'],
+                                'action'              => $existingContactgegevens ? 'update' : 'create',
                             ]
                         );
                     }
-
                 } catch (\Exception $e) {
                     $this->_logger->error(
-                        'Failed to process contactpersoon: ' . $e->getMessage(),
+                        'Failed to process contactpersoon: '.$e->getMessage(),
                         [
-                            'organizationId' => $organizationUuid,
+                            'organizationId'      => $organizationUuid,
                             'contactpersoonIndex' => $index,
-                            'contactpersoon' => $contactpersoon,
-                            'exception' => $e
+                            'contactpersoon'      => $contactpersoon,
+                            'exception'           => $e,
                         ]
                     );
-                }
-            }
+                }//end try
+            }//end foreach
 
             return $processedContacts;
-
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to process contactpersonen: ' . $e->getMessage(),
+                'Failed to process contactpersonen: '.$e->getMessage(),
                 [
                     'organizationId' => $organizationObject->getId(),
-                    'exception' => $e
+                    'exception'      => $e,
                 ]
             );
             return [];
-        }
-    }
+        }//end try
+    }//end processContactpersonen()
 
     /**
      * Finds existing contactgegevens object for a given email and organization
      *
-     * @param string $email The email address to search for
-     * @param string $organizationUuid The organization UUID
-     * @param \OCA\OpenRegister\Service\ObjectService $objectService The object service
-     * @param int $registerId The register ID
-     * @param int $contactgegevensSchemaId The contactgegevens schema ID
-     * 
+     * @param string                                  $email                   The email address to search for
+     * @param string                                  $organizationUuid        The organization UUID
+     * @param \OCA\OpenRegister\Service\ObjectService $objectService           The object service
+     * @param int                                     $registerId              The register ID
+     * @param int                                     $contactgegevensSchemaId The contactgegevens schema ID
+     *
      * @return object|null The existing contactgegevens object or null if not found
      */
     private function findExistingContactgegevens(string $email, string $organizationUuid, \OCA\OpenRegister\Service\ObjectService $objectService, int $registerId, int $contactgegevensSchemaId): ?object
@@ -436,8 +450,8 @@ class OrganizationHandler
 
             // Search for existing contactgegevens with this email and organization
             $searchFilters = [
-                'email' => $email,
-                'organisation' => $organizationUuid
+                'email'        => $email,
+                'organisation' => $organizationUuid,
             ];
 
             $existingObjects = $objectService->findAll($searchFilters, $registerId, $contactgegevensSchemaId);
@@ -446,29 +460,29 @@ class OrganizationHandler
                 $this->_logger->info(
                     'Found existing contactgegevens object',
                     [
-                        'email' => $email,
+                        'email'            => $email,
                         'organizationUuid' => $organizationUuid,
-                        'existingId' => $existingObjects[0]->getUuid(),
-                        'totalFound' => count($existingObjects)
+                        'existingId'       => $existingObjects[0]->getUuid(),
+                        'totalFound'       => count($existingObjects),
                     ]
                 );
-                return $existingObjects[0]; // Return the first match
+                return $existingObjects[0];
+                // Return the first match
             }
 
             return null;
-
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to find existing contactgegevens: ' . $e->getMessage(),
+                'Failed to find existing contactgegevens: '.$e->getMessage(),
                 [
-                    'email' => $email,
+                    'email'            => $email,
                     'organizationUuid' => $organizationUuid,
-                    'exception' => $e
+                    'exception'        => $e,
                 ]
             );
             return null;
-        }
-    }
+        }//end try
+    }//end findExistingContactgegevens()
 
     /**
      * Gets all available roles in the system
@@ -483,39 +497,40 @@ class OrganizationHandler
             'Gebruik-beheerder',
             'Gebruik-raadpleger',
             'VNG-raadpleger',
-            'beheerder' // Add beheerder role for group assignment
+            'beheerder',
+        // Add beheerder role for group assignment
         ];
-    }
+    }//end getAllAvailableRoles()
 
     /**
      * Maps functie (job function) to appropriate roles
      *
-     * @param string $functie The job function
+     * @param string $functie        The job function
      * @param bool   $isFirstContact Whether this is the first contact in the organization
-     * 
+     *
      * @return array Array of roles
      */
-    private function mapFunctieToRoles(string $functie, bool $isFirstContact = false): array
+    private function mapFunctieToRoles(string $functie, bool $isFirstContact=false): array
     {
         // If this is the first contact, give them all available roles
         if ($isFirstContact) {
             $this->_logger->info('Assigning all roles to first contact', ['functie' => $functie]);
             return $this->getAllAvailableRoles();
         }
-        
+
         $functie = strtolower(trim($functie));
-        
+
         // Default role mappings based on common job functions
         $roleMapping = [
-            'ceo' => ['Functioneel-beheerder', 'Aanbod-beheerder'],
-            'manager' => ['Functioneel-beheerder', 'Gebruik-beheerder'],
-            'beheerder' => ['Gebruik-beheerder', 'beheerder'],
+            'ceo'           => ['Functioneel-beheerder', 'Aanbod-beheerder'],
+            'manager'       => ['Functioneel-beheerder', 'Gebruik-beheerder'],
+            'beheerder'     => ['Gebruik-beheerder', 'beheerder'],
             'administrator' => ['Functioneel-beheerder'],
-            'inkoper' => ['Gebruik-beheerder'],
-            'procurement' => ['Gebruik-beheerder'],
-            'raadpleger' => ['Gebruik-raadpleger'],
-            'viewer' => ['Gebruik-raadpleger'],
-            'vng' => ['VNG-raadpleger']
+            'inkoper'       => ['Gebruik-beheerder'],
+            'procurement'   => ['Gebruik-beheerder'],
+            'raadpleger'    => ['Gebruik-raadpleger'],
+            'viewer'        => ['Gebruik-raadpleger'],
+            'vng'           => ['VNG-raadpleger'],
         ];
 
         // Check for specific matches
@@ -527,121 +542,125 @@ class OrganizationHandler
 
         // Default role for unknown functions
         return ['Gebruik-raadpleger'];
-    }
+    }//end mapFunctieToRoles()
 
     /**
      * Handles new organization creation with contactpersonen processing
      *
-     * @param object $organizationObject  The organization object
-     * 
+     * @param object $organizationObject The organization object
+     *
      * @return void
      */
     public function handleNewOrganization(object $organizationObject): void
     {
         try {
-            $this->_logger->info('Handling new organization', [
-                'objectId' => $organizationObject->getId()
-            ]);
+            $this->_logger->info(
+                    'Handling new organization',
+                    [
+                        'objectId' => $organizationObject->getId(),
+                    ]
+                    );
 
             // First process the organization to ensure it has proper group structure
             $processed = $this->processOrganization($organizationObject);
-            
+
             if ($processed) {
                 // Then process contactpersonen if organization is active
-                $objectData = $organizationObject->getObject();
+                $objectData  = $organizationObject->getObject();
                 $beoordeling = strtolower($objectData['beoordeling'] ?? '');
-                
+
                 if ($beoordeling === 'actief') {
                     $processedContacts = $this->processContactpersonen($organizationObject);
-                    
+
                     $this->_logger->info(
                         'Processed organization and contactgegevens',
                         [
-                            'organizationId' => $organizationObject->getId(),
-                            'contactgegevensCount' => count($processedContacts)
+                            'organizationId'       => $organizationObject->getId(),
+                            'contactgegevensCount' => count($processedContacts),
                         ]
                     );
                 }
             }
-
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to handle new organization: ' . $e->getMessage(),
+                'Failed to handle new organization: '.$e->getMessage(),
                 [
-                    'objectId' => $organizationObject->getId(),
-                    'exception' => $e
+                    'objectId'  => $organizationObject->getId(),
+                    'exception' => $e,
                 ]
             );
-        }
-    }
+        }//end try
+    }//end handleNewOrganization()
 
     /**
      * Gets all beheerders for an organization
      *
-     * @param string $organizationUuid  The organization UUID
-     * 
+     * @param string $organizationUuid The organization UUID
+     *
      * @return array Array of usernames who are beheerders in this organization
      */
     public function getOrganizationBeheerders(string $organizationUuid): array
     {
         try {
-            $beheerders = [];
+            $beheerders     = [];
             $beheerderGroup = $this->_groupManager->get('beheerder');
-            
+
             if (!$beheerderGroup) {
                 return [];
             }
-            
+
             // Get all users in beheerder group
             $beheerderUsers = $beheerderGroup->getUsers();
-            
+
             // Filter users who belong to this organization
             foreach ($beheerderUsers as $user) {
                 if ($this->userBelongsToOrganization($user, $organizationUuid)) {
                     $beheerders[] = $user->getUID();
                 }
             }
-            
+
             // Sort by user creation date (oldest first)
-            usort($beheerders, function($a, $b) {
-                $userA = $this->_userManager->get($a);
-                $userB = $this->_userManager->get($b);
-                
-                // Get user creation timestamps (fallback to 0 if not available)
-                $timeA = $userA ? ($userA->getLastLogin() ?: 0) : 0;
-                $timeB = $userB ? ($userB->getLastLogin() ?: 0) : 0;
-                
-                return $timeA <=> $timeB;
-            });
-            
+            usort(
+                    $beheerders,
+                    function ($a, $b) {
+                        $userA = $this->_userManager->get($a);
+                        $userB = $this->_userManager->get($b);
+
+                        // Get user creation timestamps (fallback to 0 if not available)
+                        $timeA = $userA ? ($userA->getLastLogin() ?: 0) : 0;
+                        $timeB = $userB ? ($userB->getLastLogin() ?: 0) : 0;
+
+                        return $timeA <=> $timeB;
+                    }
+                    );
+
             $this->_logger->info(
                 'Found organization beheerders',
                 [
                     'organization' => $organizationUuid,
-                    'beheerders' => $beheerders
+                    'beheerders'   => $beheerders,
                 ]
             );
-            
+
             return $beheerders;
-            
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to get organization beheerders: ' . $e->getMessage(),
+                'Failed to get organization beheerders: '.$e->getMessage(),
                 [
                     'organization' => $organizationUuid,
-                    'exception' => $e
+                    'exception'    => $e,
                 ]
             );
             return [];
-        }
-    }
+        }//end try
+    }//end getOrganizationBeheerders()
 
     /**
      * Checks if a user belongs to an organization
      *
-     * @param IUser  $user              The user to check
-     * @param string $organizationUuid  The organization UUID
-     * 
+     * @param IUser  $user             The user to check
+     * @param string $organizationUuid The organization UUID
+     *
      * @return bool True if user belongs to organization
      */
     public function userBelongsToOrganization(IUser $user, string $organizationUuid): bool
@@ -649,12 +668,12 @@ class OrganizationHandler
         try {
             // Check if user is in the organization-specific group
             $organizationGroupName = $this->sanitizeGroupName($organizationUuid);
-            $organizationGroup = $this->_groupManager->get($organizationGroupName);
-            
+            $organizationGroup     = $this->_groupManager->get($organizationGroupName);
+
             if ($organizationGroup && $organizationGroup->inGroup($user)) {
                 return true;
             }
-            
+
             // Alternative approach: check user's groups for organization-specific groups
             $userGroups = $this->_groupManager->getUserGroups($user);
             foreach ($userGroups as $group) {
@@ -663,18 +682,17 @@ class OrganizationHandler
                     return true;
                 }
             }
-            
+
             return false;
-            
         } catch (\Exception $e) {
             $this->_logger->error(
-                'Failed to check user organization membership: ' . $e->getMessage(),
+                'Failed to check user organization membership: '.$e->getMessage(),
                 [
-                    'username' => $user->getUID(),
-                    'organization' => $organizationUuid
+                    'username'     => $user->getUID(),
+                    'organization' => $organizationUuid,
                 ]
             );
             return false;
-        }
-    }
-} 
+        }//end try
+    }//end userBelongsToOrganization()
+}//end class

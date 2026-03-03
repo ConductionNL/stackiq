@@ -64,28 +64,26 @@ class OpenRegisterEventsDebugListener implements IEventListener
     /**
      * Whether debug logging is enabled
      *
-     * @var bool
+     * @var boolean
      */
     private readonly bool $debugEnabled;
-
 
     /**
      * Constructor for the debug listener
      *
-     * @param LoggerInterface $logger Logger instance for debug output
-     * @param bool           $debugEnabled Whether debug logging should be enabled
+     * @param LoggerInterface $logger       Logger instance for debug output
+     * @param bool            $debugEnabled Whether debug logging should be enabled
      *
      * @return void
      */
     public function __construct(
         LoggerInterface $logger,
-        bool $debugEnabled = true
+        bool $debugEnabled=true
     ) {
-        $this->logger = $logger;
+        $this->logger       = $logger;
         $this->debugEnabled = $debugEnabled;
 
     }//end __construct()
-
 
     /**
      * Handle any OpenRegister event for debugging purposes
@@ -102,17 +100,18 @@ class OpenRegisterEventsDebugListener implements IEventListener
     public function handle(Event $event): void
     {
         $eventClass = get_class($event);
-        $eventType = $this->getEventTypeName($eventClass);
+        $eventType  = $this->getEventTypeName($eventClass);
 
-        $this->logger->debug('OpenRegister debug listener triggered', [
-            'app' => 'softwarecatalog',
-            'eventType' => $eventType,
-            'eventClass' => $eventClass,
-            'debugEnabled' => $this->debugEnabled,
-        ]);
-        
+        $this->logger->debug(
+                'OpenRegister debug listener triggered',
+                [
+                    'app'          => 'softwarecatalog',
+                    'eventType'    => $eventType,
+                    'eventClass'   => $eventClass,
+                    'debugEnabled' => $this->debugEnabled,
+                ]
+                );
 
-        
         if (!$this->debugEnabled) {
             $this->logger->warning('SoftwareCatalog OpenRegister Debug: Debug disabled, skipping detailed logging');
 
@@ -125,18 +124,17 @@ class OpenRegisterEventsDebugListener implements IEventListener
         $this->logger->info(
             '[SoftwareCatalog] 🔍 OPENREGISTER EVENT: {eventType} received from OpenRegister',
             [
-                'app' => 'softwarecatalog',
-                'eventType' => $eventType,
-                'eventClass' => $eventClass,
+                'app'           => 'softwarecatalog',
+                'eventType'     => $eventType,
+                'eventClass'    => $eventClass,
                 'listenerClass' => self::class,
-                'eventData' => $eventData,
-                'timestamp' => date('Y-m-d H:i:s'),
-                'source' => 'OpenRegister',
+                'eventData'     => $eventData,
+                'timestamp'     => date('Y-m-d H:i:s'),
+                'source'        => 'OpenRegister',
             ]
         );
 
     }//end handle()
-
 
     /**
      * Extract a human-readable event type name from the class name
@@ -152,7 +150,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
     {
         // Extract the class name without namespace
         $className = substr($eventClass, strrpos($eventClass, '\\') + 1);
-        
+
         // Remove 'Event' suffix if present
         if (str_ends_with($className, 'Event')) {
             $className = substr($className, 0, -5);
@@ -161,7 +159,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
         return $className;
 
     }//end getEventTypeName()
-
 
     /**
      * Extract relevant data from the event for debugging
@@ -185,149 +182,187 @@ class OpenRegisterEventsDebugListener implements IEventListener
         // Handle Object events
         if ($event instanceof ObjectCreatedEvent) {
             $object = $event->getObject();
-            $data = array_merge($data, [
-                'eventType' => 'ObjectCreated',
-                'objectId' => $object->getId(),
-                'objectUuid' => $object->getUuid(),
-                'registerId' => $object->getRegister(),
-                'schemaId' => $object->getSchema(),
-                'owner' => $object->getOwner(),
-                'created' => $object->getCreated()?->format('Y-m-d H:i:s'),
-                'objectData' => $this->getSafeObjectData($object->getObject()),
-            ]);
+            $data   = array_merge(
+                    $data,
+                    [
+                        'eventType'  => 'ObjectCreated',
+                        'objectId'   => $object->getId(),
+                        'objectUuid' => $object->getUuid(),
+                        'registerId' => $object->getRegister(),
+                        'schemaId'   => $object->getSchema(),
+                        'owner'      => $object->getOwner(),
+                        'created'    => $object->getCreated()?->format('Y-m-d H:i:s'),
+                        'objectData' => $this->getSafeObjectData($object->getObject()),
+                    ]
+                    );
         } else if ($event instanceof ObjectUpdatedEvent) {
             $newObject = $event->getNewObject();
             $oldObject = $event->getOldObject();
-            $data = array_merge($data, [
-                'eventType' => 'ObjectUpdated',
-                'newObjectId' => $newObject->getId(),
-                'newObjectUuid' => $newObject->getUuid(),
-                'oldObjectId' => $oldObject?->getId(),
-                'oldObjectUuid' => $oldObject?->getUuid(),
-                'registerId' => $newObject->getRegister(),
-                'schemaId' => $newObject->getSchema(),
-                'owner' => $newObject->getOwner(),
-                'updated' => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
-                'newObjectData' => $this->getSafeObjectData($newObject->getObject()),
-                'oldObjectData' => $oldObject ? $this->getSafeObjectData($oldObject->getObject()) : null,
-            ]);
+            $data      = array_merge(
+                    $data,
+                    [
+                        'eventType'     => 'ObjectUpdated',
+                        'newObjectId'   => $newObject->getId(),
+                        'newObjectUuid' => $newObject->getUuid(),
+                        'oldObjectId'   => $oldObject?->getId(),
+                        'oldObjectUuid' => $oldObject?->getUuid(),
+                        'registerId'    => $newObject->getRegister(),
+                        'schemaId'      => $newObject->getSchema(),
+                        'owner'         => $newObject->getOwner(),
+                        'updated'       => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
+                        'newObjectData' => $this->getSafeObjectData($newObject->getObject()),
+                        'oldObjectData' => $oldObject ? $this->getSafeObjectData($oldObject->getObject()) : null,
+                    ]
+                    );
         } else if ($event instanceof ObjectDeletedEvent) {
             $object = $event->getObject();
-            $data = array_merge($data, [
-                'eventType' => 'ObjectDeleted',
-                'objectId' => $object->getId(),
-                'objectUuid' => $object->getUuid(),
-                'registerId' => $object->getRegister(),
-                'schemaId' => $object->getSchema(),
-                'owner' => $object->getOwner(),
-                'objectData' => $this->getSafeObjectData($object->getObject()),
-            ]);
+            $data   = array_merge(
+                    $data,
+                    [
+                        'eventType'  => 'ObjectDeleted',
+                        'objectId'   => $object->getId(),
+                        'objectUuid' => $object->getUuid(),
+                        'registerId' => $object->getRegister(),
+                        'schemaId'   => $object->getSchema(),
+                        'owner'      => $object->getOwner(),
+                        'objectData' => $this->getSafeObjectData($object->getObject()),
+                    ]
+                    );
         } else if ($event instanceof ObjectLockedEvent) {
             $object = $event->getObject();
-            $data = array_merge($data, [
-                'eventType' => 'ObjectLocked',
-                'objectId' => $object->getId(),
-                'objectUuid' => $object->getUuid(),
-                'registerId' => $object->getRegister(),
-                'schemaId' => $object->getSchema(),
-                'lockedBy' => $object->getLockedBy(),
-                'lockedAt' => $object->getLockedAt()?->format('Y-m-d H:i:s'),
-            ]);
+            $data   = array_merge(
+                    $data,
+                    [
+                        'eventType'  => 'ObjectLocked',
+                        'objectId'   => $object->getId(),
+                        'objectUuid' => $object->getUuid(),
+                        'registerId' => $object->getRegister(),
+                        'schemaId'   => $object->getSchema(),
+                        'lockedBy'   => $object->getLockedBy(),
+                        'lockedAt'   => $object->getLockedAt()?->format('Y-m-d H:i:s'),
+                    ]
+                    );
         } else if ($event instanceof ObjectUnlockedEvent) {
             $object = $event->getObject();
-            $data = array_merge($data, [
-                'eventType' => 'ObjectUnlocked',
-                'objectId' => $object->getId(),
-                'objectUuid' => $object->getUuid(),
-                'registerId' => $object->getRegister(),
-                'schemaId' => $object->getSchema(),
-            ]);
+            $data   = array_merge(
+                    $data,
+                    [
+                        'eventType'  => 'ObjectUnlocked',
+                        'objectId'   => $object->getId(),
+                        'objectUuid' => $object->getUuid(),
+                        'registerId' => $object->getRegister(),
+                        'schemaId'   => $object->getSchema(),
+                    ]
+                    );
         } else if ($event instanceof ObjectRevertedEvent) {
             $object = $event->getObject();
-            $data = array_merge($data, [
-                'eventType' => 'ObjectReverted',
-                'objectId' => $object->getId(),
-                'objectUuid' => $object->getUuid(),
-                'registerId' => $object->getRegister(),
-                'schemaId' => $object->getSchema(),
-                'revertedTo' => $event->getRevertedToVersion(),
-            ]);
-        }
+            $data   = array_merge(
+                    $data,
+                    [
+                        'eventType'  => 'ObjectReverted',
+                        'objectId'   => $object->getId(),
+                        'objectUuid' => $object->getUuid(),
+                        'registerId' => $object->getRegister(),
+                        'schemaId'   => $object->getSchema(),
+                        'revertedTo' => $event->getRevertedToVersion(),
+                    ]
+                    );
+        }//end if
 
         // Handle Register events
         else if ($event instanceof RegisterCreatedEvent) {
             $register = $event->getRegister();
-            $data = array_merge($data, [
-                'eventType' => 'RegisterCreated',
-                'registerId' => $register->getId(),
-                'registerTitle' => $register->getTitle(),
-                'registerSlug' => $register->getSlug(),
-            ]);
+            $data     = array_merge(
+                    $data,
+                    [
+                        'eventType'     => 'RegisterCreated',
+                        'registerId'    => $register->getId(),
+                        'registerTitle' => $register->getTitle(),
+                        'registerSlug'  => $register->getSlug(),
+                    ]
+                    );
         } else if ($event instanceof RegisterUpdatedEvent) {
             $register = $event->getRegister();
-            $data = array_merge($data, [
-                'eventType' => 'RegisterUpdated',
-                'registerId' => $register->getId(),
-                'registerTitle' => $register->getTitle(),
-                'registerSlug' => $register->getSlug(),
-            ]);
+            $data     = array_merge(
+                    $data,
+                    [
+                        'eventType'     => 'RegisterUpdated',
+                        'registerId'    => $register->getId(),
+                        'registerTitle' => $register->getTitle(),
+                        'registerSlug'  => $register->getSlug(),
+                    ]
+                    );
         } else if ($event instanceof RegisterDeletedEvent) {
             $register = $event->getRegister();
-            $data = array_merge($data, [
-                'eventType' => 'RegisterDeleted',
-                'registerId' => $register->getId(),
-                'registerTitle' => $register->getTitle(),
-                'registerSlug' => $register->getSlug(),
-            ]);
+            $data     = array_merge(
+                    $data,
+                    [
+                        'eventType'     => 'RegisterDeleted',
+                        'registerId'    => $register->getId(),
+                        'registerTitle' => $register->getTitle(),
+                        'registerSlug'  => $register->getSlug(),
+                    ]
+                    );
         }
 
         // Handle Schema events
         else if ($event instanceof SchemaCreatedEvent) {
             $schema = $event->getSchema();
-            $data = array_merge($data, [
-                'eventType' => 'SchemaCreated',
-                'schemaId' => $schema->getId(),
-                'schemaTitle' => $schema->getTitle(),
-                'schemaVersion' => $schema->getVersion(),
-            ]);
+            $data   = array_merge(
+                    $data,
+                    [
+                        'eventType'     => 'SchemaCreated',
+                        'schemaId'      => $schema->getId(),
+                        'schemaTitle'   => $schema->getTitle(),
+                        'schemaVersion' => $schema->getVersion(),
+                    ]
+                    );
         } else if ($event instanceof SchemaUpdatedEvent) {
             $schema = $event->getSchema();
-            $data = array_merge($data, [
-                'eventType' => 'SchemaUpdated',
-                'schemaId' => $schema->getId(),
-                'schemaTitle' => $schema->getTitle(),
-                'schemaVersion' => $schema->getVersion(),
-            ]);
+            $data   = array_merge(
+                    $data,
+                    [
+                        'eventType'     => 'SchemaUpdated',
+                        'schemaId'      => $schema->getId(),
+                        'schemaTitle'   => $schema->getTitle(),
+                        'schemaVersion' => $schema->getVersion(),
+                    ]
+                    );
         } else if ($event instanceof SchemaDeletedEvent) {
             $schema = $event->getSchema();
-            $data = array_merge($data, [
-                'eventType' => 'SchemaDeleted',
-                'schemaId' => $schema->getId(),
-                'schemaTitle' => $schema->getTitle(),
-                'schemaVersion' => $schema->getVersion(),
-            ]);
+            $data   = array_merge(
+                    $data,
+                    [
+                        'eventType'     => 'SchemaDeleted',
+                        'schemaId'      => $schema->getId(),
+                        'schemaTitle'   => $schema->getTitle(),
+                        'schemaVersion' => $schema->getVersion(),
+                    ]
+                    );
         }
 
         // Handle Organisation events
         else if ($event instanceof OrganisationCreatedEvent) {
             $organisation = $event->getOrganisation();
-            $data = array_merge($data, [
-                'eventType' => 'OrganisationCreated',
-                'organisationId' => $organisation->getId(),
-                'organisationTitle' => $organisation->getTitle(),
-            ]);
+            $data         = array_merge(
+                    $data,
+                    [
+                        'eventType'         => 'OrganisationCreated',
+                        'organisationId'    => $organisation->getId(),
+                        'organisationTitle' => $organisation->getTitle(),
+                    ]
+                    );
         }
 
         // Unknown event type
         else {
             $data['eventType'] = 'Unknown';
-            $data['note'] = 'Event type not specifically handled by SoftwareCatalog debug listener';
+            $data['note']      = 'Event type not specifically handled by SoftwareCatalog debug listener';
         }
 
         return $data;
 
     }//end extractEventData()
-
 
     /**
      * Get safe object data for logging (truncated if too large)
@@ -343,20 +378,18 @@ class OpenRegisterEventsDebugListener implements IEventListener
     {
         // Convert to JSON string to check size
         $jsonData = json_encode($objectData);
-        
+
         // If the data is too large (>2KB), truncate it
         if (strlen($jsonData) > 2048) {
             return [
-                '_truncated' => true,
+                '_truncated'    => true,
                 '_originalSize' => strlen($jsonData),
-                '_preview' => substr($jsonData, 0, 500) . '...',
-                '_note' => 'Object data truncated for logging - too large to display fully'
+                '_preview'      => substr($jsonData, 0, 500).'...',
+                '_note'         => 'Object data truncated for logging - too large to display fully',
             ];
         }
 
         return $objectData;
 
     }//end getSafeObjectData()
-
-
 }//end class

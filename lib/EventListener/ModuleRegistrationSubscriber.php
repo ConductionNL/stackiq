@@ -22,7 +22,7 @@ class ModuleRegistrationSubscriber implements IEventListener
     public function __construct(
         private readonly ContainerInterface $container
     ) {
-    }
+    }//end __construct()
 
     public function handle(Event $event): void
     {
@@ -32,7 +32,7 @@ class ModuleRegistrationSubscriber implements IEventListener
 
         if ($event instanceof ObjectCreatedEvent) {
             $object = $event->getObject();
-        } elseif ($event instanceof ObjectUpdatedEvent) {
+        } else if ($event instanceof ObjectUpdatedEvent) {
             $object = $event->getNewObject();
         } else {
             return;
@@ -42,7 +42,7 @@ class ModuleRegistrationSubscriber implements IEventListener
 
         // Check if this is a module object.
         $settingsService = $this->container->get(SettingsService::class);
-        $moduleSchemaId = $settingsService->getSchemaIdForObjectType('module');
+        $moduleSchemaId  = $settingsService->getSchemaIdForObjectType('module');
 
         if (!$moduleSchemaId || (int) $objectSchemaId !== (int) $moduleSchemaId) {
             return;
@@ -53,10 +53,13 @@ class ModuleRegistrationSubscriber implements IEventListener
             $moduleRegistrationService->handleModuleRegistration($object);
         } catch (\Exception $e) {
             $logger = $this->container->get(LoggerInterface::class);
-            $logger->error('ModuleRegistrationSubscriber: Failed to handle module registration', [
-                'objectId' => $object->getId(),
-                'exception' => $e->getMessage(),
-            ]);
+            $logger->error(
+                    'ModuleRegistrationSubscriber: Failed to handle module registration',
+                    [
+                        'objectId'  => $object->getId(),
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
         }
-    }
-}
+    }//end handle()
+}//end class

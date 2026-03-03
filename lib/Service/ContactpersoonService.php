@@ -41,8 +41,6 @@ use OCP\IAppConfig;
  */
 class ContactpersoonService
 {
-
-
     /**
      * ContactpersoonService constructor
      *
@@ -67,7 +65,6 @@ class ContactpersoonService
 
     }//end __construct()
 
-
     /**
      * Processes a contactpersoon object to create a user account
      *
@@ -87,7 +84,6 @@ class ContactpersoonService
      * which re-enters this method — this guard breaks that loop.
      */
     private static array $processingContacts = [];
-
 
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
@@ -180,11 +176,11 @@ class ContactpersoonService
                                 $orgStatus = strtolower(($orgData['status'] ?? ''));
                                 if (in_array($orgStatus, ['actief', 'active'])) {
                                     $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
-                                    $backupStats             = [
+                                    $backupStats        = [
                                         'entitiesCreated' => 0,
                                         'entitiesUpdated' => 0,
                                     ];
-                                    $organisationEntity      = $organizationSyncService->ensureOrganisationEntityPublic($orgObject, $backupStats);
+                                    $organisationEntity = $organizationSyncService->ensureOrganisationEntityPublic($orgObject, $backupStats);
                                     $this->logger->info(
                                         'ContactpersoonService: Backup entity created',
                                         [
@@ -322,7 +318,6 @@ class ContactpersoonService
 
     }//end processContactpersoon()
 
-
     /**
      * Updates user groups based on contactpersoon data
      *
@@ -345,7 +340,6 @@ class ContactpersoonService
 
     }//end updateUserGroups()
 
-
     /**
      * Ensures organization has at least one beheerder and manages user hierarchy
      *
@@ -360,7 +354,6 @@ class ContactpersoonService
 
     }//end ensureOrganizationBeheerder()
 
-
     /**
      * Gets a user's manager
      *
@@ -374,7 +367,6 @@ class ContactpersoonService
 
     }//end getUserManager()
 
-
     /**
      * Updates contactpersoon object with username
      *
@@ -383,7 +375,6 @@ class ContactpersoonService
      *
      * @return void
      */
-
 
     /**
      * Normalize contact data types to match schema expectations.
@@ -415,11 +406,10 @@ class ContactpersoonService
 
     }//end normalizeContactDataTypes()
 
-
     private function updateContactpersoonUsername(object $contactpersoonObject, string $username): void
     {
         try {
-            $contactData             = $contactpersoonObject->getObject();
+            $contactData = $contactpersoonObject->getObject();
             $contactData['username'] = $username;
             $contactpersoonObject->setObject($contactData);
 
@@ -449,7 +439,6 @@ class ContactpersoonService
         }//end try
 
     }//end updateContactpersoonUsername()
-
 
     /**
      * Handles contactpersoon updates, particularly role changes
@@ -500,7 +489,6 @@ class ContactpersoonService
         }//end try
 
     }//end handleContactpersoonUpdate()
-
 
     /**
      * Syncs name/functie fields from contactpersoon to the corresponding Nextcloud user.
@@ -569,7 +557,6 @@ class ContactpersoonService
 
     }//end syncNameFieldsToUser()
 
-
     /**
      * Handles role changes between old and new contactpersoon objects
      *
@@ -607,7 +594,6 @@ class ContactpersoonService
 
     }//end handleRoleChanges()
 
-
     /**
      * Gets the ObjectService instance
      *
@@ -627,7 +613,6 @@ class ContactpersoonService
         }
 
     }//end getObjectService()
-
 
     /**
      * Handles contact person deletion
@@ -696,7 +681,6 @@ class ContactpersoonService
 
     }//end handleContactDeletion()
 
-
     /**
      * Gets all contact persons for an organization
      *
@@ -712,21 +696,21 @@ class ContactpersoonService
                 return [];
             }
 
-        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-        $contactSchema       = $voorzieningenConfig['contactpersoon_schema'] ?? null;
-        $register            = $voorzieningenConfig['register'] ?? null;
+            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+            $contactSchema       = $voorzieningenConfig['contactpersoon_schema'] ?? null;
+            $register            = $voorzieningenConfig['register'] ?? null;
 
-        // Skip if no proper configuration is available
-        if (!$contactSchema || !$register) {
-            $this->logger->warning(
+            // Skip if no proper configuration is available
+            if (!$contactSchema || !$register) {
+                $this->logger->warning(
                 'ContactpersoonService: Missing Voorzieningen configuration',
                 [
                     'contactSchema' => $contactSchema,
                     'register'      => $register,
                 ]
-            );
-            return [];
-        }
+                );
+                return [];
+            }
 
             // Build query for searchObjects method
             $query = [
@@ -750,7 +734,6 @@ class ContactpersoonService
         }//end try
 
     }//end getContactPersonsForOrganization()
-
 
     /**
      * Gets all contact persons for an organization with user details spliced in
@@ -848,7 +831,7 @@ class ContactpersoonService
                     }//end if
 
                     // Create enhanced contact person object with user details spliced in
-                    $enhancedContactData                = $contactData;
+                    $enhancedContactData = $contactData;
                     $enhancedContactData['userDetails'] = $userDetails;
 
                     // Create a new object with the enhanced data
@@ -902,7 +885,6 @@ class ContactpersoonService
         }//end try
 
     }//end getContactPersonsWithUserDetailsForOrganization()
-
 
     /**
      * Gets bulk user information for multiple contact persons
@@ -996,10 +978,10 @@ class ContactpersoonService
                     if ($username) {
                         $user = $userManager->get($username);
                         if ($user) {
-                            $groupManager            = \OC::$server->get('OCP\IGroupManager');
-                            $userGroups              = $groupManager->getUserGroups($user);
-                            $userInfo['groups']      = array_keys($userGroups);
-                            $userInfo['enabled']     = $user->isEnabled();
+                            $groupManager        = \OC::$server->get('OCP\IGroupManager');
+                            $userGroups          = $groupManager->getUserGroups($user);
+                            $userInfo['groups']  = array_keys($userGroups);
+                            $userInfo['enabled'] = $user->isEnabled();
                             $userInfo['displayName'] = $user->getDisplayName();
                             $userInfo['lastLogin']   = $user->getLastLogin();
                         } else {
@@ -1062,7 +1044,6 @@ class ContactpersoonService
         }//end try
 
     }//end getBulkUserInfo()
-
 
     /**
      * Updates the contactpersoon object's @self metadata to set owner to the user UID
@@ -1176,7 +1157,6 @@ class ContactpersoonService
 
     }//end updateContactpersoonObjectOwner()
 
-
     /**
      * Enable user account for a contactpersoon
      *
@@ -1245,7 +1225,6 @@ class ContactpersoonService
 
     }//end enableUserForContactpersoon()
 
-
     /**
      * Disable user account for a contactpersoon
      *
@@ -1313,6 +1292,4 @@ class ContactpersoonService
         }//end try
 
     }//end disableUserForContactpersoon()
-
-
 }//end class

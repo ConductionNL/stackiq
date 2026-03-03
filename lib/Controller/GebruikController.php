@@ -44,7 +44,7 @@ class GebruikController extends Controller
     /**
      * Constructor for ViewController
      *
-     * @param string $appName The app name
+     * @param string   $appName The app name
      * @param IRequest $request The request object
      */
     public function __construct(
@@ -56,7 +56,7 @@ class GebruikController extends Controller
         private readonly GebruikService $gebruikService,
     ) {
         parent::__construct($appName, $request);
-    }
+    }//end __construct()
 
     /**
      * Fetch gebruiken, for a gebruik-beheerder, get all gebruiken, for an aanbod-beheerder, fetch gebruiken of applications of the organization of the user.
@@ -76,10 +76,13 @@ class GebruikController extends Controller
             return new JSONResponse($this->getEmptyResult());
         }
 
-        $groups = $this->groupManager->getUserGroups(user: $user);
-        $groupNames = array_map(function (IGroup $group) {
-            return $group->getGID();
-        }, $groups);
+        $groups     = $this->groupManager->getUserGroups(user: $user);
+        $groupNames = array_map(
+                function (IGroup $group) {
+                    return $group->getGID();
+                },
+                $groups
+                );
 
         $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');
 
@@ -99,7 +102,6 @@ class GebruikController extends Controller
             } else if (isset($options['module']) === false) {
                 $options['module'] = $applicatieIds;
             }
-
         } else {
             return new JSONResponse($this->getEmptyResult());
         }
@@ -109,7 +111,7 @@ class GebruikController extends Controller
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
-    }
+    }//end getGebruiken()
 
     /**
      * Fetch gebruiken for a deelnemer.
@@ -138,7 +140,7 @@ class GebruikController extends Controller
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
-    }
+    }//end getGebruikenForDeelnemer()
 
     /**
      * Returns an empty result set with the standard paginated response structure.
@@ -164,8 +166,5 @@ class GebruikController extends Controller
                 'deleted'   => false,
             ],
         ];
-    }
-
-
-
-}
+    }//end getEmptyResult()
+}//end class

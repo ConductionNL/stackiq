@@ -87,7 +87,6 @@ class OrganizationSyncService
      */
     private LoggerInterface $logger;
 
-
     /**
      * Constructor for OrganizationSyncService
      *
@@ -110,12 +109,11 @@ class OrganizationSyncService
         $this->organisatieService    = $organisatieService;
         $this->contactpersoonService = $contactpersoonService;
         $this->emailService          = $emailService;
-        $this->config                = $config;
-        $this->logger                = $logger;
-        $this->settingsService       = $settingsService;
+        $this->config          = $config;
+        $this->logger          = $logger;
+        $this->settingsService = $settingsService;
 
     }//end __construct()
-
 
     /**
      * Create a database-agnostic JSON extraction expression
@@ -148,7 +146,6 @@ class OrganizationSyncService
 
     }//end jsonExtract()
 
-
     /**
      * Create a database-agnostic JSON contains expression
      *
@@ -173,7 +170,6 @@ class OrganizationSyncService
         return "json_contains({$column}, '\"{$value}\"')";
 
     }//end jsonContains()
-
 
     public function performOrganizationsSync(int $batchSize=50, int $maxExecutionSeconds=45): array
     {
@@ -302,7 +298,6 @@ class OrganizationSyncService
 
     }//end performOrganizationsSync()
 
-
     public function performContactSync(int $batchSize=100, int $maxExecutionSeconds=30): array
     {
         // Check configuration
@@ -345,7 +340,7 @@ class OrganizationSyncService
             ->orderBy('o._updated', 'ASC')
             ->setMaxResults($batchSize);
 
-        $contacts                = $qb->execute()->fetchAll();
+        $contacts = $qb->execute()->fetchAll();
         $stats['totalRemaining'] = count($contacts);
 
         if (empty($contacts)) {
@@ -374,13 +369,13 @@ class OrganizationSyncService
             }
 
             try {
-                $contactEntity                   = $objectService->find(
+                $contactEntity       = $objectService->find(
                     id: $contact['uuid'],
                     register: $register,
                     schema: $contactSchema,
                     _rbac: false
                 );
-                $contactEntityObject             = $contactEntity->getObject();
+                $contactEntityObject = $contactEntity->getObject();
                 $contactEntityObject['username'] = $contact['uid'];
 
                 // Temporarily remove organisatie field to avoid validation error
@@ -399,7 +394,7 @@ class OrganizationSyncService
 
                 // Restore the organisatie field so the link is preserved
                 if ($savedOrganisatie !== null) {
-                    $restoredData                = $contactEntity->getObject();
+                    $restoredData = $contactEntity->getObject();
                     $restoredData['organisatie'] = $savedOrganisatie;
                     $contactEntity->setObject($restoredData);
                     $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
@@ -423,7 +418,6 @@ class OrganizationSyncService
         return $stats;
 
     }//end performContactSync()
-
 
     public function performUserSync(): array
     {
@@ -481,7 +475,6 @@ class OrganizationSyncService
         return [];
 
     }//end performUserSync()
-
 
     /**
      * Performs comprehensive organization and contact person synchronization
@@ -580,7 +573,6 @@ class OrganizationSyncService
 
     }//end performFullSync()
 
-
     /**
      * Gets organisatie objects filtered by time window
      *
@@ -667,7 +659,6 @@ class OrganizationSyncService
 
     }//end getOrganisatieObjectsByTimeWindow()
 
-
     /**
      * Processes a single organisatie object
      *
@@ -725,7 +716,6 @@ class OrganizationSyncService
 
     }//end processOrganisatieObject()
 
-
     /**
      * Ensures organisation entity exists for organisatie object
      *
@@ -736,7 +726,6 @@ class OrganizationSyncService
      * @return object|null The organisation entity or null on failure
      */
 
-
     /**
      * Public wrapper for ensureOrganisationEntity, used by ContactpersoonService
      * for backup entity creation when org entity is missing.
@@ -746,7 +735,6 @@ class OrganizationSyncService
         return $this->ensureOrganisationEntity($organisatieObject, $stats, $sendEmails);
 
     }//end ensureOrganisationEntityPublic()
-
 
     private function ensureOrganisationEntity(object $organisatieObject, array &$stats, bool $sendEmails=true): ?object
     {
@@ -775,7 +763,7 @@ class OrganizationSyncService
                         'error'         => $e->getMessage(),
                     ]
                 );
-            }
+            }//end try
 
             $objectData = $organisatieObject->getObject();
 
@@ -963,7 +951,6 @@ class OrganizationSyncService
 
     }//end ensureOrganisationEntity()
 
-
     /**
      * Safely sends organization registration email with error handling
      *
@@ -988,7 +975,6 @@ class OrganizationSyncService
 
     }//end sendOrganizationRegistrationEmail()
 
-
     /**
      * Safely sends organization activation email with error handling
      *
@@ -1012,7 +998,6 @@ class OrganizationSyncService
         }
 
     }//end sendOrganizationActivationEmail()
-
 
     /**
      * Gets all contact persons for a specific organisation
@@ -1069,7 +1054,6 @@ class OrganizationSyncService
         }//end try
 
     }//end getContactPersonsForOrganisation()
-
 
     /**
      * Processes a contact person to ensure they have a user account
@@ -1162,7 +1146,6 @@ class OrganizationSyncService
 
     }//end processContactPerson()
 
-
     /**
      * Updates organisation entity with all usernames
      *
@@ -1234,7 +1217,6 @@ class OrganizationSyncService
 
     }//end updateOrganisationEntityUsers()
 
-
     /**
      * Gets admin users that should always be included in organizations
      *
@@ -1266,7 +1248,6 @@ class OrganizationSyncService
         }//end try
 
     }//end getAdminUsers()
-
 
     /**
      * Performs a quick sync status check with prediction of objects to be processed
@@ -1311,9 +1292,9 @@ class OrganizationSyncService
             $predictedContactPersonsToProcess = 0;
             if (!empty($contactSchema)) {
                 foreach ($incrementalOrganisatieObjects as $orgObject) {
-                    $objectData                        = $orgObject->getObject();
-                    $organisatieId                     = ($objectData['id'] ?? $orgObject->getId());
-                    $contactPersons                    = $this->getContactPersonsForOrganisation($organisatieId, $register, $contactSchema);
+                    $objectData     = $orgObject->getObject();
+                    $organisatieId  = ($objectData['id'] ?? $orgObject->getId());
+                    $contactPersons = $this->getContactPersonsForOrganisation($organisatieId, $register, $contactSchema);
                     $predictedContactPersonsToProcess += count($contactPersons);
                 }
             }
@@ -1358,7 +1339,6 @@ class OrganizationSyncService
 
     }//end getSyncStatus()
 
-
     /**
      * Gets email configuration status for sync reporting
      *
@@ -1385,7 +1365,6 @@ class OrganizationSyncService
 
     }//end getEmailConfigurationStatus()
 
-
     /**
      * Format numbers for better readability
      *
@@ -1403,7 +1382,6 @@ class OrganizationSyncService
 
     }//end formatNumber()
 
-
     /**
      * Records the last sync time
      *
@@ -1414,7 +1392,6 @@ class OrganizationSyncService
         $this->config->setValueString('softwarecatalog', 'last_sync_time', date('Y-m-d H:i:s'));
 
     }//end recordSyncTime()
-
 
     /**
      * Process a specific organization object (called from event listener)
@@ -1548,7 +1525,6 @@ class OrganizationSyncService
 
     }//end processSpecificOrganization()
 
-
     /**
      * Process nested contact persons within an organization object
      *
@@ -1677,7 +1653,6 @@ class OrganizationSyncService
         }//end try
 
     }//end processNestedContactPersons()
-
 
     /**
      * Process related contactpersoon objects that have this organization in their organisation property
@@ -1952,7 +1927,6 @@ class OrganizationSyncService
 
     }//end processRelatedContactPersons()
 
-
     /**
      * Create or update a contact person object and user account
      *
@@ -2045,7 +2019,7 @@ class OrganizationSyncService
 
                 // Restore the organisatie field so the link to the organisation is preserved
                 if ($contactObject && $savedOrganisatie !== null) {
-                    $restoredData                = $contactObject->getObject();
+                    $restoredData = $contactObject->getObject();
                     $restoredData['organisatie'] = $savedOrganisatie;
                     $contactObject->setObject($restoredData);
                     $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
@@ -2151,7 +2125,7 @@ class OrganizationSyncService
                                 // entity in-place (sets username). Using the stale $contactObjectData
                                 // captured before createUserAccount() would overwrite those changes
                                 // and could lose the organisatie field.
-                                $contactObjectData             = $contactObject->getObject();
+                                $contactObjectData = $contactObject->getObject();
                                 $contactObjectData['username'] = $user->getUID();
 
                                 // FIX #434: Use ObjectEntityMapper::update() directly instead of
@@ -2262,7 +2236,6 @@ class OrganizationSyncService
         }//end try
 
     }//end createOrUpdateContactPersonObject()
-
 
     /**
      * Process a specific contact person object (called from event listener)
@@ -2473,7 +2446,6 @@ class OrganizationSyncService
 
     }//end processSpecificContactPerson()
 
-
     /**
      * Performs optimized manual synchronization for large datasets
      *
@@ -2529,7 +2501,7 @@ class OrganizationSyncService
             $allResults['usersCreated']            += $contactResults['usersCreated'] ?? 0;
             $allResults['usersUpdated']            += $contactResults['usersUpdated'] ?? 0;
 
-            $roundTime                       = (time() - $roundStartTime);
+            $roundTime = (time() - $roundStartTime);
             $allResults['roundsCompleted'][] = [
                 'round'                   => $round,
                 'organizationsProcessed'  => $orgResults['organizationsProcessed'],
@@ -2572,7 +2544,6 @@ class OrganizationSyncService
 
     }//end performOptimizedManualSync()
 
-
     /**
      * Performs scheduled synchronization with comprehensive logging
      *
@@ -2599,13 +2570,13 @@ class OrganizationSyncService
             // Perform optimized batch synchronization
             // Use smaller batches for scheduled sync to ensure it completes within time limits
             $orgBatchSize = 25;
-// Conservative batch size for organizations
+            // Conservative batch size for organizations
             $contactBatchSize = 50;
-// Larger batch size for contacts (faster processing)
+            // Larger batch size for contacts (faster processing)
             $maxOrgTime = 30;
-// 30 seconds max for organizations
+            // 30 seconds max for organizations
             $maxContactTime = 15;
-// 15 seconds max for contacts
+            // 15 seconds max for contacts
             $syncResults = $this->performOrganizationsSync($orgBatchSize, $maxOrgTime);
 
             $contactResults = $this->performContactSync($contactBatchSize, $maxContactTime);
@@ -2665,7 +2636,6 @@ class OrganizationSyncService
         }//end try
 
     }//end performScheduledSync()
-
 
     /**
      * Performs manual synchronization with API-specific logging
@@ -2733,7 +2703,6 @@ class OrganizationSyncService
 
     }//end performManualSync()
 
-
     /**
      * Gets synchronization status with error handling
      *
@@ -2765,7 +2734,6 @@ class OrganizationSyncService
         }
 
     }//end getSyncStatusWithErrorHandling()
-
 
     /**
      * Updates the organisatie object's @self metadata to set owner to the organisation entity UUID
@@ -2858,7 +2826,6 @@ class OrganizationSyncService
         }//end try
 
     }//end updateOrganisatieObjectOwner()
-
 
     /**
      * Updates the contactpersoon object's @self metadata to set owner to the user UID
@@ -2969,6 +2936,4 @@ class OrganizationSyncService
         }//end try
 
     }//end updateContactpersoonObjectOwner()
-
-
 }//end class

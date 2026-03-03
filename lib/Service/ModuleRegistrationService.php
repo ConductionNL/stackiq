@@ -1,4 +1,18 @@
 <?php
+/**
+ * Module Registration Service.
+ *
+ * Service for auto-setting geregistreerdDoor on module objects
+ * based on the owning organisation's type.
+ *
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
+ */
 
 declare(strict_types=1);
 
@@ -11,6 +25,9 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for auto-setting geregistreerdDoor on module objects
  * based on the owning organisation's type.
+ *
+ * @category Service
+ * @package  OCA\SoftwareCatalog\Service
  */
 class ModuleRegistrationService
 {
@@ -24,33 +41,50 @@ class ModuleRegistrationService
         'Community'    => 'Community',
     ];
 
+    /**
+     * Constructor for ModuleRegistrationService.
+     *
+     * @param ContainerInterface $container       The DI container
+     * @param SettingsService    $settingsService The settings service
+     * @param LoggerInterface    $logger          The logger instance
+     */
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly SettingsService $settingsService,
         private readonly LoggerInterface $logger
     ) {
-    }
+    }//end __construct()
 
     /**
      * Handle a module create/update event: look up the owning organisatie's type
      * and set geregistreerdDoor accordingly.
+     *
+     * @param object $moduleObject The module object to process
+     *
+     * @return void
      */
     public function handleModuleRegistration(object $moduleObject): void
     {
-        $moduleId = $moduleObject->getId();
+        $moduleId         = $moduleObject->getId();
         $organisationUuid = $moduleObject->getOrganisation();
 
-        if (empty($organisationUuid)) {
-            $this->logger->debug('ModuleRegistrationService: Module has no organisation, skipping', [
-                'moduleId' => $moduleId,
-            ]);
+        if (empty($organisationUuid) === true) {
+            $this->logger->debug(
+                    'ModuleRegistrationService: Module has no organisation, skipping',
+                    [
+                        'moduleId' => $moduleId,
+                    ]
+                    );
             return;
         }
 
-        $this->logger->info('ModuleRegistrationService: Processing module for geregistreerdDoor', [
-            'moduleId' => $moduleId,
-            'organisationUuid' => $organisationUuid,
-        ]);
+        $this->logger->info(
+                'ModuleRegistrationService: Processing module for geregistreerdDoor',
+                [
+                    'moduleId'         => $moduleId,
+                    'organisationUuid' => $organisationUuid,
+                ]
+                );
 
         try {
             $objectService = $this->getObjectService();
@@ -62,13 +96,16 @@ class ModuleRegistrationService
             // Look up the organisatie object whose UUID matches the module's _organisation.
             $organisatieSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-            $registerId = $voorzieningenConfig['register'] ?? null;
+            $registerId          = $voorzieningenConfig['register'] ?? null;
 
             if ($organisatieSchemaId === null || $registerId === null) {
-                $this->logger->warning('ModuleRegistrationService: Organisatie schema or register not configured', [
-                    'organisatieSchemaId' => $organisatieSchemaId,
-                    'registerId' => $registerId,
-                ]);
+                $this->logger->warning(
+                        'ModuleRegistrationService: Organisatie schema or register not configured',
+                        [
+                            'organisatieSchemaId' => $organisatieSchemaId,
+                            'registerId'          => $registerId,
+                        ]
+                        );
                 return;
             }
 
@@ -81,29 +118,38 @@ class ModuleRegistrationService
                     schema: (int) $organisatieSchemaId
                 );
             } catch (\Exception $e) {
-                $this->logger->debug('ModuleRegistrationService: Organisatie not found for organisation UUID', [
-                    'moduleId' => $moduleId,
-                    'organisationUuid' => $organisationUuid,
-                ]);
+                $this->logger->debug(
+                        'ModuleRegistrationService: Organisatie not found for organisation UUID',
+                        [
+                            'moduleId'         => $moduleId,
+                            'organisationUuid' => $organisationUuid,
+                        ]
+                        );
                 return;
             }
 
             if ($organisatieObject === null) {
-                $this->logger->debug('ModuleRegistrationService: Organisatie not found for organisation UUID', [
-                    'moduleId' => $moduleId,
-                    'organisationUuid' => $organisationUuid,
-                ]);
+                $this->logger->debug(
+                        'ModuleRegistrationService: Organisatie not found for organisation UUID',
+                        [
+                            'moduleId'         => $moduleId,
+                            'organisationUuid' => $organisationUuid,
+                        ]
+                        );
                 return;
             }
 
             $organisatieData = $organisatieObject->getObject();
-            $orgType = $organisatieData['type'] ?? null;
+            $orgType         = $organisatieData['type'] ?? null;
 
-            if (empty($orgType)) {
-                $this->logger->debug('ModuleRegistrationService: Organisatie has no type, skipping', [
-                    'moduleId' => $moduleId,
-                    'organisationUuid' => $organisationUuid,
-                ]);
+            if (empty($orgType) === true) {
+                $this->logger->debug(
+                        'ModuleRegistrationService: Organisatie has no type, skipping',
+                        [
+                            'moduleId'         => $moduleId,
+                            'organisationUuid' => $organisationUuid,
+                        ]
+                        );
                 return;
             }
 
@@ -111,22 +157,28 @@ class ModuleRegistrationService
             $geregistreerdDoor = self::TYPE_MAP[$orgType] ?? null;
 
             if ($geregistreerdDoor === null) {
-                $this->logger->warning('ModuleRegistrationService: Unknown org type, cannot map geregistreerdDoor', [
-                    'moduleId' => $moduleId,
-                    'orgType' => $orgType,
-                ]);
+                $this->logger->warning(
+                        'ModuleRegistrationService: Unknown org type, cannot map geregistreerdDoor',
+                        [
+                            'moduleId' => $moduleId,
+                            'orgType'  => $orgType,
+                        ]
+                        );
                 return;
             }
 
             // Check if already set correctly.
-            $moduleData = $moduleObject->getObject();
+            $moduleData   = $moduleObject->getObject();
             $currentValue = $moduleData['geregistreerdDoor'] ?? null;
 
             if ($currentValue === $geregistreerdDoor) {
-                $this->logger->debug('ModuleRegistrationService: geregistreerdDoor already correct', [
-                    'moduleId' => $moduleId,
-                    'geregistreerdDoor' => $geregistreerdDoor,
-                ]);
+                $this->logger->debug(
+                        'ModuleRegistrationService: geregistreerdDoor already correct',
+                        [
+                            'moduleId'          => $moduleId,
+                            'geregistreerdDoor' => $geregistreerdDoor,
+                        ]
+                        );
                 return;
             }
 
@@ -142,30 +194,44 @@ class ModuleRegistrationService
                 _multitenancy: false
             );
 
-            $this->logger->info('ModuleRegistrationService: Set geregistreerdDoor on module', [
-                'moduleId' => $moduleId,
-                'orgType' => $orgType,
-                'geregistreerdDoor' => $geregistreerdDoor,
-            ]);
+            $this->logger->info(
+                    'ModuleRegistrationService: Set geregistreerdDoor on module',
+                    [
+                        'moduleId'          => $moduleId,
+                        'orgType'           => $orgType,
+                        'geregistreerdDoor' => $geregistreerdDoor,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('ModuleRegistrationService: Failed to set geregistreerdDoor', [
-                'moduleId' => $moduleId,
-                'exception' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-        }
-    }
+            $this->logger->error(
+                    'ModuleRegistrationService: Failed to set geregistreerdDoor',
+                    [
+                        'moduleId'  => $moduleId,
+                        'exception' => $e->getMessage(),
+                        'file'      => $e->getFile(),
+                        'line'      => $e->getLine(),
+                    ]
+                    );
+        }//end try
+    }//end handleModuleRegistration()
 
+    /**
+     * Get the object service from the DI container.
+     *
+     * @return ObjectService|null The object service or null if not available
+     */
     private function getObjectService(): ?ObjectService
     {
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (\Exception $e) {
-            $this->logger->error('ModuleRegistrationService: Failed to get ObjectService', [
-                'exception' => $e->getMessage(),
-            ]);
+            $this->logger->error(
+                    'ModuleRegistrationService: Failed to get ObjectService',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
             return null;
         }
-    }
-}
+    }//end getObjectService()
+}//end class

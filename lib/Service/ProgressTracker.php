@@ -1,10 +1,10 @@
 <?php
 /**
  * ProgressTracker Service
- * 
+ *
  * Tracks and reports progress for long-running operations like ArchiMate import/export.
  * Supports real-time streaming via Server-Sent Events.
- * 
+ *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
@@ -23,7 +23,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for tracking and reporting progress of long-running operations
- * 
+ *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
@@ -37,39 +37,39 @@ class ProgressTracker
      * Operation phases and their relative weights for progress calculation
      */
     private const PHASES = [
-        'initializing' => ['weight' => 5, 'description' => 'Initializing'],
-        'validating' => ['weight' => 5, 'description' => 'Validating file'],
-        'parsing' => ['weight' => 10, 'description' => 'Parsing ArchiMate file'],
-        'analyzing' => ['weight' => 5, 'description' => 'Analyzing structure'],
-        'caching' => ['weight' => 10, 'description' => 'Loading existing objects'],
-        'processing_elements' => ['weight' => 30, 'description' => 'Processing elements'],
+        'initializing'             => ['weight' => 5, 'description' => 'Initializing'],
+        'validating'               => ['weight' => 5, 'description' => 'Validating file'],
+        'parsing'                  => ['weight' => 10, 'description' => 'Parsing ArchiMate file'],
+        'analyzing'                => ['weight' => 5, 'description' => 'Analyzing structure'],
+        'caching'                  => ['weight' => 10, 'description' => 'Loading existing objects'],
+        'processing_elements'      => ['weight' => 30, 'description' => 'Processing elements'],
         'processing_relationships' => ['weight' => 15, 'description' => 'Processing relationships'],
         'processing_organizations' => ['weight' => 10, 'description' => 'Processing organizations'],
-        'processing_views' => ['weight' => 10, 'description' => 'Processing views'],
-        'finalizing' => ['weight' => 5, 'description' => 'Finalizing import'],
-        'completed' => ['weight' => 0, 'description' => 'Completed']
+        'processing_views'         => ['weight' => 10, 'description' => 'Processing views'],
+        'finalizing'               => ['weight' => 5, 'description' => 'Finalizing import'],
+        'completed'                => ['weight' => 0, 'description' => 'Completed'],
     ];
 
     /**
      * Current progress state
-     * 
+     *
      * @var array
      */
     private array $progress = [
-        'operation_id' => null,
-        'operation_type' => null,
-        'phase' => 'initializing',
-        'phase_description' => 'Initializing',
-        'total_items' => 0,
-        'processed_items' => 0,
-        'current_item_type' => null,
-        'current_item_name' => null,
-        'percentage' => 0,
-        'start_time' => null,
+        'operation_id'         => null,
+        'operation_type'       => null,
+        'phase'                => 'initializing',
+        'phase_description'    => 'Initializing',
+        'total_items'          => 0,
+        'processed_items'      => 0,
+        'current_item_type'    => null,
+        'current_item_name'    => null,
+        'percentage'           => 0,
+        'start_time'           => null,
         'estimated_completion' => null,
-        'errors' => [],
-        'warnings' => [],
-        'statistics' => []
+        'errors'               => [],
+        'warnings'             => [],
+        'statistics'           => [],
     ];
 
     /**
@@ -82,57 +82,60 @@ class ProgressTracker
         private readonly ISession $session,
         private readonly LoggerInterface $logger
     ) {
-    }
+    }//end __construct()
 
     /**
      * Start tracking a new operation
      *
      * @param string $operationType Type of operation (import, export)
      * @param array  $options       Operation options and metadata
-     * 
+     *
      * @return string Unique operation ID
      */
-    public function startOperation(string $operationType, array $options = []): string
+    public function startOperation(string $operationType, array $options=[]): string
     {
-        $operationId = uniqid($operationType . '_', true);
-        
+        $operationId = uniqid($operationType.'_', true);
+
         $this->progress = [
-            'operation_id' => $operationId,
-            'operation_type' => $operationType,
-            'phase' => 'initializing',
-            'phase_description' => self::PHASES['initializing']['description'],
-            'total_items' => $options['total_items'] ?? 0,
-            'processed_items' => 0,
-            'current_item_type' => null,
-            'current_item_name' => null,
-            'percentage' => 0,
-            'start_time' => time(),
+            'operation_id'         => $operationId,
+            'operation_type'       => $operationType,
+            'phase'                => 'initializing',
+            'phase_description'    => self::PHASES['initializing']['description'],
+            'total_items'          => $options['total_items'] ?? 0,
+            'processed_items'      => 0,
+            'current_item_type'    => null,
+            'current_item_name'    => null,
+            'percentage'           => 0,
+            'start_time'           => time(),
             'estimated_completion' => null,
-            'errors' => [],
-            'warnings' => [],
-            'statistics' => $options['statistics'] ?? []
+            'errors'               => [],
+            'warnings'             => [],
+            'statistics'           => $options['statistics'] ?? [],
         ];
 
         $this->saveProgress();
-        
-        $this->logger->info('Started progress tracking', [
-            'operation_id' => $operationId,
-            'operation_type' => $operationType,
-            'total_items' => $this->progress['total_items']
-        ]);
+
+        $this->logger->info(
+                'Started progress tracking',
+                [
+                    'operation_id'   => $operationId,
+                    'operation_type' => $operationType,
+                    'total_items'    => $this->progress['total_items'],
+                ]
+                );
 
         return $operationId;
-    }
+    }//end startOperation()
 
     /**
      * Set the current phase of the operation
      *
      * @param string $phase Phase identifier
      * @param array  $data  Additional phase data
-     * 
+     *
      * @return void
      */
-    public function setPhase(string $phase, array $data = []): void
+    public function setPhase(string $phase, array $data=[]): void
     {
         if (!isset(self::PHASES[$phase])) {
             $this->logger->warning('Unknown progress phase', ['phase' => $phase]);
@@ -153,13 +156,16 @@ class ProgressTracker
         }
 
         $this->updateProgress();
-        
-        $this->logger->debug('Progress phase updated', [
-            'operation_id' => $this->progress['operation_id'],
-            'phase' => $phase,
-            'total_items' => $this->progress['total_items']
-        ]);
-    }
+
+        $this->logger->debug(
+                'Progress phase updated',
+                [
+                    'operation_id' => $this->progress['operation_id'],
+                    'phase'        => $phase,
+                    'total_items'  => $this->progress['total_items'],
+                ]
+                );
+    }//end setPhase()
 
     /**
      * Update progress within the current phase
@@ -167,10 +173,10 @@ class ProgressTracker
      * @param int    $processedItems Number of items processed
      * @param string $currentItem    Name of current item being processed
      * @param string $itemType       Type of current item
-     * 
+     *
      * @return void
      */
-    public function updateProgress(int $processedItems = null, string $currentItem = null, string $itemType = null): void
+    public function updateProgress(int $processedItems=null, string $currentItem=null, string $itemType=null): void
     {
         if ($processedItems !== null) {
             $this->progress['processed_items'] = $processedItems;
@@ -186,135 +192,141 @@ class ProgressTracker
 
         // Calculate overall percentage based on phase weights and current progress
         $this->progress['percentage'] = $this->calculateOverallPercentage();
-        
+
         // Calculate estimated completion time
         $this->progress['estimated_completion'] = $this->calculateEstimatedCompletion();
 
         $this->saveProgress();
-    }
+    }//end updateProgress()
 
     /**
      * Increment the processed items counter by one
      *
      * @param string $currentItem Name of current item being processed
      * @param string $itemType    Type of current item
-     * 
+     *
      * @return void
      */
-    public function incrementProgress(string $currentItem = null, string $itemType = null): void
+    public function incrementProgress(string $currentItem=null, string $itemType=null): void
     {
         $this->updateProgress(
             $this->progress['processed_items'] + 1,
             $currentItem,
             $itemType
         );
-    }
+    }//end incrementProgress()
 
     /**
      * Add an error to the progress tracking
      *
      * @param string $message Error message
      * @param array  $context Error context
-     * 
+     *
      * @return void
      */
-    public function addError(string $message, array $context = []): void
+    public function addError(string $message, array $context=[]): void
     {
         $this->progress['errors'][] = [
-            'message' => $message,
-            'context' => $context,
-            'timestamp' => time()
+            'message'   => $message,
+            'context'   => $context,
+            'timestamp' => time(),
         ];
 
         $this->saveProgress();
-        
-        $this->logger->error('Progress tracking error', [
-            'operation_id' => $this->progress['operation_id'],
-            'message' => $message,
-            'context' => $context
-        ]);
-    }
+
+        $this->logger->error(
+                'Progress tracking error',
+                [
+                    'operation_id' => $this->progress['operation_id'],
+                    'message'      => $message,
+                    'context'      => $context,
+                ]
+                );
+    }//end addError()
 
     /**
      * Add a warning to the progress tracking
      *
      * @param string $message Warning message
      * @param array  $context Warning context
-     * 
+     *
      * @return void
      */
-    public function addWarning(string $message, array $context = []): void
+    public function addWarning(string $message, array $context=[]): void
     {
         $this->progress['warnings'][] = [
-            'message' => $message,
-            'context' => $context,
-            'timestamp' => time()
+            'message'   => $message,
+            'context'   => $context,
+            'timestamp' => time(),
         ];
 
         $this->saveProgress();
-    }
+    }//end addWarning()
 
     /**
      * Update operation statistics
      *
      * @param array $statistics Statistics to merge
-     * 
+     *
      * @return void
      */
     public function updateStatistics(array $statistics): void
     {
         $this->progress['statistics'] = array_merge($this->progress['statistics'], $statistics);
         $this->saveProgress();
-    }
+    }//end updateStatistics()
 
     /**
      * Complete the operation
      *
      * @param array $finalStatistics Final operation statistics
-     * 
+     *
      * @return void
      */
-    public function completeOperation(array $finalStatistics = []): void
+    public function completeOperation(array $finalStatistics=[]): void
     {
         $this->progress['phase'] = 'completed';
-        $this->progress['phase_description'] = self::PHASES['completed']['description'];
-        $this->progress['percentage'] = 100;
-        $this->progress['processed_items'] = $this->progress['total_items'];
+        $this->progress['phase_description']    = self::PHASES['completed']['description'];
+        $this->progress['percentage']           = 100;
+        $this->progress['processed_items']      = $this->progress['total_items'];
         $this->progress['estimated_completion'] = time();
-        
+
         if (!empty($finalStatistics)) {
             $this->progress['statistics'] = array_merge($this->progress['statistics'], $finalStatistics);
         }
 
         $this->saveProgress();
-        
-        $this->logger->info('Operation completed', [
-            'operation_id' => $this->progress['operation_id'],
-            'duration' => time() - $this->progress['start_time'],
-            'total_items' => $this->progress['total_items'],
-            'errors' => count($this->progress['errors']),
-            'warnings' => count($this->progress['warnings'])
-        ]);
-    }
+
+        $this->logger->info(
+                'Operation completed',
+                [
+                    'operation_id' => $this->progress['operation_id'],
+                    'duration'     => time() - $this->progress['start_time'],
+                    'total_items'  => $this->progress['total_items'],
+                    'errors'       => count($this->progress['errors']),
+                    'warnings'     => count($this->progress['warnings']),
+                ]
+                );
+    }//end completeOperation()
 
     /**
      * Get current progress state
      *
      * @param string $operationId Operation ID to get progress for
-     * 
+     *
      * @return array|null Progress data or null if not found
      */
-    public function getProgress(string $operationId = null): ?array
+    public function getProgress(string $operationId=null): ?array
     {
         if ($operationId && $operationId !== $this->progress['operation_id']) {
             // Load progress from session for different operation
-            $sessionKey = 'progress_' . $operationId;
+            $sessionKey     = 'progress_'.$operationId;
             $storedProgress = $this->session->get($sessionKey);
             return $storedProgress ?: null;
         }
 
         return $this->progress['operation_id'] ? $this->progress : null;
-    }
+    }//end getProgress()
 
     /**
      * Calculate overall percentage based on phase weights and current progress
@@ -323,12 +335,12 @@ class ProgressTracker
      */
     private function calculateOverallPercentage(): int
     {
-        $totalWeight = array_sum(array_column(self::PHASES, 'weight'));
-        $completedWeight = 0;
-        $currentPhaseWeight = 0;
+        $totalWeight          = array_sum(array_column(self::PHASES, 'weight'));
+        $completedWeight      = 0;
+        $currentPhaseWeight   = 0;
         $currentPhaseProgress = 0;
 
-        $phases = array_keys(self::PHASES);
+        $phases            = array_keys(self::PHASES);
         $currentPhaseIndex = array_search($this->progress['phase'], $phases);
 
         // Add weight of all completed phases
@@ -339,7 +351,7 @@ class ProgressTracker
         // Calculate progress within current phase
         if ($currentPhaseIndex !== false) {
             $currentPhaseWeight = self::PHASES[$this->progress['phase']]['weight'];
-            
+
             if ($this->progress['total_items'] > 0) {
                 $currentPhaseProgress = ($this->progress['processed_items'] / $this->progress['total_items']) * $currentPhaseWeight;
             } else {
@@ -349,10 +361,10 @@ class ProgressTracker
         }
 
         $overallProgress = $completedWeight + $currentPhaseProgress;
-        $percentage = $totalWeight > 0 ? intval(($overallProgress / $totalWeight) * 100) : 0;
+        $percentage      = $totalWeight > 0 ? intval(($overallProgress / $totalWeight) * 100) : 0;
 
         return min(100, max(0, $percentage));
-    }
+    }//end calculateOverallPercentage()
 
     /**
      * Calculate estimated completion time
@@ -365,11 +377,11 @@ class ProgressTracker
             return null;
         }
 
-        $elapsed = time() - $this->progress['start_time'];
+        $elapsed        = time() - $this->progress['start_time'];
         $estimatedTotal = ($elapsed / $this->progress['percentage']) * 100;
-        
+
         return $this->progress['start_time'] + intval($estimatedTotal);
-    }
+    }//end calculateEstimatedCompletion()
 
     /**
      * Save progress to session
@@ -379,22 +391,22 @@ class ProgressTracker
     private function saveProgress(): void
     {
         if ($this->progress['operation_id']) {
-            $sessionKey = 'progress_' . $this->progress['operation_id'];
+            $sessionKey = 'progress_'.$this->progress['operation_id'];
             $this->session->set($sessionKey, $this->progress);
         }
-    }
+    }//end saveProgress()
 
     /**
      * Clean up old progress entries from session
      *
      * @param int $maxAge Maximum age in seconds (default: 1 hour)
-     * 
+     *
      * @return void
      */
-    public function cleanupOldProgress(int $maxAge = 3600): void
+    public function cleanupOldProgress(int $maxAge=3600): void
     {
         // Note: This would need to iterate through session keys to find and clean old progress entries
         // Implementation depends on session storage capabilities
         $this->logger->debug('Progress cleanup requested', ['max_age' => $maxAge]);
-    }
-}
+    }//end cleanupOldProgress()
+}//end class
