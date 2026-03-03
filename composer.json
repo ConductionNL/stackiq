@@ -67,7 +67,6 @@
 		"phpcsstandards/phpcsextra": "^1.4",
 		"phpmd/phpmd": "^2.15",
 		"phpmetrics/phpmetrics": "^2.8",
-		"phpro/grumphp": "^2.9",
 		"phpstan/phpstan": "^1.10",
 		"phpunit/phpunit": "^10.5",
 		"roave/security-advisories": "dev-latest",
@@ -78,7 +77,6 @@
 		"allow-plugins": {
 			"bamarni/composer-bin-plugin": true,
 			"php-http/discovery": true,
-			"phpro/grumphp": true,
 			"dealerdirect/phpcodesniffer-composer-installer": true
 		},
 		"optimize-autoloader": true,

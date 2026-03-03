@@ -387,7 +387,7 @@ class SoftwareCatalogueService
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
         // Use the new organization type-based logic instead of old role-based logic
-        $user = $this->_userManager->get($username);
+        $user = $this->_container->get(\OCP\IUserManager::class)->get($username);
         if ($user) {
             $contactData = $contactpersoonObject->getObject();
             $this->_contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);

@@ -114,12 +114,12 @@ class Application extends App implements IBootstrap
                     _userManager: $c->get(IUserManager::class),
                     _secureRandom: $c->get(\OCP\Security\ISecureRandom::class),
                     _groupManager: $c->get(IGroupManager::class),
-                    _appConfig: $c->get(IAppConfig::class),
+                    _config: $c->get(IAppConfig::class),
                     _container: $c,
                     _appManager: $c->get(IAppManager::class),
                     _logger: $c->get(\Psr\Log\LoggerInterface::class),
                     _emailService: $c->get(SymfonyEmailService::class),
-                    _config: $c->get(IConfig::class)
+                    config: $c->get(IConfig::class)
                     );
                 }
                 );
@@ -182,7 +182,7 @@ class Application extends App implements IBootstrap
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
-                    appConfig: $container->get(IAppConfig::class),
+                    config: $container->get(IAppConfig::class),
                     userManager: $container->get(IUserManager::class),
                     emailService: $container->get(SymfonyEmailService::class),
                     );
@@ -199,7 +199,7 @@ class Application extends App implements IBootstrap
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
-                    appConfig: $container->get(IAppConfig::class),
+                    config: $container->get(IAppConfig::class),
                     settingsService: $container->get(SettingsService::class)
                     );
                 }
@@ -210,7 +210,7 @@ class Application extends App implements IBootstrap
                 SymfonyEmailService::class,
                 function ($container) {
                     return new SymfonyEmailService(
-                    appConfig: $container->get(IAppConfig::class),
+                    config: $container->get(IAppConfig::class),
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class)
                     );
@@ -222,7 +222,7 @@ class Application extends App implements IBootstrap
                 SettingsService::class,
                 function ($container) {
                     return new SettingsService(
-                    appConfig: $container->get(IAppConfig::class),
+                    config: $container->get(IAppConfig::class),
                     request: $container->get('OCP\IRequest'),
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
@@ -239,11 +239,11 @@ class Application extends App implements IBootstrap
                     organisatieService: $container->get(\OCA\SoftwareCatalog\Service\OrganisatieService::class),
                     contactpersoonService: $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
                     emailService: $container->get(SymfonyEmailService::class),
-                    appConfig: $container->get(IAppConfig::class),
+                    config: $container->get(IAppConfig::class),
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class),
                     db: $container->get(IDBConnection::class),
-                    contactPersonHandler: $container->get(ContactPersonHandler::class),
+                    contactpersonHandler: $container->get(ContactPersonHandler::class),
                     );
                 }
                 );
@@ -301,7 +301,7 @@ class Application extends App implements IBootstrap
                 \OCA\SoftwareCatalog\Service\ArchiMateImportService::class,
                 function ($container) {
                     return new \OCA\SoftwareCatalog\Service\ArchiMateImportService(
-                    appConfig: $container->get(IAppConfig::class),
+                    config: $container->get(IAppConfig::class),
                     rootFolder: $container->get('OCP\Files\IRootFolder'),
                     userSession: $container->get('OCP\IUserSession'),
                     appManager: $container->get('OCP\App\IAppManager'),
@@ -328,7 +328,7 @@ class Application extends App implements IBootstrap
                 \OCA\SoftwareCatalog\Service\ArchiMateService::class,
                 function ($container) {
                     return new \OCA\SoftwareCatalog\Service\ArchiMateService(
-                    appConfig: $container->get(IAppConfig::class),
+                    config: $container->get(IAppConfig::class),
                     rootFolder: $container->get('OCP\Files\IRootFolder'),
                     userSession: $container->get('OCP\IUserSession'),
                     appManager: $container->get('OCP\App\IAppManager'),
@@ -346,7 +346,7 @@ class Application extends App implements IBootstrap
                 \OCA\SoftwareCatalog\Service\ViewService::class,
                 function ($container) {
                     return new \OCA\SoftwareCatalog\Service\ViewService(
-                    appConfig: $container->get(IAppConfig::class),
+                    config: $container->get(IAppConfig::class),
                     appManager: $container->get('OCP\App\IAppManager'),
                     container: $container,
                     logger: $container->get('Psr\Log\LoggerInterface'),

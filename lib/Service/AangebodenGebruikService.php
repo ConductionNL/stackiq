@@ -563,7 +563,7 @@ class AangebodenGebruikService
             ];
 
             // Add additional filters from options (pagination, search, etc.).
-            $query = $this->addQueryFilters(query: $query, options: $options);
+            $query = $this->addQueryFilters(baseQuery: $query, options: $options);
 
             // Force use of database source (not index/SOLR) like PublicationsController.
             $query['_source'] = 'database';

@@ -392,7 +392,7 @@ class ContactpersoonService
     public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void
     {
         $this->hierarchyHandler->ensureOrganizationBeheerder(
-            contactpersoonObject: $contactpersoonObject,
+            contactgegevensObject: $contactpersoonObject,
             username: $username
         );
 

@@ -487,8 +487,8 @@ class SoftwareCatalogEventListener implements IEventListener
 
             try {
                 $contactpersoonService->handleContactpersoonUpdate(
-                    contactpersoon: $object,
-                    oldContactpersoon: $oldObject
+                    contactpersoonObject: $object,
+                    oldContactpersoonObject: $oldObject
                 );
 
                 $logger->info(
@@ -531,8 +531,8 @@ class SoftwareCatalogEventListener implements IEventListener
             try {
                 // Handle contactgegevens as contactpersoon (backward compatibility).
                 $contactpersoonService->handleContactpersoonUpdate(
-                    contactpersoon: $object,
-                    oldContactpersoon: $oldObject
+                    contactpersoonObject: $object,
+                    oldContactpersoonObject: $oldObject
                 );
 
                 $logger->info(

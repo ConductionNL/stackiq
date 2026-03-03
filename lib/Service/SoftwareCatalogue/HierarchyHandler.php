@@ -73,7 +73,7 @@ class HierarchyHandler
             if (empty($organizationBeheerders) === true) {
                 // No beheerders found - make this user the beheerder.
                 $this->_contactPersonHandler->assignBeheerderRole(
-                    contactgegevensObject: $contactgegevensObject,
+                    contactpersoonObject: $contactgegevensObject,
                     username: $username,
                     organizationUuid: $organizationUuid
                 );
@@ -119,14 +119,14 @@ class HierarchyHandler
 
             // If current user is not a beheerder, set their manager.
             if (in_array(needle: $username, haystack: $organizationBeheerders) === false) {
-                $this->_contactPersonHandler->setUserManager(username: $username, manager: $primaryManager);
+                $this->_contactPersonHandler->setUserManager(username: $username, managerUsername: $primaryManager);
             }
 
             // If there are multiple beheerders, set the primary as manager for others.
             if (count($organizationBeheerders) > 1) {
                 foreach ($organizationBeheerders as $beheerder) {
                     if ($beheerder !== $primaryManager) {
-                        $this->_contactPersonHandler->setUserManager(username: $beheerder, manager: $primaryManager);
+                        $this->_contactPersonHandler->setUserManager(username: $beheerder, managerUsername: $primaryManager);
                     }
                 }
             }

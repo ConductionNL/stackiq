@@ -280,7 +280,7 @@ class OrganisatieService
         // Use OrganisationService to create the entity.
         // NOTE: Don't call save() afterwards as it causes UUID/ID issues in the mapper.
         $organisationEntity = $organisationService->createOrganisation(
-            createOrganisation: (string) $mappedData['naam'],
+            name: (string) $mappedData['naam'],
             description: (string) ($mappedData['type'] ?? ''),
             addCurrentUser: false,
             uuid: $organizationUuid
@@ -364,8 +364,8 @@ class OrganisatieService
                 ];
 
                 $this->emailService->sendUserUpdateEmail(
-                    userData: $userData,
-                    organisationData: $organisationEntity->jsonSerialize()
+                    user: $userData,
+                    organization: $organisationEntity->jsonSerialize()
                 );
             }
 
