@@ -129,11 +129,9 @@
 
         <MismatchingDocblockReturnType errorLevel="suppress"/>
         <EmptyArrayAccess errorLevel="suppress"/>
-        <ImplementedReturnTypeMismatch errorLevel="suppress"/>
         <MissingTemplateParam errorLevel="suppress"/>
         <UndefinedInterfaceMethod errorLevel="suppress"/>
         <UnusedMethodCall errorLevel="suppress"/>
         <UnusedReturnValue errorLevel="suppress"/>
-        <NullableReturnStatement errorLevel="suppress"/>
     </issueHandlers>
 </psalm>
