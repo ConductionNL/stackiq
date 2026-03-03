@@ -774,7 +774,7 @@
       "voorzieningen": {
         "slug": "voorzieningen",
         "title": "Voorzieningen",
-        "version": "2.0.2",
+        "version": "2.0.3",
         "description": "Register voor voorzieningen uit de softwarecatalogus",
         "published": "2025-01-01T00:00:00+00:00",
         "schemas": [
@@ -6518,7 +6518,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.2.2",
+        "version": "0.2.3",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6867,7 +6867,7 @@
             "visible": true,
             "order": 26,
             "facetable": false,
-            "title": "Applicatie Versies",
+            "title": "Applicatieversies",
             "hideOnForm": true,
             "items": {
               "type": "object",
@@ -7053,9 +7053,9 @@
       "moduleVersie": {
         "uri": null,
         "slug": "moduleVersie",
-        "title": "Applicatie Versie",
-        "description": "Schema voor applicatie versies",
-        "version": "0.0.9",
+        "title": "Applicatieversie",
+        "description": "Schema voor applicatieversies",
+        "version": "0.0.10",
         "summary": "",
         "icon": "ViewModule",
         "required": [],
@@ -7095,7 +7095,7 @@
             "maxLength": 255
           },
           "beschrijvingLang": {
-            "description": "Uitgebreide beschrijving van de applicatie versie",
+            "description": "Uitgebreide beschrijving van de applicatieversie",
             "type": "string",
             "order": 4,
             "title": "Beschrijving",
@@ -7144,7 +7144,7 @@
             "title": "Datum Teruggetrokken"
           },
           "gebruiken": {
-            "description": "Het gebruik van deze applicatie versie",
+            "description": "Het gebruik van deze applicatieversie",
             "type": "array",
             "visible": true,
             "order": 18,
