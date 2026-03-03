@@ -53,7 +53,8 @@ class SoftwareCatalogAdmin implements IIconSection
      */
     public function getIcon(): string
     {
-        return $this->urlGenerator->imagePath(appName: 'core', file: 'actions/settings-dark.svg');
+        // phpcs:ignore -- named parameters unsafe for Nextcloud core methods (param names vary by NC version)
+        return $this->urlGenerator->imagePath('core', 'actions/settings-dark.svg');
     }//end getIcon()
 
     /**
