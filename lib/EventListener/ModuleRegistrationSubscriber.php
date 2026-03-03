@@ -1,4 +1,18 @@
 <?php
+/**
+ * Module Registration Subscriber.
+ *
+ * Event subscriber that auto-sets geregistreerdDoor on module objects
+ * based on the owning organisation's type.
+ *
+ * @category  EventListener
+ * @package   OCA\SoftwareCatalog\EventListener
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
+ */
 
 declare(strict_types=1);
 
@@ -16,17 +30,32 @@ use Psr\Container\ContainerInterface;
 /**
  * Event subscriber that auto-sets geregistreerdDoor on module objects
  * based on the owning organisation's type.
+ *
+ * @category EventListener
+ * @package  OCA\SoftwareCatalog\EventListener
  */
 class ModuleRegistrationSubscriber implements IEventListener
 {
+    /**
+     * Constructor for ModuleRegistrationSubscriber.
+     *
+     * @param ContainerInterface $container The DI container
+     */
     public function __construct(
         private readonly ContainerInterface $container
     ) {
     }//end __construct()
 
+    /**
+     * Handle the event.
+     *
+     * @param Event $event The event to handle
+     *
+     * @return void
+     */
     public function handle(Event $event): void
     {
-        if (!($event instanceof ObjectCreatedEvent) && !($event instanceof ObjectUpdatedEvent)) {
+        if (($event instanceof ObjectCreatedEvent) === false && ($event instanceof ObjectUpdatedEvent) === false) {
             return;
         }
 
@@ -44,7 +73,7 @@ class ModuleRegistrationSubscriber implements IEventListener
         $settingsService = $this->container->get(SettingsService::class);
         $moduleSchemaId  = $settingsService->getSchemaIdForObjectType('module');
 
-        if (!$moduleSchemaId || (int) $objectSchemaId !== (int) $moduleSchemaId) {
+        if ($moduleSchemaId === null || (int) $objectSchemaId !== (int) $moduleSchemaId) {
             return;
         }
 

@@ -94,7 +94,7 @@ class ProgressTracker
      */
     public function startOperation(string $operationType, array $options=[]): string
     {
-        $operationId = uniqid($operationType.'_', true);
+        $operationId = uniqid(prefix: $operationType.'_', more_entropy: true);
 
         $this->progress = [
             'operation_id'         => $operationId,
@@ -137,7 +137,7 @@ class ProgressTracker
      */
     public function setPhase(string $phase, array $data=[]): void
     {
-        if (!isset(self::PHASES[$phase])) {
+        if (isset(self::PHASES[$phase]) === false) {
             $this->logger->warning('Unknown progress phase', ['phase' => $phase]);
             return;
         }
@@ -145,13 +145,13 @@ class ProgressTracker
         $this->progress['phase'] = $phase;
         $this->progress['phase_description'] = self::PHASES[$phase]['description'];
 
-        // Update total items if provided
-        if (isset($data['total_items'])) {
+        // Update total items if provided.
+        if (isset($data['total_items']) === true) {
             $this->progress['total_items'] = $data['total_items'];
         }
 
-        // Reset processed items for new phase if specified
-        if (isset($data['reset_progress']) && $data['reset_progress']) {
+        // Reset processed items for new phase if specified.
+        if (isset($data['reset_progress']) === true && $data['reset_progress'] === true) {
             $this->progress['processed_items'] = 0;
         }
 
@@ -190,10 +190,10 @@ class ProgressTracker
             $this->progress['current_item_type'] = $itemType;
         }
 
-        // Calculate overall percentage based on phase weights and current progress
+        // Calculate overall percentage based on phase weights and current progress.
         $this->progress['percentage'] = $this->calculateOverallPercentage();
 
-        // Calculate estimated completion time
+        // Calculate estimated completion time.
         $this->progress['estimated_completion'] = $this->calculateEstimatedCompletion();
 
         $this->saveProgress();
@@ -210,9 +210,9 @@ class ProgressTracker
     public function incrementProgress(string $currentItem=null, string $itemType=null): void
     {
         $this->updateProgress(
-            $this->progress['processed_items'] + 1,
-            $currentItem,
-            $itemType
+            processedItems: $this->progress['processed_items'] + 1,
+            currentItem: $currentItem,
+            itemType: $itemType
         );
     }//end incrementProgress()
 
@@ -291,7 +291,7 @@ class ProgressTracker
         $this->progress['processed_items']      = $this->progress['total_items'];
         $this->progress['estimated_completion'] = time();
 
-        if (!empty($finalStatistics)) {
+        if (empty($finalStatistics) === false) {
             $this->progress['statistics'] = array_merge($this->progress['statistics'], $finalStatistics);
         }
 
@@ -318,14 +318,22 @@ class ProgressTracker
      */
     public function getProgress(string $operationId=null): ?array
     {
-        if ($operationId && $operationId !== $this->progress['operation_id']) {
-            // Load progress from session for different operation
+        if ($operationId !== null && $operationId !== $this->progress['operation_id']) {
+            // Load progress from session for different operation.
             $sessionKey     = 'progress_'.$operationId;
             $storedProgress = $this->session->get($sessionKey);
-            return $storedProgress ?: null;
+            if ($storedProgress !== null && $storedProgress !== false) {
+                return $storedProgress;
+            }
+
+            return null;
         }
 
-        return $this->progress['operation_id'] ? $this->progress : null;
+        if ($this->progress['operation_id'] !== null) {
+            return $this->progress;
+        }
+
+        return null;
     }//end getProgress()
 
     /**
@@ -343,25 +351,29 @@ class ProgressTracker
         $phases            = array_keys(self::PHASES);
         $currentPhaseIndex = array_search($this->progress['phase'], $phases);
 
-        // Add weight of all completed phases
+        // Add weight of all completed phases.
         for ($i = 0; $i < $currentPhaseIndex; $i++) {
             $completedWeight += self::PHASES[$phases[$i]]['weight'];
         }
 
-        // Calculate progress within current phase
+        // Calculate progress within current phase.
         if ($currentPhaseIndex !== false) {
             $currentPhaseWeight = self::PHASES[$this->progress['phase']]['weight'];
 
             if ($this->progress['total_items'] > 0) {
                 $currentPhaseProgress = ($this->progress['processed_items'] / $this->progress['total_items']) * $currentPhaseWeight;
             } else {
-                // If no items to process, consider phase as complete
+                // If no items to process, consider phase as complete.
                 $currentPhaseProgress = $currentPhaseWeight;
             }
         }
 
         $overallProgress = $completedWeight + $currentPhaseProgress;
-        $percentage      = $totalWeight > 0 ? intval(($overallProgress / $totalWeight) * 100) : 0;
+        if ($totalWeight > 0) {
+            $percentage = intval(($overallProgress / $totalWeight) * 100);
+        } else {
+            $percentage = 0;
+        }
 
         return min(100, max(0, $percentage));
     }//end calculateOverallPercentage()
@@ -390,7 +402,7 @@ class ProgressTracker
      */
     private function saveProgress(): void
     {
-        if ($this->progress['operation_id']) {
+        if ($this->progress['operation_id'] !== null) {
             $sessionKey = 'progress_'.$this->progress['operation_id'];
             $this->session->set($sessionKey, $this->progress);
         }
@@ -405,8 +417,8 @@ class ProgressTracker
      */
     public function cleanupOldProgress(int $maxAge=3600): void
     {
-        // Note: This would need to iterate through session keys to find and clean old progress entries
-        // Implementation depends on session storage capabilities
+        // Note: This would need to iterate through session keys to find and clean old progress entries.
+        // Implementation depends on session storage capabilities.
         $this->logger->debug('Progress cleanup requested', ['max_age' => $maxAge]);
     }//end cleanupOldProgress()
 }//end class

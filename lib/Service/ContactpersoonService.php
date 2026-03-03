@@ -10,7 +10,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -36,21 +36,22 @@ use OCP\IAppConfig;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class ContactpersoonService
 {
     /**
-     * ContactpersoonService constructor
+     * ContactpersoonService constructor.
      *
-     * @param ContactPersonHandler $contactPersonHandler Contact person handler
-     * @param GroupHandler         $groupHandler         Group handler
-     * @param HierarchyHandler     $hierarchyHandler     Hierarchy handler
-     * @param LoggerInterface      $logger               Logger interface
-     * @param ContainerInterface   $container            Container interface
-     * @param IAppManager          $appManager           App manager
-     * @param IAppConfig           $config               Configuration service
+     * @param ContactPersonHandler $contactPersonHandler Contact person handler.
+     * @param GroupHandler         $groupHandler         Group handler.
+     * @param HierarchyHandler     $hierarchyHandler     Hierarchy handler.
+     * @param LoggerInterface      $logger               Logger interface.
+     * @param ContainerInterface   $container            Container interface.
+     * @param IAppManager          $appManager           App manager.
+     * @param IAppConfig           $config               Configuration service.
+     * @param SettingsService      $settingsService      Settings service.
      */
     public function __construct(
         private readonly ContactPersonHandler $contactPersonHandler,
@@ -66,25 +67,28 @@ class ContactpersoonService
     }//end __construct()
 
     /**
-     * Processes a contactpersoon object to create a user account
+     * Tracks contact UUIDs currently being processed to prevent event recursion.
+     *
+     * When saveObject() is called to update the username, it triggers ObjectUpdatedEvent
+     * which re-enters this method — this guard breaks that loop.
+     *
+     * @var array
+     */
+    private static array $processingContacts = [];
+
+    /**
+     * Processes a contactpersoon object to create a user account.
      *
      * If the contactpersoon object doesn't have a user or the user is missing,
      * this method will create a user account with appropriate status.
      *
-     * @param object $contactpersoonObject The contactpersoon object to process
-     * @param bool   $isUpdate             Whether this is an update operation
+     * @param object $contactpersoonObject The contactpersoon object to process.
+     * @param bool   $isUpdate             Whether this is an update operation.
      *
-     * @return bool True if processing was successful
-     * @throws \Exception If processing fails
+     * @return bool True if processing was successful.
+     *
+     * @throws \Exception If processing fails.
      */
-
-    /**
-     * Tracks contact UUIDs currently being processed to prevent event recursion.
-     * When saveObject() is called to update the username, it triggers ObjectUpdatedEvent
-     * which re-enters this method — this guard breaks that loop.
-     */
-    private static array $processingContacts = [];
-
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
         $startTime = microtime(true);
@@ -93,27 +97,30 @@ class ContactpersoonService
             $contactData = $contactpersoonObject->getObject();
             $contactId   = $contactpersoonObject->getId();
 
-            // Recursion guard: saveObject triggers ObjectUpdatedEvent which re-enters here
-            if (isset(self::$processingContacts[$contactId])) {
+            // Recursion guard: saveObject triggers ObjectUpdatedEvent which re-enters here.
+            if (isset(self::$processingContacts[$contactId]) === true) {
                 return true;
             }
 
             self::$processingContacts[$contactId] = true;
 
+            $emailValue      = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+            $hasEmail        = empty($emailValue) === false;
+            $hasOrganisation = empty($contactData['organisation']) === false;
             $this->logger->info(
                 'ContactpersoonService: Starting contactpersoon processing',
                 [
                     'contactId'       => $contactId,
                     'isUpdate'        => $isUpdate,
-                    'hasEmail'        => !empty($contactData['email'] ?? $contactData['e-mailadres'] ?? ''),
-                    'hasOrganisation' => !empty($contactData['organisation']),
+                    'hasEmail'        => $hasEmail,
+                    'hasOrganisation' => $hasOrganisation,
                 ]
             );
 
-            // Check if contactpersoon has required data
-            // Schema uses 'e-mailadres' but some data may use 'email'
+            // Check if contactpersoon has required data.
+            // Schema uses 'e-mailadres' but some data may use 'email'.
             $email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-            if (empty($email)) {
+            if (empty($email) === true) {
                 $this->logger->warning(
                     'ContactpersoonService: Contactpersoon has no email, skipping processing',
                     ['contactId' => $contactId]
@@ -134,25 +141,25 @@ class ContactpersoonService
                 return false;
             }
 
-            // Use email as username
+            // Use email as username.
             $username = $email;
 
-            // Check if user already exists
+            // Check if user already exists.
             $userManager = \OC::$server->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
-            if (!$user) {
-                // Check if organization is active before creating user account
+            if ($user === null) {
+                // Check if organization is active before creating user account.
                 $organizationUuid = ($contactData['organisation'] ?? $contactData['organisatie'] ?? '');
 
-                if (!empty($organizationUuid)) {
-                    // Look up organization entity, creating backup if missing
+                if (empty($organizationUuid) === false) {
+                    // Look up organization entity, creating backup if missing.
                     $organisationEntity = null;
                     try {
                         $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
                     } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-                        // Org entity missing — try backup creation from org object
+                        // Org entity missing — try backup creation from org object.
                         $this->logger->info(
                             'ContactpersoonService: Organisation entity missing, attempting backup creation',
                             [
@@ -171,16 +178,19 @@ class ContactpersoonService
                                 _rbac: false,
                                 _multitenancy: false
                             );
-                            if ($orgObject) {
+                            if ($orgObject !== null) {
                                 $orgData   = $orgObject->getObject();
                                 $orgStatus = strtolower(($orgData['status'] ?? ''));
-                                if (in_array($orgStatus, ['actief', 'active'])) {
+                                if (in_array(needle: $orgStatus, haystack: ['actief', 'active']) === true) {
                                     $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
                                     $backupStats        = [
                                         'entitiesCreated' => 0,
                                         'entitiesUpdated' => 0,
                                     ];
-                                    $organisationEntity = $organizationSyncService->ensureOrganisationEntityPublic($orgObject, $backupStats);
+                                    $organisationEntity = $organizationSyncService->ensureOrganisationEntityPublic(
+                                        orgObject: $orgObject,
+                                        stats: $backupStats
+                                    );
                                     $this->logger->info(
                                         'ContactpersoonService: Backup entity created',
                                         [
@@ -190,7 +200,7 @@ class ContactpersoonService
                                         ]
                                     );
                                 }
-                            }
+                            }//end if
                         } catch (\Exception $backupEx) {
                             $this->logger->error(
                                 'ContactpersoonService: Backup entity creation failed',
@@ -204,11 +214,14 @@ class ContactpersoonService
                     }//end try
 
                     try {
-                        if ($organisationEntity && $organisationEntity->getActive()) {
-                            // Determine if this is the first contact for the organization
-                            $isFirstContact = $this->contactPersonHandler->isFirstContactForOrganization($contactpersoonObject, $contactData);
+                        if ($organisationEntity !== null && $organisationEntity->getActive() === true) {
+                            // Determine if this is the first contact for the organization.
+                            $isFirstContact = $this->contactPersonHandler->isFirstContactForOrganization(
+                                contactpersoonObject: $contactpersoonObject,
+                                contactData: $contactData
+                            );
 
-                            // Create user account - organization is active
+                            // Create user account - organization is active.
                             $this->logger->info(
                                 'ContactpersoonService: Creating user account for contactpersoon (org is active)',
                                 [
@@ -219,16 +232,26 @@ class ContactpersoonService
                                 ]
                             );
 
-                            $success = $this->contactPersonHandler->createUserAccount($contactpersoonObject, $isFirstContact);
-                            if (!$success) {
+                            $success = $this->contactPersonHandler->createUserAccount(
+                                contactpersoonObject: $contactpersoonObject,
+                                isFirstContact: $isFirstContact
+                            );
+                            if ($success === false) {
                                 throw new \Exception('Failed to create user account');
                             }
 
-                            // Link user to organization entity
-                            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $username, $organizationUuid);
+                            // Link user to organization entity.
+                            $this->contactPersonHandler->addUserToOrganizationEntity(
+                                contactpersoonObject: $contactpersoonObject,
+                                username: $username,
+                                organizationUuid: $organizationUuid
+                            );
 
-                            // Update contactpersoon object owner to user UID
-                            $this->updateContactpersoonObjectOwner($contactpersoonObject, $username);
+                            // Update contactpersoon object owner to user UID.
+                            $this->updateContactpersoonObjectOwner(
+                                contactObject: $contactpersoonObject,
+                                userUID: $username
+                            );
 
                             $this->logger->info(
                                 'ContactpersoonService: Successfully created user account',
@@ -238,13 +261,19 @@ class ContactpersoonService
                                 ]
                             );
                         } else {
+                            if ($organisationEntity !== null) {
+                                $orgActive = $organisationEntity->getActive();
+                            } else {
+                                $orgActive = false;
+                            }
+
                             $this->logger->info(
                                 'ContactpersoonService: Skipping user creation - organization not active or entity not found',
                                 [
                                     'contactId'          => $contactId,
                                     'organizationUuid'   => $organizationUuid,
                                     'organizationFound'  => $organisationEntity !== null,
-                                    'organizationActive' => $organisationEntity ? $organisationEntity->getActive() : false,
+                                    'organizationActive' => $orgActive,
                                 ]
                             );
                             return false;
@@ -277,15 +306,24 @@ class ContactpersoonService
                 );
             }//end if
 
-            // Update user groups based on contactpersoon data
-            $this->updateUserGroups($contactpersoonObject, $username);
+            // Update user groups based on contactpersoon data.
+            $this->updateUserGroups(
+                contactpersoonObject: $contactpersoonObject,
+                username: $username
+            );
 
-            // Ensure organization has at least one beheerder
-            $this->ensureOrganizationBeheerder($contactpersoonObject, $username);
+            // Ensure organization has at least one beheerder.
+            $this->ensureOrganizationBeheerder(
+                contactpersoonObject: $contactpersoonObject,
+                username: $username
+            );
 
-            // Update the contactpersoon object with username if not set
-            if (empty($contactData['username'])) {
-                $this->updateContactpersoonUsername($contactpersoonObject, $username);
+            // Update the contactpersoon object with username if not set.
+            if (empty($contactData['username']) === true) {
+                $this->updateContactpersoonUsername(
+                    contactpersoonObject: $contactpersoonObject,
+                    username: $username
+                );
             }
 
             $processingTime = round(((microtime(true) - $startTime) * 1000), 2);
@@ -328,12 +366,15 @@ class ContactpersoonService
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
-        // Use the new organization type-based logic instead of old role-based logic
+        // Use the new organization type-based logic instead of old role-based logic.
         $userManager = \OC::$server->get('OCP\IUserManager');
         $user        = $userManager->get($username);
-        if ($user) {
+        if ($user !== null) {
             $contactData = $contactpersoonObject->getObject();
-            $this->contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
+            $this->contactPersonHandler->updateUserGroupsFromContactData(
+                user: $user,
+                contactData: $contactData
+            );
         } else {
             $this->logger->warning('User not found for group update', ['username' => $username]);
         }
@@ -350,7 +391,10 @@ class ContactpersoonService
      */
     public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void
     {
-        $this->hierarchyHandler->ensureOrganizationBeheerder($contactpersoonObject, $username);
+        $this->hierarchyHandler->ensureOrganizationBeheerder(
+            contactpersoonObject: $contactpersoonObject,
+            username: $username
+        );
 
     }//end ensureOrganizationBeheerder()
 
@@ -368,15 +412,6 @@ class ContactpersoonService
     }//end getUserManager()
 
     /**
-     * Updates contactpersoon object with username
-     *
-     * @param object $contactpersoonObject The contactpersoon object
-     * @param string $username              The username to set
-     *
-     * @return void
-     */
-
-    /**
      * Normalize contact data types to match schema expectations.
      * This ensures numeric strings are properly typed as strings.
      *
@@ -386,7 +421,7 @@ class ContactpersoonService
      */
     private function normalizeContactDataTypes(array $data): array
     {
-        // Fields that should always be strings according to the contactpersoon schema
+        // Fields that should always be strings according to the contactpersoon schema.
         $stringFields = [
             'voornaam',
             'tussenvoegsel',
@@ -397,7 +432,7 @@ class ContactpersoonService
         ];
 
         foreach ($stringFields as $field) {
-            if (isset($data[$field]) && (is_int($data[$field]) || is_float($data[$field]))) {
+            if (isset($data[$field]) === true && (is_int($data[$field]) === true || is_float($data[$field]) === true)) {
                 $data[$field] = (string) $data[$field];
             }
         }
@@ -406,6 +441,14 @@ class ContactpersoonService
 
     }//end normalizeContactDataTypes()
 
+    /**
+     * Updates contactpersoon object with username.
+     *
+     * @param object $contactpersoonObject The contactpersoon object.
+     * @param string $username             The username to set.
+     *
+     * @return void
+     */
     private function updateContactpersoonUsername(object $contactpersoonObject, string $username): void
     {
         try {
@@ -462,16 +505,25 @@ class ContactpersoonService
                 ]
             );
 
-            // Process the contactpersoon (this will handle user creation/updates)
-            $this->processContactpersoon($contactpersoonObject, true);
+            // Process the contactpersoon (this will handle user creation/updates).
+            $this->processContactpersoon(
+                contactpersoonObject: $contactpersoonObject,
+                isUpdate: true
+            );
 
-            // If we have old object, check for role changes
-            if ($oldContactpersoonObject) {
-                $this->handleRoleChanges($contactpersoonObject, $oldContactpersoonObject);
+            // If we have old object, check for role changes.
+            if ($oldContactpersoonObject !== null) {
+                $this->handleRoleChanges(
+                    newContactpersoonObject: $contactpersoonObject,
+                    oldContactpersoonObject: $oldContactpersoonObject
+                );
             }
 
             // Sync name/functie fields back to the Nextcloud user when changed.
-            $this->syncNameFieldsToUser($contactpersoonObject, $oldContactpersoonObject);
+            $this->syncNameFieldsToUser(
+                contactpersoonObject: $contactpersoonObject,
+                oldContactpersoonObject: $oldContactpersoonObject
+            );
 
             $this->logger->info(
                 'ContactpersoonService: Successfully handled contactpersoon update',
@@ -501,7 +553,11 @@ class ContactpersoonService
     private function syncNameFieldsToUser(object $contactpersoonObject, ?object $oldContactpersoonObject): void
     {
         $newData = $contactpersoonObject->getObject();
-        $oldData = $oldContactpersoonObject !== null ? $oldContactpersoonObject->getObject() : [];
+        if ($oldContactpersoonObject !== null) {
+            $oldData = $oldContactpersoonObject->getObject();
+        } else {
+            $oldData = [];
+        }
 
         // Check if any name/functie fields have changed.
         $nameFields     = [
@@ -553,7 +609,10 @@ class ContactpersoonService
             ]
         );
 
-        $this->contactPersonHandler->storeContactNameFields($user, $newData);
+        $this->contactPersonHandler->storeContactNameFields(
+            user: $user,
+            contactData: $newData
+        );
 
     }//end syncNameFieldsToUser()
 
@@ -573,10 +632,10 @@ class ContactpersoonService
         $newRoles = ($newData['roles'] ?? []);
         $oldRoles = ($oldData['roles'] ?? []);
 
-        // Check if roles have changed
+        // Check if roles have changed.
         if ($newRoles !== $oldRoles) {
             $username = ($newData['email'] ?? $newData['e-mailadres'] ?? $newData['username'] ?? '');
-            if ($username) {
+            if (empty($username) === false) {
                 $this->logger->info(
                     'ContactpersoonService: Roles changed, updating user groups',
                     [
@@ -587,8 +646,11 @@ class ContactpersoonService
                     ]
                 );
 
-                // Update user groups based on new roles
-                $this->updateUserGroups($newContactpersoonObject, $username);
+                // Update user groups based on new roles.
+                $this->updateUserGroups(
+                    contactpersoonObject: $newContactpersoonObject,
+                    username: $username
+                );
             }
         }
 
@@ -601,7 +663,7 @@ class ContactpersoonService
      */
     private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (!$this->appManager->isEnabledForUser('openregister')) {
+        if ($this->appManager->isEnabledForUser('openregister') === false) {
             return null;
         }
 
@@ -627,7 +689,7 @@ class ContactpersoonService
             $contactData = $contactObject->getObject();
             $username    = ($contactData['email'] ?? $contactData['e-mailadres'] ?? $contactData['username'] ?? '');
 
-            if (!$username) {
+            if (empty($username) === true) {
                 $this->logger->warning(
                     'ContactpersoonService: Contact deletion - no username found',
                     [
@@ -645,12 +707,12 @@ class ContactpersoonService
                 ]
             );
 
-            // Get user manager to disable the user
+            // Get user manager to disable the user.
             $userManager = \OC::$server->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
-            if ($user) {
-                // Disable the user instead of deleting
+            if ($user !== null) {
+                // Disable the user instead of deleting.
                 $user->setEnabled(false);
 
                 $this->logger->info(
@@ -692,16 +754,16 @@ class ContactpersoonService
     {
         try {
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 return [];
             }
 
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-            $contactSchema       = $voorzieningenConfig['contactpersoon_schema'] ?? null;
-            $register            = $voorzieningenConfig['register'] ?? null;
+            $contactSchema       = ($voorzieningenConfig['contactpersoon_schema'] ?? null);
+            $register            = ($voorzieningenConfig['register'] ?? null);
 
-            // Skip if no proper configuration is available
-            if (!$contactSchema || !$register) {
+            // Skip if no proper configuration is available.
+            if ($contactSchema === null || $register === null) {
                 $this->logger->warning(
                 'ContactpersoonService: Missing Voorzieningen configuration',
                 [
@@ -712,7 +774,7 @@ class ContactpersoonService
                 return [];
             }
 
-            // Build query for searchObjects method
+            // Build query for searchObjects method.
             $query = [
                 '@self'        => [
                     'register' => (int) $register,
@@ -755,10 +817,10 @@ class ContactpersoonService
                 ['organizationUuid' => $organizationUuid]
             );
 
-            // Get contact persons for the organization
+            // Get contact persons for the organization.
             $contactPersons = $this->getContactPersonsForOrganization($organizationUuid);
 
-            if (empty($contactPersons)) {
+            if (empty($contactPersons) === true) {
                 $this->logger->info(
                     'ContactpersoonService: No contact persons found for organization',
                     ['organizationUuid' => $organizationUuid]
@@ -774,23 +836,23 @@ class ContactpersoonService
                 ]
             );
 
-            // Get user manager to fetch user details
+            // Get user manager to fetch user details.
             $userManager            = \OC::$server->get('OCP\IUserManager');
             $enhancedContactPersons = [];
 
-            // Loop through each contact person and fetch user details
+            // Loop through each contact person and fetch user details.
             foreach ($contactPersons as $contactPerson) {
                 try {
                     $contactData = $contactPerson->getObject();
-                    $username    = $contactData['username'] ?? null;
+                    $username    = ($contactData['username'] ?? null);
 
-                    // Initialize user details as null
+                    // Initialize user details as null.
                     $userDetails = null;
 
-                    // If username exists, fetch user details
-                    if ($username) {
+                    // If username exists, fetch user details.
+                    if ($username !== null) {
                         $user = $userManager->get($username);
-                        if ($user) {
+                        if ($user !== null) {
                             $userDetails = [
                                 'uid'         => $user->getUID(),
                                 'email'       => $user->getEMailAddress(),
@@ -830,11 +892,11 @@ class ContactpersoonService
                         );
                     }//end if
 
-                    // Create enhanced contact person object with user details spliced in
+                    // Create enhanced contact person object with user details spliced in.
                     $enhancedContactData = $contactData;
                     $enhancedContactData['userDetails'] = $userDetails;
 
-                    // Create a new object with the enhanced data
+                    // Create a new object with the enhanced data.
                     $enhancedContactPerson = clone $contactPerson;
                     $enhancedContactPerson->setObject($enhancedContactData);
 
@@ -849,7 +911,7 @@ class ContactpersoonService
                         ]
                     );
 
-                    // Still add the contact person without user details
+                    // Still add the contact person without user details.
                     $enhancedContactPersons[] = $contactPerson;
                 }//end try
             }//end foreach
@@ -862,7 +924,7 @@ class ContactpersoonService
                     'contactPersonsWithUserDetails' => count(
                         array_filter(
                             $enhancedContactPersons,
-                            function ($cp) {
+                            static function ($cp) {
                                 $data = $cp->getObject();
                                 return $data['userDetails'] !== null;
                             }
@@ -911,7 +973,7 @@ class ContactpersoonService
             $bulkUserInfo = [];
             $userManager  = \OC::$server->get('OCP\IUserManager');
 
-            // Get contact person register and schema from settings
+            // Get contact person register and schema from settings.
             $contactRegister = null;
             $contactSchema   = null;
             try {
@@ -931,9 +993,9 @@ class ContactpersoonService
 
             foreach ($contactpersoonIds as $contactpersoonId) {
                 try {
-                    // Get contactpersoon from OpenRegister
+                    // Get contactpersoon from OpenRegister.
                     $objectService = $this->getObjectService();
-                    if (!$objectService) {
+                    if ($objectService === null) {
                         $this->logger->warning(
                             'ContactpersoonService: ObjectService not available for bulk user info',
                             ['contactpersoonId' => $contactpersoonId]
@@ -941,7 +1003,7 @@ class ContactpersoonService
                         continue;
                     }
 
-                    // Find the contactpersoon object with register and schema specified
+                    // Find the contactpersoon object with register and schema specified.
                     $contactObject = $objectService->findSilent(
                         id: $contactpersoonId,
                         _extend: [],
@@ -952,7 +1014,7 @@ class ContactpersoonService
                         _multitenancy: false
                     );
 
-                    if (!$contactObject) {
+                    if ($contactObject === null) {
                         $this->logger->warning(
                             'ContactpersoonService: Contactpersoon not found for bulk user info',
                             ['contactpersoonId' => $contactpersoonId]
@@ -969,15 +1031,15 @@ class ContactpersoonService
                     $username    = $contactData['username'] ?? null;
 
                     $userInfo = [
-                        'hasUser'  => !empty($username),
+                        'hasUser'  => empty($username) === false,
                         'username' => $username,
                         'groups'   => [],
                     ];
 
-                    // If user exists, get their current groups
-                    if ($username) {
+                    // If user exists, get their current groups.
+                    if (empty($username) === false) {
                         $user = $userManager->get($username);
-                        if ($user) {
+                        if ($user !== null) {
                             $groupManager        = \OC::$server->get('OCP\IGroupManager');
                             $userGroups          = $groupManager->getUserGroups($user);
                             $userInfo['groups']  = array_keys($userGroups);
@@ -1005,7 +1067,7 @@ class ContactpersoonService
                         ]
                     );
 
-                    // Add error entry for this contactpersoon
+                    // Add error entry for this contactpersoon.
                     $bulkUserInfo[$contactpersoonId] = [
                         'hasUser'  => false,
                         'username' => null,
@@ -1023,7 +1085,7 @@ class ContactpersoonService
                         array_filter(
                             $bulkUserInfo,
                             function ($info) {
-                                return !isset($info['error']);
+                                return isset($info['error']) === false;
                             }
                         )
                     ),
@@ -1046,10 +1108,11 @@ class ContactpersoonService
     }//end getBulkUserInfo()
 
     /**
-     * Updates the contactpersoon object's @self metadata to set owner to the user UID
+     * Updates the contactpersoon object's @self metadata to set owner to the user UID.
      *
-     * @param  object $contactObject The contactpersoon object to update
-     * @param  string $userUID       The user UID to set as owner
+     * @param object $contactObject The contactpersoon object to update.
+     * @param string $userUID       The user UID to set as owner.
+     *
      * @return void
      */
     private function updateContactpersoonObjectOwner(object $contactObject, string $userUID): void
@@ -1057,12 +1120,12 @@ class ContactpersoonService
         try {
             $contactId = $contactObject->getUuid();
 
-            // Get configuration for register and schema
+            // Get configuration for register and schema.
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
             $register            = ($voorzieningenConfig['register'] ?? '');
             $contactSchema       = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
 
-            if (empty($register) || empty($contactSchema)) {
+            if (empty($register) === true || empty($contactSchema) === true) {
                 $this->logger->warning(
                     'ContactpersoonService: Cannot update object owner - missing configuration',
                     [
@@ -1084,20 +1147,20 @@ class ContactpersoonService
                 ]
             );
 
-            // Get the current object data and normalize types
+            // Get the current object data and normalize types.
             $currentObject = $contactObject->getObject();
             $currentObject = $this->normalizeContactDataTypes($currentObject);
 
-            // Get current @self metadata or create new
+            // Get current @self metadata or create new.
             $selfMetadata = ($currentObject['@self'] ?? []);
 
-            // Update the owner field to the user UID
+            // Update the owner field to the user UID.
             $selfMetadata['owner'] = $userUID;
 
-            // Set the organisation field in @self metadata to the organization UUID
-            // This ensures the contact person is properly linked to their organization
+            // Set the organisation field in @self metadata to the organization UUID.
+            // This ensures the contact person is properly linked to their organization.
             $organizationUuid = ($currentObject['organisation'] ?? $currentObject['organisatie'] ?? '');
-            if (!empty($organizationUuid)) {
+            if (empty($organizationUuid) === false) {
                 $selfMetadata['organisation'] = $organizationUuid;
                 $this->logger->info(
                     'ContactpersoonService: Setting @self.organisation metadata',
@@ -1116,7 +1179,7 @@ class ContactpersoonService
                 );
             }
 
-            // Update the object with the new @self metadata
+            // Update the object with the new @self metadata.
             $currentObject['@self'] = $selfMetadata;
             $contactObject->setObject($currentObject);
 
@@ -1158,10 +1221,13 @@ class ContactpersoonService
     }//end updateContactpersoonObjectOwner()
 
     /**
-     * Enable user account for a contactpersoon
+     * Enable user account for a contactpersoon.
      *
-     * @param  string $contactpersoonId
-     * @throws \Exception
+     * @param string $contactpersoonId The UUID of the contactpersoon.
+     *
+     * @return void
+     *
+     * @throws \Exception If enabling fails.
      */
     public function enableUserForContactpersoon(string $contactpersoonId): void
     {
@@ -1172,7 +1238,7 @@ class ContactpersoonService
             );
 
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 throw new \Exception('ObjectService not available');
             }
 
@@ -1183,25 +1249,25 @@ class ContactpersoonService
                 _rbac: false,
                 _multitenancy: false
             );
-            if (!$contactObject) {
+            if ($contactObject === null) {
                 throw new \Exception('Contactpersoon not found');
             }
 
             $contactData = $contactObject->getObject();
-            $username    = $contactData['username'] ?? null;
+            $username    = ($contactData['username'] ?? null);
 
-            if (!$username) {
+            if (empty($username) === true) {
                 throw new \Exception('No username found for contactpersoon');
             }
 
             $userManager = \OC::$server->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
-            if (!$user) {
+            if ($user === null) {
                 throw new \Exception('User not found in Nextcloud');
             }
 
-            // Enable the user
+            // Enable the user.
             $user->setEnabled(true);
 
             $this->logger->info(
@@ -1226,10 +1292,13 @@ class ContactpersoonService
     }//end enableUserForContactpersoon()
 
     /**
-     * Disable user account for a contactpersoon
+     * Disable user account for a contactpersoon.
      *
-     * @param  string $contactpersoonId
-     * @throws \Exception
+     * @param string $contactpersoonId The UUID of the contactpersoon.
+     *
+     * @return void
+     *
+     * @throws \Exception If disabling fails.
      */
     public function disableUserForContactpersoon(string $contactpersoonId): void
     {
@@ -1240,7 +1309,7 @@ class ContactpersoonService
             );
 
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 throw new \Exception('ObjectService not available');
             }
 
@@ -1251,25 +1320,25 @@ class ContactpersoonService
                 _rbac: false,
                 _multitenancy: false
             );
-            if (!$contactObject) {
+            if ($contactObject === null) {
                 throw new \Exception('Contactpersoon not found');
             }
 
             $contactData = $contactObject->getObject();
-            $username    = $contactData['username'] ?? null;
+            $username    = ($contactData['username'] ?? null);
 
-            if (!$username) {
+            if (empty($username) === true) {
                 throw new \Exception('No username found for contactpersoon');
             }
 
             $userManager = \OC::$server->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
-            if (!$user) {
+            if ($user === null) {
                 throw new \Exception('User not found in Nextcloud');
             }
 
-            // Disable the user
+            // Disable the user.
             $user->setEnabled(false);
 
             $this->logger->info(

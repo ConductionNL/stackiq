@@ -10,7 +10,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/OpenConnector
  */
 
@@ -34,7 +34,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/OpenConnector
  */
 class TestEventListener implements IEventListener
@@ -62,7 +62,7 @@ class TestEventListener implements IEventListener
      */
     public function handle(Event $event): void
     {
-        // Log that we received ANY event first
+        // Log that we received ANY event first.
         $this->logger->info(
                 'SoftwareCatalog TestEventListener: Event received!',
                 [
@@ -72,7 +72,7 @@ class TestEventListener implements IEventListener
                 ]
                 );
 
-        // Handle UserLoggedInEvent specifically
+        // Handle UserLoggedInEvent specifically.
         if ($event instanceof UserLoggedInEvent) {
             $user = $event->getUser();
 
@@ -87,7 +87,7 @@ class TestEventListener implements IEventListener
                     ]
                     );
 
-            // Test that we can access Nextcloud services
+            // Test that we can access Nextcloud services.
             try {
                 $this->logger->debug(
                         'SoftwareCatalog TestEventListener: Event listener is working correctly!',
@@ -107,7 +107,7 @@ class TestEventListener implements IEventListener
                         );
             }
         } else {
-            // Log other events we might receive
+            // Log other events we might receive.
             $this->logger->debug(
                     'SoftwareCatalog TestEventListener: Received unhandled event',
                     [

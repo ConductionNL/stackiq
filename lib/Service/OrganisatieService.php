@@ -1,6 +1,6 @@
 <?php
 /**
- * Organisatie Service
+ * Organisatie Service.
  *
  * This file contains the service class for handling organization-specific operations
  * in the SoftwareCatalog application.
@@ -10,7 +10,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -26,7 +26,7 @@ use OCP\App\IAppManager;
 use OCP\IAppConfig;
 
 /**
- * Service for handling organization-specific operations
+ * Service for handling organization-specific operations.
  *
  * This service provides functionality for organization entity creation,
  * status management, and integration with OpenRegister.
@@ -35,19 +35,21 @@ use OCP\IAppConfig;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class OrganisatieService
 {
     /**
-     * OrganisatieService constructor
+     * OrganisatieService constructor.
      *
      * @param OrganizationHandler $organizationHandler Organization handler
      * @param LoggerInterface     $logger              Logger interface
      * @param ContainerInterface  $container           Container interface
      * @param IAppManager         $appManager          App manager
      * @param IAppConfig          $config              Configuration service
+     * @param IUserManager        $userManager         User manager service
+     * @param SymfonyEmailService $emailService        Email service
      */
     public function __construct(
         private readonly OrganizationHandler $organizationHandler,
@@ -61,7 +63,7 @@ class OrganisatieService
     }//end __construct()
 
     /**
-     * Creates an organization entity in OpenRegister
+     * Creates an organization entity in OpenRegister.
      *
      * @param array $objectData The organization object data
      *
@@ -71,7 +73,7 @@ class OrganisatieService
     {
         try {
             $organizationUuid = $objectData['id'] ?? null;
-            if (!$organizationUuid) {
+            if (empty($organizationUuid) === true) {
                 $this->logger->error('OrganisatieService: No organization UUID provided for creation');
                 return null;
             }
@@ -84,20 +86,24 @@ class OrganisatieService
                     ]
                     );
 
-            // Map the data for OpenRegister
+            // Map the data for OpenRegister.
             $mappedData = $this->mapOrganizationDataForOpenRegister($objectData);
 
-            // Get organisation service
+            // Get organisation service.
             $organisationService = $this->getOrganisationService();
-            if (!$organisationService) {
+            if ($organisationService === null) {
                 $this->logger->error('OrganisatieService: OrganisationService not available');
                 return null;
             }
 
-            // Create the organization entity
-            $organisationEntity = $this->createOrganisationEntityInternal($organisationService, $mappedData, $organizationUuid);
+            // Create the organization entity.
+            $organisationEntity = $this->createOrganisationEntityInternal(
+                organisationService: $organisationService,
+                mappedData: $mappedData,
+                organizationUuid: $organizationUuid
+            );
 
-            if ($organisationEntity) {
+            if ($organisationEntity !== null) {
                 $this->logger->info(
                         'OrganisatieService: Successfully created organization entity',
                         [
@@ -121,7 +127,7 @@ class OrganisatieService
     }//end createOrganisationInOpenRegister()
 
     /**
-     * Updates organization entity status based on object data
+     * Updates organization entity status based on object data.
      *
      * @param string $organizationUuid The organization UUID
      * @param array  $objectData       The organization object data
@@ -139,14 +145,14 @@ class OrganisatieService
                     ]
                     );
 
-            // Get the organization entity
+            // Get the organization entity.
             $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
             $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
 
-            // Map status from SoftwareCatalog to OpenRegister
+            // Map status from SoftwareCatalog to OpenRegister.
             $active = $this->mapStatus($objectData['beoordeling'] ?? 'actief');
 
-            // Update the entity
+            // Update the entity.
             $organisationEntity->setActive($active);
             $organisationMapper->save($organisationEntity);
 
@@ -172,13 +178,13 @@ class OrganisatieService
     }//end updateOrganizationStatus()
 
     /**
-     * Gets the OrganisationService instance
+     * Gets the OrganisationService instance.
      *
-     * @return \OCA\OpenRegister\Service\OrganisationService|null
+     * @return \OCA\OpenRegister\Service\OrganisationService|null The service instance or null if unavailable
      */
     private function getOrganisationService(): ?\OCA\OpenRegister\Service\OrganisationService
     {
-        if (!$this->appManager->isEnabledForUser('openregister')) {
+        if ($this->appManager->isEnabledForUser('openregister') === false) {
             return null;
         }
 
@@ -191,14 +197,6 @@ class OrganisatieService
     }//end getOrganisationService()
 
     /**
-     * Maps organization data for OpenRegister format
-     *
-     * @param array $objectData The organization object data
-     *
-     * @return array The mapped data for OpenRegister
-     */
-
-    /**
      * Maps organization data from Software Catalog object to OpenRegister format.
      *
      * @param array $objectData The organization object data.
@@ -207,12 +205,12 @@ class OrganisatieService
      */
     private function mapOrganizationDataForOpenRegister(array $objectData): array
     {
-        // Get the organization name - try 'naam' first, then 'name', then use UUID as fallback
+        // Get the organization name - try 'naam' first, then 'name', then use UUID as fallback.
         $naam = $objectData['naam'] ?? $objectData['name'] ?? null;
 
-        // If still no name, create a unique one using the ID to avoid slug conflicts
-        if (empty($naam) || $naam === 'Unknown') {
-            $orgId = $objectData['id'] ?? uniqid('org-');
+        // If still no name, create a unique one using the ID to avoid slug conflicts.
+        if (empty($naam) === true || $naam === 'Unknown') {
+            $orgId = $objectData['id'] ?? uniqid(prefix: 'org-');
             $naam  = 'Organisation '.substr($orgId, 0, 8);
         }
 
@@ -227,7 +225,7 @@ class OrganisatieService
     }//end mapOrganizationDataForOpenRegister()
 
     /**
-     * Maps status from Software Catalog to OpenRegister format
+     * Maps status from Software Catalog to OpenRegister format.
      *
      * @param string $status The status from Software Catalog
      *
@@ -240,13 +238,13 @@ class OrganisatieService
         return match ($normalizedStatus) {
             'actief', 'active' => true,
             'inactief', 'inactive', 'deactief' => false,
+            // Default to active for unknown statuses.
             default => true
-            // Default to active for unknown statuses
         };
     }//end mapStatus()
 
     /**
-     * Internal method to create organization entity
+     * Internal method to create organization entity.
      *
      * HOTFIX: Parent organisation setting has been disabled due to RBAC issues.
      * Previously, new organisations were automatically set as children of the active organisation,
@@ -264,33 +262,28 @@ class OrganisatieService
         array $mappedData,
         string $organizationUuid
     ): \OCA\OpenRegister\Db\Organisation {
-
         // HOTFIX: Commented out automatic parent organisation setting due to RBAC issues.
         // When child organisations are created, the parent relationship causes permission problems
         // where users cannot access the newly created organisations due to hierarchical RBAC filtering.
         // TODO: Investigate and fix RBAC logic to properly handle parent-child organisation relationships.
-        // $parentOrganisationUuid = $this->getActiveOrganisationUuid($organisationService);
+        // Disabled: $parentOrganisationUuid = $this->getActiveOrganisationUuid($organisationService).
         $this->logger->info(
                 'OrganisatieService: Creating organisation entity',
                 [
                     'uuid'   => $organizationUuid,
                     'name'   => $mappedData['naam'],
                     'active' => $mappedData['active'],
-            // 'parentOrganisation' => $parentOrganisationUuid // HOTFIX: Commented out
+                    // 'parentOrganisation' => $parentOrganisationUuid // HOTFIX: Commented out.
                 ]
                 );
 
         // Use OrganisationService to create the entity.
         // NOTE: Don't call save() afterwards as it causes UUID/ID issues in the mapper.
         $organisationEntity = $organisationService->createOrganisation(
-            (string) $mappedData['naam'],
-        // name (string)
-            (string) ($mappedData['type'] ?? ''),
-        // description (string)
-            false,
-        // addCurrentUser (bool) - don't auto-add current user
-            $organizationUuid
-        // uuid (string)
+            createOrganisation: (string) $mappedData['naam'],
+            description: (string) ($mappedData['type'] ?? ''),
+            addCurrentUser: false,
+            uuid: $organizationUuid
         );
 
         $this->logger->info(
@@ -335,7 +328,7 @@ class OrganisatieService
     }//end getActiveOrganisationUuid()
 
     /**
-     * Adds users to organization entity
+     * Adds users to organization entity.
      *
      * @param string $organizationUuid The organization UUID
      * @param array  $usernames        Array of usernames to add
@@ -353,11 +346,11 @@ class OrganisatieService
                     ]
                     );
 
-            // Get the organization entity
+            // Get the organization entity.
             $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
             $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
 
-            // Get current users and merge with new ones
+            // Get current users and merge with new ones.
             $currentUsers = $organisationEntity->getUsers() ?? [];
             $allUsers     = array_unique(array_merge($currentUsers, $usernames));
 
@@ -370,10 +363,13 @@ class OrganisatieService
                     'name'     => $user->getDisplayName(),
                 ];
 
-                $this->emailService->sendUserUpdateEmail($userData, $organisationEntity->jsonSerialize());
+                $this->emailService->sendUserUpdateEmail(
+                    userData: $userData,
+                    organisationData: $organisationEntity->jsonSerialize()
+                );
             }
 
-            // Update the entity
+            // Update the entity.
             $organisationEntity->setUsers($allUsers);
             $organisationMapper->save($organisationEntity);
 
@@ -395,7 +391,7 @@ class OrganisatieService
                         'error'            => $e->getMessage(),
                     ]
                     );
-            // Log detailed error information using PSR-3 logger
+            // Log detailed error information using PSR-3 logger.
             $this->logger->error(
                     'OrganisatieService: Exception details',
                     [
@@ -408,7 +404,7 @@ class OrganisatieService
     }//end addUsersToOrganization()
 
     /**
-     * Gets admin group usernames
+     * Gets admin group usernames.
      *
      * @return array Array of admin usernames
      */
@@ -418,7 +414,7 @@ class OrganisatieService
             $groupManager = $this->container->get('OCP\IGroupManager');
             $adminGroup   = $groupManager->get('admin');
 
-            if ($adminGroup) {
+            if ($adminGroup !== null) {
                 $adminUsers     = $adminGroup->getUsers();
                 $adminUsernames = [];
                 foreach ($adminUsers as $user) {

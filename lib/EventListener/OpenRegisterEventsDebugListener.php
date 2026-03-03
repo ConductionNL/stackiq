@@ -14,7 +14,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  *
- * @version GIT: <git-id>
+ * @version GIT: <git_id>
  *
  * @link https://SoftwareCatalog.app
  */
@@ -112,17 +112,17 @@ class OpenRegisterEventsDebugListener implements IEventListener
                 ]
                 );
 
-        if (!$this->debugEnabled) {
-            $this->logger->warning('SoftwareCatalog OpenRegister Debug: Debug disabled, skipping detailed logging');
+        if ($this->debugEnabled === false) {
+            $this->logger->warning('SoftwareCatalog OpenRegister Debug: Debug disabled, skipping detailed logging.');
 
             return;
         }
 
         $eventData = $this->extractEventData($event);
 
-        // Log comprehensive debug information
+        // Log comprehensive debug information.
         $this->logger->info(
-            '[SoftwareCatalog] 🔍 OPENREGISTER EVENT: {eventType} received from OpenRegister',
+            '[SoftwareCatalog] OPENREGISTER EVENT: {eventType} received from OpenRegister',
             [
                 'app'           => 'softwarecatalog',
                 'eventType'     => $eventType,
@@ -148,11 +148,11 @@ class OpenRegisterEventsDebugListener implements IEventListener
      */
     private function getEventTypeName(string $eventClass): string
     {
-        // Extract the class name without namespace
+        // Extract the class name without namespace.
         $className = substr($eventClass, strrpos($eventClass, '\\') + 1);
 
-        // Remove 'Event' suffix if present
-        if (str_ends_with($className, 'Event')) {
+        // Remove 'Event' suffix if present.
+        if (str_ends_with(haystack: $className, needle: 'Event') === true) {
             $className = substr($className, 0, -5);
         }
 
@@ -179,7 +179,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
             'eventClass' => get_class($event),
         ];
 
-        // Handle Object events
+        // Handle Object events.
         if ($event instanceof ObjectCreatedEvent) {
             $object = $event->getObject();
             $data   = array_merge(
@@ -198,7 +198,14 @@ class OpenRegisterEventsDebugListener implements IEventListener
         } else if ($event instanceof ObjectUpdatedEvent) {
             $newObject = $event->getNewObject();
             $oldObject = $event->getOldObject();
-            $data      = array_merge(
+
+            if ($oldObject !== null) {
+                $oldObjectData = $this->getSafeObjectData($oldObject->getObject());
+            } else {
+                $oldObjectData = null;
+            }
+
+            $data = array_merge(
                     $data,
                     [
                         'eventType'     => 'ObjectUpdated',
@@ -211,7 +218,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'owner'         => $newObject->getOwner(),
                         'updated'       => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
                         'newObjectData' => $this->getSafeObjectData($newObject->getObject()),
-                        'oldObjectData' => $oldObject ? $this->getSafeObjectData($oldObject->getObject()) : null,
+                        'oldObjectData' => $oldObjectData,
                     ]
                     );
         } else if ($event instanceof ObjectDeletedEvent) {
@@ -267,10 +274,8 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'revertedTo' => $event->getRevertedToVersion(),
                     ]
                     );
-        }//end if
-
-        // Handle Register events
-        else if ($event instanceof RegisterCreatedEvent) {
+            // Handle Register events.
+        } else if ($event instanceof RegisterCreatedEvent) {
             $register = $event->getRegister();
             $data     = array_merge(
                     $data,
@@ -303,10 +308,8 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'registerSlug'  => $register->getSlug(),
                     ]
                     );
-        }
-
-        // Handle Schema events
-        else if ($event instanceof SchemaCreatedEvent) {
+            // Handle Schema events.
+        } else if ($event instanceof SchemaCreatedEvent) {
             $schema = $event->getSchema();
             $data   = array_merge(
                     $data,
@@ -339,10 +342,8 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'schemaVersion' => $schema->getVersion(),
                     ]
                     );
-        }
-
-        // Handle Organisation events
-        else if ($event instanceof OrganisationCreatedEvent) {
+            // Handle Organisation events.
+        } else if ($event instanceof OrganisationCreatedEvent) {
             $organisation = $event->getOrganisation();
             $data         = array_merge(
                     $data,
@@ -352,13 +353,11 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'organisationTitle' => $organisation->getTitle(),
                     ]
                     );
-        }
-
-        // Unknown event type
-        else {
+            // Unknown event type.
+        } else {
             $data['eventType'] = 'Unknown';
             $data['note']      = 'Event type not specifically handled by SoftwareCatalog debug listener';
-        }
+        }//end if
 
         return $data;
 
@@ -376,10 +375,10 @@ class OpenRegisterEventsDebugListener implements IEventListener
      */
     private function getSafeObjectData(mixed $objectData): mixed
     {
-        // Convert to JSON string to check size
+        // Convert to JSON string to check size.
         $jsonData = json_encode($objectData);
 
-        // If the data is too large (>2KB), truncate it
+        // If the data is too large (>2KB), truncate it.
         if (strlen($jsonData) > 2048) {
             return [
                 '_truncated'    => true,

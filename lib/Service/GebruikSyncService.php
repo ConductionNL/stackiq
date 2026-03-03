@@ -1,4 +1,21 @@
 <?php
+/**
+ * Gebruik Sync Service.
+ *
+ * Service for synchronizing and processing Gebruik (Usage) objects.
+ *
+ * This service handles the processing of gebruik schema objects, including:
+ * - Processing gebruiktVoorReferentiecomponenten to populate amefElements
+ * - Auto-updating status based on date fields
+ *
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Ruben van der Linde <ruben@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl
+ * @version   GIT: <git_id>
+ * @link      https://github.com/conduction/nextcloud-software-catalog
+ */
 
 declare(strict_types=1);
 
@@ -11,28 +28,34 @@ use Exception;
 use DateTime;
 
 /**
- * Service for synchronizing and processing Gebruik (Usage) objects
- *
- * This service handles the processing of gebruik schema objects, including:
- * - Processing gebruiktVoorReferentiecomponenten to populate amefElements
- * - Auto-updating status based on date fields
+ * Service for synchronizing and processing Gebruik (Usage) objects.
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Ruben van der Linde <ruben@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/conduction/nextcloud-software-catalog
  */
 class GebruikSyncService
 {
 
+    /**
+     * Logger for debugging and error reporting.
+     *
+     * @var LoggerInterface
+     */
     private LoggerInterface $logger;
 
+    /**
+     * Service for retrieving configuration settings.
+     *
+     * @var SettingsService
+     */
     private SettingsService $settingsService;
 
     /**
-     * Constructor for GebruikSyncService
+     * Constructor for GebruikSyncService.
      *
      * @param LoggerInterface $logger          Logger for debugging and error reporting
      * @param SettingsService $settingsService Service for retrieving configuration settings
@@ -46,12 +69,13 @@ class GebruikSyncService
     }//end __construct()
 
     /**
-     * Process a specific gebruik object
+     * Process a specific gebruik object.
      *
-     * This method handles both AMEF elements processing and status auto-update
+     * This method handles both AMEF elements processing and status auto-update.
      *
-     * @param  ObjectEntity $gebruikObject The gebruik object to process
-     * @return array Processing statistics
+     * @param ObjectEntity $gebruikObject The gebruik object to process
+     *
+     * @return array Processing statistics.
      */
     public function processSpecificGebruik(ObjectEntity $gebruikObject): array
     {
@@ -78,12 +102,12 @@ class GebruikSyncService
                     ]
                     );
 
-            // Step 1: Process gebruiktVoorReferentiecomponenten for AMEF elements
+            // Step 1: Process gebruiktVoorReferentiecomponenten for AMEF elements.
             $amefStats = $this->processAmefElements($gebruikObject);
             $stats['amefElementsProcessed'] = $amefStats['amefElementsProcessed'];
             $stats['errors'] = array_merge($stats['errors'], $amefStats['errors']);
 
-            // Step 2: Auto-update status based on dates
+            // Step 2: Auto-update status based on dates.
             $statusStats            = $this->updateStatusBasedOnDates($gebruikObject);
             $stats['statusUpdated'] = $statusStats['statusUpdated'];
             $stats['errors']        = array_merge($stats['errors'], $statusStats['errors']);
@@ -92,7 +116,7 @@ class GebruikSyncService
             $stats['duration'] = round(microtime(true) - $startTime, 3);
 
             $this->logger->critical(
-                    '✅ GEBRUIK PROCESSING COMPLETED',
+                    'GEBRUIK PROCESSING COMPLETED',
                     [
                         'app'            => 'softwarecatalog',
                         'gebruikId'      => $gebruikUuid,
@@ -107,7 +131,7 @@ class GebruikSyncService
             $stats['duration'] = round(microtime(true) - $startTime, 3);
 
             $this->logger->error(
-                    '💥 GEBRUIK PROCESSING ERROR',
+                    'GEBRUIK PROCESSING ERROR',
                     [
                         'app'       => 'softwarecatalog',
                         'gebruikId' => $gebruikObject->getUuid(),
@@ -123,13 +147,14 @@ class GebruikSyncService
     }//end processSpecificGebruik()
 
     /**
-     * Process AMEF elements from gebruiktVoorReferentiecomponenten
+     * Process AMEF elements from gebruiktVoorReferentiecomponenten.
      *
      * Searches for AMEF elements based on IDs in gebruiktVoorReferentiecomponenten
-     * and adds their slugs to the amefElements array
+     * and adds their slugs to the amefElements array.
      *
-     * @param  ObjectEntity $gebruikObject The gebruik object to process
-     * @return array Processing statistics
+     * @param ObjectEntity $gebruikObject The gebruik object to process
+     *
+     * @return array Processing statistics.
      */
     private function processAmefElements(ObjectEntity $gebruikObject): array
     {
@@ -142,12 +167,12 @@ class GebruikSyncService
             $gebruikData = $gebruikObject->getObject();
             $gebruikUuid = $gebruikObject->getUuid();
 
-            // Get the referentiecomponenten IDs
+            // Get the referentiecomponenten IDs.
             $referentieComponenten = $gebruikData['gebruiktVoorReferentiecomponenten'] ?? [];
 
-            if (empty($referentieComponenten)) {
+            if (empty($referentieComponenten) === true) {
                 $this->logger->info(
-                        '🔍 No referentiecomponenten found for gebruik object',
+                        'No referentiecomponenten found for gebruik object',
                         [
                             'gebruikId' => $gebruikUuid,
                         ]
@@ -164,17 +189,17 @@ class GebruikSyncService
                     ]
                     );
 
-            // Extract IDs from referentiecomponenten
+            // Extract IDs from referentiecomponenten.
             $referentieIds = [];
             foreach ($referentieComponenten as $component) {
-                if (isset($component['id'])) {
+                if (isset($component['id']) === true) {
                     $referentieIds[] = $component['id'];
                 }
             }
 
-            if (empty($referentieIds)) {
+            if (empty($referentieIds) === true) {
                 $this->logger->warning(
-                        '⚠️  No valid IDs found in referentiecomponenten',
+                        'No valid IDs found in referentiecomponenten',
                         [
                             'gebruikId' => $gebruikUuid,
                         ]
@@ -182,15 +207,15 @@ class GebruikSyncService
                 return $stats;
             }
 
-            // Get AMEF register configuration
+            // Get AMEF register configuration.
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
             $amefRegister        = $voorzieningenConfig['amef_register'] ?? '';
             $elementSchema       = $voorzieningenConfig['element_schema'] ?? '';
 
-            if (empty($amefRegister) || empty($elementSchema)) {
+            if (empty($amefRegister) === true || empty($elementSchema) === true) {
                 $stats['errors'][] = 'AMEF register or element schema not configured';
                 $this->logger->error(
-                        '❌ AMEF configuration missing',
+                        'AMEF configuration missing',
                         [
                             'app'           => 'softwarecatalog',
                             'amefRegister'  => $amefRegister,
@@ -200,26 +225,33 @@ class GebruikSyncService
                 return $stats;
             }
 
-            // Search for AMEF elements
-            $amefElements = $this->searchAmefElementsByIds($referentieIds, $amefRegister, $elementSchema);
+            // Search for AMEF elements.
+            $amefElements = $this->searchAmefElementsByIds(
+                ids: $referentieIds,
+                register: $amefRegister,
+                schema: $elementSchema
+            );
 
-            // Extract slugs from found AMEF elements
+            // Extract slugs from found AMEF elements.
             $amefSlugs = [];
             foreach ($amefElements as $amefElement) {
                 $amefData = $amefElement->getObject();
-                if (isset($amefData['slug'])) {
+                if (isset($amefData['slug']) === true) {
                     $amefSlugs[] = $amefData['slug'];
                     $stats['amefElementsProcessed']++;
                 }
             }
 
-            // Update the gebruik object with AMEF slugs
-            if (!empty($amefSlugs)) {
+            // Update the gebruik object with AMEF slugs.
+            if (empty($amefSlugs) === false) {
                 $gebruikData['amefElements'] = array_unique($amefSlugs);
-                $this->updateGebruikObject($gebruikObject, $gebruikData);
+                $this->updateGebruikObject(
+                    gebruikObject: $gebruikObject,
+                    updatedData: $gebruikData
+                );
 
                 $this->logger->critical(
-                        '✅ AMEF ELEMENTS UPDATED',
+                        'AMEF ELEMENTS UPDATED',
                         [
                             'app'               => 'softwarecatalog',
                             'gebruikId'         => $gebruikUuid,
@@ -229,7 +261,7 @@ class GebruikSyncService
                         );
             } else {
                 $this->logger->info(
-                        'ℹ️  No AMEF elements with slugs found',
+                        'No AMEF elements with slugs found',
                         [
                             'gebruikId' => $gebruikUuid,
                         ]
@@ -240,7 +272,7 @@ class GebruikSyncService
         } catch (Exception $e) {
             $stats['errors'][] = 'AMEF processing error: '.$e->getMessage();
             $this->logger->error(
-                    '💥 AMEF PROCESSING ERROR',
+                    'AMEF PROCESSING ERROR',
                     [
                         'app'       => 'softwarecatalog',
                         'gebruikId' => $gebruikObject->getUuid(),
@@ -253,16 +285,17 @@ class GebruikSyncService
     }//end processAmefElements()
 
     /**
-     * Search for AMEF elements by IDs
+     * Search for AMEF elements by IDs.
      *
      * Uses searchObjects to find AMEF elements based on provided IDs.
      * Since searchObjects may not support direct IDs array parameter,
      * this method implements multiple individual searches.
      *
-     * @param  array  $ids      Array of IDs to search for
-     * @param  string $register AMEF register ID
-     * @param  string $schema   Element schema ID
-     * @return array Array of found ObjectEntity objects
+     * @param array  $ids      Array of IDs to search for
+     * @param string $register AMEF register ID
+     * @param string $schema   Element schema ID
+     *
+     * @return array Array of found ObjectEntity objects.
      */
     private function searchAmefElementsByIds(array $ids, string $register, string $schema): array
     {
@@ -271,7 +304,7 @@ class GebruikSyncService
 
         foreach ($ids as $id) {
             try {
-                // Try to search by ID
+                // Try to search by ID.
                 $query = [
                     '@self' => [
                         'register' => (int) $register,
@@ -284,7 +317,7 @@ class GebruikSyncService
                 $foundElements = array_merge($foundElements, $elements);
             } catch (Exception $e) {
                 $this->logger->warning(
-                        '⚠️  Failed to search for AMEF element',
+                        'Failed to search for AMEF element',
                         [
                             'app'   => 'softwarecatalog',
                             'id'    => $id,
@@ -295,7 +328,7 @@ class GebruikSyncService
         }//end foreach
 
         $this->logger->info(
-                '🔍 AMEF elements search completed',
+                'AMEF elements search completed',
                 [
                     'app'                => 'softwarecatalog',
                     'searchedIds'        => $ids,
@@ -307,13 +340,14 @@ class GebruikSyncService
     }//end searchAmefElementsByIds()
 
     /**
-     * Update status based on date fields
+     * Update status based on date fields.
      *
      * Looks at all status date fields and updates the status to the one
-     * with the highest date that is not in the future
+     * with the highest date that is not in the future.
      *
-     * @param  ObjectEntity $gebruikObject The gebruik object to process
-     * @return array Processing statistics
+     * @param ObjectEntity $gebruikObject The gebruik object to process
+     *
+     * @return array Processing statistics.
      */
     private function updateStatusBasedOnDates(ObjectEntity $gebruikObject): array
     {
@@ -327,7 +361,7 @@ class GebruikSyncService
             $gebruikUuid   = $gebruikObject->getUuid();
             $currentStatus = $gebruikData['status'] ?? '';
 
-            // Define status dates mapping
+            // Define status dates mapping.
             $statusDates = [
                 'Verwerving'     => $gebruikData['startDatumVerwerving'] ?? null,
                 'Gepland'        => $gebruikData['startDatumGepland'] ?? null,
@@ -337,7 +371,7 @@ class GebruikSyncService
             ];
 
             $this->logger->info(
-                    '🔍 CHECKING STATUS DATES',
+                    'CHECKING STATUS DATES',
                     [
                         'app'           => 'softwarecatalog',
                         'gebruikId'     => $gebruikUuid,
@@ -346,17 +380,17 @@ class GebruikSyncService
                     ]
                     );
 
-            // Find the highest date that is not in the future
+            // Find the highest date that is not in the future.
             $now          = new DateTime();
             $targetStatus = null;
             $targetDate   = null;
 
             foreach ($statusDates as $status => $dateString) {
-                if (!empty($dateString)) {
+                if (empty($dateString) === false) {
                     try {
                         $date = new DateTime($dateString);
 
-                        // Only consider dates that are not in the future
+                        // Only consider dates that are not in the future.
                         if ($date <= $now) {
                             if ($targetDate === null || $date > $targetDate) {
                                 $targetDate   = $date;
@@ -365,7 +399,7 @@ class GebruikSyncService
                         }
                     } catch (Exception $e) {
                         $this->logger->warning(
-                                '⚠️  Invalid date format',
+                                'Invalid date format',
                                 [
                                     'app'        => 'softwarecatalog',
                                     'gebruikId'  => $gebruikUuid,
@@ -378,25 +412,34 @@ class GebruikSyncService
                 }//end if
             }//end foreach
 
-            // Update status if we found a different one
-            if ($targetStatus && $targetStatus !== $currentStatus) {
+            // Update status if we found a different one.
+            if ($targetStatus !== null && $targetStatus !== $currentStatus) {
                 $gebruikData['status'] = $targetStatus;
-                $this->updateGebruikObject($gebruikObject, $gebruikData);
+                $this->updateGebruikObject(
+                    gebruikObject: $gebruikObject,
+                    updatedData: $gebruikData
+                );
                 $stats['statusUpdated'] = true;
 
+                if ($targetDate !== null) {
+                    $basedOnDate = $targetDate->format('Y-m-d');
+                } else {
+                    $basedOnDate = null;
+                }
+
                 $this->logger->critical(
-                        '✅ STATUS AUTO-UPDATED',
+                        'STATUS AUTO-UPDATED',
                         [
                             'app'         => 'softwarecatalog',
                             'gebruikId'   => $gebruikUuid,
                             'oldStatus'   => $currentStatus,
                             'newStatus'   => $targetStatus,
-                            'basedOnDate' => $targetDate ? $targetDate->format('Y-m-d') : null,
+                            'basedOnDate' => $basedOnDate,
                         ]
                         );
             } else {
                 $this->logger->info(
-                        'ℹ️  No status update needed',
+                        'No status update needed',
                         [
                             'app'           => 'softwarecatalog',
                             'gebruikId'     => $gebruikUuid,
@@ -410,7 +453,7 @@ class GebruikSyncService
         } catch (Exception $e) {
             $stats['errors'][] = 'Status update error: '.$e->getMessage();
             $this->logger->error(
-                    '💥 STATUS UPDATE ERROR',
+                    'STATUS UPDATE ERROR',
                     [
                         'app'       => 'softwarecatalog',
                         'gebruikId' => $gebruikObject->getUuid(),
@@ -423,28 +466,30 @@ class GebruikSyncService
     }//end updateStatusBasedOnDates()
 
     /**
-     * Update a gebruik object in OpenRegister
+     * Update a gebruik object in OpenRegister.
      *
-     * @param  ObjectEntity $gebruikObject The object to update
-     * @param  array        $updatedData   The updated data
+     * @param ObjectEntity $gebruikObject The object to update
+     * @param array        $updatedData   The updated data
+     *
      * @return void
-     * @throws Exception If the update fails
+     *
+     * @throws Exception If the update fails.
      */
     private function updateGebruikObject(ObjectEntity $gebruikObject, array $updatedData): void
     {
         try {
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // Get voorzieningenConfig to find the correct register and schema
+            // Get voorzieningenConfig to find the correct register and schema.
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
             $register            = $voorzieningenConfig['register'] ?? '';
             $gebruikSchema       = $voorzieningenConfig['gebruik_schema'] ?? '';
 
-            if (empty($register) || empty($gebruikSchema)) {
+            if (empty($register) === true || empty($gebruikSchema) === true) {
                 throw new Exception('Register or gebruik schema not configured');
             }
 
-            // Update the object
+            // Update the object.
             $objectService->saveObject(
                 object: $updatedData,
                 register: (int) $register,
@@ -453,7 +498,7 @@ class GebruikSyncService
             );
 
             $this->logger->info(
-                    '✅ Gebruik object updated successfully',
+                    'Gebruik object updated successfully',
                     [
                         'app'       => 'softwarecatalog',
                         'gebruikId' => $gebruikObject->getUuid(),
@@ -461,7 +506,7 @@ class GebruikSyncService
                     );
         } catch (Exception $e) {
             $this->logger->error(
-                    '❌ Failed to update gebruik object',
+                    'Failed to update gebruik object',
                     [
                         'app'       => 'softwarecatalog',
                         'gebruikId' => $gebruikObject->getUuid(),

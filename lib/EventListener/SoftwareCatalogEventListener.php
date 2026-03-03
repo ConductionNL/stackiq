@@ -10,7 +10,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/OpenConnector
  */
 
@@ -42,9 +42,9 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/OpenConnector
- * @todo     This listener should be moved to the software catalog app
+ * @todo     This listener should be moved to the software catalog app.
  */
 class SoftwareCatalogEventListener implements IEventListener
 {
@@ -53,7 +53,7 @@ class SoftwareCatalogEventListener implements IEventListener
      */
     public function __construct()
     {
-        // Empty constructor - we'll get services from the server container
+        // Empty constructor - we'll get services from the server container.
     }//end __construct()
 
     /**
@@ -82,12 +82,30 @@ class SoftwareCatalogEventListener implements IEventListener
                     );
 
             if ($event instanceof ObjectCreatedEvent) {
-                $this->handleObjectCreated($event, $contactpersoonService, $settingsService, $logger);
+                $this->handleObjectCreated(
+                    event: $event,
+                    contactpersoonService: $contactpersoonService,
+                    settingsService: $settingsService,
+                    logger: $logger
+                );
             } else if ($event instanceof ObjectUpdatedEvent) {
-                $this->handleObjectUpdated($event, $contactpersoonService, $settingsService, $logger);
+                $this->handleObjectUpdated(
+                    event: $event,
+                    contactpersoonService: $contactpersoonService,
+                    settingsService: $settingsService,
+                    logger: $logger
+                );
             } else if ($event instanceof ObjectDeletedEvent) {
-                $this->handleObjectDeleted($event, $contactpersoonService, $settingsService, $logger);
-            } else if ($event instanceof ObjectLockedEvent || $event instanceof ObjectUnlockedEvent || $event instanceof ObjectRevertedEvent) {
+                $this->handleObjectDeleted(
+                    event: $event,
+                    contactpersoonService: $contactpersoonService,
+                    settingsService: $settingsService,
+                    logger: $logger
+                );
+            } else if ($event instanceof ObjectLockedEvent
+                || $event instanceof ObjectUnlockedEvent
+                || $event instanceof ObjectRevertedEvent
+            ) {
                 $logger->debug(
                         'SoftwareCatalog: Ignoring object lifecycle event',
                         [
@@ -116,7 +134,7 @@ class SoftwareCatalogEventListener implements IEventListener
                         ]
                         );
             } catch (\Exception $logException) {
-                // Silently fail if logging fails - better than breaking the event system
+                // Silently fail if logging fails - better than breaking the event system.
             }
         }//end try
     }//end handle()
@@ -124,14 +142,19 @@ class SoftwareCatalogEventListener implements IEventListener
     /**
      * Handles object creation events
      *
-     * @param  ObjectCreatedEvent    $event                 The creation event
-     * @param  ContactpersoonService $contactpersoonService The contact person service
-     * @param  SettingsService       $settingsService       The settings service
-     * @param  LoggerInterface       $logger                The logger instance
+     * @param ObjectCreatedEvent    $event                 The creation event
+     * @param ContactpersoonService $contactpersoonService The contact person service
+     * @param SettingsService       $settingsService       The settings service
+     * @param LoggerInterface       $logger                The logger instance
+     *
      * @return void
      */
-    private function handleObjectCreated(ObjectCreatedEvent $event, ContactpersoonService $contactpersoonService, SettingsService $settingsService, LoggerInterface $logger): void
-    {
+    private function handleObjectCreated(
+        ObjectCreatedEvent $event,
+        ContactpersoonService $contactpersoonService,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): void {
         $object = $event->getObject();
         if ($object === null) {
             $logger->warning('SoftwareCatalog: ObjectCreatedEvent received with null object');
@@ -142,7 +165,7 @@ class SoftwareCatalogEventListener implements IEventListener
         $objectId         = $object->getUuid();
         $objectRegisterId = $object->getRegister();
 
-        // Convert schema ID to integer for consistent comparison
+        // Convert schema ID to integer for consistent comparison.
         $objectSchemaIdInt = (int) $objectSchemaId;
 
         $logger->info(
@@ -156,7 +179,7 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
 
-        // Get configuration for different object types
+        // Get configuration for different object types.
         $organisatieSchemaId     = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
         $contactpersoonSchemaId  = $settingsService->getSchemaIdForObjectType(objectType: 'contactpersoon');
         $contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens');
@@ -173,13 +196,13 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
 
-        // Check if this is an organization object
-        if ($organisatieSchemaId && $objectSchemaIdInt === (int) $organisatieSchemaId) {
+        // Check if this is an organization object.
+        if ($organisatieSchemaId !== null && $objectSchemaIdInt === (int) $organisatieSchemaId) {
             $objectData = $object->getObject();
             $status     = strtolower($objectData['status'] ?? '');
 
-            // Only process active organizations
-            if (in_array($status, ['actief', 'active'])) {
+            // Only process active organizations.
+            if (in_array(needle: $status, haystack: ['actief', 'active']) === true) {
                 $logger->info(
                         'SoftwareCatalog: Processing active organization creation',
                         [
@@ -189,7 +212,7 @@ class SoftwareCatalogEventListener implements IEventListener
                         );
 
                 try {
-                    // Process organization with OrganizationSyncService
+                    // Process organization with OrganizationSyncService.
                     $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
                     $result = $organizationSyncService->processSpecificOrganization($object);
 
@@ -224,26 +247,26 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Check if this is a contactpersoon object
-        if ($contactpersoonSchemaId && $objectSchemaIdInt === (int) $contactpersoonSchemaId) {
+        // Check if this is a contactpersoon object.
+        if ($contactpersoonSchemaId !== null && $objectSchemaIdInt === (int) $contactpersoonSchemaId) {
             $logger->info('SoftwareCatalog: Processing contactpersoon creation', ['objectId' => $objectId]);
             $contactpersoonService->processContactpersoon($object);
             return;
         }
 
-        // Check if this is a contactgegevens object (deprecated - use contactpersoon instead)
-        if ($contactgegevensSchemaId && $objectSchemaIdInt === (int) $contactgegevensSchemaId) {
+        // Check if this is a contactgegevens object (deprecated - use contactpersoon instead).
+        if ($contactgegevensSchemaId !== null && $objectSchemaIdInt === (int) $contactgegevensSchemaId) {
             $logger->info('SoftwareCatalog: Processing contactgegevens creation (deprecated)', ['objectId' => $objectId]);
-            // Contactgegevens is deprecated, use contactpersoon instead
+            // Contactgegevens is deprecated, use contactpersoon instead.
             return;
         }
 
-        // Check if this is a gebruik object
-        if ($gebruikSchemaId && $objectSchemaIdInt === (int) $gebruikSchemaId) {
+        // Check if this is a gebruik object.
+        if ($gebruikSchemaId !== null && $objectSchemaIdInt === (int) $gebruikSchemaId) {
             $logger->info('SoftwareCatalog: Processing gebruik creation', ['objectId' => $objectId]);
 
             try {
-                // Process gebruik object with GebruikSyncService
+                // Process gebruik object with GebruikSyncService.
                 $gebruikSyncService = \OC::$server->get(GebruikSyncService::class);
                 $result = $gebruikSyncService->processSpecificGebruik($object);
 
@@ -269,7 +292,7 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Log unhandled object types
+        // Log unhandled object types.
         $logger->debug(
             'SoftwareCatalog: Object creation not handled - not a supported object type',
             [
@@ -289,14 +312,19 @@ class SoftwareCatalogEventListener implements IEventListener
     /**
      * Handles object update events
      *
-     * @param  ObjectUpdatedEvent    $event                 The update event
-     * @param  ContactpersoonService $contactpersoonService The contact person service
-     * @param  SettingsService       $settingsService       The settings service
-     * @param  LoggerInterface       $logger                The logger instance
+     * @param ObjectUpdatedEvent    $event                 The update event
+     * @param ContactpersoonService $contactpersoonService The contact person service
+     * @param SettingsService       $settingsService       The settings service
+     * @param LoggerInterface       $logger                The logger instance
+     *
      * @return void
      */
-    private function handleObjectUpdated(ObjectUpdatedEvent $event, ContactpersoonService $contactpersoonService, SettingsService $settingsService, LoggerInterface $logger): void
-    {
+    private function handleObjectUpdated(
+        ObjectUpdatedEvent $event,
+        ContactpersoonService $contactpersoonService,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): void {
         $object    = $event->getNewObject();
         $oldObject = $event->getOldObject();
 
@@ -309,7 +337,7 @@ class SoftwareCatalogEventListener implements IEventListener
         $objectId         = $object->getUuid();
         $objectRegisterId = $object->getRegister();
 
-        // Convert schema ID to integer for consistent comparison
+        // Convert schema ID to integer for consistent comparison.
         $objectSchemaIdInt = (int) $objectSchemaId;
 
         $logger->info(
@@ -323,7 +351,7 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
 
-        // Check if this is an organization update
+        // Check if this is an organization update.
         $organisatieSchemaId    = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
 
@@ -348,10 +376,15 @@ class SoftwareCatalogEventListener implements IEventListener
                 ]
                 );
 
-        if ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt) {
+        if ($organisatieSchemaId !== null && $objectSchemaIdInt === $organisatieSchemaIdInt) {
             $objectData = $object->getObject();
             $status     = strtolower($objectData['status'] ?? '');
-            $oldStatus  = $oldObject ? strtolower($oldObject->getObject()['status'] ?? '') : '';
+
+            if ($oldObject !== null) {
+                $oldStatus = strtolower($oldObject->getObject()['status'] ?? '');
+            } else {
+                $oldStatus = '';
+            }
 
             $logger->debug(
                     'Organization status check',
@@ -361,13 +394,13 @@ class SoftwareCatalogEventListener implements IEventListener
                         'status'        => $status,
                         'oldStatus'     => $oldStatus,
                         'statusChanged' => ($status !== $oldStatus),
-                        'isActief'      => in_array($status, ['actief', 'active']),
-                        'willProcess'   => (in_array($status, ['actief', 'active']) && $status !== $oldStatus),
+                        'isActief'      => in_array(needle: $status, haystack: ['actief', 'active']),
+                        'willProcess'   => (in_array(needle: $status, haystack: ['actief', 'active']) && $status !== $oldStatus),
                     ]
                     );
 
-            // Only process active organizations
-            if (in_array($status, ['actief', 'active']) === true && $status !== $oldStatus) {
+            // Only process active organizations.
+            if (in_array(needle: $status, haystack: ['actief', 'active']) === true && $status !== $oldStatus) {
                 $logger->info(
                         'SoftwareCatalog: Processing active organization update',
                         [
@@ -378,7 +411,7 @@ class SoftwareCatalogEventListener implements IEventListener
                         );
 
                 try {
-                    // Refetch organization WITH contactpersonen expanded to get full contact data
+                    // Refetch organization WITH contactpersonen expanded to get full contact data.
                     $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
                     $register            = $voorzieningenConfig['register'] ?? '';
                     $organizationSchema  = $voorzieningenConfig['organisatie_schema'] ?? '';
@@ -388,8 +421,8 @@ class SoftwareCatalogEventListener implements IEventListener
                         id: $objectId,
                         register: $register,
                         schema: $organizationSchema,
+                        // This expands contactpersonen with full data!
                         _extend: ['contactpersonen'],
-                    // This expands contactpersonen with full data!
                         _rbac: false,
                         _multitenancy: false
                     );
@@ -397,12 +430,12 @@ class SoftwareCatalogEventListener implements IEventListener
                     $logger->info(
                             'SoftwareCatalog: Refetched organization with contactpersonen',
                             [
-                                'objectId'              => $objectId,
-                                'contactperso nenCount' => count($organizationWithContacts->getObject()['contactpersonen'] ?? []),
+                                'objectId'             => $objectId,
+                                'contactpersonenCount' => count($organizationWithContacts->getObject()['contactpersonen'] ?? []),
                             ]
                             );
 
-                    // Process organization with OrganizationSyncService
+                    // Process organization with OrganizationSyncService.
                     $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
                     $result = $organizationSyncService->processSpecificOrganization($organizationWithContacts);
 
@@ -438,11 +471,11 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Handle contactpersoon updates
+        // Handle contactpersoon updates.
         $contactpersoonSchemaId    = $settingsService->getSchemaIdForObjectType(objectType: 'contactpersoon');
         $contactpersoonSchemaIdInt = (int) $contactpersoonSchemaId;
 
-        if ($contactpersoonSchemaId && $objectSchemaIdInt === $contactpersoonSchemaIdInt) {
+        if ($contactpersoonSchemaId !== null && $objectSchemaIdInt === $contactpersoonSchemaIdInt) {
             $logger->info(
                 'SoftwareCatalog: Matched contactpersoon schema - processing update',
                 [
@@ -453,7 +486,10 @@ class SoftwareCatalogEventListener implements IEventListener
             );
 
             try {
-                $contactpersoonService->handleContactpersoonUpdate($object, $oldObject);
+                $contactpersoonService->handleContactpersoonUpdate(
+                    contactpersoon: $object,
+                    oldContactpersoon: $oldObject
+                );
 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactpersoon update',
@@ -478,11 +514,11 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Handle contactgegevens updates (backward compatibility)
+        // Handle contactgegevens updates (backward compatibility).
         $contactgegevensSchemaId    = $settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens');
         $contactgegevensSchemaIdInt = (int) $contactgegevensSchemaId;
 
-        if ($contactgegevensSchemaId && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {
+        if ($contactgegevensSchemaId !== null && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {
             $logger->info(
                 'SoftwareCatalog: Matched contactgegevens schema - processing update (backward compatibility)',
                 [
@@ -493,8 +529,11 @@ class SoftwareCatalogEventListener implements IEventListener
             );
 
             try {
-                // Handle contactgegevens as contactpersoon (backward compatibility)
-                $contactpersoonService->handleContactpersoonUpdate($object, $oldObject);
+                // Handle contactgegevens as contactpersoon (backward compatibility).
+                $contactpersoonService->handleContactpersoonUpdate(
+                    contactpersoon: $object,
+                    oldContactpersoon: $oldObject
+                );
 
                 $logger->info(
                     'SoftwareCatalog: Successfully processed contactgegevens update (as contactpersoon)',
@@ -519,11 +558,11 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Handle gebruik updates
+        // Handle gebruik updates.
         $gebruikSchemaId    = $settingsService->getSchemaIdForObjectType(objectType: 'gebruik');
         $gebruikSchemaIdInt = (int) $gebruikSchemaId;
 
-        if ($gebruikSchemaId && $objectSchemaIdInt === $gebruikSchemaIdInt) {
+        if ($gebruikSchemaId !== null && $objectSchemaIdInt === $gebruikSchemaIdInt) {
             $logger->info(
                 'SoftwareCatalog: Matched gebruik schema - processing update',
                 [
@@ -534,7 +573,7 @@ class SoftwareCatalogEventListener implements IEventListener
             );
 
             try {
-                // Process gebruik object with GebruikSyncService
+                // Process gebruik object with GebruikSyncService.
                 $gebruikSyncService = \OC::$server->get(GebruikSyncService::class);
                 $result = $gebruikSyncService->processSpecificGebruik($object);
 
@@ -562,7 +601,7 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Log if we don't handle this schema type
+        // Log if we don't handle this schema type.
         $logger->debug(
             'SoftwareCatalog: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik',
             [
@@ -584,14 +623,19 @@ class SoftwareCatalogEventListener implements IEventListener
     /**
      * Handles object deletion events
      *
-     * @param  ObjectDeletedEvent    $event                 The deletion event
-     * @param  ContactpersoonService $contactpersoonService The contact person service
-     * @param  SettingsService       $settingsService       The settings service
-     * @param  LoggerInterface       $logger                The logger instance
+     * @param ObjectDeletedEvent    $event                 The deletion event
+     * @param ContactpersoonService $contactpersoonService The contact person service
+     * @param SettingsService       $settingsService       The settings service
+     * @param LoggerInterface       $logger                The logger instance
+     *
      * @return void
      */
-    private function handleObjectDeleted(ObjectDeletedEvent $event, ContactpersoonService $contactpersoonService, SettingsService $settingsService, LoggerInterface $logger): void
-    {
+    private function handleObjectDeleted(
+        ObjectDeletedEvent $event,
+        ContactpersoonService $contactpersoonService,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): void {
         $object = $event->getObject();
         if ($object === null) {
             $logger->warning('SoftwareCatalog: ObjectDeletedEvent received with null object');
@@ -612,21 +656,21 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
 
-        // Check if this is an organization deletion
+        // Check if this is an organization deletion.
         $organisatieSchemaId    = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
         $organisatieSchemaIdInt = (int) $organisatieSchemaId;
         $objectSchemaIdInt      = (int) $objectSchemaId;
 
-        if ($organisatieSchemaId && $objectSchemaIdInt === $organisatieSchemaIdInt) {
+        if ($organisatieSchemaId !== null && $objectSchemaIdInt === $organisatieSchemaIdInt) {
             $logger->info('SoftwareCatalog: Processing organization deletion', ['objectId' => $objectId]);
 
             try {
-                // For deletions, we may need to handle cleanup regardless of status
-                // The OrganizationSyncService can determine what cleanup is needed
+                // For deletions, we may need to handle cleanup regardless of status.
+                // The OrganizationSyncService can determine what cleanup is needed.
                 $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
 
-                // Note: processSpecificOrganization may handle cleanup for deleted organizations
-                // The service can check if the organization exists and handle accordingly
+                // Note: processSpecificOrganization may handle cleanup for deleted organizations.
+                // The service can check if the organization exists and handle accordingly.
                 $result = $organizationSyncService->processSpecificOrganization($object);
 
                 $logger->info(
@@ -651,11 +695,11 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Handle contactpersoon deletion
+        // Handle contactpersoon deletion.
         $contactpersoonSchemaId    = $settingsService->getSchemaIdForObjectType(objectType: 'contactpersoon');
         $contactpersoonSchemaIdInt = (int) $contactpersoonSchemaId;
 
-        if ($contactpersoonSchemaId && $objectSchemaIdInt === $contactpersoonSchemaIdInt) {
+        if ($contactpersoonSchemaId !== null && $objectSchemaIdInt === $contactpersoonSchemaIdInt) {
             $logger->info(
                 'SoftwareCatalog: Matched contactpersoon schema - processing deletion',
                 [
@@ -691,11 +735,11 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Handle contactgegevens deletion (backward compatibility)
+        // Handle contactgegevens deletion (backward compatibility).
         $contactgegevensSchemaId    = $settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens');
         $contactgegevensSchemaIdInt = (int) $contactgegevensSchemaId;
 
-        if ($contactgegevensSchemaId && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {
+        if ($contactgegevensSchemaId !== null && $objectSchemaIdInt === $contactgegevensSchemaIdInt) {
             $logger->info(
                 'SoftwareCatalog: Matched contactgegevens schema - processing deletion (backward compatibility)',
                 [
@@ -731,11 +775,11 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Handle gebruik deletion
+        // Handle gebruik deletion.
         $gebruikSchemaId    = $settingsService->getSchemaIdForObjectType(objectType: 'gebruik');
         $gebruikSchemaIdInt = (int) $gebruikSchemaId;
 
-        if ($gebruikSchemaId && $objectSchemaIdInt === $gebruikSchemaIdInt) {
+        if ($gebruikSchemaId !== null && $objectSchemaIdInt === $gebruikSchemaIdInt) {
             $objectData = $object->getObject();
 
             $logger->info(
@@ -749,8 +793,8 @@ class SoftwareCatalogEventListener implements IEventListener
                 ]
             );
 
-            // For deletions, we mainly log the event since the object is being removed
-            // No specific cleanup needed for gebruik objects currently
+            // For deletions, we mainly log the event since the object is being removed.
+            // No specific cleanup needed for gebruik objects currently.
             $logger->info(
                 'SoftwareCatalog: Gebruik object deleted - no specific cleanup required',
                 [
@@ -761,7 +805,7 @@ class SoftwareCatalogEventListener implements IEventListener
             return;
         }//end if
 
-        // Log if we don't handle this schema type
+        // Log if we don't handle this schema type.
         $logger->debug(
             'SoftwareCatalog: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik',
             [
@@ -781,14 +825,17 @@ class SoftwareCatalogEventListener implements IEventListener
     /**
      * Handles object locking events
      *
-     * @param  ObjectLockedEvent        $event                    The locking event
-     * @param  SoftwareCatalogueService $softwareCatalogueService The software catalog service
-     * @param  SettingsService          $settingsService          The settings service
-     * @param  LoggerInterface          $logger                   The logger instance
+     * @param ObjectLockedEvent $event           The locking event
+     * @param SettingsService   $settingsService The settings service
+     * @param LoggerInterface   $logger          The logger instance
+     *
      * @return void
      */
-    private function handleObjectLocked(ObjectLockedEvent $event, SoftwareCatalogueService $softwareCatalogueService, SettingsService $settingsService, LoggerInterface $logger): void
-    {
+    private function handleObjectLocked(
+        ObjectLockedEvent $event,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): void {
         $object = $event->getObject();
         if ($object === null) {
             $logger->warning('SoftwareCatalog: ObjectLockedEvent received with null object');
@@ -807,7 +854,7 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
 
-        // Currently no specific handling for locking events
+        // Currently no specific handling for locking events.
         $logger->debug(
             'SoftwareCatalog: Object locking event received but no specific handling implemented',
             [
@@ -820,14 +867,17 @@ class SoftwareCatalogEventListener implements IEventListener
     /**
      * Handles object unlocking events
      *
-     * @param  ObjectUnlockedEvent      $event                    The unlocking event
-     * @param  SoftwareCatalogueService $softwareCatalogueService The software catalog service
-     * @param  SettingsService          $settingsService          The settings service
-     * @param  LoggerInterface          $logger                   The logger instance
+     * @param ObjectUnlockedEvent $event           The unlocking event
+     * @param SettingsService     $settingsService The settings service
+     * @param LoggerInterface     $logger          The logger instance
+     *
      * @return void
      */
-    private function handleObjectUnlocked(ObjectUnlockedEvent $event, SoftwareCatalogueService $softwareCatalogueService, SettingsService $settingsService, LoggerInterface $logger): void
-    {
+    private function handleObjectUnlocked(
+        ObjectUnlockedEvent $event,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): void {
         $object = $event->getObject();
         if ($object === null) {
             $logger->warning('SoftwareCatalog: ObjectUnlockedEvent received with null object');
@@ -846,7 +896,7 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
 
-        // Currently no specific handling for unlocking events
+        // Currently no specific handling for unlocking events.
         $logger->debug(
             'SoftwareCatalog: Object unlocking event received but no specific handling implemented',
             [
@@ -859,14 +909,17 @@ class SoftwareCatalogEventListener implements IEventListener
     /**
      * Handles object reversion events
      *
-     * @param  ObjectRevertedEvent      $event                    The reversion event
-     * @param  SoftwareCatalogueService $softwareCatalogueService The software catalog service
-     * @param  SettingsService          $settingsService          The settings service
-     * @param  LoggerInterface          $logger                   The logger instance
+     * @param ObjectRevertedEvent $event           The reversion event
+     * @param SettingsService     $settingsService The settings service
+     * @param LoggerInterface     $logger          The logger instance
+     *
      * @return void
      */
-    private function handleObjectReverted(ObjectRevertedEvent $event, SoftwareCatalogueService $softwareCatalogueService, SettingsService $settingsService, LoggerInterface $logger): void
-    {
+    private function handleObjectReverted(
+        ObjectRevertedEvent $event,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): void {
         $object = $event->getObject();
         if ($object === null) {
             $logger->warning('SoftwareCatalog: ObjectRevertedEvent received with null object');
@@ -885,7 +938,7 @@ class SoftwareCatalogEventListener implements IEventListener
             ]
         );
 
-        // Currently no specific handling for reversion events
+        // Currently no specific handling for reversion events.
         $logger->debug(
             'SoftwareCatalog: Object reversion event received but no specific handling implemented',
             [

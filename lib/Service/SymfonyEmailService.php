@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Symfony Email Service for SoftwareCatalog.
+ *
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
+ */
+
 declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
@@ -26,7 +38,7 @@ use Twig\Loader\ArrayLoader;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link     https://github.com/ConductionNL/SoftwareCatalog
- * @version  1.0.0
+ * @version  GIT: <git_id>
  */
 class SymfonyEmailService
 {
@@ -172,7 +184,8 @@ class SymfonyEmailService
                 <li>Samenwerken met andere organisaties</li>
             </ul>
             <p><strong>Login gegevens:</strong></p>
-            <p>We hebben uw bestaande account gekoppeld aan een nieuwe organisatie. Uw inloggegevens zijn hetzelfde, maar u kunt nu uw organisatie wisselen tussen uw organisaties.</p>
+            <p>We hebben uw bestaande account gekoppeld aan een nieuwe organisatie.
+            Uw inloggegevens zijn hetzelfde, maar u kunt nu uw organisatie wisselen tussen uw organisaties.</p>
             <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>
             <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
         </body>
@@ -240,10 +253,11 @@ class SymfonyEmailService
     }//end __construct()
 
     /**
-     * Gets or creates a Symfony Mailer instance with the configured transport
+     * Gets or creates a Symfony Mailer instance with the configured transport.
      *
-     * @return Mailer The configured Symfony Mailer instance
-     * @throws \Exception If transport configuration is invalid
+     * @return Mailer The configured Symfony Mailer instance.
+     *
+     * @throws \Exception If transport configuration is invalid.
      */
     private function getMailer(): Mailer
     {
@@ -256,10 +270,11 @@ class SymfonyEmailService
     }//end getMailer()
 
     /**
-     * Creates a Symfony Mailer transport based on configuration
+     * Creates a Symfony Mailer transport based on configuration.
      *
-     * @return TransportInterface The configured transport
-     * @throws \Exception If transport configuration is invalid
+     * @return TransportInterface The configured transport.
+     *
+     * @throws \Exception If transport configuration is invalid.
      */
     private function createTransport(): TransportInterface
     {
@@ -308,10 +323,11 @@ class SymfonyEmailService
     }//end createTransport()
 
     /**
-     * Creates an SMTP transport
+     * Creates an SMTP transport.
      *
-     * @param  array $settings Email settings
-     * @return TransportInterface SMTP transport
+     * @param array $settings Email settings.
+     *
+     * @return TransportInterface SMTP transport.
      */
     private function createSmtpTransport(array $settings): TransportInterface
     {
@@ -337,15 +353,16 @@ class SymfonyEmailService
     }//end createSmtpTransport()
 
     /**
-     * Creates a SendGrid transport
+     * Creates a SendGrid transport.
      *
-     * @param  array $settings Email settings
-     * @return TransportInterface SendGrid transport
+     * @param array $settings Email settings.
+     *
+     * @return TransportInterface SendGrid transport.
      */
     private function createSendGridTransport(array $settings): TransportInterface
     {
-        $apiKey = $settings['sendgridApiKey'] ?? '';
-        if (empty($apiKey)) {
+        $apiKey = ($settings['sendgridApiKey'] ?? '');
+        if (empty($apiKey) === true) {
             throw new \InvalidArgumentException('SendGrid API key is required');
         }
 
@@ -353,17 +370,18 @@ class SymfonyEmailService
     }//end createSendGridTransport()
 
     /**
-     * Creates a Mailgun transport
+     * Creates a Mailgun transport.
      *
-     * @param  array $settings Email settings
-     * @return TransportInterface Mailgun transport
+     * @param array $settings Email settings.
+     *
+     * @return TransportInterface Mailgun transport.
      */
     private function createMailgunTransport(array $settings): TransportInterface
     {
-        $apiKey = $settings['mailgunApiKey'] ?? '';
-        $domain = $settings['mailgunDomain'] ?? '';
+        $apiKey = ($settings['mailgunApiKey'] ?? '');
+        $domain = ($settings['mailgunDomain'] ?? '');
 
-        if (empty($apiKey) || empty($domain)) {
+        if (empty($apiKey) === true || empty($domain) === true) {
             throw new \InvalidArgumentException('Mailgun API key and domain are required');
         }
 
@@ -377,15 +395,16 @@ class SymfonyEmailService
     }//end createMailgunTransport()
 
     /**
-     * Creates a Postmark transport
+     * Creates a Postmark transport.
      *
-     * @param  array $settings Email settings
-     * @return TransportInterface Postmark transport
+     * @param array $settings Email settings.
+     *
+     * @return TransportInterface Postmark transport.
      */
     private function createPostmarkTransport(array $settings): TransportInterface
     {
-        $apiKey = $settings['postmarkApiKey'] ?? '';
-        if (empty($apiKey)) {
+        $apiKey = ($settings['postmarkApiKey'] ?? '');
+        if (empty($apiKey) === true) {
             throw new \InvalidArgumentException('Postmark API key is required');
         }
 
@@ -393,18 +412,19 @@ class SymfonyEmailService
     }//end createPostmarkTransport()
 
     /**
-     * Creates an Amazon SES transport
+     * Creates an Amazon SES transport.
      *
-     * @param  array $settings Email settings
-     * @return TransportInterface SES transport
+     * @param array $settings Email settings.
+     *
+     * @return TransportInterface SES transport.
      */
     private function createSesTransport(array $settings): TransportInterface
     {
-        $accessKey = $settings['sesAccessKey'] ?? '';
-        $secretKey = $settings['sesSecretKey'] ?? '';
-        $region    = $settings['sesRegion'] ?? 'us-east-1';
+        $accessKey = ($settings['sesAccessKey'] ?? '');
+        $secretKey = ($settings['sesSecretKey'] ?? '');
+        $region    = ($settings['sesRegion'] ?? 'us-east-1');
 
-        if (empty($accessKey) || empty($secretKey)) {
+        if (empty($accessKey) === true || empty($secretKey) === true) {
             throw new \InvalidArgumentException('Amazon SES access key and secret key are required');
         }
 
@@ -419,17 +439,18 @@ class SymfonyEmailService
     }//end createSesTransport()
 
     /**
-     * Creates a Mailjet transport
+     * Creates a Mailjet transport.
      *
-     * @param  array $settings Email settings
-     * @return TransportInterface Mailjet transport
+     * @param array $settings Email settings.
+     *
+     * @return TransportInterface Mailjet transport.
      */
     private function createMailjetTransport(array $settings): TransportInterface
     {
-        $apiKey    = $settings['mailjetApiKey'] ?? '';
-        $secretKey = $settings['mailjetSecretKey'] ?? '';
+        $apiKey    = ($settings['mailjetApiKey'] ?? '');
+        $secretKey = ($settings['mailjetSecretKey'] ?? '');
 
-        if (empty($apiKey) || empty($secretKey)) {
+        if (empty($apiKey) === true || empty($secretKey) === true) {
             throw new \InvalidArgumentException('Mailjet API key and secret key are required');
         }
 
@@ -443,17 +464,19 @@ class SymfonyEmailService
     }//end createMailjetTransport()
 
     /**
-     * Sends an organization registration email
+     * Sends an organization registration email.
      *
-     * @param  array $organization The organization data
-     * @return bool True if email was sent successfully, false otherwise
-     * @throws \Exception If email sending fails
+     * @param array $organization The organization data.
+     *
+     * @return bool True if email was sent successfully, false otherwise.
+     *
+     * @throws \Exception If email sending fails.
      */
     public function sendOrganizationRegistrationEmail(array $organization): bool
     {
-        // Check if email system is fully configured
+        // Check if email system is fully configured.
         $configStatus = $this->isEmailSystemConfigured();
-        if (!$configStatus['configured']) {
+        if ($configStatus['configured'] === false) {
             $this->logger->info(
                     'OrganizationRegistrationEmail: Email system not configured, skipping',
                     [
@@ -469,8 +492,8 @@ class SymfonyEmailService
 
         $emailSettings = $this->settingsService->getEmailSettings();
 
-        // Check if organization registration emails are enabled
-        if (!$emailSettings['organizationRegistrationEnabled']) {
+        // Check if organization registration emails are enabled.
+        if ($emailSettings['organizationRegistrationEnabled'] === false) {
             $this->logger->info(
                     'OrganizationRegistrationEmail: Organization registration emails disabled',
                     [
@@ -482,9 +505,9 @@ class SymfonyEmailService
 
         $organizationName = $organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie';
 
-        // Determine recipient email
+        // Determine recipient email.
         $recipientEmail = $this->getRecipientEmail($organization);
-        if (!$recipientEmail) {
+        if ($recipientEmail === null) {
             $this->logger->warning(
                     'OrganizationRegistrationEmail: Cannot send without valid email address',
                     [
@@ -504,26 +527,26 @@ class SymfonyEmailService
                 ]
                 );
 
-        // Prepare template data
+        // Prepare template data.
         $templateData = [
             'organization' => [
                 'name'        => $organizationName,
-                'beoordeling' => $organization['beoordeling'] ?? 'Geregistreerd',
-                'type'        => $organization['type'] ?? 'Organisatie',
-                'website'     => $organization['website'] ?? '',
+                'beoordeling' => ($organization['beoordeling'] ?? 'Geregistreerd'),
+                'type'        => ($organization['type'] ?? 'Organisatie'),
+                'website'     => ($organization['website'] ?? ''),
             ],
         ];
 
         try {
             $success = $this->sendTemplatedEmail(
-                $recipientEmail,
-                $organizationName,
-                'Welkom bij de Software Catalogus - Organisatie Geregistreerd',
-                'organization_registration',
-                $templateData
+                recipientEmail: $recipientEmail,
+                recipientName: $organizationName,
+                subject: 'Welkom bij de Software Catalogus - Organisatie Geregistreerd',
+                templateName: 'organization_registration',
+                templateData: $templateData
             );
 
-            if ($success) {
+            if ($success === true) {
                 $this->logger->info(
                         'OrganizationRegistrationEmail: Successfully sent registration email',
                         [
@@ -548,17 +571,19 @@ class SymfonyEmailService
     }//end sendOrganizationRegistrationEmail()
 
     /**
-     * Sends an organization activation email
+     * Sends an organization activation email.
      *
-     * @param  array $organization The organization data
-     * @return bool True if email was sent successfully, false otherwise
-     * @throws \Exception If email sending fails
+     * @param array $organization The organization data.
+     *
+     * @return bool True if email was sent successfully, false otherwise.
+     *
+     * @throws \Exception If email sending fails.
      */
     public function sendOrganizationActivationEmail(array $organization): bool
     {
-        // Check if email system is fully configured
+        // Check if email system is fully configured.
         $configStatus = $this->isEmailSystemConfigured();
-        if (!$configStatus['configured']) {
+        if ($configStatus['configured'] === false) {
             $this->logger->info(
                     'OrganizationActivationEmail: Email system not configured, skipping',
                     [
@@ -573,8 +598,8 @@ class SymfonyEmailService
 
         $emailSettings = $this->settingsService->getEmailSettings();
 
-        // Check if organization activation emails are enabled
-        if (!$emailSettings['organizationActivationEnabled']) {
+        // Check if organization activation emails are enabled.
+        if ($emailSettings['organizationActivationEnabled'] === false) {
             $this->logger->info(
                     'OrganizationActivationEmail: Organization activation emails disabled',
                     [
@@ -584,11 +609,11 @@ class SymfonyEmailService
             return false;
         }
 
-        $organizationName = $organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie';
+        $organizationName = ($organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie');
 
-        // Determine recipient email
+        // Determine recipient email.
         $recipientEmail = $this->getRecipientEmail($organization);
-        if (!$recipientEmail) {
+        if ($recipientEmail === null) {
             $this->logger->warning(
                     'OrganizationActivationEmail: Cannot send without valid email address',
                     [
@@ -608,26 +633,26 @@ class SymfonyEmailService
                 ]
                 );
 
-        // Prepare template data
+        // Prepare template data.
         $templateData = [
             'organization' => [
                 'name'        => $organizationName,
-                'beoordeling' => $organization['beoordeling'] ?? 'Actief',
-                'type'        => $organization['type'] ?? 'Organisatie',
-                'website'     => $organization['website'] ?? '',
+                'beoordeling' => ($organization['beoordeling'] ?? 'Actief'),
+                'type'        => ($organization['type'] ?? 'Organisatie'),
+                'website'     => ($organization['website'] ?? ''),
             ],
         ];
 
         try {
             $success = $this->sendTemplatedEmail(
-                $recipientEmail,
-                $organizationName,
-                'Software Catalogus - Organisatie Geactiveerd',
-                'organization_activation',
-                $templateData
+                recipientEmail: $recipientEmail,
+                recipientName: $organizationName,
+                subject: 'Software Catalogus - Organisatie Geactiveerd',
+                templateName: 'organization_activation',
+                templateData: $templateData
             );
 
-            if ($success) {
+            if ($success === true) {
                 $this->logger->info(
                         'OrganizationActivationEmail: Successfully sent activation email',
                         [
@@ -652,18 +677,20 @@ class SymfonyEmailService
     }//end sendOrganizationActivationEmail()
 
     /**
-     * Sends a user creation email
+     * Sends a user creation email.
      *
-     * @param  array $user         The user data
-     * @param  array $organization The organization data (optional)
-     * @return bool True if email was sent successfully, false otherwise
-     * @throws \Exception If email sending fails
+     * @param array $user         The user data.
+     * @param array $organization The organization data (optional).
+     *
+     * @return bool True if email was sent successfully, false otherwise.
+     *
+     * @throws \Exception If email sending fails.
      */
     public function sendUserCreationEmail(array $user, array $organization=[]): bool
     {
-        // Check if email system is fully configured
+        // Check if email system is fully configured.
         $configStatus = $this->isEmailSystemConfigured();
-        if (!$configStatus['configured']) {
+        if ($configStatus['configured'] === false) {
             $this->logger->info(
                     'UserCreationEmail: Email system not configured, skipping',
                     [
@@ -678,8 +705,8 @@ class SymfonyEmailService
 
         $emailSettings = $this->settingsService->getEmailSettings();
 
-        // Check if user creation emails are enabled
-        if (!$emailSettings['userCreationEnabled']) {
+        // Check if user creation emails are enabled.
+        if ($emailSettings['userCreationEnabled'] === false) {
             $this->logger->info(
                     'UserCreationEmail: User creation emails disabled',
                     [
@@ -693,7 +720,7 @@ class SymfonyEmailService
         $userName  = $user['naam'] ?? $user['name'] ?? ($user['voornaam'] ?? '').' '.($user['achternaam'] ?? '');
         $userName  = trim($userName);
 
-        if (empty($userEmail)) {
+        if (empty($userEmail) === true) {
             $this->logger->warning(
                     'UserCreationEmail: Cannot send without email address',
                     [
@@ -714,28 +741,34 @@ class SymfonyEmailService
                 ]
                 );
 
-        // Prepare template data
+        // Prepare template data.
+        if (empty($userName) === false) {
+            $displayName = $userName;
+        } else {
+            $displayName = 'Gebruiker';
+        }
+
         $templateData = [
             'user'         => [
-                'name'    => $userName ?: 'Gebruiker',
+                'name'    => $displayName,
                 'email'   => $userEmail,
-                'functie' => $user['functie'] ?? '',
+                'functie' => ($user['functie'] ?? ''),
             ],
             'organization' => [
-                'name' => $organization['naam'] ?? $organization['name'] ?? 'Software Catalogus',
+                'name' => ($organization['naam'] ?? $organization['name'] ?? 'Software Catalogus'),
             ],
         ];
 
         try {
             $success = $this->sendTemplatedEmail(
-                $userEmail,
-                $userName ?: 'Gebruiker',
-                'Welkom bij de Software Catalogus - Account Aangemaakt',
-                'user_creation',
-                $templateData
+                recipientEmail: $userEmail,
+                recipientName: $displayName,
+                subject: 'Welkom bij de Software Catalogus - Account Aangemaakt',
+                templateName: 'user_creation',
+                templateData: $templateData
             );
 
-            if ($success) {
+            if ($success === true) {
                 $this->logger->info(
                         'UserCreationEmail: Successfully sent user creation email',
                         [
@@ -760,18 +793,20 @@ class SymfonyEmailService
     }//end sendUserCreationEmail()
 
     /**
-     * Sends a user creation email
+     * Sends a user update/organisation email.
      *
-     * @param  array $user         The user data
-     * @param  array $organization The organization data (optional)
-     * @return bool True if email was sent successfully, false otherwise
-     * @throws \Exception If email sending fails
+     * @param array $user         The user data.
+     * @param array $organization The organization data (optional).
+     *
+     * @return bool True if email was sent successfully, false otherwise.
+     *
+     * @throws \Exception If email sending fails.
      */
     public function sendUserUpdateEmail(array $user, array $organization=[]): bool
     {
-        // Check if email system is fully configured
+        // Check if email system is fully configured.
         $configStatus = $this->isEmailSystemConfigured();
-        if (!$configStatus['configured']) {
+        if ($configStatus['configured'] === false) {
             $this->logger->info(
                     'UserCreationEmail: Email system not configured, skipping',
                     [
@@ -786,8 +821,8 @@ class SymfonyEmailService
 
         $emailSettings = $this->settingsService->getEmailSettings();
 
-        // Check if user creation emails are enabled
-        if (!$emailSettings['userOrganisationEnabled']) {
+        // Check if user creation emails are enabled.
+        if ($emailSettings['userOrganisationEnabled'] === false) {
             $this->logger->info(
                     'UserOrganisationEmail: User creation emails disabled',
                     [
@@ -801,7 +836,7 @@ class SymfonyEmailService
         $userName  = $user['naam'] ?? $user['name'] ?? ($user['voornaam'] ?? '').' '.($user['achternaam'] ?? '');
         $userName  = trim($userName);
 
-        if (empty($userEmail)) {
+        if (empty($userEmail) === true) {
             $this->logger->warning(
                     'UserCreationEmail: Cannot send without email address',
                     [
@@ -822,28 +857,34 @@ class SymfonyEmailService
                 ]
                 );
 
-        // Prepare template data
+        // Prepare template data.
+        if (empty($userName) === false) {
+            $displayName = $userName;
+        } else {
+            $displayName = 'Gebruiker';
+        }
+
         $templateData = [
             'user'         => [
-                'name'    => $userName ?: 'Gebruiker',
+                'name'    => $displayName,
                 'email'   => $userEmail,
-                'functie' => $user['functie'] ?? '',
+                'functie' => ($user['functie'] ?? ''),
             ],
             'organization' => [
-                'name' => $organization['naam'] ?? $organization['name'] ?? 'Software Catalogus',
+                'name' => ($organization['naam'] ?? $organization['name'] ?? 'Software Catalogus'),
             ],
         ];
 
         try {
             $success = $this->sendTemplatedEmail(
-                $userEmail,
-                $userName ?: 'Gebruiker',
-                'Welkom bij de Software Catalogus - Account toegevoegd aan organisatie',
-                'user_organisation',
-                $templateData
+                recipientEmail: $userEmail,
+                recipientName: $displayName,
+                subject: 'Welkom bij de Software Catalogus - Account toegevoegd aan organisatie',
+                templateName: 'user_organisation',
+                templateData: $templateData
             );
 
-            if ($success) {
+            if ($success === true) {
                 $this->logger->info(
                         'UserCreationEmail: Successfully sent user organisation email',
                         [
@@ -868,19 +909,21 @@ class SymfonyEmailService
     }//end sendUserUpdateEmail()
 
     /**
-     * Sends a user password email
+     * Sends a user password email.
      *
-     * @param  array  $user         The user data
-     * @param  string $password     The generated password
-     * @param  array  $organization The organization data (optional)
-     * @return bool True if email was sent successfully, false otherwise
-     * @throws \Exception If email sending fails
+     * @param array  $user         The user data.
+     * @param string $password     The generated password.
+     * @param array  $organization The organization data (optional).
+     *
+     * @return bool True if email was sent successfully, false otherwise.
+     *
+     * @throws \Exception If email sending fails.
      */
     public function sendUserPasswordEmail(array $user, string $password, array $organization=[]): bool
     {
-        // Check if email system is fully configured
+        // Check if email system is fully configured.
         $configStatus = $this->isEmailSystemConfigured();
-        if (!$configStatus['configured']) {
+        if ($configStatus['configured'] === false) {
             $this->logger->info(
                     'UserPasswordEmail: Email system not configured, skipping',
                     [
@@ -895,8 +938,8 @@ class SymfonyEmailService
 
         $emailSettings = $this->settingsService->getEmailSettings();
 
-        // Check if user password emails are enabled
-        if (!$emailSettings['userPasswordEnabled']) {
+        // Check if user password emails are enabled.
+        if ($emailSettings['userPasswordEnabled'] === false) {
             $this->logger->info(
                     'UserPasswordEmail: User password emails disabled',
                     [
@@ -910,7 +953,7 @@ class SymfonyEmailService
         $userName  = $user['naam'] ?? $user['name'] ?? ($user['voornaam'] ?? '').' '.($user['achternaam'] ?? '');
         $userName  = trim($userName);
 
-        if (empty($userEmail)) {
+        if (empty($userEmail) === true) {
             $this->logger->warning(
                     'UserPasswordEmail: Cannot send without email address',
                     [
@@ -931,29 +974,35 @@ class SymfonyEmailService
                 ]
                 );
 
-        // Prepare template data
+        // Prepare template data.
+        if (empty($userName) === false) {
+            $displayName = $userName;
+        } else {
+            $displayName = 'Gebruiker';
+        }
+
         $templateData = [
             'user'         => [
-                'name'     => $userName ?: 'Gebruiker',
+                'name'     => $displayName,
                 'email'    => $userEmail,
                 'password' => $password,
-                'functie'  => $user['functie'] ?? '',
+                'functie'  => ($user['functie'] ?? ''),
             ],
             'organization' => [
-                'name' => $organization['naam'] ?? $organization['name'] ?? 'Software Catalogus',
+                'name' => ($organization['naam'] ?? $organization['name'] ?? 'Software Catalogus'),
             ],
         ];
 
         try {
             $success = $this->sendTemplatedEmail(
-                $userEmail,
-                $userName ?: 'Gebruiker',
-                'Software Catalogus - Inloggegevens',
-                'user_password',
-                $templateData
+                recipientEmail: $userEmail,
+                recipientName: $displayName,
+                subject: 'Software Catalogus - Inloggegevens',
+                templateName: 'user_password',
+                templateData: $templateData
             );
 
-            if ($success) {
+            if ($success === true) {
                 $this->logger->info(
                         'UserPasswordEmail: Successfully sent user password email',
                         [
@@ -978,15 +1027,17 @@ class SymfonyEmailService
     }//end sendUserPasswordEmail()
 
     /**
-     * Sends a templated email using the configured templates
+     * Sends a templated email using the configured templates.
      *
-     * @param  string $recipientEmail The recipient email address
-     * @param  string $recipientName  The recipient name
-     * @param  string $subject        The email subject
-     * @param  string $templateName   The template name
-     * @param  array  $templateData   The template data
-     * @return bool True if email was sent successfully, false otherwise
-     * @throws \Exception If email sending fails
+     * @param string $recipientEmail The recipient email address.
+     * @param string $recipientName  The recipient name.
+     * @param string $subject        The email subject.
+     * @param string $templateName   The template name.
+     * @param array  $templateData   The template data.
+     *
+     * @return bool True if email was sent successfully, false otherwise.
+     *
+     * @throws \Exception If email sending fails.
      */
     private function sendTemplatedEmail(
         string $recipientEmail,
@@ -996,19 +1047,22 @@ class SymfonyEmailService
         array $templateData
     ): bool {
         try {
-            // Get template content from settings service
+            // Get template content from settings service.
             $emailSettings   = $this->settingsService->getEmailSettings();
-            $templates       = $emailSettings['templates'] ?? [];
-            $templateContent = $templates[$templateName] ?? $this->getDefaultTemplate($templateName);
+            $templates       = ($emailSettings['templates'] ?? []);
+            $templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate($templateName));
 
-            // Replace template variables
-            $htmlBody = $this->processTemplate($templateContent, $templateData);
+            // Replace template variables.
+            $htmlBody = $this->processTemplate(
+                template: $templateContent,
+                templateData: $templateData
+            );
 
             return $this->sendEmail(
-                $recipientEmail,
-                $recipientName,
-                $subject,
-                $htmlBody
+                recipientEmail: $recipientEmail,
+                recipientName: $recipientName,
+                subject: $subject,
+                htmlBody: $htmlBody
             );
         } catch (\Exception $e) {
             $this->logger->error(
@@ -1025,10 +1079,11 @@ class SymfonyEmailService
     }//end sendTemplatedEmail()
 
     /**
-     * Gets the default template for a given template name
+     * Gets the default template for a given template name.
      *
-     * @param  string $templateName The template name
-     * @return string The default template content
+     * @param string $templateName The template name.
+     *
+     * @return string The default template content.
      */
     private function getDefaultTemplate(string $templateName): string
     {
@@ -1043,92 +1098,128 @@ class SymfonyEmailService
     }//end getDefaultTemplate()
 
     /**
-     * Processes a template by replacing variables with actual data
+     * Processes a template by replacing variables with actual data.
      *
-     * @param  string $template     The template content
-     * @param  array  $templateData The data to replace in the template
-     * @return string The processed template
+     * @param string $template     The template content.
+     * @param array  $templateData The data to replace in the template.
+     *
+     * @return string The processed template.
      */
     private function processTemplate(string $template, array $templateData): string
     {
         $processed = $template;
 
-        // Replace organization variables
-        if (isset($templateData['organization'])) {
+        // Replace organization variables.
+        if (isset($templateData['organization']) === true) {
             $org       = $templateData['organization'];
-            $processed = str_replace('{{ organization.name }}', $org['name'] ?? '', $processed);
+            $processed = str_replace(
+                search: '{{ organization.name }}',
+                replace: ($org['name'] ?? ''),
+                subject: $processed
+            );
         }
 
-        // Replace user variables
-        if (isset($templateData['user'])) {
+        // Replace user variables.
+        if (isset($templateData['user']) === true) {
             $user      = $templateData['user'];
-            $processed = str_replace('{{ user.name }}', $user['name'] ?? '', $processed);
-            $processed = str_replace('{{ user.email }}', $user['email'] ?? '', $processed);
-            $processed = str_replace('{{ user.password }}', $user['password'] ?? '', $processed);
+            $processed = str_replace(
+                search: '{{ user.name }}',
+                replace: ($user['name'] ?? ''),
+                subject: $processed
+            );
+            $processed = str_replace(
+                search: '{{ user.email }}',
+                replace: ($user['email'] ?? ''),
+                subject: $processed
+            );
+            $processed = str_replace(
+                search: '{{ user.password }}',
+                replace: ($user['password'] ?? ''),
+                subject: $processed
+            );
         }
 
-        // Replace contact variables (backward compatibility)
-        if (isset($templateData['user'])) {
+        // Replace contact variables (backward compatibility).
+        if (isset($templateData['user']) === true) {
             $user      = $templateData['user'];
-            $processed = str_replace('{{ user.name }}', $user['name'] ?? '', $processed);
-            $processed = str_replace('{{ user.email }}', $user['email'] ?? '', $processed);
+            $processed = str_replace(
+                search: '{{ user.name }}',
+                replace: ($user['name'] ?? ''),
+                subject: $processed
+            );
+            $processed = str_replace(
+                search: '{{ user.email }}',
+                replace: ($user['email'] ?? ''),
+                subject: $processed
+            );
         }
 
         return $processed;
     }//end processTemplate()
 
     /**
-     * Gets recipient email from organization or user data
+     * Gets recipient email from organization or user data.
      *
-     * @param  array $data The organization or user data
-     * @return string|null The recipient email address or null if not found
+     * @param array $data The organization or user data.
+     *
+     * @return string|null The recipient email address or null if not found.
      */
     private function getRecipientEmail(array $data): ?string
     {
-        // Check for test receiver override
+        // Check for test receiver override.
         $testReceiver = $this->getTestReceiverOverride();
-        if ($testReceiver) {
+        if ($testReceiver !== null) {
             return $testReceiver;
         }
 
-        // Try to get email from various fields
-        $email = $data['e-mailadres'] ?? null;
+        // Try to get email from various fields.
+        $email = ($data['e-mailadres'] ?? null);
 
-        // If no direct email, try to get from contactpersonen
-        if (!$email && isset($data['contactpersonen']) && is_array($data['contactpersonen'])) {
+        // If no direct email, try to get from contactpersonen.
+        if ($email === null && isset($data['contactpersonen']) === true && is_array($data['contactpersonen']) === true) {
             foreach ($data['contactpersonen'] as $contact) {
-                if (is_array($contact) && !empty($contact['e-mailadres'])) {
+                if (is_array($contact) === true && empty($contact['e-mailadres']) === false) {
                     $email = $contact['e-mailadres'];
                     break;
                 }
             }
         }
 
-        return $email && $this->validateEmail($email) ? $email : null;
+        if ($email !== null && $this->validateEmail($email) === true) {
+            return $email;
+        }
+
+        return null;
     }//end getRecipientEmail()
 
     /**
-     * Gets the test receiver override email address
+     * Gets the test receiver override email address.
      *
-     * @return string|null The test receiver override email address or null if not set
+     * @return string|null The test receiver override email address or null if not set.
      */
     private function getTestReceiverOverride(): ?string
     {
         $emailSettings = $this->settingsService->getEmailSettings();
-        $override      = $emailSettings['testReceiverOverride'] ?? '';
+        $override      = ($emailSettings['testReceiverOverride'] ?? '');
 
-        return !empty($override) && $this->validateEmail($override) ? $override : null;
+        if (empty($override) === false && $this->validateEmail($override) === true) {
+            return $override;
+        }
+
+        return null;
     }//end getTestReceiverOverride()
 
     /**
-     * Sends an email using Symfony Mailer
+     * Sends an email using Symfony Mailer.
      *
-     * @param  string $recipientEmail The recipient email address
-     * @param  string $recipientName  The recipient name
-     * @param  string $subject        The email subject
-     * @param  string $htmlBody       The HTML email body
-     * @return bool True if email was sent successfully, false otherwise
-     * @throws \Exception If email sending fails
+     * @param string $recipientEmail The recipient email address.
+     * @param string $recipientName  The recipient name.
+     * @param string $subject        The email subject.
+     * @param string $htmlBody       The HTML email body.
+     *
+     * @return bool True if email was sent successfully, false otherwise.
+     *
+     * @throws \Exception If email sending fails.
      */
     private function sendEmail(
         string $recipientEmail,
@@ -1137,20 +1228,20 @@ class SymfonyEmailService
         string $htmlBody
     ): bool {
         try {
-            // Get sender configuration from settings service
+            // Get sender configuration from settings service.
             $emailSettings = $this->settingsService->getEmailSettings();
-            $senderEmail   = $emailSettings['senderEmail'] ?? self::DEFAULT_SENDER;
-            $senderName    = $emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME;
+            $senderEmail   = ($emailSettings['senderEmail'] ?? self::DEFAULT_SENDER);
+            $senderName    = ($emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME);
 
-            // Create Symfony Email
+            // Create Symfony Email.
             $email = (new Email())
-                ->from(new Address($senderEmail, $senderName))
-                ->to(new Address($recipientEmail, $recipientName))
+                ->from(new Address(address: $senderEmail, name: $senderName))
+                ->to(new Address(address: $recipientEmail, name: $recipientName))
                 ->subject($subject)
                 ->html($htmlBody)
                 ->text(strip_tags($htmlBody));
-            // Fallback text version
-            // Send email using Symfony Mailer
+            // Fallback text version.
+            // Send email using Symfony Mailer.
             $this->getMailer()->send($email);
 
             $this->logger->info(
@@ -1179,10 +1270,11 @@ class SymfonyEmailService
     }//end sendEmail()
 
     /**
-     * Validates email address format
+     * Validates email address format.
      *
-     * @param  string $email The email address to validate
-     * @return bool True if email is valid, false otherwise
+     * @param string $email The email address to validate.
+     *
+     * @return bool True if email is valid, false otherwise.
      */
     private function validateEmail(string $email): bool
     {
@@ -1190,9 +1282,9 @@ class SymfonyEmailService
     }//end validateEmail()
 
     /**
-     * Gets the configured sender email address
+     * Gets the configured sender email address.
      *
-     * @return string The sender email address
+     * @return string The sender email address.
      */
     public function getSenderEmail(): string
     {
@@ -1201,9 +1293,9 @@ class SymfonyEmailService
     }//end getSenderEmail()
 
     /**
-     * Gets the configured sender name
+     * Gets the configured sender name.
      *
-     * @return string The sender name
+     * @return string The sender name.
      */
     public function getSenderName(): string
     {
@@ -1212,25 +1304,25 @@ class SymfonyEmailService
     }//end getSenderName()
 
     /**
-     * Gets all email settings including transport configuration
+     * Gets all email settings including transport configuration.
      *
-     * @return array The email settings
+     * @return array The email settings.
      */
     public function getEmailSettings(): array
     {
         $settings = $this->settingsService->getEmailSettings();
 
-        // Add transport information
+        // Add transport information.
         $settings['availableTransports'] = self::TRANSPORT_TYPES;
-        $settings['transportType']       = $settings['transportType'] ?? 'smtp';
+        $settings['transportType']       = ($settings['transportType'] ?? 'smtp');
 
         return $settings;
     }//end getEmailSettings()
 
     /**
-     * Gets available transport types
+     * Gets available transport types.
      *
-     * @return array<string, string> Available transport types
+     * @return array<string, string> Available transport types.
      */
     public function getAvailableTransports(): array
     {
@@ -1238,70 +1330,74 @@ class SymfonyEmailService
     }//end getAvailableTransports()
 
     /**
-     * Sets the sender email address in app configuration
+     * Sets the sender email address in app configuration.
      *
-     * @param  string $email The sender email address
+     * @param string $email The sender email address.
+     *
      * @return void
      */
     public function setSenderEmail(string $email): void
     {
-        if (!$this->validateEmail($email)) {
+        if ($this->validateEmail($email) === false) {
             throw new \InvalidArgumentException('Invalid email address: '.$email);
         }
 
         $this->settingsService->updateEmailSettings(['senderEmail' => $email]);
         $this->mailer = null;
-        // Reset mailer to pick up new settings
+        // Reset mailer to pick up new settings.
     }//end setSenderEmail()
 
     /**
-     * Sets the sender name in app configuration
+     * Sets the sender name in app configuration.
      *
-     * @param  string $name The sender name
+     * @param string $name The sender name.
+     *
      * @return void
      */
     public function setSenderName(string $name): void
     {
         $this->settingsService->updateEmailSettings(['senderName' => $name]);
         $this->mailer = null;
-        // Reset mailer to pick up new settings
+        // Reset mailer to pick up new settings.
     }//end setSenderName()
 
     /**
-     * Sets the transport type and related configuration
+     * Sets the transport type and related configuration.
      *
-     * @param  string $transportType   The transport type
-     * @param  array  $transportConfig Transport-specific configuration
+     * @param string $transportType   The transport type.
+     * @param array  $transportConfig Transport-specific configuration.
+     *
      * @return void
      */
     public function setTransportConfiguration(string $transportType, array $transportConfig=[]): void
     {
-        if (!isset(self::TRANSPORT_TYPES[$transportType])) {
+        if (isset(self::TRANSPORT_TYPES[$transportType]) === false) {
             throw new \InvalidArgumentException('Invalid transport type: '.$transportType);
         }
 
         $settings = ['transportType' => $transportType] + $transportConfig;
         $this->settingsService->updateEmailSettings($settings);
         $this->mailer = null;
-        // Reset mailer to pick up new settings
+        // Reset mailer to pick up new settings.
     }//end setTransportConfiguration()
 
     /**
-     * Tests if the email system is working by sending a test email
+     * Tests if the email system is working by sending a test email.
      *
-     * @param  string $testEmail The email address to send test email to
-     * @return bool True if test email was sent successfully
+     * @param string $testEmail The email address to send test email to.
+     *
+     * @return bool True if test email was sent successfully.
      */
     public function sendTestEmail(string $testEmail): bool
     {
-        if (!$this->validateEmail($testEmail)) {
+        if ($this->validateEmail($testEmail) === false) {
             $this->logger->error('Invalid test email address', ['email' => $testEmail]);
             return false;
         }
 
         $subject       = 'Software Catalogus - Test Email (Symfony Mailer)';
         $emailSettings = $this->getEmailSettings();
-        $transportType = $emailSettings['transportType'] ?? 'smtp';
+        $transportType = ($emailSettings['transportType'] ?? 'smtp');
 
         $htmlBody = '
             <html>
@@ -1313,7 +1409,8 @@ class SymfonyEmailService
                 <h1>Test Email - Symfony Mailer</h1>
                 <p>Dit is een test email van de Software Catalogus.</p>
                 <p>Als u deze email ontvangt, werkt het email systeem correct.</p>
-                <p><strong>Transport Type:</strong> '.htmlspecialchars($transportType).' ('.htmlspecialchars(self::TRANSPORT_TYPES[$transportType] ?? 'Unknown').')</p>
+                <p><strong>Transport Type:</strong> '.htmlspecialchars($transportType).'
+                    ('.htmlspecialchars(self::TRANSPORT_TYPES[$transportType] ?? 'Unknown').')</p>
                 <p><strong>Datum:</strong> '.date('Y-m-d H:i:s').'</p>
                 <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
             </body>
@@ -1322,10 +1419,10 @@ class SymfonyEmailService
 
         try {
             return $this->sendEmail(
-                $testEmail,
-                'Test Recipient',
-                $subject,
-                $htmlBody
+                recipientEmail: $testEmail,
+                recipientName: 'Test Recipient',
+                subject: $subject,
+                htmlBody: $htmlBody
             );
         } catch (\Exception $e) {
             $this->logger->error(
@@ -1340,9 +1437,10 @@ class SymfonyEmailService
     }//end sendTestEmail()
 
     /**
-     * Sets whether email notifications are enabled
+     * Sets whether email notifications are enabled.
      *
-     * @param  bool $enabled True to enable email notifications, false to disable
+     * @param bool $enabled True to enable email notifications, false to disable.
+     *
      * @return void
      */
     public function setEnabled(bool $enabled): void
@@ -1351,14 +1449,15 @@ class SymfonyEmailService
     }//end setEnabled()
 
     /**
-     * Sets the test receiver override email address
+     * Sets the test receiver override email address.
      *
-     * @param  string $email The test receiver override email address
+     * @param string $email The test receiver override email address.
+     *
      * @return void
      */
     public function setTestReceiverOverride(string $email): void
     {
-        if (!empty($email) && !$this->validateEmail($email)) {
+        if (empty($email) === false && $this->validateEmail($email) === false) {
             throw new \InvalidArgumentException('Invalid test receiver override email address: '.$email);
         }
 
@@ -1366,9 +1465,10 @@ class SymfonyEmailService
     }//end setTestReceiverOverride()
 
     /**
-     * Sets whether organization registration emails are enabled
+     * Sets whether organization registration emails are enabled.
      *
-     * @param  bool $enabled True to enable organization registration emails, false to disable
+     * @param bool $enabled True to enable organization registration emails, false to disable.
+     *
      * @return void
      */
     public function setOrganizationRegistrationEnabled(bool $enabled): void
@@ -1377,9 +1477,10 @@ class SymfonyEmailService
     }//end setOrganizationRegistrationEnabled()
 
     /**
-     * Sets whether organization activation emails are enabled
+     * Sets whether organization activation emails are enabled.
      *
-     * @param  bool $enabled True to enable organization activation emails, false to disable
+     * @param bool $enabled True to enable organization activation emails, false to disable.
+     *
      * @return void
      */
     public function setOrganizationActivationEnabled(bool $enabled): void
@@ -1388,9 +1489,10 @@ class SymfonyEmailService
     }//end setOrganizationActivationEnabled()
 
     /**
-     * Sets whether user creation emails are enabled
+     * Sets whether user creation emails are enabled.
      *
-     * @param  bool $enabled True to enable user creation emails, false to disable
+     * @param bool $enabled True to enable user creation emails, false to disable.
+     *
      * @return void
      */
     public function setUserCreationEnabled(bool $enabled): void
@@ -1399,9 +1501,10 @@ class SymfonyEmailService
     }//end setUserCreationEnabled()
 
     /**
-     * Sets whether user password emails are enabled
+     * Sets whether user password emails are enabled.
      *
-     * @param  bool $enabled True to enable user password emails, false to disable
+     * @param bool $enabled True to enable user password emails, false to disable.
+     *
      * @return void
      */
     public function setUserPasswordEnabled(bool $enabled): void
@@ -1410,16 +1513,16 @@ class SymfonyEmailService
     }//end setUserPasswordEnabled()
 
     /**
-     * Checks if the email system is fully configured with credentials and templates
+     * Checks if the email system is fully configured with credentials and templates.
      *
-     * @return array Configuration status with details
+     * @return array Configuration status with details.
      */
     public function isEmailSystemConfigured(): array
     {
         $emailSettings = $this->settingsService->getEmailSettings();
 
-        // Check if emails are enabled
-        if (!($emailSettings['enabled'] ?? false)) {
+        // Check if emails are enabled.
+        if (($emailSettings['enabled'] ?? false) === false) {
             return [
                 'configured'     => false,
                 'reason'         => 'Email notifications are disabled',
@@ -1428,71 +1531,82 @@ class SymfonyEmailService
             ];
         }
 
-        // Check transport credentials
+        // Check transport credentials.
         $hasCredentials = $this->hasValidTransportCredentials($emailSettings);
 
-        // Check templates
+        // Check templates.
         $hasTemplates = $this->hasValidTemplates($emailSettings);
 
-        $configured = $hasCredentials && $hasTemplates;
+        $configured = ($hasCredentials === true && $hasTemplates === true);
+
+        if ($configured === true) {
+            $reason = 'Email system fully configured';
+        } else {
+            $reason = $this->getConfigurationIssues(
+                hasCredentials: $hasCredentials,
+                hasTemplates: $hasTemplates
+            );
+        }
 
         return [
             'configured'     => $configured,
-            'reason'         => $configured ? 'Email system fully configured' : $this->getConfigurationIssues($hasCredentials, $hasTemplates),
+            'reason'         => $reason,
             'hasCredentials' => $hasCredentials,
             'hasTemplates'   => $hasTemplates,
-            'transportType'  => $emailSettings['transportType'] ?? 'smtp',
+            'transportType'  => ($emailSettings['transportType'] ?? 'smtp'),
         ];
     }//end isEmailSystemConfigured()
 
     /**
-     * Checks if the current transport has valid credentials
+     * Checks if the current transport has valid credentials.
      *
-     * @param  array $emailSettings Email settings
-     * @return bool True if credentials are valid for the current transport
+     * @param array $emailSettings Email settings.
+     *
+     * @return bool True if credentials are valid for the current transport.
      */
     private function hasValidTransportCredentials(array $emailSettings): bool
     {
-        $transportType = $emailSettings['transportType'] ?? 'smtp';
+        $transportType = ($emailSettings['transportType'] ?? 'smtp');
 
         switch ($transportType) {
             case 'mailjet':
-                return !empty($emailSettings['mailjetApiKey']) && !empty($emailSettings['mailjetSecretKey']);
+                return empty($emailSettings['mailjetApiKey']) === false && empty($emailSettings['mailjetSecretKey']) === false;
             case 'sendgrid':
-                return !empty($emailSettings['sendgridApiKey']);
+                return empty($emailSettings['sendgridApiKey']) === false;
             case 'mailgun':
-                return !empty($emailSettings['mailgunApiKey']) && !empty($emailSettings['mailgunDomain']);
+                return empty($emailSettings['mailgunApiKey']) === false && empty($emailSettings['mailgunDomain']) === false;
             case 'postmark':
-                return !empty($emailSettings['postmarkApiKey']);
+                return empty($emailSettings['postmarkApiKey']) === false;
             case 'ses':
-                return !empty($emailSettings['sesAccessKey']) && !empty($emailSettings['sesSecretKey']);
+                return empty($emailSettings['sesAccessKey']) === false && empty($emailSettings['sesSecretKey']) === false;
             case 'smtp':
-                return !empty($emailSettings['smtpHost']);
+                return empty($emailSettings['smtpHost']) === false;
             case 'sendmail':
             case 'native':
             case 'null':
+                // These don't require credentials.
                 return true;
-            // These don't require credentials
             default:
                 return false;
         }//end switch
     }//end hasValidTransportCredentials()
 
     /**
-     * Checks if required templates are configured
+     * Checks if required templates are configured.
      *
-     * @param  array $emailSettings Email settings
-     * @return bool True if templates are configured
+     * @param array $emailSettings Email settings.
+     *
+     * @return bool True if templates are configured.
      */
     private function hasValidTemplates(array $emailSettings): bool
     {
-        $templates         = $emailSettings['templates'] ?? [];
+        $templates         = ($emailSettings['templates'] ?? []);
         $requiredTemplates = ['organization_registration', 'organization_activation', 'user_creation', 'user_password'];
 
         foreach ($requiredTemplates as $templateName) {
-            $template = $templates[$templateName] ?? '';
-            // Template is valid if it's not empty or if we have a default template
-            if (empty($template) && empty($this->getDefaultTemplate($templateName))) {
+            $template = ($templates[$templateName] ?? '');
+            // Template is valid if it's not empty or if we have a default template.
+            if (empty($template) === true && empty($this->getDefaultTemplate($templateName)) === true) {
                 return false;
             }
         }
@@ -1501,24 +1615,25 @@ class SymfonyEmailService
     }//end hasValidTemplates()
 
     /**
-     * Gets configuration issues description
+     * Gets configuration issues description.
      *
-     * @param  bool $hasCredentials Whether credentials are configured
-     * @param  bool $hasTemplates   Whether templates are configured
-     * @return string Description of configuration issues
+     * @param bool $hasCredentials Whether credentials are configured.
+     * @param bool $hasTemplates   Whether templates are configured.
+     *
+     * @return string Description of configuration issues.
      */
     private function getConfigurationIssues(bool $hasCredentials, bool $hasTemplates): string
     {
         $issues = [];
 
-        if (!$hasCredentials) {
+        if ($hasCredentials === false) {
             $issues[] = 'missing transport credentials';
         }
 
-        if (!$hasTemplates) {
+        if ($hasTemplates === false) {
             $issues[] = 'missing email templates';
         }
 
-        return 'Configuration incomplete: '.implode(', ', $issues);
+        return 'Configuration incomplete: '.implode(separator: ', ', array: $issues);
     }//end getConfigurationIssues()
 }//end class

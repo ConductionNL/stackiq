@@ -8,10 +8,10 @@
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team
- * @license  AGPL-3.0
- * @version  1.0.0
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @author   Conduction b.v. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version  GIT: <git_id>
+ * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -35,10 +35,10 @@ use Psr\Log\LoggerInterface;
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team
- * @license  AGPL-3.0
- * @version  1.0.0
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @author   Conduction b.v. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version  GIT: <git_id>
+ * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class ViewService
 {
@@ -79,10 +79,11 @@ class ViewService
     }//end __construct()
 
     /**
-     * Get all views from the system
+     * Get all views from the system.
      *
-     * @param  array $options Query options including enrichment flags
-     * @return array Array of view objects with optional enrichments
+     * @param array $options Query options including enrichment flags.
+     *
+     * @return array Array of view objects with optional enrichments.
      */
     public function getAllViews(array $options=[]): array
     {
@@ -94,19 +95,19 @@ class ViewService
                 );
 
         try {
-            // Get all view objects from OpenRegister
+            // Get all view objects from OpenRegister.
             $views = $this->getViewsFromRegister();
 
-            // Transform views to include critical API fields
+            // Transform views to include critical API fields.
             $views = $this->transformViews($views);
 
-                    // Apply enrichments based on options
-            if (!empty($options)) {
-                $views = $this->enrichViews($views, $options);
+            // Apply enrichments based on options.
+            if (empty($options) === false) {
+                $views = $this->enrichViews(views: $views, options: $options);
             }
 
-            // Apply module-to-viewNode expansion if modules are enabled
-            if (isset($options['include_modules']) && $options['include_modules']) {
+            // Apply module-to-viewNode expansion if modules are enabled.
+            if (isset($options['include_modules']) === true && $options['include_modules'] === true) {
                 $views = $this->expandModulesToViewNodes($views);
             }
 
@@ -135,11 +136,12 @@ class ViewService
     }//end getAllViews()
 
     /**
-     * Get a specific view by ID
+     * Get a specific view by ID.
      *
-     * @param  string $viewId  The view identifier
-     * @param  array  $options Query options including enrichment flags
-     * @return array View object with optional enrichments or error response
+     * @param string $viewId  The view identifier.
+     * @param array  $options Query options including enrichment flags.
+     *
+     * @return array View object with optional enrichments or error response.
      */
     public function getView(string $viewId, array $options=[]): array
     {
@@ -152,10 +154,10 @@ class ViewService
                 );
 
         try {
-            // Get specific view from OpenRegister
+            // Get specific view from OpenRegister.
             $view = $this->getViewFromRegister($viewId);
 
-            if (!$view) {
+            if ($view === null) {
                 return [
                     'success' => false,
                     'error'   => "View with ID '$viewId' not found",
@@ -163,18 +165,18 @@ class ViewService
                 ];
             }
 
-            // Transform view to include critical API fields
+            // Transform view to include critical API fields.
             $view = $this->transformView($view);
 
-            // Apply enrichments based on options
-            if (!empty($options)) {
-                $view = $this->enrichView($view, $options);
+            // Apply enrichments based on options.
+            if (empty($options) === false) {
+                $view = $this->enrichView(view: $view, options: $options);
 
-                // Apply module-to-viewNode expansion if modules are enabled
-                if (isset($options['include_modules']) && $options['include_modules']) {
+                // Apply module-to-viewNode expansion if modules are enabled.
+                if (isset($options['include_modules']) === true && $options['include_modules'] === true) {
                     $views = $this->expandModulesToViewNodes([$view]);
-                    $view  = $views[0] ?? $view;
-                    // Get the expanded view back
+                    // Get the expanded view back.
+                    $view = $views[0] ?? $view;
                 }
             }
 
@@ -341,97 +343,103 @@ class ViewService
     }//end getViewFromRegister()
 
     /**
-     * Enrich multiple views with additional data
+     * Enrich multiple views with additional data.
      *
-     * @param  array $views   Array of view objects
-     * @param  array $options Enrichment options
-     * @return array Array of enriched view objects
+     * @param array $views   Array of view objects.
+     * @param array $options Enrichment options.
+     *
+     * @return array Array of enriched view objects.
      */
     private function enrichViews(array $views, array $options): array
     {
         $enrichedViews = [];
 
         foreach ($views as $view) {
-            $enrichedViews[] = $this->enrichView($view, $options);
+            $enrichedViews[] = $this->enrichView(view: $view, options: $options);
         }
 
         return $enrichedViews;
     }//end enrichViews()
 
     /**
-     * Enrich a single view with additional data
+     * Enrich a single view with additional data.
      *
-     * @param  array $view    View object to enrich
-     * @param  array $options Enrichment options
-     * @return array Enriched view object
+     * @param array $view    View object to enrich.
+     * @param array $options Enrichment options.
+     *
+     * @return array Enriched view object.
      */
     private function enrichView(array $view, array $options): array
     {
         $enrichedView = $view;
 
-        // Enrich viewNodes if present
-        if (isset($view['viewNodes']) && is_array($view['viewNodes'])) {
-            $enrichedView['viewNodes'] = $this->enrichViewNodes($view['viewNodes'], $options);
+        // Enrich viewNodes if present.
+        if (isset($view['viewNodes']) === true && is_array(value: $view['viewNodes']) === true) {
+            $enrichedView['viewNodes'] = $this->enrichViewNodes(viewNodes: $view['viewNodes'], options: $options);
         }
 
-        // TODO: Add view-level enrichments here if needed
+        // TODO: Add view-level enrichments here if needed.
         return $enrichedView;
     }//end enrichView()
 
     /**
-     * Enrich view nodes with additional data based on options
+     * Enrich view nodes with additional data based on options.
      *
-     * @param  array $viewNodes Array of view nodes
-     * @param  array $options   Enrichment options
-     * @return array Array of enriched view nodes
+     * @param array $viewNodes Array of view nodes.
+     * @param array $options   Enrichment options.
+     *
+     * @return array Array of enriched view nodes.
      */
     private function enrichViewNodes(array $viewNodes, array $options): array
     {
         $enrichedNodes = [];
 
-        // Get enrichment data upfront if requested
+        // Get enrichment data upfront if requested.
         $productsData         = [];
         $modulesData          = [];
         $gebruikData          = [];
         $deelnamesGebruikData = [];
 
-        if ($this->shouldIncludeProducts($options)) {
+        if ($this->shouldIncludeProducts($options) === true) {
             $productsData = $this->getProductsData();
         }
 
-        if ($this->shouldIncludeModules($options)) {
+        if ($this->shouldIncludeModules($options) === true) {
             $modulesData = $this->getModulesData();
         }
 
-        if ($this->shouldIncludeGebruik($options)) {
+        if ($this->shouldIncludeGebruik($options) === true) {
             $gebruikData = $this->getGebruikData($options);
         }
 
-        if ($this->shouldIncludeDeelnamesGebruik($options)) {
+        if ($this->shouldIncludeDeelnamesGebruik($options) === true) {
             $deelnamesGebruikData = $this->getDeelnamesGebruikData();
         }
 
         foreach ($viewNodes as $node) {
             $enrichedNode = $node;
 
-            // Apply enrichments based on the node's modelNodeId (element reference)
+            // Apply enrichments based on the node's modelNodeId (element reference).
             $modelNodeId = $node['modelNodeId'] ?? null;
 
-            if ($modelNodeId) {
-                if ($this->shouldIncludeProducts($options)) {
-                    $enrichedNode['products'] = $this->getNodeProducts($modelNodeId, $productsData);
+            if ($modelNodeId !== null) {
+                if ($this->shouldIncludeProducts($options) === true) {
+                    $enrichedNode['products'] = $this->getNodeProducts(modelNodeId: $modelNodeId, productsData: $productsData);
                 }
 
-                if ($this->shouldIncludeModules($options)) {
-                    $enrichedNode['modules'] = $this->getNodeModules($modelNodeId, $modulesData);
+                if ($this->shouldIncludeModules($options) === true) {
+                    $enrichedNode['modules'] = $this->getNodeModules(modelNodeId: $modelNodeId, modulesData: $modulesData);
                 }
 
-                if ($this->shouldIncludeGebruik($options)) {
-                    $enrichedNode['gebruik'] = $this->getNodeGebruik($modelNodeId, $gebruikData);
+                if ($this->shouldIncludeGebruik($options) === true) {
+                    $enrichedNode['gebruik'] = $this->getNodeGebruik(modelNodeId: $modelNodeId, gebruikData: $gebruikData);
                 }
 
-                if ($this->shouldIncludeDeelnamesGebruik($options)) {
-                    $enrichedNode['deelnamesGebruik'] = $this->getNodeDeelnamesGebruik($modelNodeId, $deelnamesGebruikData);
+                if ($this->shouldIncludeDeelnamesGebruik($options) === true) {
+                    $enrichedNode['deelnamesGebruik'] = $this->getNodeDeelnamesGebruik(
+                        modelNodeId: $modelNodeId,
+                        deelnamesGebruikData: $deelnamesGebruikData
+                    );
                 }
             }
 
@@ -442,10 +450,11 @@ class ViewService
     }//end enrichViewNodes()
 
     /**
-     * Check if products should be included in enrichment
+     * Check if products should be included in enrichment.
      *
-     * @param  array $options Enrichment options
-     * @return bool True if products should be included
+     * @param array $options Enrichment options.
+     *
+     * @return bool True if products should be included.
      */
     private function shouldIncludeProducts(array $options): bool
     {
@@ -453,10 +462,11 @@ class ViewService
     }//end shouldIncludeProducts()
 
     /**
-     * Check if modules should be included in enrichment
+     * Check if modules should be included in enrichment.
      *
-     * @param  array $options Enrichment options
-     * @return bool True if modules should be included
+     * @param array $options Enrichment options.
+     *
+     * @return bool True if modules should be included.
      */
     private function shouldIncludeModules(array $options): bool
     {
@@ -464,10 +474,11 @@ class ViewService
     }//end shouldIncludeModules()
 
     /**
-     * Check if gebruik should be included in enrichment
+     * Check if gebruik should be included in enrichment.
      *
-     * @param  array $options Enrichment options
-     * @return bool True if gebruik should be included
+     * @param array $options Enrichment options.
+     *
+     * @return bool True if gebruik should be included.
      */
     private function shouldIncludeGebruik(array $options): bool
     {
@@ -475,10 +486,11 @@ class ViewService
     }//end shouldIncludeGebruik()
 
     /**
-     * Check if deelnames gebruik should be included in enrichment
+     * Check if deelnames gebruik should be included in enrichment.
      *
-     * @param  array $options Enrichment options
-     * @return bool True if deelnames gebruik should be included
+     * @param array $options Enrichment options.
+     *
+     * @return bool True if deelnames gebruik should be included.
      */
     private function shouldIncludeDeelnamesGebruik(array $options): bool
     {
@@ -486,28 +498,29 @@ class ViewService
     }//end shouldIncludeDeelnamesGebruik()
 
     /**
-     * Get applied enrichments list for response metadata
+     * Get applied enrichments list for response metadata.
      *
-     * @param  array $options Enrichment options
-     * @return array List of applied enrichments
+     * @param array $options Enrichment options.
+     *
+     * @return array List of applied enrichments.
      */
     private function getAppliedEnrichments(array $options): array
     {
         $enrichments = [];
 
-        if ($this->shouldIncludeProducts($options)) {
+        if ($this->shouldIncludeProducts($options) === true) {
             $enrichments[] = 'products';
         }
 
-        if ($this->shouldIncludeModules($options)) {
+        if ($this->shouldIncludeModules($options) === true) {
             $enrichments[] = 'modules';
         }
 
-        if ($this->shouldIncludeGebruik($options)) {
+        if ($this->shouldIncludeGebruik($options) === true) {
             $enrichments[] = 'gebruik';
         }
 
-        if ($this->shouldIncludeDeelnamesGebruik($options)) {
+        if ($this->shouldIncludeDeelnamesGebruik($options) === true) {
             $enrichments[] = 'deelnames_gebruik';
         }
 
@@ -515,32 +528,32 @@ class ViewService
     }//end getAppliedEnrichments()
 
     /**
-     * Get products data for enrichment (placeholder implementation)
+     * Get products data for enrichment (placeholder implementation).
      *
-     * @return array Products data
+     * @return array Products data.
      */
     private function getProductsData(): array
     {
-        // TODO: Implement actual products data retrieval
+        // TODO: Implement actual products data retrieval.
         $this->logger->debug('Getting products data for enrichment');
         return [];
     }//end getProductsData()
 
     /**
-     * Get current active organisation for filtering
+     * Get current active organisation for filtering.
      *
-     * @return string|null Current organisation identifier
+     * @return string|null Current organisation identifier.
      */
     private function getCurrentOrganisation(): ?string
     {
         $user = $this->userSession->getUser();
-        if (!$user) {
+        if ($user === null) {
             return null;
         }
 
-        // TODO: Implement proper organisation determination logic
-        // This could be based on user groups, settings, or other mechanisms
-        // For now, return a placeholder that would need actual implementation
+        // TODO: Implement proper organisation determination logic.
+        // This could be based on user groups, settings, or other mechanisms.
+        // For now, return a placeholder that would need actual implementation.
         $userId = $user->getUID();
         $this->logger->debug(
                 'Getting current organisation for user',
@@ -549,18 +562,18 @@ class ViewService
                 ]
                 );
 
-        // Placeholder - needs actual implementation based on your organisation structure
+        // Placeholder - needs actual implementation based on your organisation structure.
+        // Replace with actual organisation logic.
         return 'default';
-        // Replace with actual organisation logic
     }//end getCurrentOrganisation()
 
     /**
-     * Get modules data for enrichment based on elementRef linkage
+     * Get modules data for enrichment based on elementRef linkage.
      *
      * Modules are directly linked to nodes based on their elementRef.
      * This method retrieves all module data from OpenRegister, filtered by current organisation.
      *
-     * @return array Modules data indexed by elementRef
+     * @return array Modules data indexed by elementRef.
      */
     private function getModulesData(): array
     {
@@ -568,18 +581,18 @@ class ViewService
 
         try {
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 return [];
             }
 
-            // Get current organisation for filtering
+            // Get current organisation for filtering.
             $currentOrg = $this->getCurrentOrganisation();
 
-            // Get configuration for modules register/schema
+            // Get configuration for modules register/schema.
             $amefConfig = $this->settingsService->getAmefConfig();
             $registerId = $amefConfig['register_id'] ?? null;
 
-            // Modules could be in various schemas - check common ones
+            // Modules could be in various schemas - check common ones.
             $moduleSchemas = [
                 $amefConfig['module_schema'] ?? null,
                 $amefConfig['component_schema'] ?? null,
@@ -589,7 +602,7 @@ class ViewService
             $allModules = [];
 
             foreach ($moduleSchemas as $schemaId) {
-                if (!$schemaId) {
+                if ($schemaId === null) {
                     continue;
                 }
 
@@ -601,22 +614,24 @@ class ViewService
                         ],
                     ];
 
-                    // Add organisation filter if current organisation is available
-                    if ($currentOrg) {
+                    // Add organisation filter if current organisation is available.
+                    if ($currentOrg !== null) {
                         $query['@self']['organisation'] = $currentOrg;
                     }
 
                     $modules = $objectService->searchObjects($query);
 
                     foreach ($modules as $module) {
-                        // Additional check for organisation in metadata if not caught by query
-                        if ($currentOrg && isset($module['@self']['organisation']) && $module['@self']['organisation'] !== $currentOrg) {
+                        // Additional check for organisation in metadata if not caught by query.
+                        $moduleOrg      = $module['@self']['organisation'] ?? null;
+                        $hasOrgMismatch = $currentOrg !== null && isset($module['@self']['organisation']) === true && $moduleOrg !== $currentOrg;
+                        if ($hasOrgMismatch === true) {
                             continue;
                         }
 
-                        // Index by elementRef or identifier for quick lookup
+                        // Index by elementRef or identifier for quick lookup.
                         $elementRef = $module['elementRef'] ?? $module['identifier'] ?? null;
-                        if ($elementRef) {
+                        if ($elementRef !== null) {
                             $allModules[$elementRef] = $module;
                         }
                     }
@@ -659,14 +674,15 @@ class ViewService
     }//end getModulesData()
 
     /**
-     * Get gebruik data for enrichment based on elementRef linkage
+     * Get gebruik data for enrichment based on elementRef linkage.
      *
      * Usage data is linked to nodes based on their elementRef.
      * This method retrieves usage statistics from OpenRegister, filtered by organisation.
      * Also handles deelnames logic when enabled.
      *
-     * @param  array $options Query options for deelnames handling
-     * @return array Gebruik data indexed by elementRef with extended modules
+     * @param array $options Query options for deelnames handling.
+     *
+     * @return array Gebruik data indexed by elementRef with extended modules.
      */
     private function getGebruikData(array $options=[]): array
     {
@@ -674,18 +690,18 @@ class ViewService
 
         try {
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 return [];
             }
 
-            // Get current organisation for filtering
+            // Get current organisation for filtering.
             $currentOrg = $this->getCurrentOrganisation();
 
-            // Get configuration for usage register/schema
+            // Get configuration for usage register/schema.
             $amefConfig = $this->settingsService->getAmefConfig();
             $registerId = $amefConfig['register_id'] ?? null;
 
-            // Usage data could be in various schemas
+            // Usage data could be in various schemas.
             $gebruikSchemas = [
                 $amefConfig['gebruik_schema'] ?? null,
                 $amefConfig['usage_schema'] ?? null,
@@ -694,9 +710,9 @@ class ViewService
 
             $allGebruik = [];
 
-            // STEP 1: Get regular gebruik data filtered by current organisation
+            // STEP 1: Get regular gebruik data filtered by current organisation.
             foreach ($gebruikSchemas as $schemaId) {
-                if (!$schemaId) {
+                if ($schemaId === null) {
                     continue;
                 }
 
@@ -708,13 +724,13 @@ class ViewService
                         ],
                     ];
 
-                    // Add organisation filter for regular gebruik
-                    if ($currentOrg) {
+                    // Add organisation filter for regular gebruik.
+                    if ($currentOrg !== null) {
                         $query['@self']['organisation'] = $currentOrg;
                     }
 
                     $gebruikItems = $objectService->searchObjects($query);
-                    $this->processGebruikItems($gebruikItems, $allGebruik, $currentOrg, 'regular');
+                    $this->processGebruikItems(gebruikItems: $gebruikItems, allGebruik: $allGebruik, currentOrg: $currentOrg, type: 'regular');
 
                     $this->logger->debug(
                             'Retrieved regular gebruik from schema',
@@ -735,29 +751,34 @@ class ViewService
                 }//end try
             }//end foreach
 
-            // STEP 2: If deelnames is enabled, get additional gebruik with RBAC off
-            if (isset($options['include_deelnames_gebruik']) && $options['include_deelnames_gebruik'] && $currentOrg) {
+            // STEP 2: If deelnames is enabled, get additional gebruik with RBAC off.
+            if (isset($options['include_deelnames_gebruik']) === true && $options['include_deelnames_gebruik'] === true && $currentOrg !== null) {
                 $this->logger->debug('Processing deelnames gebruik with RBAC disabled');
 
                 foreach ($gebruikSchemas as $schemaId) {
-                    if (!$schemaId) {
+                    if ($schemaId === null) {
                         continue;
                     }
 
                     try {
-                        // Search with RBAC disabled to find gebruik where current org is in deelnemers
+                        // Search with RBAC disabled to find gebruik where current org is in deelnemers.
                         $query = [
                             '@self'      => [
                                 'register' => $registerId,
                                 'schema'   => $schemaId,
                             ],
+                            // Current org in deelnemers field.
                             'deelnemers' => $currentOrg,
-                            // Current org in deelnemers field
                         ];
 
-                        // Call with RBAC disabled
+                        // Call with RBAC disabled.
                         $deelnamesGebruikItems = $objectService->searchObjects($query, _rbac: false);
-                        $this->processGebruikItems($deelnamesGebruikItems, $allGebruik, $currentOrg, 'deelnames');
+                        $this->processGebruikItems(
+                            gebruikItems: $deelnamesGebruikItems,
+                            allGebruik: $allGebruik,
+                            currentOrg: $currentOrg,
+                            type: 'deelnames'
+                        );
 
                         $this->logger->debug(
                                 'Retrieved deelnames gebruik from schema',
@@ -779,15 +800,16 @@ class ViewService
                 }//end foreach
             }//end if
 
-            // STEP 3: Extend gebruik with modules data
+            // STEP 3: Extend gebruik with modules data.
             $allGebruik = $this->extendGebruikWithModules($allGebruik);
 
+            $deelnamesEnabled = isset($options['include_deelnames_gebruik']) === true && $options['include_deelnames_gebruik'] === true;
             $this->logger->debug(
                     'Total gebruik retrieved and processed',
                     [
                         'total_element_refs_with_gebruik' => count($allGebruik),
                         'current_organisation'            => $currentOrg,
-                        'deelnames_enabled'               => isset($options['include_deelnames_gebruik']) && $options['include_deelnames_gebruik'],
+                        'deelnames_enabled'               => $deelnamesEnabled,
                     ]
                     );
 
@@ -804,25 +826,27 @@ class ViewService
     }//end getGebruikData()
 
     /**
-     * Process gebruik items and group them by elementRef
+     * Process gebruik items and group them by elementRef.
      *
-     * @param  array  $gebruikItems Array of gebruik objects
-     * @param  array  &$allGebruik  Array to add items to (by reference)
-     * @param  string $type         Type identifier ('regular' or 'deelnames')
+     * @param array  $gebruikItems Array of gebruik objects.
+     * @param array  $allGebruik   Array to add items to (by reference).
+     * @param string $currentOrg   Current organisation identifier.
+     * @param string $type         Type identifier ('regular' or 'deelnames').
+     *
      * @return void
      */
     private function processGebruikItems(array $gebruikItems, array &$allGebruik, string $currentOrg, string $type): void
     {
         foreach ($gebruikItems as $gebruik) {
-            // Group by elementRef for quick lookup
+            // Group by elementRef for quick lookup.
             $elementRef = $gebruik['elementRef'] ?? $gebruik['componentRef'] ?? $gebruik['moduleRef'] ?? null;
 
-            if ($elementRef) {
-                if (!isset($allGebruik[$elementRef])) {
+            if ($elementRef !== null) {
+                if (isset($allGebruik[$elementRef]) === false) {
                     $allGebruik[$elementRef] = [];
                 }
 
-                // Add type indicator and processing info
+                // Add type indicator and processing info.
                 $gebruik['_type'] = $type;
                 $gebruik['_processed_for_org'] = $currentOrg;
 
@@ -832,24 +856,25 @@ class ViewService
     }//end processGebruikItems()
 
     /**
-     * Extend gebruik data with modules information
+     * Extend gebruik data with modules information.
      *
-     * @param  array $allGebruik Gebruik data indexed by elementRef
-     * @return array Extended gebruik data with modules
+     * @param array $allGebruik Gebruik data indexed by elementRef.
+     *
+     * @return array Extended gebruik data with modules.
      */
     private function extendGebruikWithModules(array $allGebruik): array
     {
         $this->logger->debug('Extending gebruik data with modules information');
 
-        // Get modules data for extension
+        // Get modules data for extension.
         $modulesData = $this->getModulesData();
 
         foreach ($allGebruik as $elementRef => &$gebruikList) {
-            // Check if we have a module for this elementRef
-            if (isset($modulesData[$elementRef])) {
+            // Check if we have a module for this elementRef.
+            if (isset($modulesData[$elementRef]) === true) {
                 $module = $modulesData[$elementRef];
 
-                // Add module data to each gebruik item for this elementRef
+                // Add module data to each gebruik item for this elementRef.
                 foreach ($gebruikList as &$gebruik) {
                     $gebruik['_linked_module'] = $module;
 
@@ -864,55 +889,56 @@ class ViewService
                             );
                 }
 
+                // Clean up reference.
                 unset($gebruik);
-                // Clean up reference
             }//end if
         }//end foreach
 
+        // Clean up reference.
         unset($gebruikList);
-        // Clean up reference
         return $allGebruik;
     }//end extendGebruikWithModules()
 
     /**
-     * Expand modules to viewNodes based on referentiecomponent relationships
+     * Expand modules to viewNodes based on referentiecomponent relationships.
      *
      * For each module that has referentiecomponent relationships, add new nodes
      * to viewNodes with the module as parent.
      *
-     * @param  array $views Array of views to process
-     * @return array Views with expanded module nodes
+     * @param array $views Array of views to process.
+     *
+     * @return array Views with expanded module nodes.
      */
     private function expandModulesToViewNodes(array $views): array
     {
         $this->logger->debug('Expanding modules to viewNodes');
 
-        // Get modules data for expansion
+        // Get modules data for expansion.
         $modulesData = $this->getModulesData();
 
         foreach ($views as &$view) {
-            if (!isset($view['viewNodes']) || !is_array($view['viewNodes'])) {
+            if (isset($view['viewNodes']) === false || is_array(value: $view['viewNodes']) === false) {
                 continue;
             }
 
             $originalNodes = $view['viewNodes'];
             $expandedNodes = $originalNodes;
 
-            // Create a lookup of existing nodes by modelNodeId for quick parent matching
+            // Create a lookup of existing nodes by modelNodeId for quick parent matching.
             $nodesByModelId = [];
             foreach ($originalNodes as $node) {
                 $modelNodeId = $node['modelNodeId'] ?? null;
-                if ($modelNodeId) {
+                if ($modelNodeId !== null) {
                     $nodesByModelId[$modelNodeId] = $node;
                 }
             }
 
-            // Process each module for expansion
+            // Process each module for expansion.
             foreach ($modulesData as $elementRef => $module) {
-                $expandedNodes = $this->expandModuleToNodes($module, $expandedNodes, $nodesByModelId);
+                $expandedNodes = $this->expandModuleToNodes(module: $module, existingNodes: $expandedNodes, nodesByModelId: $nodesByModelId);
             }
 
-            // Update the view with expanded nodes
+            // Update the view with expanded nodes.
             $view['viewNodes'] = $expandedNodes;
 
             $addedNodesCount = count($expandedNodes) - count($originalNodes);
@@ -929,33 +955,34 @@ class ViewService
             }
         }//end foreach
 
+        // Clean up reference.
         unset($view);
-        // Clean up reference
         return $views;
     }//end expandModulesToViewNodes()
 
     /**
-     * Expand a single module to nodes based on its referentiecomponent relationships
+     * Expand a single module to nodes based on its referentiecomponent relationships.
      *
-     * @param  array $module         Module data
-     * @param  array $existingNodes  Current view nodes
-     * @param  array $nodesByModelId Lookup of nodes by modelNodeId
-     * @return array Updated nodes array with module expansions
+     * @param array $module         Module data.
+     * @param array $existingNodes  Current view nodes.
+     * @param array $nodesByModelId Lookup of nodes by modelNodeId.
+     *
+     * @return array Updated nodes array with module expansions.
      */
     private function expandModuleToNodes(array $module, array $existingNodes, array $nodesByModelId): array
     {
         $expandedNodes = $existingNodes;
 
-        // Look for referentiecomponent relationships in the module
+        // Look for referentiecomponent relationships in the module.
         $referentieComponenten = $this->extractReferentieComponenten($module);
 
         foreach ($referentieComponenten as $referentieComponentId) {
-            // Find if there's an existing node for this referentiecomponent
+            // Find if there's an existing node for this referentiecomponent.
             $parentNode = $nodesByModelId[$referentieComponentId] ?? null;
 
-            if ($parentNode) {
-                // Create a new node for this module as child of the referentiecomponent
-                $moduleNode      = $this->createModuleNode($module, $parentNode, $referentieComponentId);
+            if ($parentNode !== null) {
+                // Create a new node for this module as child of the referentiecomponent.
+                $moduleNode      = $this->createModuleNode(module: $module, parentNode: $parentNode, referentieComponentId: $referentieComponentId);
                 $expandedNodes[] = $moduleNode;
 
                 $this->logger->debug(
@@ -974,16 +1001,17 @@ class ViewService
     }//end expandModuleToNodes()
 
     /**
-     * Extract referentiecomponent IDs from module data
+     * Extract referentiecomponent IDs from module data.
      *
-     * @param  array $module Module data
-     * @return array Array of referentiecomponent identifiers
+     * @param array $module Module data.
+     *
+     * @return array Array of referentiecomponent identifiers.
      */
     private function extractReferentieComponenten(array $module): array
     {
         $referentieComponenten = [];
 
-        // Look for referentiecomponent relationships in various possible locations
+        // Look for referentiecomponent relationships in various possible locations.
         $possibleFields = [
             'referentiecomponenten',
             'referentieComponenten',
@@ -993,22 +1021,22 @@ class ViewService
         ];
 
         foreach ($possibleFields as $field) {
-            if (isset($module[$field])) {
+            if (isset($module[$field]) === true) {
                 $value = $module[$field];
 
-                if (is_array($value)) {
-                    // Handle array of components
+                if (is_array(value: $value) === true) {
+                    // Handle array of components.
                     foreach ($value as $component) {
-                        if (is_string($component)) {
+                        if (is_string(value: $component) === true) {
                             $referentieComponenten[] = $component;
-                        } else if (is_array($component) && isset($component['id'])) {
+                        } else if (is_array(value: $component) === true && isset($component['id']) === true) {
                             $referentieComponenten[] = $component['id'];
-                        } else if (is_array($component) && isset($component['identifier'])) {
+                        } else if (is_array(value: $component) === true && isset($component['identifier']) === true) {
                             $referentieComponenten[] = $component['identifier'];
                         }
                     }
-                } else if (is_string($value)) {
-                    // Handle single component ID
+                } else if (is_string(value: $value) === true) {
+                    // Handle single component ID.
                     $referentieComponenten[] = $value;
                 }
             }
@@ -1018,19 +1046,20 @@ class ViewService
     }//end extractReferentieComponenten()
 
     /**
-     * Create a module node as child of a referentiecomponent node
+     * Create a module node as child of a referentiecomponent node.
      *
-     * @param  array  $module                Module data
-     * @param  array  $parentNode            Parent referentiecomponent node
-     * @param  string $referentieComponentId Referentiecomponent identifier
-     * @return array New module node
+     * @param array  $module                Module data.
+     * @param array  $parentNode            Parent referentiecomponent node.
+     * @param string $referentieComponentId Referentiecomponent identifier.
+     *
+     * @return array New module node.
      */
     private function createModuleNode(array $module, array $parentNode, string $referentieComponentId): array
     {
         $moduleId   = $module['id'] ?? $module['identifier'] ?? uniqid('module_');
         $moduleName = $module['name'] ?? 'Unnamed Module';
 
-        // Position the module node relative to parent (slightly offset)
+        // Position the module node relative to parent (slightly offset).
         $parentX     = $parentNode['x'] ?? 0;
         $parentY     = $parentNode['y'] ?? 0;
         $parentWidth = $parentNode['width'] ?? 100;
@@ -1038,16 +1067,16 @@ class ViewService
         return [
             'modelNodeId'                => $moduleId,
             'viewNodeId'                 => 'module-'.$moduleId.'-'.uniqid(),
+            // Position to the right of parent.
             'x'                          => $parentX + $parentWidth + 20,
-        // Position to the right of parent
             'y'                          => $parentY,
             'width'                      => 150,
             'height'                     => 50,
             'parent'                     => $parentNode['viewNodeId'] ?? null,
             'name'                       => $moduleName,
             'type'                       => 'module',
+            // Light green for modules.
             'color'                      => 'rgb(200, 255, 200)',
-        // Light green for modules
             'borderColor'                => 'rgb(0, 150, 0)',
             'font'                       => [
                 'name'  => 'Segoe UI, Arial',
@@ -1075,12 +1104,12 @@ class ViewService
 
         try {
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 return [];
             }
 
             $currentOrg = $this->getCurrentOrganisation();
-            if (!$currentOrg) {
+            if ($currentOrg === null) {
                 return [];
             }
 
@@ -1096,7 +1125,7 @@ class ViewService
             $allDeelnames = [];
 
             foreach ($gebruikSchemas as $schemaId) {
-                if (!$schemaId) {
+                if ($schemaId === null) {
                     continue;
                 }
 
@@ -1110,7 +1139,7 @@ class ViewService
                     ];
 
                     $deelnamesItems = $objectService->searchObjects($query, _rbac: false);
-                    $this->processGebruikItems($deelnamesItems, $allDeelnames, $currentOrg, 'deelnames');
+                    $this->processGebruikItems(gebruikItems: $deelnamesItems, allGebruik: $allDeelnames, currentOrg: $currentOrg, type: 'deelnames');
 
                     $this->logger->debug(
                             'Retrieved deelnames gebruik data',
@@ -1152,32 +1181,34 @@ class ViewService
     }//end getDeelnamesGebruikData()
 
     /**
-     * Get products for a specific node (placeholder implementation)
+     * Get products for a specific node (placeholder implementation).
      *
-     * @param  string $modelNodeId  The model node identifier
-     * @param  array  $productsData Products data to search in
-     * @return array Products related to the node
+     * @param string $modelNodeId  The model node identifier.
+     * @param array  $productsData Products data to search in.
+     *
+     * @return array Products related to the node.
      */
     private function getNodeProducts(string $modelNodeId, array $productsData): array
     {
-        // TODO: Implement actual node products matching logic
+        // TODO: Implement actual node products matching logic.
         $this->logger->debug('Getting products for node', ['model_node_id' => $modelNodeId]);
         return [];
     }//end getNodeProducts()
 
     /**
-     * Get modules for a specific node based on elementRef linkage
+     * Get modules for a specific node based on elementRef linkage.
      *
-     * @param  string $modelNodeId The model node identifier (elementRef)
-     * @param  array  $modulesData Modules data indexed by elementRef
-     * @return array Modules related to the node
+     * @param string $modelNodeId The model node identifier (elementRef).
+     * @param array  $modulesData Modules data indexed by elementRef.
+     *
+     * @return array Modules related to the node.
      */
     private function getNodeModules(string $modelNodeId, array $modulesData): array
     {
         $this->logger->debug('Getting modules for node', ['model_node_id' => $modelNodeId]);
 
-        // Direct lookup by elementRef
-        if (isset($modulesData[$modelNodeId])) {
+        // Direct lookup by elementRef.
+        if (isset($modulesData[$modelNodeId]) === true) {
             $module = $modulesData[$modelNodeId];
 
             $this->logger->debug(
@@ -1189,27 +1220,28 @@ class ViewService
                     ]
                     );
 
+            // Return as array for consistency.
             return [$module];
-            // Return as array for consistency
         }
 
-        // No module found for this node
+        // No module found for this node.
         return [];
     }//end getNodeModules()
 
     /**
-     * Get gebruik for a specific node based on elementRef linkage
+     * Get gebruik for a specific node based on elementRef linkage.
      *
-     * @param  string $modelNodeId The model node identifier (elementRef)
-     * @param  array  $gebruikData Gebruik data indexed by elementRef
-     * @return array Gebruik related to the node
+     * @param string $modelNodeId The model node identifier (elementRef).
+     * @param array  $gebruikData Gebruik data indexed by elementRef.
+     *
+     * @return array Gebruik related to the node.
      */
     private function getNodeGebruik(string $modelNodeId, array $gebruikData): array
     {
         $this->logger->debug('Getting gebruik for node', ['model_node_id' => $modelNodeId]);
 
-        // Direct lookup by elementRef
-        if (isset($gebruikData[$modelNodeId])) {
+        // Direct lookup by elementRef.
+        if (isset($gebruikData[$modelNodeId]) === true) {
             $gebruikList = $gebruikData[$modelNodeId];
 
             $this->logger->debug(
@@ -1223,22 +1255,23 @@ class ViewService
             return $gebruikList;
         }
 
-        // No usage data found for this node
+        // No usage data found for this node.
         return [];
     }//end getNodeGebruik()
 
     /**
      * Get deelnames gebruik for a specific node based on elementRef linkage.
      *
-     * @param  string $modelNodeId          The model node identifier (elementRef)
-     * @param  array  $deelnamesGebruikData Deelnames gebruik data indexed by elementRef
-     * @return array Deelnames gebruik related to the node
+     * @param string $modelNodeId          The model node identifier (elementRef).
+     * @param array  $deelnamesGebruikData Deelnames gebruik data indexed by elementRef.
+     *
+     * @return array Deelnames gebruik related to the node.
      */
     private function getNodeDeelnamesGebruik(string $modelNodeId, array $deelnamesGebruikData): array
     {
         $this->logger->debug('Getting deelnames gebruik for node', ['model_node_id' => $modelNodeId]);
 
-        if (isset($deelnamesGebruikData[$modelNodeId])) {
+        if (isset($deelnamesGebruikData[$modelNodeId]) === true) {
             $deelnamesList = $deelnamesGebruikData[$modelNodeId];
 
             $this->logger->debug(
@@ -1256,13 +1289,13 @@ class ViewService
     }//end getNodeDeelnamesGebruik()
 
     /**
-     * Get ObjectService from container
+     * Get ObjectService from container.
      *
-     * @return ObjectService|null ObjectService instance or null if not available
+     * @return ObjectService|null ObjectService instance or null if not available.
      */
     private function getObjectService(): ?ObjectService
     {
-        if (!$this->appManager->isInstalled('openregister')) {
+        if ($this->appManager->isInstalled('openregister') === false) {
             return null;
         }
 
@@ -1280,10 +1313,11 @@ class ViewService
     }//end getObjectService()
 
     /**
-     * Transform multiple views to include critical API fields
+     * Transform multiple views to include critical API fields.
      *
-     * @param  array $views Array of view objects
-     * @return array Array of transformed view objects
+     * @param array $views Array of view objects.
+     *
+     * @return array Array of transformed view objects.
      */
     private function transformViews(array $views): array
     {
@@ -1297,32 +1331,33 @@ class ViewService
     }//end transformViews()
 
     /**
-     * Transform a single view to include critical API fields
+     * Transform a single view to include critical API fields.
      *
-     * @param  array $view View object to transform
-     * @return array Transformed view object with critical API fields
+     * @param array $view View object to transform.
+     *
+     * @return array Transformed view object with critical API fields.
      */
     private function transformView(array $view): array
     {
         $transformedView = $view;
 
-        // Add view documentation from XML if available
-        if (isset($view['xml']['documentation'])) {
+        // Add view documentation from XML if available.
+        if (isset($view['xml']['documentation']) === true) {
             $transformedView['documentation'] = $view['xml']['documentation'];
         }
 
-        // Transform properties from XML to required API format
-        if (isset($view['xml']['properties']['property']) && is_array($view['xml']['properties']['property'])) {
+        // Transform properties from XML to required API format.
+        if (isset($view['xml']['properties']['property']) === true && is_array(value: $view['xml']['properties']['property']) === true) {
             $transformedView['properties'] = $this->transformViewProperties($view['xml']['properties']['property']);
         }
 
-        // Transform viewNodes to include critical fields
-        if (isset($view['xml']['viewNodes']) && is_array($view['xml']['viewNodes'])) {
+        // Transform viewNodes to include critical fields.
+        if (isset($view['xml']['viewNodes']) === true && is_array(value: $view['xml']['viewNodes']) === true) {
             $transformedView['viewNodes'] = $this->transformViewNodes($view['xml']['viewNodes']);
         }
 
-        // Transform viewRelationships to include critical fields
-        if (isset($view['xml']['viewRelationships']) && is_array($view['xml']['viewRelationships'])) {
+        // Transform viewRelationships to include critical fields.
+        if (isset($view['xml']['viewRelationships']) === true && is_array(value: $view['xml']['viewRelationships']) === true) {
             $transformedView['viewRelationships'] = $this->transformViewRelationships($view['xml']['viewRelationships']);
         }
 
@@ -1330,22 +1365,24 @@ class ViewService
     }//end transformView()
 
     /**
-     * Transform view properties to required API format
+     * Transform view properties to required API format.
      *
-     * @param  array $properties Array of property objects from XML
-     * @return array Array of transformed properties
+     * @param array $properties Array of property objects from XML.
+     *
+     * @return array Array of transformed properties.
      */
     private function transformViewProperties(array $properties): array
     {
         $transformedProperties = [];
 
         foreach ($properties as $property) {
+            $propertyRef         = $property['_propertyDefinitionRef'] ?? $property['___propertyDefinitionRef'] ?? null;
             $transformedProperty = [
-                'propertyDefinitionRef' => $property['_propertyDefinitionRef'] ?? $property['___propertyDefinitionRef'] ?? null,
+                'propertyDefinitionRef' => $propertyRef,
                 'value'                 => $property['value']['_value'] ?? null,
             ];
 
-            if ($transformedProperty['propertyDefinitionRef'] && $transformedProperty['value']) {
+            if ($transformedProperty['propertyDefinitionRef'] !== null && $transformedProperty['value'] !== null) {
                 $transformedProperties[] = $transformedProperty;
             }
         }
@@ -1354,23 +1391,24 @@ class ViewService
     }//end transformViewProperties()
 
     /**
-     * Transform viewNodes to include critical API fields
+     * Transform viewNodes to include critical API fields.
      *
-     * @param  array $viewNodes Array of viewNode objects from XML
-     * @return array Array of transformed viewNodes
+     * @param array $viewNodes Array of viewNode objects from XML.
+     *
+     * @return array Array of transformed viewNodes.
      */
     private function transformViewNodes(array $viewNodes): array
     {
         $transformedNodes = [];
 
         foreach ($viewNodes as $node) {
+            // Keep all existing fields.
             $transformedNode = $node;
-            // Keep all existing fields
-            // Add critical API fields
+            // Add critical API fields.
             $transformedNode['identifier']    = $node['viewNodeId'] ?? null;
             $transformedNode['documentation'] = $node['description'] ?? null;
 
-            // Add position with width and height
+            // Add position with width and height.
             $transformedNode['position'] = [
                 'x' => $node['x'] ?? null,
                 'y' => $node['y'] ?? null,
@@ -1378,8 +1416,8 @@ class ViewService
                 'h' => $node['height'] ?? null,
             ];
 
-            // Add style information
-            if (isset($node['color']) || isset($node['borderColor']) || isset($node['font'])) {
+            // Add style information.
+            if (isset($node['color']) === true || isset($node['borderColor']) === true || isset($node['font']) === true) {
                 $transformedNode['style'] = [
                     'fillColor' => $this->parseColor($node['color'] ?? null),
                     'lineColor' => $this->parseColor($node['borderColor'] ?? null),
@@ -1394,28 +1432,29 @@ class ViewService
     }//end transformViewNodes()
 
     /**
-     * Transform viewRelationships to include critical API fields
+     * Transform viewRelationships to include critical API fields.
      *
-     * @param  array $viewRelationships Array of viewRelationship objects from XML
-     * @return array Array of transformed viewRelationships
+     * @param array $viewRelationships Array of viewRelationship objects from XML.
+     *
+     * @return array Array of transformed viewRelationships.
      */
     private function transformViewRelationships(array $viewRelationships): array
     {
         $transformedRelationships = [];
 
         foreach ($viewRelationships as $relationship) {
+            // Keep all existing fields.
             $transformedRelationship = $relationship;
-            // Keep all existing fields
-            // Add critical API fields
+            // Add critical API fields.
             $transformedRelationship['identifier'] = $relationship['viewRelationshipId'] ?? null;
 
-            // Add properties if available (check for relationship properties)
-            if (isset($relationship['properties'])) {
+            // Add properties if available (check for relationship properties).
+            if (isset($relationship['properties']) === true) {
                 $transformedRelationship['properties'] = $relationship['properties'];
             } else {
-                // Create properties array with relationship name if available
+                // Create properties array with relationship name if available.
                 $properties = [];
-                if (isset($relationship['label'])) {
+                if (isset($relationship['label']) === true) {
                     $properties[] = [
                         'propertyDefinitionRef' => 'propid-62',
                         'value'                 => $relationship['label'],
@@ -1425,7 +1464,7 @@ class ViewService
                 $transformedRelationship['properties'] = $properties;
             }
 
-            // Ensure bendpoints are properly formatted
+            // Ensure bendpoints are properly formatted.
             $transformedRelationship['bendpoints'] = $relationship['bendpoints'] ?? [];
 
             $transformedRelationships[] = $transformedRelationship;
@@ -1435,19 +1474,20 @@ class ViewService
     }//end transformViewRelationships()
 
     /**
-     * Parse color string to extract RGB values
+     * Parse color string to extract RGB values.
      *
-     * @param  string|null $colorString Color string in format "rgb(r, g, b)" or null
-     * @return array|null Array with r, g, b, a values or null
+     * @param string|null $colorString Color string in format "rgb(r, g, b)" or null.
+     *
+     * @return array|null Array with r, g, b, a values or null.
      */
     private function parseColor(?string $colorString): ?array
     {
-        if (!$colorString) {
+        if ($colorString === null) {
             return null;
         }
 
-        // Handle rgb(r, g, b) format
-        if (preg_match('/rgb\((\d+),\s*(\d+),\s*(\d+)\)/', $colorString, $matches)) {
+        // Handle rgb(r, g, b) format.
+        if (preg_match(pattern: '/rgb\((\d+),\s*(\d+),\s*(\d+)\)/', subject: $colorString, matches: $matches) === 1) {
             return [
                 'r' => (int) $matches[1],
                 'g' => (int) $matches[2],

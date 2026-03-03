@@ -3,18 +3,19 @@
 /**
  * Cronjob Context Trait
  *
- * @deprecated Since all sync operations now use _rbac: false and _multitenancy: false,
- *             this trait is no longer needed. Background jobs are system-level operations
- *             that do not require user context. Will be removed in a future version.
- *             See OrganizationContactSyncJob for the simplified approach.
+ * Since all sync operations now use _rbac: false and _multitenancy: false,
+ * this trait is no longer needed. Background jobs are system-level operations
+ * that do not require user context. Will be removed in a future version.
+ * See OrganizationContactSyncJob for the simplified approach.
  *
- * @category  Trait
- * @package   OCA\SoftwareCatalog\BackgroundJob
- * @author    Conduction b.v. <info@conduction.nl>
- * @copyright 2024 Conduction B.V.
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @category   Trait
+ * @package    OCA\SoftwareCatalog\BackgroundJob
+ * @author     Conduction b.v. <info@conduction.nl>
+ * @copyright  2024 Conduction B.V.
+ * @license    AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version    GIT: <git_id>
+ * @link       https://github.com/ConductionNL/SoftwareCatalog
+ * @deprecated Will be removed in a future version.
  */
 
 declare(strict_types=1);
@@ -91,7 +92,7 @@ trait CronjobContextTrait
             }
 
             // Check if job is enabled.
-            if (!($context['enabled'] ?? true)) {
+            if (($context['enabled'] ?? true) === false) {
                 $this->getLogger()->info(
                         '[CRONJOB] Cronjob is disabled',
                         [
@@ -127,7 +128,7 @@ trait CronjobContextTrait
             $this->cronjobOrganisationUuid = $organisationUuid;
 
             // Set the active organisation in OpenRegister if available.
-            if (class_exists('\OCA\OpenRegister\Service\OrganisationService')) {
+            if (class_exists(classname: '\OCA\OpenRegister\Service\OrganisationService') === true) {
                 try {
                     $config = \OC::$server->get(IConfig::class);
 
@@ -186,7 +187,7 @@ trait CronjobContextTrait
     protected function clearCronjobContext(string $jobId): void
     {
         try {
-            if (!$this->contextSet) {
+            if ($this->contextSet === false) {
                 return;
             }
 

@@ -49,16 +49,16 @@ class SettingsController extends Controller
     /**
      * SettingsController constructor.
      *
-     * @param string                  $appName                 The name of the app
-     * @param IRequest                $request                 The request object
-     * @param IAppConfig              $config                  The app configuration
-     * @param ContainerInterface      $container               The container
-     * @param IAppManager             $appManager              The app manager
-     * @param SettingsService         $settingsService         The settings service
-     * @param OrganizationSyncService $organizationSyncService The organization sync service
-     * @param ArchiMateService        $archiMateService        The ArchiMate import/export service
-     * @param ProgressTracker         $progressTracker         The progress tracking service
-     * @param LoggerInterface         $logger                  The logger instance
+     * @param string                  $appName                 The name of the app.
+     * @param IRequest                $request                 The request object.
+     * @param IAppConfig              $config                  The app configuration.
+     * @param ContainerInterface      $container               The container.
+     * @param IAppManager             $appManager              The app manager.
+     * @param SettingsService         $settingsService         The settings service.
+     * @param OrganizationSyncService $organizationSyncService The organization sync service.
+     * @param ArchiMateService        $archiMateService        The ArchiMate import/export service.
+     * @param ProgressTracker         $progressTracker         The progress tracking service.
+     * @param LoggerInterface         $logger                  The logger instance.
      */
     public function __construct(
         $appName,
@@ -69,10 +69,10 @@ class SettingsController extends Controller
         private readonly SettingsService $settingsService,
         private readonly OrganizationSyncService $organizationSyncService,
         private readonly ArchiMateService $archiMateService,
+        private readonly ProgressTracker $progressTracker,
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
-        $this->_appName = $appName;
 
     }//end __construct()
 
@@ -84,7 +84,7 @@ class SettingsController extends Controller
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (in_array('openregister', $this->appManager->getInstalledApps())) {
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
             $this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
             return $this->objectService;
         }
@@ -102,7 +102,7 @@ class SettingsController extends Controller
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
         // Check if the 'openregister' app is installed.
-        if (in_array('openregister', $this->appManager->getInstalledApps())) {
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
             // Retrieve the ConfigurationService from the container.
             $configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
             return $configurationService;
@@ -124,7 +124,7 @@ class SettingsController extends Controller
     public function index(): JSONResponse
     {
         try {
-            // Delegate all business logic to service
+            // Delegate all business logic to service.
             $data = $this->settingsService->getAllSettings();
             return new JSONResponse($data);
         } catch (\Exception $e) {
@@ -151,31 +151,31 @@ class SettingsController extends Controller
         try {
             $data = $this->request->getParams();
 
-            // Handle different types of settings updates
+            // Handle different types of settings updates.
             $result = [];
 
-            // Update schema/register configuration
-            if (isset($data['configuration']) || isset($data['selectedRegister'])) {
+            // Update schema/register configuration.
+            if (isset($data['configuration']) === true || isset($data['selectedRegister']) === true) {
                 $configData = array_filter(
                         $data,
                         function ($key) {
-                            return !in_array($key, ['userGroups', 'emailSettings']);
+                            return in_array(needle: $key, haystack: ['userGroups', 'emailSettings']) === false;
                         },
                         ARRAY_FILTER_USE_KEY
                         );
 
-                if (!empty($configData)) {
+                if (empty($configData) === false) {
                     $result['configuration'] = $this->settingsService->updateSettings($configData);
                 }
             }
 
-            // Update user groups
-            if (isset($data['userGroups'])) {
+            // Update user groups.
+            if (isset($data['userGroups']) === true) {
                 $userGroups = $data['userGroups'];
 
-                if (isset($userGroups['generic'])) {
+                if (isset($userGroups['generic']) === true) {
                     $validation = $this->settingsService->validateGroups($userGroups['generic']);
-                    if (!empty($validation['invalid'])) {
+                    if (empty($validation['invalid']) === false) {
                         return new JSONResponse(
                                 [
                                     'error'      => 'Invalid generic group names provided',
@@ -189,9 +189,9 @@ class SettingsController extends Controller
                     $result['userGroups']['generic'] = $validation['valid'];
                 }
 
-                if (isset($userGroups['organizationAdmin'])) {
+                if (isset($userGroups['organizationAdmin']) === true) {
                     $validation = $this->settingsService->validateGroups($userGroups['organizationAdmin']);
-                    if (!empty($validation['invalid'])) {
+                    if (empty($validation['invalid']) === false) {
                         return new JSONResponse(
                                 [
                                     'error'      => 'Invalid organization admin group names provided',
@@ -205,9 +205,9 @@ class SettingsController extends Controller
                     $result['userGroups']['organizationAdmin'] = $validation['valid'];
                 }
 
-                if (isset($userGroups['superUser'])) {
+                if (isset($userGroups['superUser']) === true) {
                     $validation = $this->settingsService->validateGroups($userGroups['superUser']);
-                    if (!empty($validation['invalid'])) {
+                    if (empty($validation['invalid']) === false) {
                         return new JSONResponse(
                                 [
                                     'error'      => 'Invalid super user group names provided',
@@ -222,8 +222,8 @@ class SettingsController extends Controller
                 }
             }//end if
 
-            // Update email settings
-            if (isset($data['emailSettings'])) {
+            // Update email settings.
+            if (isset($data['emailSettings']) === true) {
                 $result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
             }
 
@@ -296,7 +296,7 @@ class SettingsController extends Controller
         try {
             $data = $this->request->getParams();
 
-            if (isset($data['catalogLocation'])) {
+            if (isset($data['catalogLocation']) === true) {
                 $this->settingsService->setCatalogLocation($data['catalogLocation']);
             }
 
@@ -376,7 +376,7 @@ class SettingsController extends Controller
         try {
             $data = $this->request->getParams();
 
-            if (isset($data['syncTimeWindow'])) {
+            if (isset($data['syncTimeWindow']) === true) {
                 $this->config->setValueString($this->_appName, 'syncTimeWindow', (string) $data['syncTimeWindow']);
             }
 
@@ -512,7 +512,7 @@ class SettingsController extends Controller
     {
         try {
             $configuration = $this->settingsService->autoConfigure();
-            if (!empty($configuration)) {
+            if (empty($configuration) === false) {
                 $result = $this->settingsService->updateSettings($configuration);
                 return new JSONResponse(
                         [
@@ -612,8 +612,11 @@ class SettingsController extends Controller
             $email         = $data['email'] ?? '';
             $emailSettings = $data['emailSettings'] ?? [];
 
-            // Delegate all business logic (including validation) to service
-            $result = $this->settingsService->sendTestEmail($email, $emailSettings);
+            // Delegate all business logic (including validation) to service.
+            $result = $this->settingsService->sendTestEmail(
+                email: $email,
+                emailSettings: $emailSettings
+            );
 
             return new JSONResponse(
                     [
@@ -668,13 +671,13 @@ class SettingsController extends Controller
     public function performSync(int $minutesBack=0): JSONResponse
     {
         try {
-            // For full sync (minutesBack = 0), use optimized batch processing to handle large datasets
+            // For full sync (minutesBack = 0), use optimized batch processing to handle large datasets.
             if ($minutesBack === 0) {
                 $result = $this->organizationSyncService->performOptimizedManualSync(
                     maxRounds: 15,
-                // Up to 15 rounds of processing
+                // Up to 15 rounds of processing.
                     batchSize: 75
-                // 75 items per batch for good performance
+                // 75 items per batch for good performance.
                 );
 
                 return new JSONResponse(
@@ -686,10 +689,10 @@ class SettingsController extends Controller
                         ]
                         );
             } else {
-                // For incremental sync, use the original method
+                // For incremental sync, use the original method.
                 $result = $this->organizationSyncService->performManualSync($minutesBack);
 
-                if ($result['success']) {
+                if ($result['success'] === true) {
                     return new JSONResponse($result);
                 } else {
                     return new JSONResponse($result, 500);
@@ -787,7 +790,7 @@ class SettingsController extends Controller
                     ]
                     );
 
-            // Add timestamp for cache busting
+            // Add timestamp for cache busting.
             $data['timestamp'] = time();
 
             return new JSONResponse($data);
@@ -820,11 +823,11 @@ class SettingsController extends Controller
     {
         try {
             $params = $this->request->getParams();
-            $resetConfiguration = isset($params['resetConfiguration']) && $params['resetConfiguration'] === true;
+            $resetConfiguration = isset($params['resetConfiguration']) === true && $params['resetConfiguration'] === true;
 
             $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
 
-            if ($result['success']) {
+            if ($result['success'] === true) {
                 return new JSONResponse($result);
             } else {
                 return new JSONResponse($result, 400);
@@ -891,7 +894,7 @@ class SettingsController extends Controller
     {
         try {
             $params      = $this->request->getParams();
-            $forceImport = isset($params['force']) && $params['force'] === true;
+            $forceImport = isset($params['force']) === true && $params['force'] === true;
 
             $this->logger->info(
                     'SettingsController: Starting manual import',
@@ -910,10 +913,10 @@ class SettingsController extends Controller
                     ]
                     );
 
-            // Add timestamp for cache busting
+            // Add timestamp for cache busting.
             $result['timestamp'] = time();
 
-            if ($result['success']) {
+            if ($result['success'] === true) {
                 return new JSONResponse($result);
             } else {
                 return new JSONResponse($result, 400);
@@ -960,10 +963,10 @@ class SettingsController extends Controller
                     ]
                     );
 
-            // Add timestamp for cache busting
+            // Add timestamp for cache busting.
             $result['timestamp'] = time();
 
-            // Ensure result is JSON serializable by removing any potential circular references
+            // Ensure result is JSON serializable by removing any potential circular references.
             $jsonResult = json_decode(json_encode($result), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $this->logger->error(
@@ -973,7 +976,7 @@ class SettingsController extends Controller
                             'result_keys' => array_keys($result),
                         ]
                         );
-                // Return a simplified response if serialization fails
+                // Return a simplified response if serialization fails.
                 return new JSONResponse(
                         [
                             'success'   => $result['success'] ?? false,
@@ -984,7 +987,7 @@ class SettingsController extends Controller
                         );
             }
 
-            // Always return 200 since the operation completed, even if configuration needs attention
+            // Always return 200 since the operation completed, even if configuration needs attention.
             return new JSONResponse($jsonResult, 200);
         } catch (\Throwable $e) {
             $this->logger->error(
@@ -1020,19 +1023,23 @@ class SettingsController extends Controller
     public function consolidatedAutoConfigure(): JSONResponse
     {
         try {
-            // Get force parameter from request
+            // Get force parameter from request.
             $force = $this->request->getParam('force', false);
 
-            // Delegate all business logic to the service
+            // Delegate all business logic to the service.
             $results = $this->settingsService->performConsolidatedAutoConfiguration($force);
 
-            // Determine HTTP status based on results
-            if (!$results['success']) {
-                $httpStatus = !empty($results['errors']) ? 207 : 500;
-                // Multi-status or Server Error
+            // Determine HTTP status based on results.
+            if ($results['success'] === false) {
+                // Multi-status or Server Error.
+                if (empty($results['errors']) === false) {
+                    $httpStatus = 207;
+                } else {
+                    $httpStatus = 500;
+                }
             } else {
+                // Success.
                 $httpStatus = 200;
-                // Success
             }
 
             return new JSONResponse($results, $httpStatus);
@@ -1057,14 +1064,14 @@ class SettingsController extends Controller
     }//end consolidatedAutoConfigure()
 
     /**
-     * Get current progress for an operation
+     * Get current progress for an operation.
+     *
+     * @param string $operationId The operation ID to get progress for.
+     *
+     * @return JSONResponse The current progress data.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @param string $operationId The operation ID to get progress for
-     *
-     * @return JSONResponse The current progress data
      */
     public function getProgress(string $operationId): JSONResponse
     {
@@ -1109,19 +1116,26 @@ class SettingsController extends Controller
     }//end getProgress()
 
     /**
-     * Stream progress updates using Server-Sent Events
+     * Stream progress updates using Server-Sent Events.
+     *
+     * @param string $operationId The operation ID to stream progress for.
+     *
+     * @return Response SSE stream response.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @param string $operationId The operation ID to stream progress for
-     *
-     * @return Response SSE stream response
      */
     public function streamProgress(string $operationId): Response
     {
-        // Set headers for Server-Sent Events
+        // Set headers for Server-Sent Events.
         $response = new class($operationId, $this->progressTracker, $this->logger) extends Response {
+            /**
+             * Constructor for the SSE response.
+             *
+             * @param string          $operationId     The operation ID to stream.
+             * @param ProgressTracker $progressTracker The progress tracker service.
+             * @param LoggerInterface $logger          The logger instance.
+             */
             public function __construct(
                 private string $operationId,
                 private ProgressTracker $progressTracker,
@@ -1135,19 +1149,24 @@ class SettingsController extends Controller
                 $this->addHeader('Access-Control-Allow-Headers', 'Cache-Control');
             }//end __construct()
 
+            /**
+             * Render the SSE stream.
+             *
+             * @return string Empty string (output is streamed directly).
+             */
             public function render(): string
             {
-                // Enable output buffering and turn off compression
-                if (ob_get_level()) {
+                // Enable output buffering and turn off compression.
+                if (ob_get_level() !== 0) {
                     ob_end_clean();
                 }
 
                 ob_implicit_flush(true);
 
-                // Stream progress updates
+                // Stream progress updates.
                 $lastProgress = null;
                 $maxAttempts  = 300;
-                // 5 minutes with 1-second intervals
+                // 5 minutes with 1-second intervals.
                 $attempts = 0;
 
                 while ($attempts < $maxAttempts) {
@@ -1155,19 +1174,19 @@ class SettingsController extends Controller
                         $progress = $this->progressTracker->getProgress($this->operationId);
 
                         if ($progress === null) {
-                            // Operation not found, send error and close
+                            // Operation not found, send error and close.
                             echo "event: error\n";
                             echo "data: ".json_encode(['error' => 'Operation not found'])."\n\n";
                             break;
                         }
 
-                        // Only send update if progress changed
+                        // Only send update if progress changed.
                         if ($progress !== $lastProgress) {
                             echo "event: progress\n";
                             echo "data: ".json_encode($progress)."\n\n";
                             $lastProgress = $progress;
 
-                            // If operation completed, send final event and close
+                            // If operation completed, send final event and close.
                             if ($progress['phase'] === 'completed') {
                                 echo "event: completed\n";
                                 echo "data: ".json_encode($progress)."\n\n";
@@ -1175,7 +1194,7 @@ class SettingsController extends Controller
                             }
                         }
 
-                        // Send heartbeat every 10 seconds
+                        // Send heartbeat every 10 seconds.
                         if ($attempts % 10 === 0) {
                             echo "event: heartbeat\n";
                             echo "data: ".json_encode(['timestamp' => time()])."\n\n";
@@ -1199,7 +1218,7 @@ class SettingsController extends Controller
                     }//end try
                 }//end while
 
-                // Send final close event
+                // Send final close event.
                 echo "event: close\n";
                 echo "data: ".json_encode(['reason' => 'Stream ended'])."\n\n";
                 flush();
@@ -1212,17 +1231,17 @@ class SettingsController extends Controller
     }//end streamProgress()
 
     /**
-     * Import ArchiMate file
+     * Import ArchiMate file.
+     *
+     * @return JSONResponse Result of the import operation with progress tracking.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @return JSONResponse Result of the import operation with progress tracking
      */
     public function importArchiMate(): JSONResponse
     {
         try {
-            // Increase memory limit for large imports
+            // Increase memory limit for large imports.
             ini_set('memory_limit', '4096M');
             $this->logger->info(
                     'Memory limit increased for import',
@@ -1231,19 +1250,22 @@ class SettingsController extends Controller
                         'new_limit' => '4096M',
                     ]
                     );
-            // Get JSON data from request body
+            // Get JSON data from request body.
             $rawInput = file_get_contents('php://input');
             $data     = json_decode($rawInput, true);
 
-            // Enhanced debug logging
+            $contentType = $this->request->getHeader('Content-Type');
+            $isMultipart = strpos(haystack: $contentType, needle: 'multipart/form-data') !== false;
+
+            // Enhanced debug logging.
             $this->logger->info(
                     'ArchiMate import request received',
                     [
                         'rawInput'       => $rawInput,
                         'decodedData'    => $data,
                         'jsonError'      => json_last_error_msg(),
-                        'contentType'    => $this->request->getHeader('Content-Type'),
-                        'isMultipart'    => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
+                        'contentType'    => $contentType,
+                        'isMultipart'    => $isMultipart,
                         'requestMethod'  => $this->request->getMethod(),
                         'userAgent'      => $this->request->getHeader('User-Agent'),
                         'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
@@ -1253,11 +1275,14 @@ class SettingsController extends Controller
                     ]
                     );
 
-            // Check if a file was uploaded (traditional file upload)
+            // Check if a file was uploaded (traditional file upload).
             $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
 
-            // Also check $_FILES directly as fallback
+            // Also check $_FILES directly as fallback.
             $filesArray = $_FILES['archiMateFile'] ?? null;
+
+            $hasUploadedFiles = empty($uploadedFiles) === false;
+            $hasFilesArray    = empty($filesArray) === false;
 
             $this->logger->info(
                     'File upload detection detailed',
@@ -1265,20 +1290,24 @@ class SettingsController extends Controller
                         'uploadedFiles'     => $uploadedFiles,
                         'filesArray'        => $filesArray,
                         'requestMethod'     => $this->request->getMethod(),
-                        'contentType'       => $this->request->getHeader('Content-Type'),
-                        'hasUploadedFiles'  => !empty($uploadedFiles),
-                        'hasFilesArray'     => !empty($filesArray),
+                        'contentType'       => $contentType,
+                        'hasUploadedFiles'  => $hasUploadedFiles,
+                        'hasFilesArray'     => $hasFilesArray,
                         'uploadedFilesType' => gettype($uploadedFiles),
                         'filesArrayType'    => gettype($filesArray),
                         'allFilesKeys'      => array_keys($_FILES ?? []),
                     ]
                     );
 
-            if ($uploadedFiles || $filesArray) {
-                // Use $_FILES as fallback if getUploadedFile doesn't work
-                $fileData = $uploadedFiles ?: $filesArray;
+            if ($hasUploadedFiles === true || $hasFilesArray === true) {
+                // Use $_FILES as fallback if getUploadedFile doesn't work.
+                if ($uploadedFiles !== null) {
+                    $fileData = $uploadedFiles;
+                } else {
+                    $fileData = $filesArray;
+                }
 
-                // Handle file upload
+                // Handle file upload.
                 $options = [
                     'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
                     'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
@@ -1290,9 +1319,15 @@ class SettingsController extends Controller
                     'mimeType'       => $fileData['type'] ?? 'text/xml',
                 ];
 
-                $this->logger->info('File upload detected', ['options' => $options]);
-            } else if ($data && isset($data['file_path'])) {
-                // Handle file path from JSON payload
+                $this->logger->info('File upload detected.', ['options' => $options]);
+            } else if ($data !== null && isset($data['file_path']) === true) {
+                // Handle file path from JSON payload.
+                if (file_exists($data['file_path']) === true) {
+                    $fileSize = filesize($data['file_path']);
+                } else {
+                    $fileSize = 0;
+                }
+
                 $options = [
                     'updateExisting' => $data['updateExisting'] ?? true,
                     'deleteOrphaned' => $data['deleteOrphaned'] ?? false,
@@ -1300,21 +1335,21 @@ class SettingsController extends Controller
                     'processingMode' => $data['processingMode'] ?? 'speed',
                     'filePath'       => $data['file_path'],
                     'fileName'       => $data['fileName'] ?? basename($data['file_path']),
-                    'fileSize'       => $data['fileSize'] ?? (file_exists($data['file_path']) ? filesize($data['file_path']) : 0),
+                    'fileSize'       => $data['fileSize'] ?? $fileSize,
                     'mimeType'       => $data['mimeType'] ?? 'text/xml',
                 ];
 
-                $this->logger->info('JSON payload detected', ['options' => $options]);
+                $this->logger->info('JSON payload detected.', ['options' => $options]);
             } else {
                 $this->logger->error(
-                        'No file uploaded or file path provided - DETAILED DEBUG',
+                        'No file uploaded or file path provided — DETAILED DEBUG',
                         [
                             'uploadedFiles'  => $uploadedFiles,
                             'filesArray'     => $filesArray,
                             'data'           => $data,
                             'rawInput'       => $rawInput,
-                            'contentType'    => $this->request->getHeader('Content-Type'),
-                            'isMultipart'    => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
+                            'contentType'    => $contentType,
+                            'isMultipart'    => $isMultipart,
                             'requestMethod'  => $this->request->getMethod(),
                             '_FILES_DEBUG'   => $_FILES,
                             '_POST_DEBUG'    => $_POST,
@@ -1330,8 +1365,8 @@ class SettingsController extends Controller
                             'message' => 'No ArchiMate file uploaded or file path provided',
                             'error'   => 'NO_FILE_UPLOADED_OR_PATH',
                             'debug'   => [
-                                'contentType' => $this->request->getHeader('Content-Type'),
-                                'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
+                                'contentType' => $contentType,
+                                'isMultipart' => $isMultipart,
                                 'filesKeys'   => array_keys($_FILES ?? []),
                             ],
                         ],
@@ -1339,13 +1374,13 @@ class SettingsController extends Controller
                         );
             }//end if
 
-            // OPTIMIZATION: Use optimized method if available or if explicitly requested
+            // OPTIMIZATION: Use optimized method if available or if explicitly requested.
             $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
-            if ($useOptimized && method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized')) {
-                $this->logger->info('Using OPTIMIZED ArchiMate import method');
+            if ($useOptimized === true && method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized') === true) {
+                $this->logger->info('Using OPTIMIZED ArchiMate import method.');
                 $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
             } else {
-                $this->logger->info('Using STANDARD ArchiMate import method');
+                $this->logger->info('Using STANDARD ArchiMate import method.');
                 $result = $this->archiMateService->importArchiMateFileFromPath($options);
             }
 
@@ -1359,7 +1394,7 @@ class SettingsController extends Controller
                     ]
                     );
 
-            // Determine appropriate HTTP status code based on error type
+            // Determine appropriate HTTP status code based on error type.
             $statusCode = $this->getHttpStatusForException($e);
 
             return new JSONResponse(
@@ -1374,36 +1409,36 @@ class SettingsController extends Controller
     }//end importArchiMate()
 
     /**
-     * Export to ArchiMate format - returns file directly for download
+     * Export to ArchiMate format - returns file directly for download.
+     *
+     * @return Response File download response or JSON error response.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @return Response File download response or JSON error response
      */
     public function exportArchiMate(): Response
     {
         try {
-            // Get JSON data from request parameters or body
+            // Get JSON data from request parameters or body.
             $rawInput = file_get_contents('php://input');
             $data     = json_decode($rawInput, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                // Fallback to request parameters if JSON decode fails
+                // Fallback to request parameters if JSON decode fails.
                 $data = [
                     'organization' => $this->request->getParam('organization', null),
                 ];
             }
 
-            // Simple organization filter - only parameter we support
+            // Simple organization filter - only parameter we support.
             $organization = $data['organization'] ?? null;
 
-            // Call export service with simplified parameters
+            // Call export service with simplified parameters.
             $result = $this->archiMateService->exportToArchiMate($organization);
 
-            // Check if export was successful
-            if (!$result['success']) {
-                // Determine appropriate status code based on error message
+            // Check if export was successful.
+            if ($result['success'] === false) {
+                // Determine appropriate status code based on error message.
                 $statusCode = $this->getHttpStatusForErrorMessage($result['error'] ?? 'Export failed');
 
                 return new JSONResponse(
@@ -1416,20 +1451,30 @@ class SettingsController extends Controller
                         );
             }
 
-            // Return the XML file directly for download
+            // Return the XML file directly for download.
             $fileName   = $result['file_name'] ?? 'archimate_export_'.date('Y-m-d_H-i-s').'.xml';
             $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
-            // Always return XML format
+            // Always return XML format.
             $contentType = 'application/xml';
 
-            // Create direct download response
+            // Create direct download response.
             $response = new class($xmlContent) extends Response {
+                /**
+                 * Constructor for the download response.
+                 *
+                 * @param string $content The XML content to return.
+                 */
                 public function __construct(private string $content)
                 {
                     parent::__construct();
                 }//end __construct()
 
+                /**
+                 * Render the response content.
+                 *
+                 * @return string The response content.
+                 */
                 public function render(): string
                 {
                     return $this->content;
@@ -1461,7 +1506,7 @@ class SettingsController extends Controller
                     ]
                     );
 
-            // Determine appropriate HTTP status code based on error type
+            // Determine appropriate HTTP status code based on error type.
             $statusCode = $this->getHttpStatusForException($e);
 
             return new JSONResponse(
@@ -1476,17 +1521,19 @@ class SettingsController extends Controller
     }//end exportArchiMate()
 
     /**
-     * Export organization-specific ArchiMate file with enriched views
+     * Export organization-specific ArchiMate file with enriched views.
+     *
+     * @param string $organizationUuid The organization UUID to export for.
+     *
+     * @return Response File download response or JSON error response.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @return Response File download response or JSON error response
      */
     public function exportOrgArchiMate(string $organizationUuid): Response
     {
         try {
-            // Read boolean query parameters
+            // Read boolean query parameters.
             $modules   = $this->request->getParam('modules', 'true') === 'true';
             $deelnames = $this->request->getParam('deelnames', 'false') === 'true';
             $gebruik   = $this->request->getParam('gebruik', 'false') === 'true';
@@ -1497,11 +1544,14 @@ class SettingsController extends Controller
                 'gebruik'   => $gebruik,
             ];
 
-            $result = $this->archiMateService->exportOrgArchiMate($organizationUuid, $options);
+            $result = $this->archiMateService->exportOrgArchiMate(
+                organizationUuid: $organizationUuid,
+                options: $options
+            );
 
-            if (!$result['success']) {
+            if ($result['success'] === false) {
                 $statusCode = 500;
-                if (str_contains($result['error'] ?? '', 'not found')) {
+                if (str_contains(haystack: ($result['error'] ?? ''), needle: 'not found') === true) {
                     $statusCode = 404;
                 }
 
@@ -1519,11 +1569,21 @@ class SettingsController extends Controller
             $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
             $response = new class($xmlContent) extends Response {
+                /**
+                 * Constructor for the org download response.
+                 *
+                 * @param string $content The XML content to return.
+                 */
                 public function __construct(private string $content)
                 {
                     parent::__construct();
                 }//end __construct()
 
+                /**
+                 * Render the response content.
+                 *
+                 * @return string The response content.
+                 */
                 public function render(): string
                 {
                     return $this->content;
@@ -1560,20 +1620,22 @@ class SettingsController extends Controller
     }//end exportOrgArchiMate()
 
     /**
-     * Download ArchiMate file
+     * Download ArchiMate file.
+     *
+     * @param string $fileName The filename to download.
+     *
+     * @return Response File download response.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @param string $fileName The filename to download
-     *
-     * @return Response File download response
      */
     public function downloadArchiMate(string $fileName): Response
     {
         try {
-            // Security: validate filename to prevent path traversal
-            if (strpos($fileName, '..') !== false || strpos($fileName, '/') !== false) {
+            // Security: validate filename to prevent path traversal.
+            if (strpos(haystack: $fileName, needle: '..') !== false
+                || strpos(haystack: $fileName, needle: '/') !== false
+            ) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -1584,13 +1646,13 @@ class SettingsController extends Controller
                         );
             }
 
-            // Get user folder
+            // Get user folder.
             $userSession = $this->container->get(\OCP\IUserSession::class);
             $rootFolder  = $this->container->get(\OCP\Files\IRootFolder::class);
             $userFolder  = $rootFolder->getUserFolder($userSession->getUser()->getUID());
 
-            // Check if file exists
-            if (!$userFolder->nodeExists($fileName)) {
+            // Check if file exists.
+            if ($userFolder->nodeExists($fileName) === false) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -1603,7 +1665,7 @@ class SettingsController extends Controller
 
             $file = $userFolder->get($fileName);
 
-            if (!($file instanceof \OCP\Files\File)) {
+            if (($file instanceof \OCP\Files\File) === false) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -1614,7 +1676,7 @@ class SettingsController extends Controller
                         );
             }
 
-            // Determine content type based on file extension
+            // Determine content type based on file extension.
             $extension   = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
             $contentType = match ($extension) {
                 'xml', 'archimate' => 'application/xml',
@@ -1622,7 +1684,7 @@ class SettingsController extends Controller
                 default => 'application/octet-stream'
             };
 
-            // Create download response
+            // Create download response.
             $response = new StreamResponse($file->fopen('r'));
             $response->addHeader('Content-Type', $contentType);
             $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
@@ -1672,12 +1734,12 @@ class SettingsController extends Controller
             $this->logger->info(
                     'SoftwareCatalog: Email connection test request data',
                     [
-                        'has_email_settings' => !empty($emailSettings),
+                        'has_email_settings' => empty($emailSettings) === false,
                         'transport_type'     => $emailSettings['transportType'] ?? 'not specified',
                     ]
                     );
 
-            // Call the settings service to test the connection (without sending email)
+            // Call the settings service to test the connection (without sending email).
             $result = $this->settingsService->testEmailConnection($emailSettings);
 
             $this->logger->info(
@@ -1796,17 +1858,17 @@ class SettingsController extends Controller
     // ========================================================================
 
     /**
-     * Get all email templates
+     * Get all email templates.
+     *
+     * @return JSONResponse List of available templates.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @return JSONResponse List of available templates
      */
     public function getEmailTemplates(): JSONResponse
     {
         try {
-            // Delegate all business logic to service
+            // Delegate all business logic to service.
             $templates = $this->settingsService->getAllEmailTemplates();
 
             return new JSONResponse(
@@ -1833,13 +1895,14 @@ class SettingsController extends Controller
     }//end getEmailTemplates()
 
     /**
-     * Get specific email template
+     * Get specific email template.
+     *
+     * @param string $templateName Template name.
+     *
+     * @return JSONResponse Template content.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @param  string $templateName Template name
-     * @return JSONResponse Template content
      */
     public function getEmailTemplate(string $templateName): JSONResponse
     {
@@ -1871,13 +1934,14 @@ class SettingsController extends Controller
     }//end getEmailTemplate()
 
     /**
-     * Update email template
+     * Update email template.
+     *
+     * @param string $templateName Template name.
+     *
+     * @return JSONResponse Update result.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @param  string $templateName Template name
-     * @return JSONResponse Update result
      */
     public function updateEmailTemplate(string $templateName): JSONResponse
     {
@@ -1885,7 +1949,7 @@ class SettingsController extends Controller
             $data            = $this->request->getParams();
             $templateContent = $data['template'] ?? $data['content'] ?? '';
 
-            if (empty($templateContent)) {
+            if (empty($templateContent) === true) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -1895,12 +1959,21 @@ class SettingsController extends Controller
                         );
             }
 
-            $success = $this->settingsService->updateEmailTemplate($templateName, $templateContent);
+            $success = $this->settingsService->updateEmailTemplate(
+                templateName: $templateName,
+                content: $templateContent
+            );
+
+            if ($success === true) {
+                $updateMsg = "Template {$templateName} updated successfully";
+            } else {
+                $updateMsg = "Failed to update template {$templateName}";
+            }
 
             return new JSONResponse(
                     [
                         'success' => $success,
-                        'message' => $success ? "Template {$templateName} updated successfully" : "Failed to update template {$templateName}",
+                        'message' => $updateMsg,
                     ]
                     );
         } catch (\Exception $e) {
@@ -1922,13 +1995,14 @@ class SettingsController extends Controller
     }//end updateEmailTemplate()
 
     /**
-     * Get default email template
+     * Get default email template.
+     *
+     * @param string $templateName Template name.
+     *
+     * @return JSONResponse Default template content.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @param  string $templateName Template name
-     * @return JSONResponse Default template content
      */
     public function getEmailTemplateDefault(string $templateName): JSONResponse
     {
@@ -1960,13 +2034,14 @@ class SettingsController extends Controller
     }//end getEmailTemplateDefault()
 
     /**
-     * Get email template variables
+     * Get email template variables.
+     *
+     * @param string $templateName Template name.
+     *
+     * @return JSONResponse Available variables for template.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @param  string $templateName Template name
-     * @return JSONResponse Available variables for template
      */
     public function getEmailTemplateVariables(string $templateName): JSONResponse
     {
@@ -2051,7 +2126,7 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
 
-            // Delegate all business logic (including validation) to service
+            // Delegate all business logic (including validation) to service.
             $result = $this->settingsService->updateGenericUserGroups($groups);
 
             return new JSONResponse(
@@ -2129,7 +2204,7 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
 
-            // Delegate all business logic (including validation) to service
+            // Delegate all business logic (including validation) to service.
             $result = $this->settingsService->updateOrganizationAdminGroups($groups);
 
             return new JSONResponse(
@@ -2207,7 +2282,7 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
 
-            // Delegate all business logic (including validation) to service
+            // Delegate all business logic (including validation) to service.
             $result = $this->settingsService->updateSuperUserGroups($groups);
 
             return new JSONResponse(
@@ -2313,13 +2388,14 @@ class SettingsController extends Controller
     }//end clearArchiMateImportStatus()
 
     /**
-     * Force kill running ArchiMate import process and clear status
+     * Force kill running ArchiMate import process and clear status.
+     *
+     * @return JSONResponse Kill result.
+     *
+     * @deprecated Use cancelArchiMateImport() instead.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @return     JSONResponse Kill result
-     * @deprecated Use cancelArchiMateImport() instead
      */
     public function killArchiMateImport(): JSONResponse
     {
@@ -2364,7 +2440,11 @@ class SettingsController extends Controller
         try {
             $result = $this->settingsService->cancelArchiMateImport();
 
-            $message = $result['cancelled'] ? 'ArchiMate import cancelled successfully' : 'ArchiMate import cancellation failed';
+            if ($result['cancelled'] === true) {
+                $message = 'ArchiMate import cancelled successfully';
+            } else {
+                $message = 'ArchiMate import cancellation failed';
+            }
 
             return new JSONResponse(
                     [
@@ -2443,7 +2523,7 @@ class SettingsController extends Controller
         try {
             $this->logger->info('SoftwareCatalog: ArchiMate round-trip test started');
 
-            // Call the ArchiMate service to perform round-trip test
+            // Call the ArchiMate service to perform round-trip test.
             $result = $this->archiMateService->testRoundTrip();
 
             $this->logger->info(
@@ -2930,61 +3010,63 @@ class SettingsController extends Controller
     }//end updateUserGroupsConfig()
 
     /**
-     * Determine appropriate HTTP status code for an exception
+     * Determine appropriate HTTP status code for an exception.
      *
-     * @param  \Exception $e The exception to classify
-     * @return int HTTP status code (400, 404, 422, or 500)
+     * @param \Exception $e The exception to classify.
+     *
+     * @return int HTTP status code (400, 404, 422, or 500).
      */
     private function getHttpStatusForException(\Exception $e): int
     {
-        // Check exception type first
+        // Check exception type first.
         if ($e instanceof \InvalidArgumentException) {
+            // Bad Request for invalid arguments/configuration.
             return 400;
-            // Bad Request for invalid arguments/configuration
         }
 
-        // Fallback to message-based classification
+        // Fallback to message-based classification.
         $message = $e->getMessage();
         return $this->getHttpStatusForErrorMessage($message);
     }//end getHttpStatusForException()
 
     /**
-     * Determine appropriate HTTP status code for an error message
+     * Determine appropriate HTTP status code for an error message.
      *
-     * @param  string $message The error message to classify
-     * @return int HTTP status code (400, 404, 422, or 500)
+     * @param string $message The error message to classify.
+     *
+     * @return int HTTP status code (400, 404, 422, or 500).
      */
     private function getHttpStatusForErrorMessage(string $message): int
     {
         $message = strtolower($message);
 
-        // Configuration errors - 400 Bad Request
-        if (str_contains($message, 'not configured')
-            || str_contains($message, 'missing configuration')
-            || str_contains($message, 'invalid configuration')
+        // Configuration errors — 400 Bad Request.
+        if (str_contains(haystack: $message, needle: 'not configured') === true
+            || str_contains(haystack: $message, needle: 'missing configuration') === true
+            || str_contains(haystack: $message, needle: 'invalid configuration') === true
         ) {
             return 400;
         }
 
-        // File not found errors - 404 Not Found
-        if (str_contains($message, 'file not found')
-            || str_contains($message, 'not found')
-            || str_contains($message, 'missing file')
+        // File not found errors — 404 Not Found.
+        if (str_contains(haystack: $message, needle: 'file not found') === true
+            || str_contains(haystack: $message, needle: 'not found') === true
+            || str_contains(haystack: $message, needle: 'missing file') === true
         ) {
             return 404;
         }
 
-        // Validation errors - 422 Unprocessable Entity
-        if (str_contains($message, 'validation')
-            || str_contains($message, 'invalid xml')
-            || str_contains($message, 'parsing error')
-            || str_contains($message, 'malformed')
-            || str_contains($message, 'could not be parsed')
+        // Validation errors — 422 Unprocessable Entity.
+        if (str_contains(haystack: $message, needle: 'validation') === true
+            || str_contains(haystack: $message, needle: 'invalid xml') === true
+            || str_contains(haystack: $message, needle: 'parsing error') === true
+            || str_contains(haystack: $message, needle: 'malformed') === true
+            || str_contains(haystack: $message, needle: 'could not be parsed') === true
         ) {
             return 422;
         }
 
-        // Default to 500 Internal Server Error for unknown issues
+        // Default to 500 Internal Server Error for unknown issues.
         return 500;
     }//end getHttpStatusForErrorMessage()
 
@@ -3001,19 +3083,23 @@ class SettingsController extends Controller
         try {
             $this->logger->info('SettingsController: Starting organisation sync via API');
 
-            // Get request parameters
+            // Get request parameters.
             $requestBody = $this->request->getParams();
             $options     = [
                 'batch_size' => (int) ($requestBody['batch_size'] ?? 500),
                 'dry_run'    => filter_var($requestBody['dry_run'] ?? false, FILTER_VALIDATE_BOOLEAN),
             ];
 
-            $this->logger->debug('SettingsController: Sync options', $options);
+            $this->logger->debug('SettingsController: Sync options.', $options);
 
-            // Call the settings service method
+            // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
-            $statusCode = $result['success'] ? 200 : 500;
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 500;
+            }
 
             $this->logger->info(
                     'SettingsController: Organisation sync completed',
@@ -3045,20 +3131,21 @@ class SettingsController extends Controller
     }//end syncOrganisations()
 
     /**
-     * Bulk sync module standards from all compliance objects
+     * Bulk sync module standards from all compliance objects.
      *
-     * @return         JSONResponse Response containing sync results
+     * @return JSONResponse Response containing sync results.
+     *
      * @NoCSRFRequired
      */
     public function bulkSyncStandards(): JSONResponse
     {
         try {
-            $this->logger->info('SettingsController: Starting bulk sync of module standards');
+            $this->logger->info('SettingsController: Starting bulk sync of module standards.');
 
-            // Get the ModuleComplianceService from the container
+            // Get the ModuleComplianceService from the container.
             $moduleComplianceService = $this->container->get(\OCA\SoftwareCatalog\Service\ModuleComplianceService::class);
 
-            // Perform the bulk sync
+            // Perform the bulk sync.
             $results = $moduleComplianceService->bulkSyncModuleStandards();
 
             $this->logger->info(
@@ -3148,7 +3235,12 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $result = $this->settingsService->updateCronjobConfig($data);
 
-            $statusCode = $result['success'] ? 200 : 400;
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 400;
+            }
+
             return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
             $this->logger->error(

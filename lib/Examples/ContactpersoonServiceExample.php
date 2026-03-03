@@ -10,7 +10,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -22,13 +22,13 @@ use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use Psr\Log\LoggerInterface;
 
 /**
- * Example class demonstrating ContactpersoonService usage
+ * Example class demonstrating ContactpersoonService usage.
  *
  * @category Example
  * @package  OCA\SoftwareCatalog\Examples
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class ContactpersoonServiceExample
@@ -64,8 +64,10 @@ class ContactpersoonServiceExample
                     ]
                     );
 
-            // Use the service method to get contact persons with user details
-            $contactPersons = $this->contactpersoonService->getContactPersonsWithUserDetailsForOrganization($organizationUuid);
+            // Use the service method to get contact persons with user details.
+            $contactPersons = $this->contactpersoonService->getContactPersonsWithUserDetailsForOrganization(
+                organizationUuid: $organizationUuid
+            );
 
             $this->logger->info(
                     'ContactpersoonServiceExample: Retrieved contact persons',
@@ -75,7 +77,7 @@ class ContactpersoonServiceExample
                     ]
                     );
 
-            // Process the results
+            // Process the results.
             $processedResults = [];
             foreach ($contactPersons as $contactPerson) {
                 $contactData = $contactPerson->getObject();

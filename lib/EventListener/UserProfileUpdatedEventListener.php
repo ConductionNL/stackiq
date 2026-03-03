@@ -45,6 +45,9 @@ class UserProfileUpdatedEventListener implements IEventListener
         'email'      => 'e-mailadres',
     ];
 
+    /**
+     * Constructor for UserProfileUpdatedEventListener.
+     */
     public function __construct()
     {
     }//end __construct()
@@ -87,7 +90,7 @@ class UserProfileUpdatedEventListener implements IEventListener
                     ]
                     );
 
-            $this->syncToContactpersoon($event, $logger);
+            $this->syncToContactpersoon(event: $event, logger: $logger);
         } catch (\Exception $e) {
             try {
                 $logger = \OC::$server->get(LoggerInterface::class);
@@ -125,7 +128,9 @@ class UserProfileUpdatedEventListener implements IEventListener
         $contactpersoonSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
 
         if (empty($register) === true || empty($contactpersoonSchema) === true) {
-            $logger->warning('[UserProfileUpdatedEventListener] Voorzieningen config missing register or contactpersoon_schema');
+            $logger->warning(
+                '[UserProfileUpdatedEventListener] Voorzieningen config missing register or contactpersoon_schema'
+            );
             return;
         }
 
@@ -135,7 +140,13 @@ class UserProfileUpdatedEventListener implements IEventListener
             'schema'   => (int) $contactpersoonSchema,
         ];
 
-        $contactpersoon = $this->findContactpersoon($objectService, $selfQuery, $userId, $event, $logger);
+        $contactpersoon = $this->findContactpersoon(
+            objectService: $objectService,
+            selfQuery: $selfQuery,
+            userId: $userId,
+            event: $event,
+            logger: $logger
+        );
 
         if ($contactpersoon === null) {
             $logger->info(
@@ -282,7 +293,11 @@ class UserProfileUpdatedEventListener implements IEventListener
         );
 
         if (empty($results) === false && (is_array($results) === false || count($results) > 0)) {
-            return is_array($results) === true ? reset($results) : $results;
+            if (is_array($results) === true) {
+                return reset($results);
+            }
+
+            return $results;
         }
 
         // 2. Fallback: case-insensitive email search using _search (ILIKE).

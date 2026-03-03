@@ -10,7 +10,7 @@
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -34,7 +34,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class GroupHandler
@@ -70,16 +70,17 @@ class GroupHandler
      * Gets the OpenRegister ObjectService if available
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null ObjectService instance or null
+     *
      * @throws \RuntimeException If service is not available
      */
-    private function _getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
+    private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (in_array('openregister', $this->_appManager->getInstalledApps())) {
+        if (in_array(needle: 'openregister', haystack: $this->_appManager->getInstalledApps()) === true) {
             return $this->_container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
         throw new \RuntimeException('OpenRegister service is not available.');
-    }//end _getObjectService()
+    }//end getObjectService()
 
     /**
      * Gets the list of generic user groups from configuration
@@ -90,16 +91,20 @@ class GroupHandler
     {
         $groupsJson = $this->_appConfig->getValueString(self::APP_NAME, 'generic_user_groups', '');
 
-        if (empty($groupsJson)) {
-            // Return only truly generic groups as default (not role-specific)
-            // Role-specific groups are now assigned based on organization type
+        if (empty($groupsJson) === true) {
+            // Return only truly generic groups as default (not role-specific).
+            // Role-specific groups are now assigned based on organization type.
             return [
                 'software-catalog-users'
             ];
         }
 
         $groups = json_decode($groupsJson, true);
-        return is_array($groups) ? $groups : [];
+        if (is_array($groups) === true) {
+            return $groups;
+        }
+
+        return [];
     }//end getGenericUserGroups()
 
     /**
@@ -133,9 +138,9 @@ class GroupHandler
         $createdGroups = [];
 
         foreach ($genericGroups as $groupName) {
-            if (!$this->_groupManager->get($groupName)) {
+            if ($this->_groupManager->get($groupName) === null) {
                 $group = $this->_groupManager->createGroup($groupName);
-                if ($group) {
+                if ($group !== null) {
                     $createdGroups[] = $groupName;
                     $this->_logger->info(
                         'Created generic user group',
@@ -145,7 +150,7 @@ class GroupHandler
             }
         }
 
-        // Also ensure role-based groups exist
+        // Also ensure role-based groups exist.
         $roleBasedGroups = [
             'aanbod-beheerder',
             'gebruik-beheerder',
@@ -153,16 +158,16 @@ class GroupHandler
             'functioneel-beheerder',
             'vng-raadpleger',
             'organisatie-beheerder',
+            // Plural form for organization contacts.
             'organisaties-beheerder',
-        // Plural form for organization contacts
+            // For users from Gemeente organizations.
             'ambtenaar',
-        // For users from Gemeente organizations
         ];
 
         foreach ($roleBasedGroups as $groupName) {
-            if (!$this->_groupManager->get($groupName)) {
+            if ($this->_groupManager->get($groupName) === null) {
                 $group = $this->_groupManager->createGroup($groupName);
-                if ($group) {
+                if ($group !== null) {
                     $createdGroups[] = $groupName;
                     $this->_logger->info(
                         'Created role-based group',
@@ -186,7 +191,7 @@ class GroupHandler
     {
         $group = $this->_groupManager->get($groupName);
 
-        if (!$group) {
+        if ($group === null) {
             try {
                 $group = $this->_groupManager->createGroup($groupName);
                 $this->_logger->info(
@@ -222,21 +227,21 @@ class GroupHandler
     {
         try {
             $user = $this->_userManager->get($username);
-            if (!$user) {
+            if ($user === null) {
                 $this->_logger->warning('User not found for group update', ['username' => $username]);
                 return;
             }
 
             $objectData = $contactpersoonObject->getObject();
 
-            // Handle role-based groups
-            $this->updateRoleBasedGroups($user, $objectData);
+            // Handle role-based groups.
+            $this->updateRoleBasedGroups(user: $user, objectData: $objectData);
 
-            // Handle organization groups
-            $this->updateOrganizationGroups($user, $objectData);
+            // Handle organization groups.
+            $this->updateOrganizationGroups(user: $user, objectData: $objectData);
 
-            // Handle special gemeente groups
-            $this->updateGemeenteGroups($user, $objectData);
+            // Handle special gemeente groups.
+            $this->updateGemeenteGroups(user: $user, objectData: $objectData);
 
             $this->_logger->info(
                 'Updated user groups successfully',
@@ -267,7 +272,7 @@ class GroupHandler
     public function updateRoleBasedGroups(IUser $user, array $objectData): void
     {
         $userRoles = $objectData['roles'] ?? [];
-        if (!is_array($userRoles)) {
+        if (is_array($userRoles) === false) {
             $userRoles = [];
         }
 
@@ -279,18 +284,18 @@ class GroupHandler
             ]
         );
 
-        // Get the configured generic user groups
+        // Get the configured generic user groups.
         $genericGroups = $this->getGenericUserGroups();
 
         foreach ($genericGroups as $groupName) {
             $group = $this->createGroupIfNotExists($groupName);
 
-            if ($group) {
-                $hasRole = in_array($groupName, $userRoles);
+            if ($group !== null) {
+                $hasRole = in_array(needle: $groupName, haystack: $userRoles);
                 $inGroup = $group->inGroup($user);
 
-                if ($hasRole && !$inGroup) {
-                    // Add user to group
+                if ($hasRole === true && $inGroup === false) {
+                    // Add user to group.
                     $group->addUser($user);
                     $this->_logger->info(
                         'Added user to role-based group',
@@ -300,10 +305,10 @@ class GroupHandler
                             'role'     => $groupName,
                         ]
                     );
-                } else if (!$hasRole && $inGroup) {
-                    // Remove user from group (except for system groups)
-                    // Note: Removed 'ambtenaar' from protected groups since it's no longer automatically assigned
-                    if (!in_array($groupName, ['software-catalog-users'])) {
+                } else if ($hasRole === false && $inGroup === true) {
+                    // Remove user from group (except for system groups).
+                    // Note: Removed 'ambtenaar' from protected groups since it's no longer automatically assigned.
+                    if (in_array(needle: $groupName, haystack: ['software-catalog-users']) === false) {
                         $group->removeUser($user);
                         $this->_logger->info(
                             'Removed user from role-based group',
@@ -330,24 +335,24 @@ class GroupHandler
     {
         $organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
-        if (!empty($organizationUuid)) {
+        if (empty($organizationUuid) === false) {
             try {
-                // Get organization object
-                $objectService = $this->_getObjectService();
+                // Get organization object.
+                $objectService = $this->getObjectService();
 
-                // Get register and schema IDs dynamically from configuration
+                // Get register and schema IDs dynamically from configuration.
                 $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
                 $registerId          = $settingsService->getVoorzieningenRegisterId();
                 $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-                if (!$registerId || !$organisatieSchemaId) {
-                    $this->_logger->warning('Register or schema ID not configured for organisatie');
+                if ($registerId === null || $organisatieSchemaId === null) {
+                    $this->_logger->warning('Register or schema ID not configured for organisatie.');
                     return;
                 }
 
                 $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
 
-                if ($organizationObject) {
+                if ($organizationObject !== null) {
                     $orgData    = $organizationObject->getObject();
                     $actualUuid = $orgData['id'] ?? $organizationUuid;
                     $groupId    = $orgData['group'] ?? '';
@@ -362,10 +367,10 @@ class GroupHandler
                         ]
                     );
 
-                    if (!empty($groupId)) {
+                    if (empty($groupId) === false) {
                         $group = $this->_groupManager->get($groupId);
 
-                        if ($group && !$group->inGroup($user)) {
+                        if ($group !== null && $group->inGroup($user) === false) {
                             $group->addUser($user);
                             $this->_logger->info(
                                 'Added user to organization group',
@@ -402,30 +407,30 @@ class GroupHandler
     {
         $organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
-        if (!empty($organizationUuid)) {
+        if (empty($organizationUuid) === false) {
             try {
-                // Get organization object
-                $objectService = $this->_getObjectService();
+                // Get organization object.
+                $objectService = $this->getObjectService();
 
-                // Get register and schema IDs dynamically from configuration
+                // Get register and schema IDs dynamically from configuration.
                 $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
                 $registerId          = $settingsService->getVoorzieningenRegisterId();
                 $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-                if (!$registerId || !$organisatieSchemaId) {
-                    $this->_logger->warning('Register or schema ID not configured for organisatie');
+                if ($registerId === null || $organisatieSchemaId === null) {
+                    $this->_logger->warning('Register or schema ID not configured for organisatie.');
                     return;
                 }
 
                 $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
 
-                if ($organizationObject) {
+                if ($organizationObject !== null) {
                     $orgData    = $organizationObject->getObject();
                     $actualUuid = $orgData['id'] ?? $organizationUuid;
                     $orgType    = strtolower($orgData['type'] ?? $orgData['soort'] ?? '');
 
-                    // Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations
-                    // The 'ambtenaar' group can still be created if needed, but users are not automatically assigned
+                    // Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations.
+                    // The 'ambtenaar' group can still be created if needed, but users are not automatically assigned.
                     if ($orgType === 'gemeente') {
                         $this->_logger->debug(
                             'User from gemeente organization (no automatic ambtenaar group assignment)',
@@ -464,7 +469,7 @@ class GroupHandler
                 'id'          => $group->getGID(),
                 'displayName' => $group->getDisplayName(),
                 'memberCount' => count($group->getUsers()),
-                'isGeneric'   => in_array($group->getGID(), $this->getGenericUserGroups()),
+                'isGeneric'   => in_array(needle: $group->getGID(), haystack: $this->getGenericUserGroups()),
             ];
         }
 
@@ -487,14 +492,14 @@ class GroupHandler
         ];
 
         foreach ($groups as $groupName) {
-            if (empty($groupName) || !is_string($groupName)) {
+            if (empty($groupName) === true || is_string($groupName) === false) {
                 $results['invalid'][] = $groupName;
                 $results['errors'][]  = 'Group name cannot be empty';
                 continue;
             }
 
-            // Check for invalid characters
-            if (preg_match('/[^a-zA-Z0-9._-]/', $groupName)) {
+            // Check for invalid characters.
+            if (preg_match('/[^a-zA-Z0-9._-]/', $groupName) === true) {
                 $results['invalid'][] = $groupName;
                 $results['errors'][]  = "Group name '{$groupName}' contains invalid characters";
                 continue;

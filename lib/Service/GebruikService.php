@@ -1,4 +1,17 @@
 <?php
+/**
+ * Gebruik Service.
+ *
+ * Service for retrieving and managing Gebruik (usage) objects.
+ *
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
+ */
 
 namespace OCA\SoftwareCatalog\Service;
 
@@ -11,10 +24,12 @@ use Psr\Log\LoggerInterface;
 class GebruikService
 {
     /**
-     * @param SettingsService    $settingsService
-     * @param IAppManager        $appManager
-     * @param ContainerInterface $container
-     * @param LoggerInterface    $logger
+     * Constructor for GebruikService.
+     *
+     * @param SettingsService    $settingsService The settings service instance
+     * @param IAppManager        $appManager      The application manager
+     * @param ContainerInterface $container       The DI container
+     * @param LoggerInterface    $logger          The logger instance
      */
     public function __construct(
         private readonly SettingsService $settingsService,
@@ -28,11 +43,12 @@ class GebruikService
      * Fetch relevant configuration for this service.
      *
      * @return array The resulting configuration parameters.
-     * @throws Exception
+     *
+     * @throws Exception When configuration cannot be retrieved.
      */
     private function getGebruiksConfiguration(): array
     {
-        // Try to get voorzieningen configuration from SettingsService
+        // Try to get voorzieningen configuration from SettingsService.
         try {
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 
@@ -47,8 +63,8 @@ class GebruikService
             $gebruikSchema    = $voorzieningenConfig['gebruik_schema'] ?? null;
             $applicatieSchema = $voorzieningenConfig['module_schema'] ?? null;
 
-            // If configuration is available, use it
-            if ($registerId && $gebruikSchema) {
+            // If configuration is available, use it.
+            if (empty($registerId) === false && empty($gebruikSchema) === false) {
                 return [
                     'registerId'       => $registerId ?? 'null',
                     'gebruikSchema'    => $gebruikSchema ?? 'null',
@@ -64,7 +80,7 @@ class GebruikService
                     );
         }//end try
 
-        // No hardcoded fallback - configuration must be properly set
+        // No hardcoded fallback - configuration must be properly set.
         $this->logger->error(
                 'Failed to get voorzieningen configuration - no fallback provided',
                 [
@@ -79,14 +95,15 @@ class GebruikService
     }//end getGebruiksConfiguration()
 
     /**
-     * Get ObjectService from OpenRegister app
+     * Get ObjectService from OpenRegister app.
      *
-     * @return ObjectService The OpenRegister object service
-     * @throws Exception When OpenRegister service is not available
+     * @return ObjectService The OpenRegister object service.
+     *
+     * @throws Exception When OpenRegister service is not available.
      */
     private function getObjectService(): ObjectService
     {
-        if (!in_array('openregister', $this->appManager->getInstalledApps())) {
+        if (in_array('openregister', $this->appManager->getInstalledApps()) === false) {
             throw new Exception('OpenRegister app is not installed');
         }
 
@@ -100,9 +117,11 @@ class GebruikService
     /**
      * Fetch gebruiken for given options.
      *
-     * @param  array $options The options to use while searching.
+     * @param array $options The options to use while searching.
+     *
      * @return array The result set of gebruiken.
-     * @throws \OCP\DB\Exception
+     *
+     * @throws \OCP\DB\Exception When database query fails.
      */
     public function getGebruiken(array $options): array
     {
@@ -145,11 +164,13 @@ class GebruikService
     }//end getGebruiken()
 
     /**
-     * Get application ids for given options
+     * Get application ids for given options.
      *
-     * @param  array $options The options to use while searching.
-     * @return array The resulting ids
-     * @throws \OCP\DB\Exception
+     * @param array $options The options to use while searching.
+     *
+     * @return array The resulting ids.
+     *
+     * @throws \OCP\DB\Exception When database query fails.
      */
     public function getApplicationIds(array $options): array
     {

@@ -8,9 +8,9 @@
  *
  * @category Controller
  * @package  OCA\SoftwareCatalog\Controller
- * @author   SoftwareCatalog Team
+ * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/nextcloud/softwarecatalog
  */
 
@@ -23,16 +23,16 @@ use OCA\SoftwareCatalog\Service\ViewService;
 use Psr\Log\LoggerInterface;
 
 /**
- * Controller for handling view-related API operations
+ * Controller for handling view-related API operations.
  *
  * This controller provides REST API endpoints for querying and managing ArchiMate views
  * with optional enrichment capabilities for products, usage data (gebruik), and related information.
  *
  * @category Controller
  * @package  OCA\SoftwareCatalog\Controller
- * @author   SoftwareCatalog Team
+ * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/nextcloud/softwarecatalog
  */
 class ViewController extends Controller
@@ -83,14 +83,18 @@ class ViewController extends Controller
                 );
 
         try {
-            // Parse query parameters for enrichment options
+            // Parse query parameters for enrichment options.
             $options = $this->parseEnrichmentOptions();
 
-            // Get views from service with enrichments
+            // Get views from service with enrichments.
             $result = $this->viewService->getAllViews($options);
 
-            // Return appropriate HTTP status code
-            $statusCode = $result['success'] ? 200 : 500;
+            // Return appropriate HTTP status code.
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 500;
+            }
 
             $this->logger->info(
                     'API: All views request completed',
@@ -134,11 +138,12 @@ class ViewController extends Controller
      * - include_gebruik (bool): Include usage data in view nodes
      * - include_deelnames_gebruik (bool): Include participation usage data in view nodes
      *
+     * @param string $viewId The view identifier
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      *
-     * @param  string $viewId The view identifier
      * @return JSONResponse JSON response with view object
      */
     public function getView(string $viewId): JSONResponse
@@ -154,8 +159,8 @@ class ViewController extends Controller
                 );
 
         try {
-            // Validate view ID
-            if (empty($viewId)) {
+            // Validate view ID.
+            if (empty($viewId) === true) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -166,14 +171,23 @@ class ViewController extends Controller
                         );
             }
 
-            // Parse query parameters for enrichment options
+            // Parse query parameters for enrichment options.
             $options = $this->parseEnrichmentOptions();
 
-            // Get view from service with enrichments
-            $result = $this->viewService->getView($viewId, $options);
+            // Get view from service with enrichments.
+            $result = $this->viewService->getView(
+                viewId: $viewId,
+                options: $options
+            );
 
-            // Return appropriate HTTP status code
-            $statusCode = $result['success'] ? 200 : ($result['view'] === null ? 404 : 500);
+            // Return appropriate HTTP status code.
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else if ($result['view'] === null) {
+                $statusCode = 404;
+            } else {
+                $statusCode = 500;
+            }
 
             $this->logger->info(
                     'API: Specific view request completed',
@@ -216,7 +230,7 @@ class ViewController extends Controller
     {
         $options = [];
 
-        // Parse boolean query parameters
+        // Parse boolean query parameters.
         $includeProducts = $this->request->getParam('include_products');
         if ($includeProducts !== null) {
             $options['include_products'] = $this->parseBooleanParam($includeProducts);
@@ -254,24 +268,25 @@ class ViewController extends Controller
     }//end parseEnrichmentOptions()
 
     /**
-     * Parse a boolean parameter from string values
+     * Parse a boolean parameter from string values.
      *
      * Accepts: true, false, 1, 0, "true", "false", "1", "0", "yes", "no"
      *
-     * @param  mixed $value The parameter value to parse
+     * @param mixed $value The parameter value to parse
+     *
      * @return bool The parsed boolean value
      */
     private function parseBooleanParam($value): bool
     {
-        if (is_bool($value)) {
+        if (is_bool($value) === true) {
             return $value;
         }
 
-        if (is_numeric($value)) {
+        if (is_numeric($value) === true) {
             return (int) $value > 0;
         }
 
-        if (is_string($value)) {
+        if (is_string($value) === true) {
             $lowerValue = strtolower(trim($value));
             return in_array($lowerValue, ['true', '1', 'yes', 'on'], true);
         }

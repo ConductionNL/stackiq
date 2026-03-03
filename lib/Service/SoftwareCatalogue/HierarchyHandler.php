@@ -10,7 +10,7 @@
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -29,7 +29,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class HierarchyHandler
@@ -62,23 +62,31 @@ class HierarchyHandler
             $objectData       = $contactgegevensObject->getObject();
             $organizationUuid = (string) ($objectData['organisation'] ?? $objectData['organization'] ?? '');
 
-            if (empty($organizationUuid)) {
-                $this->_logger->debug('No organization linked to contactgegevens');
+            if (empty($organizationUuid) === true) {
+                $this->_logger->debug('No organization linked to contactgegevens.');
                 return;
             }
 
-            // Get organization and check for existing beheerders
+            // Get organization and check for existing beheerders.
             $organizationBeheerders = $this->_organizationHandler->getOrganizationBeheerders($organizationUuid);
 
-            if (empty($organizationBeheerders)) {
-                // No beheerders found - make this user the beheerder
-                $this->_contactPersonHandler->assignBeheerderRole($contactgegevensObject, $username, $organizationUuid);
+            if (empty($organizationBeheerders) === true) {
+                // No beheerders found - make this user the beheerder.
+                $this->_contactPersonHandler->assignBeheerderRole(
+                    contactgegevensObject: $contactgegevensObject,
+                    username: $username,
+                    organizationUuid: $organizationUuid
+                );
                 $organizationBeheerders = [$username];
-                // Update our list
+                // Update our list.
             }
 
-            // Set up manager relationships
-            $this->setupManagerRelationships($username, $organizationBeheerders, $organizationUuid);
+            // Set up manager relationships.
+            $this->setupManagerRelationships(
+                username: $username,
+                organizationBeheerders: $organizationBeheerders,
+                organizationUuid: $organizationUuid
+            );
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to ensure organization beheerder: '.$e->getMessage(),
@@ -102,23 +110,23 @@ class HierarchyHandler
     public function setupManagerRelationships(string $username, array $organizationBeheerders, string $organizationUuid): void
     {
         try {
-            if (empty($organizationBeheerders)) {
+            if (empty($organizationBeheerders) === true) {
                 return;
             }
 
-            // The oldest beheerder becomes the manager
+            // The oldest beheerder becomes the manager.
             $primaryManager = $organizationBeheerders[0];
 
-            // If current user is not a beheerder, set their manager
-            if (!in_array($username, $organizationBeheerders)) {
-                $this->_contactPersonHandler->setUserManager($username, $primaryManager);
+            // If current user is not a beheerder, set their manager.
+            if (in_array(needle: $username, haystack: $organizationBeheerders) === false) {
+                $this->_contactPersonHandler->setUserManager(username: $username, manager: $primaryManager);
             }
 
-            // If there are multiple beheerders, set the primary as manager for others
+            // If there are multiple beheerders, set the primary as manager for others.
             if (count($organizationBeheerders) > 1) {
                 foreach ($organizationBeheerders as $beheerder) {
                     if ($beheerder !== $primaryManager) {
-                        $this->_contactPersonHandler->setUserManager($beheerder, $primaryManager);
+                        $this->_contactPersonHandler->setUserManager(username: $beheerder, manager: $primaryManager);
                     }
                 }
             }
@@ -163,21 +171,21 @@ class HierarchyHandler
                 'isPrimaryManager' => false,
             ];
 
-            // Get user's manager
+            // Get user's manager.
             $manager = $this->_contactPersonHandler->getUserManager($username);
-            if ($manager) {
+            if ($manager !== null) {
                 $hierarchy['manager'] = $manager;
             }
 
-            // Find subordinates (users who have this user as manager)
+            // Find subordinates (users who have this user as manager).
             $subordinates = $this->findSubordinates($username);
             $hierarchy['subordinates'] = $subordinates;
 
-            // Check if user is a beheerder
+            // Check if user is a beheerder.
             $hierarchy['isBeheerder'] = $this->isUserBeheerder($username);
 
-            // Check if user is primary manager (has subordinates and no manager)
-            $hierarchy['isPrimaryManager'] = empty($hierarchy['manager']) && !empty($hierarchy['subordinates']);
+            // Check if user is primary manager (has subordinates and no manager).
+            $hierarchy['isPrimaryManager'] = empty($hierarchy['manager']) === true && empty($hierarchy['subordinates']) === false;
 
             return $hierarchy;
         } catch (\Exception $e) {
@@ -204,7 +212,7 @@ class HierarchyHandler
         $subordinates = [];
 
         try {
-            // Get all users and check their managers
+            // Get all users and check their managers.
             $userManager = \OC::$server->getUserManager();
             $users       = $userManager->search('');
 
@@ -242,14 +250,18 @@ class HierarchyHandler
             $groupManager   = \OC::$server->getGroupManager();
             $beheerderGroup = $groupManager->get('beheerder');
 
-            if (!$beheerderGroup) {
+            if ($beheerderGroup === null) {
                 return false;
             }
 
             $userManager = \OC::$server->getUserManager();
             $user        = $userManager->get($username);
 
-            return $user && $beheerderGroup->inGroup($user);
+            if ($user === null) {
+                return false;
+            }
+
+            return $beheerderGroup->inGroup($user);
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to check if user is beheerder: '.$e->getMessage(),
@@ -279,15 +291,15 @@ class HierarchyHandler
                 'hierarchy'      => [],
             ];
 
-            // Get all beheerders for this organization
+            // Get all beheerders for this organization.
             $beheerders = $this->_organizationHandler->getOrganizationBeheerders($organizationUuid);
             $structure['beheerders'] = $beheerders;
 
-            if (!empty($beheerders)) {
+            if (empty($beheerders) === false) {
                 $structure['primaryManager'] = $beheerders[0];
             }
 
-            // Build hierarchy tree
+            // Build hierarchy tree.
             foreach ($beheerders as $beheerder) {
                 $hierarchy = $this->getUserHierarchy($beheerder);
                 $structure['hierarchy'][] = $hierarchy;

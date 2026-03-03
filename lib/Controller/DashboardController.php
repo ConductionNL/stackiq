@@ -1,4 +1,15 @@
 <?php
+/**
+ * Dashboard Controller for SoftwareCatalog.
+ *
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
+ */
 
 namespace OCA\SoftwareCatalog\Controller;
 
@@ -10,16 +21,28 @@ use OCP\AppFramework\Http\ContentSecurityPolicy;
 
 class DashboardController extends Controller
 {
+    /**
+     * Constructor for DashboardController.
+     *
+     * @param string   $appName The app name
+     * @param IRequest $request The request object
+     */
     public function __construct($appName, IRequest $request)
     {
         parent::__construct($appName, $request);
     }//end __construct()
 
     /**
+     * Renders the main application page.
+     *
+     * @param string|null $getParameter Optional query parameter
+     *
+     * @return TemplateResponse The rendered page template
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function page(?string $getParameter)
+    public function page(?string $getParameter): TemplateResponse
     {
         try {
             $response = new TemplateResponse(
@@ -44,8 +67,12 @@ class DashboardController extends Controller
     }//end page()
 
     /**
+     * Returns an empty JSON result.
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @return JSONResponse The JSON response with empty results
      */
     public function index(): JSONResponse
     {

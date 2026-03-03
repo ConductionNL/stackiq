@@ -10,7 +10,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class ModuleComplianceService
@@ -75,17 +75,17 @@ class ModuleComplianceService
                 );
 
         try {
-            // Get the object service
+            // Get the object service.
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 throw new \RuntimeException('ObjectService not available');
             }
 
-            // Get module UUID from entity
+            // Get module UUID from entity.
             $moduleUuid = $moduleObject->getUuid();
             $moduleData = $moduleObject->getObject();
 
-            if (!$moduleUuid) {
+            if ($moduleUuid === null) {
                 $this->logger->warning(
                         'ModuleComplianceService: Module object has no UUID',
                         [
@@ -103,7 +103,7 @@ class ModuleComplianceService
                     ]
                     );
 
-            // Get compliance objects linked to this module
+            // Get compliance objects linked to this module.
             $complianceObjects = $this->getComplianceObjectsForModule($moduleUuid);
 
             $this->logger->debug(
@@ -115,7 +115,7 @@ class ModuleComplianceService
                     ]
                     );
 
-            // Extract standaardversie UUIDs from compliance objects
+            // Extract standaardversie UUIDs from compliance objects.
             $standaardversieUuids = $this->extractStandaardversieUuids($complianceObjects);
 
             $this->logger->debug(
@@ -128,11 +128,11 @@ class ModuleComplianceService
                     ]
                     );
 
-            // Get current standaarden from module
+            // Get current standaarden from module.
             $currentStandaarden = $moduleData['standaardVersies'] ?? [];
 
-            // Ensure currentStandaarden is an array
-            if (!is_array($currentStandaarden)) {
+            // Ensure currentStandaarden is an array.
+            if (is_array($currentStandaarden) === false) {
                 $currentStandaarden = [];
             }
 
@@ -146,8 +146,8 @@ class ModuleComplianceService
                     ]
                     );
 
-            // Compare and update if different
-            if ($this->arraysAreDifferent($currentStandaarden, $standaardversieUuids)) {
+            // Compare and update if different.
+            if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === true) {
                 $this->logger->info(
                         'ModuleComplianceService: Standaarden differ, updating module',
                         [
@@ -158,8 +158,8 @@ class ModuleComplianceService
                         ]
                         );
 
-                // Update the module with new standaarden
-                $this->updateModuleStandaarden($moduleObject, $standaardversieUuids);
+                // Update the module with new standaarden.
+                $this->updateModuleStandaarden(moduleObject: $moduleObject, standaardversieUuids: $standaardversieUuids);
 
                 $this->logger->info(
                         'ModuleComplianceService: Successfully updated module standaarden',
@@ -218,10 +218,10 @@ class ModuleComplianceService
     private function getComplianceObjectsForModule(string $moduleUuid): array
     {
         try {
-            // Get compliance schema ID from configuration
+            // Get compliance schema ID from configuration.
             $complianceSchemaId = $this->settingsService->getSchemaIdForObjectType('compliancy');
 
-            if (!$complianceSchemaId) {
+            if ($complianceSchemaId === null) {
                 $this->logger->warning(
                         'ModuleComplianceService: Compliance schema not configured',
                         [
@@ -231,11 +231,11 @@ class ModuleComplianceService
                 return [];
             }
 
-            // Get register ID from voorzieningen config
+            // Get register ID from voorzieningen config.
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
             $registerId          = $voorzieningenConfig['register'] ?? null;
 
-            if (!$registerId) {
+            if ($registerId === null) {
                 $this->logger->warning(
                         'ModuleComplianceService: Voorzieningen register not configured',
                         [
@@ -245,13 +245,13 @@ class ModuleComplianceService
                 return [];
             }
 
-            // Get object service
+            // Get object service.
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 throw new \RuntimeException('ObjectService not available');
             }
 
-            // Query compliance objects where module matches the module UUID
+            // Query compliance objects where module matches the module UUID.
             $query = [
                 '@self'  => [
                     'schema'   => (int) $complianceSchemaId,
@@ -308,11 +308,11 @@ class ModuleComplianceService
             $complianceData  = $complianceObject->getObject();
             $standaardversie = $complianceData['standaardversie'] ?? null;
 
-            if ($standaardversie) {
+            if ($standaardversie !== null) {
                 $tracking['withStandaardversie']++;
 
-                // Handle both string UUID and object with UUID property
-                if (is_string($standaardversie)) {
+                // Handle both string UUID and object with UUID property.
+                if (is_string($standaardversie) === true) {
                     $tracking['stringType']++;
                     $standaardversieUuids[] = $standaardversie;
                     $this->logger->debug(
@@ -322,7 +322,7 @@ class ModuleComplianceService
                                 'standaardversie' => $standaardversie,
                             ]
                             );
-                } else if (is_array($standaardversie) && isset($standaardversie['uuid'])) {
+                } else if (is_array($standaardversie) === true && isset($standaardversie['uuid']) === true) {
                     $tracking['arrayType']++;
                     $standaardversieUuids[] = $standaardversie['uuid'];
                     $this->logger->debug(
@@ -332,7 +332,7 @@ class ModuleComplianceService
                                 'standaardversie' => $standaardversie['uuid'],
                             ]
                             );
-                } else if (is_object($standaardversie) && isset($standaardversie->uuid)) {
+                } else if (is_object($standaardversie) === true && isset($standaardversie->uuid) === true) {
                     $tracking['objectType']++;
                     $standaardversieUuids[] = $standaardversie->uuid;
                     $this->logger->debug(
@@ -344,12 +344,18 @@ class ModuleComplianceService
                             );
                 } else {
                     $tracking['invalidType']++;
+                    if (is_array($standaardversie) === true) {
+                        $standaardversieValue = json_encode($standaardversie);
+                    } else {
+                        $standaardversieValue = (string) $standaardversie;
+                    }
+
                     $this->logger->warning(
                             'ModuleComplianceService: Invalid standaardversie type',
                             [
                                 'complianceId' => $complianceObject->getId(),
                                 'type'         => gettype($standaardversie),
-                                'value'        => is_array($standaardversie) ? json_encode($standaardversie) : (string) $standaardversie,
+                                'value'        => $standaardversieValue,
                             ]
                             );
                 }//end if
@@ -365,7 +371,7 @@ class ModuleComplianceService
             }//end if
         }//end foreach
 
-        // Remove duplicates and empty values
+        // Remove duplicates and empty values.
         $standaardversieUuids = array_unique(array_filter($standaardversieUuids));
 
         $this->logger->info(
@@ -391,7 +397,7 @@ class ModuleComplianceService
      */
     private function arraysAreDifferent(array $array1, array $array2): bool
     {
-        // Sort both arrays to ignore order
+        // Sort both arrays to ignore order.
         sort($array1);
         sort($array2);
 
@@ -411,22 +417,22 @@ class ModuleComplianceService
     private function updateModuleStandaarden(object $moduleObject, array $standaardversieUuids): void
     {
         try {
-            // Get object service
+            // Get object service.
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 throw new \RuntimeException('ObjectService not available');
             }
 
-            // Get current module data
+            // Get current module data.
             $moduleData = $moduleObject->getObject();
 
-            // Update standaarden property
+            // Update standaarden property.
             $moduleData['standaardVersies'] = $standaardversieUuids;
 
-            // Get register ID from module object
+            // Get register ID from module object.
             $registerId = $moduleObject->getRegister();
 
-            // Save the updated module
+            // Save the updated module.
             $savedObject = $objectService->saveObject(
                 object: $moduleData,
                 extend: [],
@@ -488,40 +494,40 @@ class ModuleComplianceService
                 'modulesUpdated'                   => [],
                 'modulesSkipped'                   => [],
             ],
+            // Full list of all processed modules.
             'modules'                          => [],
-            // Full list of all processed modules
         ];
 
         try {
-            // Get compliance schema ID from configuration
+            // Get compliance schema ID from configuration.
             $complianceSchemaId = $this->settingsService->getSchemaIdForObjectType('compliancy');
 
-            if (!$complianceSchemaId) {
+            if ($complianceSchemaId === null) {
                 throw new \RuntimeException('Compliance schema not configured');
             }
 
-            // Get register ID from voorzieningen config
+            // Get register ID from voorzieningen config.
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
             $registerId          = $voorzieningenConfig['register'] ?? null;
 
-            if (!$registerId) {
+            if ($registerId === null) {
                 throw new \RuntimeException('Voorzieningen register not configured');
             }
 
-            // Get module schema ID from configuration
+            // Get module schema ID from configuration.
             $moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
 
-            if (!$moduleSchemaId) {
+            if ($moduleSchemaId === null) {
                 throw new \RuntimeException('Module schema not configured');
             }
 
-            // Get object service
+            // Get object service.
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 throw new \RuntimeException('ObjectService not available');
             }
 
-            // Get all compliance objects (both schema AND register are required)
+            // Get all compliance objects (both schema AND register are required).
             $query = [
                 '@self' => [
                     'schema'   => (int) $complianceSchemaId,
@@ -539,7 +545,7 @@ class ModuleComplianceService
 
             $results['totalProcessed'] = count($complianceObjects);
 
-            // Group compliance objects by module UUID and track samples
+            // Group compliance objects by module UUID and track samples.
             $complianceByModule = [];
             $sampleCount        = 0;
 
@@ -548,9 +554,9 @@ class ModuleComplianceService
                 $moduleUuid      = $complianceData['module'] ?? null;
                 $standaardversie = $complianceData['standaardversie'] ?? null;
 
-                // Track compliance objects with/without standaardversie (first 5 samples)
+                // Track compliance objects with/without standaardversie (first 5 samples).
                 if ($sampleCount < 5) {
-                    if ($standaardversie) {
+                    if ($standaardversie !== null) {
                         $results['samples']['complianceWithStandaardversie'][] = [
                             'id'              => $complianceObject->getId(),
                             'uuid'            => $complianceData['uuid'] ?? 'unknown',
@@ -568,25 +574,25 @@ class ModuleComplianceService
                     $sampleCount++;
                 }
 
-                if (!$moduleUuid) {
+                if ($moduleUuid === null) {
                     $results['complianceMissingModule']++;
                     $results['errors'][] = 'Compliance object has no module reference: '.$complianceObject->getId();
                     continue;
                 }
 
-                // Handle both string UUID and object with UUID property
-                if (is_string($moduleUuid)) {
+                // Handle both string UUID and object with UUID property.
+                if (is_string($moduleUuid) === true) {
                     $moduleUuidValue = $moduleUuid;
-                } else if (is_array($moduleUuid) && isset($moduleUuid['uuid'])) {
+                } else if (is_array($moduleUuid) === true && isset($moduleUuid['uuid']) === true) {
                     $moduleUuidValue = $moduleUuid['uuid'];
-                } else if (is_object($moduleUuid) && isset($moduleUuid->uuid)) {
+                } else if (is_object($moduleUuid) === true && isset($moduleUuid->uuid) === true) {
                     $moduleUuidValue = $moduleUuid->uuid;
                 } else {
                     $results['errors'][] = 'Invalid module reference in compliance object: '.$complianceObject->getId();
                     continue;
                 }
 
-                if (!isset($complianceByModule[$moduleUuidValue])) {
+                if (isset($complianceByModule[$moduleUuidValue]) === false) {
                     $complianceByModule[$moduleUuidValue] = [];
                 }
 
@@ -595,20 +601,20 @@ class ModuleComplianceService
 
             $results['modulesFound'] = count($complianceByModule);
 
-            // Process each module
+            // Process each module.
             foreach ($complianceByModule as $moduleUuid => $moduleComplianceObjects) {
                 try {
-                    // Find the module object (must specify register and schema for magic table lookup)
+                    // Find the module object (must specify register and schema for magic table lookup).
                     $moduleObject = $objectService->find(
                         id: $moduleUuid,
                         register: (int) $registerId,
                         schema: (int) $moduleSchemaId
                     );
-                    if (!$moduleObject) {
+                    if ($moduleObject === null) {
                         $results['modulesNotFound']++;
                         $results['errors'][] = 'Module not found for UUID: '.$moduleUuid;
 
-                        // Add to full modules list
+                        // Add to full modules list.
                         $results['modules'][] = [
                             'uuid'               => $moduleUuid,
                             'name'               => 'Not Found',
@@ -622,18 +628,18 @@ class ModuleComplianceService
                         continue;
                     }
 
-                    // Get module data for tracking
+                    // Get module data for tracking.
                     $moduleData = $moduleObject->getObject();
                     $moduleName = $moduleData['name'] ?? $moduleData['title'] ?? 'Unknown';
 
-                    // Extract standaardversie UUIDs from compliance objects
+                    // Extract standaardversie UUIDs from compliance objects.
                     $standaardversieUuids = $this->extractStandaardversieUuids($moduleComplianceObjects);
 
-                    if (empty($standaardversieUuids)) {
+                    if (empty($standaardversieUuids) === true) {
                         $results['modulesWithNoStandards']++;
                         $results['complianceMissingStandaardversie'] += count($moduleComplianceObjects);
 
-                        // Add to full modules list
+                        // Add to full modules list.
                         $results['modules'][] = [
                             'uuid'               => $moduleUuid,
                             'name'               => $moduleName,
@@ -645,7 +651,7 @@ class ModuleComplianceService
                             'standardsCount'     => 0,
                         ];
 
-                        // Add to samples (first 5)
+                        // Add to samples (first 5).
                         if (count($results['samples']['modulesSkipped']) < 5) {
                             $results['samples']['modulesSkipped'][] = [
                                 'uuid'            => $moduleUuid,
@@ -658,23 +664,23 @@ class ModuleComplianceService
                         continue;
                     }//end if
 
-                    // Get current standaarden from module
+                    // Get current standaarden from module.
                     $currentStandaarden = $moduleData['standaardVersies'] ?? [];
 
-                    // Ensure currentStandaarden is an array
-                    if (!is_array($currentStandaarden)) {
+                    // Ensure currentStandaarden is an array.
+                    if (is_array($currentStandaarden) === false) {
                         $currentStandaarden = [];
                     }
 
-                    // Compare and update if different
-                    if ($this->arraysAreDifferent($currentStandaarden, $standaardversieUuids)) {
-                        // Update the module with new standaarden
-                        $this->updateModuleStandaarden($moduleObject, $standaardversieUuids);
+                    // Compare and update if different.
+                    if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === true) {
+                        // Update the module with new standaarden.
+                        $this->updateModuleStandaarden(moduleObject: $moduleObject, standaardversieUuids: $standaardversieUuids);
 
                         $results['modulesUpdated']++;
                         $results['standardsAdded'] += count($standaardversieUuids);
 
-                        // Add to full modules list
+                        // Add to full modules list.
                         $results['modules'][] = [
                             'uuid'               => $moduleUuid,
                             'name'               => $moduleName,
@@ -686,7 +692,7 @@ class ModuleComplianceService
                             'standardsCount'     => count($standaardversieUuids),
                         ];
 
-                        // Add to samples (first 5)
+                        // Add to samples (first 5).
                         if (count($results['samples']['modulesUpdated']) < 5) {
                             $results['samples']['modulesUpdated'][] = [
                                 'uuid'            => $moduleUuid,
@@ -709,7 +715,7 @@ class ModuleComplianceService
                     } else {
                         $results['modulesAlreadyUpToDate']++;
 
-                        // Add to full modules list
+                        // Add to full modules list.
                         $results['modules'][] = [
                             'uuid'               => $moduleUuid,
                             'name'               => $moduleName,
@@ -721,7 +727,7 @@ class ModuleComplianceService
                             'standardsCount'     => count($currentStandaarden),
                         ];
 
-                        // Add to samples (first 5)
+                        // Add to samples (first 5).
                         if (count($results['samples']['modulesSkipped']) < 5) {
                             $results['samples']['modulesSkipped'][] = [
                                 'uuid'                 => $moduleUuid,

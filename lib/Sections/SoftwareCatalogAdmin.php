@@ -53,7 +53,7 @@ class SoftwareCatalogAdmin implements IIconSection
      */
     public function getIcon(): string
     {
-        return $this->urlGenerator->imagePath(app: 'core', image: 'actions/settings-dark.svg');
+        return $this->urlGenerator->imagePath(appName: 'core', file: 'actions/settings-dark.svg');
     }//end getIcon()
 
     /**

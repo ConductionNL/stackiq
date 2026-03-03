@@ -1,5 +1,20 @@
 <?php
 
+/**
+ * Contactpersonen Controller for SoftwareCatalog.
+ *
+ * Handles HTTP requests for managing contactpersonen and their user accounts,
+ * including converting contactpersonen to users, managing passwords and groups.
+ *
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
+ */
+
 declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Controller;
@@ -18,86 +33,89 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Controller for managing contactpersonen and their user accounts
+ * Controller for managing contactpersonen and their user accounts.
  *
  * This controller handles operations related to contactpersonen including:
  * - Converting contactpersonen to users
  * - Managing user passwords
  * - Managing user group memberships
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
- * @link     https://github.com/ConductionNL/SoftwareCatalog
- * @version  1.0.0
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 class ContactpersonenController extends Controller
 {
 
     /**
-     * Settings service for configuration access
+     * Settings service for configuration access.
      *
      * @var SettingsService
      */
     private SettingsService $settingsService;
 
     /**
-     * Contact person handler for user operations
+     * Contact person handler for user operations.
      *
      * @var ContactPersonHandler
      */
     private ContactPersonHandler $contactPersonHandler;
 
     /**
-     * User manager for user operations
+     * User manager for user operations.
      *
      * @var IUserManager
      */
     private IUserManager $userManager;
 
     /**
-     * Group manager for group operations
+     * Group manager for group operations.
      *
      * @var IGroupManager
      */
     private IGroupManager $groupManager;
 
     /**
-     * Secure random generator for passwords
+     * Secure random generator for passwords.
      *
      * @var ISecureRandom
      */
     private ISecureRandom $secureRandom;
 
     /**
-     * Logger instance
+     * Logger instance.
      *
      * @var LoggerInterface
      */
     private LoggerInterface $logger;
 
     /**
-     * User session for getting current user
+     * User session for getting current user.
      *
      * @var IUserSession
      */
     private IUserSession $userSession;
 
     /**
-     * Container for dependency injection
+     * Container for dependency injection.
      *
      * @var ContainerInterface
      */
     private ContainerInterface $container;
 
     /**
-     * Contactpersoon service for business logic
+     * Contactpersoon service for business logic.
+     *
+     * @var ContactpersoonService
      */
     private ContactpersoonService $contactpersoonService;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param string                $appName               The app name
      * @param IRequest              $request               The request object
@@ -137,11 +155,11 @@ class ContactpersonenController extends Controller
     }//end __construct()
 
     /**
-     * Get contactpersonen for an organisation with user status
+     * Get contactpersonen for an organisation with user status.
      *
-     * @param string $organisationId The organisation ID
+     * @param string $organisationId The organisation ID.
      *
-     * @return JSONResponse List of contactpersonen with user information
+     * @return JSONResponse List of contactpersonen with user information.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -149,36 +167,37 @@ class ContactpersonenController extends Controller
     public function getContactpersonen(string $organisationId): JSONResponse
     {
         try {
-            // Get object service
+            // Get object service.
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // Search for contactpersonen belonging to this organisation
-            // Use a more generic search that doesn't require specific register/schema
+            // Search for contactpersonen belonging to this organisation.
+            // Use a more generic search that doesn't require specific register/schema.
             $searchParams = [
                 'organisation' => $organisationId,
                 '_limit'       => 100,
                 '_schema'      => 'contactpersoon',
-            // Let ObjectService resolve the schema
+            // Let ObjectService resolve the schema.
             ];
 
             $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
 
-            // Enhance with user information
+            // Enhance with user information.
             $enhancedContactpersonen = [];
             foreach ($contactpersonen['results'] as $contactpersoon) {
                 $contactData = $contactpersoon->getObject();
                 $username    = $contactData['username'] ?? null;
 
+                $hasUser  = empty($username) === false;
                 $userInfo = [
-                    'hasUser'  => !empty($username),
+                    'hasUser'  => $hasUser,
                     'username' => $username,
                     'groups'   => [],
                     'disabled' => false,
                 ];
 
-                if (!empty($username)) {
+                if (empty($username) === false) {
                     $user = $this->userManager->get($username);
-                    if ($user) {
+                    if ($user !== null) {
                         $userGroups         = $this->groupManager->getUserGroups($user);
                         $userInfo['groups'] = array_map(
                                 function ($group) {
@@ -187,8 +206,8 @@ class ContactpersonenController extends Controller
                                 $userGroups
                                 );
 
-                        // Get the disabled status from Nextcloud
-                        $userInfo['disabled'] = !$user->isEnabled();
+                        // Get the disabled status from Nextcloud.
+                        $userInfo['disabled'] = ($user->isEnabled() === false);
                     }
                 }
 
@@ -227,11 +246,11 @@ class ContactpersonenController extends Controller
     }//end getContactpersonen()
 
     /**
-     * Convert a contactpersoon to a user account
+     * Convert a contactpersoon to a user account.
      *
-     * @param string $contactpersoonId The contactpersoon ID
+     * @param string $contactpersoonId The contactpersoon ID.
      *
-     * @return JSONResponse Result of user creation
+     * @return JSONResponse Result of user creation.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -239,10 +258,10 @@ class ContactpersonenController extends Controller
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
         try {
-            // Get object service
+            // Get object service.
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // Find the contactpersoon object
+            // Find the contactpersoon object.
             $contactpersoonObject = $objectService->find(
                 id: $contactpersoonId,
                 register: 'voorzieningen',
@@ -251,7 +270,7 @@ class ContactpersonenController extends Controller
                 _multitenancy: false
             );
 
-            if (!$contactpersoonObject) {
+            if ($contactpersoonObject === null) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -261,7 +280,7 @@ class ContactpersonenController extends Controller
                         );
             }
 
-            // Get register and schema from the found object
+            // Get register and schema from the found object.
             $registerId = $contactpersoonObject->getRegister();
             $schemaId   = $contactpersoonObject->getSchema();
 
@@ -276,8 +295,8 @@ class ContactpersonenController extends Controller
 
             $contactData = $contactpersoonObject->getObject();
 
-            // Check if user already exists
-            if (!empty($contactData['username'])) {
+            // Check if user already exists.
+            if (empty($contactData['username']) === false) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -287,7 +306,7 @@ class ContactpersonenController extends Controller
                         );
             }
 
-            // Validate email address before attempting user creation
+            // Validate email address before attempting user creation.
             $email      = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
             $emailError = $this->contactPersonHandler->validateEmailForUsername($email);
             if ($emailError !== null) {
@@ -300,10 +319,10 @@ class ContactpersonenController extends Controller
                         );
             }
 
-            // Create user account using ContactPersonHandler
+            // Create user account using ContactPersonHandler.
             $user = $this->contactPersonHandler->createUserAccount($contactpersoonObject);
 
-            if (!$user) {
+            if ($user === null) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -313,12 +332,12 @@ class ContactpersonenController extends Controller
                         );
             }
 
-            // Ensure groups are assigned based on organization type
-            // This is a safety check in case the createUserAccount didn't assign groups properly
+            // Ensure groups are assigned based on organization type.
+            // This is a safety check in case the createUserAccount didn't assign groups properly.
             $contactData    = $contactpersoonObject->getObject();
             $organizationId = $contactData['organisatie'] ?? $contactData['organisation'] ?? '';
 
-            if (!empty($organizationId)) {
+            if (empty($organizationId) === false) {
                 $this->logger->info(
                         'ContactpersonenController: Ensuring groups are assigned based on organization type',
                         [
@@ -328,27 +347,34 @@ class ContactpersonenController extends Controller
                         ]
                         );
 
-                // Call the ContactPersonHandler to update groups based on contact data
-                $this->contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
+                // Call the ContactPersonHandler to update groups based on contact data.
+                $this->contactPersonHandler->updateUserGroupsFromContactData(
+                    user: $user,
+                    objectData: $contactData
+                );
             }
 
-            // Link user to organization entity
-            $this->contactPersonHandler->addUserToOrganizationEntity($contactpersoonObject, $user->getUID(), $organizationId);
+            // Link user to organization entity.
+            $this->contactPersonHandler->addUserToOrganizationEntity(
+                contactpersoonObject: $contactpersoonObject,
+                username: $user->getUID(),
+                organizationId: $organizationId
+            );
 
-            // Update the contactpersoon object with the username
+            // Update the contactpersoon object with the username.
             $contactData['username'] = $user->getUID();
 
-            // Ensure string fields are properly typed (fixes data stored with incorrect types)
+            // Ensure string fields are properly typed (fixes data stored with incorrect types).
             $stringFields = ['voornaam', 'tussenvoegsel', 'achternaam', 'functie', 'telefoonnummer', 'email', 'e-mailadres'];
             foreach ($stringFields as $field) {
-                if (isset($contactData[$field]) && !is_string($contactData[$field])) {
+                if (isset($contactData[$field]) === true && is_string($contactData[$field]) === false) {
                     $contactData[$field] = (string) $contactData[$field];
                 }
             }
 
-            // Handle organisatie field - if it's a string UUID, convert to null to avoid validation errors
-            // The relationship is maintained through the organisation entity's users array
-            if (isset($contactData['organisatie']) && is_string($contactData['organisatie'])) {
+            // Handle organisatie field — if it's a string UUID, convert to null to avoid validation errors.
+            // The relationship is maintained through the organisation entity's users array.
+            if (isset($contactData['organisatie']) === true && is_string($contactData['organisatie']) === true) {
                 $this->logger->info(
                         'ContactpersonenController: Converting organisatie string to null for validation',
                         [
@@ -358,26 +384,33 @@ class ContactpersonenController extends Controller
                 $contactData['organisatie'] = null;
             }
 
-            if (isset($contactData['organisation']) && is_string($contactData['organisation'])) {
+            if (isset($contactData['organisation']) === true && is_string($contactData['organisation']) === true) {
                 $contactData['organisation'] = null;
             }
 
             $contactpersoonObject->setObject($contactData);
 
-            // Debug logging to understand data types before save
+            // Debug logging to understand data types before save.
+            $achternaamValue = $contactData['achternaam'] ?? 'not set';
+            if (isset($contactData['achternaam']) === true) {
+                $achternaamType = gettype($contactData['achternaam']);
+            } else {
+                $achternaamType = 'not set';
+            }
+
             $this->logger->info(
                     'ContactpersonenController: About to save contactpersoon object',
                     [
                         'contactpersoonId' => $contactpersoonId,
-                        'achternaamValue'  => $contactData['achternaam'] ?? 'not set',
-                        'achternaamType'   => isset($contactData['achternaam']) ? gettype($contactData['achternaam']) : 'not set',
+                        'achternaamValue'  => $achternaamValue,
+                        'achternaamType'   => $achternaamType,
                         'registerId'       => $registerId,
                         'schemaId'         => $schemaId,
                     ]
                     );
 
-            // Save using ObjectEntityMapper directly to bypass schema validation
-            // This avoids "Unresolved reference" errors when schema references can't be resolved
+            // Save using ObjectEntityMapper directly to bypass schema validation.
+            // This avoids "Unresolved reference" errors when schema references can't be resolved.
             $objectMapper = $this->container->get('OCA\OpenRegister\Db\ObjectEntityMapper');
             $objectMapper->update($contactpersoonObject);
 
@@ -389,23 +422,23 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            // Get user groups to include in response
+            // Get user groups to include in response.
             $userGroups            = $this->groupManager->getUserGroups($user);
             $softwareCatalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
             $userGroupNames        = [];
 
             foreach ($userGroups as $group) {
                 $groupId = $group->getGID();
-                if (in_array($groupId, $softwareCatalogGroups)) {
+                if (in_array(needle: $groupId, haystack: $softwareCatalogGroups) === true) {
                     $userGroupNames[] = $groupId;
                 }
             }
 
-            // Add groups to the contactpersoon data for frontend
+            // Add groups to the contactpersoon data for frontend.
             $updatedContactData           = $contactpersoonObject->getObject();
             $updatedContactData['groups'] = $userGroupNames;
 
-            // Return the updated contactpersoon object with groups
+            // Return the updated contactpersoon object with groups.
             return new JSONResponse(
                     [
                         'success'        => true,
@@ -439,12 +472,12 @@ class ContactpersonenController extends Controller
     }//end convertToUser()
 
     /**
-     * Change user password
+     * Change user password.
      *
-     * @param string $username    The username
-     * @param string $newPassword The new password
+     * @param string $username    The username.
+     * @param string $newPassword The new password.
      *
-     * @return JSONResponse Result of password change
+     * @return JSONResponse Result of password change.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -454,7 +487,7 @@ class ContactpersonenController extends Controller
         try {
             $user = $this->userManager->get($username);
 
-            if (!$user) {
+            if ($user === null) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -464,7 +497,7 @@ class ContactpersonenController extends Controller
                         );
             }
 
-            // Validate password (basic validation)
+            // Validate password (basic validation).
             if (strlen($newPassword) < 10) {
                 return new JSONResponse(
                         [
@@ -480,10 +513,12 @@ class ContactpersonenController extends Controller
             $result = $user->setPassword($newPassword);
 
             if ($result === false) {
+                // Password rejected — too common or violates the configured policy.
+                $msg = 'Password was rejected: may be too common or violate the policy. Please choose another.';
                 return new JSONResponse(
                         [
                             'success' => false,
-                            'message' => 'Password was rejected. It may be too common or violate the password policy. Please choose a different password.',
+                            'message' => $msg,
                         ],
                         400
                         );
@@ -522,12 +557,12 @@ class ContactpersonenController extends Controller
     }//end changePassword()
 
     /**
-     * Update user groups
+     * Update user groups.
      *
-     * @param string $username The username
-     * @param array  $groups   Array of group names to assign
+     * @param string $username The username.
+     * @param array  $groups   Array of group names to assign.
      *
-     * @return JSONResponse Result of group update
+     * @return JSONResponse Result of group update.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -537,7 +572,7 @@ class ContactpersonenController extends Controller
         try {
             $user = $this->userManager->get($username);
 
-            if (!$user) {
+            if ($user === null) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -547,27 +582,27 @@ class ContactpersonenController extends Controller
                         );
             }
 
-            // Get allowed software catalog groups
+            // Get allowed software catalog groups.
             $allowedGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
 
-            // Filter to only allowed groups
+            // Filter to only allowed groups.
             $validGroups = array_intersect($groups, $allowedGroups);
 
-            // Get current user groups (only software catalog groups)
+            // Get current user groups (only software catalog groups).
             $currentGroups = $this->groupManager->getUserGroups($user);
             $currentSoftwareCatalogGroups = [];
 
             foreach ($currentGroups as $group) {
-                if (in_array($group->getGID(), $allowedGroups)) {
+                if (in_array(needle: $group->getGID(), haystack: $allowedGroups) === true) {
                     $currentSoftwareCatalogGroups[] = $group->getGID();
                 }
             }
 
-            // Remove user from groups they should no longer be in
+            // Remove user from groups they should no longer be in.
             $groupsToRemove = array_diff($currentSoftwareCatalogGroups, $validGroups);
             foreach ($groupsToRemove as $groupName) {
                 $group = $this->groupManager->get($groupName);
-                if ($group && $group->inGroup($user)) {
+                if ($group !== null && $group->inGroup($user) === true) {
                     $group->removeUser($user);
                     $this->logger->info(
                             'Removed user from group',
@@ -579,12 +614,12 @@ class ContactpersonenController extends Controller
                 }
             }
 
-            // Add user to new groups (only if they exist)
+            // Add user to new groups (only if they exist).
             $groupsToAdd = array_diff($validGroups, $currentSoftwareCatalogGroups);
             foreach ($groupsToAdd as $groupName) {
                 $group = $this->groupManager->get($groupName);
-                if ($group) {
-                    if (!$group->inGroup($user)) {
+                if ($group !== null) {
+                    if ($group->inGroup($user) === false) {
                         $group->addUser($user);
                         $this->logger->info(
                                 'Added user to group',
@@ -605,7 +640,7 @@ class ContactpersonenController extends Controller
                 }
             }//end foreach
 
-            // Get updated groups
+            // Get updated groups.
             $updatedGroups     = $this->groupManager->getUserGroups($user);
             $updatedGroupNames = array_map(
                     function ($group) {
@@ -642,13 +677,14 @@ class ContactpersonenController extends Controller
     }//end updateUserGroups()
 
     /**
-     * Get contact persons for an organization with user details
+     * Get contact persons for an organization with user details.
      *
      * Returns all contact persons linked to a specific organization,
      * with their corresponding Nextcloud user details spliced in.
      *
-     * @param  string $organizationUuid The organization UUID
-     * @return JSONResponse JSON response containing contact persons with user details
+     * @param string $organizationUuid The organization UUID.
+     *
+     * @return JSONResponse JSON response containing contact persons with user details.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -663,8 +699,8 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            // Validate organization UUID
-            if (empty($organizationUuid)) {
+            // Validate organization UUID.
+            if (empty($organizationUuid) === true) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -674,10 +710,12 @@ class ContactpersonenController extends Controller
                         );
             }
 
-            // Get contact persons with user details using the service
-            $contactPersons = $this->contactpersoonService->getContactPersonsWithUserDetailsForOrganization($organizationUuid);
+            // Get contact persons with user details using the service.
+            $contactPersons = $this->contactpersoonService->getContactPersonsWithUserDetailsForOrganization(
+                $organizationUuid
+            );
 
-            // Convert objects to arrays for JSON response
+            // Convert objects to arrays for JSON response.
             $contactPersonsData = [];
             foreach ($contactPersons as $contactPerson) {
                 $contactPersonsData[] = [
@@ -728,13 +766,14 @@ class ContactpersonenController extends Controller
     }//end getContactPersonsWithUserDetailsForOrganization()
 
     /**
-     * Get user information and available groups for a specific contactpersoon
+     * Get user information and available groups for a specific contactpersoon.
      *
      * Returns user information including current groups and available groups
      * for a specific contactpersoon identified by UUID.
      *
-     * @param  string $contactpersoonId The contactpersoon UUID
-     * @return JSONResponse JSON response containing user info and available groups
+     * @param string $contactpersoonId The contactpersoon UUID.
+     *
+     * @return JSONResponse JSON response containing user info and available groups.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -749,10 +788,10 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            // Get contactpersoon from OpenRegister
+            // Get contactpersoon from OpenRegister.
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // First try to find the object by UUID
+            // First try to find the object by UUID.
             $contactObject = $objectService->find(
                 id: $contactpersoonId,
                 register: 'voorzieningen',
@@ -761,7 +800,7 @@ class ContactpersonenController extends Controller
                 _multitenancy: false
             );
 
-            if (!$contactObject) {
+            if ($contactObject === null) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -774,33 +813,34 @@ class ContactpersonenController extends Controller
             $contactData = $contactObject->getObject();
             $username    = $contactData['username'] ?? null;
 
+            $hasUser  = empty($username) === false;
             $userInfo = [
-                'hasUser'  => !empty($username),
+                'hasUser'  => $hasUser,
                 'username' => $username,
                 'groups'   => [],
                 'disabled' => false,
             ];
 
-            // If user exists, get their current groups and disabled status
-            if (!empty($username)) {
+            // If user exists, get their current groups and disabled status.
+            if (empty($username) === false) {
                 $user = $this->userManager->get($username);
-                if ($user) {
+                if ($user !== null) {
                     $userGroups            = $this->groupManager->getUserGroups($user);
                     $softwareCatalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
 
                     foreach ($userGroups as $group) {
                         $groupId = $group->getGID();
-                        if (in_array($groupId, $softwareCatalogGroups)) {
+                        if (in_array(needle: $groupId, haystack: $softwareCatalogGroups) === true) {
                             $userInfo['groups'][] = $groupId;
                         }
                     }
 
-                    // Get the disabled status from Nextcloud
-                    $userInfo['disabled'] = !$user->isEnabled();
+                    // Get the disabled status from Nextcloud.
+                    $userInfo['disabled'] = ($user->isEnabled() === false);
                 }
             }
 
-            // Available groups (same as getAvailableGroups but inline for consistency)
+            // Available groups (same as getAvailableGroups but inline for consistency).
             $availableGroups = [
                 [
                     'id'          => 'gebruik-beheerder',
@@ -819,11 +859,11 @@ class ContactpersonenController extends Controller
                 ],
             ];
 
-            // Check which groups actually exist
+            // Check which groups actually exist.
             $existingGroups = [];
             foreach ($availableGroups as $groupInfo) {
                 $group = $this->groupManager->get($groupInfo['id']);
-                if ($group) {
+                if ($group !== null) {
                     $existingGroups[] = $groupInfo;
                 }
             }
@@ -857,9 +897,9 @@ class ContactpersonenController extends Controller
     }//end getUserInfo()
 
     /**
-     * Get available software catalog groups
+     * Get available software catalog groups.
      *
-     * @return JSONResponse List of available groups
+     * @return JSONResponse List of available groups.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -885,11 +925,11 @@ class ContactpersonenController extends Controller
                 ],
             ];
 
-            // Check which groups actually exist
+            // Check which groups actually exist.
             $existingGroups = [];
             foreach ($availableGroups as $groupInfo) {
                 $group = $this->groupManager->get($groupInfo['id']);
-                if ($group) {
+                if ($group !== null) {
                     $existingGroups[] = $groupInfo;
                 }
             }
@@ -919,17 +959,19 @@ class ContactpersonenController extends Controller
     }//end getAvailableGroups()
 
     /**
-     * Disable a user account
+     * Disable a user account.
+     *
+     * @param string $contactpersoonId The contactpersoon ID.
+     *
+     * @return JSONResponse Result of the disable operation.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @param           string $contactpersoonId
-     * @return          JSONResponse
      */
     public function disableUser(string $contactpersoonId): JSONResponse
     {
         try {
-            // Delegate to service
+            // Delegate to service.
             $this->contactpersoonService->disableUserForContactpersoon($contactpersoonId);
 
             $this->logger->info(
@@ -939,7 +981,12 @@ class ContactpersonenController extends Controller
                         'disabled_by'      => $this->userId,
                     ]
                     );
-            return new JSONResponse(['success' => true, 'message' => 'User account disabled successfully']);
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'User account disabled successfully',
+                    ]
+                    );
         } catch (\Exception $e) {
             $this->logger->error(
                     'Failed to disable user account',
@@ -948,22 +995,30 @@ class ContactpersonenController extends Controller
                         'error'            => $e->getMessage(),
                     ]
                     );
-            return new JSONResponse(['success' => false, 'message' => 'Failed to disable user account: '.$e->getMessage()], 500);
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to disable user account: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }//end try
     }//end disableUser()
 
     /**
-     * Enable a user account
+     * Enable a user account.
+     *
+     * @param string $contactpersoonId The contactpersoon ID.
+     *
+     * @return JSONResponse Result of the enable operation.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @param           string $contactpersoonId
-     * @return          JSONResponse
      */
     public function enableUser(string $contactpersoonId): JSONResponse
     {
         try {
-            // Delegate to service
+            // Delegate to service.
             $this->contactpersoonService->enableUserForContactpersoon($contactpersoonId);
 
             $this->logger->info(
@@ -973,7 +1028,12 @@ class ContactpersonenController extends Controller
                         'enabled_by'       => $this->userId,
                     ]
                     );
-            return new JSONResponse(['success' => true, 'message' => 'User account enabled successfully']);
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'User account enabled successfully',
+                    ]
+                    );
         } catch (\Exception $e) {
             $this->logger->error(
                     'Failed to enable user account',
@@ -982,26 +1042,51 @@ class ContactpersonenController extends Controller
                         'error'            => $e->getMessage(),
                     ]
                     );
-            return new JSONResponse(['success' => false, 'message' => 'Failed to enable user account: '.$e->getMessage()], 500);
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to enable user account: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }//end try
     }//end enableUser()
 
     /**
-     * Test endpoint to debug bulk user info
+     * Test endpoint to debug bulk user info.
+     *
+     * @return JSONResponse Debug information about available services.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @return          JSONResponse
      */
     public function testBulkUserInfo(): JSONResponse
     {
         try {
+            if ($this->objectService !== null) {
+                $objectServiceAvail = 'available';
+            } else {
+                $objectServiceAvail = 'null';
+            }
+
+            if ($this->userManager !== null) {
+                $userManagerAvail = 'available';
+            } else {
+                $userManagerAvail = 'null';
+            }
+
+            if ($this->groupManager !== null) {
+                $groupManagerAvail = 'available';
+            } else {
+                $groupManagerAvail = 'null';
+            }
+
             $this->logger->info(
                     'testBulkUserInfo called',
                     [
-                        'objectService' => $this->objectService ? 'available' : 'null',
-                        'userManager'   => $this->userManager ? 'available' : 'null',
-                        'groupManager'  => $this->groupManager ? 'available' : 'null',
+                        'objectService' => $objectServiceAvail,
+                        'userManager'   => $userManagerAvail,
+                        'groupManager'  => $groupManagerAvail,
                     ]
                     );
 
@@ -1010,24 +1095,36 @@ class ContactpersonenController extends Controller
                         'success'  => true,
                         'message'  => 'Test endpoint working',
                         'services' => [
-                            'objectService' => $this->objectService ? 'available' : 'null',
-                            'userManager'   => $this->userManager ? 'available' : 'null',
-                            'groupManager'  => $this->groupManager ? 'available' : 'null',
+                            'objectService' => $objectServiceAvail,
+                            'userManager'   => $userManagerAvail,
+                            'groupManager'  => $groupManagerAvail,
                         ],
                     ]
                     );
         } catch (\Exception $e) {
-            $this->logger->error('Test endpoint error', ['error' => $e->getMessage()]);
-            return new JSONResponse(['success' => false, 'message' => $e->getMessage()], 500);
+            $this->logger->error(
+                    'Test endpoint error',
+                    [
+                        'error' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                    ],
+                    500
+                    );
         }//end try
     }//end testBulkUserInfo()
 
     /**
-     * Get user info for multiple contactpersonen in one request
+     * Get user info for multiple contactpersonen in one request.
+     *
+     * @return JSONResponse Bulk user info keyed by contactpersoon ID.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @return          JSONResponse
      */
     public function getBulkUserInfo(): JSONResponse
     {
@@ -1043,11 +1140,17 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            if (empty($contactpersoonIds) || !is_array($contactpersoonIds)) {
-                return new JSONResponse(['success' => false, 'message' => 'No contactpersoon IDs provided'], 400);
+            if (empty($contactpersoonIds) === true || is_array($contactpersoonIds) === false) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'No contactpersoon IDs provided',
+                        ],
+                        400
+                        );
             }
 
-            // Delegate to service
+            // Delegate to service.
             $bulkUserInfo = $this->contactpersoonService->getBulkUserInfo($contactpersoonIds);
 
             return new JSONResponse(
@@ -1074,14 +1177,14 @@ class ContactpersonenController extends Controller
     }//end getBulkUserInfo()
 
     /**
-     * Get current user profile information
+     * Get current user profile information.
      *
      * Returns the current logged-in user's profile including:
      * - email, firstName, middleName, lastName, functie
      * - organisations.active (the currently active organisation)
      * - organisations.all (all organisations the user belongs to)
      *
-     * @return JSONResponse The user profile data
+     * @return JSONResponse The user profile data.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -1089,7 +1192,7 @@ class ContactpersonenController extends Controller
     public function getMe(): JSONResponse
     {
         try {
-            // Get current user from session
+            // Get current user from session.
             $user = $this->userSession->getUser();
             if ($user === null) {
                 return new JSONResponse(
@@ -1112,7 +1215,7 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            // Initialize response with user data from Nextcloud
+            // Initialize response with user data from Nextcloud.
             $response = [
                 'email'         => $userEmail,
                 'firstName'     => '',
@@ -1125,11 +1228,11 @@ class ContactpersonenController extends Controller
                 ],
             ];
 
-            // Try to get contactpersoon data for additional profile info
+            // Try to get contactpersoon data for additional profile info.
             try {
                 $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-                // Search for contactpersoon by username (which is the email)
+                // Search for contactpersoon by username (which is the email).
                 $searchParams = [
                     'username' => $userId,
                     '_limit'   => 1,
@@ -1138,18 +1241,18 @@ class ContactpersonenController extends Controller
 
                 $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
 
-                if (!empty($contactpersonen['results'])) {
+                if (empty($contactpersonen['results']) === false) {
                     $contactpersoon = $contactpersonen['results'][0];
                     $contactData    = $contactpersoon->getObject();
 
-                    // Extract name parts
+                    // Extract name parts.
                     $response['firstName']  = $contactData['voornaam'] ?? $contactData['firstName'] ?? '';
                     $response['middleName'] = $contactData['tussenvoegsel'] ?? $contactData['middleName'] ?? '';
                     $response['lastName']   = $contactData['achternaam'] ?? $contactData['lastName'] ?? '';
                     $response['functie']    = $contactData['functie'] ?? '';
 
-                    // If email not set, try from contact data
-                    if (empty($response['email'])) {
+                    // If email not set, try from contact data.
+                    if (empty($response['email']) === true) {
                         $response['email'] = $contactData['e-mailadres'] ?? $contactData['email'] ?? $userEmail;
                     }
                 }
@@ -1163,11 +1266,11 @@ class ContactpersonenController extends Controller
                         );
             }//end try
 
-            // Get organisation data from OpenRegister
+            // Get organisation data from OpenRegister.
             try {
                 $organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
 
-                // Get active organisation
+                // Get active organisation.
                 $activeOrg = $organisationService->getActiveOrganisation();
                 if ($activeOrg !== null) {
                     $response['organisations']['active'] = [
@@ -1178,7 +1281,7 @@ class ContactpersonenController extends Controller
                     ];
                 }
 
-                // Get all user organisations
+                // Get all user organisations.
                 $userOrgs = $organisationService->getUserOrganisations();
                 foreach ($userOrgs as $org) {
                     $response['organisations']['all'][] = [
@@ -1219,19 +1322,19 @@ class ContactpersonenController extends Controller
     }//end getMe()
 
     /**
-     * Create a URL-friendly slug from a name
+     * Create a URL-friendly slug from a name.
      *
-     * @param string $name The name to convert
+     * @param string $name The name to convert.
      *
-     * @return string The slug
+     * @return string The slug.
      */
     private function createSlug(string $name): string
     {
-        // Convert to lowercase
+        // Convert to lowercase.
         $slug = strtolower($name);
-        // Replace spaces and special chars with hyphens
+        // Replace spaces and special chars with hyphens.
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
-        // Remove leading/trailing hyphens
+        // Remove leading/trailing hyphens.
         $slug = trim($slug, '-');
         return $slug;
     }//end createSlug()

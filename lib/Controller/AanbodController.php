@@ -1,9 +1,7 @@
 <?php
 
-declare(strict_types=1);
-
-/*
- * Aanbod Controller for SoftwareCatalog
+/**
+ * Aanbod Controller for SoftwareCatalog.
  *
  * Handles HTTP requests for aanbod (offers) operations including retrieving
  * aanbod objects (gebruik, dienst, module, koppeling) and accepting or denying them.
@@ -13,9 +11,11 @@ declare(strict_types=1);
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
+
+declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Controller;
 
@@ -27,7 +27,7 @@ use OCA\SoftwareCatalog\Service\AanbodService;
 use Psr\Log\LoggerInterface;
 
 /**
- * Controller for handling aanbod (offers) API operations
+ * Controller for handling aanbod (offers) API operations.
  *
  * This controller provides REST API endpoints for managing aanbod objects where
  * the active organization is involved either as afnemer (consumer) or aanbieder
@@ -38,13 +38,13 @@ use Psr\Log\LoggerInterface;
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 class AanbodController extends Controller
 {
     /**
-     * Constructor for AanbodController
+     * Constructor for AanbodController.
      *
      * @param string          $appName       The name of the app
      * @param IRequest        $request       The HTTP request object
@@ -63,7 +63,7 @@ class AanbodController extends Controller
     }//end __construct()
 
     /**
-     * Get all aanbod objects (modules, diensten, koppelingen, gebruiks)
+     * Get all aanbod objects (modules, diensten, koppelingen, gebruiks).
      *
      * API Endpoint: GET /api/aanbod
      *
@@ -77,11 +77,11 @@ class AanbodController extends Controller
      * - offset (int): Number of results to skip for pagination
      * - page (int): Page number for pagination
      *
+     * @return JSONResponse JSON response with aanbod objects array
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     *
-     * @return JSONResponse JSON response with aanbod objects array
      */
     public function getAanbod(): JSONResponse
     {
@@ -95,21 +95,25 @@ class AanbodController extends Controller
                 );
 
         try {
-            // Parse query parameters for filtering options
+            // Parse query parameters for filtering options.
             $options = $this->parseQueryOptions();
 
-            // Get aanbod objects from service
+            // Get aanbod objects from service.
             $result = $this->aanbodService->getAanbod($options);
 
-            // Determine HTTP status code based on whether there's an error
-            $statusCode = isset($result['error']) ? 500 : 200;
+            // Determine HTTP status code based on whether there's an error.
+            if (isset($result['error']) === true) {
+                $statusCode = 500;
+            } else {
+                $statusCode = 200;
+            }
 
             $this->logger->info(
                     'API: Aanbod request completed',
                     [
                         'total'         => $result['total'] ?? 0,
                         'results_count' => count($result['results'] ?? []),
-                        'has_error'     => isset($result['error']),
+                        'has_error'     => isset($result['error']) === true,
                     ]
                     );
 
@@ -139,7 +143,7 @@ class AanbodController extends Controller
     }//end getAanbod()
 
     /**
-     * Accept an aanbod object (set @self.organisation to current organisation)
+     * Accept an aanbod object (set @self.organisation to current organisation).
      *
      * API Endpoint: PUT /api/aanbod/{uuid}/accept
      *
@@ -147,12 +151,13 @@ class AanbodController extends Controller
      * organization. This operation is only allowed if the active organization
      * is the afnemer (for gebruiks) or aanbieder (for modules, diensten, koppelingen).
      *
+     * @param string $uuid The UUID of the aanbod object to accept
+     *
+     * @return JSONResponse JSON response with success status and updated object
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     *
-     * @param  string $uuid The UUID of the aanbod object to accept
-     * @return JSONResponse JSON response with success status and updated object
      */
     public function acceptAanbod(string $uuid): JSONResponse
     {
@@ -166,8 +171,8 @@ class AanbodController extends Controller
                 );
 
         try {
-            // Validate input
-            if (empty($uuid)) {
+            // Validate input.
+            if (empty($uuid) === true) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -178,25 +183,33 @@ class AanbodController extends Controller
                         );
             }
 
-            // Parse any additional options from request body
+            // Parse any additional options from request body.
             $options     = [];
             $requestBody = $this->request->getParams();
-            if (!empty($requestBody)) {
+            if (empty($requestBody) === false) {
                 $options = array_filter(
                         $requestBody,
                         function ($key) {
-                            return !in_array($key, ['uuid']);
-                            // Exclude path parameters
+                            // Exclude path parameters.
+                            return in_array(needle: $key, haystack: ['uuid']) === false;
                         },
                         ARRAY_FILTER_USE_KEY
                         );
             }
 
-            // Accept aanbod object via service
-            $result = $this->aanbodService->acceptAanbod($uuid, $options);
+            // Accept aanbod object via service.
+            $result = $this->aanbodService->acceptAanbod(uuid: $uuid, options: $options);
 
-            // Determine appropriate HTTP status code
-            $statusCode = $result['success'] ? 200 : ($result['error'] === 'Aanbod object not found' ? 404 : (strpos($result['error'] ?? '', 'Operation not allowed') !== false ? 403 : 500));
+            // Determine appropriate HTTP status code.
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else if ($result['error'] === 'Aanbod object not found') {
+                $statusCode = 404;
+            } else if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
+                $statusCode = 403;
+            } else {
+                $statusCode = 500;
+            }
 
             $this->logger->info(
                     'API: Accept aanbod request completed',
@@ -230,7 +243,7 @@ class AanbodController extends Controller
     }//end acceptAanbod()
 
     /**
-     * Deny an aanbod object (delete it)
+     * Deny an aanbod object (delete it).
      *
      * API Endpoint: DELETE /api/aanbod/{uuid}/deny
      *
@@ -238,12 +251,13 @@ class AanbodController extends Controller
      * organization is the afnemer (for gebruiks) or aanbieder (for modules,
      * diensten, koppelingen).
      *
+     * @param string $uuid The UUID of the aanbod object to deny
+     *
+     * @return JSONResponse JSON response with success status and deletion details
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     *
-     * @param  string $uuid The UUID of the aanbod object to deny
-     * @return JSONResponse JSON response with success status and deletion details
      */
     public function denyAanbod(string $uuid): JSONResponse
     {
@@ -257,8 +271,8 @@ class AanbodController extends Controller
                 );
 
         try {
-            // Validate input
-            if (empty($uuid)) {
+            // Validate input.
+            if (empty($uuid) === true) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -269,25 +283,33 @@ class AanbodController extends Controller
                         );
             }
 
-            // Parse any additional options from request body
+            // Parse any additional options from request body.
             $options     = [];
             $requestBody = $this->request->getParams();
-            if (!empty($requestBody)) {
+            if (empty($requestBody) === false) {
                 $options = array_filter(
                         $requestBody,
                         function ($key) {
-                            return !in_array($key, ['uuid']);
-                            // Exclude path parameters
+                            // Exclude path parameters.
+                            return in_array(needle: $key, haystack: ['uuid']) === false;
                         },
                         ARRAY_FILTER_USE_KEY
                         );
             }
 
-            // Deny aanbod object via service
-            $result = $this->aanbodService->denyAanbod($uuid, $options);
+            // Deny aanbod object via service.
+            $result = $this->aanbodService->denyAanbod(uuid: $uuid, options: $options);
 
-            // Determine appropriate HTTP status code
-            $statusCode = $result['success'] ? 200 : ($result['error'] === 'Aanbod object not found' ? 404 : (strpos($result['error'] ?? '', 'Operation not allowed') !== false ? 403 : 500));
+            // Determine appropriate HTTP status code.
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else if ($result['error'] === 'Aanbod object not found') {
+                $statusCode = 404;
+            } else if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
+                $statusCode = 403;
+            } else {
+                $statusCode = 500;
+            }
 
             $this->logger->info(
                     'API: Deny aanbod request completed',
@@ -322,7 +344,7 @@ class AanbodController extends Controller
     }//end denyAanbod()
 
     /**
-     * Parse query parameters into options array
+     * Parse query parameters into options array.
      *
      * @return array Parsed options array
      */
@@ -330,27 +352,27 @@ class AanbodController extends Controller
     {
         $options = [];
 
-        // Parse pagination parameters
+        // Parse pagination parameters.
         $limit = $this->request->getParam('_limit') ?? $this->request->getParam('limit');
-        if ($limit !== null && is_numeric($limit)) {
+        if ($limit !== null && is_numeric($limit) === true) {
             $options['_limit'] = (int) $limit;
-            $options['limit']  = (int) $limit;
-            // Keep both for compatibility
+            // Keep both for compatibility.
+            $options['limit'] = (int) $limit;
         }
 
         $offset = $this->request->getParam('_offset') ?? $this->request->getParam('offset');
-        if ($offset !== null && is_numeric($offset)) {
+        if ($offset !== null && is_numeric($offset) === true) {
             $options['_offset'] = (int) $offset;
-            $options['offset']  = (int) $offset;
-            // Keep both for compatibility
+            // Keep both for compatibility.
+            $options['offset'] = (int) $offset;
         }
 
         $page = $this->request->getParam('_page') ?? $this->request->getParam('page');
-        if ($page !== null && is_numeric($page)) {
+        if ($page !== null && is_numeric($page) === true) {
             $options['_page'] = (int) $page;
         }
 
-        // Force database source for real-time data
+        // Force database source for real-time data.
         $options['_source'] = 'database';
 
         $this->logger->debug(
