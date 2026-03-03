@@ -1629,13 +1629,13 @@ class ContactPersonHandler
                     );
             return '';
         } catch (\Exception $e) {
-            $this->_logger->error(
-                'Failed to get organization type: '.$e->getMessage(),
+            // "Object not found" is expected for NC org UUIDs that don't have a matching
+            // register organisatie object (e.g. orgs created outside the sync process).
+            // Log at warning level — the caller handles '' gracefully.
+            $this->_logger->warning(
+                'Could not determine organization type (org may not be synced yet): '.$e->getMessage(),
                 [
                     'organizationId' => $organizationId,
-                    'exception'      => $e->getMessage(),
-                    'file'           => $e->getFile(),
-                    'line'           => $e->getLine(),
                 ]
             );
             return '';
