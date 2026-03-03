@@ -1,8 +1,20 @@
-# Software Catalogus
+<p align="center">
+  <img src="img/app-store.svg" alt="Software Catalogus logo" width="80" height="80">
+</p>
 
-[![License: EUPL](https://img.shields.io/badge/License-EUPL-blue.svg)](https://opensource.org/licenses/EUPL)
-[![Nextcloud](https://img.shields.io/badge/Nextcloud-Compatible-brightgreen)](https://nextcloud.com/)
-[![Version](https://img.shields.io/badge/version-0.1.1-blue)]()
+<h1 align="center">Software Catalogus</h1>
+
+<p align="center">
+  <strong>Software catalog management for Nextcloud — synchronized catalog entries, open data publication, and organization workflows</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/ConductionNL/softwarecatalog/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/softwarecatalog" alt="Latest release"></a>
+  <a href="https://github.com/ConductionNL/softwarecatalog/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
+  <a href="https://github.com/ConductionNL/softwarecatalog/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/softwarecatalog/code-quality.yml?label=quality" alt="Code quality"></a>
+</p>
+
+---
 
 The **Software Catalogus** is a Nextcloud app that provides a powerful framework for managing and synchronizing software catalogs in an open data ecosystem. This app enables organizations to keep their software data up-to-date, facilitates collaboration, and promotes transparency through open data practices.
 
