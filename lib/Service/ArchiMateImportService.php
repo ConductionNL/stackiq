@@ -1737,7 +1737,7 @@ class ArchiMateImportService
      */
     private function getObjectService(): ?ObjectService
     {
-        if ($this->appManage === falser->isInstalled('openregister')) {
+        if ($this->appManager->isInstalled(appId: 'openregister') === false) {
             return null;
         }
 

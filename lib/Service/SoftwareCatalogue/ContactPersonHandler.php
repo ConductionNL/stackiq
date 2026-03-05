@@ -797,7 +797,7 @@ class ContactPersonHandler
                 }
             }
 
-            if ($group !== false && $group === false->inGroup($user)) {
+            if ($group !== false && $group->inGroup($user) === false) {
                 $group->addUser($user);
                 $this->_logger->info(
                     'Added user to group',
@@ -847,7 +847,7 @@ class ContactPersonHandler
                 return;
             }
 
-            if ($group === false->inGroup($user)) {
+            if ($group->inGroup($user) === false) {
                 $group->addUser($user);
                 $this->_logger->info(
                     'Added user to existing group',
@@ -1487,7 +1487,7 @@ class ContactPersonHandler
 
                 if (empty($beheerderGroup) === false) {
                     $user = $this->_userManager->get($username);
-                    if ($user !== false && $beheerderGroup === false->inGroup($user)) {
+                    if ($user !== false && $beheerderGroup->inGroup($user) === false) {
                         $beheerderGroup->addUser($user);
                     }
                 }

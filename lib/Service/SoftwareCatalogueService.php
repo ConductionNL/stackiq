@@ -80,7 +80,7 @@ class SoftwareCatalogueService
      */
     private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if ($this->_appManage === falser->isEnabledForUser('openregister')) {
+        if ($this->_appManager->isEnabledForUser(appId: 'openregister') === false) {
             return null;
         }
 
@@ -99,7 +99,7 @@ class SoftwareCatalogueService
      */
     private function getOrganisationService(): ?\OCA\OpenRegister\Service\OrganisationService
     {
-        if ($this->_appManage === falser->isEnabledForUser('openregister')) {
+        if ($this->_appManager->isEnabledForUser(appId: 'openregister') === false) {
             return null;
         }
 
