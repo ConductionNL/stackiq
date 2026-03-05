@@ -8,9 +8,8 @@
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team
- * @license  AGPL-3.0
- * @version  1.0.0
+ * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
  * @link     https://github.com/nextcloud/softwarecatalog
  */
 
@@ -40,9 +39,8 @@ use SimpleXMLElement;
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team
- * @license  AGPL-3.0
- * @version  1.0.0
+ * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
  * @link     https://github.com/nextcloud/softwarecatalog
  */
 class ArchiMateImportService
@@ -63,21 +61,21 @@ class ArchiMateImportService
         'disable_validation'     => true,
         'disable_events'         => true,
         'disable_rbac'           => false,
-    // Keep RBAC for security
+    // Keep RBAC for security.
         'use_multi'              => true,
         'xml_parse_flags'        => LIBXML_NOCDATA | LIBXML_NONET,
         'memory_cleanup'         => true,
         'parallel_processing'    => true,
         'batch_size'             => 1000,
-    // Default batch size (will be adjusted intelligently)
+    // Default batch size (will be adjusted intelligently).
         'parallel_batches'       => 8,
-    // Process 8 batches concurrently
+    // Process 8 batches concurrently.
         'max_batch_size_bytes'   => 8388608,
-    // 8 MB - safe under MySQL's 16 MB limit
+    // 8 MB - safe under MySQL's 16 MB limit.
         'min_batch_size'         => 50,
-    // Minimum batch size for very large objects
+    // Minimum batch size for very large objects.
         'size_estimation_sample' => 10,
-    // Sample size for estimating object sizes
+    // Sample size for estimating object sizes.
     ];
 
     /**
@@ -121,13 +119,17 @@ class ArchiMateImportService
     private ?array $propertyDefinitionMapCache = null;
 
     /**
-     * Storage for the last save operation results
-     * Contains the structured return from ObjectService::saveObjects
+     * Storage for the last save operation results.
+     * Contains the structured return from ObjectService::saveObjects.
+     *
+     * @var array|null
      */
     private ?array $lastSaveResult = null;
 
     /**
-     * Cached configuration values for performance optimization
+     * Cached configuration values for performance optimization.
+     *
+     * @var array|null
      */
     private ?array $cachedConfig = null;
 
@@ -140,7 +142,8 @@ class ArchiMateImportService
      * @param IAppManager        $appManager      App manager service
      * @param ContainerInterface $container       PSR-11 container interface
      * @param LoggerInterface    $logger          Logger service
-     * @param SettingsService    $settingsService Settings service for AMEF configuration
+     * @param SettingsService    $settingsService    Settings service for AMEF configuration.
+     * @param OrganisationService $organisationService Organisation service.
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -165,21 +168,30 @@ class ArchiMateImportService
      * - Leaf node text is available as `_value`; when children exist alongside
      *   text, it is available as `_text`.
      * - Repeated child nodes are represented as arrays.
+     *
+     * @param \SimpleXMLElement $xml The XML element to convert.
+     *
+     * @return array The normalized associative array.
      */
     public function xmlToArray(\SimpleXMLElement $xml): array
     {
-        // PERFORMANCE OPTIMIZATION: Initialize result only
+        // PERFORMANCE OPTIMIZATION: Initialize result only.
         $result = [];
 
-        // OPTIMIZATION: Extract non-namespaced attributes (skip redundant processing)
+        // OPTIMIZATION: Extract non-namespaced attributes (skip redundant processing).
         $attributes = $xml->attributes();
         if (count($attributes) > 0) {
             $attrBag = [];
             foreach ($attributes as $attrName => $attrValue) {
                 $name  = (string) $attrName;
                 $value = (string) $attrValue;
-                // OPTIMIZATION: Only create underscored key if needed (skip str_replace for simple names)
-                $underscoredKey          = (strpos($name, ':') !== false) ? '_'.str_replace(':', '__', $name) : '_'.$name;
+                // OPTIMIZATION: Only create underscored key if needed (skip str_replace for simple names).
+                if ((strpos($name, ':') !== false)) {
+                    $underscoredKey = '_'.str_replace(':', '__', $name);
+                } else {
+                    $underscoredKey = '_'.$name;
+                }
+
                 $result[$underscoredKey] = $value;
                 $attrBag[$name]          = $value;
             }
@@ -187,8 +199,8 @@ class ArchiMateImportService
             $result['_attributes'] = $attrBag;
         }
 
-        // OPTIMIZATION: Extract namespaced attributes (simplified processing)
-        foreach ($xml->getNameSpaces(true) as $prefix => $_) {
+        // OPTIMIZATION: Extract namespaced attributes (simplified processing).
+        foreach ($xml->getNameSpaces(true) as $prefix => $nsUri) {
             $nsAttributes = $xml->attributes($prefix, true);
             if (count($nsAttributes) > 0) {
                 foreach ($nsAttributes as $attrName => $attrValue) {
@@ -196,7 +208,7 @@ class ArchiMateImportService
                     $value          = (string) $attrValue;
                     $underscoredKey = '_'.$prefix.'__'.$name;
                     $result[$underscoredKey] = $value;
-                    if (!isset($result['_attributes'])) {
+                    if (isset($result['_attributes']) === false) {
                         $result['_attributes'] = [];
                     }
 
@@ -205,10 +217,10 @@ class ArchiMateImportService
             }
         }
 
-        // Extract children
+        // Extract children.
         $children = $xml->children();
         if (count($children) === 0) {
-            // Leaf node: always return array shape for compatibility
+            // Leaf node: always return array shape for compatibility.
             $text = trim((string) $xml);
             if ($text !== '') {
                 $result['_value'] = $text;
@@ -217,18 +229,18 @@ class ArchiMateImportService
             return $result;
         }
 
-        // OPTIMIZATION: Process child elements with faster array operations
+        // OPTIMIZATION: Process child elements with faster array operations.
         foreach ($children as $child) {
             $childName  = $child->getName();
-            $childValue = $this->xmlToArray($child);
+            $childValue = $this->xmlToArray(xml: $child);
 
-            // OPTIMIZATION: Use isset instead of array_key_exists (faster)
-            if (!isset($result[$childName])) {
+            // OPTIMIZATION: Use isset instead of array_key_exists (faster).
+            if (isset($result[$childName]) === false) {
                 $result[$childName] = $childValue;
             } else {
-                // OPTIMIZATION: Fast array conversion without expensive isAssoc check
-                if (!is_array($result[$childName]) || !isset($result[$childName][0])) {
-                    // Convert to indexed array if it's a single value or associative array
+                // OPTIMIZATION: Fast array conversion without expensive isAssoc check.
+                if (is_array($result[$childName]) === false || isset($result[$childName][0]) === false) {
+                    // Convert to indexed array if it's a single value or associative array.
                     $result[$childName] = [$result[$childName]];
                 }
 
@@ -236,7 +248,7 @@ class ArchiMateImportService
             }
         }
 
-        // Preserve text content when children exist
+        // Preserve text content when children exist.
         $text = trim((string) $xml);
         if ($text !== '') {
             $result['_text'] = $text;
@@ -246,14 +258,15 @@ class ArchiMateImportService
     }//end xmlToArray()
 
     /**
-     * Check if an array is associative (has string keys)
+     * Check if an array is associative (has string keys).
      *
-     * @param  array $array The array to check
+     * @param mixed $value The value to check.
+     *
      * @return bool True if associative, false if indexed
      */
     private function isAssoc(mixed $value): bool
     {
-        if (!is_array($value)) {
+        if (is_array($value) === false) {
             return false;
         }
 
@@ -271,6 +284,7 @@ class ArchiMateImportService
      * Expected performance: <1 minute for 8000 objects (vs current 13 minutes)
      *
      * @param  array $options Import options including file_path, fileName, etc.
+     *
      * @return array Import results with detailed status
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
@@ -278,47 +292,47 @@ class ArchiMateImportService
         $startTime   = microtime(true);
         $startMemory = memory_get_usage(true);
 
-        // DEBUG: Verify that the optimized import method is being called
+        // DEBUG: Verify that the optimized import method is being called.
         $this->logger->info('GEMMA IMPORT DEBUG: Starting optimized import', $options);
 
-        // Starting OPTIMIZED ArchiMate XML import
+        // Starting OPTIMIZED ArchiMate XML import.
         try {
-            // OPTIMIZATION: Cache all configuration once at start
+            // OPTIMIZATION: Cache all configuration once at start.
             $cacheStartTime = microtime(true);
             $this->initializeCache();
             $cacheTime = microtime(true) - $cacheStartTime;
 
-            // Cache initialization completed
-            // STEP 1: Parse XML to array (same as before)
+            // Cache initialization completed.
+            // STEP 1: Parse XML to array (same as before).
             $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
-            if (empty($filePath) || !file_exists($filePath)) {
+            if (empty($filePath) === true || file_exists($filePath) === false) {
                 throw new \InvalidArgumentException("File not found: {$filePath}");
             }
 
             $parseStartTime = microtime(true);
-            $xmlData        = $this->parseArchiMateXml($filePath);
+            $xmlData        = $this->parseArchiMateXml(filePath: $filePath);
             $parseTime      = microtime(true) - $parseStartTime;
 
-            // PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing
+            // PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing.
             $memoryCleanupTime = 0;
-            if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup']) {
+            if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] !== false) {
                 $memoryCleanupStartTime = microtime(true);
                 $this->cleanupMemory();
                 $memoryCleanupTime = microtime(true) - $memoryCleanupStartTime;
             }
 
-            // STEP 2: Extract model identifier
+            // STEP 2: Extract model identifier.
             $modelIdentifierStartTime = microtime(true);
-            $modelIdentifier          = $this->extractModelIdentifier($xmlData);
+            $modelIdentifier          = $this->extractModelIdentifier(xmlData: $xmlData);
             $modelIdentifierTime      = microtime(true) - $modelIdentifierStartTime;
 
-            // STEP 3: Parse ALL objects in one go (like CSV import)
+            // STEP 3: Parse ALL objects in one go (like CSV import).
             $transformStartTime = microtime(true);
-            $allObjects         = $this->transformArchiMateXmlToObjectsBatch($xmlData, $modelIdentifier);
+            $allObjects         = $this->transformArchiMateXmlToObjectsBatch(xmlData: $xmlData, modelIdentifier: $modelIdentifier);
             $transformTime      = microtime(true) - $transformStartTime;
 
-            // Parsed and transformed all objects
-            // STEP 4: Single saveObjects() call (like CSV import)
+            // Parsed and transformed all objects.
+            // STEP 4: Single saveObjects() call (like CSV import).
             $saveStartTime = microtime(true);
             $this->logger->info(
                     'GEMMA IMPORT DEBUG: About to save objects to database',
@@ -326,10 +340,10 @@ class ArchiMateImportService
                         'object_count' => count($allObjects),
                     ]
                     );
-            $savedObjects = $this->saveObjectsToDatabase($allObjects);
+            $savedObjects = $this->saveObjectsToDatabase(objects: $allObjects);
             $saveTime     = microtime(true) - $saveStartTime;
 
-            // Capture detailed save timing from internal tracking
+            // Capture detailed save timing from internal tracking.
             $saveBreakdown = $this->lastSaveTimingBreakdown;
 
             $totalTime      = microtime(true) - $startTime;
@@ -338,9 +352,9 @@ class ArchiMateImportService
             // Use statistics directly from saveObjects result (stored in lastSaveResult).
             // No need for custom calculation since ObjectService already provides accurate stats.
             $statistics     = $this->buildStatisticsFromSaveResult();
-            $detailedErrors = $this->extractDetailedErrors($statistics);
+            $detailedErrors = $this->extractDetailedErrors(statistics: $statistics);
 
-            // OPTIMIZED import completed successfully
+            // OPTIMIZED import completed successfully.
             return [
                 'success'             => true,
                 'file_info'           => [
@@ -401,77 +415,82 @@ class ArchiMateImportService
      * 5. Save objects using ObjectService::saveObjects
      *
      * @param  array $options Import options including file_path, fileName, etc.
+     *
      * @return array Import results with detailed status
      */
     public function importArchiMateFileFromPath(array $options=[]): array
     {
-        // Track start time and memory for performance metrics
+        // Track start time and memory for performance metrics.
         $startTime   = microtime(true);
         $startMemory = memory_get_usage(true);
 
-        // OPTIMIZATION: Cache configuration values once at the start
+        // OPTIMIZATION: Cache configuration values once at the start.
         $this->initializeCache();
 
-        // Starting ArchiMate XML import with model detection
+        // Starting ArchiMate XML import with model detection.
         try {
-            // STEP 1: Parse XML to array using the specialized import service
-            // This captures ALL possible XML values including attributes, text content, and nested elements
+            // STEP 1: Parse XML to array using the specialized import service.
+            // This captures ALL possible XML values including attributes, text content, and nested elements.
             $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
 
-            if (empty($filePath)) {
+            if (empty($filePath) === true) {
                 throw new \InvalidArgumentException('File path is required for import');
             }
 
-            if (!file_exists($filePath)) {
+            if (file_exists($filePath) === false) {
                 throw new \InvalidArgumentException("File not found: {$filePath}");
             }
 
             $this->logger->info('Step 1: Parsing XML to array for complete data capture', ['filePath' => $filePath]);
             $parseStartTime = microtime(true);
-            $xmlData        = $this->parseArchiMateXml($filePath);
+            $xmlData        = $this->parseArchiMateXml(filePath: $filePath);
             $parseTime      = microtime(true) - $parseStartTime;
 
-            // STEP 2: Extract model identifier and detect if model already exists
-            // This is critical for determining whether to create new or update existing model
+            // STEP 2: Extract model identifier and detect if model already exists.
+            // This is critical for determining whether to create new or update existing model.
             $this->logger->info('Step 2: Extracting model identifier and checking for existing model');
             $validationStartTime = microtime(true);
-            $modelIdentifier     = $this->extractModelIdentifier($xmlData);
-            $modelExists         = $this->checkIfModelExists($modelIdentifier);
+            $modelIdentifier     = $this->extractModelIdentifier(xmlData: $xmlData);
+            $modelExists         = $this->checkIfModelExists(modelIdentifier: $modelIdentifier);
             $validationTime      = microtime(true) - $validationStartTime;
 
-            // STEP 3: Normalize data structure for storage as JSON blob
-            // Store complete raw XML data for exact round-trip fidelity during export
+            // STEP 3: Normalize data structure for storage as JSON blob.
+            // Store complete raw XML data for exact round-trip fidelity during export.
             $this->logger->info('Step 3: Normalizing data structure for JSON blob storage');
-            $normalizedData = $this->normalizeArchiMateData($xmlData, $modelIdentifier);
+            $normalizedData = $this->normalizeArchiMateData(data: $xmlData, modelIdentifier: $modelIdentifier);
 
-            // STEP 4: Convert to OpenRegister objects with proper @self structure
-            // Each object must have @self with register, schema, and id for ObjectService::saveObjects
+            // STEP 4: Convert to OpenRegister objects with proper @self structure.
+            // Each object must have @self with register, schema, and id for ObjectService::saveObjects.
             $this->logger->info('Step 4: Converting to OpenRegister objects with @self structure');
             $convertStartTime = microtime(true);
-            $objects          = $this->convertToOpenRegisterObjects($normalizedData, $modelIdentifier);
+            $objects          = $this->convertToOpenRegisterObjects(normalizedData: $normalizedData, modelIdentifier: $modelIdentifier);
             $convertTime      = microtime(true) - $convertStartTime;
 
-            // STEP 5: Save objects using ObjectService::saveObjects
-            // This handles the actual database persistence with proper validation
+            // STEP 5: Save objects using ObjectService::saveObjects.
+            // This handles the actual database persistence with proper validation.
             $this->logger->info('Step 5: Saving objects to database using ObjectService::saveObjects');
-            $savedObjects = $this->saveObjectsToDatabase($objects);
+            $savedObjects = $this->saveObjectsToDatabase(objects: $objects);
 
-            // Calculate total time and memory usage
+            // Calculate total time and memory usage.
             $totalTime  = microtime(true) - $startTime;
             $endMemory  = memory_get_usage(true);
             $peakMemory = memory_get_peak_usage(true);
 
-            // Count objects by type for detailed statistics
-            $statistics = $this->calculateObjectStatistics($normalizedData, $savedObjects);
+            // Count objects by type for detailed statistics.
+            $statistics = $this->calculateObjectStatistics(normalizedData: $normalizedData, savedObjects: $savedObjects);
 
-            // Calculate performance metrics
-            $totalObjects   = $statistics['summary']['total_objects_created'] + $statistics['summary']['total_objects_updated'];
-            $itemsPerSecond = $totalObjects > 0 ? $totalObjects / $totalTime : 0;
+            // Calculate performance metrics.
+            $totalObjects = $statistics['summary']['total_objects_created'] + $statistics['summary']['total_objects_updated'];
+            if ($totalObjects > 0) {
+                $itemsPerSecond = $totalObjects / $totalTime;
+            } else {
+                $itemsPerSecond = 0;
+            }
 
-            // Extract detailed error information from statistics
-            $detailedErrors = $this->extractDetailedErrors($statistics);
+            // Extract detailed error information from statistics.
+            $detailedErrors = $this->extractDetailedErrors(statistics: $statistics);
 
-            // Prepare comprehensive result with detailed information
+            // Prepare comprehensive result with detailed information.
             $result = [
                 'success'             => true,
                 'file_info'           => [
@@ -539,7 +558,7 @@ class ArchiMateImportService
                 'message'     => 'Import failed: '.$e->getMessage(),
                 'error'       => $e->getMessage(),
                 'step_failed' => 'unknown',
-            // Will be refined with better error tracking
+            // Will be refined with better error tracking.
             ];
         }//end try
     }//end importArchiMateFileFromPath()
@@ -548,34 +567,35 @@ class ArchiMateImportService
      * Parse ArchiMate XML file to array using the import service
      *
      * @param  string $filePath Path to XML file
+     *
      * @return array Parsed XML data
      */
     private function parseArchiMateXml(string $filePath): array
     {
-        if (!file_exists($filePath)) {
+        if (file_exists($filePath) === false) {
             throw new \InvalidArgumentException("File not found: {$filePath}");
         }
 
-        // PERFORMANCE OPTIMIZATION: Use more efficient XML parsing
+        // PERFORMANCE OPTIMIZATION: Use more efficient XML parsing.
         $xmlContent = file_get_contents($filePath);
         if ($xmlContent === false) {
             throw new \RuntimeException("Failed to read file: {$filePath}");
         }
 
-        // PERFORMANCE OPTIMIZATION: Disable external entity loading for security and speed
+        // PERFORMANCE OPTIMIZATION: Disable external entity loading for security and speed.
         $previousValue = libxml_disable_entity_loader(true);
 
         try {
-            // PERFORMANCE OPTIMIZATION: Use LIBXML_NOCDATA for faster parsing
+            // PERFORMANCE OPTIMIZATION: Use LIBXML_NOCDATA for faster parsing.
             $xml    = new SimpleXMLElement($xmlContent, LIBXML_NOCDATA | LIBXML_NONET);
-            $result = $this->xmlToArray($xml);
+            $result = $this->xmlToArray(xml: $xml);
 
-            // PERFORMANCE OPTIMIZATION: Clear XML object from memory immediately
+            // PERFORMANCE OPTIMIZATION: Clear XML object from memory immediately.
             unset($xml);
 
             return $result;
         } finally {
-            // Restore previous entity loader setting
+            // Restore previous entity loader setting.
             libxml_disable_entity_loader($previousValue);
         }
     }//end parseArchiMateXml()
@@ -589,6 +609,7 @@ class ArchiMateImportService
      * 3. Fallback to generated identifier if none found
      *
      * @param  array $xmlData Parsed XML data array
+     *
      * @return string Model identifier for tracking and storage
      */
     private function extractModelIdentifier(array $xmlData): string
@@ -600,8 +621,8 @@ class ArchiMateImportService
                 ]
                 );
 
-        // STEP 1: Try to find identifier in root attributes (most common location)
-        if (isset($xmlData['_attributes']['identifier'])) {
+        // STEP 1: Try to find identifier in root attributes (most common location).
+        if (isset($xmlData['_attributes']['identifier']) === true) {
             $modelId = $xmlData['_attributes']['identifier'];
             $this->logger->info(
                     'Found model identifier in root attributes',
@@ -612,9 +633,9 @@ class ArchiMateImportService
             return $modelId;
         }
 
-        // STEP 2: Look for model element with identifier
-        if (isset($xmlData['model']) && is_array($xmlData['model'])) {
-            if (isset($xmlData['model']['_attributes']['identifier'])) {
+        // STEP 2: Look for model element with identifier.
+        if (isset($xmlData['model']) === true && is_array($xmlData['model']) === true) {
+            if (isset($xmlData['model']['_attributes']['identifier']) === true) {
                 $modelId = $xmlData['model']['_attributes']['identifier'];
                 $this->logger->info(
                         'Found model identifier in model element attributes',
@@ -626,9 +647,9 @@ class ArchiMateImportService
             }
         }
 
-        // STEP 3: Look for archimate:model namespace (ArchiMate Tool format)
-        if (isset($xmlData['archimate:model']) && is_array($xmlData['archimate:model'])) {
-            if (isset($xmlData['archimate:model']['_attributes']['identifier'])) {
+        // STEP 3: Look for archimate:model namespace (ArchiMate Tool format).
+        if (isset($xmlData['archimate:model']) === true && is_array($xmlData['archimate:model']) === true) {
+            if (isset($xmlData['archimate:model']['_attributes']['identifier']) === true) {
                 $modelId = $xmlData['archimate:model']['_attributes']['identifier'];
                 $this->logger->info(
                         'Found model identifier in archimate:model namespace',
@@ -640,7 +661,7 @@ class ArchiMateImportService
             }
         }
 
-        // STEP 4: Generate fallback identifier if none found
+        // STEP 4: Generate fallback identifier if none found.
         $fallbackId = 'model-'.uniqid().'-'.time();
         $this->logger->warning(
                 'No model identifier found, generating fallback',
@@ -656,6 +677,7 @@ class ArchiMateImportService
      * Check if a model already exists in the database
      *
      * @param  string $modelIdentifier The model identifier to check
+     *
      * @return bool True if model exists, false otherwise
      */
     private function checkIfModelExists(string $modelIdentifier): bool
@@ -668,18 +690,18 @@ class ArchiMateImportService
                 );
 
         try {
-            // Get ObjectService to query existing objects
+            // Get ObjectService to query existing objects.
             $objectService = $this->getObjectService();
-            if (!$objectService) {
+            if ($objectService === null) {
                 $this->logger->warning('ObjectService not available, assuming new model');
                 return false;
             }
 
-            // Get AMEF configuration for register and schema IDs
+            // Get AMEF configuration for register and schema IDs.
             $registerId = $this->getAmefRegisterId();
-            $schemaId   = $this->getAmefSchemaIdForType('model');
+            $schemaId   = $this->getAmefSchemaIdForType(archiMateType: 'model');
 
-            if (!$registerId || !$schemaId) {
+            if ($registerId === null || $schemaId === false) {
                 $this->logger->warning(
                         'AMEF register or model schema not configured, assuming new model',
                         [
@@ -690,8 +712,8 @@ class ArchiMateImportService
                 return false;
             }
 
-            // Query for existing model objects with this identifier
-            // Use searchObjects with @self structure for proper querying
+            // Query for existing model objects with this identifier.
+            // Use searchObjects with @self structure for proper querying.
             $query = [
                 '@self'        => [
                     'register' => $registerId,
@@ -702,7 +724,7 @@ class ArchiMateImportService
 
             $existingModels = $objectService->searchObjects($query);
 
-            $exists = !empty($existingModels);
+            $exists = empty($existingModels) === false;
 
             $this->logger->info(
                     'Model existence check completed',
@@ -724,7 +746,7 @@ class ArchiMateImportService
                         'error'            => $e->getMessage(),
                     ]
                     );
-            // If we can't check, assume new model to avoid data loss
+            // If we can't check, assume new model to avoid data loss.
             return false;
         }//end try
     }//end checkIfModelExists()
@@ -740,6 +762,7 @@ class ArchiMateImportService
      *
      * @param  array  $data            Raw parsed XML data from import service
      * @param  string $modelIdentifier The model identifier for linking items
+     *
      * @return array Normalized data structure ready for database storage
      */
     private function normalizeArchiMateData(array $data, string $modelIdentifier): array
@@ -751,25 +774,25 @@ class ArchiMateImportService
                 ]
                 );
 
-        // STEP 0: Extract propertyDefinition map and store in model metadata
-        $propertyDefinitionMap = $this->extractPropertyDefinitionMap($data);
+        // STEP 0: Extract propertyDefinition map and store in model metadata.
+        $propertyDefinitionMap = $this->extractPropertyDefinitionMap(data: $data);
 
-        // Log property mapping for debugging
-        if (!empty($propertyDefinitionMap)) {
+        // Log property mapping for debugging.
+        if (empty($propertyDefinitionMap) === false) {
             $this->logger->info(
                     'Property definitions extracted and mapped',
                     [
                         'total_properties' => count($propertyDefinitionMap),
-                        'property_mapping' => $this->getPropertyNameMapping($propertyDefinitionMap),
+                        'property_mapping' => $this->getPropertyNameMapping(propertyDefinitionMap: $propertyDefinitionMap),
                     ]
                     );
         }
 
-        // Initialize normalized structure with model metadata
+        // Initialize normalized structure with model metadata.
         $normalized = [
             'model_metadata'       => [],
             'model_identifier'     => $modelIdentifier,
-        // Add model identifier for linking
+        // Add model identifier for linking.
             'elements'             => [],
             'relationships'        => [],
             'organizations'        => [],
@@ -777,37 +800,37 @@ class ArchiMateImportService
             'property_definitions' => [],
         ];
 
-        // STEP 1: Extract and store model metadata
-        if (isset($data['_attributes'])) {
+        // STEP 1: Extract and store model metadata.
+        if (isset($data['_attributes']) === true) {
             $normalized['model_metadata'] = $data['_attributes'];
         }
 
-        // Also extract name and documentation from root level
-        if (isset($data['name'])) {
+        // Also extract name and documentation from root level.
+        if (isset($data['name']) === true) {
             $normalized['model_metadata']['name'] = $data['name'];
         }
 
-        if (isset($data['documentation'])) {
+        if (isset($data['documentation']) === true) {
             $normalized['model_metadata']['documentation'] = $data['documentation'];
         }
 
-        if (isset($data['properties'])) {
+        if (isset($data['properties']) === true) {
             $normalized['model_metadata']['properties'] = $data['properties'];
         }
 
-        // Store propertyDefinitionMap in model_metadata
+        // Store propertyDefinitionMap in model_metadata.
         $normalized['model_metadata']['propertyDefinitionMap'] = $propertyDefinitionMap;
 
         $this->logger->debug(
                 'Extracted model metadata',
                 [
                     'metadata_keys'     => array_keys($normalized['model_metadata']),
-                    'has_name'          => isset($normalized['model_metadata']['name']),
-                    'has_documentation' => isset($normalized['model_metadata']['documentation']),
+                    'has_name'          => isset($normalized['model_metadata']['name']) === true,
+                    'has_documentation' => isset($normalized['model_metadata']['documentation']) === true,
                 ]
                 );
 
-        // STEP 2: Process each section and store complete raw XML data
+        // STEP 2: Process each section and store complete raw XML data.
         $sections         = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
         $alternativeNames = [
             'views'                => ['views', 'diagrams'],
@@ -817,13 +840,13 @@ class ArchiMateImportService
         foreach ($sections as $section) {
             $sectionData       = null;
             $actualSectionName = null;
-            if (isset($data[$section])) {
+            if (isset($data[$section]) === true) {
                 $sectionData       = $data[$section];
                 $actualSectionName = $section;
             } else {
-                if (isset($alternativeNames[$section])) {
+                if (isset($alternativeNames[$section]) === true) {
                     foreach ($alternativeNames[$section] as $altName) {
-                        if (isset($data[$altName])) {
+                        if (isset($data[$altName]) === true) {
                             $sectionData       = $data[$altName];
                             $actualSectionName = $altName;
                             break;
@@ -843,10 +866,10 @@ class ArchiMateImportService
                         'model_identifier' => $modelIdentifier,
                         'name'             => 'Organizations',
                         'xml'              => $sectionData,
-                    // complete hierarchy preserved
+                    // complete hierarchy preserved.
                     ];
                 } else {
-                    $normalized[$section] = $this->extractSectionDataWithProperties($sectionData, $section, $modelIdentifier, $propertyDefinitionMap);
+                    $normalized[$section] = $this->extractSectionDataWithProperties(sectionData: $sectionData, sectionName: $section, modelIdentifier: $modelIdentifier, propertyDefinitionMap: $propertyDefinitionMap);
                 }
             }
         }//end foreach
@@ -869,99 +892,100 @@ class ArchiMateImportService
      * @param  string $sectionName           Name of the section being processed
      * @param  string $modelIdentifier       The model identifier for linking items
      * @param  array  $propertyDefinitionMap Map of propertyDefinitionRef => property name
+     *
      * @return array Extracted section data with complete XML preservation and flattened properties
      */
     private function extractSectionDataWithProperties(mixed $sectionData, string $sectionName, string $modelIdentifier, array $propertyDefinitionMap): array
     {
         $extracted = [];
-        if (is_array($sectionData)) {
-            $items = $this->findItemsInSection($sectionData, $sectionName);
+        if (is_array($sectionData) === true) {
+            $items = $this->findItemsInSection(sectionData: $sectionData, sectionName: $sectionName);
             foreach ($items as $item) {
-                $identifier = $this->extractIdentifier($item, $sectionName);
-                if ($identifier) {
-                    // OPTIMIZATION: Store XML data directly without expensive deep copy
-                    // Start with base object structure
+                $identifier = $this->extractIdentifier(item: $item, sectionName: $sectionName);
+                if (empty($identifier) === false) {
+                    // OPTIMIZATION: Store XML data directly without expensive deep copy.
+                    // Start with base object structure.
                     $object = [
                         'identifier'       => $identifier,
                         'section'          => $sectionName,
                         'model_identifier' => $modelIdentifier,
                         'extracted_at'     => time(),
-                        'xml'              => $this->extractEssentialXmlData($item),
-                    // OPTIMIZATION: Store only essential XML data
+                        'xml'              => $this->extractEssentialXmlData(item: $item),
+                    // OPTIMIZATION: Store only essential XML data.
                     ];
 
-                    // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent", "Referentiecomponent")
-                    // The xsi:type is stored as _xsi__type or in _attributes['xsi:type']
-                    if (isset($item['_xsi__type'])) {
+                    // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent", "Referentiecomponent").
+                    // The xsi:type is stored as _xsi__type or in _attributes['xsi:type'].
+                    if (isset($item['_xsi__type']) === true) {
                         $object['type'] = $item['_xsi__type'];
-                    } else if (isset($item['_attributes']['xsi:type'])) {
+                    } else if (isset($item['_attributes']['xsi:type']) === true) {
                         $object['type'] = $item['_attributes']['xsi:type'];
                     }
 
-                    // Extract name from XML if it exists
-                    if (isset($item['name'])) {
-                        if (is_array($item['name']) && isset($item['name']['_value'])) {
+                    // Extract name from XML if it exists.
+                    if (isset($item['name']) === true) {
+                        if (is_array($item['name']) === true && isset($item['name']['_value']) === true) {
                             $object['name'] = $item['name']['_value'];
-                        } else if (is_string($item['name'])) {
+                        } else if (is_string($item['name']) === true) {
                             $object['name'] = $item['name'];
                         }
                     }
 
-                    // Extract documentation from XML if it exists - set both summary and documentation
-                    if (isset($item['documentation'])) {
+                    // Extract documentation from XML if it exists - set both summary and documentation.
+                    if (isset($item['documentation']) === true) {
                         $docValue = null;
-                        if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
+                        if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
                             $docValue = $item['documentation']['_value'];
-                        } else if (is_string($item['documentation'])) {
+                        } else if (is_string($item['documentation']) === true) {
                             $docValue = $item['documentation'];
                         }
 
                         if ($docValue !== null) {
                             $object['summary']       = $docValue;
                             $object['documentation'] = $docValue;
-                            // Also set documentation field for schema compatibility
+                            // Also set documentation field for schema compatibility.
                         }
                     }
 
-                    // Flatten properties to root fields using the propertyDefinitionMap
-                    if (isset($item['properties']) && isset($item['properties']['property'])) {
+                    // Flatten properties to root fields using the propertyDefinitionMap.
+                    if (isset($item['properties']) === true && isset($item['properties']['property']) === true) {
                         $props = $item['properties']['property'];
                         $processedProperties = [];
-                        if (isset($props[0])) {
-                            // Multiple properties
+                        if (isset($props[0]) === true) {
+                            // Multiple properties.
                             foreach ($props as $prop) {
                                 $defRef = $prop['_attributes']['propertyDefinitionRef'] ?? null;
                                 $value  = $prop['value']['_value'] ?? $prop['value'] ?? null;
-                                if ($defRef && isset($propertyDefinitionMap[$defRef])) {
+                                if ($defRef !== false && isset($propertyDefinitionMap[$defRef]) === true) {
                                     $name          = $propertyDefinitionMap[$defRef];
-                                    $camelCaseName = $this->convertToCamelCase($name);
+                                    $camelCaseName = $this->convertToCamelCase(propertyName: $name);
                                     $object[$camelCaseName] = $value;
 
-                                    // Store property mapping for reference
-                                    if (!isset($object['_propertyMapping'])) {
+                                    // Store property mapping for reference.
+                                    if (isset($object['_propertyMapping']) === false) {
                                         $object['_propertyMapping'] = [];
                                     }
 
                                     $object['_propertyMapping'][$camelCaseName] = $name;
 
-                                    // If this property is 'Object ID', set slug for later use
+                                    // If this property is 'Object ID', set slug for later use.
                                     if (strtolower($name) === 'object id') {
                                         $object['_slug'] = $value;
-                                        // Store temporarily, will be moved to @self.slug later
+                                        // Store temporarily, will be moved to @self.slug later.
                                     }
                                 }
                             }//end foreach
-                        } else if (isset($props['_attributes']['propertyDefinitionRef'])) {
-                            // Single property
+                        } else if (isset($props['_attributes']['propertyDefinitionRef']) === true) {
+                            // Single property.
                             $defRef = $props['_attributes']['propertyDefinitionRef'];
                             $value  = $props['value']['_value'] ?? $props['value'] ?? null;
-                            if ($defRef && isset($propertyDefinitionMap[$defRef])) {
+                            if ($defRef !== false && isset($propertyDefinitionMap[$defRef]) === true) {
                                 $name          = $propertyDefinitionMap[$defRef];
-                                $camelCaseName = $this->convertToCamelCase($name);
+                                $camelCaseName = $this->convertToCamelCase(propertyName: $name);
                                 $object[$camelCaseName] = $value;
 
-                                // Store property mapping for reference
-                                if (!isset($object['_propertyMapping'])) {
+                                // Store property mapping for reference.
+                                if (isset($object['_propertyMapping']) === false) {
                                     $object['_propertyMapping'] = [];
                                 }
 
@@ -975,7 +999,7 @@ class ArchiMateImportService
 
                                 if (strtolower($name) === 'object id') {
                                     $object['_slug'] = $value;
-                                    // Store temporarily, will be moved to @self.slug later
+                                    // Store temporarily, will be moved to @self.slug later.
                                 }
                             }//end if
                         }//end if
@@ -1000,6 +1024,7 @@ class ArchiMateImportService
      *
      * @param  array  $normalizedData  Normalized ArchiMate data with model_identifier
      * @param  string $modelIdentifier The model identifier for linking objects
+     *
      * @return array Array of OpenRegister objects with proper @self structure
      */
     private function convertToOpenRegisterObjects(array $normalizedData, string $modelIdentifier): array
@@ -1013,29 +1038,29 @@ class ArchiMateImportService
 
         $objects = [];
 
-        // STEP 1: Convert model metadata to model object
-        if (!empty($normalizedData['model_metadata'])) {
+        // STEP 1: Convert model metadata to model object.
+        if (empty($normalizedData['model_metadata']) === false) {
             $this->logger->debug('Creating model object from metadata');
-            $objects[] = $this->createModelObject($normalizedData['model_metadata'], $modelIdentifier);
+            $objects[] = $this->createModelObject(metadata: $normalizedData['model_metadata'], modelIdentifier: $modelIdentifier);
         }
 
-        // STEP 2: Convert each section to individual objects
+        // STEP 2: Convert each section to individual objects.
         $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
 
-        // OPTIMIZATION: Removed excessive debug logging from tight loops
+        // OPTIMIZATION: Removed excessive debug logging from tight loops.
         $sectionCounts = [];
         foreach ($sections as $section) {
-            if (!empty($normalizedData[$section]) && is_array($normalizedData[$section])) {
+            if (empty($normalizedData[$section]) === false && is_array($normalizedData[$section]) === true) {
                 $sectionCounts[$section] = count($normalizedData[$section]);
                 foreach ($normalizedData[$section] as $identifier => $data) {
-                    $objects[] = $this->createSectionObject($section, $identifier, $data, $modelIdentifier);
+                    $objects[] = $this->createSectionObject(section: $section, identifier: $identifier, data: $data, modelIdentifier: $modelIdentifier);
                 }
             } else {
                 $sectionCounts[$section] = 0;
             }
         }
 
-        // Single consolidated log entry
+        // Single consolidated log entry.
         $this->logger->debug('Sections processed', $sectionCounts);
 
         $this->logger->info(
@@ -1055,43 +1080,44 @@ class ArchiMateImportService
      *
      * @param  array  $metadata        Model metadata
      * @param  string $modelIdentifier Model identifier
+     *
      * @return array Model object with @self structure
      */
     private function createModelObject(array $metadata, string $modelIdentifier): array
     {
-        // OPTIMIZATION: Use cached configuration values
+        // OPTIMIZATION: Use cached configuration values.
         $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
         $schemaId   = $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException("Schema ID for 'model' not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
 
-        // Extract a plain string name (schema column expects string, not array)
+        // Extract a plain string name (schema column expects string, not array).
         $nameString = null;
-        if (isset($metadata['name'])) {
-            if (is_array($metadata['name']) && isset($metadata['name']['_value'])) {
+        if (isset($metadata['name']) === true) {
+            if (is_array($metadata['name']) === true && isset($metadata['name']['_value']) === true) {
                 $nameString = (string) $metadata['name']['_value'];
-            } else if (is_string($metadata['name'])) {
+            } else if (is_string($metadata['name']) === true) {
                 $nameString = $metadata['name'];
             }
         }
 
-        // Build xml field preserving full array structure for round-trip fidelity
+        // Build xml field preserving full array structure for round-trip fidelity.
         $xmlData = [];
-        if (isset($metadata['name'])) {
+        if (isset($metadata['name']) === true) {
             $xmlData['name'] = $metadata['name'];
         }
 
-        if (isset($metadata['documentation'])) {
+        if (isset($metadata['documentation']) === true) {
             $xmlData['documentation'] = $metadata['documentation'];
         }
 
-        if (isset($metadata['properties'])) {
+        if (isset($metadata['properties']) === true) {
             $xmlData['properties'] = $metadata['properties'];
         }
 
-        if (isset($metadata['propertyDefinitionMap'])) {
+        if (isset($metadata['propertyDefinitionMap']) === true) {
             $xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
         }
 
-        // Create object with @self structure and metadata at root level (no JSON serialization)
+        // Create object with @self structure and metadata at root level (no JSON serialization).
         $object = [
             '@self'            => [
                 'register'     => $registerId,
@@ -1107,7 +1133,7 @@ class ArchiMateImportService
             'xml'              => $xmlData,
         ];
 
-        // Merge metadata directly at root level, but override name with string version
+        // Merge metadata directly at root level, but override name with string version.
         $merged = array_merge($object, $metadata);
         if ($nameString !== null) {
             $merged['name'] = $nameString;
@@ -1123,66 +1149,67 @@ class ArchiMateImportService
      * @param  string $identifier      Item identifier
      * @param  array  $data            Item data (already contains XML data at root level)
      * @param  string $modelIdentifier Model identifier for linking
+     *
      * @return array Section object with @self structure
      */
     private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
     {
-        // OPTIMIZATION: Use cached configuration values
+        // OPTIMIZATION: Use cached configuration values.
         $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
-        $schemaId   = $this->cachedConfig['schemaIds'][$section] ?? $this->getSchemaIdForSection($section);
+        $schemaId   = $this->cachedConfig['schemaIds'][$section] ?? $this->getSchemaIdForSection(section: $section);
 
-        // FIXED: Use objectId as main ID and AMEF identifier as slug
+        // FIXED: Use objectId as main ID and AMEF identifier as slug.
         $objectId = null;
         $slug     = null;
 
-        // Priority 1: Check for objectId property (flattened from "Object ID")
-        if (isset($data['objectId'])) {
+        // Priority 1: Check for objectId property (flattened from "Object ID").
+        if (isset($data['objectId']) === true) {
             $objectId = $data['objectId'];
             $slug     = $identifier;
-            // Use AMEF identifier as slug
+            // Use AMEF identifier as slug.
         }
-        // Priority 2: Check for temporary _slug field (legacy support)
-        else if (isset($data['_slug'])) {
+        // Priority 2: Check for temporary _slug field (legacy support).
+        else if (isset($data['_slug']) === true) {
             $objectId = $data['_slug'];
             $slug     = $identifier;
-            // Use AMEF identifier as slug
+            // Use AMEF identifier as slug.
             unset($data['_slug']);
-            // Remove the temporary field
+            // Remove the temporary field.
         }
-        // Priority 3: Check for direct "Object ID" property
-        else if (isset($data['Object ID'])) {
+        // Priority 3: Check for direct "Object ID" property.
+        else if (isset($data['Object ID']) === true) {
             $objectId = $data['Object ID'];
             $slug     = $identifier;
-            // Use AMEF identifier as slug
+            // Use AMEF identifier as slug.
         }
-        // Fallback: Use AMEF identifier as both ID and extract clean UUID for slug
+        // Fallback: Use AMEF identifier as both ID and extract clean UUID for slug.
         else {
             $objectId = $identifier;
-            // Extract clean UUID from AMEF identifier (remove "id-" prefix if present)
-            if ($identifier && str_starts_with($identifier, 'id-')) {
+            // Extract clean UUID from AMEF identifier (remove "id-" prefix if present).
+            if ($identifier !== false && str_starts_with($identifier, 'id-') === true) {
                 $slug = substr($identifier, 3);
-                // Remove "id-" prefix
+                // Remove "id-" prefix.
             } else {
                 $slug = $identifier;
             }
         }
 
-        // Create object with @self structure using correct ID and slug
+        // Create object with @self structure using correct ID and slug.
         $object = [
             '@self' => [
                 'register'     => $registerId,
                 'schema'       => $schemaId,
                 'id'           => $objectId,
-        // Now using objectId as main ID
+        // Now using objectId as main ID.
                 'slug'         => $slug,
-        // Now using AMEF identifier as slug
+        // Now using AMEF identifier as slug.
                 'owner'        => $this->getCurrentUserId(),
                 'organisation' => $this->getCurrentOrganisation(),
                 'published'    => date('Y-m-d\TH:i:s\Z'),
             ],
         ];
 
-        // Merge XML data directly at root level (data already contains identifier, section, model_identifier)
+        // Merge XML data directly at root level (data already contains identifier, section, model_identifier).
         return array_merge($object, $data);
     }//end createSectionObject()
 
@@ -1190,16 +1217,21 @@ class ArchiMateImportService
      * Save objects to database using ObjectService::saveObjects
      *
      * @param  array $objects Objects to save
+     *
      * @return array Saved objects
      */
     private function saveObjectsToDatabase(array $objects): array
     {
         $saveStartTime = microtime(true);
 
-        // DEBUG: Log basic object info before sending to ObjectService
-        // Find first element with gemmaType for debugging
-        $elementsWithGemmaType      = array_filter($objects, fn($o) => ($o['section'] ?? '') === 'element' && !empty($o['gemmaType']));
-        $sampleElementWithGemmaType = !empty($elementsWithGemmaType) ? array_values($elementsWithGemmaType)[0] : null;
+        // DEBUG: Log basic object info before sending to ObjectService.
+        // Find first element with gemmaType for debugging.
+        $elementsWithGemmaType = array_filter($objects, fn($o) => ($o['section'] ?? '') === 'element' && empty($o['gemmaType']) === false);
+        if (empty($elementsWithGemmaType) === false) {
+            $sampleElementWithGemmaType = array_values($elementsWithGemmaType)[0];
+        } else {
+            $sampleElementWithGemmaType = null;
+        }
 
         $this->logger->debug(
                 'Objects before save',
@@ -1211,26 +1243,26 @@ class ArchiMateImportService
 
         $serviceInitStartTime = microtime(true);
         $objectService        = $this->getObjectService();
-        if (!$objectService) {
+        if ($objectService === null) {
             throw new \RuntimeException('ObjectService not available');
         }
 
         $serviceInitTime = microtime(true) - $serviceInitStartTime;
 
-        // ENHANCEMENT: Process GEMMA Referentiecomponent-Standaard relationships before saving
+        // ENHANCEMENT: Process GEMMA Referentiecomponent-Standaard relationships before saving.
         $gemmaProcessingStartTime = microtime(true);
-        $objects = $this->processGemmaReferenceComponentStandards($objects);
+        $objects = $this->processGemmaReferenceComponentStandards(objects: $objects);
         $gemmaProcessingTime = microtime(true) - $gemmaProcessingStartTime;
 
-        // Saving objects to database
-        // OPTIMIZATION: Use cached register ID
+        // Saving objects to database.
+        // OPTIMIZATION: Use cached register ID.
         $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized.");
 
         // MAGIC MAPPING SUPPORT: Group objects by schema first, then save each schema group.
         // This ensures each batch has a single schema so UnifiedObjectMapper can route to the correct magic table.
         $batchProcessingStartTime = microtime(true);
 
-        // Group objects by schema
+        // Group objects by schema.
         $schemaGroups = [];
         foreach ($objects as $obj) {
             $schemaId = $obj['@self']['schema'] ?? 'unknown';
@@ -1253,19 +1285,25 @@ class ArchiMateImportService
             'unchanged' => [],
             'invalid'   => [],
         ];
-        // Track counts per schema for accurate statistics (serialized objects lose the 'section' field)
+        // Track counts per schema for accurate statistics (serialized objects lose the 'section' field).
         $countsBySchema = [];
 
         foreach ($schemaGroups as $schemaId => $schemaObjects) {
             $schemaObjectCount = count($schemaObjects);
 
             try {
-                // Save this schema group with the specific schema ID
-                // PERFORMANCE: Disabled validation and events for bulk import (like CSV import pattern)
+                // Save this schema group with the specific schema ID.
+                // PERFORMANCE: Disabled validation and events for bulk import (like CSV import pattern).
+                if ($schemaId !== 'unknown') {
+                    $schemaValue = (int) $schemaId;
+                } else {
+                    $schemaValue = null;
+                }
+
                 $saveResult = $objectService->saveObjects(
                     objects: $schemaObjects,
                     register: $registerId,
-                    schema: $schemaId !== 'unknown' ? (int) $schemaId : null,
+                    schema: $schemaValue,
                     _rbac: false,
                     _multitenancy: false,
                     validation: false,
@@ -1278,7 +1316,7 @@ class ArchiMateImportService
                 $aggregatedStats['unchanged'] = array_merge($aggregatedStats['unchanged'], $saveResult['unchanged'] ?? []);
                 $aggregatedStats['invalid']   = array_merge($aggregatedStats['invalid'], $saveResult['invalid'] ?? []);
 
-                // Track per-schema counts for statistics (since serialized objects lose 'section')
+                // Track per-schema counts for statistics (since serialized objects lose 'section').
                 $countsBySchema[$schemaId] = [
                     'saved'     => count($saveResult['saved'] ?? []),
                     'updated'   => count($saveResult['updated'] ?? []),
@@ -1309,30 +1347,36 @@ class ArchiMateImportService
             }//end try
         }//end foreach
 
-        // Store aggregated result for statistics, including per-schema counts
+        // Store aggregated result for statistics, including per-schema counts.
         $aggregatedStats['countsBySchema'] = $countsBySchema;
         $this->lastSaveResult = $aggregatedStats;
         $result = $allResults;
 
         $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
 
-        // POST-PROCESSING: Fix StandaardVersie standaard field UUIDs
-        // The standaard field was set with ArchiMate identifiers, but we need database UUIDs
+        // POST-PROCESSING: Fix StandaardVersie standaard field UUIDs.
+        // The standaard field was set with ArchiMate identifiers, but we need database UUIDs.
         // for the inversedBy lookup to work correctly.
-        $this->fixStandaardVersieUuids($registerId);
+        $this->fixStandaardVersieUuids(registerId: $registerId);
 
         $totalSaveTime = microtime(true) - $saveStartTime;
 
-        // Database save completed
-        // Store timing breakdown for performance metrics
-        // FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations
+        // Database save completed.
+        // Store timing breakdown for performance metrics.
+        // FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations.
         $totalSavedCount = count($aggregatedStats['saved'] ?? []) + count($aggregatedStats['updated'] ?? []) + count($aggregatedStats['unchanged'] ?? []);
+        if ($totalSavedCount > 0) {
+            $objectsSavedValue = $totalSavedCount;
+        } else {
+            $objectsSavedValue = count($objects);
+        }
+
         $this->lastSaveTimingBreakdown = [
             'total_save_seconds'           => round($totalSaveTime, 3),
             'service_init_seconds'         => round($serviceInitTime, 3),
             'gemma_processing_seconds'     => round($gemmaProcessingTime, 3),
             'batch_processing_seconds'     => round($batchProcessingTime, 3),
-            'objects_saved'                => $totalSavedCount > 0 ? $totalSavedCount : count($objects),
+            'objects_saved'                => $objectsSavedValue,
             'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1),
         ];
 
@@ -1348,6 +1392,7 @@ class ArchiMateImportService
      * 2. Updates StandaardVersie objects to use the correct database UUIDs
      *
      * @param  int $registerId The register ID
+     *
      * @return void
      */
     private function fixStandaardVersieUuids(int $registerId): void
@@ -1359,23 +1404,23 @@ class ArchiMateImportService
                 return;
             }
 
-            // Get database connection
+            // Get database connection.
             $connection = \OC::$server->getDatabaseConnection();
             $tableName  = 'oc_openregister_table_'.$registerId.'_'.$elementSchemaId;
 
-            // Step 1: Build a mapping from ArchiMate identifier to database UUID for Standaarden
-            // The identifier field contains "id-{archimate_id}" and we need the _uuid field
+            // Step 1: Build a mapping from ArchiMate identifier to database UUID for Standaarden.
+            // The identifier field contains "id-{archimate_id}" and we need the _uuid field.
             $standaardQuery = $connection->executeQuery(
                 "SELECT _uuid, identifier FROM {$tableName} WHERE gemma_type = 'Standaard' AND identifier IS NOT NULL"
             );
 
             $identifierToUuid = [];
-            while ($row = $standaardQuery->fetch()) {
+            while (($row = $standaardQuery->fetch()) !== false) {
                 $identifier = $row['identifier'] ?? '';
                 $uuid       = $row['_uuid'] ?? '';
 
-                if ($identifier && $uuid) {
-                    // Store mapping without "id-" prefix for matching
+                if ($identifier !== false && $uuid === true) {
+                    // Store mapping without "id-" prefix for matching.
                     $cleanId = str_replace('id-', '', $identifier);
                     $identifierToUuid[$cleanId] = $uuid;
                 }
@@ -1388,17 +1433,17 @@ class ArchiMateImportService
                     ]
                     );
 
-            if (empty($identifierToUuid)) {
+            if (empty($identifierToUuid) === true) {
                 $this->logger->warning('fixStandaardVersieUuids: No Standaarden found to map');
                 return;
             }
 
-            // Step 2: Update StandaardVersies that have a standaard field with ArchiMate identifiers
-            // We need to replace ArchiMate IDs with database UUIDs
+            // Step 2: Update StandaardVersies that have a standaard field with ArchiMate identifiers.
+            // We need to replace ArchiMate IDs with database UUIDs.
             $updateCount = 0;
 
             foreach ($identifierToUuid as $archiMateId => $dbUuid) {
-                // Update all StandaardVersies where standaard matches this ArchiMate ID
+                // Update all StandaardVersies where standaard matches this ArchiMate ID.
                 $result       = $connection->executeStatement(
                     "UPDATE {$tableName} SET standaard = ? WHERE standaard = ? AND gemma_type = 'Standaardversie'",
                     [$dbUuid, $archiMateId]
@@ -1431,6 +1476,7 @@ class ArchiMateImportService
      * @param  array         $objects       Array of objects to save
      * @param  ObjectService $objectService ObjectService instance
      * @param  int           $registerId    Register ID
+     *
      * @return array Array of saved objects
      */
     private function saveObjectsDirectToService(array $objects, ObjectService $objectService, int $registerId): array
@@ -1452,7 +1498,7 @@ class ArchiMateImportService
                     ]
                     );
 
-            // Save each schema group separately
+            // Save each schema group separately.
             $allSaved     = [];
             $allUpdated   = [];
             $allUnchanged = [];
@@ -1460,17 +1506,23 @@ class ArchiMateImportService
             $allInvalid   = [];
 
             foreach ($schemaGroups as $schemaId => $schemaObjects) {
+                if ($schemaId !== 'unknown') {
+                    $schemaValue = (int) $schemaId;
+                } else {
+                    $schemaValue = null;
+                }
+
                 $saveResult = $objectService->saveObjects(
                     objects: $schemaObjects,
                     register: $registerId,
-                    schema: $schemaId !== 'unknown' ? (int) $schemaId : null,
+                    schema: $schemaValue,
                     _rbac: true,
                     _multitenancy: true,
                     validation: true,
                     events: true
                 );
 
-                // Merge results
+                // Merge results.
                 $allSaved     = array_merge($allSaved, $saveResult['saved'] ?? []);
                 $allUpdated   = array_merge($allUpdated, $saveResult['updated'] ?? []);
                 $allUnchanged = array_merge($allUnchanged, $saveResult['unchanged'] ?? []);
@@ -1488,7 +1540,7 @@ class ArchiMateImportService
                         );
             }//end foreach
 
-            // Combine all results
+            // Combine all results.
             $saveResult = [
                 'saved'     => $allSaved,
                 'updated'   => $allUpdated,
@@ -1497,10 +1549,10 @@ class ArchiMateImportService
                 'invalid'   => $allInvalid,
             ];
 
-            // Store result for statistics
+            // Store result for statistics.
             $this->lastSaveResult = $saveResult;
 
-            // DEBUG: Log ObjectService save result
+            // DEBUG: Log ObjectService save result.
             $this->logger->info(
                     'ObjectService save result DEBUG',
                     [
@@ -1513,7 +1565,7 @@ class ArchiMateImportService
                     ]
                     );
 
-            // Return combined saved and updated objects
+            // Return combined saved and updated objects.
             return array_merge($allSaved, $allUpdated, $allUnchanged);
         } catch (\Exception $e) {
             $this->logger->error(
@@ -1533,6 +1585,7 @@ class ArchiMateImportService
      * @param  array         $objects       Array of objects to save
      * @param  ObjectService $objectService ObjectService instance
      * @param  int           $registerId    Register ID
+     *
      * @return array Array of saved objects
      */
     private function saveObjectsInParallelBatches(array $objects, ObjectService $objectService, int $registerId): array
@@ -1540,15 +1593,15 @@ class ArchiMateImportService
         $batchSize       = self::PERFORMANCE_OPTIMIZATIONS['batch_size'];
         $parallelBatches = self::PERFORMANCE_OPTIMIZATIONS['parallel_batches'];
 
-        // INTELLIGENT BATCH SIZING: Create size-aware batches instead of fixed-size chunks
-        $chunks      = $this->createIntelligentBatches($objects);
+        // INTELLIGENT BATCH SIZING: Create size-aware batches instead of fixed-size chunks.
+        $chunks      = $this->createIntelligentBatches(objects: $objects);
         $totalChunks = count($chunks);
 
-        // Batch processing initialized
+        // Batch processing initialized.
         $allResults      = [];
         $processedChunks = 0;
 
-        // Accumulate statistics from all chunks (using new format)
+        // Accumulate statistics from all chunks (using new format).
         $aggregatedStats = [
             'saved'     => [],
             'updated'   => [],
@@ -1556,25 +1609,31 @@ class ArchiMateImportService
             'invalid'   => [],
         ];
 
-        // Process chunks sequentially but with larger batch sizes for better performance
+        // Process chunks sequentially but with larger batch sizes for better performance.
         foreach ($chunks as $chunkIndex => $chunk) {
             $chunkInputCount = count($chunk);
 
             try {
+                if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac']) {
+                    $_rbacValue = false;
+                } else {
+                    $_rbacValue = true;
+                }
+
                 $saveResult = $objectService->saveObjects(
                     objects: $chunk,
                     register: $registerId,
                     schema: null,
-                    _rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
+                    _rbac: $_rbacValue,
                     _multitenancy: true,
                     validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
                     events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
                 );
 
-                // Calculate totals received back from this chunk
+                // Calculate totals received back from this chunk.
                 $chunkTotalReceived = count($saveResult['saved'] ?? []) + count($saveResult['updated'] ?? []) + count($saveResult['unchanged'] ?? []) + count($saveResult['invalid'] ?? []);
 
-                // Accumulate statistics from this chunk
+                // Accumulate statistics from this chunk.
                 $aggregatedStats['saved']     = array_merge($aggregatedStats['saved'], $saveResult['saved'] ?? []);
                 $aggregatedStats['updated']   = array_merge($aggregatedStats['updated'], $saveResult['updated'] ?? []);
                 $aggregatedStats['unchanged'] = array_merge($aggregatedStats['unchanged'], $saveResult['unchanged'] ?? []);
@@ -1596,23 +1655,23 @@ class ArchiMateImportService
                             'error'       => $e->getMessage(),
                         ]
                         );
-                // Continue with other chunks
+                // Continue with other chunks.
             }//end try
 
-            // Memory cleanup between chunks
-            if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup']) {
+            // Memory cleanup between chunks.
+            if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] !== false) {
                 $this->cleanupMemory();
             }
         }//end foreach
 
-        // Store the aggregated result for statistics calculation
+        // Store the aggregated result for statistics calculation.
         $this->lastSaveResult = $aggregatedStats;
 
         $totalObjectsProcessed = count($aggregatedStats['saved']) + count($aggregatedStats['updated']) + count($aggregatedStats['unchanged']) + count($aggregatedStats['invalid']);
 
-        // Batch processing completed
-        // Log critical discrepancy if found
-        if (count($objects) != $totalObjectsProcessed) {
+        // Batch processing completed.
+        // Log critical discrepancy if found.
+        if (count($objects) !== $totalObjectsProcessed) {
             $this->logger->critical(
                     'OBJECT COUNT MISMATCH DETECTED',
                     [
@@ -1633,34 +1692,41 @@ class ArchiMateImportService
      * @param  array         $objects       Array of objects to save
      * @param  ObjectService $objectService ObjectService instance
      * @param  int           $registerId    Register ID
+     *
      * @return array Array of saved objects
      */
     private function saveObjectsInSingleBatch(array $objects, ObjectService $objectService, int $registerId): array
     {
-        // Using single batch processing
+        // Using single batch processing.
+        if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac']) {
+            $_rbacValue = false;
+        } else {
+            $_rbacValue = true;
+        }
+
         $saveResult = $objectService->saveObjects(
             objects: $objects,
             register: $registerId,
             schema: null,
-            _rbac: self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] ? false : true,
+            _rbac: $_rbacValue,
             _multitenancy: true,
             validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
             events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
         );
 
-        // Store the save result for later access to statistics
+        // Store the save result for later access to statistics.
         $this->lastSaveResult = $saveResult;
 
-        // Extract saved objects from the new structured return format
+        // Extract saved objects from the new structured return format.
         $savedObjects = array_merge(
             $saveResult['saved'] ?? [],
             $saveResult['updated'] ?? []
         );
 
-        // Objects saved successfully
-        // Validation errors logged if any
-        // Unchanged objects noted if any
-        // Return the combined saved and updated objects (maintaining backward compatibility)
+        // Objects saved successfully.
+        // Validation errors logged if any.
+        // Unchanged objects noted if any.
+        // Return the combined saved and updated objects (maintaining backward compatibility).
         return $savedObjects;
     }//end saveObjectsInSingleBatch()
 
@@ -1671,7 +1737,7 @@ class ArchiMateImportService
      */
     private function getObjectService(): ?ObjectService
     {
-        if (!$this->appManager->isInstalled('openregister')) {
+        if ($this->appManage === falser->isInstalled('openregister')) {
             return null;
         }
 
@@ -1697,7 +1763,7 @@ class ArchiMateImportService
     {
         if ($this->cachedConfig !== null) {
             return;
-            // Already cached
+            // Already cached.
         }
 
         $this->cachedConfig = [
@@ -1705,13 +1771,13 @@ class ArchiMateImportService
             'organisation' => 'default',
             'registerId'   => $this->getAmefRegisterId(),
             'schemaIds'    => [
-                'model'               => $this->getAmefSchemaIdForType('model'),
-                'element'             => $this->getAmefSchemaIdForType('element'),
-                'relationship'        => $this->getAmefSchemaIdForType('relationship'),
-                'view'                => $this->getAmefSchemaIdForType('view'),
-                'organization'        => $this->getAmefSchemaIdForType('organization'),
-                'property_definition' => $this->getAmefSchemaIdForType('property_definition'),
-                // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements
+                'model'               => $this->getAmefSchemaIdForType(archiMateType: 'model'),
+                'element'             => $this->getAmefSchemaIdForType(archiMateType: 'element'),
+                'relationship'        => $this->getAmefSchemaIdForType(archiMateType: 'relationship'),
+                'view'                => $this->getAmefSchemaIdForType(archiMateType: 'view'),
+                'organization'        => $this->getAmefSchemaIdForType(archiMateType: 'organization'),
+                'property_definition' => $this->getAmefSchemaIdForType(archiMateType: 'property_definition'),
+                // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements.
             ],
         ];
     }//end initializeCache()
@@ -1720,11 +1786,12 @@ class ArchiMateImportService
      * Log current memory usage for performance monitoring
      *
      * @param  string $stage Description of the current processing stage
+     *
      * @return void
      */
     private function logMemoryUsage(string $stage): void
     {
-        // Check if debug logging is available (Nextcloud logger doesn't have isDebug method)
+        // Check if debug logging is available (Nextcloud logger doesn't have isDebug method).
         $memoryUsage = memory_get_usage(true);
         $memoryPeak  = memory_get_peak_usage(true);
         $memoryLimit = ini_get('memory_limit');
@@ -1746,9 +1813,9 @@ class ArchiMateImportService
      */
     private function cleanupMemory(): void
     {
-        if (function_exists('gc_collect_cycles')) {
+        if (function_exists('gc_collect_cycles') === true) {
             $cycles = gc_collect_cycles();
-            // Use PSR-3 standard logging instead of isDebug() check
+            // Use PSR-3 standard logging instead of isDebug() check.
             $this->logger->debug(
                     'Garbage collection completed',
                     [
@@ -1785,7 +1852,7 @@ class ArchiMateImportService
         } catch (\Exception $e) {
             $this->logger->error('Failed to get default organisation: '.$e->getMessage());
             $this->logger->error('Exception trace: '.$e->getTraceAsString());
-            // Fallback to cached value or 'default' string
+            // Fallback to cached value or 'default' string.
             return $this->cachedConfig['organisation'] ?? 'default';
         }
     }//end getCurrentOrganisation()
@@ -1800,12 +1867,12 @@ class ArchiMateImportService
         $this->logger->info('Getting AMEF configuration');
 
         try {
-            // Get configuration from app config using the correct method
+            // Get configuration from app config using the correct method.
             $config  = $this->config->getValueString('softwarecatalog', 'amef_config', '{}');
             $decoded = json_decode($config, true);
 
-            if (!is_array($decoded)) {
-                // Fallback to individual config values for backward compatibility
+            if (is_array($decoded) === false) {
+                // Fallback to individual config values for backward compatibility.
                 $decoded = [
                     'register_id'                 => $this->config->getValueString('softwarecatalog', 'amef_register', ''),
                     'model_schema_id'             => $this->config->getValueString('softwarecatalog', 'amef_model_schema', ''),
@@ -1841,21 +1908,29 @@ class ArchiMateImportService
      */
     private function getAmefRegisterId(): ?int
     {
-        // Retrieve AMEF configuration
+        // Retrieve AMEF configuration.
         $amefConfig = $this->getAmefConfig();
 
-        // Try JSON config keys first: support both 'register_id' and 'register'
+        // Try JSON config keys first: support both 'register_id' and 'register'.
         $rawRegisterId = $amefConfig['register_id'] ?? $amefConfig['register'] ?? null;
 
-        // Fallback to legacy individual app config keys if not present in JSON
+        // Fallback to legacy individual app config keys if not present in JSON.
         if ($rawRegisterId === null || $rawRegisterId === '') {
-            $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '') ?: $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
+            if ($this->config->getValueString('softwarecatalog', 'amef_register', '')) {
+                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '');
+            } else {
+                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
+            }
         }
 
-        // Validate and normalize to positive int
-        if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string) $rawRegisterId)) {
+        // Validate and normalize to positive int.
+        if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string) $rawRegisterId) === true) {
             $registerId = (int) $rawRegisterId;
-            return $registerId > 0 ? $registerId : null;
+            if ($registerId > 0) {
+                return $registerId;
+            } else {
+                return null;
+            }
         }
 
         return null;
@@ -1868,27 +1943,28 @@ class ArchiMateImportService
      * It looks for the schema ID using the pattern '{type}_schema' in the configuration.
      *
      * @param  string $archiMateType The ArchiMate type (e.g., 'element', 'organization', 'relationship')
+     *
      * @return int|null The schema ID for the given type or null if not configured
      */
     private function getAmefSchemaIdForType(string $archiMateType): ?int
     {
-        // Get AMEF configuration
+        // Get AMEF configuration.
         $amefConfig = $this->getAmefConfig();
 
-        // Normalize plural → singular and handle the actual config structure
+        // Normalize plural → singular and handle the actual config structure.
         $typeMapping    = [
             'elements'             => 'element',
             'organizations'        => 'organization',
-            // Accept both 'relationships' (AMEF wording) and UI term 'relation'
+            // Accept both 'relationships' (AMEF wording) and UI term 'relation'.
             'relationships'        => 'relation',
             'views'                => 'view',
             'models'               => 'model',
-            // NOTE: 'properties' mapping removed - properties are never root-level AMEF objects
+            // NOTE: 'properties' mapping removed - properties are never root-level AMEF objects.
             'property_definitions' => 'property_definition',
         ];
         $normalizedType = $typeMapping[$archiMateType] ?? $archiMateType;
 
-        // Candidate keys: match the actual config structure
+        // Candidate keys: match the actual config structure.
         $schemaKeyCandidatesByType = [
             'element'             => ['element_schema'],
             'organization'        => ['organization_schema'],
@@ -1896,16 +1972,16 @@ class ArchiMateImportService
             'view'                => ['view_schema'],
             'model'               => ['model_schema'],
             'property_definition' => ['property_definition_schema'],
-            // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements
+            // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements.
         ];
 
         $candidates = $schemaKeyCandidatesByType[$normalizedType] ?? [$normalizedType.'_schema'];
 
-        // Try JSON config with the actual keys
+        // Try JSON config with the actual keys.
         foreach ($candidates as $key) {
-            if (array_key_exists($key, $amefConfig)) {
+            if (array_key_exists($key, $amefConfig) === true) {
                 $raw = $amefConfig[$key];
-                if ($raw !== '' && $raw !== null && is_numeric((string) $raw)) {
+                if ($raw !== '' && $raw !== null && is_numeric((string) $raw) === true) {
                     $id = (int) $raw;
                     if ($id > 0) {
                         return $id;
@@ -1914,10 +1990,15 @@ class ArchiMateImportService
             }
         }
 
-        // Fallback to legacy individual app config keys if not present in JSON
+        // Fallback to legacy individual app config keys if not present in JSON.
         foreach ($candidates as $key) {
-            $raw = $this->config->getValueString('softwarecatalog', 'amef_'.$key, '') ?: $this->config->getValueString('softwarecatalog', $key, '');
-            if ($raw !== '' && is_numeric((string) $raw)) {
+            if ($this->config->getValueString('softwarecatalog', 'amef_'.$key, '')) {
+                $raw = $this->config->getValueString('softwarecatalog', 'amef_'.$key, '');
+            } else {
+                $raw = $this->config->getValueString('softwarecatalog', $key, '');
+            }
+
+            if ($raw !== '' && is_numeric((string) $raw) === true) {
                 $id = (int) $raw;
                 if ($id > 0) {
                     return $id;
@@ -1932,12 +2013,13 @@ class ArchiMateImportService
      * Get schema ID for a section using SettingsService (no hardcoded fallbacks)
      *
      * @param  string $section Section name
+     *
      * @return int Schema ID
      * @throws \RuntimeException If schema ID is not configured
      */
     private function getSchemaIdForSection(string $section): int
     {
-        // Map section names to object types for SettingsService
+        // Map section names to object types for SettingsService.
         $objectTypeMapping = [
             'elements'             => 'element',
             'relationships'        => 'relationship',
@@ -1949,7 +2031,7 @@ class ArchiMateImportService
         $objectType = $objectTypeMapping[$section] ?? $section;
         $schemaId   = $this->settingsService->getSchemaIdForObjectType($objectType);
 
-        // Ensure schema ID is configured - no hardcoded fallbacks
+        // Ensure schema ID is configured - no hardcoded fallbacks.
         if ($schemaId === null) {
             throw new \RuntimeException("Schema ID for section '{$section}' is not configured. Please configure all AMEF schema IDs via the admin interface. Expected object type: '{$objectType}'");
         }
@@ -1961,42 +2043,43 @@ class ArchiMateImportService
      * Extract propertyDefinitions from the parsed XML and build a map
      *
      * @param  array $data Parsed XML data
+     *
      * @return array Map of propertyDefinitionRef => property name
      */
     private function extractPropertyDefinitionMap(array $data): array
     {
-        // OPTIMIZATION: Return cached property definition map if available
+        // OPTIMIZATION: Return cached property definition map if available.
         if ($this->propertyDefinitionMapCache !== null) {
             return $this->propertyDefinitionMapCache;
         }
 
         $map = [];
-        // Find propertyDefinitions section (handle possible alternative names)
+        // Find propertyDefinitions section (handle possible alternative names).
         $propertyDefs = null;
-        if (isset($data['propertyDefinitions'])) {
+        if (isset($data['propertyDefinitions']) === true) {
             $propertyDefs = $data['propertyDefinitions'];
-        } else if (isset($data['property_definitions'])) {
+        } else if (isset($data['property_definitions']) === true) {
             $propertyDefs = $data['property_definitions'];
-        } else if (isset($data['propertyDefinitions'])) {
+        } else if (isset($data['propertyDefinitions']) === true) {
             $propertyDefs = $data['propertyDefinitions'];
         }
 
-        if ($propertyDefs && isset($propertyDefs['propertyDefinition'])) {
+        if ($propertyDefs !== false && isset($propertyDefs['propertyDefinition']) === true) {
             $defs = $propertyDefs['propertyDefinition'];
-            if (isset($defs[0])) {
-                // Array of propertyDefinition
+            if (isset($defs[0]) === true) {
+                // Array of propertyDefinition.
                 foreach ($defs as $def) {
-                    if (isset($def['_attributes']['identifier']) && isset($def['name'])) {
-                        $map[$def['_attributes']['identifier']] = is_array($def['name']) && isset($def['name']['_value']) ? $def['name']['_value'] : $def['name'];
+                    if (isset($def['_attributes']['identifier']) === true && isset($def['name']) === true) {
+                        $map[$def['_attributes']['identifier']] = is_array($def['name']) === true && isset($def['name']['_value']) === true ? $def['name']['_value'] : $def['name'];
                     }
                 }
-            } else if (isset($defs['_attributes']['identifier']) && isset($defs['name'])) {
-                // Single propertyDefinition
-                $map[$defs['_attributes']['identifier']] = is_array($defs['name']) && isset($defs['name']['_value']) ? $defs['name']['_value'] : $defs['name'];
+            } else if (isset($defs['_attributes']['identifier']) === true && isset($defs['name']) === true) {
+                // Single propertyDefinition.
+                $map[$defs['_attributes']['identifier']] = is_array($defs['name']) === true && isset($defs['name']['_value']) === true ? $defs['name']['_value'] : $defs['name'];
             }
         }
 
-        // OPTIMIZATION: Cache the result for subsequent calls during the same import
+        // OPTIMIZATION: Cache the result for subsequent calls during the same import.
         $this->propertyDefinitionMapCache = $map;
 
         return $map;
@@ -2009,6 +2092,7 @@ class ArchiMateImportService
      * which can be useful for understanding how properties are being processed.
      *
      * @param  array $propertyDefinitionMap The original property definition map
+     *
      * @return array Mapping of original names to camelCase names
      */
     public function getPropertyNameMapping(array $propertyDefinitionMap): array
@@ -2016,12 +2100,12 @@ class ArchiMateImportService
         $mapping = [];
 
         foreach ($propertyDefinitionMap as $propertyRef => $originalName) {
-            // Skip non-string values (e.g., empty arrays from incomplete property definitions)
-            if (!is_string($originalName)) {
+            // Skip non-string values (e.g., empty arrays from incomplete property definitions).
+            if (is_string($originalName) === false) {
                 continue;
             }
 
-            $mapping[$originalName] = $this->convertToCamelCase($originalName);
+            $mapping[$originalName] = $this->convertToCamelCase(propertyName: $originalName);
         }
 
         return $mapping;
@@ -2036,26 +2120,27 @@ class ArchiMateImportService
      * - "System Name" -> "systemName"
      *
      * @param  string $propertyName Property name that may contain spaces
+     *
      * @return string CamelCase version of the property name
      */
     private function convertToCamelCase(string $propertyName): string
     {
-        // OPTIMIZATION: Check cache first to avoid redundant conversions
-        if (isset($this->camelCaseCache[$propertyName])) {
+        // OPTIMIZATION: Check cache first to avoid redundant conversions.
+        if (isset($this->camelCaseCache[$propertyName]) === true) {
             return $this->camelCaseCache[$propertyName];
         }
 
-        // Remove any leading/trailing whitespace
+        // Remove any leading/trailing whitespace.
         $propertyName = trim($propertyName);
 
-        // Split by spaces and convert to camelCase
+        // Split by spaces and convert to camelCase.
         $words = explode(' ', $propertyName);
 
         if (count($words) === 1) {
-            // Single word, just lowercase it
+            // Single word, just lowercase it.
             $result = strtolower($words[0]);
         } else {
-            // First word is lowercase, subsequent words are capitalized
+            // First word is lowercase, subsequent words are capitalized.
             $camelCase = strtolower($words[0]);
 
             for ($i = 1; $i < count($words); $i++) {
@@ -2065,7 +2150,7 @@ class ArchiMateImportService
             $result = $camelCase;
         }
 
-        // OPTIMIZATION: Cache the result for future use
+        // OPTIMIZATION: Cache the result for future use.
         $this->camelCaseCache[$propertyName] = $result;
 
         return $result;
@@ -2127,9 +2212,9 @@ class ArchiMateImportService
 
         $saveResult = $this->lastSaveResult;
 
-        // Use per-schema counts if available (reliable — objects are saved per-schema-group,
+        // Use per-schema counts if available (reliable — objects are saved per-schema-group,.
         // so we know which schema each count belongs to without inspecting serialized objects).
-        if (!empty($saveResult['countsBySchema']) && $this->cachedConfig !== null) {
+        if (empty($saveResult['countsBySchema']) === false && $this->cachedConfig !== null) {
             $sectionMap = [
                 'model'               => 'elements',
                 'element'             => 'elements',
@@ -2139,7 +2224,7 @@ class ArchiMateImportService
                 'property_definition' => 'property_definitions',
             ];
 
-            // Build reverse map: schema ID → plural section name
+            // Build reverse map: schema ID → plural section name.
             $schemaToSection = [];
             foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
                 $schemaToSection[(int) $schemaId] = $sectionMap[$type] ?? 'elements';
@@ -2156,7 +2241,7 @@ class ArchiMateImportService
             }
         }//end if
 
-        // Calculate summary totals
+        // Calculate summary totals.
         foreach ($statistics as $section => $sectionStats) {
             if ($section === 'summary') {
                 continue;
@@ -2175,6 +2260,7 @@ class ArchiMateImportService
      * Calculate optimized statistics for performance reporting
      *
      * @param  array $savedObjects Saved objects from ObjectService::saveObjects
+     *
      * @return array Statistics array
      */
     private function calculateOptimizedStatistics(array $savedObjects): array
@@ -2198,8 +2284,8 @@ class ArchiMateImportService
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
-            // Use per-schema counts if available (reliable — doesn't depend on serialized object fields)
-            if (!empty($saveResult['countsBySchema']) && $this->cachedConfig !== null) {
+            // Use per-schema counts if available (reliable — doesn't depend on serialized object fields).
+            if (empty($saveResult['countsBySchema']) === false && $this->cachedConfig !== null) {
                 $sectionMap = [
                     'model'               => 'elements',
                     'element'             => 'elements',
@@ -2225,7 +2311,7 @@ class ArchiMateImportService
                 }
             }//end if
 
-            // Calculate summary totals
+            // Calculate summary totals.
             $summary = [
                 'total_objects_created'   => 0,
                 'total_objects_updated'   => 0,
@@ -2253,11 +2339,12 @@ class ArchiMateImportService
      * Get section structure configuration for XML parsing
      *
      * @param  string $sectionName The name of the section (e.g., 'elements', 'relationships', 'views', etc.)
+     *
      * @return array Configuration with direct_tags and nested_paths for finding items
      */
     private function getSectionStructureConfig(string $sectionName): array
     {
-        // Define the structure configuration for each section type
+        // Define the structure configuration for each section type.
         $configs = [
             'elements'             => [
                 'direct_tags'  => ['element', 'elements'],
@@ -2315,9 +2402,10 @@ class ArchiMateImportService
     }//end getSectionStructureConfig()
 
     /**
-     * Check if an array is associative (has string keys)
+     * Check if an array is associative (has string keys).
      *
-     * @param  array $array The array to check
+     * @param mixed $value The value to check.
+     *
      * @return bool True if associative, false if indexed
      */
     private function isAssociativeArray(array $array): bool
@@ -2330,51 +2418,52 @@ class ArchiMateImportService
      *
      * @param  array  $sectionData The section data to search
      * @param  string $sectionName The name of the section
+     *
      * @return array Array of items found
      */
     private function findItemsInSection(array $sectionData, string $sectionName): array
     {
-        // OPTIMIZATION: Removed debug logging from section processing
+        // OPTIMIZATION: Removed debug logging from section processing.
         $items = [];
 
-        // Safety check: ensure sectionData is an array
-        if (!is_array($sectionData)) {
+        // Safety check: ensure sectionData is an array.
+        if (is_array($sectionData) === false) {
             return [];
         }
 
-        // Get section structure configuration from AMEF config
-        $config = $this->getSectionStructureConfig($sectionName);
+        // Get section structure configuration from AMEF config.
+        $config = $this->getSectionStructureConfig(sectionName: $sectionName);
 
-        // Special handling for views with diagrams structure
+        // Special handling for views with diagrams structure.
         if ($sectionName === 'views') {
-            // Handle nested structure: <views><diagrams><view>
-            if (isset($sectionData['diagrams'])) {
-                if (isset($sectionData['diagrams']['view'])) {
+            // Handle nested structure: <views><diagrams><view>.
+            if (isset($sectionData['diagrams']) === true) {
+                if (isset($sectionData['diagrams']['view']) === true) {
                     $viewArray = $sectionData['diagrams']['view'];
 
-                    // Handle single view vs array of views
-                    if (!isset($viewArray[0]) && isset($viewArray['_attributes'])) {
-                        // Single view
+                    // Handle single view vs array of views.
+                    if (isset($viewArray[0]) === false && isset($viewArray['_attributes']) === true) {
+                        // Single view.
                         $items = [$viewArray];
                     } else {
-                        // Array of views
+                        // Array of views.
                         $items = $viewArray;
                     }
                 }
             } else {
-                // Direct views structure (fallback)
-                if (isset($sectionData['view'])) {
+                // Direct views structure (fallback).
+                if (isset($sectionData['view']) === true) {
                     $items = $sectionData['view'];
                 }
             }
         } else {
-            // Try to find items using the configured paths for other sections
+            // Try to find items using the configured paths for other sections.
             foreach ($config['nested_paths'] as $path) {
                 $currentData = $sectionData;
                 $pathValid   = true;
 
                 foreach ($path as $key) {
-                    if (isset($currentData[$key])) {
+                    if (isset($currentData[$key]) === true) {
                         $currentData = $currentData[$key];
                     } else {
                         $pathValid = false;
@@ -2382,9 +2471,9 @@ class ArchiMateImportService
                     }
                 }
 
-                if ($pathValid && is_array($currentData)) {
-                    // Check if this is a direct array of items or needs further processing
-                    if (isset($currentData[0]) || $this->isAssociativeArray($currentData)) {
+                if ($pathValid !== false && is_array($currentData) === true) {
+                    // Check if this is a direct array of items or needs further processing.
+                    if (isset($currentData[0]) === true || $this->isAssociativeArray(array: $currentData) === true) {
                         $items = $currentData;
                         break;
                     }
@@ -2392,28 +2481,28 @@ class ArchiMateImportService
             }//end foreach
         }//end if
 
-        // If no items found through nested paths, try direct tags
-        if (empty($items)) {
+        // If no items found through nested paths, try direct tags.
+        if (empty($items) === true) {
             foreach ($config['direct_tags'] as $tag) {
-                if (isset($sectionData[$tag])) {
+                if (isset($sectionData[$tag]) === true) {
                     $items = $sectionData[$tag];
                     break;
                 }
             }
         }
 
-        // If still no items found, treat the section itself as items
-        if (empty($items)) {
+        // If still no items found, treat the section itself as items.
+        if (empty($items) === true) {
             $items = [$sectionData];
         }
 
-        // Ensure items is always an array
-        if (!is_array($items)) {
+        // Ensure items is always an array.
+        if (is_array($items) === false) {
             $items = [$items];
         }
 
-        // If items is an associative array with numeric keys, convert to indexed array
-        if ($this->isAssociativeArray($items)) {
+        // If items is an associative array with numeric keys, convert to indexed array.
+        if ($this->isAssociativeArray(array: $items) === true) {
             $items = array_values($items);
         }
 
@@ -2425,30 +2514,31 @@ class ArchiMateImportService
      *
      * @param  array  $item        Item data
      * @param  string $sectionName The section name for special handling
+     *
      * @return string|null Identifier or null if not found
      */
     private function extractIdentifier(array $item, string $sectionName=''): ?string
     {
-        // OPTIMIZATION: Use cached patterns for section-specific identifier extraction
-        if (isset($this->identifierPatternCache[$sectionName])) {
+        // OPTIMIZATION: Use cached patterns for section-specific identifier extraction.
+        if (isset($this->identifierPatternCache[$sectionName]) === true) {
             $patterns = $this->identifierPatternCache[$sectionName];
 
-            // Try cached patterns in order of success frequency
+            // Try cached patterns in order of success frequency.
             foreach ($patterns as $pattern) {
-                $result = $this->extractIdentifierByPattern($item, $pattern);
+                $result = $this->extractIdentifierByPattern(item: $item, pattern: $pattern);
                 if ($result !== null) {
                     return $result;
                 }
             }
         }
 
-        // OPTIMIZATION: Build pattern cache on first encounter of section type
-        $patterns = $this->buildIdentifierPatternsForSection($sectionName);
+        // OPTIMIZATION: Build pattern cache on first encounter of section type.
+        $patterns = $this->buildIdentifierPatternsForSection(sectionName: $sectionName);
         $this->identifierPatternCache[$sectionName] = $patterns;
 
-        // Try all patterns and return first successful match
+        // Try all patterns and return first successful match.
         foreach ($patterns as $pattern) {
-            $result = $this->extractIdentifierByPattern($item, $pattern);
+            $result = $this->extractIdentifierByPattern(item: $item, pattern: $pattern);
             if ($result !== null) {
                 return $result;
             }
@@ -2462,6 +2552,7 @@ class ArchiMateImportService
      *
      * @param  array $item    The item to extract from
      * @param  array $pattern The extraction pattern ['path' => string[], 'type' => string]
+     *
      * @return string|null The extracted identifier or null
      */
     private function extractIdentifierByPattern(array $item, array $pattern): ?string
@@ -2469,26 +2560,36 @@ class ArchiMateImportService
         $path = $pattern['path'];
         $type = $pattern['type'];
 
-        // Navigate to the target location
+        // Navigate to the target location.
         $current = $item;
         foreach ($path as $key) {
-            if (!isset($current[$key])) {
+            if (isset($current[$key]) === false) {
                 return null;
             }
 
             $current = $current[$key];
         }
 
-        // Extract based on type
+        // Extract based on type.
         switch ($type) {
             case 'direct':
-                return is_string($current) ? $current : null;
+                if (is_string($current) === true) {
+                    return $current;
+                } else {
+                    return null;
+                }
+
             case 'value':
-                return is_array($current) && isset($current['_value']) ? (string) $current['_value'] : null;
+                if (is_array($current) === true && isset($current['_value']) === true) {
+                    return (string) $current['_value'];
+                } else {
+                    return null;
+                }
+
             case 'array_search':
-                if (is_array($current)) {
+                if (is_array($current) === true) {
                     foreach ($current as $childItem) {
-                        if (isset($childItem['_attributes']['identifierRef'])) {
+                        if (isset($childItem['_attributes']['identifierRef']) === true) {
                             return (string) $childItem['_attributes']['identifierRef'];
                         }
                     }
@@ -2496,27 +2597,28 @@ class ArchiMateImportService
                 return null;
             default:
                 return null;
-        }
+        }//end switch
     }//end extractIdentifierByPattern()
 
     /**
      * OPTIMIZATION: Build identifier extraction patterns for a section type
      *
      * @param  string $sectionName The section name
+     *
      * @return array Array of extraction patterns ordered by likelihood of success
      */
     private function buildIdentifierPatternsForSection(string $sectionName): array
     {
         $patterns = [];
 
-        // Special handling for organizations
+        // Special handling for organizations.
         if ($sectionName === 'organizations') {
             $patterns[] = ['path' => ['_attributes', 'identifierRef'], 'type' => 'direct'];
             $patterns[] = ['path' => ['item'], 'type' => 'array_search'];
             $patterns[] = ['path' => ['label'], 'type' => 'value'];
             $patterns[] = ['path' => ['label'], 'type' => 'direct'];
         } else {
-            // Standard patterns for other sections (ordered by frequency in ArchiMate)
+            // Standard patterns for other sections (ordered by frequency in ArchiMate).
             $patterns[] = ['path' => ['_attributes', 'identifier'], 'type' => 'direct'];
             $patterns[] = ['path' => ['_attributes', 'id'], 'type' => 'direct'];
             $patterns[] = ['path' => ['identifier'], 'type' => 'value'];
@@ -2541,65 +2643,66 @@ class ArchiMateImportService
      * @param  array  $item           The complete XML item data
      * @param  array  $elementsLookup Optional elements lookup for view processing
      * @param  string $schemaType     Schema type for conditional processing
+     *
      * @return array Essential XML data for storage
      */
     private function extractEssentialXmlData(array $item, array $elementsLookup=[], string $schemaType=''): array
     {
         $essential = [];
 
-        // Always preserve core attributes (needed for export)
-        if (isset($item['_attributes'])) {
+        // Always preserve core attributes (needed for export).
+        if (isset($item['_attributes']) === true) {
             $essential['_attributes'] = $item['_attributes'];
         }
 
-        // Preserve name and documentation (already extracted to root level but needed for export)
-        if (isset($item['name'])) {
+        // Preserve name and documentation (already extracted to root level but needed for export).
+        if (isset($item['name']) === true) {
             $essential['name'] = $item['name'];
         }
 
-        if (isset($item['documentation'])) {
+        if (isset($item['documentation']) === true) {
             $essential['documentation'] = $item['documentation'];
         }
 
-        // Preserve properties structure (needed for property mapping)
-        if (isset($item['properties'])) {
+        // Preserve properties structure (needed for property mapping).
+        if (isset($item['properties']) === true) {
             $essential['properties'] = $item['properties'];
         }
 
-        // For relationships, preserve source/target information
-        if (isset($item['source'])) {
+        // For relationships, preserve source/target information.
+        if (isset($item['source']) === true) {
             $essential['source'] = $item['source'];
         }
 
-        if (isset($item['target'])) {
+        if (isset($item['target']) === true) {
             $essential['target'] = $item['target'];
         }
 
-        // Preserve any other critical ArchiMate-specific fields
+        // Preserve any other critical ArchiMate-specific fields.
         $criticalFields = ['type', 'viewpoint', 'accessType', 'isDirected'];
         foreach ($criticalFields as $field) {
-            if (isset($item[$field])) {
+            if (isset($item[$field]) === true) {
                 $essential[$field] = $item[$field];
             }
         }
 
-        // Preserve original node/connection arrays for views (needed by export's addViewDataToXmlNode)
-        if (isset($item['node'])) {
+        // Preserve original node/connection arrays for views (needed by export's addViewDataToXmlNode).
+        if (isset($item['node']) === true) {
             $essential['node'] = $item['node'];
         }
 
-        if (isset($item['connection'])) {
+        if (isset($item['connection']) === true) {
             $essential['connection'] = $item['connection'];
         }
 
-        // Extract flattened viewNodes/viewRelationships for frontend consumption
+        // Extract flattened viewNodes/viewRelationships for frontend consumption.
         if ($schemaType === 'view') {
-            $this->extractViewNodesAndConnections($item, $essential, $elementsLookup);
+            $this->extractViewNodesAndConnections(item: $item, essential: $essential, elementsLookup: $elementsLookup);
         } else {
-            $this->extractViewNodesAndConnections($item, $essential);
+            $this->extractViewNodesAndConnections(item: $item, essential: $essential);
         }
 
-        // Add a marker to indicate this is essential data (for debugging)
+        // Add a marker to indicate this is essential data (for debugging).
         $essential['_essential_data'] = true;
 
         return $essential;
@@ -2614,23 +2717,24 @@ class ArchiMateImportService
      * @param  array $item           The complete XML item data
      * @param  array &$essential     Essential XML data to add viewNodes/viewRelationships to (by reference)
      * @param  array $elementsLookup Optional lookup array of elements by identifier for enrichment
+     *
      * @return void
      */
     private function extractViewNodesAndConnections(array $item, array &$essential, array $elementsLookup=[]): void
     {
-        // Only process if this looks like a view object (has nodes or connections)
-        if (!isset($item['node']) && !isset($item['connection'])) {
+        // Only process if this looks like a view object (has nodes or connections).
+        if (isset($item['node']) === false && isset($item['connection']) === false) {
             return;
         }
 
-        // Extract viewNodes array with proper JSON structure
-        if (isset($item['node'])) {
-            $essential['viewNodes'] = $this->extractViewNodesRecursively($item['node'], $elementsLookup);
+        // Extract viewNodes array with proper JSON structure.
+        if (isset($item['node']) === true) {
+            $essential['viewNodes'] = $this->extractViewNodesRecursively(nodeData: $item['node'], elementsLookup: $elementsLookup);
         }
 
-        // Extract viewRelationships array with proper JSON structure
-        if (isset($item['connection'])) {
-            $essential['viewRelationships'] = $this->extractViewRelationshipsRecursively($item['connection']);
+        // Extract viewRelationships array with proper JSON structure.
+        if (isset($item['connection']) === true) {
+            $essential['viewRelationships'] = $this->extractViewRelationshipsRecursively(connectionData: $item['connection']);
         }
     }//end extractViewNodesAndConnections()
 
@@ -2658,49 +2762,74 @@ class ArchiMateImportService
      *
      * @param  array $nodeData       Node data (can be single node or array of nodes)
      * @param  array $elementsLookup Lookup array of elements by identifier for enrichment
+     *
      * @return array Array of viewNodes with standardized structure including parent references
      */
     private function extractViewNodesRecursively($nodeData, array $elementsLookup=[]): array
     {
         $viewNodes = [];
 
-        // Handle both single node and array of nodes
-        if (!isset($nodeData[0])) {
-            // Single node
+        // Handle both single node and array of nodes.
+        if (isset($nodeData[0]) === false) {
+            // Single node.
             $nodeData = [$nodeData];
         }
 
         foreach ($nodeData as $node) {
-            if (!isset($node['_attributes'])) {
+            if (isset($node['_attributes']) === false) {
                 continue;
             }
 
             $nodeId     = $node['_attributes']['identifier'] ?? null;
             $elementRef = $node['_attributes']['elementRef'] ?? null;
 
-            if (!$nodeId) {
+            if ($nodeId === null) {
                 continue;
             }
 
-            // Create viewNode with standardized structure
+            // Create viewNode with standardized structure.
+            if (isset($node['_attributes']['x']) === true) {
+                $xValue = (int) $node['_attributes']['x'];
+            } else {
+                $xValue = 0;
+            }
+
+            if (isset($node['_attributes']['y']) === true) {
+                $yValue = (int) $node['_attributes']['y'];
+            } else {
+                $yValue = 0;
+            }
+
+            if (isset($node['_attributes']['w']) === true) {
+                $widthValue = (int) $node['_attributes']['w'];
+            } else {
+                $widthValue = 100;
+            }
+
+            if (isset($node['_attributes']['h']) === true) {
+                $heightValue = (int) $node['_attributes']['h'];
+            } else {
+                $heightValue = 50;
+            }
+
             $viewNode = [
                 'modelNodeId' => $elementRef,
-            // Reference to the ArchiMate element
+            // Reference to the ArchiMate element.
                 'viewNodeId'  => $nodeId,
-            // Unique identifier within this view
-                'x'           => isset($node['_attributes']['x']) ? (int) $node['_attributes']['x'] : 0,
-                'y'           => isset($node['_attributes']['y']) ? (int) $node['_attributes']['y'] : 0,
-                'width'       => isset($node['_attributes']['w']) ? (int) $node['_attributes']['w'] : 100,
-                'height'      => isset($node['_attributes']['h']) ? (int) $node['_attributes']['h'] : 50,
+            // Unique identifier within this view.
+                'x'           => $xValue,
+                'y'           => $yValue,
+                'width'       => $widthValue,
+                'height'      => $heightValue,
                 'parent'      => null,
-            // Will be set to parent nodeId for nested nodes (see recursive processing below)
+            // Will be set to parent nodeId for nested nodes (see recursive processing below).
                 'name'        => null,
-                'type'        => $this->extractNodeType($node),
-            // Extract type directly from node XML
+                'type'        => $this->extractNodeType(node: $node),
+            // Extract type directly from node XML.
                 'color'       => 'rgb(255, 255, 255)',
-            // Default white background
+            // Default white background.
                 'borderColor' => 'rgb(0, 0, 0)',
-            // Default black border
+            // Default black border.
                 'font'        => [
                     'name'  => 'Segoe UI, Arial',
                     'size'  => 12,
@@ -2711,87 +2840,87 @@ class ArchiMateImportService
                 'elementRef'  => $elementRef,
             ];
 
-            // Extract style information if present
-            if (isset($node['style'])) {
-                $this->applyNodeStyle($viewNode, $node['style']);
+            // Extract style information if present.
+            if (isset($node['style']) === true) {
+                $this->applyNodeStyle(viewNode: $viewNode, style: $node['style']);
             }
 
-            // Extract label text for Label type nodes
-            if (isset($node['label'])) {
-                if (is_array($node['label']) && isset($node['label']['_value'])) {
+            // Extract label text for Label type nodes.
+            if (isset($node['label']) === true) {
+                if (is_array($node['label']) === true && isset($node['label']['_value']) === true) {
                     $viewNode['name'] = $node['label']['_value'];
-                } else if (is_string($node['label'])) {
+                } else if (is_string($node['label']) === true) {
                     $viewNode['name'] = $node['label'];
                 }
             }
 
-            // Enrich with element data if available and elementRef exists
-            if ($elementRef && isset($elementsLookup[$elementRef])) {
+            // Enrich with element data if available and elementRef exists.
+            if ($elementRef !== false && isset($elementsLookup[$elementRef]) === true) {
                 $element = $elementsLookup[$elementRef];
 
-                // Use element name if node doesn't have its own label
-                if ($viewNode['name'] === null && isset($element['name'])) {
+                // Use element name if node doesn't have its own label.
+                if ($viewNode['name'] === null && isset($element['name']) === true) {
                     $viewNode['name'] = $element['name'];
                 }
 
-                // Set description from element documentation
-                if (isset($element['summary'])) {
+                // Set description from element documentation.
+                if (isset($element['summary']) === true) {
                     $viewNode['description'] = $element['summary'];
-                } else if (isset($element['documentation'])) {
+                } else if (isset($element['documentation']) === true) {
                     $viewNode['description'] = $element['documentation'];
                 }
 
-                // Enhance type with element data if node type wasn't fully extracted
+                // Enhance type with element data if node type wasn't fully extracted.
                 if ($viewNode['type'] === null || $viewNode['type'] === 'element') {
-                    if (isset($element['gemmaType'])) {
+                    if (isset($element['gemmaType']) === true) {
                         $gemmaType = $element['gemmaType'];
-                        // Handle case where gemmaType might be an array
-                        if (is_array($gemmaType)) {
+                        // Handle case where gemmaType might be an array.
+                        if (is_array($gemmaType) === true) {
                             $gemmaType = $gemmaType['_value'] ?? $gemmaType[0] ?? 'unknown';
                         }
 
                         $viewNode['type'] = strtolower((string) $gemmaType);
-                    } else if (isset($element['xml']['_attributes']['xsi:type'])) {
+                    } else if (isset($element['xml']['_attributes']['xsi:type']) === true) {
                         $archiType = $element['xml']['_attributes']['xsi:type'];
-                        // Convert ArchiMate type to simplified type (e.g., "archimate:BusinessService" -> "businessservice")
+                        // Convert ArchiMate type to simplified type (e.g., "archimate:BusinessService" -> "businessservice").
                         $viewNode['type'] = strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $archiType));
                     }
                 }
 
-                // Add all element properties to view node for full data access
-                $viewNode['elementProperties'] = $this->extractElementProperties($element);
+                // Add all element properties to view node for full data access.
+                $viewNode['elementProperties'] = $this->extractElementProperties(element: $element);
 
-                // Add specific useful properties directly to the node
-                if (isset($element['objectId'])) {
+                // Add specific useful properties directly to the node.
+                if (isset($element['objectId']) === true) {
                     $viewNode['objectId'] = $element['objectId'];
                 }
 
-                // Add GEMMA-specific properties if they exist
+                // Add GEMMA-specific properties if they exist.
                 $gemmaProperties = ['gemmaType', 'bivScoreBbn', 'belangrijksteReden', 'beschikbaarheid', 'integriteit', 'vertrouwelijkheid'];
                 foreach ($gemmaProperties as $prop) {
-                    if (isset($element[$prop])) {
+                    if (isset($element[$prop]) === true) {
                         $viewNode[$prop] = $element[$prop];
                     }
                 }
 
-                // Store element section for reference
-                if (isset($element['section'])) {
+                // Store element section for reference.
+                if (isset($element['section']) === true) {
                     $viewNode['elementSection'] = $element['section'];
                 }
 
-                // Store model identifier for linking
-                if (isset($element['model_identifier'])) {
+                // Store model identifier for linking.
+                if (isset($element['model_identifier']) === true) {
                     $viewNode['modelIdentifier'] = $element['model_identifier'];
                 }
             }//end if
 
-            // Add parent node BEFORE its children so the frontend rendering
+            // Add parent node BEFORE its children so the frontend rendering.
             // engine can look up parents via graph.getCell(parentId).
             $viewNodes[] = $viewNode;
 
-            // Handle child nodes recursively (flatten hierarchy into single array while preserving parent-child relationships)
-            if (isset($node['node'])) {
-                $childNodes = $this->extractViewNodesRecursively($node['node'], $elementsLookup);
+            // Handle child nodes recursively (flatten hierarchy into single array while preserving parent-child relationships).
+            if (isset($node['node']) === true) {
+                $childNodes = $this->extractViewNodesRecursively(nodeData: $node['node'], elementsLookup: $elementsLookup);
 
                 // Set parent reference only for DIRECT children (those with parent === null).
                 // Grandchildren already have their parent set by the recursive call.
@@ -2803,7 +2932,7 @@ class ArchiMateImportService
 
                 unset($childNode);
 
-                // Add child nodes to the main flattened array (maintaining parent references)
+                // Add child nodes to the main flattened array (maintaining parent references).
                 $viewNodes = array_merge($viewNodes, $childNodes);
             }
         }//end foreach
@@ -2816,6 +2945,7 @@ class ArchiMateImportService
      *
      * @param  array  $viewNodes Array of view nodes with parent references
      * @param  string $viewId    View identifier for logging context
+     *
      * @return void
      */
     private function debugViewNodeHierarchy(array $viewNodes, string $viewId): void
@@ -2847,62 +2977,87 @@ class ArchiMateImportService
      *
      * @param  array $nodeData       Node data (can be single node or array of nodes)
      * @param  array $elementsLookup Lookup array of elements by identifier for splicing
+     *
      * @return array Array of processed nodes with nested children and spliced elements
      */
     private function extractNodesRecursively($nodeData, array $elementsLookup=[]): array
     {
         $nodes = [];
 
-        // Handle both single node and array of nodes
-        if (!isset($nodeData[0])) {
-            // Single node
+        // Handle both single node and array of nodes.
+        if (isset($nodeData[0]) === false) {
+            // Single node.
             $nodeData = [$nodeData];
         }
 
         foreach ($nodeData as $node) {
-            if (isset($node['_attributes'])) {
+            if (isset($node['_attributes']) === true) {
+                if (isset($node['_attributes']['x']) === true) {
+                    $xValue = (int) $node['_attributes']['x'];
+                } else {
+                    $xValue = null;
+                }
+
+                if (isset($node['_attributes']['y']) === true) {
+                    $yValue = (int) $node['_attributes']['y'];
+                } else {
+                    $yValue = null;
+                }
+
+                if (isset($node['_attributes']['w']) === true) {
+                    $wValue = (int) $node['_attributes']['w'];
+                } else {
+                    $wValue = null;
+                }
+
+                if (isset($node['_attributes']['h']) === true) {
+                    $hValue = (int) $node['_attributes']['h'];
+                } else {
+                    $hValue = null;
+                }
+
                 $processedNode = [
                     'identifier' => $node['_attributes']['identifier'] ?? null,
                     'elementRef' => $node['_attributes']['elementRef'] ?? null,
                     'type'       => $node['_attributes']['xsi:type'] ?? 'Element',
-                    'x'          => isset($node['_attributes']['x']) ? (int) $node['_attributes']['x'] : null,
-                    'y'          => isset($node['_attributes']['y']) ? (int) $node['_attributes']['y'] : null,
-                    'w'          => isset($node['_attributes']['w']) ? (int) $node['_attributes']['w'] : null,
-                    'h'          => isset($node['_attributes']['h']) ? (int) $node['_attributes']['h'] : null,
+                    'x'          => $xValue,
+                    'y'          => $yValue,
+                    'w'          => $wValue,
+                    'h'          => $hValue,
                 ];
 
-                // Extract style information if present
-                if (isset($node['style'])) {
-                    $processedNode['style'] = $this->extractNodeStyle($node['style']);
+                // Extract style information if present.
+                if (isset($node['style']) === true) {
+                    $processedNode['style'] = $this->extractNodeStyle(style: $node['style']);
                 }
 
-                // Extract label text for Label type nodes
-                if (isset($node['label'])) {
-                    if (is_array($node['label']) && isset($node['label']['_value'])) {
+                // Extract label text for Label type nodes.
+                if (isset($node['label']) === true) {
+                    if (is_array($node['label']) === true && isset($node['label']['_value']) === true) {
                         $processedNode['label'] = $node['label']['_value'];
-                    } else if (is_string($node['label'])) {
+                    } else if (is_string($node['label']) === true) {
                         $processedNode['label'] = $node['label'];
                     }
                 }
 
-                // ELEMENT SPLICING: If node references an element, splice it in
-                if (!empty($processedNode['elementRef']) && !empty($elementsLookup)) {
+                // ELEMENT SPLICING: If node references an element, splice it in.
+                if (empty($processedNode['elementRef']) === false && empty($elementsLookup) === false) {
                     $elementRef = $processedNode['elementRef'];
-                    if (isset($elementsLookup[$elementRef])) {
-                        // Splice element data (minus _xml and other metadata) into the node
+                    if (isset($elementsLookup[$elementRef]) === true) {
+                        // Splice element data (minus _xml and other metadata) into the node.
                         $element = $elementsLookup[$elementRef];
-                        $processedNode['element'] = $this->prepareElementForSplicing($element);
+                        $processedNode['element'] = $this->prepareElementForSplicing(element: $element);
                     }
                 }
 
-                // RECURSIVE: Extract child nodes if they exist (with element splicing)
-                if (isset($node['node'])) {
-                    $processedNode['children'] = $this->extractNodesRecursively($node['node'], $elementsLookup);
+                // RECURSIVE: Extract child nodes if they exist (with element splicing).
+                if (isset($node['node']) === true) {
+                    $processedNode['children'] = $this->extractNodesRecursively(nodeData: $node['node'], elementsLookup: $elementsLookup);
                 }
 
-                // RECURSIVE: Extract child connections if they exist
-                if (isset($node['connection'])) {
-                    $processedNode['connections'] = $this->extractConnectionsRecursively($node['connection']);
+                // RECURSIVE: Extract child connections if they exist.
+                if (isset($node['connection']) === true) {
+                    $processedNode['connections'] = $this->extractConnectionsRecursively(connectionData: $node['connection']);
                 }
 
                 $nodes[] = $processedNode;
@@ -2916,14 +3071,15 @@ class ArchiMateImportService
      * Prepare element data for splicing by removing internal metadata
      *
      * @param  array $element The complete element object
+     *
      * @return array Element data suitable for splicing (without _xml, @self, etc.)
      */
     private function prepareElementForSplicing(array $element): array
     {
-        // Start with a copy of the element
+        // Start with a copy of the element.
         $splicedElement = $element;
 
-        // Remove internal metadata fields that shouldn't be in spliced data
+        // Remove internal metadata fields that shouldn't be in spliced data.
         $fieldsToRemove = ['@self', 'xml', '_xml', 'section', 'model_identifier', 'extracted_at', '_propertyMapping'];
 
         foreach ($fieldsToRemove as $field) {
@@ -2937,20 +3093,21 @@ class ArchiMateImportService
      * Extract connections recursively
      *
      * @param  array $connectionData Connection data (can be single connection or array)
+     *
      * @return array Array of processed connections
      */
     private function extractConnectionsRecursively($connectionData): array
     {
         $connections = [];
 
-        // Handle both single connection and array of connections
-        if (!isset($connectionData[0])) {
-            // Single connection
+        // Handle both single connection and array of connections.
+        if (isset($connectionData[0]) === false) {
+            // Single connection.
             $connectionData = [$connectionData];
         }
 
         foreach ($connectionData as $connection) {
-            if (isset($connection['_attributes'])) {
+            if (isset($connection['_attributes']) === true) {
                 $processedConnection = [
                     'identifier'      => $connection['_attributes']['identifier'] ?? null,
                     'relationshipRef' => $connection['_attributes']['relationshipRef'] ?? null,
@@ -2959,9 +3116,9 @@ class ArchiMateImportService
                     'target'          => $connection['_attributes']['target'] ?? null,
                 ];
 
-                // Extract style information if present
-                if (isset($connection['style'])) {
-                    $processedConnection['style'] = $this->extractConnectionStyle($connection['style']);
+                // Extract style information if present.
+                if (isset($connection['style']) === true) {
+                    $processedConnection['style'] = $this->extractConnectionStyle(style: $connection['style']);
                 }
 
                 $connections[] = $processedConnection;
@@ -2975,33 +3132,34 @@ class ArchiMateImportService
      * Extract all properties from an element for view node enrichment
      *
      * @param  array $element Element data containing properties
+     *
      * @return array Clean array of element properties
      */
     private function extractElementProperties(array $element): array
     {
         $properties = [];
 
-        // Extract basic element properties
+        // Extract basic element properties.
         $basicProperties = ['identifier', 'name', 'summary', 'section', 'model_identifier'];
         foreach ($basicProperties as $prop) {
-            if (isset($element[$prop])) {
+            if (isset($element[$prop]) === true) {
                 $properties[$prop] = $element[$prop];
             }
         }
 
-        // Extract all flattened properties (camelCase converted properties)
+        // Extract all flattened properties (camelCase converted properties).
         $excludedKeys = ['@self', 'xml', '_propertyMapping', '_slug', '_essential_data'];
         foreach ($element as $key => $value) {
-            if (!in_array($key, $excludedKeys) && !in_array($key, $basicProperties)) {
-                // Only include non-object values or simple arrays
-                if (is_scalar($value) || (is_array($value) && !$this->isComplexArray($value))) {
+            if (in_array($key, $excludedKeys) === false && in_array($key, $basicProperties) === false) {
+                // Only include non-object values or simple arrays.
+                if (is_scalar($value) === true || (is_array($value) === true && $this->isComplexArra === falsey(array: $value))) {
                     $properties[$key] = $value;
                 }
             }
         }
 
-        // Add property mapping for reference if available
-        if (isset($element['_propertyMapping'])) {
+        // Add property mapping for reference if available.
+        if (isset($element['_propertyMapping']) === true) {
             $properties['_propertyMapping'] = $element['_propertyMapping'];
         }
 
@@ -3012,12 +3170,13 @@ class ArchiMateImportService
      * Check if an array contains complex nested structures
      *
      * @param  array $array Array to check
+     *
      * @return bool True if array contains complex nested structures
      */
     private function isComplexArray(array $array): bool
     {
         foreach ($array as $value) {
-            if (is_array($value) || is_object($value)) {
+            if (is_array($value) === true || is_object($value) === true) {
                 return true;
             }
         }
@@ -3030,54 +3189,110 @@ class ArchiMateImportService
      *
      * @param  array &$viewNode ViewNode structure to apply styles to (by reference)
      * @param  array $style     Style data from XML
+     *
      * @return void
      */
     private function applyNodeStyle(array &$viewNode, array $style): void
     {
-        // Extract fillColor
-        if (isset($style['fillColor']['_attributes'])) {
+        // Extract fillColor.
+        if (isset($style['fillColor']['_attributes']) === true) {
             $fillColor = $style['fillColor']['_attributes'];
-            $r         = isset($fillColor['r']) ? (int) $fillColor['r'] : 255;
-            $g         = isset($fillColor['g']) ? (int) $fillColor['g'] : 255;
-            $b         = isset($fillColor['b']) ? (int) $fillColor['b'] : 255;
-            $viewNode['color'] = "rgb($r, $g, $b)";
-        }
+            if (isset($fillColor['r']) === true) {
+                $r = (int) $fillColor['r'];
+            } else {
+                $r = 255;
+            }
 
-        // Extract lineColor (including alpha for border visibility)
-        if (isset($style['lineColor']['_attributes'])) {
+            if (isset($fillColor['g']) === true) {
+                $g = (int) $fillColor['g'];
+            } else {
+                $g = 255;
+            }
+
+            if (isset($fillColor['b']) === true) {
+                $b = (int) $fillColor['b'];
+            } else {
+                $b = 255;
+            }
+
+            $viewNode['color'] = "rgb($r, $g, $b)";
+        }//end if
+
+        // Extract lineColor (including alpha for border visibility).
+        if (isset($style['lineColor']['_attributes']) === true) {
             $lineColor = $style['lineColor']['_attributes'];
-            $r         = isset($lineColor['r']) ? (int) $lineColor['r'] : 0;
-            $g         = isset($lineColor['g']) ? (int) $lineColor['g'] : 0;
-            $b         = isset($lineColor['b']) ? (int) $lineColor['b'] : 0;
-            $a         = isset($lineColor['a']) ? (int) $lineColor['a'] : 100;
+            if (isset($lineColor['r']) === true) {
+                $r = (int) $lineColor['r'];
+            } else {
+                $r = 0;
+            }
+
+            if (isset($lineColor['g']) === true) {
+                $g = (int) $lineColor['g'];
+            } else {
+                $g = 0;
+            }
+
+            if (isset($lineColor['b']) === true) {
+                $b = (int) $lineColor['b'];
+            } else {
+                $b = 0;
+            }
+
+            if (isset($lineColor['a']) === true) {
+                $a = (int) $lineColor['a'];
+            } else {
+                $a = 100;
+            }
+
             if ($a < 100) {
                 $viewNode['borderColor'] = "rgba($r, $g, $b, ".round($a / 100, 2).")";
             } else {
                 $viewNode['borderColor'] = "rgb($r, $g, $b)";
             }
-        }
+        }//end if
 
-        // Extract font information
-        if (isset($style['font'])) {
+        // Extract font information.
+        if (isset($style['font']) === true) {
             $font = [];
-            if (isset($style['font']['_attributes'])) {
-                $font['name']  = $style['font']['_attributes']['name'] ?? 'Segoe UI, Arial';
-                $font['size']  = isset($style['font']['_attributes']['size']) ? (int) $style['font']['_attributes']['size'] : 12;
+            if (isset($style['font']['_attributes']) === true) {
+                $font['name'] = $style['font']['_attributes']['name'] ?? 'Segoe UI, Arial';
+                if (isset($style['font']['_attributes']['size']) === true) {
+                    $font['size'] = (int) $style['font']['_attributes']['size'];
+                } else {
+                    $font['size'] = 12;
+                }
+
                 $font['style'] = 'normal';
             }
 
-            if (isset($style['font']['color']['_attributes'])) {
+            if (isset($style['font']['color']['_attributes']) === true) {
                 $fontColor = $style['font']['color']['_attributes'];
-                $r         = isset($fontColor['r']) ? (int) $fontColor['r'] : 0;
-                $g         = isset($fontColor['g']) ? (int) $fontColor['g'] : 0;
-                $b         = isset($fontColor['b']) ? (int) $fontColor['b'] : 0;
-                $font['color'] = "rgb($r, $g, $b)";
-            }
+                if (isset($fontColor['r']) === true) {
+                    $r = (int) $fontColor['r'];
+                } else {
+                    $r = 0;
+                }
 
-            if (!empty($font)) {
+                if (isset($fontColor['g']) === true) {
+                    $g = (int) $fontColor['g'];
+                } else {
+                    $g = 0;
+                }
+
+                if (isset($fontColor['b']) === true) {
+                    $b = (int) $fontColor['b'];
+                } else {
+                    $b = 0;
+                }
+
+                $font['color'] = "rgb($r, $g, $b)";
+            }//end if
+
+            if (empty($font) === false) {
                 $viewNode['font'] = array_merge($viewNode['font'], $font);
             }
-        }
+        }//end if
     }//end applyNodeStyle()
 
     /**
@@ -3087,20 +3302,21 @@ class ArchiMateImportService
      * format expected by the frontend visualization components.
      *
      * @param  array $connectionData Connection data (can be single connection or array)
+     *
      * @return array Array of viewRelationships with standardized structure
      */
     private function extractViewRelationshipsRecursively($connectionData): array
     {
         $viewRelationships = [];
 
-        // Handle both single connection and array of connections
-        if (!isset($connectionData[0])) {
-            // Single connection
+        // Handle both single connection and array of connections.
+        if (isset($connectionData[0]) === false) {
+            // Single connection.
             $connectionData = [$connectionData];
         }
 
         foreach ($connectionData as $connection) {
-            if (!isset($connection['_attributes'])) {
+            if (isset($connection['_attributes']) === false) {
                 continue;
             }
 
@@ -3109,55 +3325,71 @@ class ArchiMateImportService
             $source          = $connection['_attributes']['source'] ?? null;
             $target          = $connection['_attributes']['target'] ?? null;
 
-            if (!$connectionId || !$source || !$target) {
+            if ($connectionId === null || $source === null || $target === false) {
                 continue;
             }
 
-            // Create viewRelationship with standardized structure
+            // Create viewRelationship with standardized structure.
             $viewRelationship = [
                 'modelRelationshipId' => $relationshipRef,
-            // Reference to the ArchiMate relationship
+            // Reference to the ArchiMate relationship.
                 'sourceId'            => $source,
-            // Source node viewNodeId
+            // Source node viewNodeId.
                 'targetId'            => $target,
-            // Target node viewNodeId
+            // Target node viewNodeId.
                 'viewRelationshipId'  => $connectionId,
-            // Unique identifier within this view
-                'type'                => $this->extractConnectionType($connection),
-            // Extract type directly from connection XML
+            // Unique identifier within this view.
+                'type'                => $this->extractConnectionType(connection: $connection),
+            // Extract type directly from connection XML.
                 'bendpoints'          => [],
-            // Array of bend points
+            // Array of bend points.
                 'label'               => [],
-            // Label information
+            // Label information.
             ];
 
-            // Extract bend points if present
-            if (isset($connection['bendpoint'])) {
-                $bendpoints = isset($connection['bendpoint'][0]) ? $connection['bendpoint'] : [$connection['bendpoint']];
+            // Extract bend points if present.
+            if (isset($connection['bendpoint']) === true) {
+                if (isset($connection['bendpoint'][0]) === true) {
+                    $bendpoints = $connection['bendpoint'];
+                } else {
+                    $bendpoints = [$connection['bendpoint']];
+                }
 
                 foreach ($bendpoints as $bendpoint) {
-                    if (isset($bendpoint['_attributes'])) {
+                    if (isset($bendpoint['_attributes']) === true) {
+                        if (isset($bendpoint['_attributes']['x']) === true) {
+                            $xValue = (float) $bendpoint['_attributes']['x'];
+                        } else {
+                            $xValue = 0;
+                        }
+
+                        if (isset($bendpoint['_attributes']['y']) === true) {
+                            $yValue = (float) $bendpoint['_attributes']['y'];
+                        } else {
+                            $yValue = 0;
+                        }
+
                         $viewRelationship['bendpoints'][] = [
-                            'x' => isset($bendpoint['_attributes']['x']) ? (float) $bendpoint['_attributes']['x'] : 0,
-                            'y' => isset($bendpoint['_attributes']['y']) ? (float) $bendpoint['_attributes']['y'] : 0,
+                            'x' => $xValue,
+                            'y' => $yValue,
                         ];
                     }
                 }
-            }
+            }//end if
 
-            // Extract label information if present
-            if (isset($connection['label'])) {
+            // Extract label information if present.
+            if (isset($connection['label']) === true) {
                 $label = [];
 
-                if (is_array($connection['label']) && isset($connection['label']['_value'])) {
+                if (is_array($connection['label']) === true && isset($connection['label']['_value']) === true) {
                     $label['text'] = $connection['label']['_value'];
-                } else if (is_string($connection['label'])) {
+                } else if (is_string($connection['label']) === true) {
                     $label['text'] = $connection['label'];
                 }
 
-                // Extract label markup/style if present
-                if (isset($connection['style'])) {
-                    $label['markup'] = [$this->extractLabelMarkup($connection['style'])];
+                // Extract label markup/style if present.
+                if (isset($connection['style']) === true) {
+                    $label['markup'] = [$this->extractLabelMarkup(style: $connection['style'])];
                 }
 
                 $viewRelationship['label'] = $label;
@@ -3173,6 +3405,7 @@ class ArchiMateImportService
      * Extract label markup information from connection style
      *
      * @param  array $style Style data from XML
+     *
      * @return array Label markup structure
      */
     private function extractLabelMarkup(array $style): array
@@ -3187,23 +3420,47 @@ class ArchiMateImportService
             ],
         ];
 
-        // Extract font information if present
-        if (isset($style['font'])) {
-            if (isset($style['font']['_attributes'])) {
+        // Extract font information if present.
+        if (isset($style['font']) === true) {
+            if (isset($style['font']['_attributes']) === true) {
                 $markup['style']['fontFamily'] = $style['font']['_attributes']['name'] ?? 'Segoe UI, Arial';
-                $markup['style']['fontSize']   = isset($style['font']['_attributes']['size']) ? (int) $style['font']['_attributes']['size'] : 11;
+                if (isset($style['font']['_attributes']['size']) === true) {
+                    $markup['style']['fontSize'] = (int) $style['font']['_attributes']['size'];
+                } else {
+                    $markup['style']['fontSize'] = 11;
+                }
             }
 
-            if (isset($style['font']['color']['_attributes'])) {
+            if (isset($style['font']['color']['_attributes']) === true) {
                 $fontColor = $style['font']['color']['_attributes'];
-                $r         = isset($fontColor['r']) ? (int) $fontColor['r'] : 0;
-                $g         = isset($fontColor['g']) ? (int) $fontColor['g'] : 0;
-                $b         = isset($fontColor['b']) ? (int) $fontColor['b'] : 0;
-                $a         = isset($fontColor['a']) ? ((int) $fontColor['a'] / 100) : 1;
-                // Convert percentage to decimal
+                if (isset($fontColor['r']) === true) {
+                    $r = (int) $fontColor['r'];
+                } else {
+                    $r = 0;
+                }
+
+                if (isset($fontColor['g']) === true) {
+                    $g = (int) $fontColor['g'];
+                } else {
+                    $g = 0;
+                }
+
+                if (isset($fontColor['b']) === true) {
+                    $b = (int) $fontColor['b'];
+                } else {
+                    $b = 0;
+                }
+
+                if (isset($fontColor['a']) === true) {
+                    $a = ((int) $fontColor['a'] / 100);
+                } else {
+                    $a = 1;
+                }
+
+                // Convert percentage to decimal.
                 $markup['style']['fontColor'] = "rgba($r, $g, $b, $a)";
-            }
-        }
+            }//end if
+        }//end if
 
         return $markup;
     }//end extractLabelMarkup()
@@ -3212,38 +3469,39 @@ class ArchiMateImportService
      * Extract node type directly from node XML attributes
      *
      * @param  array $node Node data from XML
+     *
      * @return string|null Node type extracted from XML or null if not found
      */
     private function extractNodeType(array $node): ?string
     {
-        // Priority 1: Check xsi:type attribute (most specific)
-        if (isset($node['_attributes']['xsi:type'])) {
+        // Priority 1: Check xsi:type attribute (most specific).
+        if (isset($node['_attributes']['xsi:type']) === true) {
             $xsiType = $node['_attributes']['xsi:type'];
 
-            // Handle different xsi:type formats
+            // Handle different xsi:type formats.
             if ($xsiType === 'Label') {
                 return 'label';
             } else if ($xsiType === 'Element') {
                 return 'element';
-            } else if (str_contains($xsiType, ':')) {
-                // Handle namespaced types like "archimate:BusinessService"
+            } else if (str_contains($xsiType, ':') === true) {
+                // Handle namespaced types like "archimate:BusinessService".
                 return strtolower(preg_replace('/^[a-z]+:/', '', $xsiType));
             } else {
                 return strtolower($xsiType);
             }
         }
 
-        // Priority 2: Check if this is a Label node (has label content)
-        if (isset($node['label'])) {
+        // Priority 2: Check if this is a Label node (has label content).
+        if (isset($node['label']) === true) {
             return 'label';
         }
 
-        // Priority 3: Check if this has an elementRef (it's an Element node)
-        if (isset($node['_attributes']['elementRef'])) {
+        // Priority 3: Check if this has an elementRef (it's an Element node).
+        if (isset($node['_attributes']['elementRef']) === true) {
             return 'element';
         }
 
-        // Fallback: Return null to allow element lookup to fill in the type
+        // Fallback: Return null to allow element lookup to fill in the type.
         return null;
     }//end extractNodeType()
 
@@ -3251,39 +3509,40 @@ class ArchiMateImportService
      * Extract connection type directly from connection XML attributes
      *
      * @param  array $connection Connection data from XML
+     *
      * @return string Connection type extracted from XML or default 'association'
      */
     private function extractConnectionType(array $connection): string
     {
-        // Priority 1: Check xsi:type attribute (most specific)
-        if (isset($connection['_attributes']['xsi:type'])) {
+        // Priority 1: Check xsi:type attribute (most specific).
+        if (isset($connection['_attributes']['xsi:type']) === true) {
             $xsiType = $connection['_attributes']['xsi:type'];
 
-            // Handle different connection type formats
-            if (str_contains($xsiType, 'Relationship')) {
-                // Remove "Relationship" suffix and namespace prefix
-                // e.g., "archimate:ServingRelationship" -> "serving"
+            // Handle different connection type formats.
+            if (str_contains($xsiType, 'Relationship') === true) {
+                // Remove "Relationship" suffix and namespace prefix.
+                // e.g., "archimate:ServingRelationship" -> "serving".
                 $type = preg_replace('/^[a-z]+:/', '', $xsiType);
-                // Remove namespace
+                // Remove namespace.
                 $type = preg_replace('/relationship$/i', '', $type);
-                // Remove "Relationship" suffix
+                // Remove "Relationship" suffix.
                 return strtolower($type);
-            } else if (str_contains($xsiType, ':')) {
-                // Handle other namespaced types
+            } else if (str_contains($xsiType, ':') === true) {
+                // Handle other namespaced types.
                 return strtolower(preg_replace('/^[a-z]+:/', '', $xsiType));
             } else {
                 return strtolower($xsiType);
             }
         }
 
-        // Priority 2: Check if this has a relationshipRef (use that to determine type if possible)
-        if (isset($connection['_attributes']['relationshipRef'])) {
-            // We have a relationship reference, but we can't determine the type from just the ID
-            // Return generic 'relationship' type
+        // Priority 2: Check if this has a relationshipRef (use that to determine type if possible).
+        if (isset($connection['_attributes']['relationshipRef']) === true) {
+            // We have a relationship reference, but we can't determine the type from just the ID.
+            // Return generic 'relationship' type.
             return 'relationship';
         }
 
-        // Fallback: Default association type
+        // Fallback: Default association type.
         return 'association';
     }//end extractConnectionType()
 
@@ -3291,55 +3550,126 @@ class ArchiMateImportService
      * Extract style information from a node (LEGACY - for backward compatibility)
      *
      * @param  array $style Style data from XML
+     *
      * @return array Processed style information
      */
     private function extractNodeStyle(array $style): array
     {
         $processedStyle = [];
 
-        // Extract fillColor
-        if (isset($style['fillColor']['_attributes'])) {
+        // Extract fillColor.
+        if (isset($style['fillColor']['_attributes']) === true) {
             $fillColor = $style['fillColor']['_attributes'];
+            if (isset($fillColor['r']) === true) {
+                $rValue = (int) $fillColor['r'];
+            } else {
+                $rValue = 255;
+            }
+
+            if (isset($fillColor['g']) === true) {
+                $gValue = (int) $fillColor['g'];
+            } else {
+                $gValue = 255;
+            }
+
+            if (isset($fillColor['b']) === true) {
+                $bValue = (int) $fillColor['b'];
+            } else {
+                $bValue = 255;
+            }
+
+            if (isset($fillColor['a']) === true) {
+                $aValue = (int) $fillColor['a'];
+            } else {
+                $aValue = 100;
+            }
+
             $processedStyle['fillColor'] = [
-                'r' => isset($fillColor['r']) ? (int) $fillColor['r'] : 255,
-                'g' => isset($fillColor['g']) ? (int) $fillColor['g'] : 255,
-                'b' => isset($fillColor['b']) ? (int) $fillColor['b'] : 255,
-                'a' => isset($fillColor['a']) ? (int) $fillColor['a'] : 100,
+                'r' => $rValue,
+                'g' => $gValue,
+                'b' => $bValue,
+                'a' => $aValue,
             ];
-        }
+        }//end if
 
-        // Extract lineColor
-        if (isset($style['lineColor']['_attributes'])) {
+        // Extract lineColor.
+        if (isset($style['lineColor']['_attributes']) === true) {
             $lineColor = $style['lineColor']['_attributes'];
+            if (isset($lineColor['r']) === true) {
+                $rValue = (int) $lineColor['r'];
+            } else {
+                $rValue = 0;
+            }
+
+            if (isset($lineColor['g']) === true) {
+                $gValue = (int) $lineColor['g'];
+            } else {
+                $gValue = 0;
+            }
+
+            if (isset($lineColor['b']) === true) {
+                $bValue = (int) $lineColor['b'];
+            } else {
+                $bValue = 0;
+            }
+
+            if (isset($lineColor['a']) === true) {
+                $aValue = (int) $lineColor['a'];
+            } else {
+                $aValue = 100;
+            }
+
             $processedStyle['lineColor'] = [
-                'r' => isset($lineColor['r']) ? (int) $lineColor['r'] : 0,
-                'g' => isset($lineColor['g']) ? (int) $lineColor['g'] : 0,
-                'b' => isset($lineColor['b']) ? (int) $lineColor['b'] : 0,
-                'a' => isset($lineColor['a']) ? (int) $lineColor['a'] : 100,
+                'r' => $rValue,
+                'g' => $gValue,
+                'b' => $bValue,
+                'a' => $aValue,
             ];
-        }
+        }//end if
 
-        // Extract font information
-        if (isset($style['font'])) {
+        // Extract font information.
+        if (isset($style['font']) === true) {
             $font = [];
-            if (isset($style['font']['_attributes'])) {
+            if (isset($style['font']['_attributes']) === true) {
                 $font['name'] = $style['font']['_attributes']['name'] ?? 'Arial';
-                $font['size'] = isset($style['font']['_attributes']['size']) ? (int) $style['font']['_attributes']['size'] : 12;
+                if (isset($style['font']['_attributes']['size']) === true) {
+                    $font['size'] = (int) $style['font']['_attributes']['size'];
+                } else {
+                    $font['size'] = 12;
+                }
             }
 
-            if (isset($style['font']['color']['_attributes'])) {
-                $fontColor     = $style['font']['color']['_attributes'];
+            if (isset($style['font']['color']['_attributes']) === true) {
+                $fontColor = $style['font']['color']['_attributes'];
+                if (isset($fontColor['r']) === true) {
+                    $rValue = (int) $fontColor['r'];
+                } else {
+                    $rValue = 0;
+                }
+
+                if (isset($fontColor['g']) === true) {
+                    $gValue = (int) $fontColor['g'];
+                } else {
+                    $gValue = 0;
+                }
+
+                if (isset($fontColor['b']) === true) {
+                    $bValue = (int) $fontColor['b'];
+                } else {
+                    $bValue = 0;
+                }
+
                 $font['color'] = [
-                    'r' => isset($fontColor['r']) ? (int) $fontColor['r'] : 0,
-                    'g' => isset($fontColor['g']) ? (int) $fontColor['g'] : 0,
-                    'b' => isset($fontColor['b']) ? (int) $fontColor['b'] : 0,
+                    'r' => $rValue,
+                    'g' => $gValue,
+                    'b' => $bValue,
                 ];
-            }
+            }//end if
 
-            if (!empty($font)) {
+            if (empty($font) === false) {
                 $processedStyle['font'] = $font;
             }
-        }
+        }//end if
 
         return $processedStyle;
     }//end extractNodeStyle()
@@ -3348,43 +3678,84 @@ class ArchiMateImportService
      * Extract style information from a connection
      *
      * @param  array $style Style data from XML
+     *
      * @return array Processed style information
      */
     private function extractConnectionStyle(array $style): array
     {
         $processedStyle = [];
 
-        // Extract lineColor
-        if (isset($style['lineColor']['_attributes'])) {
+        // Extract lineColor.
+        if (isset($style['lineColor']['_attributes']) === true) {
             $lineColor = $style['lineColor']['_attributes'];
+            if (isset($lineColor['r']) === true) {
+                $rValue = (int) $lineColor['r'];
+            } else {
+                $rValue = 0;
+            }
+
+            if (isset($lineColor['g']) === true) {
+                $gValue = (int) $lineColor['g'];
+            } else {
+                $gValue = 0;
+            }
+
+            if (isset($lineColor['b']) === true) {
+                $bValue = (int) $lineColor['b'];
+            } else {
+                $bValue = 0;
+            }
+
             $processedStyle['lineColor'] = [
-                'r' => isset($lineColor['r']) ? (int) $lineColor['r'] : 0,
-                'g' => isset($lineColor['g']) ? (int) $lineColor['g'] : 0,
-                'b' => isset($lineColor['b']) ? (int) $lineColor['b'] : 0,
+                'r' => $rValue,
+                'g' => $gValue,
+                'b' => $bValue,
             ];
-        }
+        }//end if
 
-        // Extract font information
-        if (isset($style['font'])) {
+        // Extract font information.
+        if (isset($style['font']) === true) {
             $font = [];
-            if (isset($style['font']['_attributes'])) {
+            if (isset($style['font']['_attributes']) === true) {
                 $font['name'] = $style['font']['_attributes']['name'] ?? 'Arial';
-                $font['size'] = isset($style['font']['_attributes']['size']) ? (int) $style['font']['_attributes']['size'] : 12;
+                if (isset($style['font']['_attributes']['size']) === true) {
+                    $font['size'] = (int) $style['font']['_attributes']['size'];
+                } else {
+                    $font['size'] = 12;
+                }
             }
 
-            if (isset($style['font']['color']['_attributes'])) {
-                $fontColor     = $style['font']['color']['_attributes'];
+            if (isset($style['font']['color']['_attributes']) === true) {
+                $fontColor = $style['font']['color']['_attributes'];
+                if (isset($fontColor['r']) === true) {
+                    $rValue = (int) $fontColor['r'];
+                } else {
+                    $rValue = 0;
+                }
+
+                if (isset($fontColor['g']) === true) {
+                    $gValue = (int) $fontColor['g'];
+                } else {
+                    $gValue = 0;
+                }
+
+                if (isset($fontColor['b']) === true) {
+                    $bValue = (int) $fontColor['b'];
+                } else {
+                    $bValue = 0;
+                }
+
                 $font['color'] = [
-                    'r' => isset($fontColor['r']) ? (int) $fontColor['r'] : 0,
-                    'g' => isset($fontColor['g']) ? (int) $fontColor['g'] : 0,
-                    'b' => isset($fontColor['b']) ? (int) $fontColor['b'] : 0,
+                    'r' => $rValue,
+                    'g' => $gValue,
+                    'b' => $bValue,
                 ];
-            }
+            }//end if
 
-            if (!empty($font)) {
+            if (empty($font) === false) {
                 $processedStyle['font'] = $font;
             }
-        }
+        }//end if
 
         return $processedStyle;
     }//end extractConnectionStyle()
@@ -3396,44 +3767,45 @@ class ArchiMateImportService
      * compatibility with different ArchiMate model variations.
      *
      * @param  array $object The object to extract GEMMA type from
+     *
      * @return string|null The GEMMA type value or null if not found
      */
     private function extractGemmaType(array $object): ?string
     {
-        // Try various possible property names for GEMMA type
+        // Try various possible property names for GEMMA type.
         $possiblePropertyNames = [
             'gemmaType',
-        // Standard camelCase conversion of "GEMMA Type"
+        // Standard camelCase conversion of "GEMMA Type".
             'gemmatype',
-        // Lowercase version
+        // Lowercase version.
             'GemmaType',
-        // PascalCase version
+        // PascalCase version.
             'GEMMA_Type',
-        // Underscore version
+        // Underscore version.
             'gemma_type',
-        // Lowercase underscore version
+        // Lowercase underscore version.
             'GEMMAType',
-        // All caps first word
+        // All caps first word.
             'type',
-        // Sometimes just "Type" in models
+        // Sometimes just "Type" in models.
             'elementType',
-        // Alternative naming
+        // Alternative naming.
             'componentType',
-        // Another alternative
+        // Another alternative.
         ];
 
         foreach ($possiblePropertyNames as $propertyName) {
-            if (isset($object[$propertyName]) && !empty($object[$propertyName])) {
+            if (isset($object[$propertyName]) === true && empty($object[$propertyName]) === false) {
                 $rawValue = $object[$propertyName];
-                // Handle case where value might be an array (e.g., from XML parsing with _value key)
-                if (is_array($rawValue)) {
+                // Handle case where value might be an array (e.g., from XML parsing with _value key).
+                if (is_array($rawValue) === true) {
                     $value = $rawValue['_value'] ?? $rawValue[0] ?? '';
                 } else {
                     $value = (string) $rawValue;
                 }
 
-                // Log the first successful match for debugging
-                if (!isset($this->gemmaTypePropertyFound)) {
+                // Log the first successful match for debugging.
+                if (isset($this->gemmaTypePropertyFound) === false) {
                     $this->logger->debug(
                             'GEMMA Type property found',
                             [
@@ -3449,12 +3821,12 @@ class ArchiMateImportService
             }//end if
         }//end foreach
 
-        // If no direct property found, check _propertyMapping for original property names
-        if (isset($object['_propertyMapping'])) {
+        // If no direct property found, check _propertyMapping for original property names.
+        if (isset($object['_propertyMapping']) === true) {
             foreach ($object['_propertyMapping'] as $camelCase => $original) {
-                // Check if the original property name contains "gemma" or "type"
+                // Check if the original property name contains "gemma" or "type".
                 if (stripos($original, 'gemma') !== false && stripos($original, 'type') !== false) {
-                    if (isset($object[$camelCase]) && !empty($object[$camelCase])) {
+                    if (isset($object[$camelCase]) === true && empty($object[$camelCase]) === false) {
                         $this->logger->debug(
                                 'GEMMA Type found via property mapping',
                                 [
@@ -3483,37 +3855,38 @@ class ArchiMateImportService
      * - 'verplichteStandaarden' array for standards with Verbindingsrol = "Verplicht"
      *
      * @param  array $objects All objects from the import
+     *
      * @return array Objects with enhanced Referentiecomponent data
      */
     private function processGemmaReferenceComponentStandards(array $objects): array
     {
         $this->logger->info('Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships with optimized single-pass algorithm');
 
-        // OPTIMIZATION: Single-pass processing - collect all data types at once
+        // OPTIMIZATION: Single-pass processing - collect all data types at once.
         $referentieComponenten = [];
         $standaarden           = [];
         $standaardVersies      = [];
         $gemmaRelationshipMap  = [];
         $standaardVersieRelationshipMap = [];
-        // StandaardVersie -> Standaard mappings
-        // Debug: Count objects and property variations
+        // StandaardVersie -> Standaard mappings.
+        // Debug: Count objects and property variations.
         $elementCount          = 0;
         $elementsWithGemmaType = 0;
         $gemmaTypeVariations   = [];
 
-        // PASS 1: Collect Referentiecomponenten, Standaarden, and StandaardVersies
+        // PASS 1: Collect Referentiecomponenten, Standaarden, and StandaardVersies.
         foreach ($objects as $index => $object) {
-            // Debug: Count elements and GEMMA types
-            if (isset($object['section']) && $object['section'] === 'element') {
+            // Debug: Count elements and GEMMA types.
+            if (isset($object['section']) === true && $object['section'] === 'element') {
                 $elementCount++;
 
-                // Check for various possible GEMMA type property names
-                $gemmaTypeValue = $this->extractGemmaType($object);
+                // Check for various possible GEMMA type property names.
+                $gemmaTypeValue = $this->extractGemmaType(object: $object);
                 if ($gemmaTypeValue !== null) {
                     $elementsWithGemmaType++;
 
-                    // Track GEMMA type variations for debugging
-                    if (!isset($gemmaTypeVariations[$gemmaTypeValue])) {
+                    // Track GEMMA type variations for debugging.
+                    if (isset($gemmaTypeVariations[$gemmaTypeValue]) === false) {
                         $gemmaTypeVariations[$gemmaTypeValue] = 0;
                     }
 
@@ -3530,18 +3903,18 @@ class ArchiMateImportService
             }//end if
         }//end foreach
 
-        // PASS 2: Process relationships (need all entities collected first for StandaardVersie relationships)
+        // PASS 2: Process relationships (need all entities collected first for StandaardVersie relationships).
         foreach ($objects as $object) {
-            if (isset($object['section']) && $object['section'] === 'relationship') {
-                // Process Referentiecomponent-Standaard relationships
-                $this->processRelationshipImmediate($object, $referentieComponenten, $standaarden, $gemmaRelationshipMap);
+            if (isset($object['section']) === true && $object['section'] === 'relationship') {
+                // Process Referentiecomponent-Standaard relationships.
+                $this->processRelationshipImmediate(relationship: $object, referentieComponenten: $referentieComponenten, standaarden: $standaarden, gemmaRelationshipMap: $gemmaRelationshipMap);
 
-                // Process StandaardVersie-Standaard relationships (Specialization type)
-                $this->processStandaardVersieRelationship($object, $standaardVersies, $standaarden, $standaardVersieRelationshipMap);
+                // Process StandaardVersie-Standaard relationships (Specialization type).
+                $this->processStandaardVersieRelationship(relationship: $object, standaardVersies: $standaardVersies, standaarden: $standaarden, standaardVersieRelationshipMap: $standaardVersieRelationshipMap);
             }
         }
 
-        // Enhanced debug logging
+        // Enhanced debug logging.
         $this->logger->info(
                 'GEMMA objects processing complete',
                 [
@@ -3556,20 +3929,20 @@ class ArchiMateImportService
                 ]
                 );
 
-        // STEP 2: Apply the processed relationship mappings to Referentiecomponenten
+        // STEP 2: Apply the processed relationship mappings to Referentiecomponenten.
         $enhancedCount = 0;
         foreach ($gemmaRelationshipMap as $referentieComponentId => $standaardenMap) {
-            if (isset($referentieComponenten[$referentieComponentId])) {
+            if (isset($referentieComponenten[$referentieComponentId]) === true) {
                 $objectIndex = $referentieComponenten[$referentieComponentId];
 
-                // Remove duplicates and add the properties
+                // Remove duplicates and add the properties.
                 $aanbevolenStandaarden = array_unique($standaardenMap['aanbevolen']);
                 $verplichteStandaarden = array_unique($standaardenMap['verplicht']);
 
                 $objects[$objectIndex]['aanbevolenStandaarden'] = $aanbevolenStandaarden;
                 $objects[$objectIndex]['verplichteStandaarden'] = $verplichteStandaarden;
 
-                // Also add combined array for backward compatibility
+                // Also add combined array for backward compatibility.
                 $allStandaarden = array_unique(array_merge($aanbevolenStandaarden, $verplichteStandaarden));
                 $objects[$objectIndex]['standaarden'] = $allStandaarden;
 
@@ -3598,15 +3971,15 @@ class ArchiMateImportService
                 ]
                 );
 
-        // STEP 3: Apply StandaardVersie-Standaard relationship mappings
-        // Only store 'standaard' on StandaardVersie - use inversedBy for reverse lookup
+        // STEP 3: Apply StandaardVersie-Standaard relationship mappings.
+        // Only store 'standaard' on StandaardVersie - use inversedBy for reverse lookup.
         $versieEnhancedCount = 0;
 
         foreach ($standaardVersieRelationshipMap as $versieId => $standaardId) {
-            // Add standaard reference to StandaardVersie
-            if (isset($standaardVersies[$versieId])) {
+            // Add standaard reference to StandaardVersie.
+            if (isset($standaardVersies[$versieId]) === true) {
                 $versieIndex = $standaardVersies[$versieId];
-                // Convert to UUID format (remove "id-" prefix)
+                // Convert to UUID format (remove "id-" prefix).
                 $standaardUuid = str_replace('id-', '', $standaardId);
                 $objects[$versieIndex]['standaard'] = $standaardUuid;
                 $versieEnhancedCount++;
@@ -3622,34 +3995,34 @@ class ArchiMateImportService
                 ]
                 );
 
-        // STEP 4: Add standaardVersies to ReferentieComponenten
-        // This allows querying ?gemmaType=referentiecomponent&_extend[]=gekoppeldeStandaardVersies
-        // to get all referentiecomponenten with their related standaardVersies in one call
-        // Build reverse map: Standaard ID -> [StandaardVersie UUIDs]
+        // STEP 4: Add standaardVersies to ReferentieComponenten.
+        // This allows querying ?gemmaType=referentiecomponent&_extend[]=gekoppeldeStandaardVersies.
+        // to get all referentiecomponenten with their related standaardVersies in one call.
+        // Build reverse map: Standaard ID -> [StandaardVersie UUIDs].
         $standaardToVersiesMap = [];
         foreach ($standaardVersieRelationshipMap as $versieId => $standaardId) {
             $versieUuid = str_replace('id-', '', $versieId);
-            if (!isset($standaardToVersiesMap[$standaardId])) {
+            if (isset($standaardToVersiesMap[$standaardId]) === false) {
                 $standaardToVersiesMap[$standaardId] = [];
             }
 
             $standaardToVersiesMap[$standaardId][] = $versieUuid;
         }
 
-        // Add standaardVersies to each ReferentieComponent
+        // Add standaardVersies to each ReferentieComponent.
         $refCompWithVersiesCount = 0;
         foreach ($referentieComponenten as $refCompId => $objectIndex) {
             $standaardVersiesForRefComp = [];
 
-            // Get all standaarden for this referentiecomponent (combined array)
+            // Get all standaarden for this referentiecomponent (combined array).
             $refCompStandaarden = $objects[$objectIndex]['standaarden'] ?? [];
 
-            // For each standaard, collect its standaardVersies
+            // For each standaard, collect its standaardVersies.
             foreach ($refCompStandaarden as $standaardUuid) {
-                // Convert UUID back to identifier format for lookup
+                // Convert UUID back to identifier format for lookup.
                 $standaardIdentifier = 'id-'.$standaardUuid;
 
-                if (isset($standaardToVersiesMap[$standaardIdentifier])) {
+                if (isset($standaardToVersiesMap[$standaardIdentifier]) === true) {
                     $standaardVersiesForRefComp = array_merge(
                         $standaardVersiesForRefComp,
                         $standaardToVersiesMap[$standaardIdentifier]
@@ -3657,9 +4030,9 @@ class ArchiMateImportService
                 }
             }
 
-            // Remove duplicates and add to referentiecomponent
-            // Use 'gekoppeldeStandaardVersies' to avoid conflict with inversedBy on 'standaardVersies'
-            if (!empty($standaardVersiesForRefComp)) {
+            // Remove duplicates and add to referentiecomponent.
+            // Use 'gekoppeldeStandaardVersies' to avoid conflict with inversedBy on 'standaardVersies'.
+            if (empty($standaardVersiesForRefComp) === false) {
                 $objects[$objectIndex]['gekoppeldeStandaardVersies'] = array_values(array_unique($standaardVersiesForRefComp));
                 $refCompWithVersiesCount++;
             }
@@ -3684,40 +4057,41 @@ class ArchiMateImportService
      * @param  array $standaardVersies                Array of StandaardVersie identifiers
      * @param  array $standaarden                     Array of Standaard identifiers
      * @param  array &$standaardVersieRelationshipMap Map of StandaardVersie -> Standaard (by reference)
+     *
      * @return void
      */
     private function processStandaardVersieRelationship(array $relationship, array $standaardVersies, array $standaarden, array &$standaardVersieRelationshipMap): void
     {
-        // Get source and target from relationship
-        $source = $this->extractRelationshipEndpoint($relationship, 'source');
-        $target = $this->extractRelationshipEndpoint($relationship, 'target');
+        // Get source and target from relationship.
+        $source = $this->extractRelationshipEndpoint(relationship: $relationship, endpoint: 'source');
+        $target = $this->extractRelationshipEndpoint(relationship: $relationship, endpoint: 'target');
 
-        if (!$source || !$target) {
+        if ($source === null || $target === false) {
             return;
         }
 
-        // Get relationship type (looking for Specialization)
-        // Type can be in 'type' (from _xsi__type) or in _attributes['xsi:type']
+        // Get relationship type (looking for Specialization).
+        // Type can be in 'type' (from _xsi__type) or in _attributes['xsi:type'].
         $relationType = $relationship['type'] ?? $relationship['_xsi__type'] ?? $relationship['_attributes']['xsi:type'] ?? null;
         if ($relationType !== 'Specialization') {
             return;
         }
 
-        // Check if one end is a StandaardVersie and the other is a Standaard
+        // Check if one end is a StandaardVersie and the other is a Standaard.
         $versieId    = null;
         $standaardId = null;
 
-        if (isset($standaardVersies[$source]) && isset($standaarden[$target])) {
-            // StandaardVersie -> Standaard
+        if (isset($standaardVersies[$source]) === true && isset($standaarden[$target]) === true) {
+            // StandaardVersie -> Standaard.
             $versieId    = $source;
             $standaardId = $target;
-        } else if (isset($standaarden[$source]) && isset($standaardVersies[$target])) {
-            // Standaard -> StandaardVersie (reverse direction)
+        } else if (isset($standaarden[$source]) === true && isset($standaardVersies[$target]) === true) {
+            // Standaard -> StandaardVersie (reverse direction).
             $versieId    = $target;
             $standaardId = $source;
         }
 
-        if ($versieId && $standaardId) {
+        if ($versieId !== false && $standaardId === true) {
             $standaardVersieRelationshipMap[$versieId] = $standaardId;
         }
     }//end processStandaardVersieRelationship()
@@ -3729,43 +4103,44 @@ class ArchiMateImportService
      * @param  array $referentieComponenten Array of Referentiecomponent identifiers
      * @param  array $standaarden           Array of Standaard identifiers
      * @param  array &$gemmaRelationshipMap The relationship map to update (by reference)
+     *
      * @return void
      */
     private function processRelationshipImmediate(array $relationship, array $referentieComponenten, array $standaarden, array &$gemmaRelationshipMap): void
     {
-        // Get source and target from relationship XML or flattened properties
-        $source = $this->extractRelationshipEndpoint($relationship, 'source');
-        $target = $this->extractRelationshipEndpoint($relationship, 'target');
+        // Get source and target from relationship XML or flattened properties.
+        $source = $this->extractRelationshipEndpoint(relationship: $relationship, endpoint: 'source');
+        $target = $this->extractRelationshipEndpoint(relationship: $relationship, endpoint: 'target');
 
-        if (!$source || !$target) {
+        if ($source === null || $target === false) {
             return;
         }
 
-        // Get Verbindingsrol from flattened properties (camelCase: verbindingsrol)
+        // Get Verbindingsrol from flattened properties (camelCase: verbindingsrol).
         $verbindingsrol = $relationship['verbindingsrol'] ?? null;
 
-        // Skip if no Verbindingsrol is defined
-        if (!$verbindingsrol) {
+        // Skip if no Verbindingsrol is defined.
+        if ($verbindingsrol === null) {
             return;
         }
 
-        // Check if one end is a Referentiecomponent and the other is a Standaard
+        // Check if one end is a Referentiecomponent and the other is a Standaard.
         $refCompId   = null;
         $standaardId = null;
 
-        if (isset($referentieComponenten[$source]) && isset($standaarden[$target])) {
-            // Referentiecomponent -> Standaard
+        if (isset($referentieComponenten[$source]) === true && isset($standaarden[$target]) === true) {
+            // Referentiecomponent -> Standaard.
             $refCompId   = $source;
             $standaardId = $target;
-        } else if (isset($standaarden[$source]) && isset($referentieComponenten[$target])) {
-            // Standaard -> Referentiecomponent (reverse direction)
+        } else if (isset($standaarden[$source]) === true && isset($referentieComponenten[$target]) === true) {
+            // Standaard -> Referentiecomponent (reverse direction).
             $refCompId   = $target;
             $standaardId = $source;
         }
 
-        if ($refCompId && $standaardId) {
-            // Initialize arrays if not exists
-            if (!isset($gemmaRelationshipMap[$refCompId])) {
+        if ($refCompId !== false && $standaardId === true) {
+            // Initialize arrays if not exists.
+            if (isset($gemmaRelationshipMap[$refCompId]) === false) {
                 $gemmaRelationshipMap[$refCompId] = [
                     'aanbevolen' => [],
                     'verplicht'  => [],
@@ -3776,8 +4151,8 @@ class ArchiMateImportService
                 return;
             }
 
-            // Add to appropriate array based on Verbindingsrol
-            // Convert identifier to UUID format (remove "id-" prefix) for _extend compatibility
+            // Add to appropriate array based on Verbindingsrol.
+            // Convert identifier to UUID format (remove "id-" prefix) for _extend compatibility.
             $standaardUuid = str_replace('id-', '', $standaardId);
             if (strtolower($verbindingsrol) === 'aanbevolen') {
                 $gemmaRelationshipMap[$refCompId]['aanbevolen'][] = $standaardUuid;
@@ -3792,38 +4167,39 @@ class ArchiMateImportService
      *
      * @param  array  $relationship The relationship object
      * @param  string $endpoint     Either 'source' or 'target'
+     *
      * @return string|null The endpoint identifier or null if not found
      */
     private function extractRelationshipEndpoint(array $relationship, string $endpoint): ?string
     {
-        // Try flattened camelCase property first
-        if (isset($relationship[$endpoint])) {
+        // Try flattened camelCase property first.
+        if (isset($relationship[$endpoint]) === true) {
             return $relationship[$endpoint];
         }
 
-        // Try XML structure
-        if (isset($relationship['xml'][$endpoint])) {
+        // Try XML structure.
+        if (isset($relationship['xml'][$endpoint]) === true) {
             $endpointData = $relationship['xml'][$endpoint];
 
-            // Handle different XML structures
-            if (is_string($endpointData)) {
+            // Handle different XML structures.
+            if (is_string($endpointData) === true) {
                 return $endpointData;
-            } else if (is_array($endpointData)) {
-                // Try _attributes.href or _value
-                if (isset($endpointData['_attributes']['href'])) {
+            } else if (is_array($endpointData) === true) {
+                // Try _attributes.href or _value.
+                if (isset($endpointData['_attributes']['href']) === true) {
                     return $endpointData['_attributes']['href'];
-                } else if (isset($endpointData['_value'])) {
+                } else if (isset($endpointData['_value']) === true) {
                     return $endpointData['_value'];
                 }
             }
         }
 
-        // Try direct XML access for ArchiMate format
-        if (isset($relationship['xml']['_attributes'])) {
+        // Try direct XML access for ArchiMate format.
+        if (isset($relationship['xml']['_attributes']) === true) {
             $attr = $relationship['xml']['_attributes'];
-            if ($endpoint === 'source' && isset($attr['source'])) {
+            if ($endpoint === 'source' && isset($attr['source']) === true) {
                 return $attr['source'];
-            } else if ($endpoint === 'target' && isset($attr['target'])) {
+            } else if ($endpoint === 'target' && isset($attr['target']) === true) {
                 return $attr['target'];
             }
         }
@@ -3843,6 +4219,7 @@ class ArchiMateImportService
      *
      * @param  array  $xmlData         Parsed XML data
      * @param  string $modelIdentifier Model identifier
+     *
      * @return array Array of objects ready for saveObjects()
      */
     private function transformArchiMateXmlToObjectsBatch(array $xmlData, string $modelIdentifier): array
@@ -3850,12 +4227,12 @@ class ArchiMateImportService
         $startTime  = microtime(true);
         $allObjects = [];
 
-        // SPEED OPTIMIZATION 1: Pre-extract and cache EVERYTHING
+        // SPEED OPTIMIZATION 1: Pre-extract and cache EVERYTHING.
         $cacheStartTime        = microtime(true);
-        $propertyDefinitionMap = $this->extractPropertyDefinitionMap($xmlData);
+        $propertyDefinitionMap = $this->extractPropertyDefinitionMap(data: $xmlData);
 
-        // Create model object first
-        if (isset($xmlData['_attributes']) || isset($xmlData['name'])) {
+        // Create model object first.
+        if (isset($xmlData['_attributes']) === true || isset($xmlData['name']) === true) {
             $modelMetadata = [
                 'identifier'            => $modelIdentifier,
                 'name'                  => $xmlData['name'] ?? '',
@@ -3864,14 +4241,14 @@ class ArchiMateImportService
                 'propertyDefinitionMap' => $propertyDefinitionMap,
             ];
 
-            if (isset($xmlData['_attributes'])) {
+            if (isset($xmlData['_attributes']) === true) {
                 $modelMetadata = array_merge($modelMetadata, $xmlData['_attributes']);
             }
 
-            $allObjects[] = $this->createModelObjectDirect($modelMetadata, $modelIdentifier);
+            $allObjects[] = $this->createModelObjectDirect(metadata: $modelMetadata, modelIdentifier: $modelIdentifier);
         }
 
-        // Process each section type directly (no intermediate normalization)
+        // Process each section type directly (no intermediate normalization).
         $sections = [
             'elements'             => 'element',
             'relationships'        => 'relationship',
@@ -3880,10 +4257,10 @@ class ArchiMateImportService
             'property_definitions' => 'property_definition',
         ];
 
-        // SPEED OPTIMIZATION 2: Pre-build ALL section lookups simultaneously
-        $allLookups     = $this->buildAllLookupsSimultaneously($xmlData);
-        $elementsLookup = $this->buildElementsLookup($allObjects);
-        // Will be rebuilt from processed objects
+        // SPEED OPTIMIZATION 2: Pre-build ALL section lookups simultaneously.
+        $allLookups     = $this->buildAllLookupsSimultaneously(xmlData: $xmlData);
+        $elementsLookup = $this->buildElementsLookup(elementObjects: $allObjects);
+        // Will be rebuilt from processed objects.
         $cacheTime = microtime(true) - $cacheStartTime;
         $this->logger->info(
                 'Pre-built all lookups',
@@ -3896,7 +4273,7 @@ class ArchiMateImportService
                 ]
                 );
 
-        // SPEED OPTIMIZATION 3: Process all non-view sections in bulk
+        // SPEED OPTIMIZATION 3: Process all non-view sections in bulk.
         $bulkProcessingStart = microtime(true);
         $nonViewObjects      = $this->bulkProcessNonViewSections(
             $xmlData,
@@ -3906,12 +4283,12 @@ class ArchiMateImportService
         );
         $allObjects          = array_merge($allObjects, $nonViewObjects);
 
-        // SPEED OPTIMIZATION: Build elements lookup directly from raw data (faster than from processed objects)
-        $elementsLookup = $this->buildElementsLookupFromRawData($allLookups['elements'], $nonViewObjects, $propertyDefinitionMap);
+        // SPEED OPTIMIZATION: Build elements lookup directly from raw data (faster than from processed objects).
+        $elementsLookup = $this->buildElementsLookupFromRawData(rawElementsData: $allLookups['elements'], processedObjects: $nonViewObjects, propertyDefinitionMap: $propertyDefinitionMap);
 
         $bulkTime = microtime(true) - $bulkProcessingStart;
 
-        // SPEED OPTIMIZATION 4: Process views with maximum speed optimizations
+        // SPEED OPTIMIZATION 4: Process views with maximum speed optimizations.
         $viewProcessingStart = microtime(true);
         $viewObjects         = $this->processViewsMaximumSpeed(
             $xmlData,
@@ -3923,18 +4300,18 @@ class ArchiMateImportService
         $viewTime            = microtime(true) - $viewProcessingStart;
 
         $totalTime = microtime(true) - $startTime;
-        // Transformation completed
-        // MEMORY CLEANUP: Free all intermediate lookups and caches before database operations
+        // Transformation completed.
+        // MEMORY CLEANUP: Free all intermediate lookups and caches before database operations.
         $memoryBeforeCleanup = memory_get_usage(true);
         unset($allLookups, $elementsLookup, $propertyDefinitionMap);
         $this->camelCaseCache = [];
-        // Clear property name cache
+        // Clear property name cache.
         $this->identifierPatternCache = [];
-        // Clear identifier pattern cache
+        // Clear identifier pattern cache.
         $this->propertyDefinitionMapCache = null;
-        // Clear property definition cache
-        // Force garbage collection to free memory immediately
-        if (function_exists('gc_collect_cycles')) {
+        // Clear property definition cache.
+        // Force garbage collection to free memory immediately.
+        if (function_exists('gc_collect_cycles') === true) {
             $cycles = gc_collect_cycles();
             $memoryAfterCleanup = memory_get_usage(true);
             $memoryFreed        = $memoryBeforeCleanup - $memoryAfterCleanup;
@@ -3965,6 +4342,7 @@ class ArchiMateImportService
      * @param  string $modelIdentifier       Model identifier
      * @param  array  $propertyDefinitionMap Property definition map
      * @param  array  $elementsLookup        Elements lookup for splicing
+     *
      * @return array Array of processed view objects
      */
     private function transformViewsOptimized(
@@ -3975,11 +4353,11 @@ class ArchiMateImportService
     ): array {
         $objects = [];
 
-        // Find items in section (optimized version for views)
-        $items = $this->findItemsSimplified($viewsData, 'view');
+        // Find items in section (optimized version for views).
+        $items = $this->findItemsSimplified(sectionData: $viewsData, sectionType: 'view');
 
-        // OPTIMIZATION: Pre-filter elements to only those actually referenced in views
-        $referencedElements     = $this->extractReferencedElements($items);
+        // OPTIMIZATION: Pre-filter elements to only those actually referenced in views.
+        $referencedElements     = $this->extractReferencedElements(viewItems: $items);
         $filteredElementsLookup = array_intersect_key($elementsLookup, array_flip($referencedElements));
 
         $this->logger->debug(
@@ -3992,22 +4370,22 @@ class ArchiMateImportService
                 );
 
         foreach ($items as $item) {
-            if (!is_array($item)) {
+            if (is_array($item) === false) {
                 continue;
             }
 
-            $identifier = $this->extractIdentifier($item, 'view');
-            if (!$identifier) {
+            $identifier = $this->extractIdentifier(item: $item, sectionName: 'view');
+            if ($identifier === null) {
                 continue;
             }
 
-            // OPTIMIZATION: Use filtered elements lookup for better performance
-            $essentialXmlData = $this->extractEssentialXmlData($item, $filteredElementsLookup, 'view');
+            // OPTIMIZATION: Use filtered elements lookup for better performance.
+            $essentialXmlData = $this->extractEssentialXmlData(item: $item, elementsLookup: $filteredElementsLookup, schemaType: 'view');
 
             $object = [
                 '@self'            => [
                     'register'     => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
-                    'schema'       => $this->getSchemaIdForSection('view'),
+                    'schema'       => $this->getSchemaIdForSection(section: 'view'),
                     'id'           => $identifier,
                     'owner'        => $this->cachedConfig['userId'],
                     'organisation' => $this->getCurrentOrganisation(),
@@ -4019,47 +4397,47 @@ class ArchiMateImportService
                 'xml'              => $essentialXmlData,
             ];
 
-            // Extract name and summary (same as other sections)
-            if (isset($item['name'])) {
-                if (is_array($item['name']) && isset($item['name']['_value'])) {
+            // Extract name and summary (same as other sections).
+            if (isset($item['name']) === true) {
+                if (is_array($item['name']) === true && isset($item['name']['_value']) === true) {
                     $object['name'] = $item['name']['_value'];
-                } else if (is_string($item['name'])) {
+                } else if (is_string($item['name']) === true) {
                     $object['name'] = $item['name'];
                 }
             }
 
-            if (isset($item['documentation'])) {
-                if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
+            if (isset($item['documentation']) === true) {
+                if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
                     $object['summary'] = $item['documentation']['_value'];
-                } else if (is_string($item['documentation'])) {
+                } else if (is_string($item['documentation']) === true) {
                     $object['summary'] = $item['documentation'];
                 }
             }
 
-            // Extract type from xsi:type attribute
-            if (isset($item['_xsi__type'])) {
+            // Extract type from xsi:type attribute.
+            if (isset($item['_xsi__type']) === true) {
                 $object['type'] = $item['_xsi__type'];
-            } else if (isset($item['_attributes']['xsi:type'])) {
+            } else if (isset($item['_attributes']['xsi:type']) === true) {
                 $object['type'] = $item['_attributes']['xsi:type'];
             }
 
-            // Flatten properties efficiently (same as other sections)
-            if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
-                $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+            // Flatten properties efficiently (same as other sections).
+            if (isset($item['properties']['property']) === true && empty($propertyDefinitionMap) === false) {
+                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propertyDefinitionMap: $propertyDefinitionMap);
 
-                // Keep @self.id as the full ArchiMate identifier (set above)
+                // Keep @self.id as the full ArchiMate identifier (set above).
                 // so stored IDs match GEMMA Online URLs (id-e0f57689-...).
                 $object['@self']['slug'] = $identifier;
             } else {
                 $object['@self']['slug'] = $identifier;
             }
 
-            // Copy viewNodes and viewRelationships from XML to root level for easy access
-            if (isset($object['xml']['viewNodes'])) {
+            // Copy viewNodes and viewRelationships from XML to root level for easy access.
+            if (isset($object['xml']['viewNodes']) === true) {
                 $object['viewNodes'] = $object['xml']['viewNodes'];
             }
 
-            if (isset($object['xml']['viewRelationships'])) {
+            if (isset($object['xml']['viewRelationships']) === true) {
                 $object['viewRelationships'] = $object['xml']['viewRelationships'];
             }
 
@@ -4073,6 +4451,7 @@ class ArchiMateImportService
      * Extract all element references from view items for optimization
      *
      * @param  array $viewItems Array of view items
+     *
      * @return array Array of referenced element identifiers
      */
     private function extractReferencedElements(array $viewItems): array
@@ -4080,7 +4459,7 @@ class ArchiMateImportService
         $references = [];
 
         foreach ($viewItems as $item) {
-            $this->collectElementReferencesRecursively($item, $references);
+            $this->collectElementReferencesRecursively(data: $item, references: $references);
         }
 
         return array_unique($references);
@@ -4091,24 +4470,25 @@ class ArchiMateImportService
      *
      * @param  array $data        View data to process
      * @param  array &$references Array to collect references into (by reference)
+     *
      * @return void
      */
     private function collectElementReferencesRecursively(array $data, array &$references): void
     {
-        // Check for elementRef in current level
-        if (isset($data['_attributes']['elementRef'])) {
+        // Check for elementRef in current level.
+        if (isset($data['_attributes']['elementRef']) === true) {
             $references[] = $data['_attributes']['elementRef'];
         }
 
-        // Recursively check child nodes
-        if (isset($data['node'])) {
+        // Recursively check child nodes.
+        if (isset($data['node']) === true) {
             $nodeData = $data['node'];
-            if (!isset($nodeData[0])) {
+            if (isset($nodeData[0]) === false) {
                 $nodeData = [$nodeData];
             }
 
             foreach ($nodeData as $node) {
-                $this->collectElementReferencesRecursively($node, $references);
+                $this->collectElementReferencesRecursively(data: $node, references: $references);
             }
         }
     }//end collectElementReferencesRecursively()
@@ -4120,6 +4500,7 @@ class ArchiMateImportService
      * to enable efficient element splicing during view node processing.
      *
      * @param  array $elementObjects Array of processed element objects
+     *
      * @return array Lookup array with element identifier as key and element data as value
      */
     private function buildElementsLookup(array $elementObjects): array
@@ -4128,7 +4509,7 @@ class ArchiMateImportService
 
         foreach ($elementObjects as $element) {
             $identifier = $element['identifier'] ?? null;
-            if ($identifier) {
+            if (empty($identifier) === false) {
                 $lookup[$identifier] = $element;
             }
         }
@@ -4153,6 +4534,7 @@ class ArchiMateImportService
      * @param  array $rawElementsData       Raw elements data from XML
      * @param  array $processedObjects      Already processed objects (for fallback)
      * @param  array $propertyDefinitionMap Property definition map
+     *
      * @return array Elements lookup for view processing
      */
     private function buildElementsLookupFromRawData(
@@ -4162,49 +4544,61 @@ class ArchiMateImportService
     ): array {
         $lookup = [];
 
-        // SPEED: Build directly from raw data with minimal processing
+        // SPEED: Build directly from raw data with minimal processing.
         foreach ($rawElementsData as $identifier => $rawItem) {
             $element = [
                 'identifier' => $identifier,
                 'section'    => 'element',
             ];
 
-            // Fast name extraction
-            if (isset($rawItem['name'])) {
-                $element['name'] = is_array($rawItem['name']) && isset($rawItem['name']['_value']) ? $rawItem['name']['_value'] : (is_string($rawItem['name']) ? $rawItem['name'] : '');
+            // Fast name extraction.
+            if (isset($rawItem['name']) === true) {
+                if (is_array($rawItem['name']) === true && isset($rawItem['name']['_value']) === true) {
+                    $element['name'] = $rawItem['name']['_value'];
+                } else {
+                    $element['name'] = (is_string($rawItem['name']) === true ? $rawItem['name'] : '');
+                }
             }
 
-            // Fast summary extraction
-            if (isset($rawItem['documentation'])) {
-                $element['summary'] = is_array($rawItem['documentation']) && isset($rawItem['documentation']['_value']) ? $rawItem['documentation']['_value'] : (is_string($rawItem['documentation']) ? $rawItem['documentation'] : '');
+            // Fast summary extraction.
+            if (isset($rawItem['documentation']) === true) {
+                if (is_array($rawItem['documentation']) === true && isset($rawItem['documentation']['_value']) === true) {
+                    $element['summary'] = $rawItem['documentation']['_value'];
+                } else {
+                    $element['summary'] = (is_string($rawItem['documentation']) === true ? $rawItem['documentation'] : '');
+                }
             }
 
-            // Extract type from xsi:type attribute
-            if (isset($rawItem['_xsi__type'])) {
+            // Extract type from xsi:type attribute.
+            if (isset($rawItem['_xsi__type']) === true) {
                 $element['type'] = $rawItem['_xsi__type'];
-            } else if (isset($rawItem['_attributes']['xsi:type'])) {
+            } else if (isset($rawItem['_attributes']['xsi:type']) === true) {
                 $element['type'] = $rawItem['_attributes']['xsi:type'];
             }
 
-            // Fast properties flattening (only essential properties for splicing)
-            if (isset($rawItem['properties']['property']) && !empty($propertyDefinitionMap)) {
-                $props = isset($rawItem['properties']['property'][0]) ? $rawItem['properties']['property'] : [$rawItem['properties']['property']];
+            // Fast properties flattening (only essential properties for splicing).
+            if (isset($rawItem['properties']['property']) === true && empty($propertyDefinitionMap) === false) {
+                if (isset($rawItem['properties']['property'][0]) === true) {
+                    $props = $rawItem['properties']['property'];
+                } else {
+                    $props = [$rawItem['properties']['property']];
+                }
 
                 foreach ($props as $prop) {
-                    if (!isset($prop['_attributes']['propertyDefinitionRef'])) {
+                    if (isset($prop['_attributes']['propertyDefinitionRef']) === false) {
                         continue;
                     }
 
                     $defRef = $prop['_attributes']['propertyDefinitionRef'];
                     $value  = $prop['value']['_value'] ?? $prop['value'] ?? null;
 
-                    if ($value !== null && isset($propertyDefinitionMap[$defRef])) {
+                    if ($value !== null && isset($propertyDefinitionMap[$defRef]) === true) {
                         $propertyName            = $propertyDefinitionMap[$defRef];
-                        $camelCaseName           = $this->convertToCamelCase($propertyName);
+                        $camelCaseName           = $this->convertToCamelCase(propertyName: $propertyName);
                         $element[$camelCaseName] = $value;
                     }
                 }
-            }
+            }//end if
 
             $lookup[$identifier] = $element;
         }//end foreach
@@ -4225,37 +4619,38 @@ class ArchiMateImportService
      *
      * @param  array  $metadata        Model metadata
      * @param  string $modelIdentifier Model identifier
+     *
      * @return array Model object with @self structure
      */
     private function createModelObjectDirect(array $metadata, string $modelIdentifier): array
     {
         $organisation = $this->getCurrentOrganisation();
 
-        // Extract a plain string name (schema column expects string, not array)
+        // Extract a plain string name (schema column expects string, not array).
         $nameString = null;
-        if (isset($metadata['name'])) {
-            if (is_array($metadata['name']) && isset($metadata['name']['_value'])) {
+        if (isset($metadata['name']) === true) {
+            if (is_array($metadata['name']) === true && isset($metadata['name']['_value']) === true) {
                 $nameString = (string) $metadata['name']['_value'];
-            } else if (is_string($metadata['name'])) {
+            } else if (is_string($metadata['name']) === true) {
                 $nameString = $metadata['name'];
             }
         }
 
-        // Build xml field preserving full array structure for round-trip fidelity
+        // Build xml field preserving full array structure for round-trip fidelity.
         $xmlData = [];
-        if (isset($metadata['name'])) {
+        if (isset($metadata['name']) === true) {
             $xmlData['name'] = $metadata['name'];
         }
 
-        if (isset($metadata['documentation'])) {
+        if (isset($metadata['documentation']) === true) {
             $xmlData['documentation'] = $metadata['documentation'];
         }
 
-        if (isset($metadata['properties'])) {
+        if (isset($metadata['properties']) === true) {
             $xmlData['properties'] = $metadata['properties'];
         }
 
-        if (isset($metadata['propertyDefinitionMap'])) {
+        if (isset($metadata['propertyDefinitionMap']) === true) {
             $xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
         }
 
@@ -4274,7 +4669,7 @@ class ArchiMateImportService
             'xml'              => $xmlData,
         ] + $metadata;
 
-        // Override name with string version so schema column stores it properly
+        // Override name with string version so schema column stores it properly.
         if ($nameString !== null) {
             $object['name'] = $nameString;
         }
@@ -4287,25 +4682,26 @@ class ArchiMateImportService
      *
      * @param  array  $xmlData     Parsed XML data
      * @param  string $sectionName Section name to find
+     *
      * @return array Section data or empty array
      */
     private function findSectionData(array $xmlData, string $sectionName): array
     {
-        // Direct lookup first
-        if (isset($xmlData[$sectionName])) {
+        // Direct lookup first.
+        if (isset($xmlData[$sectionName]) === true) {
             return $xmlData[$sectionName];
         }
 
-        // Alternative names lookup
+        // Alternative names lookup.
         $alternatives = [
             'views'                => ['diagrams'],
             'organizations'        => ['organisation'],
             'property_definitions' => ['propertyDefinitions', 'propertydefinitions'],
         ];
 
-        if (isset($alternatives[$sectionName])) {
+        if (isset($alternatives[$sectionName]) === true) {
             foreach ($alternatives[$sectionName] as $altName) {
-                if (isset($xmlData[$altName])) {
+                if (isset($xmlData[$altName]) === true) {
                     return $xmlData[$altName];
                 }
             }
@@ -4322,6 +4718,7 @@ class ArchiMateImportService
      * @param  string $modelIdentifier       Model identifier
      * @param  array  $propertyDefinitionMap Property definition map
      * @param  array  $elementsLookup        Optional elements lookup for view processing
+     *
      * @return array Array of transformed objects
      */
     private function transformSectionObjectsBatch(
@@ -4333,26 +4730,26 @@ class ArchiMateImportService
     ): array {
         $objects = [];
 
-        // Find items in section (simplified version)
-        $items = $this->findItemsSimplified($sectionData, $schemaType);
+        // Find items in section (simplified version).
+        $items = $this->findItemsSimplified(sectionData: $sectionData, sectionType: $schemaType);
 
         $skippedNotArray     = 0;
         $skippedNoIdentifier = 0;
 
         foreach ($items as $item) {
-            if (!is_array($item)) {
+            if (is_array($item) === false) {
                 $skippedNotArray++;
                 continue;
             }
 
-            $identifier = $this->extractIdentifier($item, $schemaType);
-            if (!$identifier) {
+            $identifier = $this->extractIdentifier(item: $item, sectionName: $schemaType);
+            if ($identifier === null) {
                 $skippedNoIdentifier++;
                 continue;
             }
 
-            // Create object directly (minimal processing) with element splicing for views
-            $essentialXmlData = $this->extractEssentialXmlData($item, $elementsLookup, $schemaType);
+            // Create object directly (minimal processing) with element splicing for views.
+            $essentialXmlData = $this->extractEssentialXmlData(item: $item, elementsLookup: $elementsLookup, schemaType: $schemaType);
 
             $object = [
                 '@self'            => [
@@ -4369,7 +4766,13 @@ class ArchiMateImportService
                 'xml'              => $essentialXmlData,
             ];
 
-            // Debug: Log XML data extraction
+            // Debug: Log XML data extraction.
+            if (isset($item['properties']) === true) {
+                $propertiesStructureValue = array_keys($item['properties']);
+            } else {
+                $propertiesStructureValue = null;
+            }
+
             $this->logger->debug(
                     'XML data extracted for object',
                     [
@@ -4378,89 +4781,113 @@ class ArchiMateImportService
                         'original_item_keys'   => array_keys($item),
                         'essential_xml_keys'   => array_keys($essentialXmlData),
                         'essential_xml_size'   => strlen(json_encode($essentialXmlData)),
-                        'has_properties'       => isset($item['properties']),
-                        'properties_structure' => isset($item['properties']) ? array_keys($item['properties']) : null,
+                        'has_properties'       => isset($item['properties']) === true,
+                        'properties_structure' => $propertiesStructureValue,
                     ]
                     );
 
-            // Extract name from XML if it exists
-            if (isset($item['name'])) {
-                if (is_array($item['name']) && isset($item['name']['_value'])) {
+            // Extract name from XML if it exists.
+            if (isset($item['name']) === true) {
+                if (is_array($item['name']) === true && isset($item['name']['_value']) === true) {
                     $object['name'] = $item['name']['_value'];
-                } else if (is_string($item['name'])) {
+                } else if (is_string($item['name']) === true) {
                     $object['name'] = $item['name'];
                 }
             }
 
-            // Extract documentation from XML if it exists and set to summary
-            if (isset($item['documentation'])) {
-                if (is_array($item['documentation']) && isset($item['documentation']['_value'])) {
+            // Extract documentation from XML if it exists and set to summary.
+            if (isset($item['documentation']) === true) {
+                if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
                     $object['summary'] = $item['documentation']['_value'];
-                } else if (is_string($item['documentation'])) {
+                } else if (is_string($item['documentation']) === true) {
                     $object['summary'] = $item['documentation'];
                 }
             }
 
-            // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent")
-            if (isset($item['_xsi__type'])) {
+            // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent").
+            if (isset($item['_xsi__type']) === true) {
                 $object['type'] = $item['_xsi__type'];
-            } else if (isset($item['_attributes']['xsi:type'])) {
+            } else if (isset($item['_attributes']['xsi:type']) === true) {
                 $object['type'] = $item['_attributes']['xsi:type'];
             }
 
-            // Flatten properties efficiently (if present)
-            if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
-                $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+            // Flatten properties efficiently (if present).
+            if (isset($item['properties']['property']) === true && empty($propertyDefinitionMap) === false) {
+                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propertyDefinitionMap: $propertyDefinitionMap);
 
-                // FIXED: After properties are flattened, update ID and slug if objectId is available
-                if (isset($object['objectId'])) {
-                    // Use objectId as main ID and AMEF identifier as slug
+                // FIXED: After properties are flattened, update ID and slug if objectId is available.
+                if (isset($object['objectId']) === true) {
+                    // Use objectId as main ID and AMEF identifier as slug.
                     $object['@self']['id']   = $object['objectId'];
                     $object['@self']['slug'] = $identifier;
-                    // AMEF identifier becomes slug
+                    // AMEF identifier becomes slug.
                 } else {
-                    // Fallback: extract clean UUID from AMEF identifier for slug
-                    if ($identifier && str_starts_with($identifier, 'id-')) {
+                    // Fallback: extract clean UUID from AMEF identifier for slug.
+                    if ($identifier !== false && str_starts_with($identifier, 'id-') === true) {
                         $object['@self']['slug'] = substr($identifier, 3);
-                        // Remove "id-" prefix
+                        // Remove "id-" prefix.
                     } else {
                         $object['@self']['slug'] = $identifier;
                     }
                 }
             } else {
-                // No properties to flatten, use AMEF identifier logic
-                if ($identifier && str_starts_with($identifier, 'id-')) {
+                // No properties to flatten, use AMEF identifier logic.
+                if ($identifier !== false && str_starts_with($identifier, 'id-') === true) {
                     $object['@self']['slug'] = substr($identifier, 3);
-                    // Remove "id-" prefix
+                    // Remove "id-" prefix.
                 } else {
                     $object['@self']['slug'] = $identifier;
                 }
             }//end if
 
-            // NEW: For view objects, copy viewNodes and viewRelationships from XML to root level
-            if ($schemaType === 'view' && isset($object['xml'])) {
-                if (isset($object['xml']['viewNodes'])) {
+            // NEW: For view objects, copy viewNodes and viewRelationships from XML to root level.
+            if ($schemaType === 'view' && isset($object['xml']) === true) {
+                if (isset($object['xml']['viewNodes']) === true) {
                     $object['viewNodes'] = $object['xml']['viewNodes'];
                 }
 
-                if (isset($object['xml']['viewRelationships'])) {
+                if (isset($object['xml']['viewRelationships']) === true) {
                     $object['viewRelationships'] = $object['xml']['viewRelationships'];
                 }
             }
 
-            // DEBUG: Log final object structure before adding to array
+            // DEBUG: Log final object structure before adding to array.
+            if (isset($object['xml']) === true) {
+                $xml_keysValue = array_keys($object['xml']);
+            } else {
+                $xml_keysValue = null;
+            }
+
+            if (isset($object['_propertyMapping']) === true) {
+                $property_mapping_countValue = count($object['_propertyMapping']);
+            } else {
+                $property_mapping_countValue = 0;
+            }
+
+            if (isset($object['viewNodes']) === true) {
+                $viewNodes_countValue = count($object['viewNodes']);
+            } else {
+                $viewNodes_countValue = 0;
+            }
+
+            if (isset($object['viewRelationships']) === true) {
+                $viewRelationships_countValue = count($object['viewRelationships']);
+            } else {
+                $viewRelationships_countValue = 0;
+            }
+
             $this->logger->debug(
                     'Final object structure before save',
                     [
                         'object_id'               => $identifier,
                         'section'                 => $schemaType,
                         'object_keys'             => array_keys($object),
-                        'has_xml_property'        => isset($object['xml']),
-                        'xml_keys'                => isset($object['xml']) ? array_keys($object['xml']) : null,
-                        'has_property_mapping'    => isset($object['_propertyMapping']),
-                        'property_mapping_count'  => isset($object['_propertyMapping']) ? count($object['_propertyMapping']) : 0,
-                        'viewNodes_count'         => isset($object['viewNodes']) ? count($object['viewNodes']) : 0,
-                        'viewRelationships_count' => isset($object['viewRelationships']) ? count($object['viewRelationships']) : 0,
+                        'has_xml_property'        => isset($object['xml']) === true,
+                        'xml_keys'                => $xml_keysValue,
+                        'has_property_mapping'    => isset($object['_propertyMapping']) === true,
+                        'property_mapping_count'  => $property_mapping_countValue,
+                        'viewNodes_count'         => $viewNodes_countValue,
+                        'viewRelationships_count' => $viewRelationships_countValue,
                         'sample_properties'       => array_slice(array_diff(array_keys($object), ['@self', 'identifier', 'section', 'model_identifier', 'xml', '_propertyMapping', 'name', 'summary', 'viewNodes', 'viewRelationships']), 0, 5),
                     ]
                     );
@@ -4476,36 +4903,45 @@ class ArchiMateImportService
      *
      * @param  array  $sectionData Section data
      * @param  string $sectionType Section type
+     *
      * @return array Items array
      */
     private function findItemsSimplified(array $sectionData, string $sectionType): array
     {
-        // Handle views with diagrams structure
-        if ($sectionType === 'view' && isset($sectionData['diagrams']['view'])) {
+        // Handle views with diagrams structure.
+        if ($sectionType === 'view' && isset($sectionData['diagrams']['view']) === true) {
             $viewData = $sectionData['diagrams']['view'];
-            return isset($viewData[0]) ? $viewData : [$viewData];
+            if (isset($viewData[0]) === true) {
+                return $viewData;
+            } else {
+                return [$viewData];
+            }
         }
 
-        // Try common patterns
+        // Try common patterns.
         $patterns = [
             $sectionType,
         // singular: element, relationship, etc.
             $sectionType.'s',
         // plural: elements, relationships, etc.
             'item',
-        // organizations use 'item'
+        // organizations use 'item'.
             'propertyDefinition',
-        // property definitions
+        // property definitions.
         ];
 
         foreach ($patterns as $pattern) {
-            if (isset($sectionData[$pattern])) {
+            if (isset($sectionData[$pattern]) === true) {
                 $data = $sectionData[$pattern];
-                return is_array($data) && isset($data[0]) ? $data : [$data];
+                if (is_array($data) === true && isset($data[0]) === true) {
+                    return $data;
+                } else {
+                    return [$data];
+                }
             }
         }
 
-        // Fallback: treat section data as single item
+        // Fallback: treat section data as single item.
         return [$sectionData];
     }//end findItemsSimplified()
 
@@ -4515,14 +4951,20 @@ class ArchiMateImportService
      * @param  array &$object               Object to add properties to (by reference)
      * @param  array $properties            Properties array from XML
      * @param  array $propertyDefinitionMap Property definition map
+     *
      * @return void
      */
     private function flattenPropertiesBatch(array &$object, array $properties, array $propertyDefinitionMap): void
     {
-        $props = isset($properties[0]) ? $properties : [$properties];
+        if (isset($properties[0]) === true) {
+            $props = $properties;
+        } else {
+            $props = [$properties];
+        }
+
         $processedProperties = [];
 
-        // Debug: Log property flattening process
+        // Debug: Log property flattening process.
         $this->logger->debug(
                 'Flattening properties for object',
                 [
@@ -4534,7 +4976,7 @@ class ArchiMateImportService
                 );
 
         foreach ($props as $propIndex => $prop) {
-            if (!isset($prop['_attributes']['propertyDefinitionRef'])) {
+            if (isset($prop['_attributes']['propertyDefinitionRef']) === false) {
                 $this->logger->warning(
                         'Property missing propertyDefinitionRef',
                         [
@@ -4549,8 +4991,8 @@ class ArchiMateImportService
             $defRef = $prop['_attributes']['propertyDefinitionRef'];
             $value  = $prop['value']['_value'] ?? $prop['value'] ?? null;
 
-            // Debug: Log property reference lookup
-            if (!isset($propertyDefinitionMap[$defRef])) {
+            // Debug: Log property reference lookup.
+            if (isset($propertyDefinitionMap[$defRef]) === false) {
                 $this->logger->warning(
                         'Property definition not found in map',
                         [
@@ -4562,13 +5004,13 @@ class ArchiMateImportService
                 continue;
             }
 
-            if ($value !== null && isset($propertyDefinitionMap[$defRef])) {
+            if ($value !== null && isset($propertyDefinitionMap[$defRef]) === true) {
                 $propertyName           = $propertyDefinitionMap[$defRef];
-                $camelCaseName          = $this->convertToCamelCase($propertyName);
+                $camelCaseName          = $this->convertToCamelCase(propertyName: $propertyName);
                 $object[$camelCaseName] = $value;
 
-                // Store property mapping for reference
-                if (!isset($object['_propertyMapping'])) {
+                // Store property mapping for reference.
+                if (isset($object['_propertyMapping']) === false) {
                     $object['_propertyMapping'] = [];
                 }
 
@@ -4581,8 +5023,8 @@ class ArchiMateImportService
                     'def_ref'   => $defRef,
                 ];
 
-                // Object ID property is now handled after property flattening is complete
-                // Debug: Log GEMMA type properties specifically
+                // Object ID property is now handled after property flattening is complete.
+                // Debug: Log GEMMA type properties specifically.
                 if (stripos($propertyName, 'gemma') !== false || $defRef === 'propid-3') {
                     $this->logger->info(
                             'GEMMA type property processed',
@@ -4602,13 +5044,13 @@ class ArchiMateImportService
                             'object_id'        => $object['identifier'] ?? 'unknown',
                             'property_def_ref' => $defRef,
                             'value'            => $value,
-                            'mapping_exists'   => isset($propertyDefinitionMap[$defRef]),
+                            'mapping_exists'   => isset($propertyDefinitionMap[$defRef]) === true,
                         ]
                         );
             }//end if
         }//end foreach
 
-        // Debug: Log final property flattening results
+        // Debug: Log final property flattening results.
         $this->logger->debug(
                 'Property flattening completed',
                 [
@@ -4627,6 +5069,7 @@ class ArchiMateImportService
      * during processing. Uses more memory but significantly faster processing.
      *
      * @param  array $xmlData Complete XML data
+     *
      * @return array Array with all lookups: ['elements' => [...], 'relationships' => [...], etc.]
      */
     private function buildAllLookupsSimultaneously(array $xmlData): array
@@ -4639,7 +5082,7 @@ class ArchiMateImportService
             'property_definitions' => [],
         ];
 
-        // Pre-extract all section data simultaneously
+        // Pre-extract all section data simultaneously.
         $sections = [
             'elements'             => 'element',
             'relationships'        => 'relationship',
@@ -4649,18 +5092,18 @@ class ArchiMateImportService
         ];
 
         foreach ($sections as $sectionName => $schemaType) {
-            $sectionData = $this->findSectionData($xmlData, $sectionName);
-            if (!empty($sectionData)) {
-                $items = $this->findItemsSimplified($sectionData, $schemaType);
+            $sectionData = $this->findSectionData(xmlData: $xmlData, sectionName: $sectionName);
+            if (empty($sectionData) === false) {
+                $items = $this->findItemsSimplified(sectionData: $sectionData, sectionType: $schemaType);
 
                 foreach ($items as $item) {
-                    if (!is_array($item)) {
+                    if (is_array($item) === false) {
                         continue;
                     }
 
-                    $identifier = $this->extractIdentifier($item, $schemaType);
-                    if ($identifier) {
-                        // Store raw item data for fast processing later
+                    $identifier = $this->extractIdentifier(item: $item, sectionName: $schemaType);
+                    if (empty($identifier) === false) {
+                        // Store raw item data for fast processing later.
                         $lookups[$sectionName][$identifier] = $item;
                     }
                 }
@@ -4677,6 +5120,7 @@ class ArchiMateImportService
      * @param  string $modelIdentifier       Model identifier
      * @param  array  $propertyDefinitionMap Property definition map
      * @param  array  $allLookups            All pre-built lookups
+     *
      * @return array Processed objects
      */
     private function bulkProcessNonViewSections(
@@ -4695,10 +5139,10 @@ class ArchiMateImportService
         ];
 
         foreach ($sections as $sectionName => $schemaType) {
-            // Organizations are hierarchical folder trees — store as one tree object
+            // Organizations are hierarchical folder trees — store as one tree object.
             if ($sectionName === 'organizations') {
-                $orgData = $this->findSectionData($xmlData, 'organizations');
-                if (!empty($orgData)) {
+                $orgData = $this->findSectionData(xmlData: $xmlData, sectionName: 'organizations');
+                if (empty($orgData) === false) {
                     $syntheticId = 'org-'.preg_replace('/^id-/', '', $modelIdentifier);
                     $objects[]   = [
                         '@self'            => [
@@ -4720,7 +5164,7 @@ class ArchiMateImportService
                 continue;
             }//end if
 
-            if (empty($allLookups[$sectionName])) {
+            if (empty($allLookups[$sectionName]) === true) {
                 continue;
             }
 
@@ -4731,7 +5175,7 @@ class ArchiMateImportService
                     ]
                     );
 
-            // SPEED OPTIMIZATION: Process all items in this section as a batch
+            // SPEED OPTIMIZATION: Process all items in this section as a batch.
             $sectionObjects = $this->bulkTransformSection(
                 $allLookups[$sectionName],
                 $schemaType,
@@ -4752,6 +5196,7 @@ class ArchiMateImportService
      * @param  string $schemaType            Schema type
      * @param  string $modelIdentifier       Model identifier
      * @param  array  $propertyDefinitionMap Property definition map
+     *
      * @return array Transformed objects
      */
     private function bulkTransformSection(
@@ -4763,8 +5208,8 @@ class ArchiMateImportService
         $objects = [];
 
         foreach ($sectionItems as $identifier => $item) {
-            // SPEED OPTIMIZATION: Direct object creation without intermediate steps
-            $essentialXmlData = $this->extractEssentialXmlData($item, [], $schemaType);
+            // SPEED OPTIMIZATION: Direct object creation without intermediate steps.
+            $essentialXmlData = $this->extractEssentialXmlData(item: $item, elementsLookup: [], schemaType: $schemaType);
 
             $object = [
                 '@self'            => [
@@ -4781,51 +5226,67 @@ class ArchiMateImportService
                 'xml'              => $essentialXmlData,
             ];
 
-            // Fast extract name and summary
-            if (isset($item['name'])) {
-                $object['name'] = is_array($item['name']) && isset($item['name']['_value']) ? $item['name']['_value'] : (is_string($item['name']) ? $item['name'] : '');
+            // Fast extract name and summary.
+            if (isset($item['name']) === true) {
+                if (is_array($item['name']) === true && isset($item['name']['_value']) === true) {
+                    $object['name'] = $item['name']['_value'];
+                } else {
+                    $object['name'] = (is_string($item['name']) === true ? $item['name'] : '');
+                }
             }
 
-            if (isset($item['documentation'])) {
-                $object['summary'] = is_array($item['documentation']) && isset($item['documentation']['_value']) ? $item['documentation']['_value'] : (is_string($item['documentation']) ? $item['documentation'] : '');
+            if (isset($item['documentation']) === true) {
+                if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
+                    $object['summary'] = $item['documentation']['_value'];
+                } else {
+                    $object['summary'] = (is_string($item['documentation']) === true ? $item['documentation'] : '');
+                }
             }
 
-            // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent")
-            if (isset($item['_xsi__type'])) {
+            // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent").
+            if (isset($item['_xsi__type']) === true) {
                 $object['type'] = $item['_xsi__type'];
-            } else if (isset($item['_attributes']['xsi:type'])) {
+            } else if (isset($item['_attributes']['xsi:type']) === true) {
                 $object['type'] = $item['_attributes']['xsi:type'];
             }
 
-            // For relationships, extract source and target from attributes
+            // For relationships, extract source and target from attributes.
             if ($schemaType === 'relationship') {
-                if (isset($item['_source'])) {
+                if (isset($item['_source']) === true) {
                     $object['source'] = $item['_source'];
-                } else if (isset($item['_attributes']['source'])) {
+                } else if (isset($item['_attributes']['source']) === true) {
                     $object['source'] = $item['_attributes']['source'];
                 }
 
-                if (isset($item['_target'])) {
+                if (isset($item['_target']) === true) {
                     $object['target'] = $item['_target'];
-                } else if (isset($item['_attributes']['target'])) {
+                } else if (isset($item['_attributes']['target']) === true) {
                     $object['target'] = $item['_attributes']['target'];
                 }
             }
 
-            // Fast flatten properties
-            if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
-                $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+            // Fast flatten properties.
+            if (isset($item['properties']['property']) === true && empty($propertyDefinitionMap) === false) {
+                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propertyDefinitionMap: $propertyDefinitionMap);
 
-                // Fast ID/slug update
-                if (isset($object['objectId'])) {
+                // Fast ID/slug update.
+                if (isset($object['objectId']) === true) {
                     $object['@self']['id']   = $object['objectId'];
                     $object['@self']['slug'] = $identifier;
                 } else {
-                    $object['@self']['slug'] = str_starts_with($identifier, 'id-') ? substr($identifier, 3) : $identifier;
+                    if (str_starts_with($identifier, 'id-') === true) {
+                        $object['@self']['slug'] = substr($identifier, 3);
+                    } else {
+                        $object['@self']['slug'] = $identifier;
+                    }
                 }
             } else {
-                $object['@self']['slug'] = str_starts_with($identifier, 'id-') ? substr($identifier, 3) : $identifier;
-            }
+                if (str_starts_with($identifier, 'id-') === true) {
+                    $object['@self']['slug'] = substr($identifier, 3);
+                } else {
+                    $object['@self']['slug'] = $identifier;
+                }
+            }//end if
 
             $objects[] = $object;
         }//end foreach
@@ -4840,6 +5301,7 @@ class ArchiMateImportService
      * @param  string $modelIdentifier       Model identifier
      * @param  array  $propertyDefinitionMap Property definition map
      * @param  array  $elementsLookup        Elements lookup for splicing
+     *
      * @return array Processed view objects
      */
     private function processViewsMaximumSpeed(
@@ -4848,8 +5310,8 @@ class ArchiMateImportService
         array $propertyDefinitionMap,
         array $elementsLookup
     ): array {
-        $viewsData = $this->findSectionData($xmlData, 'views');
-        if (empty($viewsData)) {
+        $viewsData = $this->findSectionData(xmlData: $xmlData, sectionName: 'views');
+        if (empty($viewsData) === true) {
             return [];
         }
 
@@ -4860,11 +5322,11 @@ class ArchiMateImportService
                 ]
                 );
 
-        // SPEED OPTIMIZATION: Pre-extract all referenced elements
-        $items = $this->findItemsSimplified($viewsData, 'view');
-        $referencedElements = $this->extractReferencedElements($items);
+        // SPEED OPTIMIZATION: Pre-extract all referenced elements.
+        $items = $this->findItemsSimplified(sectionData: $viewsData, sectionType: 'view');
+        $referencedElements = $this->extractReferencedElements(viewItems: $items);
 
-        // SPEED OPTIMIZATION: Build super-fast lookup with array_intersect_key
+        // SPEED OPTIMIZATION: Build super-fast lookup with array_intersect_key.
         $filteredElementsLookup = array_intersect_key($elementsLookup, array_flip($referencedElements));
 
         $this->logger->debug(
@@ -4876,8 +5338,8 @@ class ArchiMateImportService
                 ]
                 );
 
-        // SPEED OPTIMIZATION: Process with bulk operations
-        return $this->bulkTransformViews($items, $modelIdentifier, $propertyDefinitionMap, $filteredElementsLookup);
+        // SPEED OPTIMIZATION: Process with bulk operations.
+        return $this->bulkTransformViews(viewItems: $items, modelIdentifier: $modelIdentifier, propertyDefinitionMap: $propertyDefinitionMap, elementsLookup: $filteredElementsLookup);
     }//end processViewsMaximumSpeed()
 
     /**
@@ -4887,6 +5349,7 @@ class ArchiMateImportService
      * @param  string $modelIdentifier       Model identifier
      * @param  array  $propertyDefinitionMap Property definition map
      * @param  array  $elementsLookup        Filtered elements lookup
+     *
      * @return array Processed view objects
      */
     private function bulkTransformViews(
@@ -4898,22 +5361,22 @@ class ArchiMateImportService
         $objects = [];
 
         foreach ($viewItems as $item) {
-            if (!is_array($item)) {
+            if (is_array($item) === false) {
                 continue;
             }
 
-            $identifier = $this->extractIdentifier($item, 'view');
-            if (!$identifier) {
+            $identifier = $this->extractIdentifier(item: $item, sectionName: 'view');
+            if ($identifier === null) {
                 continue;
             }
 
-            // SPEED OPTIMIZATION: Direct processing with minimal overhead
-            $essentialXmlData = $this->extractEssentialXmlData($item, $elementsLookup, 'view');
+            // SPEED OPTIMIZATION: Direct processing with minimal overhead.
+            $essentialXmlData = $this->extractEssentialXmlData(item: $item, elementsLookup: $elementsLookup, schemaType: 'view');
 
             $object = [
                 '@self'            => [
                     'register'     => $this->cachedConfig['registerId'] ?? throw new \RuntimeException("Register ID not found in cached configuration. Please ensure AMEF configuration is properly initialized."),
-                    'schema'       => $this->getSchemaIdForSection('view'),
+                    'schema'       => $this->getSchemaIdForSection(section: 'view'),
                     'id'           => $identifier,
                     'owner'        => $this->cachedConfig['userId'],
                     'organisation' => $this->getCurrentOrganisation(),
@@ -4925,39 +5388,47 @@ class ArchiMateImportService
                 'xml'              => $essentialXmlData,
             ];
 
-            // Fast name/summary extraction
-            if (isset($item['name'])) {
-                $object['name'] = is_array($item['name']) && isset($item['name']['_value']) ? $item['name']['_value'] : (is_string($item['name']) ? $item['name'] : '');
+            // Fast name/summary extraction.
+            if (isset($item['name']) === true) {
+                if (is_array($item['name']) === true && isset($item['name']['_value']) === true) {
+                    $object['name'] = $item['name']['_value'];
+                } else {
+                    $object['name'] = (is_string($item['name']) === true ? $item['name'] : '');
+                }
             }
 
-            if (isset($item['documentation'])) {
-                $object['summary'] = is_array($item['documentation']) && isset($item['documentation']['_value']) ? $item['documentation']['_value'] : (is_string($item['documentation']) ? $item['documentation'] : '');
+            if (isset($item['documentation']) === true) {
+                if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
+                    $object['summary'] = $item['documentation']['_value'];
+                } else {
+                    $object['summary'] = (is_string($item['documentation']) === true ? $item['documentation'] : '');
+                }
             }
 
-            // Extract type from xsi:type attribute
-            if (isset($item['_xsi__type'])) {
+            // Extract type from xsi:type attribute.
+            if (isset($item['_xsi__type']) === true) {
                 $object['type'] = $item['_xsi__type'];
-            } else if (isset($item['_attributes']['xsi:type'])) {
+            } else if (isset($item['_attributes']['xsi:type']) === true) {
                 $object['type'] = $item['_attributes']['xsi:type'];
             }
 
-            // Fast properties flattening
-            if (isset($item['properties']['property']) && !empty($propertyDefinitionMap)) {
-                $this->flattenPropertiesBatch($object, $item['properties']['property'], $propertyDefinitionMap);
+            // Fast properties flattening.
+            if (isset($item['properties']['property']) === true && empty($propertyDefinitionMap) === false) {
+                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propertyDefinitionMap: $propertyDefinitionMap);
 
-                // Keep @self.id as the full ArchiMate identifier (set above)
+                // Keep @self.id as the full ArchiMate identifier (set above).
                 // so stored IDs match GEMMA Online URLs (id-e0f57689-...).
                 $object['@self']['slug'] = $identifier;
             } else {
                 $object['@self']['slug'] = $identifier;
             }
 
-            // SPEED OPTIMIZATION: Direct copy without checks (we know it exists)
-            if (isset($object['xml']['viewNodes'])) {
+            // SPEED OPTIMIZATION: Direct copy without checks (we know it exists).
+            if (isset($object['xml']['viewNodes']) === true) {
                 $object['viewNodes'] = $object['xml']['viewNodes'];
             }
 
-            if (isset($object['xml']['viewRelationships'])) {
+            if (isset($object['xml']['viewRelationships']) === true) {
                 $object['viewRelationships'] = $object['xml']['viewRelationships'];
             }
 
@@ -4978,6 +5449,7 @@ class ArchiMateImportService
      * OpenRegister's saveObjects() method should handle this automatically based on object sizes.
      *
      * @param  array $objects Array of objects to batch
+     *
      * @return array Array of batches, each containing objects that fit within size limits
      */
     private function createIntelligentBatches(array $objects): array
@@ -4986,14 +5458,14 @@ class ArchiMateImportService
         $minBatchSize      = self::PERFORMANCE_OPTIMIZATIONS['min_batch_size'];
         $sampleSize        = self::PERFORMANCE_OPTIMIZATIONS['size_estimation_sample'];
 
-        if (empty($objects)) {
+        if (empty($objects) === true) {
             return [];
         }
 
-        // Estimate average object size by sampling
-        $avgObjectSize = $this->estimateAverageObjectSize($objects, $sampleSize);
+        // Estimate average object size by sampling.
+        $avgObjectSize = $this->estimateAverageObjectSize(objects: $objects, sampleSize: $sampleSize);
 
-        // Calculate optimal batch size based on object size
+        // Calculate optimal batch size based on object size.
         $optimalBatchSize = max($minBatchSize, intval($maxBatchSizeBytes / $avgObjectSize));
 
         $this->logger->info(
@@ -5007,28 +5479,28 @@ class ArchiMateImportService
                 ]
                 );
 
-        // Create batches with size awareness
+        // Create batches with size awareness.
         $batches          = [];
         $currentBatch     = [];
         $currentBatchSize = 0;
 
         foreach ($objects as $object) {
-            $objectSize = $this->estimateObjectSize($object);
+            $objectSize = $this->estimateObjectSize(object: $object);
 
-            // Check if adding this object would exceed the batch size limit
-            if (!empty($currentBatch) && ($currentBatchSize + $objectSize) > $maxBatchSizeBytes) {
-                // Current batch is full, save it and start a new one
+            // Check if adding this object would exceed the batch size limit.
+            if (empty($currentBatch) === false && ($currentBatchSize + $objectSize) > $maxBatchSizeBytes) {
+                // Current batch is full, save it and start a new one.
                 $batches[]        = $currentBatch;
                 $currentBatch     = [$object];
                 $currentBatchSize = $objectSize;
             } else {
-                // Add object to current batch
+                // Add object to current batch.
                 $currentBatch[]    = $object;
                 $currentBatchSize += $objectSize;
             }
 
-            // Safety check: if a single object is larger than max batch size,
-            // create a batch with just that object
+            // Safety check: if a single object is larger than max batch size,.
+            // create a batch with just that object.
             if (count($currentBatch) === 1 && $objectSize > $maxBatchSizeBytes) {
                 $this->logger->warning(
                         'Very large object detected, creating single-object batch',
@@ -5044,8 +5516,8 @@ class ArchiMateImportService
             }
         }//end foreach
 
-        // Add the last batch if it has objects
-        if (!empty($currentBatch)) {
+        // Add the last batch if it has objects.
+        if (empty($currentBatch) === false) {
             $batches[] = $currentBatch;
         }
 
@@ -5067,6 +5539,7 @@ class ArchiMateImportService
      *
      * @param  array $objects    Array of objects to sample
      * @param  int   $sampleSize Number of objects to sample for size estimation
+     *
      * @return int Estimated average object size in bytes
      */
     private function estimateAverageObjectSize(array $objects, int $sampleSize): int
@@ -5074,16 +5547,16 @@ class ArchiMateImportService
         $totalObjects = count($objects);
         if ($totalObjects === 0) {
             return 1000;
-            // Default fallback size
+            // Default fallback size.
         }
 
-        // Sample evenly distributed objects
+        // Sample evenly distributed objects.
         $sampleIndices = [];
         if ($totalObjects <= $sampleSize) {
-            // Use all objects if we have fewer than sample size
+            // Use all objects if we have fewer than sample size.
             $sampleIndices = range(0, $totalObjects - 1);
         } else {
-            // Sample evenly across the array
+            // Sample evenly across the array.
             $step = max(1, intval($totalObjects / $sampleSize));
             for ($i = 0; $i < $totalObjects; $i += $step) {
                 $sampleIndices[] = $i;
@@ -5093,10 +5566,10 @@ class ArchiMateImportService
             }
         }
 
-        // Calculate sizes of sampled objects
+        // Calculate sizes of sampled objects.
         $totalSampleSize = 0;
         foreach ($sampleIndices as $index) {
-            $totalSampleSize += $this->estimateObjectSize($objects[$index]);
+            $totalSampleSize += $this->estimateObjectSize(object: $objects[$index]);
         }
 
         $averageSize = intval($totalSampleSize / count($sampleIndices));
@@ -5112,25 +5585,26 @@ class ArchiMateImportService
                 );
 
         return max(1000, $averageSize);
-        // Minimum 1KB per object
+        // Minimum 1KB per object.
     }//end estimateAverageObjectSize()
 
     /**
      * Estimate the serialized size of an object for batching purposes
      *
      * @param  array $object The object to estimate size for
+     *
      * @return int Estimated size in bytes
      */
     private function estimateObjectSize(array $object): int
     {
-        // Quick estimation based on JSON serialization
-        // This includes overhead for SQL parameters and structure
+        // Quick estimation based on JSON serialization.
+        // This includes overhead for SQL parameters and structure.
         $jsonSize = strlen(json_encode($object));
 
-        // Add overhead for SQL INSERT statement structure
-        // Each object becomes multiple parameters in a bulk INSERT
+        // Add overhead for SQL INSERT statement structure.
+        // Each object becomes multiple parameters in a bulk INSERT.
         $sqlOverhead = 500;
-        // Estimated overhead per object in SQL
+        // Estimated overhead per object in SQL.
         return $jsonSize + $sqlOverhead;
     }//end estimateObjectSize()
 
@@ -5139,11 +5613,12 @@ class ArchiMateImportService
      *
      * @param  array $normalizedData Normalized ArchiMate data
      * @param  array $savedObjects   Objects that were saved to database
+     *
      * @return array Comprehensive statistics
      */
     private function calculateObjectStatistics(array $normalizedData, array $savedObjects): array
     {
-        // Initialize statistics structure
+        // Initialize statistics structure.
         $statistics = [
             'elements'             => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
             'organizations'        => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
@@ -5152,7 +5627,7 @@ class ArchiMateImportService
             'property_definitions' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
         ];
 
-        // If we have access to the actual save results from ObjectService, use those
+        // If we have access to the actual save results from ObjectService, use those.
         if ($this->lastSaveResult !== null) {
             $saveResult = $this->lastSaveResult;
 
@@ -5178,14 +5653,14 @@ class ArchiMateImportService
             );
 
             foreach ($allProcessedObjects as $object) {
-                // Convert ObjectEntity to array if needed
-                if (is_object($object) && method_exists($object, 'jsonSerialize')) {
+                // Convert ObjectEntity to array if needed.
+                if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
                     $object = $object->jsonSerialize();
                 }
 
                 $sectionType = $object['section'] ?? null;
 
-                // Map section types (singular or plural) to statistics keys
+                // Map section types (singular or plural) to statistics keys.
                 $sectionKey = match ($sectionType) {
                     'elements', 'element', 'model' => 'elements',
                     'relationships', 'relationship' => 'relationships',
@@ -5195,8 +5670,8 @@ class ArchiMateImportService
                     default => null
                 };
 
-                // Fallback: use @self.schema to determine section
-                if ($sectionKey === null && $this->cachedConfig !== null && isset($this->cachedConfig['schemaIds'])) {
+                // Fallback: use @self.schema to determine section.
+                if ($sectionKey === null && $this->cachedConfig !== null && isset($this->cachedConfig['schemaIds']) === true) {
                     $objSchemaId = $object['@self']['schema'] ?? null;
                     if ($objSchemaId !== null) {
                         $singularToPlural = [
@@ -5220,61 +5695,61 @@ class ArchiMateImportService
                     $sectionKey = 'elements';
                 }//end if
 
-                if (!isset($statistics[$sectionKey])) {
+                if (isset($statistics[$sectionKey]) === false) {
                     continue;
-                    // Skip unknown section types
+                    // Skip unknown section types.
                 }
 
                 // Determine if this object was created, updated, or had errors.
                 $objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
 
                 // Check if this object is in the saved (created) list.
-                $wasCreated = !empty(
+                $wasCreated = empty(
                         array_filter(
                         $saveResult['saved'] ?? [],
                     fn($saved) => ($saved->getUuid() === $objectId)
                         )
-                        );
+                        ) === false;
 
                 // Check if this object is in the updated list.
-                $wasUpdated = !empty(
+                $wasUpdated = empty(
                         array_filter(
                         $saveResult['updated'] ?? [],
                     fn($updated) => ($updated->getUuid() === $objectId)
                         )
-                        );
+                        ) === false;
 
                 // Check if this object was unchanged (no changes).
                 $unchangedObjects = $saveResult['unchanged'] ?? [];
-                $wasSkipped       = !empty(
+                $wasSkipped       = empty(
                         array_filter(
                         $unchangedObjects,
                     fn($unchanged) => ($unchanged->getUuid() === $objectId)
                         )
-                        );
+                        ) === false;
 
                 // Check if this object had validation errors.
-                $hasErrors = !empty(
+                $hasErrors = empty(
                         array_filter(
                         $saveResult['invalid'] ?? [],
                     fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)
                         )
-                        );
+                        ) === false;
 
-                if ($wasCreated) {
+                if (empty($wasCreated) === false) {
                     $statistics[$sectionKey]['created']++;
-                } else if ($wasUpdated) {
+                } else if (empty($wasUpdated) === false) {
                     $statistics[$sectionKey]['updated']++;
-                } else if ($wasSkipped) {
+                } else if (empty($wasSkipped) === false) {
                     $statistics[$sectionKey]['unchanged']++;
-                } else if ($hasErrors) {
+                } else if (empty($hasErrors) === false) {
                     // Add to errors array for this section.
                     $errorInfo = array_filter(
                             $saveResult['invalid'] ?? [],
                         fn($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)
                             );
 
-                    if (!empty($errorInfo)) {
+                    if (empty($errorInfo) === false) {
                         $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
                     }
                 } else {
@@ -5283,12 +5758,12 @@ class ArchiMateImportService
                 }
             }//end foreach
         } else {
-            // Fallback to old method if no save result is available
+            // Fallback to old method if no save result is available.
             $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
             foreach ($sections as $section) {
-                if (isset($normalizedData[$section])) {
+                if (isset($normalizedData[$section]) === true) {
                     $count = count($normalizedData[$section]);
-                    // Assume all objects were created (legacy behavior)
+                    // Assume all objects were created (legacy behavior).
                     $statistics[$section]['created'] = $count;
                 }
             }
@@ -5339,6 +5814,7 @@ class ArchiMateImportService
      * Extract detailed error information from import statistics for frontend display
      *
      * @param  array $statistics Import statistics containing section-wise error data
+     *
      * @return array Formatted error information for frontend consumption
      */
     private function extractDetailedErrors(array $statistics): array
@@ -5352,19 +5828,24 @@ class ArchiMateImportService
         $sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
 
         foreach ($sections as $section) {
-            if (isset($statistics[$section]['errors']) && !empty($statistics[$section]['errors'])) {
+            if (isset($statistics[$section]['errors']) === true && empty($statistics[$section]['errors']) === false) {
                 $sectionErrors     = $statistics[$section]['errors'];
                 $sectionErrorCount = count($sectionErrors);
 
                 $detailedErrors['total_count'] += $sectionErrorCount;
 
-                // Group errors by type/message for better presentation
+                // Group errors by type/message for better presentation.
                 $errorGroups = [];
                 foreach ($sectionErrors as $error) {
-                    $errorMessage = is_string($error) ? $error : ($error['message'] ?? 'Unknown error');
-                    $errorType    = $this->categorizeError($errorMessage);
+                    if (is_string($error) === true) {
+                        $errorMessage = $error;
+                    } else {
+                        $errorMessage = ($error['message'] ?? 'Unknown error');
+                    }
 
-                    if (!isset($errorGroups[$errorType])) {
+                    $errorType = $this->categorizeError(errorMessage: $errorMessage);
+
+                    if (isset($errorGroups[$errorType]) === false) {
                         $errorGroups[$errorType] = [
                             'type'     => $errorType,
                             'message'  => $errorMessage,
@@ -5375,9 +5856,9 @@ class ArchiMateImportService
 
                     $errorGroups[$errorType]['count']++;
 
-                    // Add example object ID if available (limit to 5 examples)
+                    // Add example object ID if available (limit to 5 examples).
                     if (count($errorGroups[$errorType]['examples']) < 5) {
-                        if (is_array($error) && isset($error['object_id'])) {
+                        if (is_array($error) === true && isset($error['object_id']) === true) {
                             $errorGroups[$errorType]['examples'][] = $error['object_id'];
                         }
                     }
@@ -5391,12 +5872,12 @@ class ArchiMateImportService
             }//end if
         }//end foreach
 
-        // Create summary of most common errors across all sections
+        // Create summary of most common errors across all sections.
         $allErrors = [];
         foreach ($detailedErrors['by_section'] as $sectionData) {
             foreach ($sectionData['error_groups'] as $errorGroup) {
                 $errorType = $errorGroup['type'];
-                if (!isset($allErrors[$errorType])) {
+                if (isset($allErrors[$errorType]) === false) {
                     $allErrors[$errorType] = [
                         'type'              => $errorType,
                         'message'           => $errorGroup['message'],
@@ -5410,7 +5891,7 @@ class ArchiMateImportService
             }
         }
 
-        // Sort by frequency and take top 10
+        // Sort by frequency and take top 10.
         uasort($allErrors, fn($a, $b) => $b['total_count'] - $a['total_count']);
         $detailedErrors['summary'] = array_slice(array_values($allErrors), 0, 10);
 
@@ -5421,13 +5902,14 @@ class ArchiMateImportService
      * Categorize error types for better grouping and presentation
      *
      * @param  string $errorMessage The error message to categorize
+     *
      * @return string Error category/type
      */
     private function categorizeError(string $errorMessage): string
     {
         $errorMessage = strtolower($errorMessage);
 
-        // Define error patterns and their categories
+        // Define error patterns and their categories.
         $errorPatterns = [
             'validation'   => ['validation', 'invalid', 'required', 'missing', 'empty'],
             'schema'       => ['schema', 'structure', 'format', 'type'],
@@ -5441,7 +5923,7 @@ class ArchiMateImportService
 
         foreach ($errorPatterns as $category => $patterns) {
             foreach ($patterns as $pattern) {
-                if (str_contains($errorMessage, $pattern)) {
+                if (str_contains($errorMessage, $pattern) === true) {
                     return $category;
                 }
             }

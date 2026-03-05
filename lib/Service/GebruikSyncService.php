@@ -103,12 +103,12 @@ class GebruikSyncService
                     );
 
             // Step 1: Process gebruiktVoorReferentiecomponenten for AMEF elements.
-            $amefStats = $this->processAmefElements($gebruikObject);
+            $amefStats = $this->processAmefElements(gebruikObject: $gebruikObject);
             $stats['amefElementsProcessed'] = $amefStats['amefElementsProcessed'];
             $stats['errors'] = array_merge($stats['errors'], $amefStats['errors']);
 
             // Step 2: Auto-update status based on dates.
-            $statusStats            = $this->updateStatusBasedOnDates($gebruikObject);
+            $statusStats            = $this->updateStatusBasedOnDates(gebruikObject: $gebruikObject);
             $stats['statusUpdated'] = $statusStats['statusUpdated'];
             $stats['errors']        = array_merge($stats['errors'], $statusStats['errors']);
 
@@ -245,7 +245,7 @@ class GebruikSyncService
             // Update the gebruik object with AMEF slugs.
             if (empty($amefSlugs) === false) {
                 $gebruikData['amefElements'] = array_unique($amefSlugs);
-                $this->updateGebruikObject(
+                                $this->updateGebruikObject(
                     gebruikObject: $gebruikObject,
                     updatedData: $gebruikData
                 );
@@ -415,7 +415,7 @@ class GebruikSyncService
             // Update status if we found a different one.
             if ($targetStatus !== null && $targetStatus !== $currentStatus) {
                 $gebruikData['status'] = $targetStatus;
-                $this->updateGebruikObject(
+                                $this->updateGebruikObject(
                     gebruikObject: $gebruikObject,
                     updatedData: $gebruikData
                 );

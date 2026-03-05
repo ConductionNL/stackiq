@@ -114,7 +114,8 @@ class SymfonyEmailService
         <body>
             <h1>Welkom {{ user.name }}!</h1>
             <p>Beste {{ user.name }},</p>
-            <p>Hartelijk welkom bij de Software Catalogus! Uw gebruikersaccount is succesvol aangemaakt voor {{ organization.name }}.</p>
+            <p>Hartelijk welkom bij de Software Catalogus! Uw gebruikersaccount is
+            succesvol aangemaakt voor {{ organization.name }}.</p>
             <p>U kunt nu:</p>
             <ul>
                 <li>Inloggen op het platform</li>
@@ -154,7 +155,8 @@ class SymfonyEmailService
                 <li>Tijdelijk wachtwoord: <code>{{ user.password }}</code></li>
             </ul>
             <p><strong>Belangrijk:</strong> We raden u aan om dit tijdelijke wachtwoord te wijzigen na uw eerste inlog.</p>
-            <p>U kunt inloggen op het platform en direct aan de slag met het beheren van software voor {{ organization.name }}.</p>
+            <p>U kunt inloggen op het platform en direct aan de slag met het beheren
+            van software voor {{ organization.name }}.</p>
             <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>
             <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
         </body>
@@ -284,7 +286,7 @@ class SymfonyEmailService
         try {
             switch ($transportType) {
                 case 'smtp':
-                    return $this->createSmtpTransport($emailSettings);
+                    return $this->createSmtpTransport(settings: $emailSettings);
                 case 'sendmail':
                     return Transport::fromDsn('sendmail://default');
                 case 'native':
@@ -292,15 +294,15 @@ class SymfonyEmailService
                 case 'null':
                     return Transport::fromDsn('null://null');
                 case 'sendgrid':
-                    return $this->createSendGridTransport($emailSettings);
+                    return $this->createSendGridTransport(settings: $emailSettings);
                 case 'mailgun':
-                    return $this->createMailgunTransport($emailSettings);
+                    return $this->createMailgunTransport(settings: $emailSettings);
                 case 'postmark':
-                    return $this->createPostmarkTransport($emailSettings);
+                    return $this->createPostmarkTransport(settings: $emailSettings);
                 case 'ses':
-                    return $this->createSesTransport($emailSettings);
+                    return $this->createSesTransport(settings: $emailSettings);
                 case 'mailjet':
-                    return $this->createMailjetTransport($emailSettings);
+                    return $this->createMailjetTransport(settings: $emailSettings);
                 default:
                     $this->logger->warning(
                             'Unknown transport type, falling back to SMTP',
@@ -308,7 +310,7 @@ class SymfonyEmailService
                                 'transportType' => $transportType,
                             ]
                             );
-                    return $this->createSmtpTransport($emailSettings);
+                    return $this->createSmtpTransport(settings: $emailSettings);
             }//end switch
         } catch (\Exception $e) {
             $this->logger->error(
@@ -506,7 +508,7 @@ class SymfonyEmailService
         $organizationName = $organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie';
 
         // Determine recipient email.
-        $recipientEmail = $this->getRecipientEmail($organization);
+        $recipientEmail = $this->getRecipientEmail(data: $organization);
         if ($recipientEmail === null) {
             $this->logger->warning(
                     'OrganizationRegistrationEmail: Cannot send without valid email address',
@@ -612,7 +614,7 @@ class SymfonyEmailService
         $organizationName = ($organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie');
 
         // Determine recipient email.
-        $recipientEmail = $this->getRecipientEmail($organization);
+        $recipientEmail = $this->getRecipientEmail(data: $organization);
         if ($recipientEmail === null) {
             $this->logger->warning(
                     'OrganizationActivationEmail: Cannot send without valid email address',
@@ -1050,7 +1052,7 @@ class SymfonyEmailService
             // Get template content from settings service.
             $emailSettings   = $this->settingsService->getEmailSettings();
             $templates       = ($emailSettings['templates'] ?? []);
-            $templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate($templateName));
+            $templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate(templateName: $templateName));
 
             // Replace template variables.
             $htmlBody = $this->processTemplate(
@@ -1185,7 +1187,7 @@ class SymfonyEmailService
             }
         }
 
-        if ($email !== null && $this->validateEmail($email) === true) {
+        if ($email !== null && $this->validateEmail(email: $email) === true) {
             return $email;
         }
 
@@ -1202,7 +1204,7 @@ class SymfonyEmailService
         $emailSettings = $this->settingsService->getEmailSettings();
         $override      = ($emailSettings['testReceiverOverride'] ?? '');
 
-        if (empty($override) === false && $this->validateEmail($override) === true) {
+        if (empty($override) === false && $this->validateEmail(email: $override) === true) {
             return $override;
         }
 
@@ -1242,7 +1244,7 @@ class SymfonyEmailService
                 ->text(strip_tags($htmlBody));
             // Fallback text version.
             // Send email using Symfony Mailer.
-            $this->getMailer()->send($email);
+                        $this->getMailer()->send($email);
 
             $this->logger->info(
                     'Email sent successfully using Symfony Mailer',
@@ -1338,7 +1340,7 @@ class SymfonyEmailService
      */
     public function setSenderEmail(string $email): void
     {
-        if ($this->validateEmail($email) === false) {
+        if ($this->validateEmail(email: $email) === false) {
             throw new \InvalidArgumentException('Invalid email address: '.$email);
         }
 
@@ -1390,7 +1392,7 @@ class SymfonyEmailService
      */
     public function sendTestEmail(string $testEmail): bool
     {
-        if ($this->validateEmail($testEmail) === false) {
+        if ($this->validateEmail(email: $testEmail) === false) {
             $this->logger->error('Invalid test email address', ['email' => $testEmail]);
             return false;
         }
@@ -1457,7 +1459,7 @@ class SymfonyEmailService
      */
     public function setTestReceiverOverride(string $email): void
     {
-        if (empty($email) === false && $this->validateEmail($email) === false) {
+        if (empty($email) === false && $this->validateEmail(email: $email) === false) {
             throw new \InvalidArgumentException('Invalid test receiver override email address: '.$email);
         }
 
@@ -1532,10 +1534,10 @@ class SymfonyEmailService
         }
 
         // Check transport credentials.
-        $hasCredentials = $this->hasValidTransportCredentials($emailSettings);
+        $hasCredentials = $this->hasValidTransportCredentials(emailSettings: $emailSettings);
 
         // Check templates.
-        $hasTemplates = $this->hasValidTemplates($emailSettings);
+        $hasTemplates = $this->hasValidTemplates(emailSettings: $emailSettings);
 
         $configured = ($hasCredentials === true && $hasTemplates === true);
 
@@ -1570,7 +1572,8 @@ class SymfonyEmailService
 
         switch ($transportType) {
             case 'mailjet':
-                return empty($emailSettings['mailjetApiKey']) === false && empty($emailSettings['mailjetSecretKey']) === false;
+                return empty($emailSettings['mailjetApiKey']) === false
+                    && empty($emailSettings['mailjetSecretKey']) === false;
             case 'sendgrid':
                 return empty($emailSettings['sendgridApiKey']) === false;
             case 'mailgun':
@@ -1606,7 +1609,8 @@ class SymfonyEmailService
         foreach ($requiredTemplates as $templateName) {
             $template = ($templates[$templateName] ?? '');
             // Template is valid if it's not empty or if we have a default template.
-            if (empty($template) === true && empty($this->getDefaultTemplate($templateName)) === true) {
+            $defaultTpl = $this->getDefaultTemplate(templateName: $templateName);
+            if (empty($template) === true && empty($defaultTpl === true) === true) {
                 return false;
             }
         }

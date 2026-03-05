@@ -10,7 +10,6 @@
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -28,7 +27,7 @@ use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
 
 /**
- * Service for handling software catalog operations
+ * Service for handling software catalog operations.
  *
  * Provides functionality for user management, contact processing,
  * email notifications, and object lifecycle management.
@@ -37,7 +36,6 @@ use OCP\App\IAppManager;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class SoftwareCatalogueService
@@ -48,17 +46,19 @@ class SoftwareCatalogueService
      *
      * @var string
      */
-    private string $_appName;
+    private string $appName;
 
     /**
      * SoftwareCatalogueService constructor
      *
-     * @param OrganizationHandler  $_organizationHandler  Organization handler
-     * @param ContactPersonHandler $_contactPersonHandler Contact person handler
-     * @param GroupHandler         $_groupHandler         Group handler
-     * @param HierarchyHandler     $_hierarchyHandler     Hierarchy handler
-     * @param SymfonyEmailService  $_emailService         Email service
-     * @param LoggerInterface      $_logger               Logger interface
+     * @param OrganizationHandler  $_organizationHandler  Organization handler.
+     * @param ContactPersonHandler $_contactPersonHandler Contact person handler.
+     * @param GroupHandler         $_groupHandler         Group handler.
+     * @param HierarchyHandler     $_hierarchyHandler     Hierarchy handler.
+     * @param SymfonyEmailService  $_emailService         Email service.
+     * @param LoggerInterface      $_logger               Logger interface.
+     * @param ContainerInterface   $_container            Container interface.
+     * @param IAppManager          $_appManager           App manager interface.
      */
     public function __construct(
         private readonly OrganizationHandler $_organizationHandler,
@@ -78,9 +78,9 @@ class SoftwareCatalogueService
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null
      */
-    private function _getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
+    private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (!$this->_appManager->isEnabledForUser('openregister')) {
+        if ($this->_appManage === falser->isEnabledForUser('openregister')) {
             return null;
         }
 
@@ -90,16 +90,16 @@ class SoftwareCatalogueService
             $this->_logger->error('Failed to get ObjectService: '.$e->getMessage());
             return null;
         }
-    }//end _getObjectService()
+    }//end getObjectService()
 
     /**
      * Gets the OrganisationService instance
      *
      * @return \OCA\OpenRegister\Service\OrganisationService|null
      */
-    private function _getOrganisationService(): ?\OCA\OpenRegister\Service\OrganisationService
+    private function getOrganisationService(): ?\OCA\OpenRegister\Service\OrganisationService
     {
-        if (!$this->_appManager->isEnabledForUser('openregister')) {
+        if ($this->_appManage === falser->isEnabledForUser('openregister')) {
             return null;
         }
 
@@ -109,7 +109,7 @@ class SoftwareCatalogueService
             $this->_logger->error('Failed to get OrganisationService: '.$e->getMessage());
             return null;
         }
-    }//end _getOrganisationService()
+    }//end getOrganisationService()
 
     /**
      * Processes a contactpersoon object to create an inactive user
@@ -140,7 +140,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Delegate to contact person handler
+            // Delegate to contact person handler.
             $this->_logger->debug(
                     'SoftwareCatalogueService: Delegating to ContactPersonHandler for contactpersoon processing',
                     [
@@ -159,8 +159,8 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            if ($result) {
-                // Get the username from the processed object
+            if (empty($result) === false) {
+                // Get the username from the processed object.
                 $updatedObjectData = $contactpersoonObject->getObject();
                 $username          = $updatedObjectData['username'] ?? '';
 
@@ -169,15 +169,15 @@ class SoftwareCatalogueService
                         [
                             'objectId'    => $objectId,
                             'username'    => $username,
-                            'hasUsername' => !empty($username),
+                            'hasUsername' => empty($username) === false,
                         ]
                         );
 
-                if (!empty($username)) {
-                    // NOTE: Group assignment is already handled by ContactPersonHandler.assignUserGroups()
-                    // during user creation, so we don't need to call GroupHandler.updateUserGroups() here
+                if (empty($username) === false) {
+                    // NOTE: Group assignment is already handled by ContactPersonHandler.assignUserGroups().
+                    // during user creation, so we don't need to call GroupHandler.updateUserGroups() here.
                     // as it would overwrite the correct group assignments.
-                    // Ensure organization has beheerder and set up manager relationships
+                    // Ensure organization has beheerder and set up manager relationships.
                     $this->_logger->debug(
                             'SoftwareCatalogueService: Ensuring organization beheerder',
                             [
@@ -188,7 +188,7 @@ class SoftwareCatalogueService
 
                     $this->_hierarchyHandler->ensureOrganizationBeheerder($contactpersoonObject, $username);
 
-                    // Set user to inactive initially
+                    // Set user to inactive initially.
                     $this->_logger->debug(
                             'SoftwareCatalogueService: Setting user to inactive',
                             [
@@ -208,9 +208,9 @@ class SoftwareCatalogueService
                             ]
                             );
 
-                    // Add the newly created user to the organization entity
+                    // Add the newly created user to the organization entity.
                     $organisatie = $objectData['organisatie'] ?? null;
-                    if ($organisatie) {
+                    if (empty($organisatie) === false) {
                         $this->_logger->info(
                                 'SoftwareCatalogueService: Adding user to organization entity',
                                 [
@@ -224,9 +224,9 @@ class SoftwareCatalogueService
                             $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
                             $organisation       = $organisationMapper->findByUuid($organisatie);
 
-                            if ($organisation) {
+                            if (empty($organisation) === false) {
                                 $currentUsers = $organisation->getUsers() ?? [];
-                                if (!in_array($username, $currentUsers)) {
+                                if (in_array($username, $currentUsers) === false) {
                                     $currentUsers[] = $username;
                                     $organisation->setUsers($currentUsers);
                                     $organisationMapper->save($organisation);
@@ -331,15 +331,16 @@ class SoftwareCatalogueService
     /**
      * Processes organization without contactpersonen processing
      *
-     * @deprecated This method is disabled to prevent organization duplication
-     * @param      object $organizationObject The organization object to process
+     * @param object $organizationObject The organization object to process.
      *
-     * @return bool True if processing was successful
-     * @throws \Exception If processing fails
+     * @return bool True if processing was successful.
+     * @throws \Exception If processing fails.
+     *
+     * @deprecated This method is disabled to prevent organization duplication.
      */
     public function processOrganization(object $organizationObject): bool
     {
-        // DISABLED: Organization processing is disabled to prevent duplication
+        // DISABLED: Organization processing is disabled to prevent duplication.
         $this->_logger->info(
             'Organization processing is disabled to prevent duplication',
             [
@@ -349,31 +350,7 @@ class SoftwareCatalogueService
 
         return false;
 
-        /*
-            try {
-            // Delegate to organization handler for basic processing
-            $processed = $this->_organizationHandler->processOrganization($organizationObject);
-
-            $this->_logger->info(
-                'Successfully processed organization without contactpersonen',
-                [
-                    'organizationId' => $organizationObject->getId()
-                ]
-            );
-
-            return $processed;
-
-            } catch (\Exception $e) {
-            $this->_logger->error(
-                'Failed to process organization: ' . $e->getMessage(),
-                [
-                    'organizationId' => $organizationObject->getId(),
-                    'exception' => $e
-                ]
-            );
-            throw $e;
-            }
-        */
+        // Disabled: organization processing logic removed.
     }//end processOrganization()
 
     /**
@@ -386,9 +363,9 @@ class SoftwareCatalogueService
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
-        // Use the new organization type-based logic instead of old role-based logic
+        // Use the new organization type-based logic instead of old role-based logic.
         $user = $this->_container->get(\OCP\IUserManager::class)->get($username);
-        if ($user) {
+        if (empty($user) === false) {
             $contactData = $contactpersoonObject->getObject();
             $this->_contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
         } else {
@@ -406,7 +383,7 @@ class SoftwareCatalogueService
      */
     public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void
     {
-        // Delegate to hierarchy handler
+        // Delegate to hierarchy handler.
         $this->_hierarchyHandler->ensureOrganizationBeheerder($contactpersoonObject, $username);
     }//end ensureOrganizationBeheerder()
 
@@ -419,7 +396,7 @@ class SoftwareCatalogueService
      */
     public function getUserManager(string $username): ?string
     {
-        // Delegate to contact person handler
+        // Delegate to contact person handler.
         return $this->_contactPersonHandler->getUserManager($username);
     }//end getUserManager()
 
@@ -440,10 +417,10 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // First, sync the organization with OpenRegister
-            $syncResult = $this->syncOrganizationWithOpenRegister($organizationObject);
+            // First, sync the organization with OpenRegister.
+            $syncResult = $this->syncOrganizationWithOpenRegister(organizationObject: $organizationObject);
 
-            if ($syncResult) {
+            if (empty($syncResult) === false) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Successfully synced organization with OpenRegister',
                         [
@@ -451,8 +428,8 @@ class SoftwareCatalogueService
                         ]
                         );
 
-                // Update organization references on objects to point to the newly created organization entity
-                $this->updateOrganizationReferences($organizationObject);
+                // Update organization references on objects to point to the newly created organization entity.
+                $this->updateOrganizationReferences(organizationObject: $organizationObject);
             } else {
                 $this->_logger->warning(
                         'SoftwareCatalogueService: Failed to sync organization with OpenRegister',
@@ -462,21 +439,21 @@ class SoftwareCatalogueService
                         );
             }
 
-            // Process the organization (existing functionality) - this creates users
-            $this->processOrganization($organizationObject);
+            // Process the organization (existing functionality) - this creates users.
+            $this->processOrganization(organizationObject: $organizationObject);
 
-            // Add all admin group users to the organization
+            // Add all admin group users to the organization.
             $objectData       = $organizationObject->getObject();
             $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
-            $this->addAdminGroupUsersToOrganization($organizationUuid);
+            $this->addAdminGroupUsersToOrganization(organizationUuid: $organizationUuid);
 
-            // Handle ownership assignment for anonymous user registrations AFTER user creation
-            $this->handleOwnershipAssignment($organizationObject);
+            // Handle ownership assignment for anonymous user registrations AFTER user creation.
+            $this->handleOwnershipAssignment(organizationObject: $organizationObject);
 
-            // Send welcome email for new organization
-            $this->sendOrganizationWelcomeEmail($organizationObject);
+            // Send welcome email for new organization.
+            $this->sendOrganizationWelcomeEmail(organizationObject: $organizationObject);
 
-            // If organization is active, send activation email too
+            // If organization is active, send activation email too.
             $objectData  = $organizationObject->getObject();
             $beoordeling = strtolower($objectData['beoordeling'] ?? '');
 
@@ -501,9 +478,9 @@ class SoftwareCatalogueService
                 }
             }
 
-            // Process nested contact persons and add their users to the organization entity
+            // Process nested contact persons and add their users to the organization entity.
             $contactpersonen = $objectData['contactpersonen'] ?? [];
-            if (!empty($contactpersonen)) {
+            if (empty($contactpersonen) === false) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Processing nested contact persons',
                         [
@@ -513,14 +490,14 @@ class SoftwareCatalogueService
                         );
 
                 $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
-                $objectService    = $this->_getObjectService();
+                $objectService    = $this->getObjectService();
 
-                if ($objectService) {
+                if (empty($objectService) === false) {
                     $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
                     $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
                     $contactSchemaId     = $voorzieningenConfig['contactpersoon_schema'] ?? null;
 
-                    if (!$contactSchemaId) {
+                    if ($contactSchemaId === null) {
                         $this->_logger->warning('SoftwareCatalogueService: Missing contactpersoon schema configuration');
                         return;
                     }
@@ -528,7 +505,7 @@ class SoftwareCatalogueService
                     $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
                     $organisation       = $organisationMapper->findByUuid($organizationUuid);
 
-                    if ($organisation) {
+                    if (empty($organisation) === false) {
                         $currentUsers = $organisation->getUsers() ?? [];
                         $addedUsers   = [];
 
@@ -538,7 +515,7 @@ class SoftwareCatalogueService
                                 $contactData         = $contactPersonObject->getObject();
                                 $email = $contactData['email'] ?? null;
 
-                                if ($email && !in_array($email, $currentUsers)) {
+                                if ($email !== false && in_array($email, $currentUsers) === false) {
                                     $currentUsers[] = $email;
                                     $addedUsers[]   = $email;
 
@@ -564,7 +541,7 @@ class SoftwareCatalogueService
                             }//end try
                         }//end foreach
 
-                        if (!empty($addedUsers)) {
+                        if (empty($addedUsers) === false) {
                             $organisation->setUsers($currentUsers);
                             $organisationMapper->save($organisation);
 
@@ -582,11 +559,11 @@ class SoftwareCatalogueService
                 }//end if
             }//end if
 
-            // Final synchronization: ensure all contact persons associated with this organization are in the users array
-            // This handles cases where contact persons were created separately and not as nested objects
+            // Final synchronization: ensure all contact persons associated with this organization are in the users array.
+            // This handles cases where contact persons were created separately and not as nested objects.
             $objectData       = $organizationObject->getObject();
             $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
-            $this->syncContactPersonUsernamesWithOrganization($organizationUuid);
+            $this->syncContactPersonUsernamesWithOrganization(organizationUuid: $organizationUuid);
 
             $this->_logger->info(
                     'SoftwareCatalogueService: Completed final contact person synchronization for new organization',
@@ -630,14 +607,14 @@ class SoftwareCatalogueService
             $newData = $organizationObject->getObject();
             $oldData = $oldOrganizationObject->getObject();
 
-            // Check both 'beoordeling' and 'status' fields (different schemas use different field names)
+            // Check both 'beoordeling' and 'status' fields (different schemas use different field names).
             $newBeoordeling = strtolower($newData['beoordeling'] ?? $newData['status'] ?? '');
             $oldBeoordeling = strtolower($oldData['beoordeling'] ?? $oldData['status'] ?? '');
 
-            // Sync the organization with OpenRegister
-            $syncResult = $this->syncOrganizationWithOpenRegister($organizationObject);
+            // Sync the organization with OpenRegister.
+            $syncResult = $this->syncOrganizationWithOpenRegister(organizationObject: $organizationObject);
 
-            if ($syncResult) {
+            if (empty($syncResult) === false) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Successfully synced organization with OpenRegister',
                         [
@@ -653,16 +630,22 @@ class SoftwareCatalogueService
                         );
             }
 
-            // Add all admin group users to the organization (ensure they're always included)
+            // Add all admin group users to the organization (ensure they're always included).
             $organizationUuid = $newData['id'] ?? $organizationObject->getId();
-            $this->addAdminGroupUsersToOrganization($organizationUuid);
+            $this->addAdminGroupUsersToOrganization(organizationUuid: $organizationUuid);
 
-            // Check if organization status changed to active
+            // Check if organization status changed to active.
             if ($newBeoordeling === 'actief') {
                 $becameActive = ($oldBeoordeling !== 'actief');
 
+                if ($becameActive === true) {
+                    $activeMessage = 'Organization became active, activating users';
+                } else {
+                    $activeMessage = 'Organization is active';
+                }
+
                 $this->_logger->info(
-                    $becameActive ? 'Organization became active, activating users' : 'Organization is active',
+                    $activeMessage,
                     [
                         'organizationId' => $organizationObject->getId(),
                         'oldBeoordeling' => $oldBeoordeling,
@@ -671,7 +654,7 @@ class SoftwareCatalogueService
                     ]
                 );
 
-                if ($becameActive) {
+                if (empty($becameActive) === false) {
                     $organizationUuid = $newData['id'] ?? $organizationObject->getId();
 
                     $this->_logger->info(
@@ -682,14 +665,14 @@ class SoftwareCatalogueService
                             );
 
                     // Process the organization to create users from contactpersonen.
-                    // This is crucial when an organization is activated for the first time
+                    // This is crucial when an organization is activated for the first time.
                     // and contactpersonen were added before activation.
-                    $this->processOrganization($organizationObject);
+                    $this->processOrganization(organizationObject: $organizationObject);
 
-                    // Activate SoftwareCatalog-specific users in this organization
-                    $this->activateSoftwareCatalogUsersForOrganization($organizationUuid);
+                    // Activate SoftwareCatalog-specific users in this organization.
+                    $this->activateSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
 
-                    // Send activation email
+                    // Send activation email.
                     try {
                         $success = $this->_emailService->sendOrganizationActivationEmail($newData);
                         $this->_logger->info(
@@ -711,12 +694,18 @@ class SoftwareCatalogueService
                 }//end if
             }//end if
 
-            // Check if organization status changed to inactive
+            // Check if organization status changed to inactive.
             if ($newBeoordeling === 'inactief' || $newBeoordeling === 'deactief') {
                 $becameInactive = ($oldBeoordeling === 'actief');
 
+                if ($becameInactive === true) {
+                    $inactiveMessage = 'Organization became inactive, deactivating users';
+                } else {
+                    $inactiveMessage = 'Organization is inactive';
+                }
+
                 $this->_logger->info(
-                    $becameInactive ? 'Organization became inactive, deactivating users' : 'Organization is inactive',
+                    $inactiveMessage,
                     [
                         'organizationId' => $organizationObject->getId(),
                         'oldBeoordeling' => $oldBeoordeling,
@@ -725,12 +714,12 @@ class SoftwareCatalogueService
                     ]
                 );
 
-                if ($becameInactive) {
-                    // Deactivate SoftwareCatalog-specific users in this organization
+                if (empty($becameInactive) === false) {
+                    // Deactivate SoftwareCatalog-specific users in this organization.
                     $organizationUuid = $newData['id'] ?? $organizationObject->getId();
-                    $this->deactivateSoftwareCatalogUsersForOrganization($organizationUuid);
+                    $this->deactivateSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
                 }
-            }
+            }//end if
         } catch (\Exception $e) {
             $this->_logger->error(
                 'SoftwareCatalogueService: Failed to handle organization update: '.$e->getMessage(),
@@ -746,16 +735,17 @@ class SoftwareCatalogueService
     }//end handleOrganizationUpdate()
 
     /**
-     * Activates contactpersonen users for an organization
+     * Activates contactpersonen users for an organization.
      *
-     * @deprecated This method is disabled to prevent organization duplication
-     * @param      string $organizationId The organization ID
+     * @param string $organizationId The organization ID.
      *
      * @return void
+     *
+     * @deprecated This method is disabled to prevent organization duplication.
      */
     private function activateContactpersonenForOrganization(string $organizationId): void
     {
-        // DISABLED: Organization handling is disabled to prevent duplication
+        // DISABLED: Organization handling is disabled to prevent duplication.
         $this->_logger->info(
             'Organization contactpersonen activation is disabled to prevent duplication',
             [
@@ -765,102 +755,21 @@ class SoftwareCatalogueService
 
         return;
 
-        /*
-            try {
-            $this->_logger->info('Activating contactpersonen for organization', [
-                'organizationId' => $organizationId
-            ]);
-
-            // Get ObjectService to find contactpersonen
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
-                $this->_logger->error('ObjectService not available');
-                return;
-            }
-
-            // Get settings service to get schema IDs
-            $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
-            $registerId = $voorzieningenConfig['register'] ?? null;
-
-            // Find contactpersonen related to this organization
-            $contactpersoonSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
-
-            // Skip if no proper configuration is available
-            if (!$registerId || !$contactpersoonSchemaId) {
-                $this->_logger->warning('SoftwareCatalogueService: Missing Voorzieningen configuration for contactpersonen', [
-                    'organizationId' => $organizationId,
-                    'registerId' => $registerId,
-                    'contactpersoonSchemaId' => $contactpersoonSchemaId
-                ]);
-                return $organizationData;
-            }
-
-            $this->_logger->info('Schema IDs for contactpersonen search', [
-                'organizationId' => $organizationId,
-                'registerId' => $registerId,
-                'contactpersoonSchemaId' => $contactpersoonSchemaId
-            ]);
-
-            $activatedUsers = [];
-
-            // Check contactpersoon objects (new data model)
-            if ($contactpersoonSchemaId) {
-                $contactpersoonObjects = $objectService->findAll(
-                    (int) $registerId,
-                    (int) $contactpersoonSchemaId,
-                    ['organisation' => $organizationId]
-                );
-
-                foreach ($contactpersoonObjects as $contactpersoonObject) {
-                    $contactData = $contactpersoonObject->getObject();
-                    $username = $contactData['username'] ?? '';
-
-                    if (!empty($username)) {
-                        $success = $this->_contactPersonHandler->setUserActive($username);
-                        if ($success) {
-                            $activatedUsers[] = $username;
-                            $this->_logger->info('Activated contactpersoon user', [
-                                'username' => $username,
-                                'organizationId' => $organizationId,
-                                'contactpersoonId' => $contactpersoonObject->getId()
-                            ]);
-                        }
-                    }
-                }
-            }
-
-            // Only use contactpersoon objects now - contactgegevens is deprecated
-
-            $this->_logger->info('Completed contactpersonen activation for organization', [
-                'organizationId' => $organizationId,
-                'activatedUsers' => $activatedUsers,
-                'totalActivated' => count($activatedUsers)
-            ]);
-
-            } catch (\Exception $e) {
-            $this->_logger->error(
-                'Failed to activate contactpersonen for organization: ' . $e->getMessage(),
-                [
-                    'organizationId' => $organizationId,
-                    'exception' => $e
-                ]
-            );
-            }
-        */
+        // Disabled: organization contactpersonen activation logic removed.
     }//end activateContactpersonenForOrganization()
 
     /**
-     * Sends welcome email to organization
+     * Sends welcome email to organization.
      *
-     * @deprecated This method is disabled to prevent organization duplication
-     * @param      object $organizationObject The organization object
+     * @param object $organizationObject The organization object.
      *
      * @return void
+     *
+     * @deprecated This method is disabled to prevent organization duplication.
      */
     public function sendOrganizationWelcomeEmail(object $organizationObject): void
     {
-        // DISABLED: Organization handling is disabled to prevent duplication
+        // DISABLED: Organization handling is disabled to prevent duplication.
         $this->_logger->info(
             'Organization welcome email sending is disabled to prevent duplication',
             [
@@ -870,33 +779,7 @@ class SoftwareCatalogueService
 
         return;
 
-        /*
-            try {
-            $this->_logger->info('Sending organization welcome email', [
-                'objectId' => $organizationObject->getId()
-            ]);
-
-            $objectData = $organizationObject->getObject();
-
-            // Send organization registration email
-            $success = $this->_emailService->sendOrganizationRegistrationEmail($objectData);
-
-            if ($success) {
-                $this->_logger->info('Organization welcome email sent successfully', [
-                    'objectId' => $organizationObject->getId()
-                ]);
-            } else {
-                $this->_logger->warning('Failed to send organization welcome email', [
-                    'objectId' => $organizationObject->getId()
-                ]);
-            }
-            } catch (\Exception $e) {
-            $this->_logger->error('Exception sending organization welcome email: ' . $e->getMessage(), [
-                'objectId' => $organizationObject->getId(),
-                'exception' => $e
-            ]);
-            }
-        */
+        // Disabled: organization welcome email logic removed.
     }//end sendOrganizationWelcomeEmail()
 
     /**
@@ -908,7 +791,7 @@ class SoftwareCatalogueService
      */
     public function handleNewContact(object $contactObject): void
     {
-        // Delegate to contact person handler
+        // Delegate to contact person handler.
         $this->_contactPersonHandler->handleNewContact($contactObject);
     }//end handleNewContact()
 
@@ -921,7 +804,7 @@ class SoftwareCatalogueService
      */
     public function createUserForContactIfNotExists(object $contactObject): void
     {
-        // Implementation for creating user from contact
+        // Implementation for creating user from contact.
         $this->_logger->info(
                 'Creating user for contact if not exists',
                 [
@@ -939,7 +822,7 @@ class SoftwareCatalogueService
      */
     public function handleNewGebruiker(object $gebruikerObject): void
     {
-        // Implementation for handling new gebruiker
+        // Implementation for handling new gebruiker.
         $this->_logger->info(
                 'Handling new gebruiker',
                 [
@@ -957,7 +840,7 @@ class SoftwareCatalogueService
      */
     public function sendGebruikerWelcomeEmail(object $gebruikerObject): void
     {
-        // Implementation for sending gebruiker welcome email
+        // Implementation for sending gebruiker welcome email.
         $this->_logger->info(
                 'Sending gebruiker welcome email',
                 [
@@ -975,7 +858,7 @@ class SoftwareCatalogueService
      */
     public function handleContactUpdate(object $contactObject): void
     {
-        // Delegate to contact person handler
+        // Delegate to contact person handler.
         $this->_contactPersonHandler->handleContactUpdate($contactObject);
     }//end handleContactUpdate()
 
@@ -989,7 +872,7 @@ class SoftwareCatalogueService
      */
     public function handleGebruikerUpdate(object $gebruikerObject, object $oldGebruikerObject): void
     {
-        // Implementation for handling gebruiker updates
+        // Implementation for handling gebruiker updates.
         $this->_logger->info(
                 'Handling gebruiker update',
                 [
@@ -1007,7 +890,7 @@ class SoftwareCatalogueService
      */
     public function handleContactDeletion(object $contactObject): void
     {
-        // Delegate to contact person handler
+        // Delegate to contact person handler.
         $this->_contactPersonHandler->handleContactDeletion($contactObject);
     }//end handleContactDeletion()
 
@@ -1020,7 +903,7 @@ class SoftwareCatalogueService
      */
     public function blockUserForGebruiker(object $gebruikerObject): void
     {
-        // Implementation for blocking user
+        // Implementation for blocking user.
         $this->_logger->info(
                 'Blocking user for gebruiker',
                 [
@@ -1038,7 +921,7 @@ class SoftwareCatalogueService
      */
     public function temporarilyBlockUserForGebruiker(object $gebruikerObject): void
     {
-        // Implementation for temporarily blocking user
+        // Implementation for temporarily blocking user.
         $this->_logger->info(
                 'Temporarily blocking user for gebruiker',
                 [
@@ -1056,7 +939,7 @@ class SoftwareCatalogueService
      */
     public function restoreUserAccessForGebruiker(object $gebruikerObject): void
     {
-        // Implementation for restoring user access
+        // Implementation for restoring user access.
         $this->_logger->info(
                 'Restoring user access for gebruiker',
                 [
@@ -1075,7 +958,7 @@ class SoftwareCatalogueService
      */
     public function syncUserWithRevertedContact(object $contactObject, mixed $revertPoint): void
     {
-        // Implementation for syncing user with reverted contact
+        // Implementation for syncing user with reverted contact.
         $this->_logger->info(
                 'Syncing user with reverted contact',
                 [
@@ -1094,7 +977,7 @@ class SoftwareCatalogueService
      */
     public function updateUserFromRevertedGebruiker(object $gebruikerObject, mixed $revertPoint): void
     {
-        // Implementation for updating user from reverted gebruiker
+        // Implementation for updating user from reverted gebruiker.
         $this->_logger->info(
                 'Updating user from reverted gebruiker',
                 [
@@ -1182,9 +1065,13 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get current and old data for comparison
+            // Get current and old data for comparison.
             $newData = $contactpersoonObject->getObject();
-            $oldData = $oldContactpersoonObject ? $oldContactpersoonObject->getObject() : [];
+            if ($oldContactpersoonObject !== null) {
+                $oldData = $oldContactpersoonObject->getObject();
+            } else {
+                $oldData = [];
+            }
 
             $newRoles = $newData['roles'] ?? [];
             $oldRoles = $oldData['roles'] ?? [];
@@ -1200,8 +1087,8 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Ensure both are arrays
-            if (!is_array($newRoles)) {
+            // Ensure both are arrays.
+            if (is_array($newRoles) === false) {
                 $newRoles = [$newRoles];
                 $this->_logger->debug(
                         'SoftwareCatalogueService: Converted newRoles to array',
@@ -1212,7 +1099,7 @@ class SoftwareCatalogueService
                         );
             }
 
-            if (!is_array($oldRoles)) {
+            if (is_array($oldRoles) === false) {
                 $oldRoles = [$oldRoles];
                 $this->_logger->debug(
                         'SoftwareCatalogueService: Converted oldRoles to array',
@@ -1223,9 +1110,9 @@ class SoftwareCatalogueService
                         );
             }
 
-            // For updates, we need to handle differently based on whether roles changed
+            // For updates, we need to handle differently based on whether roles changed.
             if ($newRoles !== $oldRoles) {
-                // Roles changed - use role-based group assignment instead of generic group assignment
+                // Roles changed - use role-based group assignment instead of generic group assignment.
                 $this->_logger->info(
                     'SoftwareCatalogueService: Roles changed for contactpersoon, using role-based group assignment',
                     [
@@ -1237,21 +1124,21 @@ class SoftwareCatalogueService
                     ]
                 );
 
-                // Ensure user exists (but don't assign generic groups)
+                // Ensure user exists (but don't assign generic groups).
                 $username = $newData['username'] ?? '';
-                if (empty($username)) {
-                    // Generate username and create user if needed
+                if (empty($username) === true) {
+                    // Generate username and create user if needed.
                     $result = $this->_contactPersonHandler->processContactpersoon($contactpersoonObject, true);
-                    if ($result) {
+                    if (empty($result) === false) {
                         $updatedData = $contactpersoonObject->getObject();
                         $username    = $updatedData['username'] ?? '';
                     }
                 }
 
-                if (!empty($username)) {
+                if (empty($username) === false) {
                     $user = $this->_container->get(\OCP\IUserManager::class)->get($username);
-                    if ($user) {
-                        // Use new organization type-based logic instead of old role-based logic
+                    if (empty($user) === false) {
+                        // Use new organization type-based logic instead of old role-based logic.
                         $contactData = $contactpersoonObject->getObject();
                         $this->_contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
 
@@ -1282,7 +1169,7 @@ class SoftwareCatalogueService
                             );
                 }//end if
             } else {
-                // No role changes - use standard processing (assigns generic groups)
+                // No role changes - use standard processing (assigns generic groups).
                 $this->_logger->debug(
                         'SoftwareCatalogueService: No role changes, using standard contactpersoon processing',
                         [
@@ -1291,7 +1178,7 @@ class SoftwareCatalogueService
                         ]
                         );
 
-                $result = $this->processContactpersoon($contactpersoonObject, true);
+                $result = $this->processContactpersoon(contactpersoonObject: $contactpersoonObject, isUpdate: true);
 
                 $this->_logger->info(
                         'SoftwareCatalogueService: Standard contactpersoon processing completed',
@@ -1345,8 +1232,8 @@ class SoftwareCatalogueService
             $objectData       = $organizationObject->getObject();
             $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
 
-            // Deactivate all users in this organization
-            $this->deactivateUsersForOrganization($organizationUuid);
+            // Deactivate all users in this organization.
+            $this->deactivateUsersForOrganization(organizationUuid: $organizationUuid);
 
             $this->_logger->info(
                 'SoftwareCatalogueService: Successfully handled organization deletion',
@@ -1395,14 +1282,14 @@ class SoftwareCatalogueService
                     [
                         'organizationUuid' => $organizationUuid,
                         'objectDataKeys'   => array_keys($objectData),
-                        'hasId'            => isset($objectData['id']),
+                        'hasId'            => isset($objectData['id']) === true,
                     ]
                     );
 
-            // Get OpenRegister OrganisationService for proper organization entity management
+            // Get OpenRegister OrganisationService for proper organization entity management.
             $this->_logger->info('SoftwareCatalogueService: SYNC_STEP_3 - Getting OrganisationService');
-            $organisationService = $this->_getOrganisationService();
-            if (!$organisationService) {
+            $organisationService = $this->getOrganisationService();
+            if ($organisationService === null) {
                 $this->_logger->error('SoftwareCatalogueService: SYNC_STEP_3 - OpenRegister OrganisationService not available');
                 return false;
             }
@@ -1422,7 +1309,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Check if organization already exists in OpenRegister
+            // Check if organization already exists in OpenRegister.
             $this->_logger->info('SoftwareCatalogueService: SYNC_STEP_5 - Checking if organization exists in OpenRegister');
             try {
                 $this->_logger->info('SoftwareCatalogueService: SYNC_STEP_5A - Getting OrganisationMapper for lookup');
@@ -1435,7 +1322,7 @@ class SoftwareCatalogueService
                         );
                 $existingOrganisation = $organisationMapper->findByUuid($organizationUuid);
 
-                // Organization exists - update it
+                // Organization exists - update it.
                 $this->_logger->info(
                         'SoftwareCatalogueService: SYNC_STEP_6 - Organization exists in OpenRegister, updating',
                         [
@@ -1444,12 +1331,16 @@ class SoftwareCatalogueService
                         ]
                         );
 
-                // Map status from SoftwareCatalog to OpenRegister
+                // Map status from SoftwareCatalog to OpenRegister.
                 $this->_logger->info('SoftwareCatalogueService: SYNC_STEP_7 - Mapping organization data');
-                $mappedData = $this->mapOrganizationDataForOpenRegister($objectData);
+                $mappedData = $this->mapOrganizationDataForOpenRegister(objectData: $objectData);
 
-                // Update the organization using OrganisationService
-                $updatedOrganisation = $this->updateOrganisationInOpenRegister($organisationService, $existingOrganisation, $mappedData);
+                // Update the organization using OrganisationService.
+                $updatedOrganisation = $this->updateOrganisationInOpenRegister(
+                    organisationService: $organisationService,
+                    existingOrganisation: $existingOrganisation,
+                    mappedData: $mappedData
+                );
 
                 $this->_logger->info(
                         'SoftwareCatalogueService: Successfully updated organization in OpenRegister',
@@ -1461,7 +1352,7 @@ class SoftwareCatalogueService
 
                 return true;
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-                // Organization doesn't exist - create it
+                // Organization doesn't exist - create it.
                 $this->_logger->info(
                         'SoftwareCatalogueService: SYNC_STEP_8 - Organization not found in OpenRegister, creating',
                         [
@@ -1470,13 +1361,17 @@ class SoftwareCatalogueService
                         ]
                         );
 
-                // Map status from SoftwareCatalog to OpenRegister
+                // Map status from SoftwareCatalog to OpenRegister.
                 $this->_logger->info('SoftwareCatalogueService: SYNC_STEP_9 - Mapping organization data for creation');
-                $mappedData = $this->mapOrganizationDataForOpenRegister($objectData);
+                $mappedData = $this->mapOrganizationDataForOpenRegister(objectData: $objectData);
 
-                // Create the organization using OrganisationService
+                // Create the organization using OrganisationService.
                 $this->_logger->info('SoftwareCatalogueService: SYNC_STEP_10 - Calling createOrganisationInOpenRegister');
-                $createdOrganisation = $this->createOrganisationInOpenRegisterInternal($organisationService, $mappedData, $organizationUuid);
+                $createdOrganisation = $this->createOrganisationInOpenRegisterInternal(
+                    organisationService: $organisationService,
+                    mappedData: $mappedData,
+                    organizationUuid: $organizationUuid
+                );
 
                 $this->_logger->info(
                         'SoftwareCatalogueService: SYNC_STEP_11 - Successfully created organization in OpenRegister',
@@ -1515,25 +1410,29 @@ class SoftwareCatalogueService
     {
         try {
             $organizationUuid = $objectData['id'] ?? null;
-            if (!$organizationUuid) {
+            if ($organizationUuid === null) {
                 $this->_logger->error('SoftwareCatalogueService: No organization UUID provided for creation');
                 return null;
             }
 
-            // Map the data
+            // Map the data.
             $mappedData = [
                 'naam'            => $objectData['naam'] ?? 'Unknown',
                 'type'            => $objectData['type'] ?? '',
                 'website'         => $objectData['website'] ?? '',
-                'active'          => $this->mapStatus($objectData['beoordeling'] ?? 'actief'),
+                'active'          => $this->mapStatus(status: $objectData['beoordeling'] ?? 'actief'),
                 'contactpersonen' => $objectData['contactpersonen'] ?? [],
                 'deelnemers'      => $objectData['deelnemers'] ?? [],
             ];
 
-            // Get organisation service
+            // Get organisation service.
             $organisationService = $this->_container->get('OCA\OpenRegister\Service\OrganisationService');
 
-            return $this->createOrganisationInOpenRegisterInternal($organisationService, $mappedData, $organizationUuid);
+            return $this->createOrganisationInOpenRegisterInternal(
+                organisationService: $organisationService,
+                mappedData: $mappedData,
+                organizationUuid: $organizationUuid
+            );
         } catch (\Exception $e) {
             $this->_logger->error(
                     'SoftwareCatalogueService: Error in public createOrganisationInOpenRegister',
@@ -1562,7 +1461,7 @@ class SoftwareCatalogueService
                 return false;
             default:
                 return true;
-            // Default to active
+            // Default to active.
         }
     }//end mapStatus()
 
@@ -1589,20 +1488,26 @@ class SoftwareCatalogueService
                 ]
                 );
 
-        // Check if we're in an anonymous context (no logged-in user)
+        // Check if we're in an anonymous context (no logged-in user).
         $userSession = \OC::$server->getUserSession();
         $currentUser = $userSession->getUser();
+
+        if ($currentUser !== null) {
+            $currentUserValue = $currentUser->getUID();
+        } else {
+            $currentUserValue = 'null';
+        }
 
         $this->_logger->info(
                 'SoftwareCatalogueService: STEP 2 - Checking user context',
                 [
                     'hasUserSession' => $userSession !== null,
-                    'currentUser'    => $currentUser ? $currentUser->getUID() : 'null',
+                    'currentUser'    => $currentUserValue,
                     'isAnonymous'    => $currentUser === null,
                 ]
                 );
 
-        if (!$currentUser) {
+        if ($currentUser === null) {
             $this->_logger->info(
                     'SoftwareCatalogueService: STEP 3A - Anonymous path: No user logged in, creating organization directly via mapper',
                     [
@@ -1610,7 +1515,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Keep the original UUID format - no conversion needed
+            // Keep the original UUID format - no conversion needed.
             $this->_logger->info(
                     'SoftwareCatalogueService: STEP 3B - Using original UUID format for OpenRegister (anonymous)',
                     [
@@ -1618,7 +1523,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Create organization directly via mapper to avoid user context requirements
+            // Create organization directly via mapper to avoid user context requirements.
             $this->_logger->info('SoftwareCatalogueService: STEP 3C - Getting OrganisationMapper from container');
             $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
             $this->_logger->info(
@@ -1628,7 +1533,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Create a new Organisation entity
+            // Create a new Organisation entity.
             $this->_logger->info('SoftwareCatalogueService: STEP 3E - Creating new Organisation entity');
             $organisation = new \OCA\OpenRegister\Db\Organisation();
 
@@ -1641,10 +1546,10 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Collect all contact person usernames for this organization
-            $contactPersonUsernames = $this->collectContactPersonUsernames($organizationUuid, $mappedData);
+            // Collect all contact person usernames for this organization.
+            $contactPersonUsernames = $this->collectContactPersonUsernames(organizationUuid: $organizationUuid, objectData: $mappedData);
 
-            // Start with admin user and add all contact person usernames
+            // Start with admin user and add all contact person usernames.
             $allUsernames = array_merge(['admin'], $contactPersonUsernames);
             $allUsernames = array_unique($allUsernames);
 
@@ -1659,14 +1564,14 @@ class SoftwareCatalogueService
 
             $organisation->setName($mappedData['naam'] ?? 'Unknown Organization');
             $organisation->setDescription($mappedData['website'] ?? '');
-            // Use website as description
+            // Use website as description.
             $organisation->setUuid($organizationUuid);
             $organisation->setUsers($allUsernames);
             $organisation->setOwner('admin');
-            // Set admin as owner for anonymous registrations
+            // Set admin as owner for anonymous registrations.
             $organisation->setActive($mappedData['active'] ?? true);
-            // Set active status based on organization beoordeling
-            // Debug: Check if UUID was set correctly
+            // Set active status based on organization beoordeling.
+            // Debug: Check if UUID was set correctly.
             $this->_logger->info(
                     'SoftwareCatalogueService: STEP 3G - Debug - UUID before save',
                     [
@@ -1677,7 +1582,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Save the organization
+            // Save the organization.
             $this->_logger->info('SoftwareCatalogueService: STEP 3H - Calling organisationMapper->save()');
             try {
                 $savedOrganisation = $organisationMapper->save($organisation);
@@ -1704,7 +1609,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Verify the UUID was preserved
+            // Verify the UUID was preserved.
             if ($savedOrganisation->getUuid() !== $organizationUuid) {
                 $this->_logger->warning(
                         'SoftwareCatalogueService: UUID mismatch after saving organization',
@@ -1725,7 +1630,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Keep the original UUID format - no conversion needed
+            // Keep the original UUID format - no conversion needed.
             $this->_logger->info(
                     'SoftwareCatalogueService: STEP 4B - Using original UUID format for OpenRegister',
                     [
@@ -1733,7 +1638,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Create organization directly via mapper to avoid service issues
+            // Create organization directly via mapper to avoid service issues.
             $this->_logger->info('SoftwareCatalogueService: STEP 4C - Getting OrganisationMapper from container');
             $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
             $this->_logger->info(
@@ -1743,11 +1648,11 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Debug: Check UUID before creating
-            // Collect all contact person usernames for this organization
-            $contactPersonUsernames = $this->collectContactPersonUsernames($organizationUuid, $mappedData);
+            // Debug: Check UUID before creating.
+            // Collect all contact person usernames for this organization.
+            $contactPersonUsernames = $this->collectContactPersonUsernames(organizationUuid: $organizationUuid, objectData: $mappedData);
 
-            // Start with current user and add all contact person usernames
+            // Start with current user and add all contact person usernames.
             $allUsernames = array_merge([$currentUser->getUID()], $contactPersonUsernames);
             $allUsernames = array_unique($allUsernames);
 
@@ -1756,7 +1661,7 @@ class SoftwareCatalogueService
                     [
                         'organizationUuid'       => $organizationUuid,
                         'uuidLength'             => strlen($organizationUuid),
-                        'uuidIsEmpty'            => empty($organizationUuid),
+                        'uuidIsEmpty'            => empty($organizationUuid) === true,
                         'name'                   => $mappedData['naam'] ?? 'Unknown Organization',
                         'description'            => $mappedData['website'] ?? '',
                         'owner'                  => $currentUser->getUID(),
@@ -1767,7 +1672,7 @@ class SoftwareCatalogueService
 
             $this->_logger->info('SoftwareCatalogueService: STEP 4F - Calling organisationMapper->createWithUuid()');
             try {
-                // Debug: Log the exact parameters being passed
+                // Debug: Log the exact parameters being passed.
                 $this->_logger->info(
                         'SoftwareCatalogueService: STEP 4F_DEBUG - Parameters for createWithUuid',
                         [
@@ -1778,22 +1683,22 @@ class SoftwareCatalogueService
                             'users'       => $allUsernames,
                             'isDefault'   => false,
                             'uuidLength'  => strlen($organizationUuid),
-                            'uuidIsEmpty' => empty($organizationUuid),
+                            'uuidIsEmpty' => empty($organizationUuid) === true,
                         ]
                         );
 
                 $organisation = $organisationMapper->createWithUuid(
                     $mappedData['naam'] ?? 'Unknown Organization',
                     $mappedData['website'] ?? '',
-                // Use website as description
+                // Use website as description.
                     $organizationUuid,
-                // Pass the original UUID
+                // Pass the original UUID.
                     $currentUser->getUID(),
-                // Set current user as owner
+                // Set current user as owner.
                     $allUsernames,
-                // Add all users including contact persons
+                // Add all users including contact persons.
                     false
-                // Not default
+                // Not default.
                 );
                 $this->_logger->info('SoftwareCatalogueService: STEP 4G - organisationMapper->createWithUuid() completed successfully');
             } catch (\Exception $e) {
@@ -1808,8 +1713,8 @@ class SoftwareCatalogueService
                 throw $e;
             }//end try
 
-            // Note: OpenRegister Organisation entity doesn't have status or type fields
-            // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation
+            // Note: OpenRegister Organisation entity doesn't have status or type fields.
+            // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation.
             $this->_logger->info(
                     'SoftwareCatalogueService: Successfully created organization in OpenRegister via service',
                     [
@@ -1846,18 +1751,18 @@ class SoftwareCatalogueService
                 ]
                 );
 
-        // Update organization fields (only those that exist on the Organisation entity)
-        if (isset($mappedData['name'])) {
+        // Update organization fields (only those that exist on the Organisation entity).
+        if (isset($mappedData['name']) === true) {
             $existingOrganisation->setName($mappedData['name']);
         }
 
-        if (isset($mappedData['description'])) {
+        if (isset($mappedData['description']) === true) {
             $existingOrganisation->setDescription($mappedData['description']);
         }
 
-        // Note: OpenRegister Organisation entity doesn't have status or type fields
-        // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation
-        // Save the updated organization
+        // Note: OpenRegister Organisation entity doesn't have status or type fields.
+        // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation.
+        // Save the updated organization.
         $organisationMapper  = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
         $updatedOrganisation = $organisationMapper->save($existingOrganisation);
 
@@ -1884,8 +1789,8 @@ class SoftwareCatalogueService
     {
         $usernames = [];
 
-        // Focus on nested contact persons in the organization object data
-        // These are available immediately when the organization is created
+        // Focus on nested contact persons in the organization object data.
+        // These are available immediately when the organization is created.
         $nestedContactPersons = $objectData['contactpersonen'] ?? [];
         $this->_logger->info(
                 'SoftwareCatalogueService: Processing nested contact persons',
@@ -1896,7 +1801,7 @@ class SoftwareCatalogueService
                 );
 
         foreach ($nestedContactPersons as $contactPerson) {
-            if (is_array($contactPerson) && isset($contactPerson['email'])) {
+            if (is_array($contactPerson) === true && isset($contactPerson['email']) === true) {
                 $usernames[] = $contactPerson['email'];
                 $this->_logger->info(
                         'SoftwareCatalogueService: Added nested contact person username',
@@ -1908,24 +1813,24 @@ class SoftwareCatalogueService
             }
         }
 
-        // Also try to find existing contact persons by their organisatie field
-        // This is useful for updates or when contact persons were created separately
-        $objectService = $this->_getObjectService();
-        if ($objectService) {
+        // Also try to find existing contact persons by their organisatie field.
+        // This is useful for updates or when contact persons were created separately.
+        $objectService = $this->getObjectService();
+        if (empty($objectService) === false) {
             $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
             $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
             $contactSchemaId     = $voorzieningenConfig['contactpersoon_schema'] ?? null;
 
-            if (!$contactSchemaId) {
+            if ($contactSchemaId === null) {
                 $this->_logger->warning('SoftwareCatalogueService: Missing contactpersoon schema configuration for username extraction');
                 return $usernames;
             }
 
             try {
-                // Try multiple approaches to find contact persons
+                // Try multiple approaches to find contact persons.
                 $contactPersons = [];
 
-                // Approach 1: Find by organisatie field
+                // Approach 1: Find by organisatie field.
                 try {
                     $contactPersons = $objectService->findAll(
                             [
@@ -1946,8 +1851,8 @@ class SoftwareCatalogueService
                             );
                 }
 
-                // Approach 2: If approach 1 fails, try to find all contact persons and filter by organisatie
-                if (empty($contactPersons)) {
+                // Approach 2: If approach 1 fails, try to find all contact persons and filter by organisatie.
+                if (empty($contactPersons) === true) {
                     try {
                         $allContactPersons = $objectService->findAll(
                                 [
@@ -1993,7 +1898,7 @@ class SoftwareCatalogueService
                 foreach ($contactPersons as $contactPerson) {
                     $contactData = $contactPerson->getObject();
                     $email       = $contactData['email'] ?? null;
-                    if ($email) {
+                    if (empty($email) === false) {
                         $usernames[] = $email;
                         $this->_logger->info(
                                 'SoftwareCatalogueService: Added existing contact person username',
@@ -2015,7 +1920,7 @@ class SoftwareCatalogueService
             }//end try
         }//end if
 
-        // Remove duplicates and return
+        // Remove duplicates and return.
         $uniqueUsernames = array_unique($usernames);
         $this->_logger->info(
                 'SoftwareCatalogueService: Collected contact person usernames',
@@ -2043,12 +1948,12 @@ class SoftwareCatalogueService
             'type'            => $objectData['type'] ?? '',
             'website'         => $objectData['website'] ?? '',
             'active'          => false,
-        // Default to inactive for new organizations
+        // Default to inactive for new organizations.
             'contactpersonen' => [],
             'deelnemers'      => [],
         ];
 
-        // Map status from SoftwareCatalog to OpenRegister
+        // Map status from SoftwareCatalog to OpenRegister.
         $beoordeling = strtolower($objectData['beoordeling'] ?? '');
         if ($beoordeling === 'actief') {
             $mappedData['active'] = true;
@@ -2056,24 +1961,24 @@ class SoftwareCatalogueService
             $mappedData['active'] = false;
         }
 
-        // Map other fields if they exist
-        if (isset($objectData['adres'])) {
+        // Map other fields if they exist.
+        if (isset($objectData['adres']) === true) {
             $mappedData['adres'] = $objectData['adres'];
         }
 
-        if (isset($objectData['postcode'])) {
+        if (isset($objectData['postcode']) === true) {
             $mappedData['postcode'] = $objectData['postcode'];
         }
 
-        if (isset($objectData['plaats'])) {
+        if (isset($objectData['plaats']) === true) {
             $mappedData['plaats'] = $objectData['plaats'];
         }
 
-        if (isset($objectData['telefoon'])) {
+        if (isset($objectData['telefoon']) === true) {
             $mappedData['telefoon'] = $objectData['telefoon'];
         }
 
-        if (isset($objectData['email'])) {
+        if (isset($objectData['email']) === true) {
             $mappedData['email'] = $objectData['email'];
         }
 
@@ -2097,18 +2002,18 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
                 $this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
                 return;
             }
 
-            // Get all contactpersonen for this organization
+            // Get all contactpersonen for this organization.
             $settingsService = $this->_container->get(SettingsService::class);
             $registerId      = $settingsService->getVoorzieningenRegisterId();
             $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
 
-            if (!$registerId || !$contactpersoonSchemaId) {
+            if ($registerId === null || $contactpersoonSchemaId === false) {
                 $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersonen');
                 return;
             }
@@ -2126,9 +2031,9 @@ class SoftwareCatalogueService
                 $contactData = $contactpersoon->getObject();
                 $username    = $contactData['username'] ?? '';
 
-                if (!empty($username)) {
+                if (empty($username) === false) {
                     $user = $userManager->get($username);
-                    if ($user && !$user->isEnabled()) {
+                    if ($user !== false && $user->isEnabled() === false) {
                         $user->setEnabled(true);
                         $activatedCount++;
 
@@ -2182,18 +2087,18 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
                 $this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
                 return;
             }
 
-            // Get all contactpersonen for this organization
+            // Get all contactpersonen for this organization.
             $settingsService = $this->_container->get(SettingsService::class);
             $registerId      = $settingsService->getVoorzieningenRegisterId();
             $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
 
-            if (!$registerId || !$contactpersoonSchemaId) {
+            if ($registerId === null || $contactpersoonSchemaId === false) {
                 $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersonen');
                 return;
             }
@@ -2211,9 +2116,9 @@ class SoftwareCatalogueService
                 $contactData = $contactpersoon->getObject();
                 $username    = $contactData['username'] ?? '';
 
-                if (!empty($username)) {
+                if (empty($username) === false) {
                     $user = $userManager->get($username);
-                    if ($user && $user->isEnabled()) {
+                    if ($user !== false && $user->isEnabled() === true) {
                         $user->setEnabled(false);
                         $deactivatedCount++;
 
@@ -2268,10 +2173,10 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get SoftwareCatalog-specific users (from contactpersonen)
-            $softwareCatalogUsers = $this->getSoftwareCatalogUsersForOrganization($organizationUuid);
+            // Get SoftwareCatalog-specific users (from contactpersonen).
+            $softwareCatalogUsers = $this->getSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
 
-            if (empty($softwareCatalogUsers)) {
+            if (empty($softwareCatalogUsers) === true) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: No SoftwareCatalog users found for organization',
                         [
@@ -2290,7 +2195,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get the user manager
+            // Get the user manager.
             $userManager    = \OC::$server->getUserManager();
             $activatedUsers = [];
             $failedUsers    = [];
@@ -2298,7 +2203,7 @@ class SoftwareCatalogueService
             foreach ($softwareCatalogUsers as $username) {
                 try {
                     $user = $userManager->get($username);
-                    if ($user && !$user->isEnabled()) {
+                    if ($user !== false && $user->isEnabled() === false) {
                         $user->setEnabled(true);
                         $activatedUsers[] = $username;
                         $this->_logger->debug(
@@ -2308,7 +2213,7 @@ class SoftwareCatalogueService
                                     'username'         => $username,
                                 ]
                                 );
-                    } else if ($user && $user->isEnabled()) {
+                    } else if ($user !== false && $user->isEnabled() === true) {
                         $this->_logger->debug(
                                 'SoftwareCatalogueService: SoftwareCatalog user already active',
                                 [
@@ -2377,10 +2282,10 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get SoftwareCatalog-specific users (from contactpersonen)
-            $softwareCatalogUsers = $this->getSoftwareCatalogUsersForOrganization($organizationUuid);
+            // Get SoftwareCatalog-specific users (from contactpersonen).
+            $softwareCatalogUsers = $this->getSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
 
-            if (empty($softwareCatalogUsers)) {
+            if (empty($softwareCatalogUsers) === true) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: No SoftwareCatalog users found for organization',
                         [
@@ -2399,7 +2304,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get the user manager
+            // Get the user manager.
             $userManager      = \OC::$server->getUserManager();
             $deactivatedUsers = [];
             $failedUsers      = [];
@@ -2407,7 +2312,7 @@ class SoftwareCatalogueService
             foreach ($softwareCatalogUsers as $username) {
                 try {
                     $user = $userManager->get($username);
-                    if ($user && $user->isEnabled()) {
+                    if ($user !== false && $user->isEnabled() === true) {
                         $user->setEnabled(false);
                         $deactivatedUsers[] = $username;
                         $this->_logger->debug(
@@ -2417,7 +2322,7 @@ class SoftwareCatalogueService
                                     'username'         => $username,
                                 ]
                                 );
-                    } else if ($user && !$user->isEnabled()) {
+                    } else if ($user !== false && $user->isEnabled() === false) {
                         $this->_logger->debug(
                                 'SoftwareCatalogueService: SoftwareCatalog user already inactive',
                                 [
@@ -2486,21 +2391,21 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get the object service to find contactpersonen
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
+            // Get the object service to find contactpersonen.
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
                 $this->_logger->error('SoftwareCatalogueService: ObjectService not available for getting SoftwareCatalog users');
                 return [];
             }
 
-            // Find all contactpersonen for this organization
+            // Find all contactpersonen for this organization.
             $contactpersonen = $objectService->findAll(
                     [
                         'filters' => [
                             'register' => 6,
-            // Voorzieningen register
+            // Voorzieningen register.
                             'schema'   => 38,
-            // Contactpersoon schema
+            // Contactpersoon schema.
                         ],
                     ]
                     );
@@ -2512,13 +2417,13 @@ class SoftwareCatalogueService
                 $contactData        = $contactpersoonObject->getObject();
                 $contactOrganisatie = $contactData['organisatie'] ?? null;
 
-                // Check if this contactpersoon belongs to our organization
+                // Check if this contactpersoon belongs to our organization.
                 if ($contactOrganisatie === $organizationUuid) {
-                    // Extract username from contactpersoon object data
+                    // Extract username from contactpersoon object data.
                     $contactData = $contactpersoonObject->getObject();
                     $username    = $contactData['username'] ?? null;
 
-                    if ($username && !in_array($username, $adminGroupUsers)) {
+                    if ($username !== false && in_array($username, $adminGroupUsers) === false) {
                         $softwareCatalogUsers[] = $username;
                         $this->_logger->debug(
                                 'SoftwareCatalogueService: Found SoftwareCatalog user',
@@ -2565,7 +2470,7 @@ class SoftwareCatalogueService
             $groupManager = \OC::$server->getGroupManager();
             $adminGroup   = $groupManager->get('admin');
 
-            if (!$adminGroup) {
+            if ($adminGroup === null) {
                 $this->_logger->warning('SoftwareCatalogueService: Admin group not found');
                 return [];
             }
@@ -2614,11 +2519,11 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get the group manager to access admin group users
+            // Get the group manager to access admin group users.
             $groupManager = \OC::$server->getGroupManager();
             $adminGroup   = $groupManager->get('admin');
 
-            if (!$adminGroup) {
+            if ($adminGroup === null) {
                 $this->_logger->warning('SoftwareCatalogueService: Admin group not found');
                 return;
             }
@@ -2632,14 +2537,14 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get the organization entity (not object) to update its users list
+            // Get the organization entity (not object) to update its users list.
             $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
-            if (!$organisationMapper) {
+            if ($organisationMapper === null) {
                 $this->_logger->error('SoftwareCatalogueService: OrganisationMapper not available for adding admin users');
                 return;
             }
 
-            // Find the organization entity by UUID
+            // Find the organization entity by UUID.
             $this->_logger->info(
                     'SoftwareCatalogueService: Searching for organization entity',
                     [
@@ -2667,7 +2572,7 @@ class SoftwareCatalogueService
                 return;
             }
 
-            // Get current users list from the entity
+            // Get current users list from the entity.
             $currentUsers = $targetOrganisation->getUsers() ?? [];
 
             $this->_logger->info(
@@ -2679,12 +2584,12 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Add admin users to the list
+            // Add admin users to the list.
             $updatedUsers = $currentUsers;
             $addedUsers   = [];
             foreach ($adminUsers as $adminUser) {
                 $adminUsername = $adminUser->getUID();
-                if (!in_array($adminUsername, $updatedUsers)) {
+                if (in_array($adminUsername, $updatedUsers) === false) {
                     $updatedUsers[] = $adminUsername;
                     $addedUsers[]   = $adminUsername;
                     $this->_logger->debug(
@@ -2706,7 +2611,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Update the organization entity with the new users list
+            // Update the organization entity with the new users list.
             if (count($updatedUsers) > count($currentUsers)) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Updating organization entity with new users',
@@ -2717,7 +2622,7 @@ class SoftwareCatalogueService
                         ]
                         );
 
-                // Set the updated users list on the entity
+                // Set the updated users list on the entity.
                 $targetOrganisation->setUsers($updatedUsers);
 
                 $this->_logger->info(
@@ -2729,7 +2634,7 @@ class SoftwareCatalogueService
                         ]
                         );
 
-                // Save the updated organization entity
+                // Save the updated organization entity.
                 $savedOrganisation = $organisationMapper->save($targetOrganisation);
 
                 $this->_logger->info(
@@ -2774,21 +2679,21 @@ class SoftwareCatalogueService
             $username         = $objectData['username'] ?? '';
             $organizationUuid = $objectData['organisation'] ?? '';
 
-            if (empty($username) || empty($organizationUuid)) {
+            if (empty($username) === true || empty($organizationUuid) === true) {
                 return false;
             }
 
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
                 return false;
             }
 
-            // Get the organization object
+            // Get the organization object.
             $settingsService     = $this->_container->get(SettingsService::class);
             $registerId          = $settingsService->getVoorzieningenRegisterId();
             $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-            if (!$registerId || !$organisatieSchemaId) {
+            if ($registerId === null || $organisatieSchemaId === false) {
                 return false;
             }
 
@@ -2796,10 +2701,10 @@ class SoftwareCatalogueService
                 $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
                 $organizationData   = $organizationObject->getObject();
 
-                // Check if the username is already in the organization's users
+                // Check if the username is already in the organization's users.
                 $organizationUsers = $organizationData['users'] ?? [];
 
-                if (is_array($organizationUsers) && !in_array($username, $organizationUsers)) {
+                if (is_array($organizationUsers) === true && in_array($username, $organizationUsers) === false) {
                     $this->_logger->info(
                             'SoftwareCatalogueService: Contactpersoon should be added to organization',
                             [
@@ -2813,7 +2718,7 @@ class SoftwareCatalogueService
 
                 return false;
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-                // Organization doesn't exist, so we can't add the user
+                // Organization doesn't exist, so we can't add the user.
                 $this->_logger->warning(
                         'SoftwareCatalogueService: Organization not found for contactpersoon',
                         [
@@ -2849,7 +2754,7 @@ class SoftwareCatalogueService
             $username         = $objectData['username'] ?? '';
             $organizationUuid = $objectData['organisation'] ?? '';
 
-            if (empty($username) || empty($organizationUuid)) {
+            if (empty($username) === true || empty($organizationUuid) === true) {
                 $this->_logger->warning(
                         'SoftwareCatalogueService: Cannot add contactpersoon to organization - missing username or organization',
                         [
@@ -2860,18 +2765,18 @@ class SoftwareCatalogueService
                 return false;
             }
 
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
                 $this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
                 return false;
             }
 
-            // Get the organization object
+            // Get the organization object.
             $settingsService     = $this->_container->get(SettingsService::class);
             $registerId          = $settingsService->getVoorzieningenRegisterId();
             $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-            if (!$registerId || !$organisatieSchemaId) {
+            if ($registerId === null || $organisatieSchemaId === false) {
                 $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for organisatie');
                 return false;
             }
@@ -2880,17 +2785,17 @@ class SoftwareCatalogueService
                 $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
                 $organizationData   = $organizationObject->getObject();
 
-                // Add the username to the organization's users list
+                // Add the username to the organization's users list.
                 $organizationUsers = $organizationData['users'] ?? [];
-                if (!is_array($organizationUsers)) {
+                if (is_array($organizationUsers) === false) {
                     $organizationUsers = [];
                 }
 
-                if (!in_array($username, $organizationUsers)) {
+                if (in_array($username, $organizationUsers) === false) {
                     $organizationUsers[]       = $username;
                     $organizationData['users'] = $organizationUsers;
 
-                    // Update the organization object
+                    // Update the organization object.
                     $updatedOrganization = $objectService->saveObject(
                         $organizationData,
                         [],
@@ -2918,7 +2823,7 @@ class SoftwareCatalogueService
                             ]
                             );
                     return true;
-                    // Already there, consider it successful
+                    // Already there, consider it successful.
                 }//end if
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                 $this->_logger->error(
@@ -2966,7 +2871,7 @@ class SoftwareCatalogueService
             $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
             $contactpersonen  = $objectData['contactpersonen'] ?? [];
 
-            if (empty($contactpersonen)) {
+            if (empty($contactpersonen) === true) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: No contact persons found for ownership assignment',
                         [
@@ -2976,37 +2881,37 @@ class SoftwareCatalogueService
                 return;
             }
 
-            // Get the first contact person as the primary owner
+            // Get the first contact person as the primary owner.
             $primaryContactUuid = $contactpersonen[0];
 
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
                 $this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available for ownership assignment');
                 return;
             }
 
-            // Get the primary contact person object
+            // Get the primary contact person object.
             $settingsService = $this->_container->get(SettingsService::class);
             $registerId      = $settingsService->getVoorzieningenRegisterId();
             $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
             $organisatieSchemaId    = $settingsService->getSchemaIdForObjectType('organisatie');
 
-            if (!$registerId || !$contactpersoonSchemaId || !$organisatieSchemaId) {
+            if ($registerId === null || $contactpersoonSchemaId === null || $organisatieSchemaId === false) {
                 $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersoon or organisatie');
                 return;
             }
 
-            // Retry mechanism for user creation timing
+            // Retry mechanism for user creation timing.
             $maxRetries = 3;
             $retryDelay = 1;
-            // seconds
+            // Seconds.
             for ($retry = 0; $retry < $maxRetries; $retry++) {
                 try {
                     $primaryContactObject = $objectService->find($primaryContactUuid, [], false, $registerId, $contactpersoonSchemaId);
                     $primaryContactData   = $primaryContactObject->getObject();
                     $primaryUsername      = $primaryContactData['username'] ?? '';
 
-                    if (empty($primaryUsername)) {
+                    if (empty($primaryUsername) === true) {
                         if ($retry < $maxRetries - 1) {
                             $this->_logger->info(
                                     'SoftwareCatalogueService: Primary contact person has no username, retrying in '.$retryDelay.' seconds',
@@ -3031,22 +2936,22 @@ class SoftwareCatalogueService
                         }//end if
                     }//end if
 
-                    // Get the organization entity UUID - use the same UUID as the organization object
+                    // Get the organization entity UUID - use the same UUID as the organization object.
                     $organisationEntityUuid = $organizationUuid;
-                    // Organization entity should have same UUID as object
-                    // Add users to the organization entity
+                    // Organization entity should have same UUID as object.
+                    // Add users to the organization entity.
                     $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
                     try {
                         $organisationEntity = $organisationMapper->findByUuid($organisationEntityUuid);
 
-                        // Add all contact person users to the organization entity
+                        // Add all contact person users to the organization entity.
                         foreach ($contactpersonen as $contactUuid) {
                             try {
                                 $contactObject   = $objectService->find($contactUuid, [], false, $registerId, $contactpersoonSchemaId);
                                 $contactData     = $contactObject->getObject();
                                 $contactUsername = $contactData['username'] ?? '';
 
-                                if (!empty($contactUsername)) {
+                                if (empty($contactUsername) === false) {
                                     $organisationEntity->addUser($contactUsername);
                                 }
                             } catch (\Exception $e) {
@@ -3060,7 +2965,7 @@ class SoftwareCatalogueService
                             }
                         }
 
-                        // Save the updated organization entity
+                        // Save the updated organization entity.
                         $organisationMapper->save($organisationEntity);
 
                         $this->_logger->info(
@@ -3079,7 +2984,7 @@ class SoftwareCatalogueService
                                 );
                     }//end try
 
-                    // Update organization object ownership and organization reference
+                    // Update organization object ownership and organization reference.
                     $organizationData['owner']        = $primaryUsername;
                     $organizationData['organisation'] = $organisationEntityUuid;
 
@@ -3091,7 +2996,7 @@ class SoftwareCatalogueService
                         $organizationUuid
                     );
 
-                    // Update primary contact person object ownership and organization reference
+                    // Update primary contact person object ownership and organization reference.
                     $primaryContactData['owner']       = $primaryUsername;
                     $primaryContactData['organisatie'] = $organisationEntityUuid;
 
@@ -3103,7 +3008,7 @@ class SoftwareCatalogueService
                         $primaryContactUuid
                     );
 
-                    // Update other contact persons with organization reference
+                    // Update other contact persons with organization reference.
                     for ($i = 1; $i < count($contactpersonen); $i++) {
                         $contactUuid = $contactpersonen[$i];
                         try {
@@ -3111,7 +3016,7 @@ class SoftwareCatalogueService
                             $contactData     = $contactObject->getObject();
                             $contactUsername = $contactData['username'] ?? '';
 
-                            if (!empty($contactUsername)) {
+                            if (empty($contactUsername) === false) {
                                 $contactData['owner']       = $contactUsername;
                                 $contactData['organisatie'] = $organisationEntityUuid;
 
@@ -3146,7 +3051,7 @@ class SoftwareCatalogueService
                             );
 
                     return;
-                    // Success, exit retry loop
+                    // Success, exit retry loop.
                 } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                     if ($retry < $maxRetries - 1) {
                         $this->_logger->info(
@@ -3203,20 +3108,20 @@ class SoftwareCatalogueService
                 ]
                 );
 
-        // Get the ObjectService to find contact persons
-        $objectService = $this->_getObjectService();
-        if (!$objectService) {
+        // Get the ObjectService to find contact persons.
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
             $this->_logger->error('SoftwareCatalogueService: ObjectService not available for username synchronization');
             return;
         }
 
-        // Get the contact person schema ID from configuration
+        // Get the contact person schema ID from configuration.
         $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
         $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
         $contactSchemaId     = $voorzieningenConfig['contactpersoon_schema'] ?? null;
         $registerId          = $voorzieningenConfig['register'] ?? null;
 
-        if (!$contactSchemaId || !$registerId) {
+        if ($contactSchemaId === null || $registerId === false) {
             $this->_logger->warning(
                     'SoftwareCatalogueService: Missing Voorzieningen configuration for contact person sync',
                     [
@@ -3229,7 +3134,7 @@ class SoftwareCatalogueService
         }
 
         try {
-            // Find all contact persons that have this organization as their organisatie
+            // Find all contact persons that have this organization as their organisatie.
             $contactPersons = $objectService->findAll(
                     [
                         'filters' => [
@@ -3248,12 +3153,12 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Collect all usernames from contact persons
+            // Collect all usernames from contact persons.
             $contactPersonUsernames = [];
             foreach ($contactPersons as $contactPerson) {
                 $contactData = $contactPerson->getObject();
                 $email       = $contactData['email'] ?? null;
-                if ($email) {
+                if (empty($email) === false) {
                     $contactPersonUsernames[] = $email;
                     $this->_logger->info(
                             'SoftwareCatalogueService: Found contact person username',
@@ -3265,11 +3170,11 @@ class SoftwareCatalogueService
                 }
             }
 
-            // Get the organization entity
+            // Get the organization entity.
             $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
             $organisation       = $organisationMapper->findByUuid($organizationUuid);
 
-            if (!$organisation) {
+            if ($organisation === null) {
                 $this->_logger->error(
                         'SoftwareCatalogueService: Organization entity not found for synchronization',
                         [
@@ -3279,7 +3184,7 @@ class SoftwareCatalogueService
                 return;
             }
 
-            // Get current users and add contact person usernames
+            // Get current users and add contact person usernames.
             $currentUsers = $organisation->getUsers() ?? [];
             $allUsers     = array_merge($currentUsers, $contactPersonUsernames);
             $allUsers     = array_unique($allUsers);
@@ -3294,7 +3199,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Update the organization entity
+            // Update the organization entity.
             $organisation->setUsers($allUsers);
             $organisationMapper->save($organisation);
 
@@ -3306,8 +3211,8 @@ class SoftwareCatalogueService
                     ]
                     );
         } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-            // Organization entity doesn't exist yet - this can happen due to race conditions
-            // Log and return gracefully, the organization sync will handle this later
+            // Organization entity doesn't exist yet - this can happen due to race conditions.
+            // Log and return gracefully, the organization sync will handle this later.
             $this->_logger->warning(
                     'SoftwareCatalogueService: Organization entity not found during username sync (race condition)',
                     [
@@ -3341,19 +3246,19 @@ class SoftwareCatalogueService
         $email       = $contactData['email'] ?? null;
         $organisatie = $contactData['organisatie'] ?? null;
 
-        if (!$email || !$organisatie) {
+        if ($email === null || $organisatie === false) {
             $this->_logger->info(
                     'SoftwareCatalogueService: Contact person missing email or organisation',
                     [
                         'contactPersonId' => $contactPersonObject->getId(),
-                        'hasEmail'        => !empty($email),
-                        'hasOrganisatie'  => !empty($organisatie),
+                        'hasEmail'        => empty($email) === false,
+                        'hasOrganisatie'  => empty($organisatie) === false,
                     ]
                     );
             return;
         }
 
-        // Skip if the contact person is owned by the default organization
+        // Skip if the contact person is owned by the default organization.
         $owner = $contactPersonObject->getOwner();
         if ($owner === 'system') {
             $this->_logger->info(
@@ -3376,11 +3281,11 @@ class SoftwareCatalogueService
                 );
 
         try {
-            // Get the organization entity
+            // Get the organization entity.
             $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
             $organisation       = $organisationMapper->findByUuid($organisatie);
 
-            if (!$organisation) {
+            if ($organisation === null) {
                 $this->_logger->error(
                         'SoftwareCatalogueService: Organization entity not found for contact person',
                         [
@@ -3391,9 +3296,9 @@ class SoftwareCatalogueService
                 return;
             }
 
-            // Check if the username is already in the organization's users array
+            // Check if the username is already in the organization's users array.
             $currentUsers = $organisation->getUsers() ?? [];
-            if (in_array($email, $currentUsers)) {
+            if (in_array($email, $currentUsers) === true) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Contact person already in organization',
                         [
@@ -3405,7 +3310,7 @@ class SoftwareCatalogueService
                 return;
             }
 
-            // Add the username to the organization's users array
+            // Add the username to the organization's users array.
             $currentUsers[] = $email;
             $organisation->setUsers($currentUsers);
             $organisationMapper->save($organisation);
@@ -3420,8 +3325,8 @@ class SoftwareCatalogueService
                     ]
                     );
         } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-            // Organization entity doesn't exist yet - this can happen due to race conditions
-            // Log and return gracefully, the organization sync will handle this later
+            // Organization entity doesn't exist yet - this can happen due to race conditions.
+            // Log and return gracefully, the organization sync will handle this later.
             $this->_logger->warning(
                     'SoftwareCatalogueService: Organization entity not found (race condition), will be handled by organization sync',
                     [
@@ -3455,17 +3360,17 @@ class SoftwareCatalogueService
             $objectData       = $organizationObject->getObject();
             $organizationUuid = $objectData['id'] ?? $organizationObject->getId();
 
-            // Get the ObjectService to update objects
-            $objectService = $this->_getObjectService();
-            if (!$objectService) {
+            // Get the ObjectService to update objects.
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
                 $this->_logger->error('SoftwareCatalogueService: ObjectService not available for updating references');
                 return;
             }
 
-            // Get the organization entity UUID (should be the same as the organization object UUID)
+            // Get the organization entity UUID (should be the same as the organization object UUID).
             $organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
             try {
-                // Use the original UUID format for OpenRegister lookup
+                // Use the original UUID format for OpenRegister lookup.
                 $organisationEntity     = $organisationMapper->findByUuid($organizationUuid);
                 $organisationEntityUuid = $organisationEntity->getUuid();
 
@@ -3486,7 +3391,7 @@ class SoftwareCatalogueService
                 return;
             }//end try
 
-            // Update the organization object's @self.organisation field
+            // Update the organization object's @self.organisation field.
             $this->_logger->info(
                     'SoftwareCatalogueService: Updating organization object reference',
                     [
@@ -3495,25 +3400,23 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            // Get the current object data and update the organisation field
+            // Get the current object data and update the organisation field.
             $currentObjectData = $organizationObject->getObject();
             $currentObjectData['@self']['organisation'] = $organisationEntityUuid;
 
-            // Update the organization object using the ObjectService
+            // Update the organization object using the ObjectService.
+            // Don't update version, not a patch, no extend.
             $objectService->updateFromArray(
                 $organizationObject->getId(),
                 $currentObjectData,
                 false,
-            // don't update version
                 false,
-            // not a patch
                 [],
-            // no extend
                 $organizationObject->getRegisterId(),
                 $organizationObject->getSchemaId()
             );
 
-            // Update contact person objects' @self.organisatie field
+            // Update contact person objects' @self.organisatie field.
             $contactpersonen = $objectData['contactpersonen'] ?? [];
             foreach ($contactpersonen as $contactUuid) {
                 $this->_logger->info(
@@ -3524,12 +3427,12 @@ class SoftwareCatalogueService
                         ]
                         );
 
-                // Get the contact person schema ID from configuration
+                // Get the contact person schema ID from configuration.
                 $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
                 $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
                 $contactSchemaId     = $voorzieningenConfig['contactpersoon_schema'] ?? null;
 
-                if (!$contactSchemaId) {
+                if ($contactSchemaId === null) {
                     $this->_logger->warning(
                             'SoftwareCatalogueService: Missing contactpersoon schema configuration for object update',
                             [
@@ -3539,24 +3442,22 @@ class SoftwareCatalogueService
                     continue;
                 }
 
-                // Find the contact person object
+                // Find the contact person object.
                 try {
                     $contactObject = $objectService->find($contactUuid, [], false, $organizationObject->getRegisterId(), $contactSchemaId);
-                    if ($contactObject) {
-                        // Get the current object data and update the organisatie field
+                    if (empty($contactObject) === false) {
+                        // Get the current object data and update the organisatie field.
                         $contactObjectData = $contactObject->getObject();
                         $contactObjectData['@self']['organisatie'] = $organisationEntityUuid;
 
-                        // Update the contact person object using the ObjectService
+                        // Update the contact person object using the ObjectService.
+                        // Don't update version, not a patch, no extend.
                         $objectService->updateFromArray(
                             $contactObject->getId(),
                             $contactObjectData,
                             false,
-                        // don't update version
                             false,
-                        // not a patch
                             [],
-                        // no extend
                             $organizationObject->getRegisterId(),
                             $contactSchemaId
                         );

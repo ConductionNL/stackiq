@@ -142,7 +142,7 @@ class ContactpersonenController extends Controller
         ISecureRandom $secureRandom,
         LoggerInterface $logger
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
         $this->settingsService       = $settingsService;
         $this->contactPersonHandler  = $contactPersonHandler;
         $this->contactpersoonService = $contactpersoonService;
@@ -508,8 +508,8 @@ class ContactpersonenController extends Controller
                         );
             }
 
-            // Set new password — setPassword() returns false if the password
-            // is rejected (e.g., compromised password list, policy violation).
+            // Set new password — setPassword() returns false if the password.
+            // Is rejected (e.g., compromised password list, policy violation).
             $result = $user->setPassword($newPassword);
 
             if ($result === false) {
@@ -593,7 +593,7 @@ class ContactpersonenController extends Controller
             $currentSoftwareCatalogGroups = [];
 
             foreach ($currentGroups as $group) {
-                if (in_array(needle: $group->getGID(), haystack: $allowedGroups) === true) {
+                if (in_array(needle: $group->getGID() === true, haystack: $allowedGroups) === true) {
                     $currentSoftwareCatalogGroups[] = $group->getGID();
                 }
             }
@@ -1277,7 +1277,7 @@ class ContactpersonenController extends Controller
                         'uuid' => $activeOrg->getUuid(),
                         'naam' => $activeOrg->getName(),
                         'id'   => (string) $activeOrg->getId(),
-                        'slug' => $activeOrg->getSlug() ?? $this->createSlug($activeOrg->getName()),
+                        'slug' => $activeOrg->getSlug() ?? $this->createSlug(name: $activeOrg->getName()),
                     ];
                 }
 
@@ -1288,7 +1288,7 @@ class ContactpersonenController extends Controller
                         'uuid' => $org->getUuid(),
                         'naam' => $org->getName(),
                         'id'   => (string) $org->getId(),
-                        'slug' => $org->getSlug() ?? $this->createSlug($org->getName()),
+                        'slug' => $org->getSlug() ?? $this->createSlug(name: $org->getName()),
                     ];
                 }
             } catch (\Exception $e) {

@@ -82,7 +82,7 @@ class HierarchyHandler
             }
 
             // Set up manager relationships.
-            $this->setupManagerRelationships(
+                        $this->setupManagerRelationships(
                 username: $username,
                 organizationBeheerders: $organizationBeheerders,
                 organizationUuid: $organizationUuid
@@ -107,8 +107,11 @@ class HierarchyHandler
      *
      * @return void
      */
-    public function setupManagerRelationships(string $username, array $organizationBeheerders, string $organizationUuid): void
-    {
+    public function setupManagerRelationships(
+        string $username,
+        array $organizationBeheerders,
+        string $organizationUuid
+    ): void {
         try {
             if (empty($organizationBeheerders) === true) {
                 return;
@@ -178,14 +181,15 @@ class HierarchyHandler
             }
 
             // Find subordinates (users who have this user as manager).
-            $subordinates = $this->findSubordinates($username);
+            $subordinates = $this->findSubordinates(username: $username);
             $hierarchy['subordinates'] = $subordinates;
 
             // Check if user is a beheerder.
-            $hierarchy['isBeheerder'] = $this->isUserBeheerder($username);
+            $hierarchy['isBeheerder'] = $this->isUserBeheerder(username: $username);
 
             // Check if user is primary manager (has subordinates and no manager).
-            $hierarchy['isPrimaryManager'] = empty($hierarchy['manager']) === true && empty($hierarchy['subordinates']) === false;
+            $hierarchy['isPrimaryManager'] = empty($hierarchy['manager']) === true
+                && empty($hierarchy['subordinates']) === false;
 
             return $hierarchy;
         } catch (\Exception $e) {
@@ -301,7 +305,7 @@ class HierarchyHandler
 
             // Build hierarchy tree.
             foreach ($beheerders as $beheerder) {
-                $hierarchy = $this->getUserHierarchy($beheerder);
+                $hierarchy = $this->getUserHierarchy(username: $beheerder);
                 $structure['hierarchy'][] = $hierarchy;
             }
 

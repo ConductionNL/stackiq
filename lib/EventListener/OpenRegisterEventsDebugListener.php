@@ -100,7 +100,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
     public function handle(Event $event): void
     {
         $eventClass = get_class($event);
-        $eventType  = $this->getEventTypeName($eventClass);
+        $eventType  = $this->getEventTypeName(eventClass: $eventClass);
 
         $this->logger->debug(
                 'OpenRegister debug listener triggered',
@@ -118,7 +118,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
             return;
         }
 
-        $eventData = $this->extractEventData($event);
+        $eventData = $this->extractEventData(event: $event);
 
         // Log comprehensive debug information.
         $this->logger->info(
@@ -192,7 +192,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'schemaId'   => $object->getSchema(),
                         'owner'      => $object->getOwner(),
                         'created'    => $object->getCreated()?->format('Y-m-d H:i:s'),
-                        'objectData' => $this->getSafeObjectData($object->getObject()),
+                        'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
                     ]
                     );
         } else if ($event instanceof ObjectUpdatedEvent) {
@@ -200,7 +200,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
             $oldObject = $event->getOldObject();
 
             if ($oldObject !== null) {
-                $oldObjectData = $this->getSafeObjectData($oldObject->getObject());
+                $oldObjectData = $this->getSafeObjectData(objectData: $oldObject->getObject());
             } else {
                 $oldObjectData = null;
             }
@@ -217,7 +217,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'schemaId'      => $newObject->getSchema(),
                         'owner'         => $newObject->getOwner(),
                         'updated'       => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
-                        'newObjectData' => $this->getSafeObjectData($newObject->getObject()),
+                        'newObjectData' => $this->getSafeObjectData(objectData: $newObject->getObject()),
                         'oldObjectData' => $oldObjectData,
                     ]
                     );
@@ -232,7 +232,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'registerId' => $object->getRegister(),
                         'schemaId'   => $object->getSchema(),
                         'owner'      => $object->getOwner(),
-                        'objectData' => $this->getSafeObjectData($object->getObject()),
+                        'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
                     ]
                     );
         } else if ($event instanceof ObjectLockedEvent) {

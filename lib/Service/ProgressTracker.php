@@ -9,7 +9,7 @@
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: 1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -28,7 +28,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: 1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class ProgressTracker
@@ -361,7 +361,8 @@ class ProgressTracker
             $currentPhaseWeight = self::PHASES[$this->progress['phase']]['weight'];
 
             if ($this->progress['total_items'] > 0) {
-                $currentPhaseProgress = ($this->progress['processed_items'] / $this->progress['total_items']) * $currentPhaseWeight;
+                $itemRatio            = $this->progress['processed_items'] / $this->progress['total_items'];
+                $currentPhaseProgress = $itemRatio * $currentPhaseWeight;
             } else {
                 // If no items to process, consider phase as complete.
                 $currentPhaseProgress = $currentPhaseWeight;

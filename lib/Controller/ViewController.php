@@ -51,7 +51,7 @@ class ViewController extends Controller
         private readonly ViewService $viewService,
         private readonly LoggerInterface $logger
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
     }//end __construct()
 
     /**
@@ -233,22 +233,22 @@ class ViewController extends Controller
         // Parse boolean query parameters.
         $includeProducts = $this->request->getParam('include_products');
         if ($includeProducts !== null) {
-            $options['include_products'] = $this->parseBooleanParam($includeProducts);
+            $options['include_products'] = $this->parseBooleanParam(value: $includeProducts);
         }
 
         $includeModules = $this->request->getParam('include_modules');
         if ($includeModules !== null) {
-            $options['include_modules'] = $this->parseBooleanParam($includeModules);
+            $options['include_modules'] = $this->parseBooleanParam(value: $includeModules);
         }
 
         $includeGebruik = $this->request->getParam('include_gebruik');
         if ($includeGebruik !== null) {
-            $options['include_gebruik'] = $this->parseBooleanParam($includeGebruik);
+            $options['include_gebruik'] = $this->parseBooleanParam(value: $includeGebruik);
         }
 
         $includeDeelnamesGebruik = $this->request->getParam('include_deelnames_gebruik');
         if ($includeDeelnamesGebruik !== null) {
-            $options['include_deelnames_gebruik'] = $this->parseBooleanParam($includeDeelnamesGebruik);
+            $options['include_deelnames_gebruik'] = $this->parseBooleanParam(value: $includeDeelnamesGebruik);
         }
 
         $this->logger->debug(
@@ -288,7 +288,7 @@ class ViewController extends Controller
 
         if (is_string($value) === true) {
             $lowerValue = strtolower(trim($value));
-            return in_array($lowerValue, ['true', '1', 'yes', 'on'], true);
+            return in_array($lowerValue, ['true', '1', 'yes', 'on'], true) === true;
         }
 
         return false;
@@ -309,7 +309,7 @@ class ViewController extends Controller
     {
         $documentation = [
             'api_version'               => '1.0.0',
-            'description'               => 'SoftwareCatalog View API - Query and enrich ArchiMate views with additional data',
+            'description'               => 'SoftwareCatalog View API - Query and enrich ArchiMate views',
             'base_url'                  => '/api/views',
             'endpoints'                 => [
                 [
@@ -404,7 +404,7 @@ class ViewController extends Controller
             'enrichment_options'        => [
                 [
                     'name'        => 'products',
-                    'description' => 'Adds product information to view nodes that reference elements with product associations',
+                    'description' => 'Adds product information to nodes with product associations',
                 ],
                 [
                     'name'        => 'gebruik',
