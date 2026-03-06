@@ -82,12 +82,10 @@ export default {
 			this.loading = true
 
 			try {
-				const { response } = await objectStore.deleteObject(objectStore.objectItem['@self'].id)
-				this.success = response.ok
+				await objectStore.deleteObject(objectStore.objectItem)
+				this.success = true
 				this.error = false
-				if (response.ok) {
-					this.closeModalTimeout = setTimeout(this.closeDialog, 2000)
-				}
+				this.closeModalTimeout = setTimeout(this.closeDialog, 2000)
 			} catch (error) {
 				this.success = false
 				this.error = error.message || 'An error occurred while deleting the publication'

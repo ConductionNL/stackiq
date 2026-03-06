@@ -98,7 +98,7 @@ export default {
 
 			try {
 				await objectStore.lockObject(
-					objectStore.objectItem.id,
+					objectStore.objectItem,
 					this.process || undefined,
 					this.duration || undefined,
 				)

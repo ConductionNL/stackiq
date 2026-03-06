@@ -46,20 +46,19 @@ class SettingsController extends Controller
      */
     private $objectService;
 
-
     /**
      * SettingsController constructor.
      *
-     * @param string                  $appName                The name of the app
-     * @param IRequest                $request                The request object
-     * @param IAppConfig              $config                 The app configuration
-     * @param ContainerInterface      $container              The container
-     * @param IAppManager             $appManager             The app manager
-     * @param SettingsService         $settingsService        The settings service
-     * @param OrganizationSyncService $organizationSyncService The organization sync service
-     * @param ArchiMateService        $archiMateService       The ArchiMate import/export service
-     * @param ProgressTracker         $progressTracker        The progress tracking service
-     * @param LoggerInterface         $logger                 The logger instance
+     * @param string                  $appName                 The name of the app.
+     * @param IRequest                $request                 The request object.
+     * @param IAppConfig              $config                  The app configuration.
+     * @param ContainerInterface      $container               The container.
+     * @param IAppManager             $appManager              The app manager.
+     * @param SettingsService         $settingsService         The settings service.
+     * @param OrganizationSyncService $organizationSyncService The organization sync service.
+     * @param ArchiMateService        $archiMateService        The ArchiMate import/export service.
+     * @param ProgressTracker         $progressTracker         The progress tracking service.
+     * @param LoggerInterface         $logger                  The logger instance.
      */
     public function __construct(
         $appName,
@@ -70,13 +69,12 @@ class SettingsController extends Controller
         private readonly SettingsService $settingsService,
         private readonly OrganizationSyncService $organizationSyncService,
         private readonly ArchiMateService $archiMateService,
+        private readonly ProgressTracker $progressTracker,
         private readonly LoggerInterface $logger,
     ) {
-        parent::__construct($appName, $request);
-        $this->_appName = $appName;
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Attempts to retrieve the OpenRegister service from the container.
@@ -86,7 +84,7 @@ class SettingsController extends Controller
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (in_array('openregister', $this->appManager->getInstalledApps())) {
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
             $this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
             return $this->objectService;
         }
@@ -94,7 +92,6 @@ class SettingsController extends Controller
         throw new \RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
-
 
     /**
      * Attempts to retrieve the Configuration service from the container.
@@ -105,7 +102,7 @@ class SettingsController extends Controller
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
         // Check if the 'openregister' app is installed.
-        if (in_array('openregister', $this->appManager->getInstalledApps())) {
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
             // Retrieve the ConfigurationService from the container.
             $configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
             return $configurationService;
@@ -115,7 +112,6 @@ class SettingsController extends Controller
         throw new \RuntimeException('Configuration service is not available.');
 
     }//end getConfigurationService()
-
 
     /**
      * Retrieve the current settings.
@@ -128,18 +124,20 @@ class SettingsController extends Controller
     public function index(): JSONResponse
     {
         try {
-            // Delegate all business logic to service
+            // Delegate all business logic to service.
             $data = $this->settingsService->getAllSettings();
             return new JSONResponse($data);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to retrieve settings', [
-                'exception' => $e->getMessage()
-            ]);
+            $this->logger->error(
+                    'Failed to retrieve settings',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }
 
     }//end index()
-
 
     /**
      * Handle the post request to update settings.
@@ -152,80 +150,100 @@ class SettingsController extends Controller
     {
         try {
             $data = $this->request->getParams();
-            
-            // Handle different types of settings updates
+
+            // Handle different types of settings updates.
             $result = [];
-            
-            // Update schema/register configuration
-            if (isset($data['configuration']) || isset($data['selectedRegister'])) {
-                $configData = array_filter($data, function($key) {
-                    return !in_array($key, ['userGroups', 'emailSettings']);
-                }, ARRAY_FILTER_USE_KEY);
-                
-                if (!empty($configData)) {
+
+            // Update schema/register configuration.
+            if (isset($data['configuration']) === true || isset($data['selectedRegister']) === true) {
+                $configData = array_filter(
+                        $data,
+                        function ($key) {
+                            return in_array(needle: $key, haystack: ['userGroups', 'emailSettings']) === false;
+                        },
+                        ARRAY_FILTER_USE_KEY
+                        );
+
+                if (empty($configData) === false) {
                     $result['configuration'] = $this->settingsService->updateSettings($configData);
                 }
             }
-            
-            // Update user groups
-            if (isset($data['userGroups'])) {
+
+            // Update user groups.
+            if (isset($data['userGroups']) === true) {
                 $userGroups = $data['userGroups'];
-                
-                if (isset($userGroups['generic'])) {
+
+                if (isset($userGroups['generic']) === true) {
                     $validation = $this->settingsService->validateGroups($userGroups['generic']);
-                    if (!empty($validation['invalid'])) {
-                        return new JSONResponse([
-                            'error' => 'Invalid generic group names provided',
-                            'validation' => $validation
-                        ], 400);
+                    if (empty($validation['invalid']) === false) {
+                        return new JSONResponse(
+                                [
+                                    'error'      => 'Invalid generic group names provided',
+                                    'validation' => $validation,
+                                ],
+                                400
+                                );
                     }
+
                     $this->settingsService->setGenericUserGroups($validation['valid']);
                     $result['userGroups']['generic'] = $validation['valid'];
                 }
-                
-                if (isset($userGroups['organizationAdmin'])) {
+
+                if (isset($userGroups['organizationAdmin']) === true) {
                     $validation = $this->settingsService->validateGroups($userGroups['organizationAdmin']);
-                    if (!empty($validation['invalid'])) {
-                        return new JSONResponse([
-                            'error' => 'Invalid organization admin group names provided',
-                            'validation' => $validation
-                        ], 400);
+                    if (empty($validation['invalid']) === false) {
+                        return new JSONResponse(
+                                [
+                                    'error'      => 'Invalid organization admin group names provided',
+                                    'validation' => $validation,
+                                ],
+                                400
+                                );
                     }
+
                     $this->settingsService->setOrganizationAdminGroups($validation['valid']);
                     $result['userGroups']['organizationAdmin'] = $validation['valid'];
                 }
-                
-                if (isset($userGroups['superUser'])) {
+
+                if (isset($userGroups['superUser']) === true) {
                     $validation = $this->settingsService->validateGroups($userGroups['superUser']);
-                    if (!empty($validation['invalid'])) {
-                        return new JSONResponse([
-                            'error' => 'Invalid super user group names provided',
-                            'validation' => $validation
-                        ], 400);
+                    if (empty($validation['invalid']) === false) {
+                        return new JSONResponse(
+                                [
+                                    'error'      => 'Invalid super user group names provided',
+                                    'validation' => $validation,
+                                ],
+                                400
+                                );
                     }
+
                     $this->settingsService->setSuperUserGroups($validation['valid']);
                     $result['userGroups']['superUser'] = $validation['valid'];
                 }
-            }
-            
-            // Update email settings
-            if (isset($data['emailSettings'])) {
+            }//end if
+
+            // Update email settings.
+            if (isset($data['emailSettings']) === true) {
                 $result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
             }
-            
-            return new JSONResponse([
-                'success' => true,
-                'data' => $result,
-                'message' => 'Settings updated successfully'
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'data'    => $result,
+                        'message' => 'Settings updated successfully',
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update settings', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
+            $this->logger->error(
+                    'Failed to update settings',
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
             return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
+        }//end try
 
     }//end create()
 
@@ -233,7 +251,7 @@ class SettingsController extends Controller
      * Get general configuration settings
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse General configuration
      */
     public function getGeneralConfig(): JSONResponse
@@ -242,64 +260,78 @@ class SettingsController extends Controller
             $config = [
                 'catalogLocation' => $this->settingsService->getCatalogLocation(),
             ];
-            
-            return new JSONResponse([
-                'success' => true,
-                'config' => $config
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'config'  => $config,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get general config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get general config: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get general config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get general config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getGeneralConfig()
 
     /**
      * Update general configuration settings
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function updateGeneralConfig(): JSONResponse
     {
         try {
             $data = $this->request->getParams();
-            
-            if (isset($data['catalogLocation'])) {
+
+            if (isset($data['catalogLocation']) === true) {
                 $this->settingsService->setCatalogLocation($data['catalogLocation']);
             }
-            
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'General configuration updated successfully',
-                'config' => [
-                    'catalogLocation' => $this->settingsService->getCatalogLocation(),
-                ]
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'General configuration updated successfully',
+                        'config'  => [
+                            'catalogLocation' => $this->settingsService->getCatalogLocation(),
+                        ],
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update general config', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update general config: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to update general config',
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update general config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end updateGeneralConfig()
 
     /**
      * Get organization synchronization configuration
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Sync configuration
      */
     public function getSyncConfig(): JSONResponse
@@ -308,58 +340,72 @@ class SettingsController extends Controller
             $config = [
                 'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
             ];
-            
-            return new JSONResponse([
-                'success' => true,
-                'config' => $config
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'config'  => $config,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get sync config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get sync config: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get sync config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get sync config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getSyncConfig()
 
     /**
      * Update organization synchronization configuration
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function updateSyncConfig(): JSONResponse
     {
         try {
             $data = $this->request->getParams();
-            
-            if (isset($data['syncTimeWindow'])) {
+
+            if (isset($data['syncTimeWindow']) === true) {
                 $this->config->setValueString($this->_appName, 'syncTimeWindow', (string) $data['syncTimeWindow']);
             }
-            
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'Sync configuration updated successfully',
-                'config' => [
-                    'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
-                ]
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'Sync configuration updated successfully',
+                        'config'  => [
+                            'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+                        ],
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update sync config', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update sync config: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to update sync config',
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update sync config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end updateSyncConfig()
 
     /**
      * Load the settings from the publication_register.json file.
@@ -379,7 +425,6 @@ class SettingsController extends Controller
 
     }//end load()
 
-
     /**
      * Initialize the SoftwareCatalog settings
      *
@@ -393,13 +438,15 @@ class SettingsController extends Controller
             $result = $this->settingsService->initialize();
             return new JSONResponse($result);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to initialize settings', [
-                'exception' => $e->getMessage()
-            ]);
+            $this->logger->error(
+                    'Failed to initialize settings',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }
-    }
-
+    }//end initialize()
 
     /**
      * Get configuration status
@@ -413,40 +460,50 @@ class SettingsController extends Controller
     {
         try {
             $this->logger->debug('SettingsController: Getting configuration status');
-            
-            $status = $this->settingsService->getConfigurationStatus();
+
+            $status            = $this->settingsService->getConfigurationStatus();
             $isFullyConfigured = $this->settingsService->isFullyConfigured();
-            $versionInfo = $this->settingsService->getVersionInfo();
-            
+            $versionInfo       = $this->settingsService->getVersionInfo();
+
             $responseData = [
-                'status' => $status,
-                'fullyConfigured' => $isFullyConfigured,
-                'versionInfo' => $versionInfo,
-                'timestamp' => time(),
-                'autoConfigCompleted' => $this->config->getValueString('softwarecatalog', 'auto_config_completed', 'false') === 'true'
+                'status'              => $status,
+                'fullyConfigured'     => $isFullyConfigured,
+                'versionInfo'         => $versionInfo,
+                'timestamp'           => time(),
+                'autoConfigCompleted' => $this->config->getValueString(
+                    'softwarecatalog',
+                    'auto_config_completed',
+                    'false'
+                ) === 'true',
             ];
-            
-            $this->logger->info('SettingsController: Configuration status compiled', [
-                'fullyConfigured' => $isFullyConfigured,
-                'needsUpdate' => $versionInfo['needsUpdate'] ?? null,
-                'versionsMatch' => $versionInfo['versionsMatch'] ?? null
-            ]);
-            
+
+            $this->logger->info(
+                    'SettingsController: Configuration status compiled',
+                    [
+                        'fullyConfigured' => $isFullyConfigured,
+                        'needsUpdate'     => $versionInfo['needsUpdate'] ?? null,
+                        'versionsMatch'   => $versionInfo['versionsMatch'] ?? null,
+                    ]
+                    );
+
             return new JSONResponse($responseData);
         } catch (\Exception $e) {
-            $this->logger->error('SettingsController: Failed to get configuration status', [
-                'exception_message' => $e->getMessage(),
-                'exception' => $e
-            ]);
-            return new JSONResponse([
-                'error' => $e->getMessage(),
-                'timestamp' => time()
-            ], 500);
-        }
-    }
-
-
-
+            $this->logger->error(
+                    'SettingsController: Failed to get configuration status',
+                    [
+                        'exception_message' => $e->getMessage(),
+                        'exception'         => $e,
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'error'     => $e->getMessage(),
+                        'timestamp' => time(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end status()
 
     /**
      * Auto-configure settings
@@ -459,25 +516,32 @@ class SettingsController extends Controller
     {
         try {
             $configuration = $this->settingsService->autoConfigure();
-            if (!empty($configuration)) {
+            if (empty($configuration) === false) {
                 $result = $this->settingsService->updateSettings($configuration);
-                return new JSONResponse([
-                    'success' => true,
-                    'configuration' => $result
-                ]);
+                return new JSONResponse(
+                        [
+                            'success'       => true,
+                            'configuration' => $result,
+                        ]
+                        );
             } else {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'No matching registers or schemas found for auto-configuration'
-                ]);
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'No matching registers or schemas found for auto-configuration',
+                        ]
+                        );
             }
         } catch (\Exception $e) {
-            $this->logger->error('Failed to auto-configure settings', [
-                'exception' => $e->getMessage()
-            ]);
+            $this->logger->error(
+                    'Failed to auto-configure settings',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
             return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
-    }
+        }//end try
+    }//end autoConfigure()
 
     /**
      * Get object counts statistics for all configured registers
@@ -491,20 +555,28 @@ class SettingsController extends Controller
     {
         try {
             $statistics = $this->settingsService->getObjectCountsStatistics();
-            return new JSONResponse([
-                'success' => true,
-                'statistics' => $statistics
-            ]);
+            return new JSONResponse(
+                    [
+                        'success'    => true,
+                        'statistics' => $statistics,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get object counts statistics', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get object counts statistics',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'error'   => $e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end stats()
 
     /**
      * Get debug information for settings
@@ -520,12 +592,15 @@ class SettingsController extends Controller
             $debugInfo = $this->settingsService->getDebugInfo();
             return new JSONResponse($debugInfo);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get debug information', [
-                'exception' => $e->getMessage()
-            ]);
+            $this->logger->error(
+                    'Failed to get debug information',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }
-    }
+    }//end debug()
 
     /**
      * Send a test email
@@ -537,46 +612,56 @@ class SettingsController extends Controller
     public function sendTestEmail(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
-            $email = $data['email'] ?? '';
+            $data          = $this->request->getParams();
+            $email         = $data['email'] ?? '';
             $emailSettings = $data['emailSettings'] ?? [];
-            
-            // Delegate all business logic (including validation) to service
-            $result = $this->settingsService->sendTestEmail($email, $emailSettings);
-            
-            return new JSONResponse([
-                'success' => $result['success'],
-                'message' => $result['message']
-            ]);
-            
+
+            // Delegate all business logic (including validation) to service.
+            $result = $this->settingsService->sendTestEmail(
+                email: $email,
+                emailSettings: $emailSettings
+            );
+
+            return new JSONResponse(
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'],
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('SoftwareCatalog: Failed to send test email in controller', [
-                'exception_class' => get_class($e),
-                'exception_message' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to send test email: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'SoftwareCatalog: Failed to send test email in controller',
+                    [
+                        'exception_class'   => get_class($e),
+                        'exception_message' => $e->getMessage(),
+                        'requestData'       => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to send test email: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end sendTestEmail()
 
     /**
      * Get organization synchronization status with processing predictions
      *
      * @param int $minutesBack Number of minutes to look back for prediction (default: 10)
-     * 
+     *
      * @return JSONResponse JSON response containing sync status information
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function getSyncStatus(int $minutesBack = 10): JSONResponse
+    public function getSyncStatus(int $minutesBack=10): JSONResponse
     {
         $status = $this->organizationSyncService->getSyncStatusWithErrorHandling($minutesBack);
         return new JSONResponse($status);
-    }
+    }//end getSyncStatus()
 
     /**
      * Perform manual organization synchronization
@@ -587,45 +672,55 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      */
-    public function performSync(int $minutesBack = 0): JSONResponse
+    public function performSync(int $minutesBack=0): JSONResponse
     {
         try {
-            // For full sync (minutesBack = 0), use optimized batch processing to handle large datasets
+            // For full sync (minutesBack = 0), use optimized batch processing to handle large datasets.
             if ($minutesBack === 0) {
                 $result = $this->organizationSyncService->performOptimizedManualSync(
-                    maxRounds: 15,   // Up to 15 rounds of processing
-                    batchSize: 75    // 75 items per batch for good performance
+                    maxRounds: 15,
+                // Up to 15 rounds of processing.
+                    batchSize: 75
+                // 75 items per batch for good performance.
                 );
-                
-                return new JSONResponse([
-                    'success' => true,
-                    'results' => $result,
-                    'message' => 'Optimized synchronization completed successfully',
-                    'isOptimized' => true
-                ]);
+
+                return new JSONResponse(
+                        [
+                            'success'     => true,
+                            'results'     => $result,
+                            'message'     => 'Optimized synchronization completed successfully',
+                            'isOptimized' => true,
+                        ]
+                        );
             } else {
-                // For incremental sync, use the original method
+                // For incremental sync, use the original method.
                 $result = $this->organizationSyncService->performManualSync($minutesBack);
-                
-                if ($result['success']) {
+
+                if ($result['success'] === true) {
                     return new JSONResponse($result);
                 } else {
                     return new JSONResponse($result, 500);
                 }
-            }
+            }//end if
         } catch (\Exception $e) {
-            $this->logger->error('Manual sync failed', [
-                'minutesBack' => $minutesBack,
-                'exception' => $e->getMessage()
-            ]);
-            
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Synchronization failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Manual sync failed',
+                    [
+                        'minutesBack' => $minutesBack,
+                        'exception'   => $e->getMessage(),
+                    ]
+                    );
+
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Synchronization failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end performSync()
 
     /**
      * Heartbeat endpoint to keep connections alive during long-running operations
@@ -642,30 +737,41 @@ class SettingsController extends Controller
     {
         try {
             $timestamp = $this->request->getParam('timestamp', time() * 1000);
-            
-            $this->logger->debug('Heartbeat received', [
-                'timestamp' => $timestamp,
-                'server_time' => time() * 1000
-            ]);
-            
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'Heartbeat received',
-                'timestamp' => $timestamp,
-                'server_time' => time() * 1000
-            ]);
+
+            $this->logger->debug(
+                    'Heartbeat received',
+                    [
+                        'timestamp'   => $timestamp,
+                        'server_time' => time() * 1000,
+                    ]
+                    );
+
+            return new JSONResponse(
+                    [
+                        'success'     => true,
+                        'message'     => 'Heartbeat received',
+                        'timestamp'   => $timestamp,
+                        'server_time' => time() * 1000,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Heartbeat error: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
-            
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Heartbeat failed',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Heartbeat error: '.$e->getMessage(),
+                    [
+                        'exception' => $e,
+                    ]
+                    );
+
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Heartbeat failed',
+                        'error'   => $e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end heartbeat()
 
     /**
      * Get version information for the app and configuration.
@@ -680,25 +786,34 @@ class SettingsController extends Controller
         try {
             $this->logger->info('SettingsController: Getting version information');
             $data = $this->settingsService->getVersionInfo();
-            
-            $this->logger->info('SettingsController: Version info retrieved', [
-                'version_info' => $data
-            ]);
-            
-            // Add timestamp for cache busting
+
+            $this->logger->info(
+                    'SettingsController: Version info retrieved',
+                    [
+                        'version_info' => $data,
+                    ]
+                    );
+
+            // Add timestamp for cache busting.
             $data['timestamp'] = time();
-            
+
             return new JSONResponse($data);
         } catch (\Exception $e) {
-            $this->logger->error('SettingsController: Failed to get version info', [
-                'exception_message' => $e->getMessage(),
-                'exception' => $e
-            ]);
-            return new JSONResponse([
-                'error' => $e->getMessage(),
-                'timestamp' => time()
-            ], 500);
-        }
+            $this->logger->error(
+                    'SettingsController: Failed to get version info',
+                    [
+                        'exception_message' => $e->getMessage(),
+                        'exception'         => $e,
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'error'     => $e->getMessage(),
+                        'timestamp' => time(),
+                    ],
+                    500
+                    );
+        }//end try
     }//end getVersionInfo()
 
     /**
@@ -712,23 +827,26 @@ class SettingsController extends Controller
     {
         try {
             $params = $this->request->getParams();
-            $resetConfiguration = isset($params['resetConfiguration']) && $params['resetConfiguration'] === true;
-            
+            $resetConfiguration = isset($params['resetConfiguration']) === true && $params['resetConfiguration'] === true;
+
             $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
-            
-            if ($result['success']) {
+
+            if ($result['success'] === true) {
                 return new JSONResponse($result);
             } else {
                 return new JSONResponse($result, 400);
             }
         } catch (\Exception $e) {
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Reset failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Reset failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end resetAutoConfig()
 
     /**
      * Clear configuration cache to force reload of schema IDs and register IDs.
@@ -741,25 +859,33 @@ class SettingsController extends Controller
     {
         try {
             $this->logger->info('SettingsController: Clearing configuration cache');
-            
+
             $this->settingsService->clearConfigurationCache();
-            
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'Configuration cache cleared successfully'
-            ]);
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'Configuration cache cleared successfully',
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('SettingsController: Cache clear failed', [
-                'exception' => $e->getMessage()
-            ]);
-            
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Cache clear failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'SettingsController: Cache clear failed',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Cache clear failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end clearCache()
 
     /**
      * Manually trigger configuration import.
@@ -771,40 +897,52 @@ class SettingsController extends Controller
     public function manualImport(): JSONResponse
     {
         try {
-            $params = $this->request->getParams();
-            $forceImport = isset($params['force']) && $params['force'] === true;
-            
-            $this->logger->info('SettingsController: Starting manual import', [
-                'force' => $forceImport
-            ]);
-            
+            $params      = $this->request->getParams();
+            $forceImport = isset($params['force']) === true && $params['force'] === true;
+
+            $this->logger->info(
+                    'SettingsController: Starting manual import',
+                    [
+                        'force' => $forceImport,
+                    ]
+                    );
+
             $result = $this->settingsService->manualImport($forceImport);
-            
-            $this->logger->info('SettingsController: Manual import completed', [
-                'success' => $result['success'],
-                'message' => $result['message'] ?? 'No message'
-            ]);
-            
-            // Add timestamp for cache busting
+
+            $this->logger->info(
+                    'SettingsController: Manual import completed',
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'] ?? 'No message',
+                    ]
+                    );
+
+            // Add timestamp for cache busting.
             $result['timestamp'] = time();
-            
-            if ($result['success']) {
+
+            if ($result['success'] === true) {
                 return new JSONResponse($result);
             } else {
                 return new JSONResponse($result, 400);
             }
         } catch (\Exception $e) {
-            $this->logger->error('SettingsController: Manual import failed', [
-                'exception_message' => $e->getMessage(),
-                'exception' => $e
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Import failed: ' . $e->getMessage(),
-                'error' => $e->getMessage(),
-                'timestamp' => time()
-            ], 500);
-        }
+            $this->logger->error(
+                    'SettingsController: Manual import failed',
+                    [
+                        'exception_message' => $e->getMessage(),
+                        'exception'         => $e,
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success'   => false,
+                        'message'   => 'Import failed: '.$e->getMessage(),
+                        'error'     => $e->getMessage(),
+                        'timestamp' => time(),
+                    ],
+                    500
+                    );
+        }//end try
     }//end manualImport()
 
     /**
@@ -818,55 +956,63 @@ class SettingsController extends Controller
     {
         try {
             $this->logger->info('SettingsController: Starting force update');
-            
+
             $result = $this->settingsService->forceUpdate();
-            
-            $this->logger->info('SettingsController: Force update completed', [
-                'success' => $result['success'],
-                'message' => $result['message'] ?? 'No message'
-            ]);
-            
-            // Add timestamp for cache busting
+
+            $this->logger->info(
+                    'SettingsController: Force update completed',
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'] ?? 'No message',
+                    ]
+                    );
+
+            // Add timestamp for cache busting.
             $result['timestamp'] = time();
-            
-            // Ensure result is JSON serializable by removing any potential circular references
+
+            // Ensure result is JSON serializable by removing any potential circular references.
             $jsonResult = json_decode(json_encode($result), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->logger->error('SettingsController: JSON serialization error', [
-                    'json_error' => json_last_error_msg(),
-                    'result_keys' => array_keys($result)
-                ]);
-                // Return a simplified response if serialization fails
-                return new JSONResponse([
-                    'success' => $result['success'] ?? false,
-                    'message' => $result['message'] ?? 'Force update completed but response serialization failed',
-                    'timestamp' => time()
-                ], 200);
+                $this->logger->error(
+                        'SettingsController: JSON serialization error',
+                        [
+                            'json_error'  => json_last_error_msg(),
+                            'result_keys' => array_keys($result),
+                        ]
+                        );
+                // Return a simplified response if serialization fails.
+                return new JSONResponse(
+                        [
+                            'success'   => $result['success'] ?? false,
+                            'message'   => $result['message'] ?? 'Force update completed but response serialization failed',
+                            'timestamp' => time(),
+                        ],
+                        200
+                        );
             }
-            
-            // Always return 200 since the operation completed, even if configuration needs attention
+
+            // Always return 200 since the operation completed, even if configuration needs attention.
             return new JSONResponse($jsonResult, 200);
-            
         } catch (\Throwable $e) {
-            $this->logger->error('SettingsController: Force update failed', [
-                'exception_message' => $e->getMessage(),
-                'exception_class' => get_class($e),
-                'exception_trace' => $e->getTraceAsString()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Force update failed: ' . $e->getMessage(),
-                'error' => $e->getMessage(),
-                'timestamp' => time()
-            ], 500);
-        }
+            $this->logger->error(
+                    'SettingsController: Force update failed',
+                    [
+                        'exception_message' => $e->getMessage(),
+                        'exception_class'   => get_class($e),
+                        'exception_trace'   => $e->getTraceAsString(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success'   => false,
+                        'message'   => 'Force update failed: '.$e->getMessage(),
+                        'error'     => $e->getMessage(),
+                        'timestamp' => time(),
+                    ],
+                    500
+                    );
+        }//end try
     }//end forceUpdate()
-
-
-
-
-
-
 
     /**
      * Consolidated auto-configuration that handles everything
@@ -881,1135 +1027,1409 @@ class SettingsController extends Controller
     public function consolidatedAutoConfigure(): JSONResponse
     {
         try {
-            // Get force parameter from request
+            // Get force parameter from request.
             $force = $this->request->getParam('force', false);
-            
-            // Delegate all business logic to the service
+
+            // Delegate all business logic to the service.
             $results = $this->settingsService->performConsolidatedAutoConfiguration($force);
-            
-            // Determine HTTP status based on results
-            if (!$results['success']) {
-                $httpStatus = !empty($results['errors']) ? 207 : 500; // Multi-status or Server Error
+
+            // Determine HTTP status based on results.
+            if ($results['success'] === false) {
+                // Multi-status or Server Error.
+                if (empty($results['errors']) === false) {
+                    $httpStatus = 207;
+                } else {
+                    $httpStatus = 500;
+                }
             } else {
-                $httpStatus = 200; // Success
+                // Success.
+                $httpStatus = 200;
             }
-            
+
             return new JSONResponse($results, $httpStatus);
-            
         } catch (\Exception $e) {
-            $this->logger->error('SettingsController: Consolidated auto-configuration failed', [
-                'exception_message' => $e->getMessage(),
-                'exception' => $e
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Auto-configuration failed: ' . $e->getMessage(),
-                'error' => $e->getMessage(),
-                'timestamp' => time()
-            ], 500);
-        }
+            $this->logger->error(
+                    'SettingsController: Consolidated auto-configuration failed',
+                    [
+                        'exception_message' => $e->getMessage(),
+                        'exception'         => $e,
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success'   => false,
+                        'message'   => 'Auto-configuration failed: '.$e->getMessage(),
+                        'error'     => $e->getMessage(),
+                        'timestamp' => time(),
+                    ],
+                    500
+                    );
+        }//end try
     }//end consolidatedAutoConfigure()
 
-
-
-
-
-
-
     /**
-     * Get current progress for an operation
+     * Get current progress for an operation.
+     *
+     * @param string $operationId The operation ID to get progress for.
+     *
+     * @return JSONResponse The current progress data.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @param string $operationId The operation ID to get progress for
-     * 
-     * @return JSONResponse The current progress data
      */
     public function getProgress(string $operationId): JSONResponse
     {
         try {
             $progress = $this->progressTracker->getProgress($operationId);
-            
+
             if ($progress === null) {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'Operation not found',
-                    'error' => 'OPERATION_NOT_FOUND'
-                ], 404);
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Operation not found',
+                            'error'   => 'OPERATION_NOT_FOUND',
+                        ],
+                        404
+                        );
             }
 
-            return new JSONResponse([
-                'success' => true,
-                'progress' => $progress
-            ]);
-
+            return new JSONResponse(
+                    [
+                        'success'  => true,
+                        'progress' => $progress,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get progress', [
-                'operation_id' => $operationId,
-                'error' => $e->getMessage()
-            ]);
+            $this->logger->error(
+                    'Failed to get progress',
+                    [
+                        'operation_id' => $operationId,
+                        'error'        => $e->getMessage(),
+                    ]
+                    );
 
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get progress: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get progress: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getProgress()
 
     /**
-     * Stream progress updates using Server-Sent Events
+     * Stream progress updates using Server-Sent Events.
+     *
+     * @param string $operationId The operation ID to stream progress for.
+     *
+     * @return Response SSE stream response.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @param string $operationId The operation ID to stream progress for
-     * 
-     * @return Response SSE stream response
      */
     public function streamProgress(string $operationId): Response
     {
-        // Set headers for Server-Sent Events
+        // Set headers for Server-Sent Events.
         $response = new class($operationId, $this->progressTracker, $this->logger) extends Response {
+            /**
+             * Constructor for the SSE response.
+             *
+             * @param string          $operationId     The operation ID to stream.
+             * @param ProgressTracker $progressTracker The progress tracker service.
+             * @param LoggerInterface $logger          The logger instance.
+             */
             public function __construct(
                 private string $operationId,
                 private ProgressTracker $progressTracker,
                 private LoggerInterface $logger
             ) {
                 parent::__construct();
-                $this->addHeader('Content-Type', 'text/event-stream');
-                $this->addHeader('Cache-Control', 'no-cache');
-                $this->addHeader('Connection', 'keep-alive');
-                $this->addHeader('Access-Control-Allow-Origin', '*');
-                $this->addHeader('Access-Control-Allow-Headers', 'Cache-Control');
-            }
+                $this->addHeader(name: 'Content-Type', value: 'text/event-stream');
+                $this->addHeader(name: 'Cache-Control', value: 'no-cache');
+                $this->addHeader(name: 'Connection', value: 'keep-alive');
+                $this->addHeader(name: 'Access-Control-Allow-Origin', value: '*');
+                $this->addHeader(name: 'Access-Control-Allow-Headers', value: 'Cache-Control');
+            }//end __construct()
 
+            /**
+             * Render the SSE stream.
+             *
+             * @return string Empty string (output is streamed directly).
+             */
             public function render(): string
             {
-                // Enable output buffering and turn off compression
-                if (ob_get_level()) {
+                // Enable output buffering and turn off compression.
+                if (ob_get_level() !== 0) {
                     ob_end_clean();
                 }
+
                 ob_implicit_flush(true);
 
-                // Stream progress updates
+                // Stream progress updates.
                 $lastProgress = null;
-                $maxAttempts = 300; // 5 minutes with 1-second intervals
+                $maxAttempts  = 300;
+                // 5 minutes with 1-second intervals.
                 $attempts = 0;
 
                 while ($attempts < $maxAttempts) {
                     try {
                         $progress = $this->progressTracker->getProgress($this->operationId);
-                        
+
                         if ($progress === null) {
-                            // Operation not found, send error and close
+                            // Operation not found, send error and close.
                             echo "event: error\n";
-                            echo "data: " . json_encode(['error' => 'Operation not found']) . "\n\n";
+                            echo "data: ".json_encode(['error' => 'Operation not found'])."\n\n";
                             break;
                         }
 
-                        // Only send update if progress changed
+                        // Only send update if progress changed.
                         if ($progress !== $lastProgress) {
                             echo "event: progress\n";
-                            echo "data: " . json_encode($progress) . "\n\n";
+                            echo "data: ".json_encode($progress)."\n\n";
                             $lastProgress = $progress;
-                            
-                            // If operation completed, send final event and close
+
+                            // If operation completed, send final event and close.
                             if ($progress['phase'] === 'completed') {
                                 echo "event: completed\n";
-                                echo "data: " . json_encode($progress) . "\n\n";
+                                echo "data: ".json_encode($progress)."\n\n";
                                 break;
                             }
                         }
 
-                        // Send heartbeat every 10 seconds
+                        // Send heartbeat every 10 seconds.
                         if ($attempts % 10 === 0) {
                             echo "event: heartbeat\n";
-                            echo "data: " . json_encode(['timestamp' => time()]) . "\n\n";
+                            echo "data: ".json_encode(['timestamp' => time()])."\n\n";
                         }
 
                         flush();
                         sleep(1);
                         $attempts++;
-
                     } catch (\Exception $e) {
-                        $this->logger->error('Progress streaming error', [
-                            'operation_id' => $this->operationId,
-                            'error' => $e->getMessage()
-                        ]);
+                        $this->logger->error(
+                                'Progress streaming error',
+                                [
+                                    'operation_id' => $this->operationId,
+                                    'error'        => $e->getMessage(),
+                                ]
+                                );
 
                         echo "event: error\n";
-                        echo "data: " . json_encode(['error' => $e->getMessage()]) . "\n\n";
+                        echo "data: ".json_encode(['error' => $e->getMessage()])."\n\n";
                         break;
-                    }
-                }
+                    }//end try
+                }//end while
 
-                // Send final close event
+                // Send final close event.
                 echo "event: close\n";
-                echo "data: " . json_encode(['reason' => 'Stream ended']) . "\n\n";
+                echo "data: ".json_encode(['reason' => 'Stream ended'])."\n\n";
                 flush();
 
                 return '';
-            }
+            }//end render()
         };
 
         return $response;
-    }
+    }//end streamProgress()
 
     /**
-     * Import ArchiMate file
+     * Import ArchiMate file.
+     *
+     * @return JSONResponse Result of the import operation with progress tracking.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @return JSONResponse Result of the import operation with progress tracking
      */
     public function importArchiMate(): JSONResponse
     {
         try {
-            // Increase memory limit for large imports
+            // Increase memory limit for large imports.
             ini_set('memory_limit', '4096M');
-            $this->logger->info('Memory limit increased for import', [
-                'old_limit' => ini_get('memory_limit'),
-                'new_limit' => '4096M'
-            ]);
-            // Get JSON data from request body
+            $this->logger->info(
+                    'Memory limit increased for import',
+                    [
+                        'old_limit' => ini_get('memory_limit'),
+                        'new_limit' => '4096M',
+                    ]
+                    );
+            // Get JSON data from request body.
             $rawInput = file_get_contents('php://input');
-            $data = json_decode($rawInput, true);
-            
-            // Enhanced debug logging
-            $this->logger->info('ArchiMate import request received', [
-                'rawInput' => $rawInput,
-                'decodedData' => $data,
-                'jsonError' => json_last_error_msg(),
-                'contentType' => $this->request->getHeader('Content-Type'),
-                'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
-                'requestMethod' => $this->request->getMethod(),
-                'userAgent' => $this->request->getHeader('User-Agent'),
-                'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
-                '_FILES' => $_FILES,
-                '_POST' => $_POST,
-                'requestParams' => $this->request->getParams()
-            ]);
-            
-            // Check if a file was uploaded (traditional file upload)
+            $data     = json_decode($rawInput, true);
+
+            $contentType = $this->request->getHeader('Content-Type');
+            $isMultipart = strpos(haystack: $contentType, needle: 'multipart/form-data') !== false;
+
+            // Enhanced debug logging.
+            $this->logger->info(
+                    'ArchiMate import request received',
+                    [
+                        'rawInput'       => $rawInput,
+                        'decodedData'    => $data,
+                        'jsonError'      => json_last_error_msg(),
+                        'contentType'    => $contentType,
+                        'isMultipart'    => $isMultipart,
+                        'requestMethod'  => $this->request->getMethod(),
+                        'userAgent'      => $this->request->getHeader('User-Agent'),
+                        'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
+                        '_FILES'         => $_FILES,
+                        '_POST'          => $_POST,
+                        'requestParams'  => $this->request->getParams(),
+                    ]
+                    );
+
+            // Check if a file was uploaded (traditional file upload).
             $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
-            
-            // Also check $_FILES directly as fallback
+
+            // Also check $_FILES directly as fallback.
             $filesArray = $_FILES['archiMateFile'] ?? null;
-            
-            $this->logger->info('File upload detection detailed', [
-                'uploadedFiles' => $uploadedFiles,
-                'filesArray' => $filesArray,
-                'requestMethod' => $this->request->getMethod(),
-                'contentType' => $this->request->getHeader('Content-Type'),
-                'hasUploadedFiles' => !empty($uploadedFiles),
-                'hasFilesArray' => !empty($filesArray),
-                'uploadedFilesType' => gettype($uploadedFiles),
-                'filesArrayType' => gettype($filesArray),
-                'allFilesKeys' => array_keys($_FILES ?? [])
-            ]);
-            
-            if ($uploadedFiles || $filesArray) {
-                // Use $_FILES as fallback if getUploadedFile doesn't work
-                $fileData = $uploadedFiles ?: $filesArray;
-                
-                // Handle file upload
+
+            $hasUploadedFiles = empty($uploadedFiles) === false;
+            $hasFilesArray    = empty($filesArray) === false;
+
+            $this->logger->info(
+                    'File upload detection detailed',
+                    [
+                        'uploadedFiles'     => $uploadedFiles,
+                        'filesArray'        => $filesArray,
+                        'requestMethod'     => $this->request->getMethod(),
+                        'contentType'       => $contentType,
+                        'hasUploadedFiles'  => $hasUploadedFiles,
+                        'hasFilesArray'     => $hasFilesArray,
+                        'uploadedFilesType' => gettype($uploadedFiles),
+                        'filesArrayType'    => gettype($filesArray),
+                        'allFilesKeys'      => array_keys($_FILES ?? []),
+                    ]
+                    );
+
+            if ($hasUploadedFiles === true || $hasFilesArray === true) {
+                // Use $_FILES as fallback if getUploadedFile doesn't work.
+                if ($uploadedFiles !== null) {
+                    $fileData = $uploadedFiles;
+                } else {
+                    $fileData = $filesArray;
+                }
+
+                // Handle file upload.
                 $options = [
                     'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
                     'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
-                    'preserveIds' => $this->request->getParam('preserveIds', 'true') === 'true',
+                    'preserveIds'    => $this->request->getParam('preserveIds', 'true') === 'true',
                     'processingMode' => $this->request->getParam('processingMode', 'speed'),
-                    'filePath' => $fileData['tmp_name'],
-                    'fileName' => $fileData['name'],
-                    'fileSize' => $fileData['size'] ?? filesize($fileData['tmp_name']),
-                    'mimeType' => $fileData['type'] ?? 'text/xml'
+                    'filePath'       => $fileData['tmp_name'],
+                    'fileName'       => $fileData['name'],
+                    'fileSize'       => $fileData['size'] ?? filesize($fileData['tmp_name']),
+                    'mimeType'       => $fileData['type'] ?? 'text/xml',
                 ];
-                
-                $this->logger->info('File upload detected', ['options' => $options]);
-            } elseif ($data && isset($data['file_path'])) {
-                // Handle file path from JSON payload
+
+                $this->logger->info('File upload detected.', ['options' => $options]);
+            } else if ($data !== null && isset($data['file_path']) === true) {
+                // Handle file path from JSON payload.
+                if (file_exists($data['file_path']) === true) {
+                    $fileSize = filesize($data['file_path']);
+                } else {
+                    $fileSize = 0;
+                }
+
                 $options = [
                     'updateExisting' => $data['updateExisting'] ?? true,
                     'deleteOrphaned' => $data['deleteOrphaned'] ?? false,
-                    'preserveIds' => $data['preserveIds'] ?? true,
+                    'preserveIds'    => $data['preserveIds'] ?? true,
                     'processingMode' => $data['processingMode'] ?? 'speed',
-                    'filePath' => $data['file_path'],
-                    'fileName' => $data['fileName'] ?? basename($data['file_path']),
-                    'fileSize' => $data['fileSize'] ?? (file_exists($data['file_path']) ? filesize($data['file_path']) : 0),
-                    'mimeType' => $data['mimeType'] ?? 'text/xml'
+                    'filePath'       => $data['file_path'],
+                    'fileName'       => $data['fileName'] ?? basename($data['file_path']),
+                    'fileSize'       => $data['fileSize'] ?? $fileSize,
+                    'mimeType'       => $data['mimeType'] ?? 'text/xml',
                 ];
-                
-                $this->logger->info('JSON payload detected', ['options' => $options]);
-            } else {
-                $this->logger->error('No file uploaded or file path provided - DETAILED DEBUG', [
-                    'uploadedFiles' => $uploadedFiles,
-                    'filesArray' => $filesArray,
-                    'data' => $data,
-                    'rawInput' => $rawInput,
-                    'contentType' => $this->request->getHeader('Content-Type'),
-                    'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
-                    'requestMethod' => $this->request->getMethod(),
-                    '_FILES_DEBUG' => $_FILES,
-                    '_POST_DEBUG' => $_POST,
-                    'requestParams' => $this->request->getParams(),
-                    'userAgent' => $this->request->getHeader('User-Agent'),
-                    'xRequestedWith' => $this->request->getHeader('X-Requested-With')
-                ]);
-                
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'No ArchiMate file uploaded or file path provided',
-                    'error' => 'NO_FILE_UPLOADED_OR_PATH',
-                    'debug' => [
-                        'contentType' => $this->request->getHeader('Content-Type'),
-                        'isMultipart' => strpos($this->request->getHeader('Content-Type'), 'multipart/form-data') !== false,
-                        'filesKeys' => array_keys($_FILES ?? [])
-                    ]
-                ], 400);
-            }
 
-            // OPTIMIZATION: Use optimized method if available or if explicitly requested
+                $this->logger->info('JSON payload detected.', ['options' => $options]);
+            } else {
+                $this->logger->error(
+                        'No file uploaded or file path provided — DETAILED DEBUG',
+                        [
+                            'uploadedFiles'  => $uploadedFiles,
+                            'filesArray'     => $filesArray,
+                            'data'           => $data,
+                            'rawInput'       => $rawInput,
+                            'contentType'    => $contentType,
+                            'isMultipart'    => $isMultipart,
+                            'requestMethod'  => $this->request->getMethod(),
+                            '_FILES_DEBUG'   => $_FILES,
+                            '_POST_DEBUG'    => $_POST,
+                            'requestParams'  => $this->request->getParams(),
+                            'userAgent'      => $this->request->getHeader('User-Agent'),
+                            'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
+                        ]
+                        );
+
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'No ArchiMate file uploaded or file path provided',
+                            'error'   => 'NO_FILE_UPLOADED_OR_PATH',
+                            'debug'   => [
+                                'contentType' => $contentType,
+                                'isMultipart' => $isMultipart,
+                                'filesKeys'   => array_keys($_FILES ?? []),
+                            ],
+                        ],
+                        400
+                        );
+            }//end if
+
+            // OPTIMIZATION: Use optimized method if available or if explicitly requested.
             $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
-            if ($useOptimized && method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized')) {
-                $this->logger->info('Using OPTIMIZED ArchiMate import method');
+            $hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
+            if ($useOptimized === true && $hasOptimized === true) {
+                $this->logger->info('Using OPTIMIZED ArchiMate import method.');
                 $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
             } else {
-                $this->logger->info('Using STANDARD ArchiMate import method');
+                $this->logger->info('Using STANDARD ArchiMate import method.');
                 $result = $this->archiMateService->importArchiMateFileFromPath($options);
             }
 
             return new JSONResponse($result);
-
         } catch (\Exception $e) {
-            $this->logger->error('ArchiMate import failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logger->error(
+                    'ArchiMate import failed',
+                    [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]
+                    );
 
-            // Determine appropriate HTTP status code based on error type
-            $statusCode = $this->getHttpStatusForException($e);
+            // Determine appropriate HTTP status code based on error type.
+            $statusCode = $this->getHttpStatusForException(e: $e);
 
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Import failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], $statusCode);
-        }
-    }
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Import failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    $statusCode
+                    );
+        }//end try
+    }//end importArchiMate()
 
     /**
-     * Export to ArchiMate format - returns file directly for download
+     * Export to ArchiMate format - returns file directly for download.
+     *
+     * @return Response File download response or JSON error response.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @return Response File download response or JSON error response
      */
     public function exportArchiMate(): Response
     {
         try {
-            // Get JSON data from request parameters or body
+            // Get JSON data from request parameters or body.
             $rawInput = file_get_contents('php://input');
-            $data = json_decode($rawInput, true);
-            
+            $data     = json_decode($rawInput, true);
+
             if (json_last_error() !== JSON_ERROR_NONE) {
-                // Fallback to request parameters if JSON decode fails
+                // Fallback to request parameters if JSON decode fails.
                 $data = [
-                    'organization' => $this->request->getParam('organization', null)
+                    'organization' => $this->request->getParam('organization', null),
                 ];
             }
 
-            // Simple organization filter - only parameter we support
+            // Simple organization filter - only parameter we support.
             $organization = $data['organization'] ?? null;
 
-            // Call export service with simplified parameters
+            // Call export service with simplified parameters.
             $result = $this->archiMateService->exportToArchiMate($organization);
 
-            // Check if export was successful
-            if (!$result['success']) {
-                // Determine appropriate status code based on error message
-                $statusCode = $this->getHttpStatusForErrorMessage($result['error'] ?? 'Export failed');
-                
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => $result['error'] ?? 'Export failed',
-                    'error' => $result['error'] ?? 'EXPORT_FAILED'
-                ], $statusCode);
+            // Check if export was successful.
+            if ($result['success'] === false) {
+                // Determine appropriate status code based on error message.
+                $statusCode = $this->getHttpStatusForErrorMessage(message: $result['error'] ?? 'Export failed');
+
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => $result['error'] ?? 'Export failed',
+                            'error'   => $result['error'] ?? 'EXPORT_FAILED',
+                        ],
+                        $statusCode
+                        );
             }
 
-            // Return the XML file directly for download
-            $fileName = $result['file_name'] ?? 'archimate_export_' . date('Y-m-d_H-i-s') . '.xml';
+            // Return the XML file directly for download.
+            $fileName   = $result['file_name'] ?? 'archimate_export_'.date('Y-m-d_H-i-s').'.xml';
             $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
-            
-            // Always return XML format
+
+            // Always return XML format.
             $contentType = 'application/xml';
 
-            // Create direct download response
+            // Create direct download response.
             $response = new class($xmlContent) extends Response {
-                public function __construct(private string $content) {
-                    parent::__construct();
-                }
-                
-                public function render(): string {
+                /**
+                 * Constructor for the download response.
+                 *
+                 * @param string $content The XML content to return.
+                 */
+                public function __construct(private string $content)
+                {
+                                        parent::__construct();
+                }//end __construct()
+
+                /**
+                 * Render the response content.
+                 *
+                 * @return string The response content.
+                 */
+                public function render(): string
+                {
                     return $this->content;
-                }
+                }//end render()
             };
-            
+
             $response->setStatus(200);
             $response->addHeader('Content-Type', $contentType);
-            $response->addHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"');
-            $response->addHeader('Content-Length', (string)strlen($xmlContent));
+            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
+            $response->addHeader('Content-Length', (string) strlen($xmlContent));
             $response->addHeader('Cache-Control', 'no-cache');
-            
-            $this->logger->info('ArchiMate export completed', [
-                'fileName' => $fileName,
-                'size' => strlen($xmlContent),
-                'objects_exported' => $result['statistics']['objects_exported'] ?? 0
-            ]);
+
+            $this->logger->info(
+                    'ArchiMate export completed',
+                    [
+                        'fileName'         => $fileName,
+                        'size'             => strlen($xmlContent),
+                        'objects_exported' => $result['statistics']['objects_exported'] ?? 0,
+                    ]
+                    );
 
             return $response;
-
         } catch (\Exception $e) {
-            $this->logger->error('ArchiMate export failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logger->error(
+                    'ArchiMate export failed',
+                    [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]
+                    );
 
-            // Determine appropriate HTTP status code based on error type
-            $statusCode = $this->getHttpStatusForException($e);
+            // Determine appropriate HTTP status code based on error type.
+            $statusCode = $this->getHttpStatusForException(e: $e);
 
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Export failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], $statusCode);
-        }
-    }
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Export failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    $statusCode
+                    );
+        }//end try
+    }//end exportArchiMate()
 
     /**
-     * Export organization-specific ArchiMate file with enriched views
+     * Export organization-specific ArchiMate file with enriched views.
+     *
+     * @param string $organizationUuid The organization UUID to export for.
+     *
+     * @return Response File download response or JSON error response.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @return Response File download response or JSON error response
      */
     public function exportOrgArchiMate(string $organizationUuid): Response
     {
         try {
-            // Read boolean query parameters
-            $modules = $this->request->getParam('modules', 'true') === 'true';
+            // Read boolean query parameters.
+            $modules   = $this->request->getParam('modules', 'true') === 'true';
             $deelnames = $this->request->getParam('deelnames', 'false') === 'true';
-            $gebruik = $this->request->getParam('gebruik', 'false') === 'true';
+            $gebruik   = $this->request->getParam('gebruik', 'false') === 'true';
 
             $options = [
-                'modules' => $modules,
+                'modules'   => $modules,
                 'deelnames' => $deelnames,
-                'gebruik' => $gebruik,
+                'gebruik'   => $gebruik,
             ];
 
-            $result = $this->archiMateService->exportOrgArchiMate($organizationUuid, $options);
+            $result = $this->archiMateService->exportOrgArchiMate(
+                organizationUuid: $organizationUuid,
+                options: $options
+            );
 
-            if (!$result['success']) {
+            if ($result['success'] === false) {
                 $statusCode = 500;
-                if (str_contains($result['error'] ?? '', 'not found')) {
+                if (str_contains(haystack: ($result['error'] ?? '') === true, needle: 'not found') === true) {
                     $statusCode = 404;
                 }
 
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => $result['error'] ?? 'Export failed',
-                    'error' => $result['error'] ?? 'EXPORT_FAILED'
-                ], $statusCode);
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => $result['error'] ?? 'Export failed',
+                            'error'   => $result['error'] ?? 'EXPORT_FAILED',
+                        ],
+                        $statusCode
+                        );
             }
 
-            $fileName = $result['file_name'] ?? 'archimate_org_export_' . date('Y-m-d_H-i-s') . '.xml';
+            $fileName   = $result['file_name'] ?? 'archimate_org_export_'.date('Y-m-d_H-i-s').'.xml';
             $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
             $response = new class($xmlContent) extends Response {
-                public function __construct(private string $content) {
-                    parent::__construct();
-                }
+                /**
+                 * Constructor for the org download response.
+                 *
+                 * @param string $content The XML content to return.
+                 */
+                public function __construct(private string $content)
+                {
+                                        parent::__construct();
+                }//end __construct()
 
-                public function render(): string {
+                /**
+                 * Render the response content.
+                 *
+                 * @return string The response content.
+                 */
+                public function render(): string
+                {
                     return $this->content;
-                }
+                }//end render()
             };
 
             $response->setStatus(200);
             $response->addHeader('Content-Type', 'application/xml');
-            $response->addHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"');
-            $response->addHeader('Content-Length', (string)strlen($xmlContent));
+            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
+            $response->addHeader('Content-Length', (string) strlen($xmlContent));
             $response->addHeader('Cache-Control', 'no-cache');
 
             return $response;
-
         } catch (\Exception $e) {
-            $this->logger->error('Organization ArchiMate export failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logger->error(
+                    'Organization ArchiMate export failed',
+                    [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]
+                    );
 
-            $statusCode = $this->getHttpStatusForException($e);
+            $statusCode = $this->getHttpStatusForException(e: $e);
 
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Export failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], $statusCode);
-        }
-    }
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Export failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    $statusCode
+                    );
+        }//end try
+    }//end exportOrgArchiMate()
 
     /**
-     * Download ArchiMate file
+     * Download ArchiMate file.
+     *
+     * @param string $fileName The filename to download.
+     *
+     * @return Response File download response.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @param string $fileName The filename to download
-     *
-     * @return Response File download response
      */
     public function downloadArchiMate(string $fileName): Response
     {
         try {
-            // Security: validate filename to prevent path traversal
-            if (strpos($fileName, '..') !== false || strpos($fileName, '/') !== false) {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'Invalid filename',
-                    'error' => 'INVALID_FILENAME'
-                ], 400);
+            // Security: validate filename to prevent path traversal.
+            if (strpos(haystack: $fileName, needle: '..') !== false
+                || strpos(haystack: $fileName, needle: '/') !== false
+            ) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Invalid filename',
+                            'error'   => 'INVALID_FILENAME',
+                        ],
+                        400
+                        );
             }
 
-            // Get user folder
+            // Get user folder.
             $userSession = $this->container->get(\OCP\IUserSession::class);
-            $rootFolder = $this->container->get(\OCP\Files\IRootFolder::class);
-            $userFolder = $rootFolder->getUserFolder($userSession->getUser()->getUID());
+            $rootFolder  = $this->container->get(\OCP\Files\IRootFolder::class);
+            $userFolder  = $rootFolder->getUserFolder($userSession->getUser()->getUID());
 
-            // Check if file exists
-            if (!$userFolder->nodeExists($fileName)) {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'File not found',
-                    'error' => 'FILE_NOT_FOUND'
-                ], 404);
+            // Check if file exists.
+            if ($userFolder->nodeExists($fileName) === false) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'File not found',
+                            'error'   => 'FILE_NOT_FOUND',
+                        ],
+                        404
+                        );
             }
 
             $file = $userFolder->get($fileName);
-            
-            if (!($file instanceof \OCP\Files\File)) {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'Invalid file type',
-                    'error' => 'INVALID_FILE_TYPE'
-                ], 400);
+
+            if (($file instanceof \OCP\Files\File) === false) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Invalid file type',
+                            'error'   => 'INVALID_FILE_TYPE',
+                        ],
+                        400
+                        );
             }
 
-            // Determine content type based on file extension
-            $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-            $contentType = match($extension) {
+            // Determine content type based on file extension.
+            $extension   = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $contentType = match ($extension) {
                 'xml', 'archimate' => 'application/xml',
                 'json' => 'application/json',
                 default => 'application/octet-stream'
             };
 
-            // Create download response
+            // Create download response.
             $response = new StreamResponse($file->fopen('r'));
             $response->addHeader('Content-Type', $contentType);
-            $response->addHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"');
-            $response->addHeader('Content-Length', (string)$file->getSize());
+            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
+            $response->addHeader('Content-Length', (string) $file->getSize());
 
             return $response;
-
         } catch (\Exception $e) {
-            $this->logger->error('ArchiMate download failed', [
-                'fileName' => $fileName,
-                'error' => $e->getMessage()
-            ]);
+            $this->logger->error(
+                    'ArchiMate download failed',
+                    [
+                        'fileName' => $fileName,
+                        'error'    => $e->getMessage(),
+                    ]
+                    );
 
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Download failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Download failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end downloadArchiMate()
 
-    // ========================================================================
-    // EMAIL MANAGEMENT METHODS
-    // ========================================================================
+    // ===.
+    // EMAIL MANAGEMENT METHODS.
+    // ===.
 
     /**
      * Test email connection (separate from sending test email)
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Test connection result
      */
     public function testEmailConnection(): JSONResponse
     {
         $this->logger->info('SoftwareCatalog: Email connection test endpoint called');
-        
+
         try {
-            $data = $this->request->getParams();
+            $data          = $this->request->getParams();
             $emailSettings = $data['emailSettings'] ?? $data ?? [];
-            
-            $this->logger->info('SoftwareCatalog: Email connection test request data', [
-                'has_email_settings' => !empty($emailSettings),
-                'transport_type' => $emailSettings['transportType'] ?? 'not specified'
-            ]);
-            
-            // Call the settings service to test the connection (without sending email)
+
+            $this->logger->info(
+                    'SoftwareCatalog: Email connection test request data',
+                    [
+                        'has_email_settings' => empty($emailSettings) === false,
+                        'transport_type'     => $emailSettings['transportType'] ?? 'not specified',
+                    ]
+                    );
+
+            // Call the settings service to test the connection (without sending email).
             $result = $this->settingsService->testEmailConnection($emailSettings);
-            
-            $this->logger->info('SoftwareCatalog: Email connection test result from service', [
-                'success' => $result['success'],
-                'message' => $result['message'] ?? 'no message'
-            ]);
-            
-            return new JSONResponse([
-                'success' => $result['success'],
-                'message' => $result['message'],
-                'details' => $result['details'] ?? null
-            ]);
-            
+
+            $this->logger->info(
+                    'SoftwareCatalog: Email connection test result from service',
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'] ?? 'no message',
+                    ]
+                    );
+
+            return new JSONResponse(
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'],
+                        'details' => $result['details'] ?? null,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('SoftwareCatalog: Failed to test email connection', [
-                'exception_class' => get_class($e),
-                'exception_message' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to test email connection: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'SoftwareCatalog: Failed to test email connection',
+                    [
+                        'exception_class'   => get_class($e),
+                        'exception_message' => $e->getMessage(),
+                        'requestData'       => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to test email connection: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end testEmailConnection()
 
     /**
      * Get email settings
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Current email settings
      */
     public function getEmailSettings(): JSONResponse
     {
         try {
             $emailSettings = $this->settingsService->getEmailSettings();
-            
-            return new JSONResponse([
-                'success' => true,
-                'emailSettings' => $emailSettings
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success'       => true,
+                        'emailSettings' => $emailSettings,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get email settings', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get email settings: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get email settings',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get email settings: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getEmailSettings()
 
     /**
      * Update email settings
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function updateEmailSettings(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data          = $this->request->getParams();
             $emailSettings = $data['emailSettings'] ?? $data;
-            
-            $result = $this->settingsService->updateEmailSettings($emailSettings);
-            
-            return new JSONResponse([
-                'success' => $result['success'],
-                'message' => $result['message'] ?? 'Email settings updated successfully',
-                'emailSettings' => $result['emailSettings'] ?? null
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to update email settings', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update email settings: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 
-    // ========================================================================
-    // EMAIL TEMPLATE METHODS
-    // ========================================================================
+            $result = $this->settingsService->updateEmailSettings($emailSettings);
+
+            return new JSONResponse(
+                    [
+                        'success'       => $result['success'],
+                        'message'       => $result['message'] ?? 'Email settings updated successfully',
+                        'emailSettings' => $result['emailSettings'] ?? null,
+                    ]
+                    );
+        } catch (\Exception $e) {
+            $this->logger->error(
+                    'Failed to update email settings',
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update email settings: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end updateEmailSettings()
+
+    // ===.
+    // EMAIL TEMPLATE METHODS.
+    // ===.
 
     /**
-     * Get all email templates
+     * Get all email templates.
+     *
+     * @return JSONResponse List of available templates.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @return JSONResponse List of available templates
      */
     public function getEmailTemplates(): JSONResponse
     {
         try {
-            // Delegate all business logic to service
+            // Delegate all business logic to service.
             $templates = $this->settingsService->getAllEmailTemplates();
-            
-            return new JSONResponse([
-                'success' => true,
-                'templates' => $templates
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success'   => true,
+                        'templates' => $templates,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get email templates', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get email templates: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get email templates',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get email templates: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getEmailTemplates()
 
     /**
-     * Get specific email template
+     * Get specific email template.
+     *
+     * @param string $templateName Template name.
+     *
+     * @return JSONResponse Template content.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @param string $templateName Template name
-     * @return JSONResponse Template content
      */
     public function getEmailTemplate(string $templateName): JSONResponse
     {
         try {
             $template = $this->settingsService->getEmailTemplate($templateName);
-            
-            return new JSONResponse([
-                'success' => true,
-                'template' => $template,
-                'templateName' => $templateName
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success'      => true,
+                        'template'     => $template,
+                        'templateName' => $templateName,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error("Failed to get email template {$templateName}", [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => "Failed to get email template {$templateName}: " . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    "Failed to get email template {$templateName}",
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => "Failed to get email template {$templateName}: ".$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getEmailTemplate()
 
     /**
-     * Update email template
+     * Update email template.
+     *
+     * @param string $templateName Template name.
+     *
+     * @return JSONResponse Update result.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @param string $templateName Template name
-     * @return JSONResponse Update result
      */
     public function updateEmailTemplate(string $templateName): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data            = $this->request->getParams();
             $templateContent = $data['template'] ?? $data['content'] ?? '';
-            
-            if (empty($templateContent)) {
-                return new JSONResponse([
-                    'success' => false,
-                    'message' => 'Template content is required'
-                ], 400);
+
+            if (empty($templateContent) === true) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Template content is required',
+                        ],
+                        400
+                        );
             }
-            
-            $success = $this->settingsService->updateEmailTemplate($templateName, $templateContent);
-            
-            return new JSONResponse([
-                'success' => $success,
-                'message' => $success ? "Template {$templateName} updated successfully" : "Failed to update template {$templateName}"
-            ]);
-            
+
+            $success = $this->settingsService->updateEmailTemplate(
+                templateName: $templateName,
+                content: $templateContent
+            );
+
+            if ($success === true) {
+                $updateMsg = "Template {$templateName} updated successfully";
+            } else {
+                $updateMsg = "Failed to update template {$templateName}";
+            }
+
+            return new JSONResponse(
+                    [
+                        'success' => $success,
+                        'message' => $updateMsg,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error("Failed to update email template {$templateName}", [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => "Failed to update email template {$templateName}: " . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    "Failed to update email template {$templateName}",
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => "Failed to update email template {$templateName}: ".$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end updateEmailTemplate()
 
     /**
-     * Get default email template
+     * Get default email template.
+     *
+     * @param string $templateName Template name.
+     *
+     * @return JSONResponse Default template content.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @param string $templateName Template name
-     * @return JSONResponse Default template content
      */
     public function getEmailTemplateDefault(string $templateName): JSONResponse
     {
         try {
             $defaultTemplate = $this->settingsService->getDefaultEmailTemplate($templateName);
-            
-            return new JSONResponse([
-                'success' => true,
-                'template' => $defaultTemplate,
-                'templateName' => $templateName
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success'      => true,
+                        'template'     => $defaultTemplate,
+                        'templateName' => $templateName,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error("Failed to get default email template {$templateName}", [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => "Failed to get default email template {$templateName}: " . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    "Failed to get default email template {$templateName}",
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => "Failed to get default email template {$templateName}: ".$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getEmailTemplateDefault()
 
     /**
-     * Get email template variables
+     * Get email template variables.
+     *
+     * @param string $templateName Template name.
+     *
+     * @return JSONResponse Available variables for template.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @param string $templateName Template name
-     * @return JSONResponse Available variables for template
      */
     public function getEmailTemplateVariables(string $templateName): JSONResponse
     {
         try {
             $variables = $this->settingsService->getEmailTemplateVariables($templateName);
-            
-            return new JSONResponse([
-                'success' => true,
-                'variables' => $variables,
-                'templateName' => $templateName
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->logger->error("Failed to get email template variables for {$templateName}", [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => "Failed to get email template variables for {$templateName}: " . $e->getMessage()
-            ], 500);
-        }
-    }
 
-    // ========================================================================
-    // USER GROUPS MANAGEMENT METHODS
-    // ========================================================================
+            return new JSONResponse(
+                    [
+                        'success'      => true,
+                        'variables'    => $variables,
+                        'templateName' => $templateName,
+                    ]
+                    );
+        } catch (\Exception $e) {
+            $this->logger->error(
+                    "Failed to get email template variables for {$templateName}",
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => "Failed to get email template variables for {$templateName}: ".$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getEmailTemplateVariables()
+
+    // ===.
+    // USER GROUPS MANAGEMENT METHODS.
+    // ===.
 
     /**
      * Get generic user groups
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Generic user groups
      */
     public function getGenericUserGroups(): JSONResponse
     {
         try {
             $groups = $this->settingsService->getGenericUserGroups();
-            
-            return new JSONResponse([
-                'success' => true,
-                'groups' => $groups
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'groups'  => $groups,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get generic user groups', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get generic user groups: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get generic user groups',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get generic user groups: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getGenericUserGroups()
 
     /**
      * Set generic user groups
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function setGenericUserGroups(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
-            
-            // Delegate all business logic (including validation) to service
+
+            // Delegate all business logic (including validation) to service.
             $result = $this->settingsService->updateGenericUserGroups($groups);
-            
-            return new JSONResponse([
-                'success' => $result['success'],
-                'message' => $result['message'],
-                'groups' => $result['groups'] ?? null
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'],
+                        'groups'  => $result['groups'] ?? null,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to set generic user groups', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to set generic user groups: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to set generic user groups',
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to set generic user groups: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end setGenericUserGroups()
 
     /**
      * Get organization admin groups
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Organization admin groups
      */
     public function getOrganizationAdminGroups(): JSONResponse
     {
         try {
             $groups = $this->settingsService->getOrganizationAdminGroups();
-            
-            return new JSONResponse([
-                'success' => true,
-                'groups' => $groups
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'groups'  => $groups,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get organization admin groups', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get organization admin groups: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get organization admin groups',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get organization admin groups: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getOrganizationAdminGroups()
 
     /**
      * Set organization admin groups
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function setOrganizationAdminGroups(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
-            
-            // Delegate all business logic (including validation) to service
+
+            // Delegate all business logic (including validation) to service.
             $result = $this->settingsService->updateOrganizationAdminGroups($groups);
-            
-            return new JSONResponse([
-                'success' => $result['success'],
-                'message' => $result['message'],
-                'groups' => $result['groups'] ?? null
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'],
+                        'groups'  => $result['groups'] ?? null,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to set organization admin groups', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to set organization admin groups: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to set organization admin groups',
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to set organization admin groups: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end setOrganizationAdminGroups()
 
     /**
      * Get super user groups
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Super user groups
      */
     public function getSuperUserGroups(): JSONResponse
     {
         try {
             $groups = $this->settingsService->getSuperUserGroups();
-            
-            return new JSONResponse([
-                'success' => true,
-                'groups' => $groups
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'groups'  => $groups,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get super user groups', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get super user groups: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get super user groups',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get super user groups: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getSuperUserGroups()
 
     /**
      * Set super user groups
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function setSuperUserGroups(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
-            
-            // Delegate all business logic (including validation) to service
+
+            // Delegate all business logic (including validation) to service.
             $result = $this->settingsService->updateSuperUserGroups($groups);
-            
-            return new JSONResponse([
-                'success' => $result['success'],
-                'message' => $result['message'],
-                'groups' => $result['groups'] ?? null
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'],
+                        'groups'  => $result['groups'] ?? null,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to set super user groups', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to set super user groups: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to set super user groups',
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to set super user groups: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end setSuperUserGroups()
 
     /**
      * Get all user groups
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse All user groups
      */
     public function getAllGroups(): JSONResponse
     {
         try {
             $allGroups = $this->settingsService->getAllGroups();
-            
-            return new JSONResponse([
-                'success' => true,
-                'groups' => $allGroups
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to get all groups', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get all groups: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 
-    // ========================================================================
-    // ARCHIMATE STATUS MANAGEMENT METHODS
-    // ========================================================================
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'groups'  => $allGroups,
+                    ]
+                    );
+        } catch (\Exception $e) {
+            $this->logger->error(
+                    'Failed to get all groups',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get all groups: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getAllGroups()
+
+    // ===.
+    // ARCHIMATE STATUS MANAGEMENT METHODS.
+    // ===.
 
     /**
      * Clear ArchiMate import status
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Clear result
      */
     public function clearArchiMateImportStatus(): JSONResponse
     {
         try {
             $result = $this->settingsService->clearArchiMateImportStatus();
-            
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'ArchiMate import status cleared successfully',
-                'details' => $result
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'ArchiMate import status cleared successfully',
+                        'details' => $result,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to clear ArchiMate import status', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to clear ArchiMate import status: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to clear ArchiMate import status',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to clear ArchiMate import status: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end clearArchiMateImportStatus()
 
     /**
-     * Force kill running ArchiMate import process and clear status
+     * Force kill running ArchiMate import process and clear status.
+     *
+     * @return JSONResponse Kill result.
+     *
+     * @deprecated Use cancelArchiMateImport() instead.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
-     * @return JSONResponse Kill result
-     * @deprecated Use cancelArchiMateImport() instead
      */
     public function killArchiMateImport(): JSONResponse
     {
         try {
             $result = $this->settingsService->killArchiMateImport();
-            
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'ArchiMate import termination completed',
-                'details' => $result
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'ArchiMate import termination completed',
+                        'details' => $result,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to kill ArchiMate import process', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to kill ArchiMate import process: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to kill ArchiMate import process',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to kill ArchiMate import process: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end killArchiMateImport()
 
     /**
      * Cancel a running ArchiMate import
@@ -2017,539 +2437,643 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Cancellation result
      */
     public function cancelArchiMateImport(): JSONResponse
     {
         try {
             $result = $this->settingsService->cancelArchiMateImport();
-            
-            $message = $result['cancelled'] 
-                ? 'ArchiMate import cancelled successfully'
-                : 'ArchiMate import cancellation failed';
-            
-            return new JSONResponse([
-                'success' => $result['cancelled'],
-                'message' => $message,
-                'details' => $result
-            ]);
-            
+
+            if ($result['cancelled'] === true) {
+                $message = 'ArchiMate import cancelled successfully';
+            } else {
+                $message = 'ArchiMate import cancellation failed';
+            }
+
+            return new JSONResponse(
+                    [
+                        'success' => $result['cancelled'],
+                        'message' => $message,
+                        'details' => $result,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to cancel ArchiMate import', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to cancel ArchiMate import: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to cancel ArchiMate import',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to cancel ArchiMate import: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end cancelArchiMateImport()
 
     /**
      * Clear ArchiMate export status
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Clear result
      */
     public function clearArchiMateExportStatus(): JSONResponse
     {
         try {
             $this->settingsService->clearArchiMateExportStatus();
-            
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'ArchiMate export status cleared successfully'
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'ArchiMate export status cleared successfully',
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to clear ArchiMate export status', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to clear ArchiMate export status: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to clear ArchiMate export status',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to clear ArchiMate export status: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end clearArchiMateExportStatus()
 
-    // ========================================================================
-    // ARCHIMATE TESTING METHODS
-    // ========================================================================
-
-
+    // ===.
+    // ARCHIMATE TESTING METHODS.
+    // ===.
 
     /**
      * Test ArchiMate round-trip functionality
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Round-trip test result
      */
     public function testArchiMateRoundTrip(): JSONResponse
     {
         try {
             $this->logger->info('SoftwareCatalog: ArchiMate round-trip test started');
-            
-            // Call the ArchiMate service to perform round-trip test
+
+            // Call the ArchiMate service to perform round-trip test.
             $result = $this->archiMateService->testRoundTrip();
-            
-            $this->logger->info('SoftwareCatalog: ArchiMate round-trip test completed', [
-                'success' => $result['success'],
-                'message' => $result['message'] ?? 'no message'
-            ]);
-            
-            return new JSONResponse([
-                'success' => $result['success'],
-                'message' => $result['message'],
-                'details' => $result['details'] ?? null,
-                'statistics' => $result['statistics'] ?? null
-            ]);
-            
+
+            $this->logger->info(
+                    'SoftwareCatalog: ArchiMate round-trip test completed',
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'] ?? 'no message',
+                    ]
+                    );
+
+            return new JSONResponse(
+                    [
+                        'success'    => $result['success'],
+                        'message'    => $result['message'],
+                        'details'    => $result['details'] ?? null,
+                        'statistics' => $result['statistics'] ?? null,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('SoftwareCatalog: ArchiMate round-trip test failed', [
-                'exception_class' => get_class($e),
-                'exception_message' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Round-trip test failed: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'SoftwareCatalog: ArchiMate round-trip test failed',
+                    [
+                        'exception_class'   => get_class($e),
+                        'exception_message' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Round-trip test failed: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end testArchiMateRoundTrip()
 
     /**
      * Get ArchiMate settings and status (without object counts for performance)
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse ArchiMate settings and status
      */
     public function getArchiMateSettings(): JSONResponse
     {
         try {
             $archimateStatus = $this->settingsService->getArchiMateStatus();
-            
-            return new JSONResponse([
-                'success' => true,
-                'archimate' => $archimateStatus,
-                'timestamp' => time()
-            ]);
-            
+
+            return new JSONResponse(
+                    [
+                        'success'   => true,
+                        'archimate' => $archimateStatus,
+                        'timestamp' => time(),
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get ArchiMate settings', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get ArchiMate settings: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to get ArchiMate settings',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get ArchiMate settings: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getArchiMateSettings()
 
     /**
      * Get object counts for all registers (separate endpoint for performance)
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Object counts for all registers
      */
     public function getObjectCounts(): JSONResponse
     {
         try {
             $objectCounts = $this->settingsService->getObjectCounts();
-            
-            return new JSONResponse([
-                'success' => true,
-                'objectCounts' => $objectCounts
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to get object counts', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get object counts: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 
-    // ========================================================================
-    // FOCUSED ENDPOINT CONTROLLER METHODS FOR PERFORMANCE OPTIMIZATION
-    // ========================================================================
+            return new JSONResponse(
+                    [
+                        'success'      => true,
+                        'objectCounts' => $objectCounts,
+                    ]
+                    );
+        } catch (\Exception $e) {
+            $this->logger->error(
+                    'Failed to get object counts',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get object counts: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end getObjectCounts()
+
+    // ===.
+    // FOCUSED ENDPOINT CONTROLLER METHODS FOR PERFORMANCE OPTIMIZATION.
+    // ===.
 
     /**
      * Get ArchiMate configuration only
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse ArchiMate configuration
      */
     public function getArchiMateConfig(): JSONResponse
     {
         try {
             $config = $this->settingsService->getArchiMateConfig();
-            
+
             return new JSONResponse($config);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get ArchiMate config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get ArchiMate config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to get ArchiMate config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get ArchiMate config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getArchiMateConfig()
 
     /**
      * Update ArchiMate configuration
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function updateArchiMateConfig(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $result = $this->settingsService->updateArchiMateConfig($data);
-            
+
             return new JSONResponse($result);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update ArchiMate config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update ArchiMate config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to update ArchiMate config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update ArchiMate config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end updateArchiMateConfig()
 
     /**
      * Get email configuration only
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Email configuration
      */
     public function getEmailConfig(): JSONResponse
     {
         try {
             $config = $this->settingsService->getEmailConfigFocused();
-            
+
             return new JSONResponse($config);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get email config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get email config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to get email config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get email config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getEmailConfig()
 
     /**
      * Update email configuration
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function updateEmailConfig(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $result = $this->settingsService->updateEmailConfig($data);
-            
+
             return new JSONResponse($result);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update email config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update email config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to update email config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update email config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end updateEmailConfig()
 
     /**
      * Get AMEF configuration only
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse AMEF configuration
      */
     public function getAmefConfig(): JSONResponse
     {
         try {
             $config = $this->settingsService->getAmefConfigFocused();
-            
+
             return new JSONResponse($config);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get AMEF config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get AMEF config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to get AMEF config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get AMEF config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getAmefConfig()
 
     /**
      * Update AMEF configuration
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function updateAmefConfig(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $result = $this->settingsService->updateAmefConfig($data);
-            
+
             return new JSONResponse($result);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update AMEF config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update AMEF config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to update AMEF config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update AMEF config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end updateAmefConfig()
 
     /**
      * Get Voorzieningen configuration only
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Voorzieningen configuration
      */
     public function getVoorzieningenConfig(): JSONResponse
     {
         try {
             $config = $this->settingsService->getVoorzieningenConfigFocused();
-            
+
             return new JSONResponse($config);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get Voorzieningen config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get Voorzieningen config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to get Voorzieningen config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get Voorzieningen config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getVoorzieningenConfig()
 
     /**
      * Update Voorzieningen configuration
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function updateVoorzieningenConfig(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $result = $this->settingsService->updateVoorzieningenConfig($data);
-            
+
             return new JSONResponse($result);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update Voorzieningen config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update Voorzieningen config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to update Voorzieningen config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update Voorzieningen config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end updateVoorzieningenConfig()
 
     /**
      * Get object counts only (lightweight)
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Object counts
      */
     public function getObjectsCounts(): JSONResponse
     {
         try {
             $counts = $this->settingsService->getObjectsCounts();
-            
+
             return new JSONResponse($counts);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get object counts', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get object counts: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to get object counts',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get object counts: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getObjectsCounts()
 
     /**
      * Get object statistics (full statistics with configuration)
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Object statistics
      */
     public function getObjectsStatistics(): JSONResponse
     {
         try {
             $statistics = $this->settingsService->getObjectsStatistics();
-            
+
             return new JSONResponse($statistics);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get object statistics', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get object statistics: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to get object statistics',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get object statistics: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getObjectsStatistics()
 
     /**
      * Get user groups configuration only
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse User groups configuration
      */
     public function getUserGroupsConfig(): JSONResponse
     {
         try {
             $config = $this->settingsService->getUserGroupsConfig();
-            
+
             return new JSONResponse($config);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get user groups config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get user groups config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to get user groups config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get user groups config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getUserGroupsConfig()
 
     /**
      * Update user groups configuration
      *
      * @NoCSRFRequired
-     * 
+     *
      * @return JSONResponse Update result
      */
     public function updateUserGroupsConfig(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $result = $this->settingsService->updateUserGroupsConfig($data);
-            
+
             return new JSONResponse($result);
-            
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update user groups config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update user groups config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to update user groups config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update user groups config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end updateUserGroupsConfig()
 
     /**
-     * Determine appropriate HTTP status code for an exception
-     * 
-     * @param \Exception $e The exception to classify
-     * @return int HTTP status code (400, 404, 422, or 500)
+     * Determine appropriate HTTP status code for an exception.
+     *
+     * @param \Exception $e The exception to classify.
+     *
+     * @return int HTTP status code (400, 404, 422, or 500).
      */
     private function getHttpStatusForException(\Exception $e): int
     {
-        // Check exception type first
+        // Check exception type first.
         if ($e instanceof \InvalidArgumentException) {
-            return 400; // Bad Request for invalid arguments/configuration
+            // Bad Request for invalid arguments/configuration.
+            return 400;
         }
-        
-        // Fallback to message-based classification
+
+        // Fallback to message-based classification.
         $message = $e->getMessage();
-        return $this->getHttpStatusForErrorMessage($message);
-    }
+        return $this->getHttpStatusForErrorMessage(message: $message);
+    }//end getHttpStatusForException()
 
     /**
-     * Determine appropriate HTTP status code for an error message
-     * 
-     * @param string $message The error message to classify
-     * @return int HTTP status code (400, 404, 422, or 500)
+     * Determine appropriate HTTP status code for an error message.
+     *
+     * @param string $message The error message to classify.
+     *
+     * @return int HTTP status code (400, 404, 422, or 500).
      */
     private function getHttpStatusForErrorMessage(string $message): int
     {
         $message = strtolower($message);
-        
-        // Configuration errors - 400 Bad Request
-        if (str_contains($message, 'not configured') ||
-            str_contains($message, 'missing configuration') ||
-            str_contains($message, 'invalid configuration')) {
+
+        // Configuration errors — 400 Bad Request.
+        if (str_contains(haystack: $message, needle: 'not configured') === true
+            || str_contains(haystack: $message, needle: 'missing configuration') === true
+            || str_contains(haystack: $message, needle: 'invalid configuration') === true
+        ) {
             return 400;
         }
-        
-        // File not found errors - 404 Not Found  
-        if (str_contains($message, 'file not found') ||
-            str_contains($message, 'not found') ||
-            str_contains($message, 'missing file')) {
+
+        // File not found errors — 404 Not Found.
+        if (str_contains(haystack: $message, needle: 'file not found') === true
+            || str_contains(haystack: $message, needle: 'not found') === true
+            || str_contains(haystack: $message, needle: 'missing file') === true
+        ) {
             return 404;
         }
-        
-        // Validation errors - 422 Unprocessable Entity
-        if (str_contains($message, 'validation') ||
-            str_contains($message, 'invalid xml') ||
-            str_contains($message, 'parsing error') ||
-            str_contains($message, 'malformed') ||
-            str_contains($message, 'could not be parsed')) {
+
+        // Validation errors — 422 Unprocessable Entity.
+        if (str_contains(haystack: $message, needle: 'validation') === true
+            || str_contains(haystack: $message, needle: 'invalid xml') === true
+            || str_contains(haystack: $message, needle: 'parsing error') === true
+            || str_contains(haystack: $message, needle: 'malformed') === true
+            || str_contains(haystack: $message, needle: 'could not be parsed') === true
+        ) {
             return 422;
         }
-        
-        // Default to 500 Internal Server Error for unknown issues
+
+        // Default to 500 Internal Server Error for unknown issues.
         return 500;
-    }
+    }//end getHttpStatusForErrorMessage()
 
     /**
      * Sync OpenRegister organisations to voorzieningen register
@@ -2564,93 +3088,115 @@ class SettingsController extends Controller
         try {
             $this->logger->info('SettingsController: Starting organisation sync via API');
 
-            // Get request parameters
+            // Get request parameters.
             $requestBody = $this->request->getParams();
-            $options = [
-                'batch_size' => (int)($requestBody['batch_size'] ?? 500),
-                'dry_run' => filter_var($requestBody['dry_run'] ?? false, FILTER_VALIDATE_BOOLEAN)
+            $options     = [
+                'batch_size' => (int) ($requestBody['batch_size'] ?? 500),
+                'dry_run'    => filter_var($requestBody['dry_run'] ?? false, FILTER_VALIDATE_BOOLEAN),
             ];
 
-            $this->logger->debug('SettingsController: Sync options', $options);
+            $this->logger->debug('SettingsController: Sync options.', $options);
 
-            // Call the settings service method
+            // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
-            $statusCode = $result['success'] ? 200 : 500;
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 500;
+            }
 
-            $this->logger->info('SettingsController: Organisation sync completed', [
-                'success' => $result['success'],
-                'message' => $result['message'] ?? 'No message'
-            ]);
+            $this->logger->info(
+                    'SettingsController: Organisation sync completed',
+                    [
+                        'success' => $result['success'],
+                        'message' => $result['message'] ?? 'No message',
+                    ]
+                    );
 
             return new JSONResponse($result, $statusCode);
-
         } catch (\Exception $e) {
-            $this->logger->error('SettingsController: Organisation sync failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logger->error(
+                    'SettingsController: Organisation sync failed',
+                    [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]
+                    );
 
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Organisation sync failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Organisation sync failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end syncOrganisations()
 
     /**
-     * Bulk sync module standards from all compliance objects
+     * Bulk sync module standards from all compliance objects.
      *
-     * @return JSONResponse Response containing sync results
+     * @return JSONResponse Response containing sync results.
+     *
      * @NoCSRFRequired
      */
     public function bulkSyncStandards(): JSONResponse
     {
         try {
-            $this->logger->info('SettingsController: Starting bulk sync of module standards');
+            $this->logger->info('SettingsController: Starting bulk sync of module standards.');
 
-            // Get the ModuleComplianceService from the container
+            // Get the ModuleComplianceService from the container.
             $moduleComplianceService = $this->container->get(\OCA\SoftwareCatalog\Service\ModuleComplianceService::class);
-            
-            // Perform the bulk sync
+
+            // Perform the bulk sync.
             $results = $moduleComplianceService->bulkSyncModuleStandards();
 
-            $this->logger->info('SettingsController: Bulk sync completed successfully', [
-                'results' => $results
-            ]);
+            $this->logger->info(
+                    'SettingsController: Bulk sync completed successfully',
+                    [
+                        'results' => $results,
+                    ]
+                    );
 
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'Bulk sync completed successfully',
-                'data' => $results
-            ]);
-
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'Bulk sync completed successfully',
+                        'data'    => $results,
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('SettingsController: Bulk sync failed', [
-                'exception' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logger->error(
+                    'SettingsController: Bulk sync failed',
+                    [
+                        'exception' => $e->getMessage(),
+                        'file'      => $e->getFile(),
+                        'line'      => $e->getLine(),
+                        'trace'     => $e->getTraceAsString(),
+                    ]
+                    );
 
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Bulk sync failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], $this->getHttpStatusForException($e));
-        }
-    }
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Bulk sync failed: '.$e->getMessage(),
+                        'error'   => $e->getMessage(),
+                    ],
+                    $this->getHttpStatusForException(e: $e)
+                    );
+        }//end try
+    }//end bulkSyncStandards()
 
-    // ========================================================================
-    // CRONJOB CONFIGURATION ENDPOINTS
-    // ========================================================================
+    // ===.
+    // CRONJOB CONFIGURATION ENDPOINTS (deprecated — sync now uses _rbac: false).
+    // ===.
 
     /**
      * Get cronjob configuration
      *
-     * Returns configuration for all registered cronjobs including their
-     * user and organisation context settings.
+     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -2663,20 +3209,26 @@ class SettingsController extends Controller
             $config = $this->settingsService->getCronjobConfig();
             return new JSONResponse($config);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get cronjob config', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get cronjob config: ' . $e->getMessage()
-            ], 500);
+            $this->logger->error(
+                    'Failed to get cronjob config',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get cronjob config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getCronjobConfig()
 
     /**
      * Update cronjob configuration
      *
-     * Updates the user and organisation context for a specific cronjob.
+     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
      *
      * @NoCSRFRequired
      *
@@ -2685,27 +3237,38 @@ class SettingsController extends Controller
     public function updateCronjobConfig(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
+            $data   = $this->request->getParams();
             $result = $this->settingsService->updateCronjobConfig($data);
-            
-            $statusCode = $result['success'] ? 200 : 400;
+
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 400;
+            }
+
             return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to update cronjob config', [
-                'exception' => $e->getMessage(),
-                'requestData' => $this->request->getParams()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to update cronjob config: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+            $this->logger->error(
+                    'Failed to update cronjob config',
+                    [
+                        'exception'   => $e->getMessage(),
+                        'requestData' => $this->request->getParams(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to update cronjob config: '.$e->getMessage(),
+                    ],
+                    500
+                    );
+        }//end try
+    }//end updateCronjobConfig()
 
     /**
      * Get available users for cronjob configuration
      *
-     * Returns a list of users that can be selected for running cronjobs.
+     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -2718,21 +3281,27 @@ class SettingsController extends Controller
             $result = $this->settingsService->getAvailableUsersForCronjobs();
             return new JSONResponse($result);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get cronjob users', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get cronjob users: ' . $e->getMessage(),
-                'users' => []
-            ], 500);
+            $this->logger->error(
+                    'Failed to get cronjob users',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'Failed to get cronjob users: '.$e->getMessage(),
+                        'users'   => [],
+                    ],
+                    500
+                    );
         }
-    }
+    }//end getCronjobUsers()
 
     /**
      * Get available organisations for cronjob configuration
      *
-     * Returns a list of organisations that can be selected for running cronjobs.
+     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -2745,17 +3314,20 @@ class SettingsController extends Controller
             $result = $this->settingsService->getAvailableOrganisationsForCronjobs();
             return new JSONResponse($result);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to get cronjob organisations', [
-                'exception' => $e->getMessage()
-            ]);
-            return new JSONResponse([
-                'success' => false,
-                'message' => 'Failed to get cronjob organisations: ' . $e->getMessage(),
-                'organisations' => []
-            ], 500);
+            $this->logger->error(
+                    'Failed to get cronjob organisations',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
+            return new JSONResponse(
+                    [
+                        'success'       => false,
+                        'message'       => 'Failed to get cronjob organisations: '.$e->getMessage(),
+                        'organisations' => [],
+                    ],
+                    500
+                    );
         }
-    }
-
+    }//end getCronjobOrganisations()
 }//end class
-
-

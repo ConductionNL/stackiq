@@ -3,13 +3,13 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.1.0"
+    "version": "2.2.0"
   },
   "x-openregister": {
     "type": "application",
     "app": "softwarecatalog",
     "sourceType": "github",
-    "sourceUrl": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register_magic.json",
+    "sourceUrl": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register_magic.json",
     "openregister": "^v0.2.10",
     "github": {
       "repo": "ConductionNL/opencatalogi",
@@ -45,51 +45,102 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
             }
           },
           {
-            "title": "Welkom",
+            "title": "Home",
             "slug": "home",
             "contents": [
               {
-                "id": 1,
+                "id": "hero1",
                 "type": "RichText",
+                "order": 0,
                 "data": {
-                  "content": "<h2><span>Over de Softwarecatalogus</span></h2>"
+                  "content": "DE PLEK WAAR GEMEENTEN EN LEVERANCIERS ELKAAR VINDEN"
                 }
               },
               {
-                "id": 2,
-                "type": "RichText",
+                "id": "quote",
+                "type": "Quote",
+                "order": 1,
                 "data": {
-                  "content": "<p>De Softwarecatalogus biedt een overzicht van software die wordt gebruikt binnen de Nederlandse gemeenten. Leveranciers en gemeenten werken hierin samen aan het (door)ontwikkelen van procesmatige en technische standaarden.</p><p>Op deze website vindt u informatie over softwarepakketten, leveranciers, standaarden en het gebruik daarvan door gemeenten. Zo willen we transparant zijn over de softwaremarkt voor de overheid.</p>"
+                  "title": "Samen bouwen aan een transparant softwarelandschap voor gemeenten",
+                  "subtitle": "De GEMMA Softwarecatalogus verbindt gemeenten en leveranciers voor beter inzicht in het gemeentelijke ICT-landschap."
                 }
               },
               {
-                "id": 3,
-                "type": "RichText",
+                "id": "content-blocks",
+                "type": "ContentBlocks",
+                "order": 2,
                 "data": {
-                  "content": "<ul><li><p>Zoek en vergelijk software voor gemeenten</p></li><li><p>Bekijk welke organisaties welke software gebruiken</p></li><li><p>Inzicht in standaarden en compliance</p></li></ul>"
+                  "blocks": [
+                    {
+                      "icon": "search",
+                      "title": "Vergelijk software",
+                      "text": "Bekijk welke software andere gemeenten gebruiken en vergelijk dit met uw eigen applicatielandschap.",
+                      "linkUrl": "/zoeken",
+                      "linkTitle": "Start met zoeken"
+                    },
+                    {
+                      "icon": "cubes",
+                      "title": "Beheer uw aanbod",
+                      "text": "Als leverancier registreert u eenvoudig uw producten, diensten en modules in de catalogus.",
+                      "linkUrl": "/beheer",
+                      "linkTitle": "Naar beheer"
+                    },
+                    {
+                      "icon": "building",
+                      "title": "Ontdek leveranciers",
+                      "text": "Vind leveranciers die passen bij uw behoeften en bekijk hun complete aanbod van software en diensten.",
+                      "linkUrl": "/zoeken?_schemas=organisatie",
+                      "linkTitle": "Bekijk leveranciers"
+                    }
+                  ]
                 }
               },
               {
-                "id": 4,
+                "id": "about-title",
                 "type": "RichText",
+                "order": 3,
                 "data": {
-                  "content": "<p><a href=\"/over-ons\" class=\"utrecht-link\">Meer weten over de Softwarecatalogus?</a></p>"
+                  "content": "Over de softwarecatalogus"
+                }
+              },
+              {
+                "id": "about-text",
+                "type": "RichText",
+                "order": 4,
+                "data": {
+                  "content": "<p>De GEMMA Softwarecatalogus biedt gemeenten en leveranciers inzicht in het actuele en toekomstige softwareaanbod. Vergelijk gebruikte software met andere gemeenten, vind leveranciers en orienteer u op de markt.</p><ul><li>Vergelijk software met andere gemeenten</li><li>Vind leveranciers en hun aanbod</li><li>Inzicht in standaarden en referentiecomponenten</li></ul>"
+                }
+              },
+              {
+                "id": "about-link",
+                "type": "RichText",
+                "order": 5,
+                "data": {
+                  "content": "<p><a href=/about>Meer weten over de softwarecatalogus?</a></p>"
+                }
+              },
+              {
+                "id": "about-img",
+                "type": "Image",
+                "order": 6,
+                "data": {
+                  "url": "https://placehold.co/550x335/003580/ffffff?text=Softwarecatalogus"
                 }
               }
             ],
             "published": true,
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "page",
-              "version": "0.0.4"
+              "version": "0.0.5"
             }
           },
           {
@@ -106,7 +157,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -126,7 +177,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -146,7 +197,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -166,7 +217,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -194,7 +245,7 @@
             "hideAfterLogin": true,
             "hideBeforeLogin": false,
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -224,7 +275,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -248,7 +299,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -266,7 +317,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -284,7 +335,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -320,7 +371,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -345,7 +396,7 @@
             ],
             "hideBeforeLogin": true,
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -411,10 +462,66 @@
               }
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
+            }
+          }
+        ],
+        "theme": [
+          {
+            "title": "Voor 342 gemeenten",
+            "summary": "Vergelijk applicaties, vind leveranciers, versterk digitale kracht.",
+            "description": "",
+            "image": "",
+            "content": "",
+            "link": "Vind een applicatie",
+            "url": "/zoeken",
+            "icon": "search",
+            "isExternal": false,
+            "sort": 1,
+            "@self": {
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "theme",
+              "version": "0.0.4"
+            }
+          },
+          {
+            "title": "Voor 336 leveranciers",
+            "summary": "Zet uw software in de etalage voor gemeenten.",
+            "description": "",
+            "image": "",
+            "content": "",
+            "link": "Meld je aan",
+            "url": "/register",
+            "icon": "document",
+            "isExternal": false,
+            "sort": 2,
+            "@self": {
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "theme",
+              "version": "0.0.4"
+            }
+          },
+          {
+            "title": "Voor 15 community's",
+            "summary": "Community's van gemeenten delen hun kennis en producten.",
+            "description": "",
+            "image": "",
+            "content": "",
+            "link": "Ontdek community's",
+            "url": "/zoeken?_schema=community",
+            "icon": "world",
+            "isExternal": false,
+            "sort": 3,
+            "@self": {
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "register": "publication",
+              "schema": "theme",
+              "version": "0.0.4"
             }
           }
         ],
@@ -430,7 +537,7 @@
               "Catalogi"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -447,7 +554,7 @@
               "Digitalisering"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -464,7 +571,7 @@
               "Data Management"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -481,7 +588,7 @@
               "Catalogus"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -498,7 +605,7 @@
               "Standaarden"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -515,7 +622,7 @@
               "Addenda"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -531,7 +638,7 @@
               "convenant"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -546,7 +653,7 @@
               "Eindproduct-standaarden"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -562,7 +669,7 @@
               "Gegevensstandaarden"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -577,7 +684,7 @@
               "Grondstof-standaarden"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -592,7 +699,7 @@
               "Halffabrikaat-standaarden"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -607,7 +714,7 @@
               "Leveranciers"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -622,7 +729,7 @@
               "Referentiecomponenten"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -637,7 +744,7 @@
               "Software as a Service"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -652,7 +759,7 @@
               "Standaarden"
             ],
             "@self": {
-              "configuration": "https://github.com/ConductionNL/opencatalogi/blob/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -667,7 +774,7 @@
       "voorzieningen": {
         "slug": "voorzieningen",
         "title": "Voorzieningen",
-        "version": "2.0.2",
+        "version": "2.0.3",
         "description": "Register voor voorzieningen uit de softwarecatalogus",
         "published": "2025-01-01T00:00:00+00:00",
         "schemas": [
@@ -692,7 +799,7 @@
         "created": "2025-05-09T12:14:18+00:00",
         "owner": "1",
         "application": null,
-        "organisation": "cb2bca24-40bf-4568-a138-454c63ab761c",
+        "organisation": null,
         "authorization": null,
         "groups": null,
         "deleted": null,
@@ -1167,14 +1274,13 @@
         "slug": "dienst",
         "title": "Dienst",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
-        "version": "0.1.5",
+        "version": "0.1.6",
         "summary": "",
         "icon": "Handshake",
         "required": [
           "naam",
           "aanbieder",
-          "type",
-          "dienstType"
+          "type"
         ],
         "properties": {
           "naam": {
@@ -1307,12 +1413,15 @@
             "table": {
               "default": true
             },
-            "facetable": false,
+            "facetable": {
+              "title": "Diensttype",
+              "aggregated": false
+            },
             "title": "Diensttype",
             "example": "Bijvoorbeeld: Implementatieondersteuning"
           },
           "logo": {
-            "description": "Logo van de dienst",
+            "description": "Het logo van de dienst of de organisatie",
             "type": "file",
             "format": "base64",
             "visible": true,
@@ -1333,7 +1442,7 @@
           "koppelingen": {
             "description": "Koppelingen die gebruikt worden door deze dienst",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 8,
             "facetable": false,
             "title": "Koppelingen",
@@ -1345,30 +1454,6 @@
               "$ref": "#/components/schemas/koppeling",
               "inversedBy": "dienst"
             }
-          },
-          "dienstType": {
-            "description": "Het type dienst dat wordt aangeboden",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "Functioneel beheer",
-                "Applicatiebeheer",
-                "Technisch beheer",
-                "Implementatieondersteuning",
-                "Opleidingen",
-                "Licentiereseller"
-              ]
-            },
-            "required": true,
-            "visible": true,
-            "order": 4,
-            "table": {
-              "default": true
-            },
-            "facetable": true,
-            "title": "Soort dienst",
-            "example": "Bijvoorbeeld: Implementatieondersteuning"
           }
         },
         "archive": [],
@@ -1451,7 +1536,7 @@
         "uri": null,
         "slug": "kwetsbaarheid",
         "title": "Kwetsbaarheid",
-        "description": "Schema voor kwetsbaarheden",
+        "description": "Schema voor kwetsbaarheden. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "1.0.19",
         "summary": "",
         "icon": "ShieldAlert",
@@ -1604,7 +1689,7 @@
         "slug": "contactpersoon",
         "title": "Contactpersoon",
         "description": "Contactgegevens van een persoon",
-        "version": "0.0.25",
+        "version": "0.0.26",
         "summary": "",
         "icon": "AccountMultiple",
         "required": [
@@ -1723,14 +1808,10 @@
             "title": "Notificaties",
             "description": "Lijst van notificaties voor deze contactpersoon",
             "facetable": false,
+            "visible": false,
             "hideOnCollection": true,
             "items": {
-              "type": "string",
-              "enum": [
-                "Nieuw in organisatie",
-                "Nieuw buiten de organisatie",
-                "Gewijzigd in de organisatie"
-              ]
+              "type": "string"
             },
             "order": 11,
             "example": "Bijvoorbeeld: ['Nieuw in organisatie', 'Gewijzigd in de organisatie']"
@@ -1759,6 +1840,7 @@
               "enum": [
                 "Aanbod-beheerder",
                 "Gebruik-beheerder",
+                "Gebruik-raadpleger",
                 "Functioneel-beheerder",
                 "Organisatie-beheerder"
               ]
@@ -1774,7 +1856,6 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "enum": [],
             "example": "Bijvoorbeeld: [\"Aanbod-beheerder\", \"Functioneel-beheerder\"]",
             "authorization": {
               "update": [
@@ -1842,17 +1923,16 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
             "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger"
+            "gebruik-raadpleger",
+            { "group": "aanbod-beheerder", "match": { "_organisation": "$organisation" } },
+            { "group": "ambtenaar", "match": { "_organisation": "$organisation" } },
+            { "group": "functioneel-beheerder", "match": { "_organisation": "$organisation" } },
+            { "group": "organisatie-beheerder", "match": { "_organisation": "$organisation" } },
+            { "group": "organisaties-beheerder", "match": { "_organisation": "$organisation" } },
+            { "group": "software-catalog-users", "match": { "_organisation": "$organisation" } },
+            { "group": "software-catalog-admins", "match": { "_organisation": "$organisation" } },
+            { "group": "vng-raadpleger", "match": { "_organisation": "$organisation" } }
           ],
           "update": [
             "aanbod-beheerder",
@@ -1890,7 +1970,7 @@
         "slug": "organisatie",
         "title": "Organisatie",
         "description": "Een organisatie die voorzieningen aanbiedt",
-        "version": "0.1.1",
+        "version": "0.2.0",
         "summary": "",
         "icon": "OfficeBuildingOutline",
         "required": [
@@ -2030,7 +2110,12 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Contactpersonen"
+            "title": "Contactpersonen",
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
           },
           "e-mailadres": {
             "description": "Het e-mailadres van de contactpersoon of de organisatie",
@@ -2059,7 +2144,12 @@
             "oneOf": [],
             "facetable": false,
             "title": "E-mailadres",
-            "example": "contact@organisatie.nl"
+            "example": "contact@organisatie.nl",
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
           },
           "website": {
             "description": "URL van de website van de organisatie",
@@ -2118,7 +2208,12 @@
               "location": "",
               "maxSize": 0
             },
-            "oneOf": []
+            "oneOf": [],
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
           },
           "deelnames": {
             "description": "Deelnames van deze organisatie in andere organisaties",
@@ -2201,7 +2296,12 @@
             "type": "string",
             "required": true,
             "visible": true,
-            "facetable": false,
+            "facetable": {
+              "aggregated": false,
+              "title": "Organisatietype",
+              "description": "Type van de organisatie",
+              "order": null
+            },
             "order": 3,
             "minLength": null,
             "maxLength": null,
@@ -2231,22 +2331,6 @@
               "Community"
             ],
             "hideOnCollection": true
-          },
-          "organisatieType": {
-            "description": "Type van de organisatie (Gemeente, Leverancier, Samenwerking)",
-            "title": "Organisatietype",
-            "type": "string",
-            "required": false,
-            "visible": true,
-            "facetable": true,
-            "order": 4,
-            "default": "{{ type }}",
-            "enum": [
-              "Gemeente",
-              "Leverancier",
-              "Samenwerking",
-              "Community"
-            ]
           },
           "status": {
             "description": "Geeft aan of de VNG de organisatie positief beoordeeld heeft voor toegang tot de Softwarecatalogus",
@@ -2329,12 +2413,13 @@
             ]
           },
           "geregistreerdDoor": {
-            "description": "Het type partij dat dit object heeft geregistreerd",
+            "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 18,
             "facetable": true,
             "title": "Geregistreerd door",
-            "visible": true,
+            "visible": false,
+            "hideOnForm": true,
             "enum": [
               "Gemeente",
               "Applicatie",
@@ -2368,17 +2453,31 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
             "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
-            "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger"
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "geregistreerdDoor": "Leverancier"
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "type": "Gemeente"
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "type": "Samenwerking"
+              }
+            }
           ],
           "update": [
             "aanbod-beheerder",
@@ -2444,7 +2543,7 @@
         "slug": "gebruik",
         "title": "Gebruik",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.1.4",
+        "version": "1.1.5",
         "summary": "",
         "icon": "Usage",
         "required": [
@@ -2468,6 +2567,7 @@
             "title": "Aanbieder",
             "description": "De organisatie die aanbieder is van de applicatie",
             "facetable": false,
+            "visible": false,
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -2479,6 +2579,7 @@
             "type": "object",
             "description": "De contactpersoon voor dit gebruik",
             "facetable": false,
+            "visible": false,
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -2771,7 +2872,7 @@
           "amefElements": {
             "description": "Ids van AMEF elementen waarvoor dit product wordt gebruikt",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 22,
             "facetable": false,
             "title": "Amef elementen",
@@ -2909,7 +3010,7 @@
         "uri": null,
         "slug": "contract",
         "title": "Contract",
-        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik",
+        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "0.0.11",
         "summary": "",
         "icon": "FileDocumentEdit",
@@ -3147,8 +3248,8 @@
         "uri": null,
         "slug": "koppeling",
         "title": "Koppeling",
-        "description": "Schema voor koppelingen tussen applicaties en systemen. Er moet óf ApplicatieB óf buitengemeentelijkVoorziening gevuld zijn.",
-        "version": "0.1.0",
+        "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
+        "version": "0.1.1",
         "summary": "",
         "icon": "Link",
         "required": [
@@ -3162,7 +3263,7 @@
             "required": true,
             "facetable": false,
             "title": "Naam",
-            "default": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB }}",
+            "default": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
             "defaultBehavior": "falsy",
             "table": {
               "default": true
@@ -3205,17 +3306,6 @@
               "api"
             ],
             "example": "Bijvoorbeeld: api"
-          },
-          "koppelingType": {
-            "description": "Het type koppeling (intern of extern)",
-            "type": "string",
-            "order": 2,
-            "facetable": true,
-            "title": "Koppelingtype",
-            "enum": [
-              "intern",
-              "extern"
-            ]
           },
           "status": {
             "description": "Geef de status van de koppeling aan, default 'in gebruik'",
@@ -3297,25 +3387,13 @@
             "inversedBy": "koppeling"
           },
           "moduleB": {
-            "description": "Kies de applicatie of buitengemeentelijke voorziening waarmee gekoppeld wordt.",
+            "description": "Kies de applicatie waarmee gekoppeld wordt.",
             "type": "object",
             "required": false,
-            "items": {
-              "oneOf": [
-                {
-                  "objectConfiguration": {
-                    "handling": "related-object"
-                  },
-                  "$ref": "#/components/schemas/module"
-                },
-                {
-                  "objectConfiguration": {
-                    "handling": "related-object"
-                  },
-                  "$ref": "#/components/schemas/element"
-                }
-              ]
+            "objectConfiguration": {
+              "handling": "related-object"
             },
+            "$ref": "#/components/schemas/module",
             "order": 10,
             "facetable": false,
             "table": {
@@ -3328,6 +3406,9 @@
             "type": "object",
             "order": 11,
             "facetable": false,
+            "table": {
+              "default": true
+            },
             "title": "Buitengemeentelijke Voorziening",
             "objectConfiguration": {
               "handling": "related-object",
@@ -3365,7 +3446,7 @@
           "aanbieder": {
             "description": "De aanbieder van deze koppeling",
             "type": "object",
-            "visible": true,
+            "visible": false,
             "order": 14,
             "table": {
               "default": true
@@ -3380,7 +3461,7 @@
           "dienst": {
             "description": "De dienst die deze koppeling gebruikt",
             "type": "object",
-            "visible": true,
+            "visible": false,
             "order": 15,
             "facetable": false,
             "title": "Dienst",
@@ -3391,12 +3472,13 @@
             "inversedBy": "koppelingen"
           },
           "geregistreerdDoor": {
-            "description": "Het type partij dat dit object heeft geregistreerd",
+            "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 16,
             "facetable": true,
             "title": "Geregistreerd door",
-            "visible": true,
+            "visible": false,
+            "hideOnForm": true,
             "enum": [
               "Gemeente",
               "Applicatie",
@@ -3408,6 +3490,21 @@
               "indexed": false,
               "searchable": false
             }
+          },
+          "koppelingType": {
+            "description": "Afgeleid gegeven: extern als de koppeling met een buitengemeentelijke voorziening is, anders intern",
+            "type": "string",
+            "order": 17,
+            "facetable": true,
+            "title": "Type koppeling",
+            "visible": false,
+            "hideOnForm": true,
+            "default": "{{ buitengemeentelijkVoorziening | ifFilled: extern, intern }}",
+            "defaultBehavior": "always",
+            "enum": [
+              "extern",
+              "intern"
+            ]
           }
         },
         "archive": [],
@@ -3475,7 +3572,7 @@
         },
         "configuration": {
           "autoPublish": false,
-          "objectNameField": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB }}",
+          "objectNameField": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang"
         }
@@ -3484,7 +3581,7 @@
         "uri": null,
         "slug": "beoordeeling",
         "title": "Beoordeeling",
-        "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten",
+        "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "0.1.2",
         "summary": "",
         "icon": "Star",
@@ -6421,7 +6518,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.1.6",
+        "version": "0.2.3",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6634,24 +6731,11 @@
           "type": {
             "description": "Het type applicatie zoals geregistreerd in de catalogus",
             "type": "string",
-            "visible": true,
+            "visible": false,
             "order": 11,
             "facetable": false,
             "title": "Type",
             "default": "Applicatie",
-            "enum": [
-              "Applicatie",
-              "Systeemsoftware"
-            ]
-          },
-          "moduleType": {
-            "description": "Het type applicatie (Applicatie of Systeemsoftware)",
-            "type": "string",
-            "visible": true,
-            "order": 12,
-            "facetable": false,
-            "title": "Applicatietype",
-            "default": "{{ type }}",
             "enum": [
               "Applicatie",
               "Systeemsoftware"
@@ -6679,38 +6763,6 @@
               "maxSize": 5242880
             }
           },
-          "omvat": {
-            "description": "Andere applicaties die onderdeel zijn van deze applicatie",
-            "type": "array",
-            "visible": true,
-            "order": 19,
-            "facetable": false,
-            "title": "Omvat",
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/module",
-              "inversedBy": "onderdeelVan"
-            }
-          },
-          "onderdeelVan": {
-            "description": "Applicaties waarvan deze applicatie onderdeel is",
-            "type": "array",
-            "visible": true,
-            "order": 20,
-            "facetable": false,
-            "title": "Onderdeel van",
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/module",
-              "inversedBy": "omvat"
-            }
-          },
           "diensten": {
             "description": "De diensten waarvan deze applicatie onderdeel is",
             "type": "array",
@@ -6719,6 +6771,9 @@
             "facetable": false,
             "title": "Diensten",
             "hideOnForm": true,
+            "table": {
+              "default": true
+            },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -6742,7 +6797,7 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/koppeling",
-              "inversedBy": "moduleA"
+              "inversedBy": ["moduleA", "moduleB"]
             }
           },
           "compliancy": {
@@ -6765,7 +6820,7 @@
           "standaarden": {
             "description": "Een array van amef id's van standaarden die deze applicatie implementeert",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 24,
             "facetable": false,
             "title": "Standaarden AMEF",
@@ -6777,7 +6832,7 @@
           "standaardenGemma": {
             "description": "Een array van gemma id's van standaarden die deze applicatie implementeert",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 25,
             "facetable": false,
             "title": "Standaarden Gemma",
@@ -6794,6 +6849,9 @@
             "facetable": true,
             "title": "Standaardversies",
             "hideOnForm": true,
+            "table": {
+              "default": true
+            },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -6809,7 +6867,7 @@
             "visible": true,
             "order": 26,
             "facetable": false,
-            "title": "Applicatie Versies",
+            "title": "Applicatieversies",
             "hideOnForm": true,
             "items": {
               "type": "object",
@@ -6823,7 +6881,7 @@
           "gebruiken": {
             "description": "Het gebruik van deze applicatie",
             "type": "array",
-            "visible": true,
+            "visible": false,
             "order": 27,
             "facetable": false,
             "title": "Gebruik",
@@ -6836,45 +6894,14 @@
               "$ref": "#/components/schemas/gebruik"
             }
           },
-          "beoordelingen": {
-            "description": "De beoordelingen van deze applicatie",
-            "type": "array",
-            "visible": true,
-            "order": 28,
-            "facetable": false,
-            "title": "Beoordelingen",
-            "hideOnForm": true,
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/beoordeeling"
-            }
-          },
-          "kwetsbaarheden": {
-            "description": "De kwetsbaarheden die deze applicatie treffen",
-            "type": "array",
-            "visible": true,
-            "order": 29,
-            "facetable": false,
-            "title": "Kwetsbaarheden",
-            "hideOnForm": true,
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/kwetsbaarheid"
-            }
-          },
           "geregistreerdDoor": {
-            "description": "Het type partij dat dit object heeft geregistreerd",
+            "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 30,
-            "facetable": true,
+            "facetable": false,
             "title": "Geregistreerd door",
-            "visible": true,
+            "visible": false,
+            "hideOnForm": true,
             "enum": [
               "Gemeente",
               "Applicatie",
@@ -7026,9 +7053,9 @@
       "moduleVersie": {
         "uri": null,
         "slug": "moduleVersie",
-        "title": "Applicatie Versie",
-        "description": "Schema voor applicatie versies",
-        "version": "0.0.9",
+        "title": "Applicatieversie",
+        "description": "Schema voor applicatieversies",
+        "version": "0.0.10",
         "summary": "",
         "icon": "ViewModule",
         "required": [],
@@ -7068,7 +7095,7 @@
             "maxLength": 255
           },
           "beschrijvingLang": {
-            "description": "Uitgebreide beschrijving van de applicatie versie",
+            "description": "Uitgebreide beschrijving van de applicatieversie",
             "type": "string",
             "order": 4,
             "title": "Beschrijving",
@@ -7117,7 +7144,7 @@
             "title": "Datum Teruggetrokken"
           },
           "gebruiken": {
-            "description": "Het gebruik van deze applicatie versie",
+            "description": "Het gebruik van deze applicatieversie",
             "type": "array",
             "visible": true,
             "order": 18,
@@ -7132,12 +7159,13 @@
             }
           },
           "geregistreerdDoor": {
-            "description": "Het type partij dat dit object heeft geregistreerd",
+            "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 19,
             "facetable": true,
             "title": "Geregistreerd door",
-            "visible": true,
+            "visible": false,
+            "hideOnForm": true,
             "enum": [
               "Gemeente",
               "Applicatie",

@@ -11,7 +11,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -34,16 +34,16 @@ class ModuleVersionService
     /**
      * Constructor for ModuleVersionService
      *
-     * @param ContainerInterface $container        The DI container
-     * @param SettingsService    $settingsService   The settings service
-     * @param LoggerInterface    $logger            The logger instance
+     * @param ContainerInterface $container       The DI container
+     * @param SettingsService    $settingsService The settings service
+     * @param LoggerInterface    $logger          The logger instance
      */
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly SettingsService $settingsService,
         private readonly LoggerInterface $logger
     ) {
-    }
+    }//end __construct()
 
     /**
      * Ensures a module has at least one version.
@@ -60,9 +60,12 @@ class ModuleVersionService
     {
         $moduleUuid = $moduleObject->getUuid();
 
-        $this->logger->info('ModuleVersionService: Checking if module has versions', [
-            'moduleUuid' => $moduleUuid,
-        ]);
+        $this->logger->info(
+                'ModuleVersionService: Checking if module has versions',
+                [
+                    'moduleUuid' => $moduleUuid,
+                ]
+                );
 
         try {
             $objectService = $this->getObjectService();
@@ -73,21 +76,24 @@ class ModuleVersionService
 
             // Get schema and register IDs.
             $moduleVersieSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
-            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-            $registerId = $voorzieningenConfig['register'] ?? null;
+            $voorzieningenConfig  = $this->settingsService->getVoorzieningenConfig();
+            $registerId           = $voorzieningenConfig['register'] ?? null;
 
             if ($moduleVersieSchemaId === null || $registerId === null) {
-                $this->logger->warning('ModuleVersionService: moduleVersie schema or register not configured', [
-                    'moduleVersieSchemaId' => $moduleVersieSchemaId,
-                    'registerId' => $registerId,
-                ]);
+                $this->logger->warning(
+                        'ModuleVersionService: moduleVersie schema or register not configured',
+                        [
+                            'moduleVersieSchemaId' => $moduleVersieSchemaId,
+                            'registerId'           => $registerId,
+                        ]
+                        );
                 return;
             }
 
-            // Query moduleVersie objects where module == this module's UUID.
-            $query = [
-                '@self' => [
-                    'schema' => (int) $moduleVersieSchemaId,
+            // Query moduleVersie objects where module === this module's UUID.
+            $query            = [
+                '@self'  => [
+                    'schema'   => (int) $moduleVersieSchemaId,
                     'register' => (int) $registerId,
                 ],
                 'module' => $moduleUuid,
@@ -98,27 +104,34 @@ class ModuleVersionService
                 _multitenancy: false
             );
 
-            $versionCount = is_array($existingVersions) ? count($existingVersions) : 0;
+            if (is_array($existingVersions) === true) {
+                $versionCount = count($existingVersions);
+            } else {
+                $versionCount = 0;
+            }
 
             if ($versionCount > 0) {
-                $this->logger->info('ModuleVersionService: Module already has versions, skipping', [
-                    'moduleUuid' => $moduleUuid,
-                    'versionCount' => $versionCount,
-                ]);
+                $this->logger->info(
+                        'ModuleVersionService: Module already has versions, skipping',
+                        [
+                            'moduleUuid'   => $moduleUuid,
+                            'versionCount' => $versionCount,
+                        ]
+                        );
                 return;
             }
 
             // No versions exist — create a default 1.0.0 version.
-            $moduleData = $moduleObject->getObject();
-            $moduleName = $moduleData['voorkeurnaam'] ?? $moduleData['naam'] ?? 'Onbekende applicatie';
+            $moduleData        = $moduleObject->getObject();
+            $moduleName        = $moduleData['voorkeurnaam'] ?? $moduleData['naam'] ?? 'Onbekende applicatie';
             $moduleDescription = $moduleData['beschrijvingKort'] ?? '';
 
             $versionData = [
-                'module' => $moduleUuid,
-                'versie' => '1.0.0',
+                'module'           => $moduleUuid,
+                'versie'           => '1.0.0',
                 'beschrijvingKort' => $moduleDescription,
                 'beschrijvingLang' => '',
-                'status' => 'in gebruik',
+                'status'           => 'in gebruik',
             ];
 
             $savedVersion = $objectService->saveObject(
@@ -129,20 +142,26 @@ class ModuleVersionService
                 _multitenancy: false
             );
 
-            $this->logger->info('ModuleVersionService: Created default version 1.0.0', [
-                'moduleUuid' => $moduleUuid,
-                'moduleName' => $moduleName,
-                'versionUuid' => $savedVersion->getUuid(),
-            ]);
+            $this->logger->info(
+                    'ModuleVersionService: Created default version 1.0.0',
+                    [
+                        'moduleUuid'  => $moduleUuid,
+                        'moduleName'  => $moduleName,
+                        'versionUuid' => $savedVersion->getUuid(),
+                    ]
+                    );
         } catch (\Exception $e) {
-            $this->logger->error('ModuleVersionService: Failed to ensure default version', [
-                'moduleUuid' => $moduleUuid,
-                'exception' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-        }
-    }
+            $this->logger->error(
+                    'ModuleVersionService: Failed to ensure default version',
+                    [
+                        'moduleUuid' => $moduleUuid,
+                        'exception'  => $e->getMessage(),
+                        'file'       => $e->getFile(),
+                        'line'       => $e->getLine(),
+                    ]
+                    );
+        }//end try
+    }//end ensureDefaultVersion()
 
     /**
      * Get the object service from the DI container.
@@ -154,10 +173,13 @@ class ModuleVersionService
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (\Exception $e) {
-            $this->logger->error('ModuleVersionService: Failed to get ObjectService', [
-                'exception' => $e->getMessage(),
-            ]);
+            $this->logger->error(
+                    'ModuleVersionService: Failed to get ObjectService',
+                    [
+                        'exception' => $e->getMessage(),
+                    ]
+                    );
             return null;
         }
-    }
-}
+    }//end getObjectService()
+}//end class

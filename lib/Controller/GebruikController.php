@@ -8,9 +8,9 @@
  *
  * @category Controller
  * @package  OCA\SoftwareCatalog\Controller
- * @author   SoftwareCatalog Team
+ * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/nextcloud/softwarecatalog
  */
 
@@ -27,25 +27,29 @@ use OCP\IRequest;
 use OCP\IUserSession;
 
 /**
- * Controller for handling view-related API operations
+ * Controller for handling gebruik-related API operations.
  *
- * This controller provides REST API endpoints for querying and managing ArchiMate views
- * with optional enrichment capabilities for products, usage data (gebruik), and related information.
+ * This controller provides REST API endpoints for querying and managing gebruik objects
+ * with role-based access for gebruik-beheerder and aanbod-beheerder users.
  *
  * @category Controller
  * @package  OCA\SoftwareCatalog\Controller
- * @author   SoftwareCatalog Team
+ * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/nextcloud/softwarecatalog
  */
 class GebruikController extends Controller
 {
     /**
-     * Constructor for ViewController
+     * Constructor for GebruikController.
      *
-     * @param string $appName The app name
-     * @param IRequest $request The request object
+     * @param string         $appName        The app name
+     * @param IRequest       $request        The request object
+     * @param IUserSession   $userSession    The user session service
+     * @param IGroupManager  $groupManager   The group manager service
+     * @param IConfig        $config         The configuration service
+     * @param GebruikService $gebruikService The gebruik service
      */
     public function __construct(
         string $appName,
@@ -55,17 +59,20 @@ class GebruikController extends Controller
         private readonly IConfig $config,
         private readonly GebruikService $gebruikService,
     ) {
-        parent::__construct($appName, $request);
-    }
+        parent::__construct(appName: $appName, request: $request);
+    }//end __construct()
 
     /**
-     * Fetch gebruiken, for a gebruik-beheerder, get all gebruiken, for an aanbod-beheerder, fetch gebruiken of applications of the organization of the user.
+     * Fetch gebruiken based on user role.
+     *
+     * For a gebruik-beheerder, returns all gebruiken.
+     * For an aanbod-beheerder, returns gebruiken of applications of the user's organization.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      *
-     * @return JSONResponse
+     * @return JSONResponse The JSON response with gebruiken results
      */
     public function getGebruiken(): JSONResponse
     {
@@ -76,14 +83,19 @@ class GebruikController extends Controller
             return new JSONResponse($this->getEmptyResult());
         }
 
-        $groups = $this->groupManager->getUserGroups(user: $user);
-        $groupNames = array_map(function (IGroup $group) {
-            return $group->getGID();
-        }, $groups);
+        $groups     = $this->groupManager->getUserGroups(user: $user);
+        $groupNames = array_map(
+                function (IGroup $group) {
+                    return $group->getGID();
+                },
+                $groups
+                );
 
         $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');
 
-        if (in_array(needle: 'admin', haystack: $groupNames) === true || in_array(needle: 'gebruik-beheerder', haystack: $groupNames) === true) {
+        $isAdmin     = in_array(needle: 'admin', haystack: $groupNames);
+        $isBeheerder = in_array(needle: 'gebruik-beheerder', haystack: $groupNames);
+        if ($isAdmin === true || $isBeheerder === true) {
             $options = $this->request->getParams();
         } else if (in_array(needle: 'aanbod-beheerder', haystack: $groupNames) === true) {
             $options = $this->request->getParams();
@@ -99,7 +111,6 @@ class GebruikController extends Controller
             } else if (isset($options['module']) === false) {
                 $options['module'] = $applicatieIds;
             }
-
         } else {
             return new JSONResponse($this->getEmptyResult());
         }
@@ -109,7 +120,7 @@ class GebruikController extends Controller
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
-    }
+    }//end getGebruiken()
 
     /**
      * Fetch gebruiken for a deelnemer.
@@ -138,7 +149,7 @@ class GebruikController extends Controller
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
-    }
+    }//end getGebruikenForDeelnemer()
 
     /**
      * Returns an empty result set with the standard paginated response structure.
@@ -164,8 +175,5 @@ class GebruikController extends Controller
                 'deleted'   => false,
             ],
         ];
-    }
-
-
-
-}
+    }//end getEmptyResult()
+}//end class
