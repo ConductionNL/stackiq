@@ -8,7 +8,6 @@
  * @license AGPL-3.0-or-later
  * @version 1.0.0
  * @link https://github.com/opencatalogi/softwarecatalog
- * Updated: Fixed AlertTriangle import to use Alert icon
  */
 
 <template>
@@ -16,11 +15,6 @@
 		<div class="cardHeader">
 			<h2 v-tooltip.bottom="getOrganisatieSummary(item)">
 				<component :is="cardIcon" :size="20" />
-				<Alert
-					v-if="!isOrganisatiePublished(item)"
-					v-tooltip="'Organisatie is niet gepubliceerd'"
-					class="unpublished-warning-icon"
-					:size="20" />
 				{{ getOrganisatieTitle(item) }}
 			</h2>
 			<div class="cardHeaderActions">
@@ -153,7 +147,6 @@ import Email from 'vue-material-design-icons/Email.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import Certificate from 'vue-material-design-icons/Certificate.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
-import Alert from 'vue-material-design-icons/Alert.vue'
 import ContactpersonenList from '../ContactpersonenList.vue'
 
 export default {
@@ -168,7 +161,6 @@ export default {
 		Phone,
 		Certificate,
 		AccountMultiple,
-		Alert,
 		ContactpersonenList,
 	},
 	props: {
@@ -324,14 +316,6 @@ export default {
 			return 'Geen adres beschikbaar'
 		},
 
-		/**
-		 * Check if the organisation is published
-		 * @param {object} item - The organisation item
-		 * @return {boolean} True if published and not depublished, false otherwise
-		 */
-		isOrganisatiePublished(item) {
-			return !!(item?.['@self']?.published && !item?.['@self']?.depublished)
-		},
 	},
 }
 </script>
@@ -366,11 +350,6 @@ export default {
 	flex: 1;
 	min-width: 0;
 	color: var(--color-main-text);
-}
-
-.unpublished-warning-icon {
-	color: #ff9800;
-	margin-right: 4px;
 }
 
 .cardHeaderActions {

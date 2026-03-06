@@ -2,6 +2,7 @@
   "name": "softwarecatalog",
   "version": "1.0.0",
   "license": "EUPL-1.2",
+  "sideEffects": true,
   "engines": {
     "node": "^20.0.0",
     "npm": "^10.0.0"

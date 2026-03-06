@@ -11,7 +11,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\BackgroundJob
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: 1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class OrganizationContactSyncJob extends TimedJob
@@ -70,8 +70,8 @@ class OrganizationContactSyncJob extends TimedJob
         OrganizationSyncService $organizationSyncService,
         LoggerInterface $logger
     ) {
-        parent::__construct($timeFactory);
-        $this->setInterval(300);
+        parent::__construct(time: $timeFactory);
+        $this->setInterval(interval: 300);
         // 5 minutes.
         $this->organizationSyncService = $organizationSyncService;
         $this->logger = $logger;

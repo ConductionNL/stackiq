@@ -182,7 +182,8 @@ class ContactpersoonService
                                 $orgData   = $orgObject->getObject();
                                 $orgStatus = strtolower(($orgData['status'] ?? ''));
                                 if (in_array(needle: $orgStatus, haystack: ['actief', 'active']) === true) {
-                                    $organizationSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+                                    $syncServiceClass        = 'OCA\SoftwareCatalog\Service\OrganizationSyncService';
+                                    $organizationSyncService = \OC::$server->get($syncServiceClass);
                                     $backupStats        = [
                                         'entitiesCreated' => 0,
                                         'entitiesUpdated' => 0,
@@ -248,7 +249,7 @@ class ContactpersoonService
                             );
 
                             // Update contactpersoon object owner to user UID.
-                            $this->updateContactpersoonObjectOwner(
+                                                        $this->updateContactpersoonObjectOwner(
                                 contactObject: $contactpersoonObject,
                                 userUID: $username
                             );
@@ -268,6 +269,7 @@ class ContactpersoonService
                             }
 
                             $this->logger->info(
+                                // phpcs:ignore Generic.Files.LineLength.TooLong
                                 'ContactpersoonService: Skipping user creation - organization not active or entity not found',
                                 [
                                     'contactId'          => $contactId,
@@ -307,20 +309,20 @@ class ContactpersoonService
             }//end if
 
             // Update user groups based on contactpersoon data.
-            $this->updateUserGroups(
+                        $this->updateUserGroups(
                 contactpersoonObject: $contactpersoonObject,
                 username: $username
             );
 
             // Ensure organization has at least one beheerder.
-            $this->ensureOrganizationBeheerder(
+                        $this->ensureOrganizationBeheerder(
                 contactpersoonObject: $contactpersoonObject,
                 username: $username
             );
 
             // Update the contactpersoon object with username if not set.
             if (empty($contactData['username']) === true) {
-                $this->updateContactpersoonUsername(
+                                $this->updateContactpersoonUsername(
                     contactpersoonObject: $contactpersoonObject,
                     username: $username
                 );
@@ -456,10 +458,10 @@ class ContactpersoonService
             $contactData['username'] = $username;
             $contactpersoonObject->setObject($contactData);
 
-            // FIX #434: Use ObjectEntityMapper directly instead of ObjectService::saveObject()
-            // to avoid validation errors on the organisatie field (stored as UUID string but
-            // schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades
-            // that could interfere with the ongoing org activation process.
+            // FIX #434: Use ObjectEntityMapper directly instead of ObjectService::saveObject().
+            // To avoid validation errors on the organisatie field (stored as UUID string but.
+            // Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
+            // That could interfere with the ongoing org activation process.
             $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
             $objectMapper->update($contactpersoonObject);
 
@@ -506,21 +508,21 @@ class ContactpersoonService
             );
 
             // Process the contactpersoon (this will handle user creation/updates).
-            $this->processContactpersoon(
+                        $this->processContactpersoon(
                 contactpersoonObject: $contactpersoonObject,
                 isUpdate: true
             );
 
             // If we have old object, check for role changes.
             if ($oldContactpersoonObject !== null) {
-                $this->handleRoleChanges(
+                                $this->handleRoleChanges(
                     newContactpersoonObject: $contactpersoonObject,
                     oldContactpersoonObject: $oldContactpersoonObject
                 );
             }
 
             // Sync name/functie fields back to the Nextcloud user when changed.
-            $this->syncNameFieldsToUser(
+                        $this->syncNameFieldsToUser(
                 contactpersoonObject: $contactpersoonObject,
                 oldContactpersoonObject: $oldContactpersoonObject
             );
@@ -647,7 +649,7 @@ class ContactpersoonService
                 );
 
                 // Update user groups based on new roles.
-                $this->updateUserGroups(
+                                $this->updateUserGroups(
                     contactpersoonObject: $newContactpersoonObject,
                     username: $username
                 );
@@ -818,7 +820,7 @@ class ContactpersoonService
             );
 
             // Get contact persons for the organization.
-            $contactPersons = $this->getContactPersonsForOrganization($organizationUuid);
+            $contactPersons = $this->getContactPersonsForOrganization(organizationUuid: $organizationUuid);
 
             if (empty($contactPersons) === true) {
                 $this->logger->info(
@@ -1149,7 +1151,7 @@ class ContactpersoonService
 
             // Get the current object data and normalize types.
             $currentObject = $contactObject->getObject();
-            $currentObject = $this->normalizeContactDataTypes($currentObject);
+            $currentObject = $this->normalizeContactDataTypes(data: $currentObject);
 
             // Get current @self metadata or create new.
             $selfMetadata = ($currentObject['@self'] ?? []);
@@ -1190,9 +1192,9 @@ class ContactpersoonService
                 $contactObject->setOrganisation($organizationUuid);
             }
 
-            // FIX #434: Use ObjectEntityMapper directly instead of ObjectService::saveObject()
-            // to avoid validation errors on the organisatie field (stored as UUID string but
-            // schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
+            // FIX #434: Use ObjectEntityMapper directly instead of ObjectService::saveObject().
+            // To avoid validation errors on the organisatie field (stored as UUID string but.
+            // Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
             $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
             $objectMapper->update($contactObject);
 

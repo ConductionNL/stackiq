@@ -395,7 +395,8 @@ class SoftwareCatalogEventListener implements IEventListener
                         'oldStatus'     => $oldStatus,
                         'statusChanged' => ($status !== $oldStatus),
                         'isActief'      => in_array(needle: $status, haystack: ['actief', 'active']),
-                        'willProcess'   => (in_array(needle: $status, haystack: ['actief', 'active']) && $status !== $oldStatus),
+                        'willProcess'   => (in_array(needle: $status, haystack: ['actief', 'active']) === true
+                            && $status !== $oldStatus),
                     ]
                     );
 
@@ -431,7 +432,9 @@ class SoftwareCatalogEventListener implements IEventListener
                             'SoftwareCatalog: Refetched organization with contactpersonen',
                             [
                                 'objectId'             => $objectId,
-                                'contactpersonenCount' => count($organizationWithContacts->getObject()['contactpersonen'] ?? []),
+                                'contactpersonenCount' => count(
+                                    $organizationWithContacts->getObject()['contactpersonen'] ?? []
+                                ),
                             ]
                             );
 

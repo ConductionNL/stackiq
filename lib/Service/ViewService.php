@@ -99,7 +99,7 @@ class ViewService
             $views = $this->getViewsFromRegister();
 
             // Transform views to include critical API fields.
-            $views = $this->transformViews($views);
+            $views = $this->transformViews(views: $views);
 
             // Apply enrichments based on options.
             if (empty($options) === false) {
@@ -108,14 +108,14 @@ class ViewService
 
             // Apply module-to-viewNode expansion if modules are enabled.
             if (isset($options['include_modules']) === true && $options['include_modules'] === true) {
-                $views = $this->expandModulesToViewNodes($views);
+                $views = $this->expandModulesToViewNodes(views: $views);
             }
 
             return [
                 'success'             => true,
                 'views'               => $views,
                 'count'               => count($views),
-                'enrichments_applied' => $this->getAppliedEnrichments($options),
+                'enrichments_applied' => $this->getAppliedEnrichments(options: $options),
             ];
         } catch (\Exception $e) {
             $this->logger->error(
@@ -155,7 +155,7 @@ class ViewService
 
         try {
             // Get specific view from OpenRegister.
-            $view = $this->getViewFromRegister($viewId);
+            $view = $this->getViewFromRegister(viewId: $viewId);
 
             if ($view === null) {
                 return [
@@ -166,7 +166,7 @@ class ViewService
             }
 
             // Transform view to include critical API fields.
-            $view = $this->transformView($view);
+            $view = $this->transformView(view: $view);
 
             // Apply enrichments based on options.
             if (empty($options) === false) {
@@ -174,7 +174,7 @@ class ViewService
 
                 // Apply module-to-viewNode expansion if modules are enabled.
                 if (isset($options['include_modules']) === true && $options['include_modules'] === true) {
-                    $views = $this->expandModulesToViewNodes([$view]);
+                    $views = $this->expandModulesToViewNodes(views: [$view]);
                     // Get the expanded view back.
                     $view = $views[0] ?? $view;
                 }
@@ -183,7 +183,7 @@ class ViewService
             return [
                 'success'             => true,
                 'view'                => $view,
-                'enrichments_applied' => $this->getAppliedEnrichments($options),
+                'enrichments_applied' => $this->getAppliedEnrichments(options: $options),
             ];
         } catch (\Exception $e) {
             $this->logger->error(
@@ -355,7 +355,7 @@ class ViewService
         $enrichedViews = [];
 
         foreach ($views as $view) {
-            $enrichedViews[] = $this->enrichView(view: $view, options: $options);
+            $enrichedViews[] = $enrichedViews[] = $this->enrichView(view: $view, options: $options);
         }
 
         return $enrichedViews;
@@ -375,7 +375,10 @@ class ViewService
 
         // Enrich viewNodes if present.
         if (isset($view['viewNodes']) === true && is_array(value: $view['viewNodes']) === true) {
-            $enrichedView['viewNodes'] = $this->enrichViewNodes(viewNodes: $view['viewNodes'], options: $options);
+            $enrichedView['viewNodes'] = $this->enrichViewNodes(
+                viewNodes: $view['viewNodes'],
+                options: $options
+            );
         }
 
         // TODO: Add view-level enrichments here if needed.
@@ -400,19 +403,19 @@ class ViewService
         $gebruikData          = [];
         $deelnamesGebruikData = [];
 
-        if ($this->shouldIncludeProducts($options) === true) {
+        if ($this->shouldIncludeProducts(options: $options) === true) {
             $productsData = $this->getProductsData();
         }
 
-        if ($this->shouldIncludeModules($options) === true) {
+        if ($this->shouldIncludeModules(options: $options) === true) {
             $modulesData = $this->getModulesData();
         }
 
-        if ($this->shouldIncludeGebruik($options) === true) {
-            $gebruikData = $this->getGebruikData($options);
+        if ($this->shouldIncludeGebruik(options: $options) === true) {
+            $gebruikData = $this->getGebruikData(options: $options);
         }
 
-        if ($this->shouldIncludeDeelnamesGebruik($options) === true) {
+        if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
             $deelnamesGebruikData = $this->getDeelnamesGebruikData();
         }
 
@@ -423,25 +426,34 @@ class ViewService
             $modelNodeId = $node['modelNodeId'] ?? null;
 
             if ($modelNodeId !== null) {
-                if ($this->shouldIncludeProducts($options) === true) {
-                    $enrichedNode['products'] = $this->getNodeProducts(modelNodeId: $modelNodeId, productsData: $productsData);
+                if ($this->shouldIncludeProducts(options: $options) === true) {
+                    $enrichedNode['products'] = $this->getNodeProducts(
+                        modelNodeId: $modelNodeId,
+                        productsData: $productsData
+                    );
                 }
 
-                if ($this->shouldIncludeModules($options) === true) {
-                    $enrichedNode['modules'] = $this->getNodeModules(modelNodeId: $modelNodeId, modulesData: $modulesData);
+                if ($this->shouldIncludeModules(options: $options) === true) {
+                    $enrichedNode['modules'] = $this->getNodeModules(
+                        modelNodeId: $modelNodeId,
+                        modulesData: $modulesData
+                    );
                 }
 
-                if ($this->shouldIncludeGebruik($options) === true) {
-                    $enrichedNode['gebruik'] = $this->getNodeGebruik(modelNodeId: $modelNodeId, gebruikData: $gebruikData);
+                if ($this->shouldIncludeGebruik(options: $options) === true) {
+                    $enrichedNode['gebruik'] = $this->getNodeGebruik(
+                        modelNodeId: $modelNodeId,
+                        gebruikData: $gebruikData
+                    );
                 }
 
-                if ($this->shouldIncludeDeelnamesGebruik($options) === true) {
-                    $enrichedNode['deelnamesGebruik'] = $this->getNodeDeelnamesGebruik(
+                if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
+                    $enrichedNode['deelnamesGebruik'] = $enrichedNode['deelnamesGebruik'] = $this->getNodeDeelnamesGebruik(
                         modelNodeId: $modelNodeId,
                         deelnamesGebruikData: $deelnamesGebruikData
                     );
                 }
-            }
+            }//end if
 
             $enrichedNodes[] = $enrichedNode;
         }//end foreach
@@ -458,7 +470,7 @@ class ViewService
      */
     private function shouldIncludeProducts(array $options): bool
     {
-        return isset($options['include_products']) && $options['include_products'] === true;
+        return isset($options['include_products']) === true && $options['include_products'] === true;
     }//end shouldIncludeProducts()
 
     /**
@@ -470,7 +482,7 @@ class ViewService
      */
     private function shouldIncludeModules(array $options): bool
     {
-        return isset($options['include_modules']) && $options['include_modules'] === true;
+        return isset($options['include_modules']) === true && $options['include_modules'] === true;
     }//end shouldIncludeModules()
 
     /**
@@ -482,7 +494,7 @@ class ViewService
      */
     private function shouldIncludeGebruik(array $options): bool
     {
-        return isset($options['include_gebruik']) && $options['include_gebruik'] === true;
+        return isset($options['include_gebruik']) === true && $options['include_gebruik'] === true;
     }//end shouldIncludeGebruik()
 
     /**
@@ -494,7 +506,7 @@ class ViewService
      */
     private function shouldIncludeDeelnamesGebruik(array $options): bool
     {
-        return isset($options['include_deelnames_gebruik']) && $options['include_deelnames_gebruik'] === true;
+        return isset($options['include_deelnames_gebruik']) === true && $options['include_deelnames_gebruik'] === true;
     }//end shouldIncludeDeelnamesGebruik()
 
     /**
@@ -508,19 +520,19 @@ class ViewService
     {
         $enrichments = [];
 
-        if ($this->shouldIncludeProducts($options) === true) {
+        if ($this->shouldIncludeProducts(options: $options) === true) {
             $enrichments[] = 'products';
         }
 
-        if ($this->shouldIncludeModules($options) === true) {
+        if ($this->shouldIncludeModules(options: $options) === true) {
             $enrichments[] = 'modules';
         }
 
-        if ($this->shouldIncludeGebruik($options) === true) {
+        if ($this->shouldIncludeGebruik(options: $options) === true) {
             $enrichments[] = 'gebruik';
         }
 
-        if ($this->shouldIncludeDeelnamesGebruik($options) === true) {
+        if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
             $enrichments[] = 'deelnames_gebruik';
         }
 
@@ -624,7 +636,9 @@ class ViewService
                     foreach ($modules as $module) {
                         // Additional check for organisation in metadata if not caught by query.
                         $moduleOrg      = $module['@self']['organisation'] ?? null;
-                        $hasOrgMismatch = $currentOrg !== null && isset($module['@self']['organisation']) === true && $moduleOrg !== $currentOrg;
+                        $hasOrgMismatch = $currentOrg !== null
+                            && isset($module['@self']['organisation']) === true
+                            && $moduleOrg !== $currentOrg;
                         if ($hasOrgMismatch === true) {
                             continue;
                         }
@@ -730,7 +744,12 @@ class ViewService
                     }
 
                     $gebruikItems = $objectService->searchObjects($query);
-                    $this->processGebruikItems(gebruikItems: $gebruikItems, allGebruik: $allGebruik, currentOrg: $currentOrg, type: 'regular');
+                    $this->processGebruikItems(
+                        gebruikItems: $gebruikItems,
+                        allGebruik: $allGebruik,
+                        currentOrg: $currentOrg,
+                        type: 'regular'
+                    );
 
                     $this->logger->debug(
                             'Retrieved regular gebruik from schema',
@@ -752,7 +771,9 @@ class ViewService
             }//end foreach
 
             // STEP 2: If deelnames is enabled, get additional gebruik with RBAC off.
-            if (isset($options['include_deelnames_gebruik']) === true && $options['include_deelnames_gebruik'] === true && $currentOrg !== null) {
+            $includeDeelnames = isset($options['include_deelnames_gebruik']) === true
+                && $options['include_deelnames_gebruik'] === true;
+            if ($includeDeelnames === true && $currentOrg !== null) {
                 $this->logger->debug('Processing deelnames gebruik with RBAC disabled');
 
                 foreach ($gebruikSchemas as $schemaId) {
@@ -773,7 +794,7 @@ class ViewService
 
                         // Call with RBAC disabled.
                         $deelnamesGebruikItems = $objectService->searchObjects($query, _rbac: false);
-                        $this->processGebruikItems(
+                                                $this->processGebruikItems(
                             gebruikItems: $deelnamesGebruikItems,
                             allGebruik: $allGebruik,
                             currentOrg: $currentOrg,
@@ -801,9 +822,10 @@ class ViewService
             }//end if
 
             // STEP 3: Extend gebruik with modules data.
-            $allGebruik = $this->extendGebruikWithModules($allGebruik);
+            $allGebruik = $this->extendGebruikWithModules(allGebruik: $allGebruik);
 
-            $deelnamesEnabled = isset($options['include_deelnames_gebruik']) === true && $options['include_deelnames_gebruik'] === true;
+            $deelnamesEnabled = isset($options['include_deelnames_gebruik']) === true
+                && $options['include_deelnames_gebruik'] === true;
             $this->logger->debug(
                     'Total gebruik retrieved and processed',
                     [
@@ -935,7 +957,11 @@ class ViewService
 
             // Process each module for expansion.
             foreach ($modulesData as $elementRef => $module) {
-                $expandedNodes = $this->expandModuleToNodes(module: $module, existingNodes: $expandedNodes, nodesByModelId: $nodesByModelId);
+                $expandedNodes = $this->expandModuleToNodes(
+                    module: $module,
+                    existingNodes: $expandedNodes,
+                    nodesByModelId: $nodesByModelId
+                );
             }
 
             // Update the view with expanded nodes.
@@ -974,7 +1000,7 @@ class ViewService
         $expandedNodes = $existingNodes;
 
         // Look for referentiecomponent relationships in the module.
-        $referentieComponenten = $this->extractReferentieComponenten($module);
+        $referentieComponenten = $this->extractReferentieComponenten(module: $module);
 
         foreach ($referentieComponenten as $referentieComponentId) {
             // Find if there's an existing node for this referentiecomponent.
@@ -982,7 +1008,11 @@ class ViewService
 
             if ($parentNode !== null) {
                 // Create a new node for this module as child of the referentiecomponent.
-                $moduleNode      = $this->createModuleNode(module: $module, parentNode: $parentNode, referentieComponentId: $referentieComponentId);
+                $moduleNode      = $this->createModuleNode(
+                    module: $module,
+                    parentNode: $parentNode,
+                    referentieComponentId: $referentieComponentId
+                );
                 $expandedNodes[] = $moduleNode;
 
                 $this->logger->debug(
@@ -995,7 +1025,7 @@ class ViewService
                         ]
                         );
             }
-        }
+        }//end foreach
 
         return $expandedNodes;
     }//end expandModuleToNodes()
@@ -1139,7 +1169,12 @@ class ViewService
                     ];
 
                     $deelnamesItems = $objectService->searchObjects($query, _rbac: false);
-                    $this->processGebruikItems(gebruikItems: $deelnamesItems, allGebruik: $allDeelnames, currentOrg: $currentOrg, type: 'deelnames');
+                    $this->processGebruikItems(
+                        gebruikItems: $deelnamesItems,
+                        allGebruik: $allDeelnames,
+                        currentOrg: $currentOrg,
+                        type: 'deelnames'
+                    );
 
                     $this->logger->debug(
                             'Retrieved deelnames gebruik data',
@@ -1159,7 +1194,7 @@ class ViewService
                 }//end try
             }//end foreach
 
-            $allDeelnames = $this->extendGebruikWithModules($allDeelnames);
+            $allDeelnames = $this->extendGebruikWithModules(allGebruik: $allDeelnames);
 
             $this->logger->debug(
                     'Total deelnames gebruik retrieved',
@@ -1324,7 +1359,7 @@ class ViewService
         $transformedViews = [];
 
         foreach ($views as $view) {
-            $transformedViews[] = $this->transformView($view);
+            $transformedViews[] = $this->transformView(view: $view);
         }
 
         return $transformedViews;
@@ -1347,18 +1382,30 @@ class ViewService
         }
 
         // Transform properties from XML to required API format.
-        if (isset($view['xml']['properties']['property']) === true && is_array(value: $view['xml']['properties']['property']) === true) {
-            $transformedView['properties'] = $this->transformViewProperties($view['xml']['properties']['property']);
+        $hasProperties = isset($view['xml']['properties']['property']) === true
+            && is_array(value: $view['xml']['properties']['property']) === true;
+        if ($hasProperties === true) {
+            $transformedView['properties'] = $this->transformViewProperties(
+                properties: $view['xml']['properties']['property']
+            );
         }
 
         // Transform viewNodes to include critical fields.
-        if (isset($view['xml']['viewNodes']) === true && is_array(value: $view['xml']['viewNodes']) === true) {
-            $transformedView['viewNodes'] = $this->transformViewNodes($view['xml']['viewNodes']);
+        $hasViewNodes = isset($view['xml']['viewNodes']) === true
+            && is_array(value: $view['xml']['viewNodes']) === true;
+        if ($hasViewNodes === true) {
+            $transformedView['viewNodes'] = $this->transformViewNodes(
+                viewNodes: $view['xml']['viewNodes']
+            );
         }
 
         // Transform viewRelationships to include critical fields.
-        if (isset($view['xml']['viewRelationships']) === true && is_array(value: $view['xml']['viewRelationships']) === true) {
-            $transformedView['viewRelationships'] = $this->transformViewRelationships($view['xml']['viewRelationships']);
+        $hasRelationships = isset($view['xml']['viewRelationships']) === true
+            && is_array(value: $view['xml']['viewRelationships']) === true;
+        if ($hasRelationships === true) {
+            $transformedView['viewRelationships'] = $this->transformViewRelationships(
+                viewRelationships: $view['xml']['viewRelationships']
+            );
         }
 
         return $transformedView;
@@ -1419,8 +1466,8 @@ class ViewService
             // Add style information.
             if (isset($node['color']) === true || isset($node['borderColor']) === true || isset($node['font']) === true) {
                 $transformedNode['style'] = [
-                    'fillColor' => $this->parseColor($node['color'] ?? null),
-                    'lineColor' => $this->parseColor($node['borderColor'] ?? null),
+                    'fillColor' => $this->parseColor(colorString: $node['color'] ?? null),
+                    'lineColor' => $this->parseColor(colorString: $node['borderColor'] ?? null),
                     'font'      => $node['font'] ?? null,
                 ];
             }

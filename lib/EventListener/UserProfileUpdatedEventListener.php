@@ -211,7 +211,7 @@ class UserProfileUpdatedEventListener implements IEventListener
         $mergedObject = array_merge($contactData, $patch);
         $contactpersoon->setObject($mergedObject);
 
-        // Regenerate _name metadata from the schema's objectNameField template
+        // Regenerate _name metadata from the schema's objectNameField template.
         // (e.g. "{{ voornaam }} {{ tussenvoegsel }} {{ achternaam }}").
         // Without this, _name stays stale after field updates because we bypass the full saveObject flow.
         $schemaMapper         = \OC::$server->get('OCA\OpenRegister\Db\SchemaMapper');
@@ -250,8 +250,8 @@ class UserProfileUpdatedEventListener implements IEventListener
                     );
         }
 
-        // Pass register and schema so the magic mapper route is triggered and the
-        // per-schema magic table is updated (not just the blob table).
+        // Pass register and schema so the magic mapper route is triggered and the.
+        // Per-schema magic table is updated (not just the blob table).
         $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
         $objectMapper->update(entity: $contactpersoon, register: $registerEntity, schema: $schemaEntity);
 
@@ -284,8 +284,8 @@ class UserProfileUpdatedEventListener implements IEventListener
         LoggerInterface $logger
     ): ?object {
         // 1. Search by username = userId, scoped to the user's organisation (multitenancy).
-        // This prevents updating a contactpersoon from a different organisation when
-        // multiple records share the same username across orgs.
+        // This prevents updating a contactpersoon from a different organisation when.
+        // Multiple records share the same username across orgs.
         $results = $objectService->searchObjects(
             query: ['@self' => $selfQuery, 'username' => $userId],
             _rbac: false,

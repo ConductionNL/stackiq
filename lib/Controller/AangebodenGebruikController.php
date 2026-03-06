@@ -60,7 +60,7 @@ class AangebodenGebruikController extends Controller
         private readonly AangebodenGebruikService $aangebodenGebruikService,
         private readonly LoggerInterface $logger
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
     }//end __construct()
 
     /**
@@ -174,7 +174,7 @@ class AangebodenGebruikController extends Controller
 
         try {
             // Check if user is in admin or ambtenaar group.
-            $isAmbtenaar = $this->isUserInGroup('admin') || $this->isUserInGroup('ambtenaar');
+            $isAmbtenaar = $this->isUserInGroup(groupName: 'admin') || $this->isUserInGroup(groupName: 'ambtenaar');
 
             // Get organization filter if provided (only for ambtenaar users).
             $organisationFilter = $this->request->getParam('organisation');
@@ -265,7 +265,9 @@ class AangebodenGebruikController extends Controller
 
         try {
             // Check if user is in admin or ambtenaar group.
-            if ($this->isUserInGroup('admin') === false && $this->isUserInGroup('ambtenaar') === false) {
+            $isAdmin     = $this->isUserInGroup(groupName: 'admin');
+            $isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
+            if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
                 $user = $this->userSession->getUser();
                 if ($user !== null) {
@@ -373,7 +375,9 @@ class AangebodenGebruikController extends Controller
 
         try {
             // Check if user is in admin or ambtenaar group.
-            if ($this->isUserInGroup('admin') === false && $this->isUserInGroup('ambtenaar') === false) {
+            $isAdmin     = $this->isUserInGroup(groupName: 'admin');
+            $isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
+            if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
                 $user = $this->userSession->getUser();
                 if ($user !== null) {
@@ -868,7 +872,7 @@ class AangebodenGebruikController extends Controller
                 [
                     'method'      => 'GET',
                     'path'        => '/api/aangeboden-gebruik/deelnemers',
-                    'description' => 'Get all gebruiks objects where the active organization is in deelnemers (participants)',
+                    'description' => 'Get gebruiks with active org in deelnemers',
                     'parameters'  => [
                         [
                             'name'        => 'limit',
@@ -1004,17 +1008,17 @@ class AangebodenGebruikController extends Controller
 
         // Parse filter parameters.
         $status = $this->request->getParam('status');
-        if ($status !== null && empty(trim($status)) === false) {
+        if ($status !== null && empty(trim($status) === true) === false) {
             $options['status'] = trim($status);
         }
 
         $startDate = $this->request->getParam('startDate');
-        if ($startDate !== null && empty(trim($startDate)) === false) {
+        if ($startDate !== null && empty(trim($startDate) === true) === false) {
             $options['startDate'] = trim($startDate);
         }
 
         $endDate = $this->request->getParam('endDate');
-        if ($endDate !== null && empty(trim($endDate)) === false) {
+        if ($endDate !== null && empty(trim($endDate) === true) === false) {
             $options['endDate'] = trim($endDate);
         }
 

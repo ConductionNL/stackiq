@@ -72,7 +72,7 @@ class SettingsController extends Controller
         private readonly ProgressTracker $progressTracker,
         private readonly LoggerInterface $logger,
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -470,7 +470,11 @@ class SettingsController extends Controller
                 'fullyConfigured'     => $isFullyConfigured,
                 'versionInfo'         => $versionInfo,
                 'timestamp'           => time(),
-                'autoConfigCompleted' => $this->config->getValueString('softwarecatalog', 'auto_config_completed', 'false') === 'true',
+                'autoConfigCompleted' => $this->config->getValueString(
+                    'softwarecatalog',
+                    'auto_config_completed',
+                    'false'
+                ) === 'true',
             ];
 
             $this->logger->info(
@@ -1142,11 +1146,11 @@ class SettingsController extends Controller
                 private LoggerInterface $logger
             ) {
                 parent::__construct();
-                $this->addHeader('Content-Type', 'text/event-stream');
-                $this->addHeader('Cache-Control', 'no-cache');
-                $this->addHeader('Connection', 'keep-alive');
-                $this->addHeader('Access-Control-Allow-Origin', '*');
-                $this->addHeader('Access-Control-Allow-Headers', 'Cache-Control');
+                $this->addHeader(name: 'Content-Type', value: 'text/event-stream');
+                $this->addHeader(name: 'Cache-Control', value: 'no-cache');
+                $this->addHeader(name: 'Connection', value: 'keep-alive');
+                $this->addHeader(name: 'Access-Control-Allow-Origin', value: '*');
+                $this->addHeader(name: 'Access-Control-Allow-Headers', value: 'Cache-Control');
             }//end __construct()
 
             /**
@@ -1376,7 +1380,8 @@ class SettingsController extends Controller
 
             // OPTIMIZATION: Use optimized method if available or if explicitly requested.
             $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
-            if ($useOptimized === true && method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized') === true) {
+            $hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
+            if ($useOptimized === true && $hasOptimized === true) {
                 $this->logger->info('Using OPTIMIZED ArchiMate import method.');
                 $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
             } else {
@@ -1395,7 +1400,7 @@ class SettingsController extends Controller
                     );
 
             // Determine appropriate HTTP status code based on error type.
-            $statusCode = $this->getHttpStatusForException($e);
+            $statusCode = $this->getHttpStatusForException(e: $e);
 
             return new JSONResponse(
                     [
@@ -1439,7 +1444,7 @@ class SettingsController extends Controller
             // Check if export was successful.
             if ($result['success'] === false) {
                 // Determine appropriate status code based on error message.
-                $statusCode = $this->getHttpStatusForErrorMessage($result['error'] ?? 'Export failed');
+                $statusCode = $this->getHttpStatusForErrorMessage(message: $result['error'] ?? 'Export failed');
 
                 return new JSONResponse(
                         [
@@ -1467,7 +1472,7 @@ class SettingsController extends Controller
                  */
                 public function __construct(private string $content)
                 {
-                    parent::__construct();
+                                        parent::__construct();
                 }//end __construct()
 
                 /**
@@ -1507,7 +1512,7 @@ class SettingsController extends Controller
                     );
 
             // Determine appropriate HTTP status code based on error type.
-            $statusCode = $this->getHttpStatusForException($e);
+            $statusCode = $this->getHttpStatusForException(e: $e);
 
             return new JSONResponse(
                     [
@@ -1551,7 +1556,7 @@ class SettingsController extends Controller
 
             if ($result['success'] === false) {
                 $statusCode = 500;
-                if (str_contains(haystack: ($result['error'] ?? ''), needle: 'not found') === true) {
+                if (str_contains(haystack: ($result['error'] ?? '') === true, needle: 'not found') === true) {
                     $statusCode = 404;
                 }
 
@@ -1576,7 +1581,7 @@ class SettingsController extends Controller
                  */
                 public function __construct(private string $content)
                 {
-                    parent::__construct();
+                                        parent::__construct();
                 }//end __construct()
 
                 /**
@@ -1606,7 +1611,7 @@ class SettingsController extends Controller
                     ]
                     );
 
-            $statusCode = $this->getHttpStatusForException($e);
+            $statusCode = $this->getHttpStatusForException(e: $e);
 
             return new JSONResponse(
                     [
@@ -1711,9 +1716,9 @@ class SettingsController extends Controller
         }//end try
     }//end downloadArchiMate()
 
-    // ========================================================================
-    // EMAIL MANAGEMENT METHODS
-    // ========================================================================
+    // ===.
+    // EMAIL MANAGEMENT METHODS.
+    // ===.
 
     /**
      * Test email connection (separate from sending test email)
@@ -1853,9 +1858,9 @@ class SettingsController extends Controller
         }//end try
     }//end updateEmailSettings()
 
-    // ========================================================================
-    // EMAIL TEMPLATE METHODS
-    // ========================================================================
+    // ===.
+    // EMAIL TEMPLATE METHODS.
+    // ===.
 
     /**
      * Get all email templates.
@@ -2072,9 +2077,9 @@ class SettingsController extends Controller
         }//end try
     }//end getEmailTemplateVariables()
 
-    // ========================================================================
-    // USER GROUPS MANAGEMENT METHODS
-    // ========================================================================
+    // ===.
+    // USER GROUPS MANAGEMENT METHODS.
+    // ===.
 
     /**
      * Get generic user groups
@@ -2346,9 +2351,9 @@ class SettingsController extends Controller
         }//end try
     }//end getAllGroups()
 
-    // ========================================================================
-    // ARCHIMATE STATUS MANAGEMENT METHODS
-    // ========================================================================
+    // ===.
+    // ARCHIMATE STATUS MANAGEMENT METHODS.
+    // ===.
 
     /**
      * Clear ArchiMate import status
@@ -2506,9 +2511,9 @@ class SettingsController extends Controller
         }//end try
     }//end clearArchiMateExportStatus()
 
-    // ========================================================================
-    // ARCHIMATE TESTING METHODS
-    // ========================================================================
+    // ===.
+    // ARCHIMATE TESTING METHODS.
+    // ===.
 
     /**
      * Test ArchiMate round-trip functionality
@@ -2633,9 +2638,9 @@ class SettingsController extends Controller
         }//end try
     }//end getObjectCounts()
 
-    // ========================================================================
-    // FOCUSED ENDPOINT CONTROLLER METHODS FOR PERFORMANCE OPTIMIZATION
-    // ========================================================================
+    // ===.
+    // FOCUSED ENDPOINT CONTROLLER METHODS FOR PERFORMANCE OPTIMIZATION.
+    // ===.
 
     /**
      * Get ArchiMate configuration only
@@ -3026,7 +3031,7 @@ class SettingsController extends Controller
 
         // Fallback to message-based classification.
         $message = $e->getMessage();
-        return $this->getHttpStatusForErrorMessage($message);
+        return $this->getHttpStatusForErrorMessage(message: $message);
     }//end getHttpStatusForException()
 
     /**
@@ -3179,14 +3184,14 @@ class SettingsController extends Controller
                         'message' => 'Bulk sync failed: '.$e->getMessage(),
                         'error'   => $e->getMessage(),
                     ],
-                    $this->getHttpStatusForException($e)
+                    $this->getHttpStatusForException(e: $e)
                     );
         }//end try
     }//end bulkSyncStandards()
 
-    // ========================================================================
-    // CRONJOB CONFIGURATION ENDPOINTS (deprecated — sync now uses _rbac: false)
-    // ========================================================================
+    // ===.
+    // CRONJOB CONFIGURATION ENDPOINTS (deprecated — sync now uses _rbac: false).
+    // ===.
 
     /**
      * Get cronjob configuration

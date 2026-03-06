@@ -151,12 +151,12 @@ class OrganizationHandler
         if (empty($groupProperty) === true) {
             // Create group with organization name.
             $organizationName = $objectData['naam'] ?? $objectData['name'] ?? 'Organization';
-            $groupName        = $this->sanitizeGroupName($organizationName);
+            $groupName        = $this->sanitizeGroupName(name: $organizationName);
 
             // Ensure group name is unique.
-            $groupName = $this->ensureUniqueGroupName($groupName);
+            $groupName = $this->ensureUniqueGroupName(baseName: $groupName);
 
-            $group = $this->createGroupIfNotExists($groupName);
+            $group = $this->createGroupIfNotExists(groupName: $groupName);
 
             if ($group !== null) {
                 // Set the group ID in the organization object.
@@ -611,7 +611,7 @@ class OrganizationHandler
                     );
 
             // First process the organization to ensure it has proper group structure.
-            $processed = $this->processOrganization($organizationObject);
+            $processed = $this->processOrganization(organizationObject: $organizationObject);
 
             if ($processed === true) {
                 // Then process contactpersonen if organization is active.
@@ -619,7 +619,7 @@ class OrganizationHandler
                 $beoordeling = strtolower($objectData['beoordeling'] ?? '');
 
                 if ($beoordeling === 'actief') {
-                    $processedContacts = $this->processContactpersonen($organizationObject);
+                    $processedContacts = $this->processContactpersonen(organizationObject: $organizationObject);
 
                     $this->_logger->info(
                         'Processed organization and contactgegevens',
@@ -735,7 +735,7 @@ class OrganizationHandler
     {
         try {
             // Check if user is in the organization-specific group.
-            $organizationGroupName = $this->sanitizeGroupName($organizationUuid);
+            $organizationGroupName = $this->sanitizeGroupName(name: $organizationUuid);
             $organizationGroup     = $this->_groupManager->get($organizationGroupName);
 
             if ($organizationGroup !== null && $organizationGroup->inGroup($user) === true) {

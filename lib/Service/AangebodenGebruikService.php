@@ -350,7 +350,9 @@ class AangebodenGebruikService
             $koppeligenSchema    = $voorzieningenConfig['koppeling_schema'] ?? null;
 
             if ($registerId === null || $gebruikSchema === null || $koppeligenSchema === null) {
-                throw new Exception('Voorzieningen configuration not found. Please configure the schemas in the admin panel.');
+                throw new Exception(
+                    'Voorzieningen configuration not found. Please configure the schemas in the admin panel.'
+                );
             }
 
             // Check access permissions.
@@ -416,7 +418,7 @@ class AangebodenGebruikService
                     $uuidData   = $uuidObject->getObject();
                     $uuidSchema = $uuidData['@self']['schema'] ?? null;
                     $organisationSchemaId = $voorzieningenConfig['organisatie_schema'] ?? '15';
-                    $isOrganisationUuid   = ($uuidSchema == $organisationSchemaId);
+                    $isOrganisationUuid   = ($uuidSchema === $organisationSchemaId);
                 }
             } catch (Exception $e) {
                 $this->logger->debug(
@@ -621,7 +623,7 @@ class AangebodenGebruikService
     }//end getAllGebruiksForAmbtenaar()
 
     /**
-     * Get all gebruiks objects belonging to a specific suite ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group
+     * Get all gebruiks objects belonging to a specific suite ID - restricted to ambtenaar group.
      *
      * This method retrieves all gebruiks objects that belong to the specified suite ID,
      * bypassing normal RBAC and multitenancy restrictions. Access is restricted to users
@@ -809,9 +811,12 @@ class AangebodenGebruikService
 
                     // Process and add to results.
                     foreach ($gebruikItems as $gebruik) {
-                        $gebruik['_filter_type'] = 'deelnemers';
-                        $gebruik['_schema_id']   = $schemaId;
-                        $allGebruiks[]           = $gebruik;
+                        $gebruikData = is_array(value: $gebruik) === true
+                            ? $gebruik
+                            : $gebruik->jsonSerialize();
+                        $gebruikData['_filter_type'] = 'deelnemers';
+                        $gebruikData['_schema_id']   = $schemaId;
+                        $allGebruiks[]               = $gebruikData;
                     }
 
                     $this->logger->debug(
@@ -1035,8 +1040,10 @@ class AangebodenGebruikService
      *
      * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
      */
-    private function findGebruikOrKoppeling(ObjectService $objectService, string $objectId): ?\OCA\OpenRegister\Db\ObjectEntity
-    {
+    private function findGebruikOrKoppeling(
+        ObjectService $objectService,
+        string $objectId
+    ): ?\OCA\OpenRegister\Db\ObjectEntity {
         $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
         $registerId          = $voorzieningenConfig['register'] ?? null;
 

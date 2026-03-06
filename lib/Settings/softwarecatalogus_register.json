@@ -6797,7 +6797,7 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/koppeling",
-              "inversedBy": "moduleA"
+              "inversedBy": ["moduleA", "moduleB"]
             }
           },
           "compliancy": {

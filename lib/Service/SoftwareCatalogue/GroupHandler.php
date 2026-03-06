@@ -134,7 +134,7 @@ class GroupHandler
      */
     public function ensureGenericUserGroupsExist(): array
     {
-        $genericGroups = $this->getGenericUserGroups();
+        $genericGroups = $genericGroups = $this->getGenericUserGroups();
         $createdGroups = [];
 
         foreach ($genericGroups as $groupName) {
@@ -235,13 +235,13 @@ class GroupHandler
             $objectData = $contactpersoonObject->getObject();
 
             // Handle role-based groups.
-            $this->updateRoleBasedGroups(user: $user, objectData: $objectData);
+                        $this->updateRoleBasedGroups(user: $user, objectData: $objectData);
 
             // Handle organization groups.
-            $this->updateOrganizationGroups(user: $user, objectData: $objectData);
+                        $this->updateOrganizationGroups(user: $user, objectData: $objectData);
 
             // Handle special gemeente groups.
-            $this->updateGemeenteGroups(user: $user, objectData: $objectData);
+                        $this->updateGemeenteGroups(user: $user, objectData: $objectData);
 
             $this->_logger->info(
                 'Updated user groups successfully',
@@ -285,10 +285,10 @@ class GroupHandler
         );
 
         // Get the configured generic user groups.
-        $genericGroups = $this->getGenericUserGroups();
+        $genericGroups = $genericGroups = $this->getGenericUserGroups();
 
         foreach ($genericGroups as $groupName) {
-            $group = $this->createGroupIfNotExists($groupName);
+            $group = $this->createGroupIfNotExists(groupName: $groupName);
 
             if ($group !== null) {
                 $hasRole = in_array(needle: $groupName, haystack: $userRoles);
@@ -338,7 +338,7 @@ class GroupHandler
         if (empty($organizationUuid) === false) {
             try {
                 // Get organization object.
-                $objectService = $this->getObjectService();
+                $objectService = $objectService = $this->getObjectService();
 
                 // Get register and schema IDs dynamically from configuration.
                 $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
@@ -410,7 +410,7 @@ class GroupHandler
         if (empty($organizationUuid) === false) {
             try {
                 // Get organization object.
-                $objectService = $this->getObjectService();
+                $objectService = $objectService = $this->getObjectService();
 
                 // Get register and schema IDs dynamically from configuration.
                 $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');

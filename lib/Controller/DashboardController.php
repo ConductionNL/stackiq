@@ -29,7 +29,7 @@ class DashboardController extends Controller
      */
     public function __construct($appName, IRequest $request)
     {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
     }//end __construct()
 
     /**

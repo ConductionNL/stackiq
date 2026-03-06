@@ -87,7 +87,7 @@ class OrganisatieService
                     );
 
             // Map the data for OpenRegister.
-            $mappedData = $this->mapOrganizationDataForOpenRegister($objectData);
+            $mappedData = $this->mapOrganizationDataForOpenRegister(objectData: $objectData);
 
             // Get organisation service.
             $organisationService = $this->getOrganisationService();
@@ -150,7 +150,7 @@ class OrganisatieService
             $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
 
             // Map status from SoftwareCatalog to OpenRegister.
-            $active = $this->mapStatus($objectData['beoordeling'] ?? 'actief');
+            $active = $this->mapStatus(status: $objectData['beoordeling'] ?? 'actief');
 
             // Update the entity.
             $organisationEntity->setActive($active);
@@ -218,7 +218,7 @@ class OrganisatieService
             'naam'            => $naam,
             'type'            => $objectData['type'] ?? '',
             'website'         => $objectData['website'] ?? '',
-            'active'          => $this->mapStatus($objectData['status'] ?? $objectData['beoordeling'] ?? 'actief'),
+            'active'          => $this->mapStatus(status: $objectData['status'] ?? $objectData['beoordeling'] ?? 'actief'),
             'contactpersonen' => $objectData['contactpersonen'] ?? [],
             'deelnemers'      => $objectData['deelnemers'] ?? [],
         ];
@@ -263,10 +263,10 @@ class OrganisatieService
         string $organizationUuid
     ): \OCA\OpenRegister\Db\Organisation {
         // HOTFIX: Commented out automatic parent organisation setting due to RBAC issues.
-        // When child organisations are created, the parent relationship causes permission problems
-        // where users cannot access the newly created organisations due to hierarchical RBAC filtering.
+        // When child organisations are created, the parent relationship causes permission problems.
+        // Where users cannot access the newly created organisations due to hierarchical RBAC filtering.
         // TODO: Investigate and fix RBAC logic to properly handle parent-child organisation relationships.
-        // Disabled: $parentOrganisationUuid = $this->getActiveOrganisationUuid($organisationService).
+        // Disabled: $parentOrganisationUuid = $this->getActiveOrganisationUuid(organisationService: $organisationService).
         $this->logger->info(
                 'OrganisatieService: Creating organisation entity',
                 [

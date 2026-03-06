@@ -79,7 +79,7 @@ class Application extends App implements IBootstrap
      */
     public function __construct()
     {
-        parent::__construct(self::APP_ID);
+        parent::__construct(appName: self::APP_ID);
     }//end __construct()
 
     /**
@@ -178,7 +178,9 @@ class Application extends App implements IBootstrap
                 \OCA\SoftwareCatalog\Service\OrganisatieService::class,
                 function ($container) {
                     return new \OCA\SoftwareCatalog\Service\OrganisatieService(
-                    organizationHandler: $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler::class),
+                    organizationHandler: $container->get(
+                        \OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler::class
+                    ),
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
@@ -193,9 +195,15 @@ class Application extends App implements IBootstrap
                 \OCA\SoftwareCatalog\Service\ContactpersoonService::class,
                 function ($container) {
                     return new \OCA\SoftwareCatalog\Service\ContactpersoonService(
-                    contactPersonHandler: $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler::class),
-                    groupHandler: $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler::class),
-                    hierarchyHandler: $container->get(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler::class),
+                    contactPersonHandler: $container->get(
+                        \OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler::class
+                    ),
+                    groupHandler: $container->get(
+                        \OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler::class
+                    ),
+                    hierarchyHandler: $container->get(
+                        \OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler::class
+                    ),
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
@@ -388,7 +396,9 @@ class Application extends App implements IBootstrap
                     appName: self::APP_ID,
                     request: $container->get('OCP\IRequest'),
                     settingsService: $container->get(SettingsService::class),
-                    contactPersonHandler: $container->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
+                    contactPersonHandler: $container->get(
+                        'OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'
+                    ),
                     contactpersoonService: $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
                     userManager: $container->get('OCP\IUserManager'),
                     groupManager: $container->get('OCP\IGroupManager'),
