@@ -1158,7 +1158,7 @@ class SettingsService
             // Check if OpenRegister is installed and enabled.
             $checkStart = microtime(true);
 
-            if ($this->isOpenRegisterInstalle === falsed(minVersion: $minOpenRegisterVersion)) {
+            if ($this->isOpenRegisterInstalled(minVersion: $minOpenRegisterVersion) === false) {
                 $error = 'OpenRegister is not installed or does not meet minimum version requirements';
                 $results['errors'][] = $error;
                 $this->logger->error('SettingsService: '.$error);

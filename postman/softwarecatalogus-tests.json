@@ -17283,6 +17283,78 @@
 			"name": "08 - Aanbod & Gebruik",
 			"item": [
 				{
+					"name": "#419 - Standard version chain",
+					"item": [
+						{
+							"name": "#419: Applicatie has standaardVersies",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{openregister_api}}/objects/{{register_name}}/{{schema_applicatie}}/{{lever_app_uuid}}?_empty=true",
+									"host": [
+										"{{openregister_api}}"
+									],
+									"path": [
+										"objects",
+										"{{register_name}}",
+										"{{schema_applicatie}}",
+										"{{lever_app_uuid}}"
+									],
+									"query": [
+										{
+											"key": "_empty",
+											"value": "true"
+										}
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"#419: Applicatie has standaardVersies field\", function() {",
+											"    pm.response.to.have.status(200);",
+											"    var json = pm.response.json();",
+											"    pm.expect(json).to.have.property(\"standaardVersies\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						}
+					]
+				},
+				{
 					"name": "#420 - Gemeente applicaties in aanbod",
 					"item": [
 						{
@@ -17624,108 +17696,6 @@
 											"    var json = pm.response.json();",
 											"    pm.expect(json.results).to.be.an(\"array\");",
 											"    pm.expect(json.total).to.be.a(\"number\");",
-											"});"
-										],
-										"type": "text/javascript"
-									}
-								}
-							]
-						}
-					]
-				},
-				{
-					"name": "#419 - Standard version chain",
-					"item": [
-						{
-							"name": "#419: Applicatie has standaardVersies",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "OCS-APIRequest",
-										"value": "true",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "{{openregister_api}}/objects/{{register_name}}/{{schema_applicatie}}/{{lever_app_uuid}}?_empty=true",
-									"host": [
-										"{{openregister_api}}"
-									],
-									"path": [
-										"objects",
-										"{{register_name}}",
-										"{{schema_applicatie}}",
-										"{{lever_app_uuid}}"
-									],
-									"query": [
-										{
-											"key": "_empty",
-											"value": "true"
-										}
-									]
-								},
-								"auth": {
-									"type": "basic",
-									"basic": [
-										{
-											"key": "username",
-											"value": "jan.pietersen@test.nl"
-										},
-										{
-											"key": "password",
-											"value": "{{test_password}}"
-										}
-									]
-								}
-							},
-							"response": [],
-							"event": [
-								{
-									"listen": "prerequest",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"var uuid = pm.environment.get('lever_app_uuid');",
-											"if (!uuid || uuid === '' || uuid === 'undefined') {",
-											"    var baseUrl = pm.environment.get('openregister_api');",
-											"    var register = pm.environment.get('register_name');",
-											"    var schema = pm.environment.get('schema_applicatie');",
-											"    pm.sendRequest({",
-											"        url: baseUrl + '/objects/' + register + '/' + schema + '?_search=Test%20Applicatie%20Leverancier&_limit=5',",
-											"        method: 'GET',",
-											"        header: {",
-											"            'Authorization': 'Basic ' + btoa(pm.environment.get('admin_user') + ':' + pm.environment.get('admin_pass')),",
-											"            'Content-Type': 'application/json'",
-											"        }",
-											"    }, function(err, res) {",
-											"        if (!err && res.code === 200) {",
-											"            var data = res.json();",
-											"            (data.results || []).forEach(function(app) {",
-											"                var id = app['@self'] ? app['@self'].id : app.id;",
-											"                if (app.naam === 'Test Applicatie Leverancier' && id) {",
-											"                    pm.environment.set('lever_app_uuid', id);",
-											"                }",
-											"            });",
-											"        }",
-											"    });",
-											"}"
-										]
-									}
-								},
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"#419: Applicatie has standaardVersies field\", function() {",
-											"    pm.response.to.have.status(200);",
-											"    var json = pm.response.json();",
-											"    pm.expect(json).to.have.property(\"standaardVersies\");",
 											"});"
 										],
 										"type": "text/javascript"
