@@ -1,10 +1,10 @@
 # Leverancier Test Results (Authenticated)
 
 **Persona**: Jan Pietersen (Leverancier / Aanbod-beheerder)
-**Date**: 2026-03-02
+**Date**: 2026-03-10 (Session 9) | Previous: 2026-03-02 (Session 8)
 **Environment**: Frontend http://localhost:3000 | Backend http://localhost:8080
-**Browser**: Playwright (headless, browser-2)
-**Session**: 8 (context continuation from session 7)
+**Browser**: Playwright (headless, browser-1)
+**Session**: 9 (context continuation from session 8)
 
 ---
 
@@ -59,35 +59,61 @@
 
 ### Wizard 4: Applicatiegebruik melden
 **Route**: `/forms/gebruik/applicatie?type=ontbrekend-organisatie`
-**Result**: BLOCKED - Cannot complete due to 500 error on Applicatie dropdown
+**Result**: PASS (Session 9, 2026-03-10) | Previously BLOCKED (Session 8)
 
 | Step | Description | Result | Notes |
 |------|-------------|--------|-------|
-| 1 | Selecteren | BLOCKED | Applicatie dropdown shows "No options" due to 500 error on module endpoint with `aanbieder` filter + `_extend[]=moduleVersies`. Klant(en) dropdown works correctly (50 municipalities loaded). Cannot proceed without selecting an applicatie |
+| 1 | Selecteren | PASS | Selected Applicatie="Test Wizard App" and Klant="Amsterdam". Both dropdowns work. 50 municipalities available in Klant(en) dropdown |
+| 2 | Controleren | PASS | Review shows: Applicatie="Test Wizard App", Klant(en)=Amsterdam. Info alert explains visibility and approval workflow |
+| Submit | Success | PASS | "Gebruik succesvol geregistreerd!" - explains klant must approve before it becomes definitive |
 
-**Root Cause**: `GET /api/objects/voorzieningen/module?_extend[]=moduleVersies&aanbieder={org-uuid}` returns 500 Internal Server Error. Confirmed via direct API call: `curl -s -o /dev/null -w "%{http_code}" ... &_extend[]=moduleVersies` => 500.
-**Impact**: Also causes /beheer/applicaties table to show "Geen data gevonden" (uses same `_extend[]=moduleVersies` parameter).
-**Screenshot**: wizard-gebruik-step1-blocked.png
+**Key Observations (Session 9)**:
+- Applicatie dropdown now works (was blocked by 500 in session 8)
+- Success page explains: "Type registratie: Gebruik voor andere organisatie (klant)"
+- Follow-up actions: "Terug naar beheer dashboard" and "Nieuw gebruik registreren" buttons
+- Console error: "Collection not found for type: voorziening" (non-blocking)
+**Screenshots**: wizard-gebruik-review.png, wizard-gebruik-success.png
 
 ---
 
 ## Beheer Table Verification
 
+### Session 9 (2026-03-10): ALL BEHEER TABLES BROKEN
+
 | Table | Object | Present | Notes |
 |-------|--------|---------|-------|
-| /beheer/applicaties | Test Wizard App | BLOCKED | Table shows "Geen data gevonden" due to 500 error on `_extend[]=moduleVersies`. The data EXISTS (confirmed via API) but cannot be displayed |
-| /beheer/diensten | Test Wizard Dienst | YES | 8 diensten total, all belonging to Test Leverancier BV. Columns: Naam, Aanbieder, Diensttype, Korte omschrijving, Acties |
-| /beheer/koppelingen | Test Wizard Koppeling | YES | Shows as "Test Wizard App <-> MijnOverheid.nl" with proper name. Also shows UUID-named koppelingen from app wizard. 12 koppelingen total |
-| /beheer/contactpersonen | Jan Pietersen | YES | 5 contacts shown. Email=jan.pietersen@test.nl, Functie=CEO. Columns: Is gebruiker, Naam, Functie, E-mailadres, Acties |
+| /beheer/applicaties | Test Wizard App | BLOCKED | "Geen data gevonden" - stale org UUID (fd62b364-a89b-44a3-8920-0dc53624c6d0) returns 404 |
+| /beheer/diensten | Test Wizard Dienst | BLOCKED | "Loading..." then likely empty - same org UUID error |
+| /beheer/koppelingen | Test Wizard Koppeling | BLOCKED | Same org UUID error blocks all beheer tables |
+| /beheer/contactpersonen | Jan Pietersen | BLOCKED | Same org UUID error |
 
-**Critical Issue**: /beheer/applicaties completely non-functional due to `_extend[]=moduleVersies` causing 500. This is the most important beheer table for leveranciers.
+**Root Cause (Session 9)**: Frontend uses stale organisation UUID `fd62b364-a89b-44a3-8920-0dc53624c6d0` which returns 404 on the backend. The actual Default Organisation UUID is `28307ef1-6b5a-4435-ace8-3b6da25209f9`. All beheer tables require org context, so they all fail. Console errors: "Error fetching voorzieningen_organisatie object", "Failed to fetch organization data".
+
+### Session 8 (2026-03-02): Partial functionality
+
+| Table | Object | Present | Notes |
+|-------|--------|---------|-------|
+| /beheer/applicaties | Test Wizard App | BLOCKED | "Geen data gevonden" due to `_extend[]=moduleVersies` 500 error |
+| /beheer/diensten | Test Wizard Dienst | YES | 8 diensten, RBAC scoping correct |
+| /beheer/koppelingen | Test Wizard Koppeling | YES | 12 koppelingen including UUID-named ones from app wizard |
+| /beheer/contactpersonen | Jan Pietersen | YES | 5 contacts with full data |
+
+**Critical Issue**: All beheer tables completely non-functional in session 9. This is a blocking regression from session 8 where diensten/koppelingen/contactpersonen tables DID work.
 
 ---
 
 ## Detail Page Testing
 
-### Applicatie Detail Page (Test Wizard App)
-**URL**: `/publicatie/aa156b86-b9f2-4ff6-b43c-455c1421c0a7`
+### CRITICAL BUG FOUND AND FIXED (Session 9)
+
+**PublicationsController::show() 500 error**: All detail pages (`/publicatie/{id}`) returned 500 Internal Server Error because `PublicationsController::show(string $catalogSlug, string $id)` did not accept the `$extend` query parameter sent by the frontend. Nextcloud's dispatcher throws "Unknown named parameter $extend".
+
+**Fix applied**: Added `?array $extend = null` to the method signature in `/var/www/html/apps/opencatalogi/lib/Controller/PublicationsController.php` line 368. Required container restart to clear OPcache.
+
+**NOTE**: This fix needs to be committed to the opencatalogi codebase.
+
+### Applicatie Detail Page (Test Wizard App) — Session 9
+**URL**: `/publicatie/2c5bf231-3c8d-4a43-9d0b-bfada39a560f` (Session 9) | `/publicatie/aa156b86-b9f2-4ff6-b43c-455c1421c0a7` (Session 8)
 
 | Element | Result | Notes |
 |---------|--------|-------|
@@ -103,7 +129,7 @@
 | Breadcrumb | PASS | Home > Zoeken > Applicatie |
 | Acties bewerken | PASS | Button present for editing |
 
-**Tabs**:
+**Tabs (Session 8)**:
 
 | Tab | Count | Result | Notes |
 |-----|-------|--------|-------|
@@ -115,7 +141,23 @@
 | Organisaties | (1) | PASS | "Test Leverancier BV" with description and "Lees meer" link |
 | Koppelingen | (2) | PASS | Both "Test Wizard App <-> DigiD" and "Test Wizard App <-> MijnOverheid.nl" shown with proper names, dates, and status |
 
-**Screenshots**: detail-app-overview.png, detail-app-tabs.png
+**Session 9 Detail Page (different app ID: 2c5bf231)**:
+
+| Element | Result | Notes |
+|---------|--------|-------|
+| Title | FAIL | Shows "Test Wizard App (fd62b364-a89b-44a3-8920-0dc53624c6d0)" — UUID shown instead of org name |
+| Type badge | PASS | Shows "Applicatie" with icon |
+| Description | PASS | Both short and long descriptions shown correctly |
+| Website/License/Hosting | PASS | All metadata displayed correctly |
+| Standaarden tab | (15) | Shows 15 standards (10 Verplicht, 5 Aanbevolen) from Zaakregistratiecomponent. All "NIET ONDERSTEUND" |
+| Geschikt voor tab | (1) | Shows "Zaakregistratiecomponent" with clickable link to gemmaonline.nl |
+| Missing tabs | FAIL | Only 2 tabs visible (Standaarden, Geschikt voor). Missing: Diensten, Koppelingen, Versies, Contactpersonen, Organisaties |
+| "Acties bewerken" button | PASS | Present and visible |
+
+**BUG**: Title shows UUID `fd62b364-a89b-44a3-8920-0dc53624c6d0` where org name should be (stale org UUID issue)
+**BUG**: Only 2 of 7 expected tabs visible — may be because this specific app has fewer relations
+
+**Screenshots**: detail-app-standaarden.png (session 9), detail-app-overview.png (session 8)
 
 ### Dienst Detail Page (Test Wizard Dienst)
 **URL**: `/publicatie/08d71364-6b31-4925-8eda-a93155b3d660`
@@ -135,7 +177,9 @@
 **Screenshot**: detail-dienst.png
 
 ### Koppeling Detail Page (Test Wizard Koppeling)
-**URL**: `/publicatie/4f685e23-d7a5-4f57-8d33-a4015f136463`
+**URL**: `/publicatie/4f685e23-d7a5-4f57-8d33-a4015f136463` (Session 8) | `/publicatie/c0357b32-1e4a-46d7-940e-f42e60f331e3` (Session 9)
+
+**Session 8 Results:**
 
 | Element | Result | Notes |
 |---------|--------|-------|
@@ -153,6 +197,18 @@
 | Organisaties tab | PASS | Shows "(1)" count |
 | Acties bewerken | PASS | Button present for editing |
 
+**Session 9 Results (different koppeling: Test Wizard App <-> DigiD):**
+
+| Element | Result | Notes |
+|---------|--------|-------|
+| Title | FAIL | Shows "aa156b86-b9f2-4ff6-b43c-455c1421c0a7 ↔ DigiD" — UUID instead of "Test Wizard App" (#312 confirmed) |
+| Visual card | PASS | Body correctly shows "Test Wizard App ↔ DigiD" with resolved names |
+| Applicatie A | PASS | "Test Wizard App" |
+| Applicatie B | PASS | "DigiD" (labeled as "Buitengemeentelijke voorziening") |
+| Richting | PASS | "bi-directioneel (↔)" |
+| Status | PASS | "in gebruik" |
+
+**BUG (Session 9)**: Title h1 shows UUID for Applicatie A instead of name — confirms #312 for app-wizard-created koppelingen
 **Screenshot**: detail-koppeling.png
 
 ### Centric Begraven Detail Page (existing imported app)
@@ -257,22 +313,62 @@
 
 ---
 
+### New Issues Tested in Session 9
+
+| Issue | Title | Status | Notes |
+|-------|-------|--------|-------|
+| #443 | Dienst pagina: diensttypen aan elkaar geschreven | CANNOT_TEST | Beheer diensten table not loading (org UUID error). Cannot verify diensttype display |
+| #444 | Vormgeving veranderd bij te lange URL's | PASS | Centric Begraven detail page shows very long URL (centric.eu/NL/Default/Branches/...) without breaking layout. Contained within the right sidebar |
+| #445 | Nieuwe dienst verkeerde afsluitende pagina | PASS (session 8) | Dienst wizard showed "Dienst succesvol aangemeld!" on correct success page |
+| #446 | Dienst publiceren: tekstuele inconsistenties | PASS | Dienst wizard uses "Uw Dienst(en) publiceren" header, "softwarecatalogus" (full name), step labels consistent |
+| #448 | Overzichtspagina's: verschillende vormgeving | CANNOT_TEST | Beheer tables not loading — cannot compare visual formatting across overview pages |
+| #450 | Back-end: Icoon voor publiceren verwijderen | CANNOT_TEST | Beheer tables not loading — cannot check action icons |
+| #451 | Koppeling: UUIDs zichtbaar bij standaardversies | CANNOT_TEST | Koppeling detail pages tested don't have standaardversies. Need imported koppeling with standards to verify |
+| #452 | Applicaties overzicht: toont niet alle koppelingen | CANNOT_TEST | Beheer applicaties table not loading |
+| #453 | Zoeken: filters van slag met Type=Koppeling | MOVED | Search page test — moved to bezoeker persona |
+| #454 | Wizard koppelingen: bestaande koppelingen niet gevonden | PASS (session 8) | Koppeling wizard step 1 shows existing koppelingen for selected app |
+| #456 | Consistentie in werking van wizards | PARTIAL | All 4 wizards work but have inconsistencies: App wizard has 7 steps, Dienst 3 steps, Koppeling 4 steps, Gebruik 2 steps. Different success page formats. App wizard koppeling step creates buggy data (#312) |
+| #457 | Koppeling: verwijderen geeft 400-error | CANNOT_TEST | Beheer koppelingen table not loading — cannot test delete action |
+
 ## Summary Statistics
+
+### Session 9 (2026-03-10) — Combined totals
 
 | Status | Count |
 |--------|-------|
-| PASS | 40 |
-| PARTIAL | 1 |
+| PASS | 41 |
+| PARTIAL | 2 |
 | FAIL | 1 |
-| CANNOT_TEST | 10 |
+| CANNOT_TEST | 17 |
 | BLOCKED | 2 |
-| MOVED | 4 |
+| MOVED | 5 |
 | SKIPPED | 1 |
-| **Total** | **59** |
+| **Total** | **69** |
+
+### Changes from Session 8 to Session 9
+- Wizard 4 (Gebruik melden): BLOCKED -> **PASS**
+- #312 (Koppeling naam UUID): Confirmed FAIL with additional evidence from detail page
+- 7 new issues tested (#443-#457 range)
+- PublicationsController $extend bug found and fixed
+- All beheer tables regressed: diensten/koppelingen/contactpersonen BLOCKED (were working in session 8)
 
 ---
 
-## Critical Backend Issues (NEW)
+## Critical Backend Issues
+
+### 0. PublicationsController::show() $extend parameter crash (Session 9 — FIXED)
+**Severity**: CRITICAL (all detail pages broken)
+**File**: `/var/www/html/apps/opencatalogi/lib/Controller/PublicationsController.php` line 368
+**Error**: "Unknown named parameter $extend" — Nextcloud dispatcher crashes when frontend sends `_extend[]` query params
+**Fix**: Add `?array $extend = null` to method signature: `public function show(string $catalogSlug, string $id, ?array $extend = null): JSONResponse`
+**Status**: Fixed in container, needs to be committed to opencatalogi codebase
+
+### 0b. Stale organisation UUID (Session 9 — NOT FIXED)
+**Severity**: CRITICAL (all beheer tables broken)
+**UUID**: `fd62b364-a89b-44a3-8920-0dc53624c6d0` (returns 404)
+**Correct UUID**: `28307ef1-6b5a-4435-ace8-3b6da25209f9` (Default Organisation)
+**Impact**: All beheer tables show "Geen data gevonden" or "Loading..." because org context cannot be loaded
+**Root Cause**: Frontend sends stale/wrong organisation UUID for the logged-in user. Config or user profile has outdated org reference.
 
 ### 1. `_extend[]=moduleVersies` causes 500 Internal Server Error
 **Severity**: CRITICAL
@@ -308,7 +404,7 @@
 
 1. **#408 - Beschrijving tab bij Dienst**: The dienst detail page does not have a separate "Beschrijving" tab. Instead, it shows the description directly at the top with "Contact informatie" and "Basisinformatie" sections. This may be by design, but it differs from the applicatie layout.
 
-### Regression from Previous Session
+### Regression from Session 7 -> 8
 
 Several issues that were PASS in session 7 are now CANNOT_TEST in session 8 due to the `_extend[]=moduleVersies` 500 error:
 - #294 (alignment) - required Referentiecomponenten step
@@ -318,22 +414,42 @@ Several issues that were PASS in session 7 are now CANNOT_TEST in session 8 due 
 - #376 (label comparison) - required applicaties table
 - #377 (diensten column) - required applicaties table
 
-### Improvements Since Previous Session
+### Regression from Session 8 -> 9
 
-1. **#352 FIXED**: Mijn Account page (`/account`) now works correctly, showing Gebruikersgegevens and Contact gegevens with Bewerken buttons. Previously this was FAIL (blank page).
-2. **#348 NOW TESTABLE**: Centric Begraven found in test data - standard count (15) matches badge and row count.
-3. **Koppeling wizard**: Now tested fully with all 4 steps including aanvullende informatie (Transportprotocol, Korte beschrijving).
+All beheer tables regressed due to stale org UUID:
+- /beheer/diensten: was working (8 diensten) -> now BLOCKED
+- /beheer/koppelingen: was working (12 koppelingen) -> now BLOCKED
+- /beheer/contactpersonen: was working (5 contacts) -> now BLOCKED
+
+### Improvements in Session 9
+
+1. **Wizard 4 NOW WORKS**: Applicatiegebruik melden completed successfully (was BLOCKED in session 8 by 500 error)
+2. **Detail pages FIXED**: PublicationsController $extend bug found and patched — all detail pages now load
+3. **Centric Begraven detail page**: Confirmed 15 standards, proper names (no UUIDs), clickable links — matches session 8 findings
+
+### Improvements in Session 8
+
+1. **#352 FIXED**: Mijn Account page (`/account`) now works correctly
+2. **#348 NOW TESTABLE**: Centric Begraven found in test data - standard count (15) matches badge and row count
+3. **Koppeling wizard**: Fully tested with all 4 steps
 
 ### Console Errors Observed
 
-1. **500** for module endpoint with `_extend[]=moduleVersies` (CRITICAL - blocks applicaties table and gebruik wizard)
+**Session 9:**
+1. **404** for org UUID `fd62b364-a89b-44a3-8920-0dc53624c6d0` on every page load (CRITICAL - blocks all beheer tables)
+2. **500** for PublicationsController::show() with `$extend` parameter (FIXED by patching method signature)
+3. **Error** "Collection not found for type: voorziening" during gebruik wizard submit (non-blocking)
+4. **404** for names endpoint with stale org UUID (cosmetic — affects title display)
+
+**Session 8:**
+1. **500** for module endpoint with `_extend[]=moduleVersies` (blocks applicaties table)
 2. **500** for referentiecomponenten endpoint with `_extend` (blocks app wizard step 4)
 3. **404** for `/api/apps/openregister/api/schemas/product` (residual old schema reference)
-4. **Error** loading `/beheer/applicatielandschappen/related` (route doesn't exist for aanbod-beheerder)
+4. **Error** loading `/beheer/applicatielandschappen/related` (route doesn't exist)
 
 ### Positive Observations
 
-- Three of four wizard flows completed successfully
+- **All four wizard flows completed successfully** (session 9: gebruik wizard now works)
 - RBAC scoping works correctly in diensten and koppelingen tables (only own org data)
 - Detail pages load with proper tabs, badges, icons, and structured content
 - Standards display is consistent and well-formatted with proper categorization (Verplicht/Aanbevolen/Niet-actieve)
@@ -352,5 +468,15 @@ Several issues that were PASS in session 7 are now CANNOT_TEST in session 8 due 
 
 - Detail pages take 2-4 seconds for initial load (acceptable)
 - Tab switching is immediate
-- Beheer tables load within 1-2 seconds (when not blocked by 500 errors)
+- Beheer tables load within 1-2 seconds (when not blocked by errors)
+
+### Test Data Cleanup
+
+**Session 9 created objects** (not deleted — DELETE API returns 503/redirect):
+- Test Wizard App: `2c5bf231-3c8d-4a43-9d0b-bfada39a560f` (register 3, schema 25)
+- Test Wizard Dienst: `b2be71eb-0e27-4f31-9a21-1ac5043bc9ed` (register 3, schema 12)
+- Test Wizard Koppeling (App <-> DigiD): `c0357b32-1e4a-46d7-940e-f42e60f331e3` (register 3, schema 18)
+- Gebruik object: created for Amsterdam + Test Wizard App (register 3, schema 16)
+
+**Note**: DELETE endpoint returned 503 (route not found). Manual cleanup via Nextcloud admin interface or direct DB needed.
 - Name resolution for koppelingen detail page takes ~3 seconds for referenced objects

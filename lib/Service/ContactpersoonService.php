@@ -218,8 +218,8 @@ class ContactpersoonService
                         if ($organisationEntity !== null && $organisationEntity->getActive() === true) {
                             // Determine if this is the first contact for the organization.
                             $isFirstContact = $this->contactPersonHandler->isFirstContactForOrganization(
-                                contactpersoonObject: $contactpersoonObject,
-                                contactData: $contactData
+                                contactObject: $contactpersoonObject,
+                                objectData: $contactData
                             );
 
                             // Create user account - organization is active.

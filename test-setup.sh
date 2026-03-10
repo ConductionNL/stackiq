@@ -492,15 +492,16 @@ create_object() {
     local search_name="$5"
     local auth="${6:-${ADMIN_AUTH}}"
 
-    # Check if object already exists by searching as the creating user
+    # Check if object already exists — match by name AND owner (the authenticated user)
+    local auth_user="${auth%%:*}"
     if [ -n "$search_name" ]; then
         existing=$(curl -s -u "${auth}" \
-            "${BASE_URL}/objects/${register}/${schema}?_search=$(echo "$search_name" | sed 's/ /+/g')&_limit=5" \
+            "${BASE_URL}/objects/${register}/${schema}?_search=$(echo "$search_name" | sed 's/ /+/g')&_limit=20" \
             | python3 -c "
 import sys,json
 d=json.load(sys.stdin)
 for r in d.get('results',[]):
-    if r.get('naam','') == '${search_name}':
+    if r.get('naam','') == '${search_name}' and r.get('@self',{}).get('owner','') == '${auth_user}':
         print(r.get('@self',{}).get('id',''))
         break
 " 2>/dev/null)
@@ -547,7 +548,7 @@ LEVER2_APP_UUID=$(create_object "voorzieningen" "module" "{
 LEVER_DIENST_UUID=$(create_object "voorzieningen" "dienst" "{
     \"naam\": \"Test Dienst Leverancier\",
     \"beschrijvingKort\": \"Een test dienst voor geautomatiseerde tests\",
-    \"type\": \"Implementatieondersteuning\",
+    \"type\": [\"Implementatieondersteuning\"],
     \"aanbieder\": \"${LEVER_REG}\",
     \"geregistreerdDoor\": \"${LEVER_REG}\",
     \"status\": \"Actief\"

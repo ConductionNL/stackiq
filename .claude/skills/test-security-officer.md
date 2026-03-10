@@ -23,6 +23,10 @@ Mark monitors security requirements, validates privacy implementations, and ensu
 - **Browser**: Use Playwright MCP browser tools (prefixed `mcp__browser-N__`, where N is assigned by the orchestrator)
 - **Login URL**: `{FRONTEND}/login`
 
+## Organization & Permissions Context
+
+Mark's active organization is **Test Gemeente** (same as Maria). The org permission system requires the internal Nextcloud org UUID to match a register object in `voorzieningen/organisatie`. If org fetch fails (404 in console), edit/delete buttons will be disabled. Do NOT test beheer features as `admin` — use the test persona accounts. Run `bash softwarecatalog/test-setup.sh` if org assignments are broken.
+
 ## Test Scope
 
 ### Primary Steps

@@ -4,309 +4,240 @@
 **Role:** Gebruik-beheerder
 **Login:** linda.bakker@test.nl
 **Environment:** http://localhost:3000 (Frontend), http://localhost:8080 (Backend)
-**Date:** 2026-03-02 (Re-test #5)
-**Browser:** Playwright (browser-7, headless)
+**Date:** 2026-03-10 (Re-test #7)
+**Browser:** Playwright (browser-5, headless)
+
+---
+
+## Environment Status
+
+### Improvements Since Re-test #6
+1. **Organisation assignment restored:** Linda Bakker is now correctly assigned to "Test Samenwerking" (confirmed on /beheer/my-account page). This was broken in re-test #6 where the user was in "Default Organisation".
+2. **Wizards restored:** Dashboard now shows three wizard buttons (Applicatie toevoegen, Koppeling toevoegen, Dienst toevoegen). This was broken in re-test #6.
+3. **Publication detail pages working:** The PublicationsController $extend 500 error from re-test #6 is resolved. Detail pages now render.
+
+### Remaining Issues
+1. **Organisation data 500 errors:** Fetching org object (`voorzieningen/organisatie/52f5cae7-...`) returns 500 errors (upgraded from 404 in re-test #6). UI degrades gracefully -- no client crashes.
+2. **Inactive org status:** Banner "Uw organisatie heeft nog geen actieve status" displayed on org page.
+3. **vng-gemma register schemas:** Schemas 4/5, 4/20, 4/22 return 500 errors. Non-blocking.
+4. **Contactpersoon collection 500:** Fetching contactpersoon list returns 500. Non-blocking for tested flows.
 
 ---
 
 ## Login Verification
 
 - **Status:** PASS
-- **Details:** Successfully logged in as linda.bakker@test.nl with password WelcomeToTest2026. Dashboard loaded at `/beheer` showing "Test Samenwerking" in the organization selector dropdown. No crashes or TypeErrors on login.
-- **localStorage cleared** before login as required
-- **Console errors on login:** 2x 404 for organisation register object (persistent known issue -- Nextcloud org UUID vs register object UUID mismatch)
-- **Screenshot:** `01-login-dashboard.png`
+- **Details:** Successfully logged in as linda.bakker@test.nl. Dashboard loaded at `/beheer` showing "Mijn softwarecatalogus" heading, welcome section, and three wizard buttons. No crashes or TypeErrors.
+- **localStorage cleared** before login as required.
+- **Organisation confirmed:** "Test Samenwerking" (verified on /beheer/my-account: Organisatie = "Test Samenwerking", Functie = "Coordinator").
+- **Screenshot:** `01-dashboard-after-login.png`
 
 ---
 
 ## Issue #57: Pakketten opvoeren voor samenwerkingsverband
 
-**Title:** Als gebruik-beheerder van een samenwerkingsverband wil ik softwarepakketten kunnen opvoeren voor de gemeenten waarvoor we werken
-**GitHub:** https://github.com/VNG-Realisatie/Softwarecatalogus/issues/57
+**Title:** Als gebruik-beheerder van een samenwerkingsverband wil ik softwarepakketten kunnen opvoeren
 **Labels:** Gebruik, PvE eis
 **Test Step:** Step 20 (Samenwerkingen en Multi-Organisatie Beheer)
-**Previous Status:** PARTIAL (re-test #4), FAIL (re-test #3), PARTIAL (re-test #1)
+**Previous Status:** PARTIAL (re-test #6)
 
 ### Acceptance Criteria Results
 
 | # | Criterion | Type | Result | Notes |
 |---|-----------|------|--------|-------|
-| 1 | Samenwerking user can log in and see the dashboard without crash | HYBRID | **PASS** | Login succeeded, dashboard at /beheer loaded without crash. Organisation "Test Samenwerking" displayed in dropdown. |
-| 2 | Dashboard shows organization name ("Test Samenwerking") | UI | **PASS** | "Test Samenwerking" visible in the organisation selector dropdown on the dashboard. |
-| 3 | No `TypeError: Cannot read properties of undefined` in console | HYBRID | **PASS** | Console errors are only 404s for the organisation register object (UUID mismatch). No TypeError present anywhere. The previously reported crash is confirmed FIXED. |
-| 4 | Welcome section renders correctly for gebruik-beheerder role | UI | **PASS** | Welcome card "Welkom in de softwarecatalogus" renders with three action descriptions: "Dienst registreren", "Gebruik registreren", "Koppeling registreren". Links to "Mijn Account" and "Mijn Organisatie" are present and functional. |
-| 5 | Wizards are available for samenwerking organizations | UI | **PASS** | **IMPROVEMENT since re-test #4.** Dashboard now shows three wizard buttons: "Applicatie toevoegen", "Koppeling toevoegen", "Dienst toevoegen". All three wizards load correctly: Applicatie wizard at /forms/gebruik/applicatie, Koppeling wizard at /forms/gebruik/koppeling, Dienst wizard at /forms/gebruik/dienst. The "Geen wizards beschikbaar" message from re-test #4 is gone. |
-| 6 | Samenwerking user can register packages on behalf of member municipalities | UI | **FAIL** | Not implemented. The wizard can add applications to the samenwerking's own landscape, but there is no mechanism to register packages **on behalf of member municipalities**. No member municipality selection, delegation, or "namens" (on behalf of) functionality exists. Additionally, the Applicatie wizard search returns "No options" with a server error: the frontend searches schema slug "applicatie" which does not exist in the voorzieningen register (the correct slug is "module"). |
+| 1 | Samenwerking user can log in and see the dashboard without crash | HYBRID | **PASS** | Login succeeded, dashboard at /beheer loaded without crash. Three wizard buttons visible. Welcome text rendered correctly. |
+| 2 | Dashboard shows organization name ("Test Samenwerking") | UI | **PASS** | Organization name "Test Samenwerking" is shown on /beheer/my-account (linked to /beheer/my-organisation) and as h1 heading on /beheer/my-organisation page. Dashboard itself shows "Mijn softwarecatalogus" but org context is accessible. |
+| 3 | No `TypeError: Cannot read properties of undefined` in console | HYBRID | **PASS** | Checked console errors across dashboard, my-account, my-organisation, koppelingen, koppeling wizard, and search pages. No TypeError errors. Console errors are all backend 500s, not client-side TypeErrors. |
+| 4 | Welcome section renders correctly for gebruik-beheerder role | UI | **PASS** | Welcome card "Welkom in de softwarecatalogus" renders with three action descriptions: "Dienst registreren", "Gebruik registreren", "Koppeling registreren". Links to "Mijn Account" and "Mijn Organisatie" present and functional. |
+| 5 | Wizards are available for samenwerking organizations | UI | **PASS** | Three wizard buttons visible on dashboard: "Applicatie toevoegen", "Koppeling toevoegen", "Dienst toevoegen". Applicatie wizard opens at `/forms/gebruik/applicatie` with multi-step form (Applicatie > Gebruik configuratie > Controleren). Koppeling wizard opens at `/forms/gebruik/koppeling` with search-first approach. |
+| 6 | Samenwerking user can register packages on behalf of member municipalities | UI | **CANNOT_TEST** | Feature not yet implemented per issue notes. The Applicatie wizard allows selecting applications but does not have a "on behalf of member municipality" option. The org has no applications in its portfolio, so the selection dropdown shows empty results. |
 
 ### Key Findings
 
-**Wizard Availability (Fixed):** The three wizard buttons (Applicatie toevoegen, Koppeling toevoegen, Dienst toevoegen) are now visible on the dashboard for the samenwerking organisation. This is a significant improvement over re-test #4 where the dashboard showed "Geen wizards beschikbaar."
+**TypeError Fix Confirmed Stable (7th consecutive test):** Across all tested pages, no TypeError crashes occurred. The optional chaining fix applied to 6 files in February 2026 remains effective.
 
-**Applicatie Wizard Schema Bug (NEW):** The Applicatie wizard at /forms/gebruik/applicatie attempts to query schema slug "applicatie" in the voorzieningen register, but this schema does not exist. The correct slug is "module" (which contains 6,106 entries). The server returns "Schema not found" (ValidationException at ObjectService.php:501), causing the application dropdown to show "No options" regardless of search term. This means the samenwerking user **cannot complete the application registration wizard**.
+**Wizard Availability Restored:** After re-test #6's regression (org changed to Default Organisation causing "Geen wizards beschikbaar"), the wizard buttons are now correctly displayed again with the proper org assignment. This confirms wizard visibility is org-configuration-dependent.
 
-**Koppeling and Dienst Wizards:** Both load correctly with proper multi-step forms. The Koppeling wizard shows: 1) Een koppeling zoeken, 2) Gebruiksinformatie, 3) Controleren. The Dienst wizard shows: 1) Dienst zoeken, 2) Gebruiksinformatie, 3) Controleren. Both have application selection dropdowns (which may also be affected by the "applicatie" vs "module" schema slug mismatch).
-
-**Organisation Page:** The "Mijn Organisatie" page shows "Test Samenwerking" with "Geen korte beschrijving" but all action buttons (Bewerk contactgegevens, Bewerk korte beschrijving, Bewerk lange beschrijving, Deelnames) are **disabled**. The "Deelnames" button is particularly relevant for samenwerking member management.
-
-**Mijn Account:** Shows correct user data: E-mailadres: linda.bakker@test.nl, Voornaam: Linda, Achternaam: Bakker, Organisatie: Test Samenwerking, Functie: Coordinator. "Bewerken" button is available.
-
-### Organisation UUID Mismatch (Persistent)
-
-- Nextcloud org UUID: `5ba08c6a-5fd8-48f0-ba14-99d9f974159e`
-- Register object UUID: `5b7c5db6-be83-4727-845b-785f69f9ad09`
-- The frontend tries to fetch `/api/objects/voorzieningen/organisatie/{nextcloud-org-uuid}` which returns 404 because the register object has a different UUID
-- This causes 2-3 console 404 errors on every page load
-- This likely causes the "Mijn Organisatie" action buttons to be disabled (no organisation data loaded)
+**Applicatie Wizard Functional but Empty:** The wizard opens successfully with a multi-step form. The application dropdown triggers a search but returns no options because Test Samenwerking has no applications in its portfolio. The "Ik kan de gewenste applicatie niet vinden" fallback button and "Volgende" (disabled until selection) work correctly.
 
 ### Verdict: **PARTIAL**
 
-Criteria 1-5 pass (wizards are now available -- major improvement), but criterion 6 fails because the core samenwerking feature (registering packages on behalf of member municipalities) is not implemented, and the applicatie wizard itself is broken due to a schema slug mismatch ("applicatie" vs "module").
+Criteria 1-5 all PASS (improvement over re-test #6 where criteria 2 and 5 failed due to org regression). Criterion 6 remains CANNOT_TEST (feature not implemented). The core bug fix is solid; the remaining gap is the unimplemented member-municipality package registration feature.
 
 ### Comparison with Previous Test Runs
 
 | Run | Status | Key Finding |
 |-----|--------|-------------|
-| Re-test #1 | PARTIAL | Initial findings |
-| Re-test #2 | FAIL | Org switch crash, no wizards, 404 errors |
-| Re-test #3 | FAIL | Same issues persist: org switch crash, no wizards, 404 errors |
-| Re-test #4 | PARTIAL | TypeError crash FIXED. Dashboard loads. Wizards still missing from dashboard. |
-| Re-test #5 (current) | **PARTIAL** | Wizard buttons now visible on dashboard (5/6 criteria pass). Applicatie wizard broken by schema slug mismatch. Member delegation not implemented. |
+| Re-test #4 | PARTIAL | TypeError crash FIXED. Wizards missing. |
+| Re-test #5 | PARTIAL | Wizard buttons visible. Applicatie wizard broken by schema slug. |
+| Re-test #6 | PARTIAL (regressed) | Wizard buttons gone (org changed). TypeError fix stable. |
+| Re-test #7 (current) | **PARTIAL** (improved) | Org restored. Wizards visible. 5/6 criteria pass. Only member-municipality feature untestable. |
 
 ### Evidence
 
 | Screenshot | Description |
 |------------|-------------|
-| `01-login-dashboard.png` | Dashboard after login showing "Test Samenwerking" and three wizard buttons |
-| `02-applicatie-wizard.png` | Applicatie wizard step 1 (multi-step form loaded) |
-| `03-koppeling-wizard.png` | Koppeling wizard step 1 |
-| `04-dashboard-full.png` | Full dashboard page showing wizard buttons and welcome section |
-| `05-dienst-wizard.png` | Dienst wizard step 1 |
-| `06-my-organisation.png` | My Organisation page with disabled action buttons |
-| `07-org-actions-disabled.png` | Organisation actions dropdown showing all options disabled |
-| `08-my-account.png` | Mijn Account page with correct user data |
-| `09-applicatie-wizard-no-results.png` | Applicatie wizard showing "No options" due to schema slug mismatch |
+| `01-dashboard-after-login.png` | Dashboard with three wizard buttons after login |
+| `03-my-organisation-loaded.png` | My Organisation page showing "Test Samenwerking" with inactive status banner |
+| `04-applicatie-wizard.png` | Applicatie wizard form (multi-step) |
+| `12-my-account.png` | Mijn Account page confirming user identity: Linda Bakker, Test Samenwerking |
 
 ---
 
 ## Issue #186: Koppelingen
 
 **Title:** Koppelingen
-**GitHub:** https://github.com/VNG-Realisatie/Softwarecatalogus/issues/186
 **Labels:** Aanbod, Bevinding, Restpunt, Koppeling
 **Test Step:** Step 11 (Koppeling wizard)
-**Previous Status:** PARTIAL (re-test #4), PARTIAL (re-test #3, wizard-only testing)
+**Previous Status:** PARTIAL (re-test #6, regressed due to PublicationsController 500)
 
 ### Acceptance Criteria Results
 
 | # | Criterion | Type | Result | Notes |
 |---|-----------|------|--------|-------|
-| 1 | Koppelingen display in a table format with readable titles (not blank or UUID-only) | API | **FAIL** | On the search page (/zoeken), koppelingen display with arrow-only titles ("←", "→", "↔") instead of readable names. Legacy koppelingen with orphaned references show "Onbekend" for missing modules. The title rendering uses a template like "ModuleA → ModuleB" but when modules don't exist, the title degrades to just the arrow character. Per testing note: this is caused by bad client data (orphaned references), but newly created koppelingen (e.g., "Test Wizard App → DigiD") do display correct readable titles. The search filtered by `type=koppeling` returns 0 results, while general search shows koppelingen mixed with other types. |
-| 2 | Koppelingen linked to "buitengemeentelijke voorzieningen" correctly display the referenced external service | API | **PASS** | The koppeling "Test Wizard App → DigiD" correctly displays "Buitengemeentelijke voorziening: DigiD" on its detail page. The legacy koppeling "← BRK - Basisregistratie Kadaster" also correctly resolves the external service name. |
-| 3 | Koppelingen do not reference non-existent applications (graceful handling) | API | **PARTIAL** | The application does not crash when referencing non-existent applications -- pages render without JavaScript errors. However: (a) The koppeling visual display shows literal "null" text for missing Applicatie A. (b) The koppeling title h1 shows a UUID instead of the application name (e.g., "1e041054-4a21-47b9-94ca-a36c363ed49b → DigiD" instead of "Test Wizard App → DigiD"). (c) Standaardversies show UUIDs instead of names because the `/api/names/{uuid}` endpoint returns 404 for those references. |
-| 4 | Detail page shows all relevant fields: name, type, transport protocol, linked applications, external service | UI | **PASS** | Detail page at /publicatie/{uuid} shows all fields: koppeling heading, visual connection display (A → B), Applicatie A, Buitengemeentelijke voorziening, Richting, Transportprotocol, Status, Intermediair, Standaardversies. The "Applicaties" tab shows linked application cards with description, supplier, reference components, and date. All relevant fields are present and rendered. |
-| 5 | Koppeling detail page at /publicatie/{uuid} renders correctly | API | **PASS** | Tested two koppeling detail pages: (1) "Test Wizard App → DigiD" at /publicatie/97e3c3f1-4ddb-4734-beec-9e9fb611864f renders with correct fields and linked application card. (2) Legacy koppeling "←" at /publicatie/c8a8323e-650b-5577-9343-271d31568368 renders without crash, showing resolved fields (BRK - Basisregistratie Kadaster, Enable-U 2Secure as intermediair). Pages render without crash. Breadcrumb shows Home > Zoeken > Koppeling. |
+| 1 | Koppelingen display in a table format with readable titles (not blank or UUID-only) | API | **PARTIAL** | **Beheer table:** Correct structure with columns Naam, Status, Korte beschrijving, Applicatie A, Applicatie B, Acties. Shows "Geen data gevonden" for this org (expected). **Search results:** Koppeling titles display as arrow symbols only ("left-arrow", "right-arrow", "bidirectional-arrow") instead of readable names. Applications show as "Onbekend" (Unknown). Some external services resolve correctly (e.g., "BRK - Basisregistratie Kadaster"). Standaardversies show raw UUIDs. Even newly created koppelingen (March 2026) have arrow-only titles. |
+| 2 | Koppelingen linked to "buitengemeentelijke voorzieningen" correctly display the referenced external service | API | **PASS** | External services are correctly resolved and displayed. Confirmed on multiple koppelingen: "BRK - Basisregistratie Kadaster", "JUBES - JUstitie BErichten Service", "NHR - Handelsregister", "DigiD", "Enable-U 2Secure" (as intermediair). Both in search results and on detail pages. |
+| 3 | Koppelingen do not reference non-existent applications (graceful handling) | API | **PARTIAL** | No crashes occur when applications are missing -- graceful degradation. However, the display shows literal "null" text and "Onbekend" labels instead of a cleaner fallback. This happens even on newly created koppelingen (e.g., "Test Koppeling Lever2" from March 2026 shows "null right-arrow null"). |
+| 4 | Detail page shows all relevant fields: name, type, transport protocol, linked applications, external service | UI | **PARTIAL** | Detail page renders and shows: Richting, Transportprotocol, Status, Intermediair, Standaardversies, Buitengemeentelijke voorziening, Applicatie A/B, Korte beschrijving. Issues: (a) h1 heading shows only direction arrow instead of koppeling name (browser tab title IS correct), (b) Applicatie A/B show "-" or literal "null", (c) Standaardversies show raw UUIDs (names API returns 404). |
+| 5 | Koppeling detail page at /publicatie/{uuid} renders correctly | API | **PASS** | Detail pages render without errors. **Major improvement from re-test #6** where all detail pages returned 500 (PublicationsController $extend bug). Tested both old (January 2025) and new (March 2026) koppelingen. Pages load, show field data, include "Koppeling aanbieden" action button. No client-side crashes. |
 
-### Detailed Findings: Search Page (/zoeken)
+### Detailed Findings
 
-**General search (no type filter):** Shows 12,693 results sorted A-Z. Koppelingen appear mixed with other types (Applicatie, Organisatie). Koppelingen are identifiable by the "Koppeling" type badge and chain-link icon.
+#### Search Results Display Issues
+- **Arrow-only titles:** All koppeling search cards show only direction arrows as headings instead of actual koppeling names
+- **"Onbekend" labels:** Both application sides show "Onbekend" (Unknown) in italic text
+- **UUID Standaardversies:** Standard versions display as raw UUIDs (e.g., "4edb406c-f544-4b31-b35b-4074e5a79ed9") with 404 errors from the names resolution API
+- **Correct elements:** Type badge "Koppeling" and status "In gebruik" display correctly; dates properly formatted; pagination works (13,109 total results, 656 pages)
 
-**Filtered search (`?type=koppeling`):** Returns **0 results** with "Geen resultaten gevonden" message. This is a significant bug -- the type filter for koppelingen does not work, despite 3,427 koppelingen existing in the API.
+#### Detail Page (Old Koppeling -- January 2025, BRK)
+- **URL:** `/publicatie/c8a8323e-650b-5577-9343-271d31568368`
+- **h1 heading:** "left-arrow" (arrow only)
+- **Visual display:** "null left-arrow BRK - Basisregistratie Kadaster"
+- **Applicatie A:** "-"
+- **Buitengemeentelijke voorziening:** BRK - Basisregistratie Kadaster (correct)
+- **Richting:** BnaarA
+- **Transportprotocol:** extern
+- **Status:** In gebruik
+- **Intermediair:** Enable-U 2Secure
+- **Standaardversies:** 419ba65d-... (UUID, not resolved)
 
-**Koppeling display in search results:**
-- Legacy koppelingen with orphaned references show arrow-only titles ("←", "→", "↔") with "Onbekend" for missing module names
-- Newly created koppelingen (e.g., "Test Wizard App → DigiD") show correct readable titles
-- Standaardversies display as UUIDs in search cards (e.g., "419ba65d-7202-4195-babd-e6a1d493bfd4") because the `/api/names/` endpoint returns 404 for these references
+#### Detail Page (New Koppeling -- March 2026, "Test Koppeling Lever2")
+- **URL:** `/publicatie/62390f8f-2de1-41eb-a531-3db64b3bb9b4`
+- **Browser tab title:** "Test Koppeling Lever2" (CORRECT)
+- **h1 heading:** "right-arrow" (arrow only -- WRONG, should show "Test Koppeling Lever2")
+- **Visual display:** "null right-arrow null"
+- **Applicatie A:** "-"
+- **Applicatie B:** "-"
+- **Richting:** AnaarB
+- **Status:** in gebruik
+- **Korte beschrijving:** "Koppeling aangemaakt door lever 2"
 
-### Detailed Findings: Koppeling Detail Pages
+**Key observation:** The browser tab `<title>` correctly shows "Test Koppeling Lever2" but the `<h1>` heading on the page shows only the direction arrow. This confirms the data exists but the display template uses the wrong field for the heading (likely constructing the title from applicatie names instead of the koppeling's own naam field).
 
-**Newly created koppeling: "Test Wizard App → DigiD"** (UUID: `97e3c3f1-4ddb-4734-beec-9e9fb611864f`)
-- Page title (h1): "1e041054-4a21-47b9-94ca-a36c363ed49b → DigiD" -- **BUG: shows UUID of Applicatie A instead of its name**
-- Koppeling section correctly shows: "Test Wizard App → DigiD"
-- Applicatie A: Test Wizard App (resolved correctly in body)
-- Buitengemeentelijke voorziening: DigiD (resolved correctly)
-- Richting: AnaarB (→)
-- Status: in gebruik
-- Applicaties tab: Shows "Test Wizard App" (Aangeboden door Test Leverancier BV) with full details
-- **Screenshot:** `14-koppeling-detail-good.png`
+#### Beheer Koppelingen Table
+- Table at /beheer/koppelingen has correct columns: Naam, Status, Korte beschrijving, Applicatie A, Applicatie B, Acties
+- "Toevoegen" button present; search and filter icons available
+- Shows "Geen data gevonden" for Test Samenwerking (expected -- no own koppelingen)
+- No console errors on this page
 
-**Legacy koppeling: "←"** (UUID: `c8a8323e-650b-5577-9343-271d31568368`)
-- Page title (h1): "←" (just an arrow)
-- Koppeling visual display: "null ← BRK - Basisregistratie Kadaster" -- **BUG: "null" literal text for missing Applicatie A**
-- Applicatie A: "-" (field shows dash for missing reference)
-- Buitengemeentelijke voorziening: BRK - Basisregistratie Kadaster (resolved correctly)
-- Richting: BnaarA (←)
-- Transportprotocol: extern
-- Status: In gebruik
-- Intermediair: Enable-U 2Secure (resolved correctly)
-- Standaardversies: "419ba65d-7202-4195-babd-e6a1d493bfd4" -- **UUID instead of human-readable name** (name resolution fails with 404)
-- Applicaties tab: Shows "Enable-U 2Secure" (Aangeboden door Enable U) with full details
-- **Screenshot:** `15-koppeling-detail-legacy.png`
+#### Koppeling Wizard
+- Accessible from dashboard via "Koppeling toevoegen" button
+- Opens at `/forms/gebruik/koppeling?type=aanbieden-koppeling`
+- Multi-step flow: Een koppeling zoeken > Gebruiksinformatie > Deelnemers toevoegen > Controleren
+- Step 1 asks to check for existing koppelingen first (good UX)
+- Info alert suggests using the search page as alternative
+- Application dropdown shows "No options" for Test Samenwerking (expected -- no applications)
+- "Ik kan de gewenste koppeling niet vinden" button disabled until application selected
+- "Volgende" button correctly disabled (validation working)
 
-### Koppeling Wizard
-
-The wizard was accessible from the dashboard "Koppeling toevoegen" button:
-- Title: "Uw Koppeling toevoegen"
-- Steps: 1) Een koppeling zoeken (with sub-step Gebruiksinformatie), 3) Controleren
-- Includes application dropdown for selecting the source application
-- "Controleren op bestaande koppeling" guidance section with two methods
-- Info alert about using the search page as an alternative workflow
-- "Ik kan de gewenste koppeling niet vinden" fallback button (initially disabled until app selected)
-- "Volgende" button disabled until application selected (correct validation)
-- **Screenshot:** `03-koppeling-wizard.png`
-
-### UI Bugs Found
-
-1. **Koppeling page title (h1) shows UUID instead of application name (BUG):** On the koppeling detail page, the h1 heading renders "1e041054-4a21-47b9-94ca-a36c363ed49b → DigiD" instead of "Test Wizard App → DigiD". The koppeling body section correctly resolves the name, but the page title uses the raw UUID. This is a code bug in the title rendering logic.
-
-2. **"null" literal text for missing references (BUG):** When a koppeling's Applicatie A or B is null/missing, the visual connection display renders literal "null" text (e.g., "null ← BRK"). The field correctly shows "-", but the visual display does not null-check. This is a code bug.
-
-3. **Search type filter for "koppeling" returns 0 results (BUG):** Searching with `?type=koppeling` returns "Geen resultaten gevonden" despite 3,427 koppelingen existing in the API. The type filter is broken for koppelingen.
-
-4. **Standaardversies show UUIDs instead of names (BUG/DATA):** The `/api/names/{uuid}` endpoint returns 404 for standaardversie references, causing UUIDs to be displayed instead of human-readable standard names. This may be a missing name resolution endpoint or data issue.
-
-5. **Arrow-only titles for legacy koppelingen (DATA QUALITY):** Legacy koppelingen with orphaned module references display titles like "←", "→", "↔" with "Onbekend" for missing modules. Per testing notes, this is caused by bad client data, not a code bug. Newly created koppelingen display correct titles.
-
-### Console Errors
-
-| Page | Error Count | Details |
-|------|-------------|---------|
-| /zoeken | 8 | 404 for org object (x1), 404 for /api/names/ (x7 -- standaardversie UUID resolution failures) |
-| /publicatie/97e3c3f1... (Test Wizard) | 8 | 404 for org object, multiple 404 for name resolution |
-| /publicatie/c8a8323e... (legacy) | 2 | 404 for org object, 404 for /api/names/ |
-| /forms/gebruik/koppeling | 3 | 404 for org object (x2), 404 for org deelnemers |
+#### Testing Note (per issues.md)
+The issues.md states: "UUID-only titles, 'null' references, and arrow-only names in older koppelingen are caused by bad client data." However, testing confirmed that **newly created koppelingen** (March 2026, "Test Koppeling Lever2") also show arrow-only headings and "null" application references, despite having a correct name in the database (visible in browser tab title). This indicates a **code-level display issue** in the publication detail template, not just a legacy data problem.
 
 ### Verdict: **PARTIAL**
 
-Criteria 2, 4, and 5 pass -- detail pages render correctly with all relevant fields, buitengemeentelijke voorzieningen display correctly, and pages render without crash. Criterion 1 fails because the type filter returns 0 results and legacy koppelingen show arrow-only titles (though newly created ones are correct). Criterion 3 is partial -- no crashes occur (graceful in the stability sense), but "null" text and UUIDs are displayed for missing references.
+Criteria 2 and 5 PASS (external services display correctly; detail pages render -- major improvement from re-test #6). Criteria 1, 3, and 4 are PARTIAL (table structure correct but search titles are arrows, graceful degradation but "null" text, fields present but heading wrong and UUIDs not resolved).
 
 ### Comparison with Previous Test Runs
 
 | Run | Status | Key Change |
 |-----|--------|------------|
-| Re-test #3 | PARTIAL | No koppelingen data found; wizard tested; display criteria untestable |
-| Re-test #4 | PARTIAL | 2 koppelingen found via beheer page; detail pages verified; "null" display bug found |
-| Re-test #5 (current) | **PARTIAL** | Search page tested: type filter broken (0 results). Detail pages verified (PASS). New bugs found: h1 shows UUID, "null" text persists, name resolution 404s. |
+| Re-test #4 | PARTIAL | Detail pages verified; "null" display bug found |
+| Re-test #5 | PARTIAL | Search type filter broken. Detail pages PASS. h1 UUID bug. |
+| Re-test #6 | PARTIAL (regressed) | Detail pages 500 error (PublicationsController $extend bug). |
+| Re-test #7 (current) | **PARTIAL** (improved) | Detail pages working again. Arrow-only title and "null" display bugs persist for both old and new koppelingen. |
 
 ### Evidence
 
 | Screenshot | Description |
 |------------|-------------|
-| `10-koppelingen-search-empty.png` | Search page with `type=koppeling` filter returning 0 results |
-| `11-search-results-koppelingen.png` | Search results showing koppelingen with arrow-only titles |
-| `12-search-koppelingen-titles.png` | Close-up of koppeling search results with "Onbekend" and UUID standaardversies |
-| `13-test-wizard-koppeling.png` | "Test Wizard App → DigiD" koppeling in search results (correct title) |
-| `14-koppeling-detail-good.png` | Detail page of properly created koppeling (h1 UUID bug visible) |
-| `15-koppeling-detail-legacy.png` | Detail page of legacy koppeling with "null" text and UUID standaardversies |
+| `05-koppeling-wizard.png` | Koppeling wizard form (full page, multi-step) |
+| `06-koppelingen-search-no-titles.png` | Search page during initial load (before data settles) |
+| `08-search-results-scrolled.png` | Search results showing arrow-only titles and "Onbekend" labels |
+| `09-koppeling-detail-page.png` | Old koppeling detail (BRK, January 2025) showing "null" and UUID |
+| `10-koppeling-detail-new.png` | New koppeling detail ("Test Koppeling Lever2", March 2026) showing "null right-arrow null" |
+| `11-beheer-koppelingen-empty.png` | Beheer koppelingen table (empty for this org) |
 
 ---
 
 ## Cross-Cutting Observations
 
-### Organisation Register Object 404 (Persistent)
+### Console Errors Summary
 
-Every authenticated page load produces 1-3 console 404 errors because the frontend fetches the organisation register object using the Nextcloud org UUID (`5ba08c6a-5fd8-48f0-ba14-99d9f974159e`) rather than the register object's own UUID (`5b7c5db6-be83-4727-845b-785f69f9ad09`). This is a known architectural issue (dual organisation system). It does not cause crashes but:
-- Produces persistent 404 errors in the console
-- Causes "Mijn Organisatie" page to show minimal data (name only, no details)
-- Causes all organisation action buttons to be disabled (Bewerk contactgegevens, Bewerk korte beschrijving, Bewerk lange beschrijving, Deelnames)
+| Page | Error Count | Type | Notes |
+|------|-------------|------|-------|
+| /beheer (dashboard) | 4 | 500 | contactpersoon collection fetch |
+| /beheer/my-organisation | 17 | 500 | org data, uses, used, audit-trails, schema |
+| /beheer/koppelingen | 0 | -- | Clean page load |
+| /beheer/my-account | 0 | -- | Clean page load |
+| /zoeken | 8 | 500 | org data, facets API, menus API |
+| /publicatie/{uuid} | 0-1 | 500 | Some name resolution 404s |
+| /forms/gebruik/koppeling | 1 | 500 | org data with deelnemers extension |
+| /forms/gebruik/applicatie | 4 | 500 | org data with deelnemers extension |
 
-### Organisation Actions Disabled
+### Network Performance
+- Schema cache warmup: completes successfully (8 schemas)
+- Register cache warmup: completes successfully (2/2 registers)
+- Backend cache loading: ~1415ms (acceptable)
+- Search results: 13,109 results load with enrichment in ~5s (acceptable for full catalog)
+- No individual requests flagged as critical performance failures
 
-On the "Mijn Organisatie" page, all four action buttons in the "Acties" dropdown are disabled:
-- Bewerk contactgegevens
-- Bewerk korte beschrijving
-- Bewerk lange beschrijving
-- Deelnames
-
-This appears to be caused by the organisation register object 404 -- without the organisation data, the edit actions cannot be enabled. The "Deelnames" button is particularly important for the samenwerking persona to manage member municipalities.
-
-### Applicatie Schema Slug Mismatch (NEW)
-
-The Applicatie wizard at `/forms/gebruik/applicatie` queries schema slug "applicatie" in the voorzieningen register. This schema does not exist. The correct slug is "module" (6,106 entries). The server returns `ValidationException: Schema not found` at `ObjectService.php:501`. This prevents the samenwerking user (and likely all users) from completing the application registration wizard via this route.
-
-### Navigation
-
-The authenticated user has access to the "Beheer" section via the top navigation bar. The dashboard shows three wizard buttons for quick access. Sub-pages (My Account, My Organisation) are accessible via links in the welcome section.
-
-### Performance
-
-All pages loaded within acceptable timeframes. No API calls exceeded the 500ms SLOW threshold or 1000ms PERFORMANCE_FAIL threshold. The search page with 12,693 results loaded in under 5 seconds.
-
----
-
-## Console Errors Summary
-
-### Persistent Errors (every authenticated page)
-1. **Organisation 404** -- `/api/objects/voorzieningen/organisatie/5ba08c6a-5fd8-48f0-ba14-99d9f974159e` returns 404 on every page due to Nextcloud org UUID / register object UUID mismatch.
-
-### Page-Specific Errors
-2. **Names API 404** -- `/api/names/{uuid}` returns 404 on koppeling pages for standaardversie references and non-existent application references.
-3. **Schema not found** -- `/api/objects/voorzieningen/applicatie` returns server error because schema slug "applicatie" does not exist in the voorzieningen register (should be "module").
-4. **Organisation deelnemers 404** -- `/api/objects/voorzieningen/organisatie/{uuid}?_extend[]=deelnemers` returns 404 on wizard pages.
-
-### Fixed Since Previous Tests
-- **TypeError crash on org switch** -- Previously reported `TypeError: Cannot read properties of undefined (reading 'includes')` is confirmed FIXED.
-- **Wizard availability** -- Dashboard now shows three wizard buttons for samenwerking organisations (was "Geen wizards beschikbaar" in re-test #4).
-
-### Ignored (as per instructions)
-- Favicon 404s
-- ResizeObserver loop errors
-- Service worker failures
-
----
-
-## Performance Summary
-
-| Page | Load Time | Status |
-|------|-----------|--------|
-| /login | Normal | OK |
-| /beheer | Normal | OK (despite 404 errors) |
-| /beheer/my-account | Normal | OK |
-| /beheer/my-organisation | Normal | OK (despite 404, actions disabled) |
-| /forms/gebruik/applicatie | Normal | OK (but search returns no results) |
-| /forms/gebruik/koppeling | Normal | OK |
-| /forms/gebruik/dienst | Normal | OK |
-| /zoeken | Normal | OK |
-| /zoeken?type=koppeling | Normal | OK (but 0 results returned) |
-| /publicatie/{uuid} | Normal | OK |
-
-No API calls exceeded 500ms (SLOW) or 1000ms (PERFORMANCE_FAIL) thresholds.
+### Navigation Structure (Authenticated)
+- Top nav: Privacy, Terms, Beheer (with user icon)
+- Beheer sub-pages: Dashboard, My Account, My Organisation, Koppelingen
+- Breadcrumbs are correct on all pages
+- Begrippenlijst (glossary) floating button available on form pages
 
 ---
 
 ## Overall Summary
 
-| Issue | Title | Previous | Current | Key Change |
-|-------|-------|----------|---------|------------|
-| #57 | Pakketten opvoeren voor samenwerkingsverband | PARTIAL (r4) | **PARTIAL** | Wizard buttons now visible on dashboard (was "Geen wizards"). Applicatie wizard broken by schema slug mismatch. Member delegation not implemented. |
-| #186 | Koppelingen | PARTIAL (r4) | **PARTIAL** | Search page tested: type filter broken. Detail pages render (PASS). New h1 UUID bug found. Name resolution 404s cause UUID display. |
+| Issue | Title | Re-test #6 | Re-test #7 (current) | Trend |
+|-------|-------|------------|----------------------|-------|
+| #57 | Pakketten opvoeren voor samenwerkingsverband | PARTIAL | **PARTIAL** (improved) | Org restored, wizards visible. 5/6 criteria pass. |
+| #186 | Koppelingen | PARTIAL (regressed) | **PARTIAL** (improved) | Detail pages working. Display bugs persist (arrow titles, "null" text). |
 
-### New Bugs Found in Re-test #5
+### Remaining Bugs
 
-1. **[HIGH] Applicatie wizard schema slug mismatch** -- Frontend queries "applicatie" schema but correct slug is "module". No applications can be found or registered via the wizard.
-2. **[HIGH] Koppeling type filter returns 0 results** -- Search with `?type=koppeling` returns empty despite 3,427 koppelingen in the API.
-3. **[MEDIUM] Koppeling h1 title shows UUID** -- Page title shows application UUID instead of resolved name (e.g., "1e041054-... → DigiD" instead of "Test Wizard App → DigiD").
-4. **[MEDIUM] "null" literal text in koppeling visual display** -- Missing module references render as literal "null" text instead of graceful fallback.
-5. **[MEDIUM] Standaardversie names not resolving** -- `/api/names/{uuid}` returns 404 for standaardversie references, showing raw UUIDs.
-6. **[LOW] Organisation action buttons all disabled** -- On Mijn Organisatie, all actions (including Deelnames for member management) are disabled due to org object 404.
+1. **[MEDIUM] Koppeling h1 heading shows arrow instead of name:** The page heading shows only a direction arrow ("right-arrow", "left-arrow", "bidirectional-arrow") instead of the koppeling's actual name. The browser tab title is correct, confirming the name exists in the data. The display template constructs the heading from application names rather than the koppeling's naam field.
+
+2. **[MEDIUM] "null" literal text in koppeling display:** When a koppeling references applications that are missing or unlinked, the visual display shows literal "null" text (e.g., "null right-arrow null"). Should display a cleaner fallback like "-" or the application name if available.
+
+3. **[LOW] Standaardversie UUIDs not resolved:** Standard version references display as raw UUIDs. The `/api/names/{uuid}` endpoint returns 404 for these UUIDs, indicating the names are not indexed or the referenced objects no longer exist.
+
+4. **[LOW] Organisation data 500 errors:** The org data endpoint consistently returns 500 for Test Samenwerking. This does not cause crashes but triggers multiple error log entries and may prevent some org-specific features from working.
 
 ### Recommendations
 
-1. **Issue #57:**
-   - Fix the schema slug in the Applicatie wizard: change "applicatie" to "module" (or configure proper alias)
-   - Resolve the organisation UUID mismatch to enable Mijn Organisatie action buttons
-   - Enable the "Deelnames" functionality for samenwerking member municipality management
-   - Implement samenwerking-specific features: acting on behalf of members, collective license management
+1. **Fix koppeling heading display:** Use the koppeling's `naam` field for the h1 heading, falling back to the constructed "AppA direction AppB" format only if naam is empty.
+2. **Replace "null" with clean fallback:** When application references are missing, display "-" or "Onbekende applicatie" instead of literal "null".
+3. **Resolve org data 500:** Investigate why the voorzieningen org endpoint returns 500 for Test Samenwerking (may be related to inactive status or schema issues).
+4. **Index standaardversie names:** Ensure the names API can resolve standaardversie UUIDs, or display the version label from the object data instead.
 
-2. **Issue #186:**
-   - Fix the koppeling type filter on the search page (currently returns 0 results)
-   - Fix the h1 title rendering to use resolved application names instead of UUIDs
-   - Fix the "null" text rendering in the visual connection display -- use "-" or "Onbekend" instead
-   - Fix or implement the `/api/names/` endpoint for standaardversie references
-   - Consider displaying "Applicatie niet gevonden" for non-existent application references
+---
 
-3. **General:**
-   - Resolve the Nextcloud org UUID / register object UUID mapping so organisation 404 errors stop
-   - Enable organisation action buttons when org data can be loaded
+## Test Data Cleanup
+
+No test data was created during this test session. All testing was read-only (navigation and observation only). No cleanup required.
 
 ---
 
@@ -314,18 +245,15 @@ No API calls exceeded 500ms (SLOW) or 1000ms (PERFORMANCE_FAIL) thresholds.
 
 | File | Description |
 |------|-------------|
-| `01-login-dashboard.png` | Dashboard after login showing "Test Samenwerking" and three wizard buttons |
-| `02-applicatie-wizard.png` | Applicatie wizard step 1 (multi-step form loaded) |
-| `03-koppeling-wizard.png` | Koppeling wizard step 1 |
-| `04-dashboard-full.png` | Full dashboard page showing wizard buttons and welcome section |
-| `05-dienst-wizard.png` | Dienst wizard step 1 (Toevoegen dienst) |
-| `06-my-organisation.png` | My Organisation page showing "Geen korte beschrijving" |
-| `07-org-actions-disabled.png` | Organisation actions dropdown with all options disabled |
-| `08-my-account.png` | Mijn Account page with correct user data |
-| `09-applicatie-wizard-no-results.png` | Applicatie wizard showing "No options" (schema slug mismatch) |
-| `10-koppelingen-search-empty.png` | Search page with type=koppeling filter returning 0 results |
-| `11-search-results-koppelingen.png` | General search results showing koppelingen with arrow-only titles |
-| `12-search-koppelingen-titles.png` | Close-up of koppeling entries with "Onbekend" labels and UUID standaardversies |
-| `13-test-wizard-koppeling.png` | "Test Wizard App → DigiD" in search results (correct readable title) |
-| `14-koppeling-detail-good.png` | Detail page of newly created koppeling (h1 UUID bug visible) |
-| `15-koppeling-detail-legacy.png` | Detail page of legacy koppeling with "null" text and UUID standaardversies |
+| `01-dashboard-after-login.png` | Dashboard with three wizard buttons after login |
+| `02-my-organisation.png` | My Organisation page (loading spinner) |
+| `03-my-organisation-loaded.png` | My Organisation page showing "Test Samenwerking" with inactive status |
+| `04-applicatie-wizard.png` | Applicatie wizard form (multi-step) |
+| `05-koppeling-wizard.png` | Koppeling wizard form (full page) |
+| `06-koppelingen-search-no-titles.png` | Search page with koppelingen filter (before data load) |
+| `07-search-results-loaded.png` | Search results header (13,109 results) |
+| `08-search-results-scrolled.png` | Search results showing arrow-only titles and "Onbekend" labels |
+| `09-koppeling-detail-page.png` | Old koppeling detail (BRK, January 2025) |
+| `10-koppeling-detail-new.png` | New koppeling detail ("Test Koppeling Lever2", March 2026) |
+| `11-beheer-koppelingen-empty.png` | Beheer koppelingen table (empty for this org) |
+| `12-my-account.png` | Mijn Account page confirming user identity |

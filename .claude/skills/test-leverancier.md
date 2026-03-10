@@ -23,6 +23,16 @@ Jan manages his company's products in the Softwarecatalogus. He registers applic
 - **Browser**: Use Playwright MCP browser tools (prefixed `mcp__browser-N__`, where N is assigned by the orchestrator)
 - **Login URL**: `{FRONTEND}/login`
 
+## Organization & Permissions Context
+
+Jan's active organization is **Test Leverancier BV**. The internal Nextcloud org UUID matches a register object in `voorzieningen/organisatie`, which is required for edit/delete permissions to work.
+
+- **Beheer tables** only show objects owned by Jan's org (RBAC scoping by `@self.organisation`)
+- **Edit/Delete buttons** require the org data fetch to succeed — if you see disabled actions or missing buttons, check for org fetch 404 errors in the console
+- **Do NOT test beheer as admin** — admin's "Default Organisation" has no register object, so org fetch always fails and permissions are broken
+- The test setup script (`bash softwarecatalog/test-setup.sh`) creates test objects as jan.pietersen so they get the correct org assignment
+- If beheer tables are empty, run the test setup script to create/verify test objects
+
 ## Test Scope
 
 This agent tests the following steps from the test flow (`testen.md`):
@@ -126,6 +136,7 @@ This agent tests the following steps from the test flow (`testen.md`):
 | #453 | Zoeken: filters van slag met filter Type=Koppeling | Step 14 |
 | #454 | Wizard koppelingen: Reeds bestaande koppelingen voor worden niet gevonden | Step 11 |
 | #456 | Consistentie in werking van wizards | Step 7 |
+| #457 | Koppeling: verwijderen geeft een 400-error | Step 11 |
 
 ## Acceptance Criteria Reference
 

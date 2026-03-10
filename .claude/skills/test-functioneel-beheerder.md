@@ -24,6 +24,14 @@ Peter has full system access. He activates organizations, manages users, maintai
 - **Login URL**: `{FRONTEND}/login`
 - **Backend Admin**: `{BACKEND}/` ({ADMIN_USER}:{ADMIN_PASS})
 
+## Organization & Permissions Context
+
+Peter's account (`peter.vandijk@test.nl`) is in the Default Organisation. **Important**: the admin user (`admin`) has a known limitation — "Default Organisation" has no matching register object in `voorzieningen/organisatie`, which causes org fetch 404 errors and disables edit/delete in beheer.
+
+- **For frontend beheer testing**: Log in as `peter.vandijk@test.nl` (NOT `admin`). Peter has full admin group membership and a proper org assignment.
+- **For Nextcloud backend testing** (OpenCatalogi admin, OpenRegister config): Use `admin:admin` via the backend URL — these features don't depend on the org permission system.
+- If you see "org fetch error" or disabled edit/delete buttons, the active org UUID doesn't have a matching register object. Run `bash softwarecatalog/test-setup.sh` to fix org assignments.
+
 ## Test Scope
 
 ### Primary Steps

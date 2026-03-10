@@ -4,8 +4,8 @@
 > Alle issues zijn ook beschikbaar als individuele markdown bestanden in de [issues/](issues/) map (met beschrijving, reacties en afbeeldingen).
 > Zie ook: [issues.md](issues.md) voor de volledige lijst met acceptatiecriteria per issue.
 
-**Totaal: 159 issues** | Open: 207 | Gesloten: 233
-**Laatste sync:** 2026-03-05 | +6 nieuwe issues (#451-#456) | +2 gesloten issues (#225, #315)
+**Totaal: 160 issues** | Open: 207 | Gesloten: 233
+**Laatste sync:** 2026-03-09 | +1 nieuw issue (#457)
 
 ---
 
@@ -317,9 +317,9 @@ Na het verwerken van elk issue, update deze tabel:
 ---
 
 ## Open issues
-*76 issues*
+*77 issues*
 
-### Bug (45)
+### Bug (46)
 
 | # | Issue | Analyse | GitHub | Checked |
 |---|-------|---------|--------|--------|
@@ -368,6 +368,7 @@ Na het verwerken van elk issue, update deze tabel:
 | [454](issues/454.md) | Wizard koppelingen: Reeds bestaande koppelingen niet gevonden | Cross-supplier koppelingen niet zichtbaar in wizard | [#454](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/454) | [ ] |
 | [455](issues/455.md) | Tabblad koppelingen en contactpersonen publiekelijk niet getoond | Koppelingen en contactpersonen tabs niet zichtbaar voor publiek (RBAC) | [#455](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/455) | [ ] |
 | [456](issues/456.md) | Consistentie in werking van wizards | Wizard afsluiting inconsistent qua tekst, knoppen en flow | [#456](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/456) | [ ] |
+| [457](issues/457.md) | Koppeling: verwijderen geeft een 400-error | DELETE koppeling retourneert 400 bij zowel geimporteerde als nieuwe koppelingen | [#457](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/457) | [ ] |
 
 ### Datakwaliteit (10)
 

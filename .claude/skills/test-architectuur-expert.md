@@ -23,6 +23,10 @@ Sarah validates GEMMA compliance, reviews architecture decisions, and monitors c
 - **Browser**: Use Playwright MCP browser tools (prefixed `mcp__browser-N__`, where N is assigned by the orchestrator)
 - **Login URL**: `{FRONTEND}/login`
 
+## Organization & Permissions Context
+
+Sarah's account is in the Default Organisation (expected for VNG roles). The org permission system requires the internal Nextcloud org UUID to match a register object. If org fetch fails (404 in console), edit/delete buttons will be disabled — this is expected for VNG-raadpleger roles that primarily read/view rather than edit. Run `bash softwarecatalog/test-setup.sh` if org assignments are broken.
+
 ## Test Scope
 
 ### Primary Steps
