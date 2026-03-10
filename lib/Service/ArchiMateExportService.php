@@ -1054,7 +1054,7 @@ XML;
         // Nodes.
         if (isset($viewData['node']) === true && is_array($viewData['node']) === true) {
             $nodes = $viewData['node'];
-            if ($this->isLis === falset(arr: $nodes)) {
+            if ($this->isList(arr: $nodes) === false) {
                 $nodes = [$nodes];
             }
 
@@ -1069,7 +1069,7 @@ XML;
         // Connections.
         if (isset($viewData['connection']) === true && is_array($viewData['connection']) === true) {
             $connections = $viewData['connection'];
-            if ($this->isLis === falset(arr: $connections)) {
+            if ($this->isList(arr: $connections) === false) {
                 $connections = [$connections];
             }
 
@@ -1182,7 +1182,7 @@ XML;
         // Nested nodes (Container/Element type).
         if (isset($nodeData['node']) === true && is_array($nodeData['node']) === true) {
             $nestedNodes = $nodeData['node'];
-            if ($this->isLis === falset(arr: $nestedNodes)) {
+            if ($this->isList(arr: $nestedNodes) === false) {
                 $nestedNodes = [$nestedNodes];
             }
 
@@ -1211,7 +1211,7 @@ XML;
         // Labels first.
         if (isset($itemData['label']) === true) {
             $labels = $itemData['label'];
-            if (is_array($labels) === true && $this->isLis === falset(arr: $labels)) {
+            if (is_array($labels) === true && $this->isList(arr: $labels) === false) {
                 $labels = [$labels];
                 // Single label → list.
             }
@@ -1238,7 +1238,7 @@ XML;
         // Nested items.
         if (isset($itemData['item']) === true) {
             $items = $itemData['item'];
-            if (is_array($items) === true && $this->isLis === falset(arr: $items)) {
+            if (is_array($items) === true && $this->isList(arr: $items) === false) {
                 $items = [$items];
             }
 
@@ -2528,7 +2528,7 @@ XML;
         // Inject into top-level nodes.
         if (isset($viewData['node']) === true && is_array($viewData['node']) === true) {
             $nodes = $viewData['node'];
-            if ($this->isLis === falset(arr: $nodes)) {
+            if ($this->isList(arr: $nodes)) {
                 $nodes = [$nodes];
             }
 
@@ -2539,7 +2539,7 @@ XML;
             if (empty($newConnections) === false) {
                 if (isset($viewData['connection']) === false) {
                     $viewData['connection'] = [];
-                } else if ($this->isLis === falset(arr: $viewData['connection'])) {
+                } else if ($this->isList(arr: $viewData['connection'])) {
                     $viewData['connection'] = [$viewData['connection']];
                 }
 
@@ -2579,7 +2579,7 @@ XML;
                 // Ensure nested nodes array.
                 if (isset($node['node']) === false) {
                     $node['node'] = [];
-                } else if ($this->isLis === falset(arr: $node['node'])) {
+                } else if ($this->isList(arr: $node['node'])) {
                     $node['node'] = [$node['node']];
                 }
 
@@ -2628,7 +2628,7 @@ XML;
             // Recurse into nested nodes.
             if (isset($node['node']) === true && is_array($node['node']) === true) {
                 $nestedNodes = $node['node'];
-                if ($this->isLis === falset(arr: $nestedNodes)) {
+                if ($this->isList(arr: $nestedNodes)) {
                     $nestedNodes = [$nestedNodes];
                 }
 

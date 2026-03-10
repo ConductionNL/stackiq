@@ -3,7 +3,7 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.2.0"
+    "version": "2.2.1"
   },
   "x-openregister": {
     "type": "application",
@@ -2463,19 +2463,22 @@
             {
               "group": "public",
               "match": {
-                "geregistreerdDoor": "Leverancier"
+                "geregistreerdDoor": "Leverancier",
+                "status": "Actief"
               }
             },
             {
               "group": "public",
               "match": {
-                "type": "Gemeente"
+                "type": "Gemeente",
+                "status": "Actief"
               }
             },
             {
               "group": "public",
               "match": {
-                "type": "Samenwerking"
+                "type": "Samenwerking",
+                "status": "Actief"
               }
             }
           ],
