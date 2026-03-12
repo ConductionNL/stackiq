@@ -811,12 +811,15 @@ class AangebodenGebruikService
 
                     // Process and add to results.
                     foreach ($gebruikItems as $gebruik) {
-                        $gebruikData = is_array(value: $gebruik) === true
-                            ? $gebruik
-                            : $gebruik->jsonSerialize();
+                        if (is_array(value: $gebruik) === true) {
+                            $gebruikData = $gebruik;
+                        } else {
+                            $gebruikData = $gebruik->jsonSerialize();
+                        }
+
                         $gebruikData['_filter_type'] = 'deelnemers';
                         $gebruikData['_schema_id']   = $schemaId;
-                        $allGebruiks[]               = $gebruikData;
+                        $allGebruiks[] = $gebruikData;
                     }
 
                     $this->logger->debug(

@@ -34,7 +34,10 @@ module.exports = defineConfig([
 		settings: {
 			'import/resolver': {
 				alias: {
-					map: [['@', './src']],
+					map: [
+						['@', './src'],
+						['@conduction/nextcloud-vue', '../nextcloud-vue/src'],
+					],
 					extensions: ['.js', '.ts', '.vue', '.json'],
 				},
 			},
