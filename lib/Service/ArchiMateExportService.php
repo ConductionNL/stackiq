@@ -65,7 +65,8 @@ class ArchiMateExportService
                 // Skip legacy _attributes bag, handle individual underscored keys as attributes.
                 $attrKey = substr($key, 1);
 
-                // Skip malformed attribute keys that would create invalid XML (e.g., __propertyDefinitionRef -> :propertyDefinitionRef).
+                // Skip malformed attribute keys that would create invalid XML
+                // (e.g., __propertyDefinitionRef -> :propertyDefinitionRef).
                 if (str_starts_with($attrKey, '__') === true || $attrKey === '') {
                     continue;
                 }
@@ -168,7 +169,8 @@ class ArchiMateExportService
             }
 
             // Special handling for elementProperties and other nested structures - filter out problematic fields.
-            if (($key === 'elementProperties' || $key === 'properties' || $key === 'viewNodes') && is_array($value) === true) {
+            $nestedKeys = ['elementProperties', 'properties', 'viewNodes'];
+            if (in_array($key, $nestedKeys, true) === true && is_array($value) === true) {
                 $value = $this->filterProblematicFields(data: $value, fieldsToRemove: $propertyLikeFields);
             }
 
@@ -330,15 +332,18 @@ class ArchiMateExportService
      */
     public function createCleanArchiMateXml(array $modelMetadata): \SimpleXMLElement
     {
-        $modelName = $modelMetadata['name'] ?? 'ArchiMate Model';
-        $modelId   = $modelMetadata['identifier'] ?? 'model-'.uniqid();
+        $modelName  = $modelMetadata['name'] ?? 'ArchiMate Model';
+        $modelId    = $modelMetadata['identifier'] ?? 'model-'.uniqid();
+        $schemaBase = 'http://www.opengroup.org/xsd/archimate/3.0/';
+        $schemaXsd  = 'http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd';
+        $schemaLoc  = $schemaBase.' '.$schemaXsd;
 
         $xmlString = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
-<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" 
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/"
        xmlns:xml="http://www.w3.org/XML/1998/namespace"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-       xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="{$schemaLoc}"
        identifier="{$modelId}">
 </model>
 XML;
@@ -505,7 +510,8 @@ XML;
         }
 
         // DEBUG: Check if this is our target view with nodes.
-        if (isset($viewData['_identifier']) === true && $viewData['_identifier'] === 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af') {
+        $targetId = 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af';
+        if (isset($viewData['_identifier']) === true && $viewData['_identifier'] === $targetId) {
             if (is_array($viewData['node'] ?? null) === true) {
                 $nodeCountValue = count($viewData['node']);
             } else {
@@ -747,8 +753,11 @@ XML;
      *
      * @throws \RuntimeException If retrieval fails.
      */
-    public function getObjectsFromDatabase(\OCA\OpenRegister\Service\ObjectService $objectService, int $registerId, array $schemaIdMap=[]): array
-    {
+    public function getObjectsFromDatabase(
+        \OCA\OpenRegister\Service\ObjectService $objectService,
+        int $registerId,
+        array $schemaIdMap=[]
+    ): array {
         $this->logger->info(
                 'Retrieving all objects from AMEF register',
                 [
@@ -903,7 +912,11 @@ XML;
                 );
 
         // Step 1: Get all objects from database (queries each schema separately for magic table support).
-        $objects = $this->getObjectsFromDatabase(objectService: $objectService, registerId: $registerId, schemaIdMap: $schemaIdMap);
+        $objects = $this->getObjectsFromDatabase(
+            objectService: $objectService,
+            registerId: $registerId,
+            schemaIdMap: $schemaIdMap
+        );
         $dbTime  = microtime(true) - $startTime;
 
         // Step 2: Process and generate XML in single optimized pass (no schema mapping needed).
@@ -1201,7 +1214,8 @@ XML;
         // Add xsi:type if present.
         foreach (['_xsi__type', 'xsi:type', '_xsi:type'] as $typeKey) {
             if (isset($viewData[$typeKey]) === true) {
-                $viewNode->addAttribute('xsi:type', (string) $viewData[$typeKey], 'http://www.w3.org/2001/XMLSchema-instance');
+                $xsiNs = 'http://www.w3.org/2001/XMLSchema-instance';
+                $viewNode->addAttribute('xsi:type', (string) $viewData[$typeKey], $xsiNs);
                 break;
             }
         }
@@ -1514,8 +1528,12 @@ XML;
      *
      * @return void
      */
-    private function addCleanDataToXmlNode(\SimpleXMLElement $node, array $data, ?string $sectionName=null, array $propertyDefinitionMap=[]): void
-    {
+    private function addCleanDataToXmlNode(
+        \SimpleXMLElement $node,
+        array $data,
+        ?string $sectionName=null,
+        array $propertyDefinitionMap=[]
+    ): void {
         // Extract attributes from various possible locations.
         $attributes = [];
         if (isset($data['identifier']) === true) {
@@ -1536,7 +1554,11 @@ XML;
                     } else {
                         $attributes['xsi:type'] = (string) $attrValue;
                     }
-                } else if (in_array($attrKey, ['identifier', 'source', 'target', 'accessType', 'isDirected', 'type']) === true) {
+                } else if (in_array(
+                    $attrKey,
+                    ['identifier', 'source', 'target', 'accessType', 'isDirected', 'type']
+                ) === true
+                ) {
                     if ($attrKey === 'type' && $isPropertyDefinition === false) {
                         $attributes['xsi:type'] = (string) $attrValue;
                     } else {
@@ -1731,7 +1753,8 @@ XML;
                     // Add xml:lang if present in various forms (including double underscore from import service).
                     foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                         if (isset($property['value'][$langKey]) === true) {
-                            $valueNode->addAttribute('xml:lang', $property['value'][$langKey], 'http://www.w3.org/XML/1998/namespace');
+                            $xmlNs = 'http://www.w3.org/XML/1998/namespace';
+                            $valueNode->addAttribute('xml:lang', $property['value'][$langKey], $xmlNs);
                             break;
                         }
                     }
@@ -1739,7 +1762,7 @@ XML;
                     // Simple string value.
                     $valueNode    = $propertyNode->addChild('value');
                     $valueNode[0] = (string) $property['value'];
-                }
+                }//end if
             }//end if
         }//end foreach
     }//end addPropertiesToXml()
@@ -2224,12 +2247,13 @@ XML;
             // Check value element exists and has content.
             $valueElements = $property->xpath('value');
             if (empty($valueElements) === true) {
-                throw new \InvalidArgumentException("Property missing value element: ".(string) $attributes['propertyDefinitionRef']);
+                $propRef = (string) $attributes['propertyDefinitionRef'];
+                throw new \InvalidArgumentException("Property missing value element: $propRef");
             }
 
             $value = trim((string) $valueElements[0]);
             if (empty($value) === true) {
-                throw new \InvalidArgumentException("Property has empty value: ".(string) $attributes['propertyDefinitionRef']);
+                throw new \InvalidArgumentException("Property has empty value: $propRef");
             }
         }
 
@@ -2365,7 +2389,11 @@ XML;
                 );
 
         // Step 1: Get all base GEMMA objects.
-        $baseObjects = $this->getObjectsFromDatabase(objectService: $objectService, registerId: $registerId, schemaIdMap: $schemaIdMap);
+        $baseObjects = $this->getObjectsFromDatabase(
+            objectService: $objectService,
+            registerId: $registerId,
+            schemaIdMap: $schemaIdMap
+        );
 
         // Step 2: Ensure Bron property definition.
         $bronPropDefId = $this->ensureBronPropertyDefinition(baseObjects: $baseObjects);
@@ -2586,8 +2614,12 @@ XML;
      *
      * @return array Array of element data arrays ready for XML generation.
      */
-    private function generateApplicationElements(array $moduleRefMap, array $moduleNameMap, string $bronPropDefId, string $prefix=''): array
-    {
+    private function generateApplicationElements(
+        array $moduleRefMap,
+        array $moduleNameMap,
+        string $bronPropDefId,
+        string $prefix=''
+    ): array {
         $elements = [];
         if ($prefix !== '') {
             $idPrefix = 'id-swc-'.$prefix.'-app-';
@@ -2621,8 +2653,11 @@ XML;
      *
      * @return array Array of relationship data arrays.
      */
-    private function generateSpecializationRelationships(array $moduleRefMap, string $bronPropDefId, string $prefix=''): array
-    {
+    private function generateSpecializationRelationships(
+        array $moduleRefMap,
+        string $bronPropDefId,
+        string $prefix=''
+    ): array {
         $relationships = [];
         if ($prefix !== '') {
             $appIdPrefix = 'id-swc-'.$prefix.'-app-';
@@ -2652,7 +2687,10 @@ XML;
             }
         }
 
-        $this->logger->debug('Generated specialization relationships', ['count' => count($relationships), 'prefix' => $prefix]);
+        $this->logger->debug(
+            'Generated specialization relationships',
+            ['count' => count($relationships), 'prefix' => $prefix]
+        );
         return $relationships;
     }//end generateSpecializationRelationships()
 
@@ -2864,7 +2902,11 @@ XML;
             }
 
             $newConnections   = [];
-            $viewData['node'] = $this->processNodesForInjection(nodes: $nodes, refCompApps: $refCompApps, newConnections: $newConnections);
+            $viewData['node'] = $this->processNodesForInjection(
+                nodes: $nodes,
+                refCompApps: $refCompApps,
+                newConnections: $newConnections
+            );
 
             // Add connections to the view.
             if (empty($newConnections) === false) {
@@ -2969,7 +3011,11 @@ XML;
                     $nestedNodes = [$nestedNodes];
                 }
 
-                $node['node'] = $this->processNodesForInjection(nodes: $nestedNodes, refCompApps: $refCompApps, newConnections: $newConnections);
+                $node['node'] = $this->processNodesForInjection(
+                    nodes: $nestedNodes,
+                    refCompApps: $refCompApps,
+                    newConnections: $newConnections
+                );
             }
         }//end foreach
 

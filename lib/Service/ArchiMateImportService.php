@@ -328,7 +328,10 @@ class ArchiMateImportService
 
             // STEP 3: Parse ALL objects in one go (like CSV import).
             $transformStartTime = microtime(true);
-            $allObjects         = $this->transformArchiMateXmlToObjectsBatch(xmlData: $xmlData, modelIdentifier: $modelIdentifier);
+            $allObjects         = $this->transformArchiMateXmlToObjectsBatch(
+                xmlData: $xmlData,
+                modelIdentifier: $modelIdentifier
+            );
             $transformTime      = microtime(true) - $transformStartTime;
 
             // Parsed and transformed all objects.
@@ -463,7 +466,10 @@ class ArchiMateImportService
             // Each object must have @self with register, schema, and id for ObjectService::saveObjects.
             $this->logger->info('Step 4: Converting to OpenRegister objects with @self structure');
             $convertStartTime = microtime(true);
-            $objects          = $this->convertToOpenRegisterObjects(normalizedData: $normalizedData, modelIdentifier: $modelIdentifier);
+            $objects          = $this->convertToOpenRegisterObjects(
+                normalizedData: $normalizedData,
+                modelIdentifier: $modelIdentifier
+            );
             $convertTime      = microtime(true) - $convertStartTime;
 
             // STEP 5: Save objects using ObjectService::saveObjects.
@@ -916,7 +922,8 @@ class ArchiMateImportService
                     // OPTIMIZATION: Store only essential XML data.
                     ];
 
-                    // Extract type from xsi:type attribute (e.g., "Capability", "ApplicationComponent", "Referentiecomponent").
+                    // Extract type from xsi:type attribute
+                    // (e.g., "Capability", "ApplicationComponent").
                     // The xsi:type is stored as _xsi__type or in _attributes['xsi:type'].
                     if (isset($item['_xsi__type']) === true) {
                         $object['type'] = $item['_xsi__type'];
@@ -1043,7 +1050,10 @@ class ArchiMateImportService
         // STEP 1: Convert model metadata to model object.
         if (empty($normalizedData['model_metadata']) === false) {
             $this->logger->debug('Creating model object from metadata');
-            $objects[] = $this->createModelObject(metadata: $normalizedData['model_metadata'], modelIdentifier: $modelIdentifier);
+            $objects[] = $this->createModelObject(
+                metadata: $normalizedData['model_metadata'],
+                modelIdentifier: $modelIdentifier
+            );
         }
 
         // STEP 2: Convert each section to individual objects.
@@ -1236,7 +1246,10 @@ class ArchiMateImportService
 
         // DEBUG: Log basic object info before sending to ObjectService.
         // Find first element with gemmaType for debugging.
-        $elementsWithGemmaType = array_filter($objects, fn($o) => ($o['section'] ?? '') === 'element' && empty($o['gemmaType']) === false);
+        $elementsWithGemmaType = array_filter(
+            $objects,
+            fn($o) => ($o['section'] ?? '') === 'element' && empty($o['gemmaType']) === false
+        );
         if (empty($elementsWithGemmaType) === false) {
             $sampleElementWithGemmaType = array_values($elementsWithGemmaType)[0];
         } else {
@@ -1336,7 +1349,12 @@ class ArchiMateImportService
                     'invalid'   => count($saveResult['invalid'] ?? []),
                 ];
 
-                $allResults = array_merge($allResults, $saveResult['saved'] ?? [], $saveResult['updated'] ?? [], $saveResult['unchanged'] ?? []);
+                $allResults = array_merge(
+                    $allResults,
+                    $saveResult['saved'] ?? [],
+                    $saveResult['updated'] ?? [],
+                    $saveResult['unchanged'] ?? []
+                );
 
                 $this->logger->debug(
                         'Schema group saved for magic mapping',
@@ -1800,7 +1818,8 @@ class ArchiMateImportService
                 'view'                => $this->getAmefSchemaIdForType(archiMateType: 'view'),
                 'organization'        => $this->getAmefSchemaIdForType(archiMateType: 'organization'),
                 'property_definition' => $this->getAmefSchemaIdForType(archiMateType: 'property_definition'),
-                // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements.
+                // NOTE: 'property' removed - properties are never root-level
+                // AMEF objects, only nested within other elements.
             ],
         ];
     }//end initializeCache()
@@ -1896,17 +1915,50 @@ class ArchiMateImportService
 
             if (is_array($decoded) === false) {
                 // Fallback to individual config values for backward compatibility.
+                $sc      = 'softwarecatalog';
                 $decoded = [
-                    'register_id'                 => $this->config->getValueString('softwarecatalog', 'amef_register', ''),
-                    'model_schema_id'             => $this->config->getValueString('softwarecatalog', 'amef_model_schema', ''),
-                    'elements_schema'             => $this->config->getValueString('softwarecatalog', 'amef_elements_schema', ''),
-                    'relationships_schema'        => $this->config->getValueString('softwarecatalog', 'amef_relationships_schema', ''),
-                    'views_schema'                => $this->config->getValueString('softwarecatalog', 'amef_views_schema', ''),
-                    'organizations_schema'        => $this->config->getValueString('softwarecatalog', 'amef_organizations_schema', ''),
-                    'folders_schema'              => $this->config->getValueString('softwarecatalog', 'amef_folders_schema', ''),
-                    'property_definitions_schema' => $this->config->getValueString('softwarecatalog', 'amef_property_definitions_schema', ''),
+                    'register_id'                 => $this->config->getValueString(
+                        $sc,
+                            'amef_register',
+                            ''
+                    ),
+                    'model_schema_id'             => $this->config->getValueString(
+                        $sc,
+                            'amef_model_schema',
+                            ''
+                    ),
+                    'elements_schema'             => $this->config->getValueString(
+                        $sc,
+                            'amef_elements_schema',
+                            ''
+                    ),
+                    'relationships_schema'        => $this->config->getValueString(
+                        $sc,
+                            'amef_relationships_schema',
+                            ''
+                    ),
+                    'views_schema'                => $this->config->getValueString(
+                        $sc,
+                            'amef_views_schema',
+                            ''
+                    ),
+                    'organizations_schema'        => $this->config->getValueString(
+                        $sc,
+                            'amef_organizations_schema',
+                            ''
+                    ),
+                    'folders_schema'              => $this->config->getValueString(
+                        $sc,
+                            'amef_folders_schema',
+                            ''
+                    ),
+                    'property_definitions_schema' => $this->config->getValueString(
+                        $sc,
+                            'amef_property_definitions_schema',
+                            ''
+                    ),
                 ];
-            }
+            }//end if
 
             return $decoded;
         } catch (\Exception $e) {
@@ -2766,12 +2818,17 @@ class ArchiMateImportService
 
         // Extract viewNodes array with proper JSON structure.
         if (isset($item['node']) === true) {
-            $essential['viewNodes'] = $this->extractViewNodesRecursively(nodeData: $item['node'], elementsLookup: $elementsLookup);
+            $essential['viewNodes'] = $this->extractViewNodesRecursively(
+                nodeData: $item['node'],
+                elementsLookup: $elementsLookup
+            );
         }
 
         // Extract viewRelationships array with proper JSON structure.
         if (isset($item['connection']) === true) {
-            $essential['viewRelationships'] = $this->extractViewRelationshipsRecursively(connectionData: $item['connection']);
+            $essential['viewRelationships'] = $this->extractViewRelationshipsRecursively(
+                connectionData: $item['connection']
+            );
         }
     }//end extractViewNodesAndConnections()
 
@@ -2919,7 +2976,8 @@ class ArchiMateImportService
                         $viewNode['type'] = strtolower((string) $gemmaType);
                     } else if (isset($element['xml']['_attributes']['xsi:type']) === true) {
                         $archiType = $element['xml']['_attributes']['xsi:type'];
-                        // Convert ArchiMate type to simplified type (e.g., "archimate:BusinessService" -> "businessservice").
+                        // Convert ArchiMate type to simplified type
+                        // (e.g., "archimate:BusinessService" -> "businessservice").
                         $viewNode['type'] = strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $archiType));
                     }
                 }
