@@ -34,10 +34,7 @@ module.exports = defineConfig([
 		settings: {
 			'import/resolver': {
 				alias: {
-					map: [
-						['@', './src'],
-						['@conduction/nextcloud-vue', '../nextcloud-vue/src'],
-					],
+					map: [['@', './src']],
 					extensions: ['.js', '.ts', '.vue', '.json'],
 				},
 			},
@@ -58,6 +55,7 @@ module.exports = defineConfig([
 			'vue/first-attribute-linebreak': 'off',
 			'@typescript-eslint/no-explicit-any': 'off',
 			'n/no-missing-import': 'off',
+			'import/no-unresolved': ['error', { ignore: ['^@conduction/nextcloud-vue'] }],
 		},
 	},
 ])
