@@ -486,7 +486,9 @@ class ArchiMateImportService
             $statistics = $this->calculateObjectStatistics(normalizedData: $normalizedData, savedObjects: $savedObjects);
 
             // Calculate performance metrics.
-            $totalObjects = $statistics['summary']['total_objects_created'] + $statistics['summary']['total_objects_updated'];
+            $created      = $statistics['summary']['total_objects_created'];
+            $updated      = $statistics['summary']['total_objects_updated'];
+            $totalObjects = $created + $updated;
             if ($totalObjects > 0) {
                 $itemsPerSecond = $totalObjects / $totalTime;
             } else {
@@ -2991,7 +2993,14 @@ class ArchiMateImportService
                 }
 
                 // Add GEMMA-specific properties if they exist.
-                $gemmaProperties = ['gemmaType', 'bivScoreBbn', 'belangrijksteReden', 'beschikbaarheid', 'integriteit', 'vertrouwelijkheid'];
+                $gemmaProperties = [
+                    'gemmaType',
+                    'bivScoreBbn',
+                    'belangrijksteReden',
+                    'beschikbaarheid',
+                    'integriteit',
+                    'vertrouwelijkheid',
+                ];
                 foreach ($gemmaProperties as $prop) {
                     if (isset($element[$prop]) === true) {
                         $viewNode[$prop] = $element[$prop];
@@ -3013,7 +3022,8 @@ class ArchiMateImportService
             // engine can look up parents via graph.getCell(parentId).
             $viewNodes[] = $viewNode;
 
-            // Handle child nodes recursively (flatten hierarchy into single array while preserving parent-child relationships).
+            // Handle child nodes recursively (flatten hierarchy into single
+            // array while preserving parent-child relationships).
             if (isset($node['node']) === true) {
                 $childNodes = $this->extractViewNodesRecursively(nodeData: $node['node'], elementsLookup: $elementsLookup);
 
@@ -3147,12 +3157,17 @@ class ArchiMateImportService
 
                 // RECURSIVE: Extract child nodes if they exist (with element splicing).
                 if (isset($node['node']) === true) {
-                    $processedNode['children'] = $this->extractNodesRecursively(nodeData: $node['node'], elementsLookup: $elementsLookup);
+                    $processedNode['children'] = $this->extractNodesRecursively(
+                        nodeData: $node['node'],
+                        elementsLookup: $elementsLookup
+                    );
                 }
 
                 // RECURSIVE: Extract child connections if they exist.
                 if (isset($node['connection']) === true) {
-                    $processedNode['connections'] = $this->extractConnectionsRecursively(connectionData: $node['connection']);
+                    $processedNode['connections'] = $this->extractConnectionsRecursively(
+                        connectionData: $node['connection']
+                    );
                 }
 
                 $nodes[] = $processedNode;
@@ -3247,7 +3262,9 @@ class ArchiMateImportService
         foreach ($element as $key => $value) {
             if (in_array($key, $excludedKeys) === false && in_array($key, $basicProperties) === false) {
                 // Only include non-object values or simple arrays.
-                if (is_scalar($value) === true || (is_array($value) === true && $this->isComplexArra === falsey(array: $value))) {
+                if (is_scalar($value) === true
+                    || (is_array($value) === true && $this->isComplexArra === falsey(array: $value))
+                ) {
                     $properties[$key] = $value;
                 }
             }
@@ -3955,7 +3972,9 @@ class ArchiMateImportService
      */
     private function processGemmaReferenceComponentStandards(array $objects): array
     {
-        $this->logger->info('Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships with optimized single-pass algorithm');
+        $this->logger->info(
+            'Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships with single-pass algorithm'
+        );
 
         // OPTIMIZATION: Single-pass processing - collect all data types at once.
         $referentieComponenten = [];
@@ -4138,7 +4157,8 @@ class ArchiMateImportService
             // Remove duplicates and add to referentiecomponent.
             // Use 'gekoppeldeStandaardVersies' to avoid conflict with inversedBy on 'standaardVersies'.
             if (empty($standaardVersiesForRefComp) === false) {
-                $objects[$objectIndex]['gekoppeldeStandaardVersies'] = array_values(array_unique($standaardVersiesForRefComp));
+                $uniqueVersies = array_values(array_unique($standaardVersiesForRefComp));
+                $objects[$objectIndex]['gekoppeldeStandaardVersies'] = $uniqueVersies;
                 $refCompWithVersiesCount++;
             }
         }//end foreach
@@ -4181,7 +4201,8 @@ class ArchiMateImportService
 
         // Get relationship type (looking for Specialization).
         // Type can be in 'type' (from _xsi__type) or in _attributes['xsi:type'].
-        $relationType = $relationship['type'] ?? $relationship['_xsi__type'] ?? $relationship['_attributes']['xsi:type'] ?? null;
+        $attrs        = $relationship['_attributes'] ?? [];
+        $relationType = $relationship['type'] ?? $relationship['_xsi__type'] ?? $attrs['xsi:type'] ?? null;
         if ($relationType !== 'Specialization') {
             return;
         }
@@ -4482,7 +4503,10 @@ class ArchiMateImportService
                 [
                     'total_elements'      => count($elementsLookup),
                     'referenced_elements' => count($filteredElementsLookup),
-                    'optimization_ratio'  => round((1 - count($filteredElementsLookup) / max(count($elementsLookup), 1)) * 100, 1).'%',
+                    'optimization_ratio'  => round(
+                        (1 - count($filteredElementsLookup) / max(count($elementsLookup), 1)) * 100,
+                        1
+                    ).'%',
                 ]
                 );
 
@@ -4497,7 +4521,11 @@ class ArchiMateImportService
             }
 
             // OPTIMIZATION: Use filtered elements lookup for better performance.
-            $essentialXmlData = $this->extractEssentialXmlData(item: $item, elementsLookup: $filteredElementsLookup, schemaType: 'view');
+            $essentialXmlData = $this->extractEssentialXmlData(
+                item: $item,
+                elementsLookup: $filteredElementsLookup,
+                schemaType: 'view'
+            );
 
             $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException(
                     'Register ID not found in cached configuration.'
@@ -4885,7 +4913,11 @@ class ArchiMateImportService
             }
 
             // Create object directly (minimal processing) with element splicing for views.
-            $essentialXmlData = $this->extractEssentialXmlData(item: $item, elementsLookup: $elementsLookup, schemaType: $schemaType);
+            $essentialXmlData = $this->extractEssentialXmlData(
+                item: $item,
+                elementsLookup: $elementsLookup,
+                schemaType: $schemaType
+            );
 
             $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException(
                     'Register ID not found in cached configuration.'
@@ -5521,7 +5553,10 @@ class ArchiMateImportService
                 [
                     'total_elements'         => count($elementsLookup),
                     'referenced_elements'    => count($filteredElementsLookup),
-                    'memory_savings_percent' => round((1 - count($filteredElementsLookup) / max(count($elementsLookup), 1)) * 100, 1),
+                    'memory_savings_percent' => round(
+                        (1 - count($filteredElementsLookup) / max(count($elementsLookup), 1)) * 100,
+                        1
+                    ),
                 ]
                 );
 
@@ -5563,7 +5598,12 @@ class ArchiMateImportService
             }
 
             // SPEED OPTIMIZATION: Direct processing with minimal overhead.
-            $essentialXmlData = $this->extractEssentialXmlData(item: $item, elementsLookup: $elementsLookup, schemaType: 'view');
+            $lookup           = $elementsLookup;
+            $essentialXmlData = $this->extractEssentialXmlData(
+                item: $item,
+                elementsLookup: $lookup,
+                schemaType: 'view'
+            );
 
             $regId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException(
                     'Register ID not found in cached configuration.'
@@ -5731,7 +5771,12 @@ class ArchiMateImportService
                     'total_objects'               => count($objects),
                     'total_batches_created'       => count($batches),
                     'batch_sizes'                 => array_map('count', $batches),
-                    'estimated_batch_sizes_bytes' => array_map(fn($batch) => array_sum(array_map([$this, 'estimateObjectSize'], $batch)), $batches),
+                    'estimated_batch_sizes_bytes' => array_map(
+                        fn($batch) => array_sum(
+                            array_map([$this, 'estimateObjectSize'], $batch)
+                        ),
+                        $batches
+                    ),
                 ]
                 );
 
@@ -5875,7 +5920,10 @@ class ArchiMateImportService
                 };
 
                 // Fallback: use @self.schema to determine section.
-                if ($sectionKey === null && $this->cachedConfig !== null && isset($this->cachedConfig['schemaIds']) === true) {
+                if ($sectionKey === null
+                    && $this->cachedConfig !== null
+                    && isset($this->cachedConfig['schemaIds']) === true
+                ) {
                     $objSchemaId = $object['@self']['schema'] ?? null;
                     if ($objSchemaId !== null) {
                         $singularToPlural = [
@@ -5954,12 +6002,13 @@ class ArchiMateImportService
                             );
 
                     if (empty($errorInfo) === false) {
-                        $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                        $errMsg = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                        $statistics[$sectionKey]['errors'][] = $errMsg;
                     }
                 } else {
                     // This shouldn't happen, but leave as fallback.
                     $statistics[$sectionKey]['unchanged']++;
-                }
+                }//end if
             }//end foreach
         } else {
             // Fallback to old method if no save result is available.
