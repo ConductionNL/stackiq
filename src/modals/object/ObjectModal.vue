@@ -724,6 +724,7 @@ export default {
 
 .codeMirrorContainer :deep(.cm-editor) {
 	height: 100%;
+	outline: none !important;
 }
 
 .codeMirrorContainer :deep(.cm-scroller) {
@@ -796,21 +797,10 @@ export default {
 	padding: 16px;
 }
 
-.form-field {
-	margin-bottom: 16px;
-}
-
 /* CodeMirror */
-.codeMirrorContainer {
-	margin-block-start: 6px;
-}
-
 .codeMirrorContainer :deep(.cm-content) {
 	border-radius: 0 !important;
 	border: none !important;
-}
-.codeMirrorContainer :deep(.cm-editor) {
-	outline: none !important;
 }
 .codeMirrorContainer.light > .vue-codemirror {
 	border: 1px dotted silver;
