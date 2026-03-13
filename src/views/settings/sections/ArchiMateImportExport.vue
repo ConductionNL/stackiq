@@ -229,7 +229,7 @@
 											:key="sectionName"
 											class="section-error-group">
 											<div class="section-header">
-												<h7>{{ sectionData.section_name }}</h7>
+												<h6>{{ sectionData.section_name }}</h6>
 												<span class="section-error-count">{{ sectionData.total_errors }} errors</span>
 											</div>
 											<div class="section-error-details">
@@ -347,6 +347,27 @@
 							:disabled="exporting" />
 					</div>
 
+					<div v-if="selectedOrganization" class="control-group">
+						<label>Include in organization export:</label>
+						<div class="checkbox-group">
+							<NcCheckboxRadioSwitch
+								:checked.sync="includeModules"
+								:disabled="exportingOrg">
+								Modules
+							</NcCheckboxRadioSwitch>
+							<NcCheckboxRadioSwitch
+								:checked.sync="includeDeelnames"
+								:disabled="exportingOrg">
+								Deelnames
+							</NcCheckboxRadioSwitch>
+							<NcCheckboxRadioSwitch
+								:checked.sync="includeGebruik"
+								:disabled="exportingOrg">
+								Gebruik
+							</NcCheckboxRadioSwitch>
+						</div>
+					</div>
+
 					<NcButton
 						type="secondary"
 						:disabled="exporting"
@@ -355,7 +376,18 @@
 							<NcLoadingIcon v-if="exporting" :size="20" />
 							<Download v-else :size="20" />
 						</template>
-						{{ exporting ? 'Exporting...' : 'Export' }}
+						{{ exporting ? 'Exporting...' : 'Export Base' }}
+					</NcButton>
+
+					<NcButton
+						type="primary"
+						:disabled="exportingOrg || !selectedOrganization"
+						@click="exportOrgArchiMateFile">
+						<template #icon>
+							<NcLoadingIcon v-if="exportingOrg" :size="20" />
+							<Download v-else :size="20" />
+						</template>
+						{{ exportingOrg ? 'Exporting...' : 'Organization Export' }}
 					</NcButton>
 				</div>
 			</div>
@@ -401,6 +433,7 @@ import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 
 // Icons
 import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
@@ -418,6 +451,7 @@ export default {
 		NcNoteCard,
 		NcLoadingIcon,
 		NcSelect,
+		NcCheckboxRadioSwitch,
 		CloudUpload,
 		AlertCircle,
 		Download,
@@ -435,11 +469,15 @@ export default {
 		return {
 			importing: false,
 			exporting: false,
+			exportingOrg: false,
 			selectedFile: null,
 			selectedOrganization: null,
 			importResult: null,
 			importError: null,
 			showErrors: false,
+			includeModules: true,
+			includeDeelnames: false,
+			includeGebruik: false,
 			organizationOptions: [
 				{ label: 'Generic', value: null },
 			],
@@ -663,6 +701,78 @@ export default {
 		},
 
 		/**
+		 * Export organization-specific ArchiMate file with enriched views
+		 */
+		async exportOrgArchiMateFile() {
+			if (!this.selectedOrganization) return
+			this.exportingOrg = true
+
+			try {
+				const orgUuid = this.selectedOrganization?.value ?? this.selectedOrganization
+
+				// Build query string from checkbox states
+				const params = new URLSearchParams()
+				params.set('modules', String(this.includeModules))
+				params.set('deelnames', String(this.includeDeelnames))
+				params.set('gebruik', String(this.includeGebruik))
+
+				const url = `/index.php/apps/softwarecatalog/api/archimate/export/organization/${encodeURIComponent(orgUuid)}?${params.toString()}`
+
+				await withHeartbeat(async () => {
+					const response = await fetch(url, {
+						method: 'GET',
+						headers: {
+							'OCS-APIREQUEST': 'true',
+							requesttoken: OC.requestToken,
+						},
+					})
+
+					if (response.ok) {
+						const blob = await response.blob()
+						const blobUrl = window.URL.createObjectURL(blob)
+
+						const contentDisposition = response.headers.get('content-disposition')
+						let fileName = 'archimate_org_export.xml'
+						if (contentDisposition) {
+							const match = contentDisposition.match(/filename="?([^"]*)"?/)
+							if (match) {
+								fileName = match[1]
+							}
+						}
+
+						const a = document.createElement('a')
+						a.href = blobUrl
+						a.download = fileName
+						document.body.appendChild(a)
+						a.click()
+						window.URL.revokeObjectURL(blobUrl)
+						document.body.removeChild(a)
+
+						const orgLabel = this.organizationOptions.find(
+							opt => opt.value === orgUuid,
+						)?.label ?? 'Organization'
+						OC.Notification.showTemporary(
+							`Organization ArchiMate file exported for ${orgLabel}`,
+							{ type: 'success' },
+						)
+					} else {
+						const errorData = await response.json()
+						throw new Error(errorData.message || 'Organization export failed')
+					}
+				}, 30000)
+
+			} catch (error) {
+				console.error('Error exporting organization ArchiMate file:', error)
+				OC.Notification.showTemporary(
+					'Organization export failed: ' + error.message,
+					{ type: 'error' },
+				)
+			} finally {
+				this.exportingOrg = false
+			}
+		},
+
+		/**
 		 * Clear import results and errors
 		 *
 		 * @return {void}
@@ -829,9 +939,50 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async loadOrganizations() {
-			// TODO: Implement organization loading when OpenRegister organization endpoint is available
-			// For now, keep default Generic option to prevent 404 errors
-			console.debug('Organization loading disabled - using default Generic option')
+			try {
+				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config', {
+					headers: {
+						'OCS-APIREQUEST': 'true',
+						requesttoken: OC.requestToken,
+					},
+				})
+				if (!response.ok) throw new Error('Failed to load config')
+				const data = await response.json()
+
+				// Get voorzieningen register and organisatie schema from config
+				const voorzRegister = data?.config?.register
+				const orgSchema = data?.config?.organisatie_schema
+				if (!voorzRegister || !orgSchema) {
+					console.debug('Voorzieningen config not available, using default Generic option')
+					return
+				}
+
+				// Load organizations from OpenRegister
+				const orgResponse = await fetch(
+					`/index.php/apps/openregister/api/objects/${voorzRegister}/${orgSchema}?_limit=5000&_fields=id,naam`,
+					{
+						headers: {
+							'OCS-APIREQUEST': 'true',
+							requesttoken: OC.requestToken,
+						},
+					},
+				)
+				if (!orgResponse.ok) throw new Error('Failed to load organizations')
+				const orgData = await orgResponse.json()
+
+				const orgs = orgData?.results || orgData || []
+				if (Array.isArray(orgs) && orgs.length > 0) {
+					this.organizationOptions = orgs
+						.filter(org => org.naam || org.name)
+						.map(org => ({
+							label: org.naam || org.name,
+							value: org.id || org['@self']?.id,
+						}))
+						.sort((a, b) => a.label.localeCompare(b.label))
+				}
+			} catch (error) {
+				console.warn('Could not load organizations:', error.message)
+			}
 		},
 	},
 }
@@ -948,6 +1099,12 @@ export default {
 	font-weight: 500;
 	font-size: 0.9rem;
 	color: var(--color-main-text);
+}
+
+.checkbox-group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.5rem;
 }
 
 @media (max-width: 768px) {
@@ -1148,6 +1305,8 @@ export default {
 
 .error-details {
 	padding: 1rem;
+	flex: 1;
+	min-width: 0;
 }
 
 .error-details p {
@@ -1515,11 +1674,6 @@ export default {
 .error-type-badge.encoding { background: #f1f8e9; color: #558b2f; }
 .error-type-badge.general { background: #f5f5f5; color: #424242; }
 
-.error-details {
-	flex: 1;
-	min-width: 0;
-}
-
 .error-message {
 	font-weight: 500;
 	color: var(--color-main-text);
@@ -1579,7 +1733,7 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.section-header h7 {
+.section-header h6 {
 	margin: 0;
 	font-size: 0.9rem;
 	font-weight: 600;

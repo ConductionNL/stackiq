@@ -1,91 +1,213 @@
-# Software Catalogus
+<p align="center">
+  <img src="img/app-store.svg" alt="Software Catalogus logo" width="80" height="80">
+</p>
 
-[![License: EUPL](https://img.shields.io/badge/License-EUPL-blue.svg)](https://opensource.org/licenses/EUPL)
-[![Nextcloud](https://img.shields.io/badge/Nextcloud-Compatible-brightgreen)](https://nextcloud.com/)
-[![Version](https://img.shields.io/badge/version-0.1.1-blue)]()
+<h1 align="center">Software Catalogus</h1>
 
-The **Software Catalogus** is a Nextcloud app that provides a powerful framework for managing and synchronizing software catalogs in an open data ecosystem. This app enables organizations to keep their software data up-to-date, facilitates collaboration, and promotes transparency through open data practices.
+<p align="center">
+  <strong>GEMMA-compliant software catalog for Nextcloud — applications, modules, and integration management</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/ConductionNL/softwarecatalog/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/softwarecatalog" alt="Latest release"></a>
+  <a href="https://github.com/ConductionNL/softwarecatalog/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
+  <a href="https://github.com/ConductionNL/softwarecatalog/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/softwarecatalog/code-quality.yml?label=quality" alt="Code quality"></a>
+  <a href="https://softwarecatalog.app"><img src="https://img.shields.io/badge/docs-softwarecatalog.app-green" alt="Documentation"></a>
+</p>
+
+---
+
+Software Catalogus brings structured software portfolio management to Nextcloud. Register the applications, modules, and connections (koppelingen) that make up your organization's IT landscape, manage contacts and organizations, and synchronize catalog data across a federated open data network — all aligned with Dutch GEMMA standards.
+
+It integrates with [OpenRegister](https://github.com/ConductionNL/openregister) for data storage and automatic user provisioning, turning register contacts into Nextcloud accounts with role-based group membership.
+
+> **Requires:** [OpenRegister](https://github.com/ConductionNL/openregister) — all data is stored as OpenRegister objects (no own database tables).
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="img/screenshot-dashboard.png" alt="Dashboard with catalog overview and statistics" width="320"></td>
+    <td><img src="img/screenshot-applications.png" alt="Application list and detail view" width="320"></td>
+    <td><img src="img/screenshot-connections.png" alt="Connections between applications and modules" width="320"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Dashboard</em></td>
+    <td align="center"><em>Applications</em></td>
+    <td align="center"><em>Connections</em></td>
+  </tr>
+</table>
 
 ## Features
 
-- 🔄 **Synchronize Software Data**: Automatically synchronize your software data across multiple catalogs.
-- 📡 **Automatic Publication**: Publish and update software catalog information seamlessly.
-- 🏢 **Organization Management**: Enhanced organization synchronization and management capabilities.
-- 📊 **API Integration**: Comprehensive API for aangeboden gebruik and organization workflows.
-- 🆓 **Open Source**: Licensed under the [EUPL](https://opensource.org/licenses/EUPL).
+### Application Management
+- **Software Landscape** — Register and maintain all applications (voorzieningen) in your organization
+- **Module Tracking** — Break applications into modules and track their versions, suppliers, and dependencies
+- **Connection Mapping** — Define koppelingen (integrations) between applications and modules to visualize data flows
+- **Contract Administration** — Link contracts to applications and track license agreements
+
+### Organization Management
+- **Organization Registry** — Manage organizations and their contact persons within the catalog
+- **Automatic User Provisioning** — Create Nextcloud accounts from contactpersoon objects in OpenRegister
+- **Role-Based Groups** — Automatic group assignment based on user roles (beheerder, inkoper, ambtenaar)
+- **Organizational Hierarchy** — First user in an organization becomes beheerder; manager relationships maintained automatically
+
+### Synchronization
+- **Federated Sync** — Share and synchronize catalog data with other organizations over a federated network
+- **Open Data Publishing** — Automatically publish your software catalog for transparency and reuse
+- **Event-Driven Processing** — Real-time user and group updates via OpenRegister event listeners
+- **Background Jobs** — Scheduled organization-contact synchronization via Nextcloud cron
+
+### Integrations
+- **OpenRegister** — All data stored as JSON objects in OpenRegister schemas
+- **Nextcloud Groups** — Automatic group creation and membership management per organization and role
+- **Manager Relationships** — Beheerders become Nextcloud managers for their organization's users
+
+## Architecture
+
+```mermaid
+graph TD
+    A[Vue 2 Frontend] -->|REST API| B[OpenRegister API]
+    B --> C[(PostgreSQL JSON store)]
+    A --> D[Nextcloud Groups]
+    B -->|events| E[User Provisioning Service]
+    E --> F[Nextcloud User Manager]
+    G[Cron] -->|background job| H[Organization Sync]
+    H --> B
+```
+
+### Data Model
+
+| Object | Description | GEMMA Mapping |
+|--------|-------------|---------------|
+| Voorziening | Application in the software landscape | Applicatie |
+| Module | Component within an application | Module / Component |
+| Koppeling | Integration between modules or applications | Koppeling |
+| Organisatie | Organization that uses or supplies software | Organisatie |
+| Contactpersoon | Individual linked to an organization | Contactpersoon |
+| Contract | License or service agreement | Contract |
+
+**Data standard:** GEMMA Softwarecatalogus with Schema.org compatibility.
+
+### Directory Structure
+
+```
+softwarecatalog/
+├── appinfo/           # Nextcloud app manifest, routes, navigation
+├── lib/               # PHP backend — controllers, services, event listeners
+│   ├── Controller/    # API and page controllers
+│   ├── Service/       # Business logic (user provisioning, sync, groups)
+│   └── Listener/      # OpenRegister event listeners
+├── src/               # Vue 2 frontend — components, Pinia stores, views
+│   ├── views/         # Route-level views (dashboard, voorzieningen, organisaties…)
+│   └── store/         # Pinia stores per entity
+├── docs/              # Technical documentation
+├── img/               # App icons and screenshots
+├── l10n/              # Translations (en, nl)
+└── docusaurus/        # Product documentation site (softwarecatalog.app)
+```
 
 ## Requirements
 
-- PHP 8.0 or higher
-- PostgreSQL 10+, SQLite, or MySQL 8.0+
-- Nextcloud version 28 to 30
-- System Cron is required for the app to function properly
+| Dependency | Version |
+|-----------|---------|
+| Nextcloud | 28 -- 33 |
+| PHP | 8.0+ |
+| [OpenRegister](https://github.com/ConductionNL/openregister) | latest |
 
 ## Installation
 
-To install the Software Catalogus app, follow these steps:
+### From the Nextcloud App Store
 
-1. **Download the App:**
-   Download the latest release from the [GitHub repository](https://github.com/ConductionNL/SoftwareCatalogus/releases).
+1. Go to **Apps** in your Nextcloud instance
+2. Search for **Software Catalogus**
+3. Click **Download and enable**
 
-2. **Upload the App:**
-   Upload the app to the `apps` directory of your Nextcloud installation.
+> OpenRegister must be installed first. [Install OpenRegister -->](https://apps.nextcloud.com/apps/openregister)
 
-3. **Enable the App:**
-   Go to the "Apps" section in your Nextcloud instance and enable the **Software Catalogus** app.
+### From Source
 
-4. **Configure System Cron:**
-   Ensure that the System Cron is properly configured on your server to allow the app to function optimally.
+```bash
+cd /var/www/html/custom_apps
+git clone https://github.com/ConductionNL/softwarecatalog.git
+cd softwarecatalog
+npm install
+npm run build
+php occ app:enable softwarecatalog
+```
 
-## Core Features
+## Development
 
-### 🚀 Automatic User Management
-- **User Creation**: Automatic Nextcloud account creation from contactgegevens objects
-- **Username Generation**: Smart username creation from name fields (voornaam.achternaam)
-- **Profile Synchronization**: User data kept in sync with OpenRegister
+### Start the environment
 
-### 👥 Advanced Group Management
-- **Role-Based Groups**: Automatic assignment to groups based on user roles (beheerder, inkoper)
-- **Organization Groups**: Each organization gets its own group with automatic member assignment
-- **Special Groups**: The 'ambtenaar' group is available for manual assignment (no longer automatically assigned)
-- **Dynamic Updates**: Group memberships automatically updated when roles change
+```bash
+docker compose -f openregister/docker-compose.yml up -d
+```
 
-### 🏢 Organizational Hierarchy
-- **Auto-Beheerder Assignment**: First user in organization automatically becomes beheerder
-- **Manager Relationships**: Beheerders become managers for their organization's users
-- **Hierarchy Management**: Multiple beheerders supported with seniority-based primary manager
-- **Organization Groups**: Automatic group creation and management for each organization
+### Frontend development
 
-### ⚡ Event-Driven Processing
-- **Real-Time Updates**: Processes changes immediately via OpenRegister events
-- **Multiple Event Types**: Handles creation, updates, deletion, locking, and reversion
-- **Error Recovery**: Comprehensive error handling with detailed logging
-- **Type Safety**: Robust handling of schema ID mismatches and data validation
+```bash
+cd softwarecatalog
+npm install
+npm run dev        # Watch mode
+npm run build      # Production build
+```
+
+### Code quality
+
+```bash
+# PHP
+composer phpcs          # Check coding standards
+composer cs:fix         # Auto-fix issues
+composer phpmd          # Mess detection
+composer phpmetrics     # HTML metrics report
+
+# Frontend
+npm run lint            # ESLint
+npm run stylelint       # CSS linting
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vue 2.7, Pinia, @nextcloud/vue |
+| Build | Webpack 5, @nextcloud/webpack-vue-config |
+| Backend | PHP 8.0+, Nextcloud App Framework |
+| Data | OpenRegister (PostgreSQL JSON objects) |
+| UX | @conduction/nextcloud-vue |
+| Quality | PHPCS, PHPMD, phpmetrics, ESLint, Stylelint |
 
 ## Documentation
 
-Comprehensive documentation is available in the `docs/` directory:
+Full documentation is available at **[softwarecatalog.app](https://softwarecatalog.app)**
 
-### For Users and Administrators
-- **[📖 User Guide](docs/USER_GUIDE.md)** - Complete guide for end users and system administrators
-- **[⚙️ Configuration Guide](docs/CONFIGURATION.md)** - Setup instructions and troubleshooting
+| Page | Description |
+|------|-------------|
+| [Features](docs/FEATURES.md) | Complete feature specification |
+| [Architecture](docs/ARCHITECTURE.md) | Technical architecture and design decisions |
+| [User Guide](docs/USER_GUIDE.md) | End-user and administrator guide |
+| [Configuration](docs/CONFIGURATION.md) | Setup instructions and troubleshooting |
 
-### For Developers and Integrators  
-- **[🏗️ Architecture Documentation](docs/ARCHITECTURE.md)** - System design and component overview
-- **[👥 Group Management Guide](docs/GROUP_MANAGEMENT.md)** - Detailed explanation of group logic
-- **[🔌 API Reference](docs/API_REFERENCE.md)** - Technical API documentation
+## Standards & Compliance
 
-### Quick Start
-1. **Install Prerequisites**: Ensure OpenRegister app is installed and enabled
-2. **Configure Schemas**: Set up schema mappings in Admin Settings → Software Catalogus
-3. **Test Processing**: Create a contactgegevens object in OpenRegister to verify automatic user creation
-4. **Monitor Groups**: Check that users are assigned to appropriate groups
+- **Data standard:** GEMMA Softwarecatalogus (VNG)
+- **Architecture:** Common Ground principles — layered, API-first, open source
+- **Accessibility:** WCAG AA (Dutch government requirement)
+- **Authorization:** RBAC via OpenRegister
+- **Audit trail:** Full change history on all objects
+- **Localization:** English and Dutch
 
-## Usage
+## Related Apps
 
-Once installed, the Software Catalogus app will:
+- **[OpenRegister](https://github.com/ConductionNL/openregister)** — Object storage layer (required dependency)
+- **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Publication and catalog management
+- **[NL Design](https://github.com/ConductionNL/nldesign)** — Design token theming for Dutch government standards
 
-- **Automatic Processing**: Listen for OpenRegister events and process users/organizations automatically
-- **Admin Interface**: Provide configuration interface in Admin Settings → Software Catalogus
-- **Group Management**: Handle all user group assignments and organizational hierarchy
-- **Manager Relationships**: Establish and maintain manager-subordinate relationships
+## License
+
+EUPL-1.2
+
+## Authors
+
+Built by [Conduction](https://conduction.nl) — open-source software for Dutch government and public sector organizations.

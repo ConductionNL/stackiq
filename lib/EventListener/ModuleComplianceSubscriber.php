@@ -1,6 +1,6 @@
 <?php
 /**
- * Module Compliance Subscriber
+ * Module Compliance Subscriber.
  *
  * This file contains the subscriber class for handling module compliance updates
  * in the SoftwareCatalog application.
@@ -10,7 +10,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\EventListener;
 
 use OCA\SoftwareCatalog\Service\ModuleComplianceService;
+use OCA\SoftwareCatalog\Service\ModuleVersionService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -37,23 +38,23 @@ use Psr\Container\ContainerInterface;
  * @package  OCA\SoftwareCatalog\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class ModuleComplianceSubscriber implements IEventListener
 {
     /**
-     * Constructor for ModuleComplianceSubscriber
+     * Constructor for ModuleComplianceSubscriber.
      *
      * @param ContainerInterface $container The DI container
      */
     public function __construct(
         private readonly ContainerInterface $container
     ) {
-    }
+    }//end __construct()
 
     /**
-     * Handle the event
+     * Handle the event.
      *
      * @param Event $event The event to handle
      *
@@ -61,67 +62,96 @@ class ModuleComplianceSubscriber implements IEventListener
      */
     public function handle(Event $event): void
     {
-        // Log when subscriber is called for debugging
+        // Log when subscriber is called for debugging.
         $logger = $this->container->get(LoggerInterface::class);
-        $logger->info('ModuleComplianceSubscriber: SUBSCRIBER CALLED', [
-            'eventType' => get_class($event),
-            'timestamp' => date('Y-m-d H:i:s')
-        ]);
-        
-        // Only handle ObjectCreatedEvent and ObjectUpdatedEvent
-        if (!($event instanceof ObjectCreatedEvent) && !($event instanceof ObjectUpdatedEvent)) {
+        $logger->info(
+                'ModuleComplianceSubscriber: SUBSCRIBER CALLED',
+                [
+                    'eventType' => get_class($event),
+                    'timestamp' => date('Y-m-d H:i:s'),
+                ]
+                );
+
+        // Only handle ObjectCreatedEvent and ObjectUpdatedEvent.
+        if (($event instanceof ObjectCreatedEvent) === false && ($event instanceof ObjectUpdatedEvent) === false) {
             return;
         }
 
-        // Get object from event - different methods for different event types
+        // Get object from event - different methods for different event types.
         if ($event instanceof ObjectCreatedEvent) {
             $object = $event->getObject();
-        } elseif ($event instanceof ObjectUpdatedEvent) {
-            $object = $event->getNewObject(); // Use getNewObject() for updated events
+        } else if ($event instanceof ObjectUpdatedEvent) {
+            // Use getNewObject() for updated events.
+            $object = $event->getNewObject();
         } else {
             return;
         }
 
-        $objectId = $object->getId();
+        $objectId       = $object->getId();
         $objectSchemaId = $object->getSchema();
 
-        // Get module schema ID from configuration
+        // Get module schema ID from configuration.
         $settingsService = $this->container->get(SettingsService::class);
-        $moduleSchemaId = $settingsService->getSchemaIdForObjectType('module');
+        $moduleSchemaId  = $settingsService->getSchemaIdForObjectType('module');
 
-        if (!$moduleSchemaId) {
-            $logger->debug('ModuleComplianceSubscriber: Module schema not configured, skipping', [
-                'objectId' => $objectId,
-                'schemaId' => $objectSchemaId
-            ]);
+        if ($moduleSchemaId === null) {
+            $logger->debug(
+                    'ModuleComplianceSubscriber: Module schema not configured, skipping',
+                    [
+                        'objectId' => $objectId,
+                        'schemaId' => $objectSchemaId,
+                    ]
+                    );
             return;
         }
 
         $moduleSchemaIdInt = (int) $moduleSchemaId;
         $objectSchemaIdInt = (int) $objectSchemaId;
 
-        // Check if this is a module object
+        // Check if this is a module object.
         if ($objectSchemaIdInt !== $moduleSchemaIdInt) {
             return;
         }
 
         try {
-            // Handle module compliance update
+            // Handle module compliance update.
             $moduleComplianceService = $this->container->get(ModuleComplianceService::class);
             $moduleComplianceService->handleModuleComplianceUpdate($object);
-            
-            $logger->info('ModuleComplianceSubscriber: Successfully processed module compliance update', [
-                'objectId' => $objectId,
-                'timestamp' => date('Y-m-d H:i:s')
-            ]);
+
+            $logger->info(
+                    'ModuleComplianceSubscriber: Successfully processed module compliance update',
+                    [
+                        'objectId'  => $objectId,
+                        'timestamp' => date('Y-m-d H:i:s'),
+                    ]
+                    );
         } catch (\Exception $e) {
-            $logger->error('ModuleComplianceSubscriber: Failed to process module compliance update', [
-                'objectId' => $objectId,
-                'exception' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $logger->error(
+                    'ModuleComplianceSubscriber: Failed to process module compliance update',
+                    [
+                        'objectId'  => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file'      => $e->getFile(),
+                        'line'      => $e->getLine(),
+                        'trace'     => $e->getTraceAsString(),
+                    ]
+                    );
+        }//end try
+
+        // Ensure the module has at least one version (default 1.0.0).
+        try {
+            $moduleVersionService = $this->container->get(ModuleVersionService::class);
+            $moduleVersionService->ensureDefaultVersion($object);
+        } catch (\Exception $e) {
+            $logger->error(
+                    'ModuleComplianceSubscriber: Failed to ensure default module version',
+                    [
+                        'objectId'  => $objectId,
+                        'exception' => $e->getMessage(),
+                        'file'      => $e->getFile(),
+                        'line'      => $e->getLine(),
+                    ]
+                    );
         }
-    }
-}
+    }//end handle()
+}//end class

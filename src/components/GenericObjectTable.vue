@@ -428,7 +428,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 			<!-- Pagination -->
 			<PaginationComponent
 				:current-page="currentPagination.page || 1"
-				:total-pages="currentPagination.pages || Math.ceil(filteredObjects.length / (currentPagination.limit || 20))"
+				:total-pages="currentPagination.pages || Math.ceil((currentPagination.total || filteredObjects.length) / (currentPagination.limit || 20))"
 				:total-items="currentPagination.total || filteredObjects.length"
 				:current-page-size="currentPagination.limit || 20"
 				:min-items-to-show="0"
@@ -687,6 +687,7 @@ export default {
 			console.info(`GenericObjectTable: Pagination for ${this.objectType}:`, {
 				pagination,
 				filteredObjectsLength: this.filteredObjects.length,
+				calculatedPages: pagination.pages || Math.ceil((pagination.total || this.filteredObjects.length) / (pagination.limit || 20)),
 			})
 			return pagination
 		},
@@ -784,15 +785,23 @@ export default {
 	mounted() {
 		console.info(`GenericObjectTable mounted for ${this.objectType}, fetching objects...`)
 
-		// Initialize active filters with default values
+		// Initialize active filters with default values.
 		if (this.filters && this.filters.length > 0) {
 			this.filters.forEach(filter => {
 				this.$set(this.activeFilters, filter.key, 'all')
 			})
 		}
 
-		this.refreshObjects()
-		// Initialize column filters
+		// Only call refreshObjects if there's NO pagination function.
+		// If a pagination function is provided, the parent component handles data fetching via the @mounted event.
+		if (!this.paginationFunction) {
+			this.refreshObjects()
+		}
+
+		// Emit mounted event so parent can handle initialization.
+		this.$emit('mounted')
+
+		// Initialize column filters.
 		objectStore.initializeColumnFilters()
 	},
 
@@ -1204,6 +1213,30 @@ export default {
 	margin-bottom: 12px;
 }
 
+.viewTable {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: auto;
+	min-width: 600px;
+}
+
+.viewTable th,
+.viewTable td {
+	padding: 12px 8px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+	width: auto;
+	min-width: 120px;
+}
+
+.viewTable th {
+	background: var(--color-background-dark);
+	font-weight: 600;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
 .statisticsTable {
 	width: 100%;
 	border-collapse: collapse;
@@ -1229,13 +1262,6 @@ export default {
 
 .statisticsTable.compact td {
 	padding: 4px 8px;
-}
-
-.truncatedText {
-	max-width: 200px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 /* Filter Styles */
@@ -1327,30 +1353,6 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	background: var(--color-main-background);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: auto;
-	min-width: 600px;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 12px 8px;
-	text-align: left;
-	border-bottom: 1px solid var(--color-border);
-	width: auto;
-	min-width: 120px;
-}
-
-.viewTable th {
-	background: var(--color-background-dark);
-	font-weight: 600;
-	position: sticky;
-	top: 0;
-	z-index: 1;
 }
 
 .viewTableRow:hover {

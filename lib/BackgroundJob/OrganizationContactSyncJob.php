@@ -6,13 +6,13 @@
  * This file contains the background job class for synchronizing organizations and contact persons
  * between SoftwareCatalog objects and OpenRegister entities.
  *
- * @category BackgroundJob
- * @package  OCA\SoftwareCatalog\BackgroundJob
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  BackgroundJob
+ * @package   OCA\SoftwareCatalog\BackgroundJob
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: 1.0.0
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -31,24 +31,18 @@ use Psr\Log\LoggerInterface;
  * and OpenRegister entities using full sync (all organizations). All business logic is
  * delegated to the OrganizationSyncService.
  *
- * The job uses CronjobContextTrait to set user and organisation context based on
- * administrator configuration, enabling proper RBAC authorization during execution.
+ * All sync operations use _rbac: false and _multitenancy: false since this is a
+ * system-level background job that needs unrestricted access to all objects.
  *
  * @category BackgroundJob
  * @package  OCA\SoftwareCatalog\BackgroundJob
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: 1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
 class OrganizationContactSyncJob extends TimedJob
 {
-    use CronjobContextTrait;
-
-    /**
-     * The cronjob identifier for configuration lookup
-     */
-    private const JOB_ID = 'organization_contact_sync';
 
     /**
      * Organization synchronization service
@@ -76,28 +70,19 @@ class OrganizationContactSyncJob extends TimedJob
         OrganizationSyncService $organizationSyncService,
         LoggerInterface $logger
     ) {
-        parent::__construct($timeFactory);
-        $this->setInterval(300); // 5 minutes.
+        parent::__construct(time: $timeFactory);
+        $this->setInterval(interval: 300);
+        // 5 minutes.
         $this->organizationSyncService = $organizationSyncService;
         $this->logger = $logger;
-    }
-
-    /**
-     * Get the logger instance for the trait.
-     *
-     * @return LoggerInterface
-     */
-    protected function getLogger(): LoggerInterface
-    {
-        return $this->logger;
-    }
+    }//end __construct()
 
     /**
      * Runs the background job
      *
-     * This method sets the user and organisation context based on configuration,
-     * then delegates all synchronization logic to the OrganizationSyncService.
+     * Delegates all synchronization logic to the OrganizationSyncService.
      * The service handles all business logic, logging, and error handling.
+     * No user context is needed since all ObjectService calls use _rbac: false.
      *
      * @param mixed $argument Job arguments (not used)
      *
@@ -105,23 +90,6 @@ class OrganizationContactSyncJob extends TimedJob
      */
     protected function run($argument): void
     {
-        try {
-            // Set the cronjob context (user and organisation) from configuration.
-            $contextSet = $this->setCronjobContext(self::JOB_ID);
-
-            if (!$contextSet) {
-                $this->logger->warning('[CRONJOB] OrganizationContactSyncJob: Running without context - RBAC checks may fail', [
-                    'jobId' => self::JOB_ID,
-                    'hint' => 'Configure user and organisation in Settings > Cronjobs to enable proper authorization'
-                ]);
-            }
-
-            // Delegate all synchronization logic to the service.
-            $this->organizationSyncService->performScheduledSync();
-
-        } finally {
-            // Always clear the context when done.
-            $this->clearCronjobContext(self::JOB_ID);
-        }
-    }
-}
+        $this->organizationSyncService->performScheduledSync();
+    }//end run()
+}//end class

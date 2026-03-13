@@ -6,11 +6,16 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCP\App\IAppManager;
+use OCP\IAppConfig;
+use OCP\IConfig;
 use OCP\IUserManager;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IGroup;
-use OCP\IContainer;
+use OCP\Security\ISecureRandom;
+use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
@@ -47,11 +52,11 @@ class ContactPersonHandlerTest extends TestCase
     private IGroupManager|MockObject $groupManager;
 
     /**
-     * Mock of the IContainer service
+     * Mock of the ContainerInterface service
      *
-     * @var IContainer|MockObject
+     * @var ContainerInterface|MockObject
      */
-    private IContainer|MockObject $container;
+    private ContainerInterface|MockObject $container;
 
     /**
      * Mock of the LoggerInterface
@@ -86,7 +91,7 @@ class ContactPersonHandlerTest extends TestCase
         // Create mocks
         $this->userManager = $this->createMock(IUserManager::class);
         $this->groupManager = $this->createMock(IGroupManager::class);
-        $this->container = $this->createMock(IContainer::class);
+        $this->container = $this->createMock(ContainerInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->settingsService = $this->createMock(SettingsService::class);
 
@@ -98,9 +103,14 @@ class ContactPersonHandlerTest extends TestCase
         // Create the ContactPersonHandler instance
         $this->contactPersonHandler = new ContactPersonHandler(
             $this->userManager,
+            $this->createMock(ISecureRandom::class),
             $this->groupManager,
+            $this->createMock(IAppConfig::class),
             $this->container,
-            $this->logger
+            $this->createMock(IAppManager::class),
+            $this->logger,
+            $this->createMock(SymfonyEmailService::class),
+            $this->createMock(IConfig::class)
         );
     }
 

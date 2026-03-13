@@ -241,6 +241,16 @@ export default {
 		BTab,
 		CodeMirror,
 	},
+	props: {
+		/**
+		 * The object type key used to get/set the active object in the store.
+		 * Defaults to 'publication' for backward compatibility.
+		 */
+		objectTypeKey: {
+			type: String,
+			default: 'publication',
+		},
+	},
 	data() {
 		return {
 			activeTab: 0,
@@ -308,7 +318,8 @@ export default {
 			return this.fullSelectedSchema?.properties || {}
 		},
 		dialogTitle() {
-			return this.isNewObject ? 'Add Publication' : 'Edit Publication'
+			const typeName = this.objectTypeKey.charAt(0).toUpperCase() + this.objectTypeKey.slice(1)
+			return this.isNewObject ? `Add ${typeName}` : `Edit ${typeName}`
 		},
 	},
 	watch: {
@@ -383,7 +394,7 @@ export default {
 				objectStore.setActiveObject('catalog', onlyCatalog)
 			}
 
-			const activeObject = objectStore.getActiveObject('publication')
+			const activeObject = objectStore.getActiveObject(this.objectTypeKey)
 			// Update activeCatalog reference in case we auto-selected one above
 			const updatedActiveCatalog = objectStore.getActiveObject('catalog')
 
@@ -469,7 +480,7 @@ export default {
 
 			let FETCH_URL = BASE_URL
 			if (!this.isNewObject) {
-				const activeObject = objectStore.getActiveObject('publication')
+				const activeObject = objectStore.getActiveObject(this.objectTypeKey)
 				const objectId = activeObject?.['@self']?.id || activeObject?.id
 				if (!objectId) {
 					throw new Error('Cannot update object: no object ID found')
@@ -504,23 +515,23 @@ export default {
 					this.success = true
 
 					if (responseData) {
-						const publicationId = responseData.id || responseData['@self']?.id || null
-						const publicationData = {
+						const objectId = responseData.id || responseData['@self']?.id || null
+						const objectData = {
 							...responseData,
-							id: publicationId,
+							id: objectId,
 						}
 
 						// Set the active object directly in the store without related data fetch
-						// This avoids the configuration error since publications might not be properly registered yet
+						// This avoids the configuration error since objects might not be properly registered yet
 						objectStore.activeObjects = {
 							...objectStore.activeObjects,
-							publication: publicationData,
+							[this.objectTypeKey]: objectData,
 						}
 
 						// Initialize related data structure without fetching
 						objectStore.relatedData = {
 							...objectStore.relatedData,
-							publication: {
+							[this.objectTypeKey]: {
 								logs: null,
 								uses: null,
 								used: null,
@@ -529,8 +540,15 @@ export default {
 						}
 
 						this.closeModalTimeout = setTimeout(this.closeModal, 2000)
-						catalogStore.refreshPublications()
-						catalogStore.fetchPublications()
+
+						// Refresh the collection for the current object type
+						if (this.objectTypeKey === 'publication') {
+							catalogStore.refreshPublications()
+							catalogStore.fetchPublications()
+						} else {
+							// For non-publication types, refresh the collection
+							objectStore.fetchCollection(this.objectTypeKey)
+						}
 					}
 				} else {
 					this.success = false
@@ -706,6 +724,7 @@ export default {
 
 .codeMirrorContainer :deep(.cm-editor) {
 	height: 100%;
+	outline: none !important;
 }
 
 .codeMirrorContainer :deep(.cm-scroller) {
@@ -778,21 +797,10 @@ export default {
 	padding: 16px;
 }
 
-.form-field {
-	margin-bottom: 16px;
-}
-
 /* CodeMirror */
-.codeMirrorContainer {
-	margin-block-start: 6px;
-}
-
 .codeMirrorContainer :deep(.cm-content) {
 	border-radius: 0 !important;
 	border: none !important;
-}
-.codeMirrorContainer :deep(.cm-editor) {
-	outline: none !important;
 }
 .codeMirrorContainer.light > .vue-codemirror {
 	border: 1px dotted silver;

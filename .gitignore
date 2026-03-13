@@ -19,3 +19,12 @@
 # Data files
 /data/
 *.csv
+
+# Test artifacts (generated per run — only .md results are committed)
+/test-results/**/*.json
+/test-results/**/*.html
+/test-results/**/*.png
+/reacties/screenshots/
+
+# Sync timestamp (local only)
+.last-update

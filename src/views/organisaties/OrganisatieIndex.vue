@@ -1,12 +1,12 @@
 /**
  * OrganisatieIndex.vue
- * Component for displaying and managing organisaties using GenericObjectTable
+ * Component for displaying and managing organisaties using CnIndexPage + CnIndexSidebar
  * @category Views
  * @package softwarecatalog
  * @author Ruben Linde
  * @copyright 2024
  * @license AGPL-3.0-or-later
- * @version 1.0.0
+ * @version 2.0.0
  * @link https://github.com/opencatalogi/softwarecatalog
  */
 
@@ -19,26 +19,36 @@ import OrganisationModal from '../../modals/OrganisationModal.vue'
 
 <template>
 	<div class="organisatieIndex">
-		<GenericObjectTable
-			object-type="organisatie"
-			object-type-plural="organisaties"
+		<CnIndexPage
+			ref="indexPage"
 			:title="t('softwarecatalog', 'Organisaties')"
 			:description="t('softwarecatalog', 'Manage your organisaties and their configurations')"
-			:empty-icon="OfficeBuildingOutline"
-			:card-icon="OfficeBuildingOutline"
-			:properties="organisatieProperties"
-			:object-actions="organisatieObjectActions"
-			:mass-actions="organisatieMassActions"
-			:actions="organisatieActions"
-			:add-action="addOrganisatieAction"
-			:help-url="'https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties'"
-			card-display-mode="description"
-			:custom-card-component="OrganisatieCard"
-			:filters="organisatieFilters"
-			:search-query="searchQuery"
-			:on-search-input="onSearchInput"
-			:clear-search="clearSearch"
-			@mounted="onMounted" />
+			:schema="organisatieSchema"
+			:objects="organisatieObjects"
+			:pagination="organisatiePagination"
+			:loading="organisatieLoading"
+			:sort-key="sortKey"
+			:sort-order="sortOrder"
+			:selectable="true"
+			:selected-ids="selectedIds"
+			:include-columns="visibleColumns"
+			:view-mode="viewMode"
+			:show-view-toggle="true"
+			:row-actions="rowActionsDef"
+			@sort="onSort"
+			@page-changed="onPageChange"
+			@page-size-changed="onPageSizeChange"
+			@row-click="onRowClick"
+			@select="onSelect"
+			@refresh="onRefresh">
+			<!-- Custom card template for card view -->
+			<template #card="{ object }">
+				<OrganisatieCard
+					:item="object"
+					:object-actions="organisatieObjectActions"
+					:card-icon="OfficeBuildingOutline" />
+			</template>
+		</CnIndexPage>
 
 		<!-- Add Contactpersoon Modal -->
 		<AddContactpersoonModal
@@ -57,18 +67,12 @@ import OrganisationModal from '../../modals/OrganisationModal.vue'
 </template>
 
 <script>
-import GenericObjectTable from '../../components/GenericObjectTable.vue'
+import { CnIndexPage } from '@conduction/nextcloud-vue'
 import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
-import Plus from 'vue-material-design-icons/Plus.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
-import Delete from 'vue-material-design-icons/Delete.vue'
-import PublishIcon from 'vue-material-design-icons/Publish.vue'
-import PublishOffIcon from 'vue-material-design-icons/PublishOff.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
@@ -77,7 +81,7 @@ import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 export default {
 	name: 'OrganisatieIndex',
 	components: {
-		GenericObjectTable,
+		CnIndexPage,
 		// eslint-disable-next-line vue/no-unused-components
 		OrganisatieCard,
 		// eslint-disable-next-line vue/no-unused-components
@@ -85,71 +89,43 @@ export default {
 		// eslint-disable-next-line vue/no-unused-components
 		OrganisationModal,
 	},
+
+	inject: {
+		sidebarState: { default: null },
+	},
+
 	data() {
 		return {
-			// Current filter values
-			currentFilters: {
-				status: 'all',
-				type: 'all',
-			},
+			// Schema for sidebar auto-generation
+			organisatieSchema: null,
+			// Sort state
+			sortKey: null,
+			sortOrder: 'asc',
+			// View state
+			viewMode: 'cards',
+			visibleColumns: null,
+			selectedIds: [],
+			// Search and filter state
+			searchQuery: '',
+			searchDebounceTimeout: null,
+			currentFilters: {},
+			// Store subscription cleanup
+			storeUnsubscribe: null,
 			// Add Contactpersoon Modal
 			showAddContactpersoonModal: false,
 			selectedOrganisationForContact: null,
 			// Organisation Modal
 			showOrganisationModal: false,
 			selectedOrganisation: null,
-			organisationModalMode: 'create', // 'create', 'edit', 'copy'
-			organisatieProperties: [
-				{
-					id: 'naam',
-					label: 'Naam',
-					key: 'naam',
-					sortable: true,
-					searchable: true,
-				},
-				{
-					id: 'website',
-					label: 'Website',
-					key: 'website',
-					sortable: true,
-					searchable: true,
-				},
-				{
-					id: 'type',
-					label: 'Type',
-					key: 'type',
-					sortable: true,
-					searchable: true,
-				},
-				{
-					id: 'beschrijvingKort',
-					label: 'Korte beschrijving',
-					key: 'beschrijvingKort',
-					sortable: false,
-					searchable: true,
-				},
-				{
-					id: 'oin',
-					label: 'OIN',
-					key: 'oin',
-					sortable: true,
-					searchable: true,
-				},
-				{
-					id: 'tooi',
-					label: 'TOOI',
-					key: 'tooi',
-					sortable: true,
-					searchable: true,
-				},
-				{
-					id: 'rsin',
-					label: 'RSIN',
-					key: 'rsin',
-					sortable: true,
-					searchable: true,
-				},
+			organisationModalMode: 'create',
+			// Row actions definition for CnIndexPage
+			rowActionsDef: [
+				{ id: 'view', label: 'View', icon: 'eye' },
+				{ id: 'edit', label: 'Edit', icon: 'pencil' },
+				{ id: 'copy', label: 'Copy', icon: 'content-copy' },
+				{ id: 'delete', label: 'Delete', icon: 'delete', destructive: true },
 			],
+			// Object actions for OrganisatieCard
 			organisatieObjectActions: [
 				{
 					id: 'view',
@@ -224,24 +200,6 @@ export default {
 					},
 				},
 				{
-					id: 'publish',
-					label: 'Publiceren',
-					icon: PublishIcon,
-					condition: (organisatie) => !organisatie['@self']?.published,
-					handler: (organisatie) => {
-						this.publishOrganisatie(organisatie)
-					},
-				},
-				{
-					id: 'depublish',
-					label: 'Depubliceren',
-					icon: PublishOffIcon,
-					condition: (organisatie) => organisatie['@self']?.published,
-					handler: (organisatie) => {
-						this.depublishOrganisatie(organisatie)
-					},
-				},
-				{
 					id: 'delete',
 					label: 'Delete',
 					icon: TrashCanOutline,
@@ -251,360 +209,323 @@ export default {
 					},
 				},
 			],
-			organisatieMassActions: [
-				{
-					id: 'massDelete',
-					label: 'Delete Selected',
-					icon: Delete,
-					handler: () => {
-						navigationStore.setDialog('massDeleteObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
-						})
-					},
-				},
-				{
-					id: 'massPublish',
-					label: 'Publish Selected',
-					icon: PublishIcon,
-					handler: () => {
-						navigationStore.setDialog('massPublishObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
-						})
-					},
-				},
-				{
-					id: 'massDepublish',
-					label: 'Depublish Selected',
-					icon: PublishOffIcon,
-					handler: () => {
-						navigationStore.setDialog('massDepublishObjects', {
-							objectType: 'organisatie',
-							dialogTitle: 'Organisaties',
-						})
-					},
-				},
-			],
-			organisatieActions: [
-				{
-					id: 'add',
-					label: 'Add Organisatie',
-					icon: Plus,
-					primary: true,
-					handler: () => {
-						this.createOrganisation()
-					},
-				},
-				{
-					id: 'refresh',
-					label: 'Refresh',
-					icon: Refresh,
-					handler: () => {
-						objectStore.fetchCollection('organisatie')
-					},
-					disabled: () => objectStore.isLoading('organisatie'),
-				},
-				{
-					id: 'help',
-					label: 'Help',
-					icon: HelpCircleOutline,
-					handler: () => {
-						window.open('https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/organisaties', '_blank')
-					},
-				},
-			],
-			organisatieFilters: [
-				{
-					key: 'status',
-					label: 'Status',
-					options: [
-						{ value: 'all', label: 'Alle statussen' },
-						{ value: 'Actief', label: 'Actief' },
-						{ value: 'Concept', label: 'Concept' },
-					],
-					onChange: (value) => this.onFilterChange('status', value),
-				},
-				{
-					key: 'type',
-					label: 'Type',
-					options: [
-						{ value: 'all', label: 'Alle types' },
-						{ value: 'Gemeente', label: 'Gemeente' },
-						{ value: 'Leverancier', label: 'Leverancier' },
-						{ value: 'Samenwerking', label: 'Samenwerking' },
-						{ value: 'Community', label: 'Community' },
-					],
-					onChange: (value) => this.onFilterChange('type', value),
-				},
-			],
-			searchQuery: '',
-			searchDebounceTimeout: null,
-			addOrganisatieAction: {
-				id: 'add',
-				label: 'Add Organisatie',
-				icon: Plus,
-				handler: () => {
-					this.createOrganisation()
-				},
-			},
 		}
 	},
 
-	/**
-	 * Component cleanup - clear timeouts
-	 * @return {void}
-	 */
+	computed: {
+		organisatieObjects() {
+			const collection = objectStore.getCollection('organisatie')
+			if (Array.isArray(collection)) return collection
+			return collection?.results || []
+		},
+		organisatiePagination() {
+			return objectStore.getPagination('organisatie') || { total: 0, page: 1, pages: 1, limit: 20 }
+		},
+		organisatieLoading() {
+			return objectStore.isLoading('organisatie')
+		},
+	},
+
 	beforeDestroy() {
 		if (this.searchDebounceTimeout) {
 			clearTimeout(this.searchDebounceTimeout)
 		}
+		if (this.storeUnsubscribe) {
+			this.storeUnsubscribe()
+		}
+		// Deactivate sidebar
+		if (this.sidebarState) {
+			this.sidebarState.active = false
+			this.sidebarState.schema = null
+			this.sidebarState.onSearch = null
+			this.sidebarState.onFilterChange = null
+			this.sidebarState.onColumnsChange = null
+		}
 	},
+
+	async mounted() {
+		// Ensure settings are loaded
+		if (!objectStore.settings) {
+			await objectStore.fetchSettings()
+		}
+
+		// Fetch the organisatie schema for sidebar filter generation
+		await this.fetchOrganisatieSchema()
+
+		// Setup sidebar
+		this.setupSidebar()
+
+		// Initialize from URL deep links
+		this.initializeFromUrl()
+
+		// Subscribe to store changes for cross-component events
+		this.storeUnsubscribe = navigationStore.$subscribe((mutation, state) => {
+			if (!state.transferData) return
+
+			if (state.transferData.action === 'organisationActivated') {
+				const organisationName = state.transferData.organisationName
+				navigationStore.setTransferData(null)
+				this.searchQuery = organisationName || ''
+				this.currentFilters.status = ['Actief']
+				if (this.sidebarState) {
+					this.sidebarState.searchValue = this.searchQuery
+					this.sidebarState.activeFilters = { ...this.currentFilters }
+				}
+				this.fetchOrganisatiesWithFilters()
+				this.updateUrl()
+			}
+
+			if (state.transferData.action === 'organisationUpdated' || state.transferData.action === 'organisationCreated') {
+				navigationStore.setTransferData(null)
+				this.fetchOrganisatiesWithFilters()
+			}
+
+			if (state.transferData.action === 'contactpersoonAdded') {
+				navigationStore.setTransferData(null)
+				this.fetchOrganisatiesWithFilters()
+			}
+		})
+
+		// Initial fetch
+		const hash = window.location.hash.substring(1)
+		const params = new URLSearchParams(hash)
+		const page = params.has('page') ? parseInt(params.get('page'), 10) : 1
+		await this.fetchOrganisatiesWithFilters(page)
+	},
+
 	methods: {
 		/**
-		 * Handle component mount - initialize settings and fetch organisaties
-		 * @return {Promise<void>}
+		 * Fetch the organisatie JSON schema from the API for sidebar filter generation
 		 */
-		async onMounted() {
-			console.info('OrganisatieIndex mounted, initializing...')
+		async fetchOrganisatieSchema() {
 			try {
-				// Ensure settings are loaded first (this will also register object types)
-				if (!objectStore.settings) {
-					console.info('Loading settings before fetching organisaties...')
-					await objectStore.fetchSettings()
+				const config = objectStore.getSchemaConfig('organisatie')
+				if (!config?.schema) {
+					console.warn('No schema config found for organisatie')
+					return
 				}
-
-				// Fetch organisaties collection with contactpersonen extended
-				console.info('Fetching organisaties with contactpersonen...')
-				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,@self.register,contactpersonen',
-					_limit: 20,
-					_page: 1,
+				const schemaId = typeof config.schema === 'object' ? config.schema?.id || config.schema?.uuid : config.schema
+				const response = await fetch(`/index.php/apps/openregister/api/schemas/${schemaId}`, {
+					headers: { 'OCS-APIRequest': 'true' },
 				})
+				if (response.ok) {
+					this.organisatieSchema = await response.json()
+				}
 			} catch (error) {
-				console.error('Error initializing OrganisatieIndex:', error)
-				// Show error to user if needed
+				console.warn('Failed to fetch organisatie schema:', error)
 			}
 		},
 
 		/**
-		 * Handle search input with debouncing
-		 * @param {string} value - The search input value
-		 * @return {void}
+		 * Setup sidebar state and wire event handlers
 		 */
-		onSearchInput(value) {
-			this.searchQuery = value
+		setupSidebar() {
+			if (!this.sidebarState) return
 
-			// Clear existing timeout
-			if (this.searchDebounceTimeout) {
-				clearTimeout(this.searchDebounceTimeout)
+			this.sidebarState.active = true
+			this.sidebarState.schema = this.organisatieSchema
+			this.sidebarState.searchValue = this.searchQuery
+			this.sidebarState.activeFilters = { ...this.currentFilters }
+
+			this.sidebarState.onSearch = (value) => {
+				this.searchQuery = value
+				if (this.searchDebounceTimeout) {
+					clearTimeout(this.searchDebounceTimeout)
+				}
+				this.searchDebounceTimeout = setTimeout(() => {
+					this.fetchOrganisatiesWithFilters()
+					this.updateUrl()
+				}, 500)
 			}
 
-			// Set new timeout for 1.5 seconds
-			this.searchDebounceTimeout = setTimeout(() => {
-				this.performSearch()
-			}, 1500)
+			this.sidebarState.onFilterChange = ({ key, values }) => {
+				if (!values || values.length === 0) {
+					const updated = { ...this.currentFilters }
+					delete updated[key]
+					this.currentFilters = updated
+				} else {
+					this.currentFilters = { ...this.currentFilters, [key]: values }
+				}
+				if (this.sidebarState) {
+					this.sidebarState.activeFilters = { ...this.currentFilters }
+				}
+				this.fetchOrganisatiesWithFilters()
+				this.updateUrl()
+			}
+
+			this.sidebarState.onColumnsChange = (cols) => {
+				this.visibleColumns = cols
+			}
 		},
 
 		/**
-		 * Perform the actual search with API call
-		 * @return {Promise<void>}
+		 * Initialize from URL hash parameters for deep linking
 		 */
-		async performSearch() {
+		initializeFromUrl() {
 			try {
-				console.info('Performing search with query:', this.searchQuery)
+				const hash = window.location.hash.substring(1)
+				if (!hash) return
 
-				// Use the unified filter method that includes current filters
-				await this.fetchOrganisatiesWithFilters()
-			} catch (error) {
-				console.error('Error performing search:', error)
-			}
-		},
+				const params = new URLSearchParams(hash)
 
-		/**
-		 * Clear the search query and reset results
-		 * @return {Promise<void>}
-		 */
-		async clearSearch() {
-			this.searchQuery = ''
-
-			// Clear any pending timeout
-			if (this.searchDebounceTimeout) {
-				clearTimeout(this.searchDebounceTimeout)
-			}
-
-			// Fetch all organisaties without search filter but with contactpersonen extended
-			await this.fetchOrganisatiesWithFilters()
-		},
-
-		/**
-		 * Handle filter changes and refetch data
-		 * @param {string} filterKey - The filter key (status or type)
-		 * @param {string} filterValue - The new filter value
-		 * @return {Promise<void>}
-		 */
-		async onFilterChange(filterKey, filterValue) {
-			console.info('Filter changed:', { filterKey, filterValue })
-
-			// Update the current filter
-			this.currentFilters[filterKey] = filterValue
-
-			// Reset to first page when filters change
-			await this.fetchOrganisatiesWithFilters()
-		},
-
-		/**
-		 * Fetch organisaties with current filters and search
-		 * @return {Promise<void>}
-		 */
-		async fetchOrganisatiesWithFilters() {
-			try {
-				console.info('Fetching organisaties with filters:', this.currentFilters)
-
-				const searchParams = {
-					_extend: '@self.schema,contactpersonen',
-					_page: 1, // Reset to first page
+				if (params.has('search')) {
+					this.searchQuery = params.get('search')
+					if (this.sidebarState) {
+						this.sidebarState.searchValue = this.searchQuery
+					}
 				}
 
-				// Add search query if present
+				if (params.has('status')) {
+					this.currentFilters.status = [params.get('status')]
+				}
+				if (params.has('type')) {
+					this.currentFilters.type = [params.get('type')]
+				}
+
+				if (this.sidebarState) {
+					this.sidebarState.activeFilters = { ...this.currentFilters }
+				}
+			} catch (error) {
+				console.error('Error parsing URL parameters:', error)
+			}
+		},
+
+		/**
+		 * Update URL hash with current search/filter state
+		 */
+		updateUrl() {
+			const params = new URLSearchParams()
+
+			if (this.searchQuery && this.searchQuery.trim()) {
+				params.set('search', this.searchQuery.trim())
+			}
+
+			for (const [key, values] of Object.entries(this.currentFilters)) {
+				if (values && values.length > 0) {
+					params.set(key, values[0])
+				}
+			}
+
+			const pagination = objectStore.getPagination('organisatie')
+			if (pagination && pagination.page > 1) {
+				params.set('page', pagination.page.toString())
+			}
+
+			const hash = params.toString()
+			if (hash) {
+				window.location.hash = hash
+			} else {
+				history.replaceState(null, '', window.location.pathname + window.location.search)
+			}
+		},
+
+		/**
+		 * Fetch organisaties with current search, filters, and pagination
+		 */
+		async fetchOrganisatiesWithFilters(page = 1, limit = 20) {
+			try {
+				const searchParams = {
+					_extend: 'contactpersonen',
+					_page: page,
+					_limit: limit,
+				}
+
 				if (this.searchQuery.trim()) {
 					searchParams._search = this.searchQuery.trim()
 				}
 
-				// Add status filter if not 'all'
-				if (this.currentFilters.status !== 'all') {
-					searchParams.status = this.currentFilters.status
+				if (this.sortKey) {
+					searchParams._order = { [this.sortKey]: this.sortOrder }
 				}
 
-				// Add type filter if not 'all'
-				if (this.currentFilters.type !== 'all') {
-					searchParams.type = this.currentFilters.type
+				// Apply sidebar filters
+				for (const [key, values] of Object.entries(this.currentFilters)) {
+					if (values && values.length > 0) {
+						searchParams[key] = values.length === 1 ? values[0] : values
+					}
 				}
 
-				console.info('Final search params:', searchParams)
-
-				// Fetch organisaties with all parameters
 				await objectStore.fetchCollection('organisatie', searchParams)
 			} catch (error) {
-				console.error('Error fetching organisaties with filters:', error)
+				console.error('Error fetching organisaties:', error)
 			}
 		},
 
-		/**
-		 * Add contactpersoon to organisation
-		 * @param {object} organisatie - The organisation object
-		 * @return {void}
-		 */
+		// CnIndexPage event handlers
+		onSort({ key, order }) {
+			this.sortKey = key
+			this.sortOrder = order || 'asc'
+			this.fetchOrganisatiesWithFilters()
+		},
+
+		onPageChange(page) {
+			this.fetchOrganisatiesWithFilters(page)
+			this.updateUrl()
+		},
+
+		onPageSizeChange(size) {
+			this.fetchOrganisatiesWithFilters(1, size)
+		},
+
+		onRowClick(row) {
+			this.editOrganisation(row)
+		},
+
+		onSelect(ids) {
+			this.selectedIds = ids
+			objectStore.setSelectedObjects(ids)
+		},
+
+		onRefresh() {
+			this.fetchOrganisatiesWithFilters()
+		},
+
+		// Organisation modal methods
 		addContactpersoon(organisatie) {
 			this.selectedOrganisationForContact = organisatie
 			this.showAddContactpersoonModal = true
 		},
 
-		/**
-		 * Close add contactpersoon modal
-		 * @return {void}
-		 */
 		closeAddContactpersoonModal() {
 			this.showAddContactpersoonModal = false
 			this.selectedOrganisationForContact = null
 		},
 
-		/**
-		 * Handle contactpersoon added event
-		 * @param {object} contactpersoon - The added contactpersoon
-		 * @return {void}
-		 */
-		onContactpersoonAdded(contactpersoon) {
-			console.info('Contactpersoon added:', contactpersoon)
-			// The modal already refreshes the data, so we don't need to do anything here
+		onContactpersoonAdded() {
+			this.fetchOrganisatiesWithFilters()
 		},
 
-		/**
-		 * Navigate to organisation website
-		 * @param {object} organisatie - The organisation object
-		 * @return {void}
-		 */
 		goToOrganisation(organisatie) {
-			if (!organisatie.website) {
-				console.warn('Organisation has no website')
-				return
-			}
-
+			if (!organisatie.website) return
 			let websiteUrl = organisatie.website.trim()
-
-			// Add protocol if missing
 			if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
 				websiteUrl = 'https://' + websiteUrl
 			}
-
-			// Open website in new tab
 			window.open(websiteUrl, '_blank')
 		},
 
-		// Organisation Modal Methods
 		createOrganisation() {
 			this.selectedOrganisation = null
 			this.organisationModalMode = 'create'
 			this.showOrganisationModal = true
 		},
+
 		editOrganisation(organisation) {
 			this.selectedOrganisation = organisation
 			this.organisationModalMode = 'edit'
 			this.showOrganisationModal = true
 		},
+
 		copyOrganisation(organisation) {
 			this.selectedOrganisation = organisation
 			this.organisationModalMode = 'copy'
 			this.showOrganisationModal = true
 		},
+
 		closeOrganisationModal() {
 			this.showOrganisationModal = false
 			this.selectedOrganisation = null
 			this.organisationModalMode = 'create'
-		},
-
-		/**
-		 * Publish an organisation
-		 * @param {object} organisatie - The organisation to publish
-		 * @return {Promise<void>}
-		 */
-		async publishOrganisatie(organisatie) {
-			try {
-				console.info('Publishing organisatie:', organisatie)
-				console.info('Organisatie @self:', organisatie['@self'])
-				console.info('Organisatie id:', organisatie.id)
-				console.info('Organisatie register:', organisatie['@self']?.register)
-				console.info('Organisatie schema:', organisatie['@self']?.schema)
-
-				await objectStore.publishObject(organisatie)
-				// Refresh the organisation list to show updated status
-				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,@self.register,contactpersonen',
-					_limit: 20,
-					_page: 1,
-				})
-			} catch (error) {
-				console.error('Failed to publish organisation:', error)
-			}
-		},
-
-		/**
-		 * Depublish an organisation
-		 * @param {object} organisatie - The organisation to depublish
-		 * @return {Promise<void>}
-		 */
-		async depublishOrganisatie(organisatie) {
-			try {
-				await objectStore.depublishObject(organisatie)
-				// Refresh the organisation list to show updated status
-				await objectStore.fetchCollection('organisatie', {
-					_extend: '@self.schema,@self.register,contactpersonen',
-					_limit: 20,
-					_page: 1,
-				})
-			} catch (error) {
-				console.error('Failed to depublish organisation:', error)
-			}
 		},
 	},
 }

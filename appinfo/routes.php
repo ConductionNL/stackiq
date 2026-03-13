@@ -71,6 +71,7 @@ return [
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
+        ['name' => 'settings#exportOrgArchiMate', 'url' => '/api/archimate/export/organization/{organizationUuid}', 'verb' => 'GET'],
         ['name' => 'settings#downloadArchiMate', 'url' => '/api/archimate/download/{fileName}', 'verb' => 'GET'],
 
         // ArchiMate status management routes (status reading is via main settings endpoint)
@@ -131,6 +132,9 @@ return [
         ['name' => 'settings#getSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'GET'],
         ['name' => 'settings#updateSyncConfig', 'url' => '/api/settings/sync/config', 'verb' => 'POST'],
         ['name' => 'settings#syncOrganisations', 'url' => '/api/settings/sync/organisations', 'verb' => 'POST'],
+
+        // User Profile endpoint
+        ['name' => 'contactpersonen#getMe', 'url' => '/api/me', 'verb' => 'GET'],
 
         // Contactpersonen Management endpoints
         ['name' => 'contactpersonen#getContactpersonen', 'url' => '/api/contactpersonen/organisation/{organisationId}', 'verb' => 'GET'],

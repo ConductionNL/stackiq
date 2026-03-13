@@ -2,34 +2,60 @@
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>softwarecatalog</id>
-    <name>Software Catalogus</name>
-    <summary>Easily manage and publish software catalogs in an open data ecosystem</summary>
-    <description><![CDATA[🗂️ A Nextcloud App for Software Catalogs
+    <name lang="en">Software Catalogus</name>
+    <name lang="nl">Software Catalogus</name>
+    <summary lang="en">Manage your software portfolio with applications, modules, and connections</summary>
+    <summary lang="nl">Beheer je softwareportfolio met applicaties, modules en koppelingen</summary>
+    <description lang="en"><![CDATA[Software Catalogus brings structured software portfolio management to Nextcloud. Keep track of all the applications, modules, and connections in your organization — and share them across a federated open data network.
 
-The Software Catalogus Nextcloud app offers a powerful framework for managing and synchronizing software catalogs within a federated, open data environment.
+**Key Features**
 
-- 🔄 Synchronize your software data with multiple catalogs
-- 📡 Automatically publish and update your software catalog information
-- 🆓 Completely free and open source under the EUPL license
+- **Application management** — Register and maintain your organization's software landscape
+- **Module tracking** — Break applications into modules and track their relationships
+- **Connection mapping** — Visualize how applications and modules connect to each other
+- **Federated synchronization** — Share and sync catalog data with other organizations
+- **Automatic user provisioning** — Sync contacts and organizations from your register into Nextcloud accounts and groups
+- **Open data publishing** — Automatically publish your software catalog for transparency and reuse
+- **GEMMA compliant** — Aligned with Dutch government software catalog standards
 
-**Note: System Cron is required for this app to function properly**
+**Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
-Find the installation requirements [here](https://conduction.gitbook.io/opencatalogi-nextcloud/install).
-
-View the development roadmap [here](https://github.com/orgs/OpenCatalogi/projects/1/views/2).
-
-Submit a [bug report](https://github.com/OpenCatalogi/.github/issues/new/choose).
-
-Submit a [feature request](https://github.com/OpenCatalogi/.github/issues/new/choose).
+Free and open source under the EUPL license.
     ]]></description>
-    <version>0.1.137-beta.2</version>
+    <description lang="nl"><![CDATA[Software Catalogus brengt gestructureerd softwareportfoliobeheer naar Nextcloud. Houd al je applicaties, modules en koppelingen bij — en deel ze via een gefedereerd open data netwerk.
+
+**Belangrijkste functies**
+
+- **Applicatiebeheer** — Registreer en onderhoud het softwarelandschap van je organisatie
+- **Modulebeheer** — Splits applicaties op in modules en volg hun onderlinge relaties
+- **Koppelingenoverzicht** — Visualiseer hoe applicaties en modules met elkaar verbonden zijn
+- **Gefedereerde synchronisatie** — Deel en synchroniseer catalogusdata met andere organisaties
+- **Automatische gebruikersaanmaak** — Synchroniseer contacten en organisaties vanuit je register naar Nextcloud-accounts en -groepen
+- **Open data publicatie** — Publiceer je softwarecatalogus automatisch voor transparantie en hergebruik
+- **GEMMA-compliant** — Aansluitend op de Nederlandse standaarden voor softwarecatalogi
+
+**Vereist:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (installeer via de [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
+
+Vrij en open source onder de EUPL-licentie.
+    ]]></description>
+    <version>0.1.140</version>
     <licence>agpl</licence>
-    <category>organization</category>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>SoftwareCatalog</namespace>
+    <documentation>
+        <user>https://github.com/ConductionNL/SoftwareCatalogus</user>
+        <admin>https://github.com/ConductionNL/SoftwareCatalogus</admin>
+        <developer>https://github.com/ConductionNL/SoftwareCatalogus</developer>
+    </documentation>
+    <category>organization</category>
+    <category>tools</category>
+    <category>integration</category>
     <website>https://github.com/ConductionNL/SoftwareCatalogus</website>
+    <discussion>https://github.com/ConductionNL/SoftwareCatalogus/discussions</discussion>
     <bugs>https://github.com/ConductionNL/SoftwareCatalogus/issues</bugs>
     <repository>https://github.com/ConductionNL/SoftwareCatalogus</repository>
+
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/SoftwareCatalogus/main/img/app-store.svg</screenshot>
 
     <dependencies>
         <nextcloud min-version="28" max-version="33"/>
@@ -39,8 +65,14 @@ Submit a [feature request](https://github.com/OpenCatalogi/.github/issues/new/ch
         <database min-version="8.0">mysql</database>
     </dependencies>
 
+	<repair-steps>
+		<post-migration>
+			<step>OCA\SoftwareCatalog\Repair\InitializeSettings</step>
+		</post-migration>
+	</repair-steps>
+
 	<background-jobs>
-		<job>OCA\SoftwareCatalog\Cron\OrganizationSync</job>
+		<job>OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob</job>
 	</background-jobs>
 
     <navigations>
