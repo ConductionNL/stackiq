@@ -19,5 +19,6 @@ jobs:
       enable-frontend: true
       enable-eslint: true
       enable-phpunit: true
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister"}]'
       enable-newman: true
       newman-collection-path: "tests"
