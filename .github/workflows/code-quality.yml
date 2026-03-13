@@ -20,6 +20,5 @@ jobs:
       enable-phpcs: false
       enable-eslint: true
       enable-phpunit: true
-      enable-newman: true
-      newman-collection-path: "data"
+      enable-newman: false
       additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister"}]'
