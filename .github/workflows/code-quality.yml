@@ -4,7 +4,11 @@ on:
   push:
     branches: [main, development, feature/**, bugfix/**, hotfix/**]
   pull_request:
+<<<<<<< Updated upstream
     branches: [main, beta, development]
+=======
+    branches: [main, master, development]
+>>>>>>> Stashed changes
 
 jobs:
   quality:
@@ -12,8 +16,18 @@ jobs:
     with:
       app-name: softwarecatalog
       php-version: "8.3"
+<<<<<<< Updated upstream
+=======
+      nextcloud-ref: stable32
+>>>>>>> Stashed changes
       enable-psalm: true
       enable-phpstan: true
       enable-phpmetrics: true
       enable-frontend: true
       enable-eslint: true
+<<<<<<< Updated upstream
+=======
+      enable-phpunit: true
+      enable-newman: true
+      newman-collection-path: "tests"
+>>>>>>> Stashed changes
