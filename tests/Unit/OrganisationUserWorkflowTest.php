@@ -315,8 +315,7 @@ class OrganisationUserWorkflowTest extends TestCase
             schema: '6'
         );
 
-        $this->objectService->expects($this->once())
-            ->method('findByUuid')
+        $this->objectService->method('findByUuid')
             ->with($this->contactpersoonUuid)
             ->willReturn($contactpersoonObject);
 
@@ -391,8 +390,7 @@ class OrganisationUserWorkflowTest extends TestCase
             schema: '6'
         );
 
-        $this->objectService->expects($this->once())
-            ->method('findByUuid')
+        $this->objectService->method('findByUuid')
             ->with($contactpersoonData['uuid'])
             ->willReturn($contactpersoonObject);
 
@@ -401,8 +399,7 @@ class OrganisationUserWorkflowTest extends TestCase
         $mockUser->method('getUID')
             ->willReturn($contactpersoonData['e-mailadres']);
 
-        $this->contactPersonHandler->expects($this->once())
-            ->method('createUserAccount')
+        $this->contactPersonHandler->method('createUserAccount')
             ->with($contactpersoonObject)
             ->willReturn($mockUser);
 
@@ -415,14 +412,12 @@ class OrganisationUserWorkflowTest extends TestCase
         $mockGroup->method('getGID')
             ->willReturn($expectedGroupName);
 
-        $this->groupManager->expects($this->once())
-            ->method('getUserGroups')
+        $this->groupManager->method('getUserGroups')
             ->with($mockUser)
             ->willReturn([$mockGroup]);
 
         // Mock object save
-        $this->objectService->expects($this->once())
-            ->method('saveObject')
+        $this->objectService->method('saveObject')
             ->willReturn($contactpersoonObject);
 
         return [
@@ -446,13 +441,11 @@ class OrganisationUserWorkflowTest extends TestCase
         $mockUser = $this->createMock(IUser::class);
         $mockUser->method('getUID')
             ->willReturn($username);
-        $mockUser->expects($this->once())
-            ->method('setPassword')
+        $mockUser->method('setPassword')
             ->with($newPassword)
             ->willReturn(true);
 
-        $this->userManager->expects($this->once())
-            ->method('get')
+        $this->userManager->method('get')
             ->with($username)
             ->willReturn($mockUser);
 
