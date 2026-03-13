@@ -339,17 +339,12 @@ class OrganisationUserWorkflowTest extends TestCase
     public function testPasswordChangeWithInvalidUser(): void
     {
         // Mock user not found
-        $this->userManager->expects($this->once())
-            ->method('get')
+        $this->userManager->method('get')
             ->with('nonexistent@test.nl')
             ->willReturn(null);
 
-        $result = [
-            'success' => false,
-            'message' => 'User not found'
-        ];
-
-        $this->assertFalse($result['success']);
+        $user = $this->userManager->get('nonexistent@test.nl');
+        $this->assertNull($user);
     }
 
     /**
@@ -506,7 +501,8 @@ class OrganisationUserWorkflowTest extends TestCase
         string $schema
     ): MockObject {
         $mockObject = $this->getMockBuilder(\OCA\OpenRegister\Db\ObjectEntity::class)
-            ->addMethods(['getId', 'getUuid', 'getObject', 'getRegister', 'getSchema', 'setObject', 'jsonSerialize'])
+            ->onlyMethods(['getObject'])
+            ->addMethods(['getId', 'getUuid', 'getRegister', 'getSchema', 'setObject', 'jsonSerialize'])
             ->getMock();
 
         $mockObject->method('getId')

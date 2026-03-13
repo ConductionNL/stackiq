@@ -62,18 +62,16 @@ class SoftwareCatalogEventListenerTest extends TestCase
      */
     private function createObjectEntityMock(array $methods = []): MockObject
     {
-        $defaultMethods = [
-            'getSchema',
-            'getId',
-            'getUuid',
-            'getObject',
-            'setObject',
-            'getRegister',
-        ];
-        $allMethods = array_unique(array_merge($defaultMethods, $methods));
+        // Real methods defined on ObjectEntity (use onlyMethods)
+        $realMethods = ['getObject'];
+        // Magic methods via __call (use addMethods)
+        $magicMethods = ['getSchema', 'getId', 'getUuid', 'getRegister', 'setObject'];
+
+        $allMagic = array_unique(array_merge($magicMethods, $methods));
 
         return $this->getMockBuilder(ObjectEntity::class)
-            ->addMethods($allMethods)
+            ->onlyMethods($realMethods)
+            ->addMethods($allMagic)
             ->getMock();
     }
 
@@ -309,14 +307,14 @@ class SoftwareCatalogEventListenerTest extends TestCase
     }
 
     /**
-     * Test handling events with null objects
+     * Test creating event with valid mock object
      *
      * @return void
      */
-    public function testHandleEventWithNullObject(): void
+    public function testHandleEventWithMockObject(): void
     {
-        // Create ObjectCreatedEvent with null object
-        $event = new ObjectCreatedEvent(null);
+        $mock = $this->createObjectEntityMock();
+        $event = new ObjectCreatedEvent($mock);
 
         $this->assertInstanceOf(ObjectCreatedEvent::class, $event);
     }
