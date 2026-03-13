@@ -501,8 +501,8 @@ class OrganisationUserWorkflowTest extends TestCase
         string $schema
     ): MockObject {
         $mockObject = $this->getMockBuilder(\OCA\OpenRegister\Db\ObjectEntity::class)
-            ->onlyMethods(['getObject'])
-            ->addMethods(['getId', 'getUuid', 'getRegister', 'getSchema', 'setObject', 'jsonSerialize'])
+            ->onlyMethods(['getObject', 'jsonSerialize'])
+            ->addMethods(['getId', 'getUuid', 'getRegister', 'getSchema', 'setObject'])
             ->getMock();
 
         $mockObject->method('getId')
