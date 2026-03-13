@@ -32,7 +32,9 @@ use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IGroup;
 use OCP\IRequest;
+use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
+use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
@@ -137,7 +139,10 @@ class OrganisationUserWorkflowTest extends TestCase
         $this->contactpersoonService = $this->createMock(ContactpersoonService::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
-        // Create controller
+        // Create controller with correct argument order matching the constructor:
+        // $appName, $request, $settingsService, $contactPersonHandler,
+        // $contactpersoonService, $userManager, $groupManager, $userSession,
+        // $container, $secureRandom, $logger
         $this->controller = new ContactpersonenController(
             'softwarecatalog',
             $this->createMock(IRequest::class),
@@ -146,6 +151,8 @@ class OrganisationUserWorkflowTest extends TestCase
             $this->contactpersoonService,
             $this->userManager,
             $this->groupManager,
+            $this->createMock(IUserSession::class),
+            $this->createMock(ContainerInterface::class),
             $this->createMock(ISecureRandom::class),
             $this->logger
         );
@@ -408,7 +415,7 @@ class OrganisationUserWorkflowTest extends TestCase
         $expectedGroupName = $this->getExpectedGroupForOrganisationType(
             $contactpersoonData['organisationType']
         );
-        
+
         $mockGroup = $this->createMock(IGroup::class);
         $mockGroup->method('getGID')
             ->willReturn($expectedGroupName);
@@ -482,6 +489,9 @@ class OrganisationUserWorkflowTest extends TestCase
     /**
      * Helper method to create a mock ObjectEntity
      *
+     * ObjectEntity extends OCP\AppFramework\Db\Entity which uses __call()
+     * for getters/setters, so we must use getMockBuilder with addMethods().
+     *
      * @param string $uuid     The UUID
      * @param array  $data     The object data
      * @param string $register The register ID
@@ -495,8 +505,10 @@ class OrganisationUserWorkflowTest extends TestCase
         string $register,
         string $schema
     ): MockObject {
-        $mockObject = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
-        
+        $mockObject = $this->getMockBuilder(\OCA\OpenRegister\Db\ObjectEntity::class)
+            ->addMethods(['getId', 'getUuid', 'getObject', 'getRegister', 'getSchema', 'setObject', 'jsonSerialize'])
+            ->getMock();
+
         $mockObject->method('getId')
             ->willReturn(1);
         $mockObject->method('getUuid')
@@ -525,6 +537,3 @@ class OrganisationUserWorkflowTest extends TestCase
         parent::tearDown();
     }
 }
-
-
-

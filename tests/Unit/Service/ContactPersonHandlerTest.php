@@ -6,11 +6,16 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCP\IConfig;
 use OCP\IUserManager;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IGroup;
-use OCP\IContainer;
+use OCP\IAppConfig;
+use OCP\Security\ISecureRandom;
+use OCP\App\IAppManager;
+use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
@@ -40,6 +45,13 @@ class ContactPersonHandlerTest extends TestCase
     private IUserManager|MockObject $userManager;
 
     /**
+     * Mock of the ISecureRandom service
+     *
+     * @var ISecureRandom|MockObject
+     */
+    private ISecureRandom|MockObject $secureRandom;
+
+    /**
      * Mock of the IGroupManager service
      *
      * @var IGroupManager|MockObject
@@ -47,11 +59,25 @@ class ContactPersonHandlerTest extends TestCase
     private IGroupManager|MockObject $groupManager;
 
     /**
-     * Mock of the IContainer service
+     * Mock of the IAppConfig service
      *
-     * @var IContainer|MockObject
+     * @var IAppConfig|MockObject
      */
-    private IContainer|MockObject $container;
+    private IAppConfig|MockObject $appConfig;
+
+    /**
+     * Mock of the ContainerInterface service
+     *
+     * @var ContainerInterface|MockObject
+     */
+    private ContainerInterface|MockObject $container;
+
+    /**
+     * Mock of the IAppManager service
+     *
+     * @var IAppManager|MockObject
+     */
+    private IAppManager|MockObject $appManager;
 
     /**
      * Mock of the LoggerInterface
@@ -59,6 +85,20 @@ class ContactPersonHandlerTest extends TestCase
      * @var LoggerInterface|MockObject
      */
     private LoggerInterface|MockObject $logger;
+
+    /**
+     * Mock of the SymfonyEmailService
+     *
+     * @var SymfonyEmailService|MockObject
+     */
+    private SymfonyEmailService|MockObject $emailService;
+
+    /**
+     * Mock of the IConfig
+     *
+     * @var IConfig|MockObject
+     */
+    private IConfig|MockObject $config;
 
     /**
      * Mock of the SettingsService
@@ -85,9 +125,14 @@ class ContactPersonHandlerTest extends TestCase
 
         // Create mocks
         $this->userManager = $this->createMock(IUserManager::class);
+        $this->secureRandom = $this->createMock(ISecureRandom::class);
         $this->groupManager = $this->createMock(IGroupManager::class);
-        $this->container = $this->createMock(IContainer::class);
+        $this->appConfig = $this->createMock(IAppConfig::class);
+        $this->container = $this->createMock(ContainerInterface::class);
+        $this->appManager = $this->createMock(IAppManager::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->emailService = $this->createMock(SymfonyEmailService::class);
+        $this->config = $this->createMock(IConfig::class);
         $this->settingsService = $this->createMock(SettingsService::class);
 
         // Configure container to return settings service
@@ -95,12 +140,20 @@ class ContactPersonHandlerTest extends TestCase
             ->with('OCA\SoftwareCatalog\Service\SettingsService')
             ->willReturn($this->settingsService);
 
-        // Create the ContactPersonHandler instance
+        // Create the ContactPersonHandler instance with correct constructor args:
+        // IUserManager, ISecureRandom, IGroupManager, IAppConfig,
+        // ContainerInterface, IAppManager, LoggerInterface,
+        // SymfonyEmailService, IConfig
         $this->contactPersonHandler = new ContactPersonHandler(
             $this->userManager,
+            $this->secureRandom,
             $this->groupManager,
+            $this->appConfig,
             $this->container,
-            $this->logger
+            $this->appManager,
+            $this->logger,
+            $this->emailService,
+            $this->config
         );
     }
 
@@ -114,56 +167,53 @@ class ContactPersonHandlerTest extends TestCase
      */
     public function testGetRoleGroupByOrganizationType(): void
     {
-        // Create a minimal ContactPersonHandler for testing
-        $handler = $this->createPartialMock(ContactPersonHandler::class, []);
-        
         // Use reflection to access the private method
-        $reflection = new ReflectionClass($handler);
+        $reflection = new ReflectionClass($this->contactPersonHandler);
         $method = $reflection->getMethod('getRoleGroupByOrganizationType');
         $method->setAccessible(true);
 
         // Test case 1: Gemeente -> gebruik-beheerder
-        $result = $method->invoke($handler, 'Gemeente');
+        $result = $method->invoke($this->contactPersonHandler, 'Gemeente');
         $this->assertEquals('gebruik-beheerder', $result, 'Gemeente should map to gebruik-beheerder');
 
         // Test case 2: gemeente (lowercase) -> gebruik-beheerder
-        $result = $method->invoke($handler, 'gemeente');
+        $result = $method->invoke($this->contactPersonHandler, 'gemeente');
         $this->assertEquals('gebruik-beheerder', $result, 'gemeente (lowercase) should map to gebruik-beheerder');
 
         // Test case 3: Leverancier -> aanbod-beheerder
-        $result = $method->invoke($handler, 'Leverancier');
+        $result = $method->invoke($this->contactPersonHandler, 'Leverancier');
         $this->assertEquals('aanbod-beheerder', $result, 'Leverancier should map to aanbod-beheerder');
 
         // Test case 4: leverancier (lowercase) -> aanbod-beheerder
-        $result = $method->invoke($handler, 'leverancier');
+        $result = $method->invoke($this->contactPersonHandler, 'leverancier');
         $this->assertEquals('aanbod-beheerder', $result, 'leverancier (lowercase) should map to aanbod-beheerder');
 
         // Test case 5: Samenwerking -> gebruik-beheerder
-        $result = $method->invoke($handler, 'Samenwerking');
+        $result = $method->invoke($this->contactPersonHandler, 'Samenwerking');
         $this->assertEquals('gebruik-beheerder', $result, 'Samenwerking should map to gebruik-beheerder');
 
         // Test case 6: samenwerking (lowercase) -> gebruik-beheerder
-        $result = $method->invoke($handler, 'samenwerking');
+        $result = $method->invoke($this->contactPersonHandler, 'samenwerking');
         $this->assertEquals('gebruik-beheerder', $result, 'samenwerking (lowercase) should map to gebruik-beheerder');
 
         // Test case 7: Community -> aanbod-beheerder
-        $result = $method->invoke($handler, 'Community');
+        $result = $method->invoke($this->contactPersonHandler, 'Community');
         $this->assertEquals('aanbod-beheerder', $result, 'Community should map to aanbod-beheerder');
 
         // Test case 8: community (lowercase) -> aanbod-beheerder
-        $result = $method->invoke($handler, 'community');
+        $result = $method->invoke($this->contactPersonHandler, 'community');
         $this->assertEquals('aanbod-beheerder', $result, 'community (lowercase) should map to aanbod-beheerder');
 
         // Test case 9: Unknown organization type -> empty string
-        $result = $method->invoke($handler, 'UnknownType');
+        $result = $method->invoke($this->contactPersonHandler, 'UnknownType');
         $this->assertEquals('', $result, 'Unknown organization type should return empty string');
 
         // Test case 10: Empty string -> empty string
-        $result = $method->invoke($handler, '');
+        $result = $method->invoke($this->contactPersonHandler, '');
         $this->assertEquals('', $result, 'Empty organization type should return empty string');
 
         // Test case 11: Whitespace handling
-        $result = $method->invoke($handler, '  Gemeente  ');
+        $result = $method->invoke($this->contactPersonHandler, '  Gemeente  ');
         $this->assertEquals('gebruik-beheerder', $result, 'Organization type with whitespace should be trimmed and mapped correctly');
     }
 
