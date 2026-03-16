@@ -458,7 +458,6 @@ class AangebodenGebruikService
                     query: $searchQuery,
                     _rbac: false,
                     _multitenancy: false,
-                    published: false,
                     deleted: false
                 );
             } else {
@@ -481,7 +480,6 @@ class AangebodenGebruikService
                     query: $searchQuery,
                     _rbac: false,
                     _multitenancy: false,
-                    published: false,
                     deleted: false,
                     uses: $uuid
                 );
@@ -586,8 +584,6 @@ class AangebodenGebruikService
                 _rbac: false,
                 // Disable multitenancy to access objects from all organisations.
                 _multitenancy: false,
-                // Include unpublished objects.
-                published: false,
                 // Exclude deleted objects.
                 deleted: false
             );
@@ -704,8 +700,6 @@ class AangebodenGebruikService
             // Disable RBAC to access any object.
                 _multitenancy: false,
             // Disable multitenancy to access objects from any organisation.
-                published: false,
-            // Include unpublished objects.
                 deleted: false,
             // Exclude deleted objects.
                 uses: $suiteId
@@ -1298,7 +1292,6 @@ class AangebodenGebruikService
             query: $searchQuery,
             _rbac: false,
             _multitenancy: false,
-            published: false,
             deleted: false
         );
 
@@ -1464,7 +1457,6 @@ class AangebodenGebruikService
             query: $searchQuery,
             _rbac: false,
             _multitenancy: false,
-            published: false,
             deleted: false,
             uses: $relatedUuid
         );
