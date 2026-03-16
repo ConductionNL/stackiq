@@ -585,7 +585,8 @@ LEVER_APP_UUID=$(create_object "voorzieningen" "module" "{
     \"naam\": \"Test Applicatie Leverancier\",
     \"beschrijvingKort\": \"Een test applicatie van Test Leverancier BV voor geautomatiseerde tests\",
     \"beschrijvingLang\": \"Deze applicatie is aangemaakt door het test setup script om de beheer-, wizard- en zoekfunctionaliteit te testen.\",
-    \"geregistreerdDoor\": \"${LEVER_REG}\",
+    \"geregistreerdDoor\": \"Leverancier\",
+    \"referentieComponenten\": [\"e-Formulieren\", \"Zaakafhandelcomponent\"],
     \"status\": \"Actief\"
 }" "applicatie for Test Leverancier BV" "Test Applicatie Leverancier" "jan.pietersen@test.nl:${PASSWORD}")
 
@@ -593,7 +594,8 @@ LEVER_APP_UUID=$(create_object "voorzieningen" "module" "{
 LEVER2_APP_UUID=$(create_object "voorzieningen" "module" "{
     \"naam\": \"Test Applicatie Leverancier 2\",
     \"beschrijvingKort\": \"Een test applicatie van Test Leverancier 2 voor cross-vendor tests\",
-    \"geregistreerdDoor\": \"${LEVER2_REG}\",
+    \"geregistreerdDoor\": \"Leverancier\",
+    \"referentieComponenten\": [\"Zaakafhandelcomponent\"],
     \"status\": \"Actief\"
 }" "applicatie for Test Leverancier 2" "Test Applicatie Leverancier 2" "jan.vandeberg@testleverancier.nl:${PASSWORD}")
 
@@ -603,7 +605,7 @@ LEVER_DIENST_UUID=$(create_object "voorzieningen" "dienst" "{
     \"beschrijvingKort\": \"Een test dienst voor geautomatiseerde tests\",
     \"type\": [\"Implementatieondersteuning\"],
     \"aanbieder\": \"${LEVER_REG}\",
-    \"geregistreerdDoor\": \"${LEVER_REG}\",
+    \"geregistreerdDoor\": \"Leverancier\",
     \"status\": \"Actief\"
 }" "dienst for Test Leverancier BV" "Test Dienst Leverancier" "jan.pietersen@test.nl:${PASSWORD}")
 
@@ -611,7 +613,8 @@ LEVER_DIENST_UUID=$(create_object "voorzieningen" "dienst" "{
 GEMEENTE_APP_UUID=$(create_object "voorzieningen" "module" "{
     \"naam\": \"Test Applicatie Gemeente\",
     \"beschrijvingKort\": \"Een test applicatie geregistreerd door Test Gemeente\",
-    \"geregistreerdDoor\": \"${GEMEENTE_REG}\",
+    \"geregistreerdDoor\": \"Gemeente\",
+    \"referentieComponenten\": [\"Zaakafhandelcomponent\", \"e-Formulieren\"],
     \"status\": \"Actief\"
 }" "applicatie for Test Gemeente" "Test Applicatie Gemeente" "maria.vanderberg@test.nl:${PASSWORD}")
 

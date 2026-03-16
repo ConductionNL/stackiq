@@ -3663,7 +3663,7 @@
 						},
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"naam\": \"Test Applicatie Leverancier\",\n  \"beschrijvingKort\": \"Een test applicatie van Test Leverancier BV voor geautomatiseerde tests\",\n  \"beschrijvingLang\": \"Deze applicatie is aangemaakt door het test setup script om de beheer-, wizard- en zoekfunctionaliteit te testen.\",\n  \"status\": \"Actief\"\n}"
+							"raw": "{\n  \"naam\": \"Test Applicatie Leverancier\",\n  \"beschrijvingKort\": \"Een test applicatie van Test Leverancier BV voor geautomatiseerde tests\",\n  \"beschrijvingLang\": \"Deze applicatie is aangemaakt door het test setup script om de beheer-, wizard- en zoekfunctionaliteit te testen.\",\n  \"status\": \"Actief\",\n  \"geregistreerdDoor\": \"Leverancier\",\n  \"referentieComponenten\": [\n    \"e-Formulieren\",\n    \"Zaakafhandelcomponent\"\n  ]\n}"
 						},
 						"auth": {
 							"type": "basic",
@@ -3737,7 +3737,7 @@
 						},
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"naam\": \"Test Applicatie Leverancier 2\",\n  \"beschrijvingKort\": \"Een test applicatie van Test Leverancier 2 voor cross-vendor tests\",\n  \"status\": \"Actief\"\n}"
+							"raw": "{\n  \"naam\": \"Test Applicatie Leverancier 2\",\n  \"beschrijvingKort\": \"Een test applicatie van Test Leverancier 2 voor cross-vendor tests\",\n  \"status\": \"Actief\",\n  \"geregistreerdDoor\": \"Leverancier\",\n  \"referentieComponenten\": [\n    \"e-Formulieren\",\n    \"Zaakafhandelcomponent\"\n  ]\n}"
 						},
 						"auth": {
 							"type": "basic",
@@ -3886,7 +3886,7 @@
 						},
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"naam\": \"Test Applicatie Gemeente\",\n  \"beschrijvingKort\": \"Een test applicatie geregistreerd door Test Gemeente\",\n  \"status\": \"Actief\"\n}"
+							"raw": "{\n  \"naam\": \"Test Applicatie Gemeente\",\n  \"beschrijvingKort\": \"Een test applicatie geregistreerd door Test Gemeente\",\n  \"status\": \"Actief\",\n  \"geregistreerdDoor\": \"Gemeente\",\n  \"referentieComponenten\": [\n    \"Zaakafhandelcomponent\"\n  ]\n}"
 						},
 						"auth": {
 							"type": "basic",
@@ -4413,6 +4413,71 @@
 								"exec": [
 									"pm.test(\"Profile seeded for sarah.devries@test.nl\", function() {",
 									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Configure Catalog with registers and schemas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{opencatalogi_api}}/catalogi",
+							"host": [
+								"{{opencatalogi_api}}"
+							],
+							"path": [
+								"catalogi"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.results && json.results.length > 0) {",
+									"    var catalog = json.results[0];",
+									"    var uuid = catalog['@self'] ? catalog['@self'].id : catalog.uuid;",
+									"    pm.environment.set('catalog_uuid', uuid);",
+									"    pm.environment.set('catalog_slug', catalog.slug || 'publications');",
+									"    console.log('Catalog UUID: ' + uuid);",
+									"",
+									"    // Update catalog with register/schema links if not set",
+									"    if (!catalog.registers || !catalog.schemas) {",
+									"        var catalogSchema = pm.environment.get('catalog_schema_id') || '23';",
+									"        var catalogRegister = pm.environment.get('catalog_register_id') || '5';",
+									"        pm.sendRequest({",
+									"            url: pm.environment.get('base_url') + '/index.php/apps/openregister/api/objects/' + catalogRegister + '/' + catalogSchema + '/' + uuid,",
+									"            method: 'PATCH',",
+									"            header: {'Content-Type': 'application/json', 'Authorization': 'Basic ' + btoa(pm.environment.get('admin_user') + ':' + pm.environment.get('admin_pass'))},",
+									"            body: {mode: 'raw', raw: JSON.stringify({registers: ['3'], schemas: ['19','11','7','8','9'], autoPublish: true})}",
+									"        }, function(err, res) {",
+									"            console.log('Catalog updated: ' + (res ? res.code : 'error'));",
+									"        });",
+									"    }",
+									"}",
+									"pm.test('Catalog found', function() {",
+									"    pm.expect(json.results).to.be.an('array');",
+									"    pm.expect(json.results.length).to.be.greaterThan(0);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -10039,7 +10104,7 @@
 								},
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"naam\": \"Test Koppeling\",\n  \"beschrijvingKort\": \"Test koppeling voor postman tests\",\n  \"gegevensuitwisselingRichting\": \"bi-directioneel\",\n  \"koppelingType\": \"intern\",\n  \"type\": \"api\"\n}"
+									"raw": "{\n  \"naam\": \"Test Koppeling\",\n  \"beschrijvingKort\": \"Test koppeling voor postman tests\",\n  \"gegevensuitwisselingRichting\": \"bi-directioneel\",\n  \"koppelingType\": \"intern\",\n  \"type\": \"api\",\n  \"moduleA\": \"{{lever_app_uuid}}\"\n}"
 								},
 								"auth": {
 									"type": "basic",
