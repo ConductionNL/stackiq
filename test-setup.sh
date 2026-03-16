@@ -795,32 +795,41 @@ else:
 echo ""
 echo "--- Step 8b: Importing AMEF test data ---"
 
-AMEF_FILE="/var/www/html/custom_apps/softwarecatalog/lib/Settings/GEMMA_testdata_below_1_5mb.xml"
+AMEF_FILE="/var/www/html/custom_apps/softwarecatalog/data/GEMMA release.xml"
 if docker exec nextcloud test -f "$AMEF_FILE"; then
-    # Check if AMEF elements already exist
-    ELEMENT_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
-        "${NC_URL}/index.php/apps/openregister/api/objects/vng-gemma/element?_limit=1" 2>&1 | \
+    # Check if AMEF views already exist (full GEMMA release has 248 views)
+    VIEW_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+        "${NC_URL}/index.php/apps/openregister/api/objects/vng-gemma/view?_limit=1" 2>&1 | \
         python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('total',0))" 2>/dev/null || echo "0")
 
-    if [ "$ELEMENT_COUNT" = "0" ]; then
-        echo "  Importing GEMMA test AMEF data via file_path..."
-        AMEF_RESULT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
-            "${NC_URL}/index.php/apps/softwarecatalog/api/archimate/import" \
-            -H "Content-Type: application/json" \
-            -d "{\"file_path\": \"${AMEF_FILE}\"}" 2>&1)
-        AMEF_OBJECTS=$(echo "$AMEF_RESULT" | python3 -c "
-import sys, json
-try:
-    d = json.loads(sys.stdin.read())
-    print(d.get('performance_metrics', {}).get('objects_processed', d.get('message', 'unknown')))
-except: print('parse_error')
-" 2>/dev/null || echo "error")
-        echo "  AMEF import: $AMEF_OBJECTS objects processed"
+    if [ "$VIEW_COUNT" = "0" ]; then
+        echo "  Importing full GEMMA release AMEF data via PHP CLI..."
+        # HTTP endpoint times out on the 13MB file, so use PHP CLI with no timeout
+        docker exec nextcloud bash -c "cat > /tmp/import-gemma.php << 'IMPORTEOF'
+<?php
+require \"/var/www/html/lib/base.php\";
+try {
+    \\\$svc = \\OC::\\\$server->get(\\OCA\\SoftwareCatalog\\Service\\ArchiMateImportService::class);
+    \\\$r = \\\$svc->importArchiMateFileFromPathOptimized([
+        \"filePath\" => \"$AMEF_FILE\",
+        \"fileName\" => \"GEMMA release.xml\",
+        \"fileSize\" => filesize(\"$AMEF_FILE\"),
+        \"updateExisting\" => true,
+        \"processingMode\" => \"speed\",
+    ]);
+    \\\$pm = \\\$r[\"performance_metrics\"] ?? [];
+    echo json_encode([\"objects\" => \\\$pm[\"objects_processed\"] ?? 0, \"time\" => \\\$pm[\"total_time_seconds\"] ?? 0]);
+} catch (\\Throwable \\\$e) { echo json_encode([\"error\" => \\\$e->getMessage()]); }
+IMPORTEOF" 2>/dev/null
+
+        AMEF_RESULT=$(docker exec nextcloud php -d max_execution_time=0 -d memory_limit=4096M /tmp/import-gemma.php 2>/dev/null)
+        AMEF_OBJECTS=$(echo "$AMEF_RESULT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(f'{d.get(\"objects\",\"?\")} objects in {d.get(\"time\",\"?\")}s')" 2>/dev/null || echo "error")
+        echo "  AMEF import: $AMEF_OBJECTS"
     else
-        echo "  AMEF data already imported ($ELEMENT_COUNT elements)"
+        echo "  AMEF data already imported ($VIEW_COUNT views)"
     fi
 else
-    echo "  WARN: AMEF test data file not found"
+    echo "  WARN: GEMMA release.xml not found at $AMEF_FILE"
 fi
 
 # ─────────────────────────────────────────────
