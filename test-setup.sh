@@ -737,6 +737,55 @@ else:
 " 2>/dev/null
 
 # ─────────────────────────────────────────────
+# Step 8b: Ensure Beheer Menu exists (position 7)
+# ─────────────────────────────────────────────
+echo ""
+echo "--- Step 8b: Ensuring Beheer menu (position 7) exists ---"
+
+# Check if a menu at position 7 already exists
+BEHEER_MENU=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+  "${BACKEND_URL}/index.php/apps/opencatalogi/api/menus?_limit=100" 2>/dev/null \
+  | python3 -c "
+import sys,json
+try:
+    data = json.load(sys.stdin)
+    for r in data.get('results',[]):
+        if r.get('position') == 7:
+            print(r.get('id',''))
+            break
+except: pass
+" 2>/dev/null)
+
+if [ -n "$BEHEER_MENU" ]; then
+  echo "  Beheer menu already exists (id=$BEHEER_MENU)"
+else
+  # Find register/schema for menus from existing menu
+  MENU_META=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+    "${BACKEND_URL}/index.php/apps/opencatalogi/api/menus?_limit=1" 2>/dev/null \
+    | python3 -c "
+import sys,json
+try:
+    data = json.load(sys.stdin)
+    r = data['results'][0]['@self']
+    print(f\"{r['register']} {r['schema']}\")
+except: pass
+" 2>/dev/null)
+  MENU_REG=$(echo "$MENU_META" | awk '{print $1}')
+  MENU_SCHEMA=$(echo "$MENU_META" | awk '{print $2}')
+
+  if [ -n "$MENU_REG" ] && [ -n "$MENU_SCHEMA" ]; then
+    BEHEER_MENU=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
+      -H 'Content-Type: application/json' \
+      "${BACKEND_URL}/index.php/apps/openregister/api/objects/${MENU_REG}/${MENU_SCHEMA}" \
+      -d '{"title":"Dashboard","position":7,"items":[{"order":1,"name":"Dashboard","link":"/beheer","items":[]},{"order":2,"name":"Mijn Account","link":"/beheer/my-account","items":[]},{"order":3,"name":"Mijn Organisatie","link":"/beheer/my-organisation","items":[]},{"order":5,"name":"Diensten","link":"/beheer/diensten","items":[]},{"order":6,"name":"Contactpersonen","link":"/beheer/contactpersoon","items":[]},{"order":7,"name":"Applicaties","link":"/beheer/applicaties","items":[]},{"order":8,"name":"Gebruik","link":"/beheer/gebruik","items":[]},{"order":9,"name":"Koppelingen","link":"/beheer/koppeling","items":[]},{"order":10,"name":"View","link":"/beheer/view","items":[]}]}' 2>/dev/null \
+      | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
+    echo "  Created Beheer menu (id=$BEHEER_MENU)"
+  else
+    echo "  WARN: Could not determine menu register/schema — skipping beheer menu creation"
+  fi
+fi
+
+# ─────────────────────────────────────────────
 # Step 9: Clear rate limiting again (login attempts above may trigger it)
 # ─────────────────────────────────────────────
 echo ""
