@@ -1,31 +1,22 @@
 <template>
-	<div class="dashboard">
-		<!-- Header -->
-		<div class="dashboardHeader">
-			<div class="headerWithActions">
-				<div class="headerContent">
-					<h1 class="dashboardTitle">
-						<ViewDashboard :size="32" />
-						Dashboard
-					</h1>
-					<p class="dashboardDescription">
-						Overzicht van uw softwarecatalogus en configuraties
-					</p>
-				</div>
-				<div class="headerActions">
-					<NcButton type="secondary" @click="refreshAllData">
-						<template #icon>
-							<NcLoadingIcon v-if="loading" :size="20" />
-							<Refresh v-else :size="20" />
-						</template>
-						Vernieuwen
-					</NcButton>
-				</div>
-			</div>
-		</div>
+	<CnDashboardPage
+		title="Dashboard"
+		description="Overzicht van uw softwarecatalogus en configuraties"
+		:widgets="widgetDefs"
+		:layout="dashboardLayout"
+		:loading="loading">
+		<template #header-actions>
+			<NcButton type="secondary" @click="refreshAllData">
+				<template #icon>
+					<NcLoadingIcon v-if="loading" :size="20" />
+					<Refresh v-else :size="20" />
+				</template>
+				Vernieuwen
+			</NcButton>
+		</template>
 
-		<div v-if="!loading" class="dashboardContent">
-			<!-- Info Box -->
+		<!-- Beheer info box widget -->
+		<template #widget-info-box>
 			<NcNoteCard type="info" class="infoBox">
 				<div class="infoBoxContent">
 					<h3 class="infoBoxTitle">
@@ -46,130 +37,115 @@
 					</div>
 				</div>
 			</NcNoteCard>
+		</template>
 
-			<!-- Object Statistics Tables -->
-			<div class="objectStatistics">
-				<h2 class="sectionTitle">
-					Object Statistieken
-				</h2>
-				<p class="sectionDescription">
-					Overzicht van objecten opgeslagen in geconfigureerde registers
-				</p>
-
-				<div class="statisticsTablesRow">
-					<!-- First Table -->
-					<div class="statisticsTableContainer">
-						<div class="statisticsTableHeader">
-							<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
-						</div>
-
-						<table class="objectStatisticsTable">
-							<thead>
-								<tr>
-									<th>Object Type</th>
-									<th class="countHeader">
-										Aantal
-									</th>
-									<th class="manageHeader">
-										Beheren
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="stat in firstTableStats" :key="stat.objectType">
-									<td>{{ stat.objectType }}</td>
-									<td class="countCell">
-										{{ stat.count.toLocaleString() }}
-									</td>
-									<td class="manageCell">
-										<NcButton
-											v-if="stat.slug === 'organisatie'"
-											size="small"
-											type="tertiary"
-											@click="navigateToObjectType(stat.slug)">
-											<template #icon>
-												<component :is="getIconForObjectType(stat.slug)" :size="16" />
-											</template>
-											Beheren
-										</NcButton>
-										<span v-else class="disabledManage">
-											<component :is="getIconForObjectType(stat.slug)" :size="16" />
-											<span class="strikethrough">Beheren</span>
-										</span>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-
-					<!-- Second Table -->
-					<div class="statisticsTableContainer">
-						<div class="statisticsTableHeader">
-							<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
-						</div>
-
-						<table class="objectStatisticsTable">
-							<thead>
-								<tr>
-									<th>Object Type</th>
-									<th class="countHeader">
-										Aantal
-									</th>
-									<th class="manageHeader">
-										Beheren
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="stat in secondTableStats" :key="stat.objectType">
-									<td>{{ stat.objectType }}</td>
-									<td class="countCell">
-										{{ stat.count.toLocaleString() }}
-									</td>
-									<td class="manageCell">
-										<NcButton
-											v-if="stat.slug === 'organisatie'"
-											size="small"
-											type="tertiary"
-											@click="navigateToObjectType(stat.slug)">
-											<template #icon>
-												<component :is="getIconForObjectType(stat.slug)" :size="16" />
-											</template>
-											Beheren
-										</NcButton>
-										<span v-else class="disabledManage">
-											<component :is="getIconForObjectType(stat.slug)" :size="16" />
-											<span class="strikethrough">Beheren</span>
-										</span>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
+		<!-- Statistics table 1 widget -->
+		<template #widget-stats-table-1>
+			<div class="statisticsTableContainer">
+				<div class="statisticsTableHeader">
+					<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
 				</div>
-			</div>
-		</div>
 
-		<!-- Loading State -->
-		<div v-else class="dashboardLoading">
-			<NcLoadingIcon :size="64" />
-			<p>Dashboard laden...</p>
-		</div>
-	</div>
+				<table class="objectStatisticsTable">
+					<thead>
+						<tr>
+							<th>Object Type</th>
+							<th class="countHeader">
+								Aantal
+							</th>
+							<th class="manageHeader">
+								Beheren
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="stat in firstTableStats" :key="stat.objectType">
+							<td>{{ stat.objectType }}</td>
+							<td class="countCell">
+								{{ stat.count.toLocaleString() }}
+							</td>
+							<td class="manageCell">
+								<NcButton
+									v-if="stat.slug === 'organisatie'"
+									size="small"
+									type="tertiary"
+									@click="navigateToObjectType(stat.slug)">
+									<template #icon>
+										<component :is="getIconForObjectType(stat.slug)" :size="16" />
+									</template>
+									Beheren
+								</NcButton>
+								<span v-else class="disabledManage">
+									<component :is="getIconForObjectType(stat.slug)" :size="16" />
+									<span class="strikethrough">Beheren</span>
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</template>
+
+		<!-- Statistics table 2 widget -->
+		<template #widget-stats-table-2>
+			<div class="statisticsTableContainer">
+				<div class="statisticsTableHeader">
+					<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
+				</div>
+
+				<table class="objectStatisticsTable">
+					<thead>
+						<tr>
+							<th>Object Type</th>
+							<th class="countHeader">
+								Aantal
+							</th>
+							<th class="manageHeader">
+								Beheren
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="stat in secondTableStats" :key="stat.objectType">
+							<td>{{ stat.objectType }}</td>
+							<td class="countCell">
+								{{ stat.count.toLocaleString() }}
+							</td>
+							<td class="manageCell">
+								<NcButton
+									v-if="stat.slug === 'organisatie'"
+									size="small"
+									type="tertiary"
+									@click="navigateToObjectType(stat.slug)">
+									<template #icon>
+										<component :is="getIconForObjectType(stat.slug)" :size="16" />
+									</template>
+									Beheren
+								</NcButton>
+								<span v-else class="disabledManage">
+									<component :is="getIconForObjectType(stat.slug)" :size="16" />
+									<span class="strikethrough">Beheren</span>
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</template>
+	</CnDashboardPage>
 </template>
 
 <script>
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { CnDashboardPage } from '@conduction/nextcloud-vue'
 import { objectStore, navigationStore } from '../store/store.js'
 
 // Icons
-import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
 import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import ApplicationCog from 'vue-material-design-icons/ApplicationCog.vue'
 import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
-import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
 
@@ -180,25 +156,25 @@ import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
  * @author Claude AI
  * @copyright 2023 Conduction
  * @license EUPL-1.2
- * @version 1.0.0
+ * @version 2.0.0
  * @see https://github.com/OpenCatalogi/opencatalogi
  *
  * Dashboard view showing overview statistics and configuration status.
+ * Uses CnDashboardPage for standard widget-based layout.
  */
 export default {
 	name: 'Dashboard',
 	components: {
+		CnDashboardPage,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
 		// Icons
-		ViewDashboard,
 		OfficeBuildingOutline,
 		AccountMultiple,
 		ApplicationCog,
 		FileDocumentEdit,
 		Cog,
-		Plus,
 		Refresh,
 		DatabaseOutline,
 	},
@@ -206,10 +182,27 @@ export default {
 	data() {
 		return {
 			loading: true,
+			dashboardLayout: [
+				{ id: 1, widgetId: 'info-box', gridX: 0, gridY: 0, gridWidth: 12, showTitle: false },
+				{ id: 2, widgetId: 'stats-table-1', gridX: 0, gridY: 1, gridWidth: 6, showTitle: false },
+				{ id: 3, widgetId: 'stats-table-2', gridX: 6, gridY: 1, gridWidth: 6, showTitle: false },
+			],
 		}
 	},
 
 	computed: {
+		/**
+		 * Widget definitions for CnDashboardPage
+		 * @return {Array} Widget definition array
+		 */
+		widgetDefs() {
+			return [
+				{ id: 'info-box', title: 'Beheer Informatie' },
+				{ id: 'stats-table-1', title: 'Object Statistieken (1)' },
+				{ id: 'stats-table-2', title: 'Object Statistieken (2)' },
+			]
+		},
+
 		/**
 		 * Get object statistics for the table display
 		 * @return {Array} Array of object statistics
@@ -325,24 +318,6 @@ export default {
 				}
 			}
 			return null
-		},
-
-		/**
-		 * Get icon component for icon name
-		 * @param {string} iconName - Icon name from schema
-		 * @return {object} Vue icon component
-		 */
-		getIconComponent(iconName) {
-			const iconMap = {
-				OfficeBuildingOutline,
-				AccountMultiple,
-				ApplicationCog,
-				FileDocumentEdit,
-				ViewDashboard,
-				Cog,
-				DatabaseOutline,
-			}
-			return iconMap[iconName] || OfficeBuildingOutline
 		},
 
 		/**
@@ -481,40 +456,9 @@ export default {
 </script>
 
 <style scoped>
-.dashboard {
-	padding: 24px;
-	max-width: 1200px;
-	margin: 0 auto;
-}
-
-.dashboardHeader {
-	margin-bottom: 32px;
-}
-
-.dashboardTitle {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin: 0 0 8px 0;
-	font-size: 28px;
-	font-weight: 600;
-}
-
-.dashboardDescription {
-	margin: 0;
-	color: var(--color-text-lighter);
-	font-size: 16px;
-}
-
-.dashboardContent {
-	display: flex;
-	flex-direction: column;
-	gap: 32px;
-}
-
 /* Info Box Styles */
 .infoBox {
-	margin-bottom: 24px;
+	margin: 0;
 }
 
 .infoBoxContent {
@@ -541,93 +485,9 @@ export default {
 	margin-top: 8px;
 }
 
-/* Removed old statistics card styles - replaced with table */
-
-.sectionTitle {
-	margin: 0 0 16px 0;
-	font-size: 20px;
-	font-weight: 600;
-}
-
-.configurationCards {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-	gap: 16px;
-}
-
-.configurationCard {
-	padding: 20px;
-	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-}
-
-.configurationCardHeader {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin-bottom: 12px;
-}
-
-.configurationCardHeader h3 {
-	flex: 1;
-	margin: 0;
-	font-size: 16px;
-	font-weight: 500;
-}
-
-.configurationCardDescription {
-	margin: 0 0 16px 0;
-	color: var(--color-text-lighter);
-}
-
-/* Header with Actions Styles */
-.headerWithActions {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 20px;
-}
-
-.headerContent {
-	flex: 1;
-}
-
-.headerActions {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-}
-
-.dashboardLoading {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 16px;
-	min-height: 400px;
-	color: var(--color-text-lighter);
-}
-
-/* Object Statistics Tables */
-.objectStatistics {
-	margin-bottom: 32px;
-}
-
-.sectionDescription {
-	margin: 0 0 16px 0;
-	color: var(--color-text-lighter);
-}
-
-.statisticsTablesRow {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 24px;
-}
-
+/* Statistics Table Styles */
 .statisticsTableContainer {
 	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
 	overflow: hidden;
 }
@@ -697,21 +557,4 @@ export default {
 .strikethrough {
 	text-decoration: line-through;
 }
-
-@media (max-width: 768px) {
-	.statisticsTablesRow {
-		grid-template-columns: 1fr;
-	}
-
-	.headerWithActions {
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 16px;
-	}
-
-	.headerActions {
-		align-self: stretch;
-	}
-}
-
 </style>

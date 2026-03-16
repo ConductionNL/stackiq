@@ -409,9 +409,9 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            // Save using ObjectEntityMapper directly to bypass schema validation.
+            // Save using MagicMapper directly to bypass schema validation.
             // This avoids "Unresolved reference" errors when schema references can't be resolved.
-            $objectMapper = $this->container->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactpersoonObject);
 
             $this->logger->info(

@@ -252,7 +252,7 @@ class UserProfileUpdatedEventListener implements IEventListener
 
         // Pass register and schema so the magic mapper route is triggered and the.
         // Per-schema magic table is updated (not just the blob table).
-        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
         $objectMapper->update(entity: $contactpersoon, register: $registerEntity, schema: $schemaEntity);
 
         $logger->info(
