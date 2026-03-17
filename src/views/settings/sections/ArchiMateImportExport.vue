@@ -229,7 +229,7 @@
 											:key="sectionName"
 											class="section-error-group">
 											<div class="section-header">
-												<h7>{{ sectionData.section_name }}</h7>
+												<h6>{{ sectionData.section_name }}</h6>
 												<span class="section-error-count">{{ sectionData.total_errors }} errors</span>
 											</div>
 											<div class="section-error-details">
@@ -1305,6 +1305,8 @@ export default {
 
 .error-details {
 	padding: 1rem;
+	flex: 1;
+	min-width: 0;
 }
 
 .error-details p {
@@ -1672,11 +1674,6 @@ export default {
 .error-type-badge.encoding { background: #f1f8e9; color: #558b2f; }
 .error-type-badge.general { background: #f5f5f5; color: #424242; }
 
-.error-details {
-	flex: 1;
-	min-width: 0;
-}
-
 .error-message {
 	font-weight: 500;
 	color: var(--color-main-text);
@@ -1736,7 +1733,7 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.section-header h7 {
+.section-header h6 {
 	margin: 0;
 	font-size: 0.9rem;
 	font-weight: 600;

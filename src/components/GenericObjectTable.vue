@@ -1213,6 +1213,30 @@ export default {
 	margin-bottom: 12px;
 }
 
+.viewTable {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: auto;
+	min-width: 600px;
+}
+
+.viewTable th,
+.viewTable td {
+	padding: 12px 8px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+	width: auto;
+	min-width: 120px;
+}
+
+.viewTable th {
+	background: var(--color-background-dark);
+	font-weight: 600;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
 .statisticsTable {
 	width: 100%;
 	border-collapse: collapse;
@@ -1238,13 +1262,6 @@ export default {
 
 .statisticsTable.compact td {
 	padding: 4px 8px;
-}
-
-.truncatedText {
-	max-width: 200px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 /* Filter Styles */
@@ -1336,30 +1353,6 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	background: var(--color-main-background);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: auto;
-	min-width: 600px;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 12px 8px;
-	text-align: left;
-	border-bottom: 1px solid var(--color-border);
-	width: auto;
-	min-width: 120px;
-}
-
-.viewTable th {
-	background: var(--color-background-dark);
-	font-weight: 600;
-	position: sticky;
-	top: 0;
-	z-index: 1;
 }
 
 .viewTableRow:hover {

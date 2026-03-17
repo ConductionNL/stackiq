@@ -3431,11 +3431,15 @@ export default {
 	justify-content: space-between;
 	text-align: left;
 	width: 100%;
+	flex-wrap: wrap;
 }
 
 .value-input-container {
 	flex: 1;
 	text-align: left;
+	padding: 0;
+	margin: 0;
+	width: 100%;
 }
 
 .drop-property-btn {
@@ -3484,14 +3488,6 @@ export default {
 .value-cell {
 	position: relative;
 	text-align: left;
-}
-
-.value-input-container {
-	flex: 1;
-	text-align: left;
-	padding: 0;
-	margin: 0;
-	width: 100%;
 }
 
 .value-input-container .text-field {
@@ -3827,10 +3823,6 @@ export default {
 .viewObjectDialog .viewTable td.td-labels {
 	white-space: nowrap;
 	word-break: unset;
-}
-
-.value-cell-content {
-	flex-wrap: wrap;
 }
 
 .viewObjectDialog .viewTable td.table-row-type {

@@ -32,7 +32,9 @@ use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IGroup;
 use OCP\IRequest;
+use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
+use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
@@ -146,6 +148,8 @@ class OrganisationUserWorkflowTest extends TestCase
             $this->contactpersoonService,
             $this->userManager,
             $this->groupManager,
+            $this->createMock(IUserSession::class),
+            $this->createMock(ContainerInterface::class),
             $this->createMock(ISecureRandom::class),
             $this->logger
         );

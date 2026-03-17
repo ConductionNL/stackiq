@@ -496,6 +496,32 @@ export default defineComponent({
 	border-bottom: 1px solid var(--color-border-dark);
 }
 
+.modules-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9em;
+}
+
+.modules-table thead {
+	position: sticky;
+	top: 0;
+	background-color: var(--color-background-hover);
+	z-index: 1;
+}
+
+.modules-table th {
+	padding: 10px 12px;
+	text-align: left;
+	font-weight: 600;
+	border-bottom: 2px solid var(--color-border);
+	white-space: nowrap;
+}
+
+.modules-table td {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--color-border-dark);
+}
+
 .statistics-table tbody tr:last-child td {
 	border-bottom: none;
 }
@@ -725,32 +751,6 @@ export default defineComponent({
 	overflow-y: auto;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
-}
-
-.modules-table {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: 0.9em;
-}
-
-.modules-table thead {
-	position: sticky;
-	top: 0;
-	background-color: var(--color-background-hover);
-	z-index: 1;
-}
-
-.modules-table th {
-	padding: 10px 12px;
-	text-align: left;
-	font-weight: 600;
-	border-bottom: 2px solid var(--color-border);
-	white-space: nowrap;
-}
-
-.modules-table td {
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border-dark);
 }
 
 .modules-table tbody tr:last-child td {

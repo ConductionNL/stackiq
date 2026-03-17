@@ -407,7 +407,11 @@ class ContactPersonHandler
                 $this->storeContactNameFields(user: $existingUserByUsername, contactData: $objectData);
 
                 // Update groups for existing user.
-                $this->assignUserGroups(user: $existingUserByUsername, objectData: $objectData, isFirstContact: $isFirstContact);
+                $this->assignUserGroups(
+                    user: $existingUserByUsername,
+                    objectData: $objectData,
+                    isFirstContact: $isFirstContact
+                );
 
                 $this->_logger->critical(
                         '✅ EXISTING USER UPDATED BY USERNAME',
@@ -533,14 +537,20 @@ class ContactPersonHandler
                             'isFirstContact' => $isFirstContact,
                         ]
                         );
-                $assignedRole = $this->assignUserGroups(user: $user, objectData: $objectData, isFirstContact: $isFirstContact);
+                $assignedRole = $this->assignUserGroups(
+                    user: $user,
+                    objectData: $objectData,
+                    isFirstContact: $isFirstContact
+                );
 
                 // Update contactpersoon with username and auto-assigned role.
                 $objectData['username'] = $username;
 
                 // Populate the rollen field if a role was assigned and rollen is empty.
                 $currentRollen = $objectData['rollen'] ?? [];
-                if (empty($assignedRole) === false && (empty($currentRollen) === true || is_array($currentRollen) === false)) {
+                if (empty($assignedRole) === false
+                    && (empty($currentRollen) === true || is_array($currentRollen) === false)
+                ) {
                     $objectData['rollen'] = [$assignedRole];
                     $this->_logger->info(
                             'Auto-populated rollen field on contactpersoon',
@@ -1748,7 +1758,13 @@ class ContactPersonHandler
                         return;
                     }
 
-                    $organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisatieSchemaId);
+                    $organizationObject = $objectService->find(
+                        $organizationId,
+                        [],
+                        false,
+                        $registerId,
+                        $organisatieSchemaId
+                    );
                     if (empty($organizationObject) === false) {
                         $organizationData = $organizationObject->getObject();
                         $this->_logger->info(
@@ -1855,7 +1871,7 @@ class ContactPersonHandler
                         $contactpersoonObject->setObject($objectData);
 
                         $this->_logger->info(
-                                'Username added to contactpersoon object during update, but not saved to prevent event loops',
+                                'Username added to contactpersoon during update, not saved to prevent event loops',
                                 [
                                     'username' => $username,
                                     'objectId' => $contactpersoonObject->getId(),
@@ -1870,10 +1886,16 @@ class ContactPersonHandler
                 }//end if
 
                 // Determine if this is the first contact for the organization (expensive operation).
-                $isFirstContact = $this->isFirstContactForOrganization(contactObject: $contactpersoonObject, objectData: $objectData);
+                $isFirstContact = $this->isFirstContactForOrganization(
+                    contactObject: $contactpersoonObject,
+                    objectData: $objectData
+                );
 
                 // Create the user account.
-                $user = $this->createUserAccount(contactpersoonObject: $contactpersoonObject, isFirstContact: $isFirstContact);
+                $user = $this->createUserAccount(
+                    contactpersoonObject: $contactpersoonObject,
+                    isFirstContact: $isFirstContact
+                );
 
                 if ($user === null) {
                     throw new \Exception('Failed to create user account');
