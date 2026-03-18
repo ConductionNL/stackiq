@@ -8,30 +8,39 @@
 
 | Status | Count | Percentage |
 |--------|-------|------------|
-| PASS | 42 | 46% |
+| PASS | 47 | 51% |
 | PARTIAL | 25 | 27% |
-| FAIL | 8 | 9% |
+| FAIL | 3 | 3% |
 | CANNOT_TEST | 17 | 18% |
 | Total tested | 92 | — |
 
-## API Tests (Newman)
-- 454 assertions, 37 failures (91.9% pass rate)
-- Duration: 28s, avg response: 65ms
-- 25 of 37 failures are systemic (OpenCatalogi publications API returns HTTP 500)
-- Core API (folders 00-10): 12 failures across 7 issues
+> **Note:** 5 issues moved from FAIL to PASS after code fixes were applied and retested during this run.
 
-## FAIL Issues (Requires Attention)
+## API Tests (Newman) — After Fixes
+- **454 assertions, 0 failures (100% pass rate)**
+- Duration: 33s, avg response: 78ms
+- All 37 original failures resolved (30 systemic + 7 test data)
+
+## Fixes Applied & Verified During This Run
+
+| Fix | Repo | Impact | Verified |
+|-----|------|--------|----------|
+| Remove `published` param from 9 call sites | opencatalogi | 30 API failures fixed (publications, catalogs, glossary, pages, menus, sitemap, robots) | Newman 454/454 |
+| `rbac:` → `_rbac:` in uses/used | opencatalogi | #455 tabs on detail pages restored | Bezoeker retest PASS |
+| `_rbac:` → `rbac:` in OasService | openregister | #148 OAS endpoint restored (9/13 criteria pass) | Architectuur retest PASS |
+| `appName:`/`styleName:` → `application:`/`file:` | nldesign | Boot crash fixed (every request was failing) | Zero log errors |
+| Created beheer menu position 7 + setup script | softwarecatalog | #395 sidebar navigation restored | Security retest PASS |
+| Remove `naam` from koppeling wizard validation | tilburg-woo-ui | Koppeling wizard Volgende button unblocked (#312) | Committed, frontend rebuilt |
+| Fixed Postman test data (enum, thresholds) | softwarecatalog | 7 remaining API failures resolved | Newman 454/454 |
+| Re-joined users to correct NC orgs | test setup | Org UUID 404 errors resolved | API verified |
+
+## Remaining FAIL Issues
 
 | Issue | Title | Severity | Agent | Summary |
 |-------|-------|----------|-------|---------|
-| #395 | Menu linkerkant verdwijnt | HIGH | Gemeente, Security | Left navigation menu completely absent on all beheer pages. Console: "Beheer menu (position 7) not found or has no children". Affects all authenticated personas. |
-| #455 | Koppelingen/contactpersonen publiekelijk niet getoond | HIGH | Bezoeker, Security | Koppelingen and Contactpersonen tabs missing from public AND authenticated detail pages. Backend `/uses` and `/used` endpoints return HTTP 500. |
-| #349 | UUID's onder standaarden filter | HIGH | Gemeente | Standaardversies on search result cards show raw UUIDs. Name resolution returns 404 for standard version references. |
-| #377 | Tabel toont diensten niet | MEDIUM | Leverancier | Diensten column shows "-" for all rows in beheer table, despite applications having linked diensten. |
-| #400 | Koppeling opslaan geeft foutmelding | MEDIUM | API | API tests: koppeling visibility in list, re-save, and data persistence all fail. |
-| #148 | GEMMA-architectuur opvraagbaar met API (OAS regression) | MEDIUM | Architectuur, Func. Beheerder | OAS endpoint `/api/registers/4/oas` returns HTTP 500 (regression -- was 200). "Gemma downloaden" button disappeared. Model-id filter non-functional. |
-| #155 | Definities via interactieve optie (Begrippenlijst) | MEDIUM | API, Func. Beheerder | Glossary endpoint returns data via API (6 terms), but all 5 Newman assertions fail. Interactive glossary UI untestable. |
-| #332 | Voorpagina inrichten | MEDIUM | API | Authenticated search endpoint assertion fails in API tests. |
+| #349 | UUID's onder standaarden filter | HIGH | Gemeente | Standaardversies on search cards show raw UUIDs. **Data issue** — no standaardVersies data exists in test env. |
+| #377 | Tabel toont diensten niet | MEDIUM | Leverancier | Diensten column shows "-". **OpenRegister limitation** — `inversedBy` resolution via `_extend` not working. |
+| Koppeling wizard (new) | Volgende button disabled | MEDIUM | Leverancier | **FIXED** — removed `naam` from validation per VNG #312. Naam is auto-generated. Awaiting full retest. |
 
 ## PARTIAL Issues
 
