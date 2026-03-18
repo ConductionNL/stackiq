@@ -148,9 +148,27 @@ export const useSettingsStore = defineStore('settings', {
 		error: null,
 		importError: null,
 		exportError: null,
+
+		// OpenRegister dependency check
+		openRegisters: false,
+		isAdmin: false,
 	}),
 
 	getters: {
+		/**
+		 * Whether the OpenRegister app is installed
+		 * @param {object} state - The store state
+		 * @return {boolean} True if OpenRegister is installed
+		 */
+		hasOpenRegisters: (state) => state.openRegisters,
+
+		/**
+		 * Whether the current user is an admin
+		 * @param {object} state - The store state
+		 * @return {boolean} True if the user is an admin
+		 */
+		getIsAdmin: (state) => state.isAdmin,
+
 		/**
 		 * Get register options for dropdowns
 		 * @param {object} state - The store state
@@ -394,6 +412,9 @@ export const useSettingsStore = defineStore('settings', {
 				}
 				const data = await response.json()
 				if (data.success !== false) {
+					// OpenRegister dependency check
+					this.openRegisters = data.openRegisters ?? false
+					this.isAdmin = data.isAdmin ?? false
 					// Basic app settings
 					this.settings.availableRegisters = data.availableRegisters || []
 					this.settings.catalogLocation = data.catalogLocation || ''

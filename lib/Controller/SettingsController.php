@@ -26,6 +26,8 @@ use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
+use OCP\IGroupManager;
+use OCP\IUserSession;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCA\SoftwareCatalog\Service\ArchiMateService;
@@ -54,6 +56,8 @@ class SettingsController extends Controller
      * @param IAppConfig              $config                  The app configuration.
      * @param ContainerInterface      $container               The container.
      * @param IAppManager             $appManager              The app manager.
+     * @param IGroupManager           $groupManager            The group manager.
+     * @param IUserSession            $userSession             The user session.
      * @param SettingsService         $settingsService         The settings service.
      * @param OrganizationSyncService $organizationSyncService The organization sync service.
      * @param ArchiMateService        $archiMateService        The ArchiMate import/export service.
@@ -66,6 +70,8 @@ class SettingsController extends Controller
         private readonly IAppConfig $config,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
+        private readonly IGroupManager $groupManager,
+        private readonly IUserSession $userSession,
         private readonly SettingsService $settingsService,
         private readonly OrganizationSyncService $organizationSyncService,
         private readonly ArchiMateService $archiMateService,
@@ -124,8 +130,14 @@ class SettingsController extends Controller
     public function index(): JSONResponse
     {
         try {
+            $user    = $this->userSession->getUser();
+            $isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
+
             // Delegate all business logic to service.
-            $data = $this->settingsService->getAllSettings();
+            $data                  = $this->settingsService->getAllSettings();
+            $data['openRegisters'] = in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps());
+            $data['isAdmin']       = $isAdmin;
+
             return new JSONResponse($data);
         } catch (\Exception $e) {
             $this->logger->error(

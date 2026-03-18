@@ -3,6 +3,7 @@ import { PiniaVuePlugin } from 'pinia'
 import pinia from './pinia.js'
 import App from './App.vue'
 import Tooltip from '@nextcloud/vue/dist/Directives/Tooltip.js'
+import './assets/app.css'
 
 Vue.mixin({ methods: { t, n } })
 Vue.directive('tooltip', Tooltip)
