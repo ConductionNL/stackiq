@@ -204,6 +204,12 @@ Full documentation is available at **[softwarecatalog.app](https://softwarecatal
 - **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Publication and catalog management
 - **[NL Design](https://github.com/ConductionNL/nldesign)** — Design token theming for Dutch government standards
 
+## Support
+
+For support, contact us at [support@conduction.nl](mailto:support@conduction.nl).
+
+For a Service Level Agreement (SLA), contact [sales@conduction.nl](mailto:sales@conduction.nl).
+
 ## License
 
 EUPL-1.2
