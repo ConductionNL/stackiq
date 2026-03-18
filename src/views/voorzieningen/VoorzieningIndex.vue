@@ -11,6 +11,7 @@
  */
 
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
@@ -56,42 +57,42 @@ export default {
 			voorzieningProperties: [
 				{
 					id: 'naam',
-					label: 'Naam',
+					label: t('softwarecatalog', 'Name'),
 					key: 'naam',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'website',
-					label: 'Website',
+					label: t('softwarecatalog', 'Website'),
 					key: 'website',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'beschrijvingKort',
-					label: 'Korte beschrijving',
+					label: t('softwarecatalog', 'Short description'),
 					key: 'beschrijvingKort',
 					sortable: false,
 					searchable: true,
 				},
 				{
 					id: 'type',
-					label: 'Type',
+					label: t('softwarecatalog', 'Type'),
 					key: 'type',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'status',
-					label: 'Status',
+					label: t('softwarecatalog', 'Status'),
 					key: 'status',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'organisatieIsEigenaarVan',
-					label: 'Eigenaar organisatie',
+					label: t('softwarecatalog', 'Owner organisation'),
 					key: 'organisatieIsEigenaarVan',
 					sortable: false,
 					searchable: true,
@@ -100,7 +101,7 @@ export default {
 			voorzieningObjectActions: [
 				{
 					id: 'view',
-					label: 'View',
+					label: t('softwarecatalog', 'View'),
 					icon: Eye,
 					handler: (voorziening) => {
 						objectStore.setActiveObject('voorziening', voorziening)
@@ -109,7 +110,7 @@ export default {
 				},
 				{
 					id: 'edit',
-					label: 'Edit',
+					label: t('softwarecatalog', 'Edit'),
 					icon: Pencil,
 					handler: (voorziening) => {
 						objectStore.setActiveObject('voorziening', voorziening)
@@ -118,7 +119,7 @@ export default {
 				},
 				{
 					id: 'copy',
-					label: 'Copy',
+					label: t('softwarecatalog', 'Copy'),
 					icon: ContentCopy,
 					handler: (voorziening) => {
 						objectStore.setActiveObject('voorziening', voorziening)
@@ -130,7 +131,7 @@ export default {
 				},
 				{
 					id: 'delete',
-					label: 'Delete',
+					label: t('softwarecatalog', 'Delete'),
 					icon: TrashCanOutline,
 					handler: (voorziening) => {
 						objectStore.setActiveObject('voorziening', voorziening)
@@ -144,7 +145,7 @@ export default {
 			voorzieningMassActions: [
 				{
 					id: 'massDelete',
-					label: 'Delete Selected',
+					label: t('softwarecatalog', 'Delete Selected'),
 					icon: Delete,
 					handler: () => {
 						navigationStore.setDialog('massDeleteObjects', {
@@ -155,7 +156,7 @@ export default {
 				},
 				{
 					id: 'massPublish',
-					label: 'Publish Selected',
+					label: t('softwarecatalog', 'Publish Selected'),
 					icon: PublishIcon,
 					handler: () => {
 						navigationStore.setDialog('massPublishObjects', {
@@ -166,7 +167,7 @@ export default {
 				},
 				{
 					id: 'massDepublish',
-					label: 'Depublish Selected',
+					label: t('softwarecatalog', 'Depublish Selected'),
 					icon: PublishOffIcon,
 					handler: () => {
 						navigationStore.setDialog('massDepublishObjects', {
@@ -179,7 +180,7 @@ export default {
 			voorzieningActions: [
 				{
 					id: 'add',
-					label: 'Add Voorziening',
+					label: t('softwarecatalog', 'Add Voorziening'),
 					icon: Plus,
 					primary: true,
 					handler: () => {
@@ -189,7 +190,7 @@ export default {
 				},
 				{
 					id: 'refresh',
-					label: 'Refresh',
+					label: t('softwarecatalog', 'Refresh'),
 					icon: Refresh,
 					handler: () => {
 						objectStore.fetchCollection('voorziening')
@@ -198,7 +199,7 @@ export default {
 				},
 				{
 					id: 'help',
-					label: 'Help',
+					label: t('softwarecatalog', 'Help'),
 					icon: HelpCircleOutline,
 					handler: () => {
 						window.open('https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/voorzieningen', '_blank')
@@ -207,7 +208,7 @@ export default {
 			],
 			addVoorzieningAction: {
 				id: 'add',
-				label: 'Add Voorziening',
+				label: t('softwarecatalog', 'Add Voorziening'),
 				icon: Plus,
 				handler: () => {
 					objectStore.clearActiveObject('voorziening')

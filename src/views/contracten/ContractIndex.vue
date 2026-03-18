@@ -11,6 +11,7 @@
  */
 
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
@@ -56,49 +57,49 @@ export default {
 			contractProperties: [
 				{
 					id: 'contractNummer',
-					label: 'Contractnummer',
+					label: t('softwarecatalog', 'Contract number'),
 					key: 'contractNummer',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'contractType',
-					label: 'Contracttype',
+					label: t('softwarecatalog', 'Contract type'),
 					key: 'contractType',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'status',
-					label: 'Status',
+					label: t('softwarecatalog', 'Status'),
 					key: 'status',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'startDatum',
-					label: 'Startdatum',
+					label: t('softwarecatalog', 'Start date'),
 					key: 'startDatum',
 					sortable: true,
 					searchable: false,
 				},
 				{
 					id: 'eindDatum',
-					label: 'Einddatum',
+					label: t('softwarecatalog', 'End date'),
 					key: 'eindDatum',
 					sortable: true,
 					searchable: false,
 				},
 				{
 					id: 'voorzieningAanbod',
-					label: 'Voorziening aanbod',
+					label: t('softwarecatalog', 'Provision offer'),
 					key: 'voorzieningAanbod',
 					sortable: false,
 					searchable: true,
 				},
 				{
 					id: 'voorzieningGebruik',
-					label: 'Voorziening gebruik',
+					label: t('softwarecatalog', 'Provision usage'),
 					key: 'voorzieningGebruik',
 					sortable: false,
 					searchable: true,
@@ -107,7 +108,7 @@ export default {
 			contractObjectActions: [
 				{
 					id: 'view',
-					label: 'View',
+					label: t('softwarecatalog', 'View'),
 					icon: Eye,
 					handler: (contract) => {
 						objectStore.setActiveObject('contract', contract)
@@ -116,7 +117,7 @@ export default {
 				},
 				{
 					id: 'edit',
-					label: 'Edit',
+					label: t('softwarecatalog', 'Edit'),
 					icon: Pencil,
 					handler: (contract) => {
 						objectStore.setActiveObject('contract', contract)
@@ -125,7 +126,7 @@ export default {
 				},
 				{
 					id: 'copy',
-					label: 'Copy',
+					label: t('softwarecatalog', 'Copy'),
 					icon: ContentCopy,
 					handler: (contract) => {
 						objectStore.setActiveObject('contract', contract)
@@ -137,7 +138,7 @@ export default {
 				},
 				{
 					id: 'delete',
-					label: 'Delete',
+					label: t('softwarecatalog', 'Delete'),
 					icon: TrashCanOutline,
 					handler: (contract) => {
 						objectStore.setActiveObject('contract', contract)
@@ -151,7 +152,7 @@ export default {
 			contractMassActions: [
 				{
 					id: 'massDelete',
-					label: 'Delete Selected',
+					label: t('softwarecatalog', 'Delete Selected'),
 					icon: Delete,
 					handler: () => {
 						navigationStore.setDialog('massDeleteObjects', {
@@ -162,7 +163,7 @@ export default {
 				},
 				{
 					id: 'massPublish',
-					label: 'Publish Selected',
+					label: t('softwarecatalog', 'Publish Selected'),
 					icon: PublishIcon,
 					handler: () => {
 						navigationStore.setDialog('massPublishObjects', {
@@ -173,7 +174,7 @@ export default {
 				},
 				{
 					id: 'massDepublish',
-					label: 'Depublish Selected',
+					label: t('softwarecatalog', 'Depublish Selected'),
 					icon: PublishOffIcon,
 					handler: () => {
 						navigationStore.setDialog('massDepublishObjects', {
@@ -186,7 +187,7 @@ export default {
 			contractActions: [
 				{
 					id: 'add',
-					label: 'Add Contract',
+					label: t('softwarecatalog', 'Add Contract'),
 					icon: Plus,
 					primary: true,
 					handler: () => {
@@ -196,7 +197,7 @@ export default {
 				},
 				{
 					id: 'refresh',
-					label: 'Refresh',
+					label: t('softwarecatalog', 'Refresh'),
 					icon: Refresh,
 					handler: () => {
 						objectStore.fetchCollection('contract')
@@ -205,7 +206,7 @@ export default {
 				},
 				{
 					id: 'help',
-					label: 'Help',
+					label: t('softwarecatalog', 'Help'),
 					icon: HelpCircleOutline,
 					handler: () => {
 						window.open('https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/contracten', '_blank')
@@ -214,7 +215,7 @@ export default {
 			],
 			addContractAction: {
 				id: 'add',
-				label: 'Add Contract',
+				label: t('softwarecatalog', 'Add Contract'),
 				icon: Plus,
 				handler: () => {
 					objectStore.clearActiveObject('contract')

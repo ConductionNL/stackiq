@@ -11,6 +11,7 @@
  */
 
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { objectStore, navigationStore } from '../store/store.js'
 </script>
 
@@ -29,10 +30,10 @@ import { objectStore, navigationStore } from '../store/store.js'
 			<div class="viewActionsBar">
 				<div class="viewInfo">
 					<span v-if="filteredObjects.length" class="viewTotalCount">
-						{{ t('opencatalogi', 'Showing {showing} of {total} {type}', { showing: filteredObjects.length, total: currentPagination.total || filteredObjects.length, type: objectTypePlural }) }}
+						{{ t('softwarecatalog', 'Showing {showing} of {total} {type}', { showing: filteredObjects.length, total: currentPagination.total || filteredObjects.length, type: objectTypePlural }) }}
 					</span>
 					<span v-if="selectedObjects.length > 0" class="viewIndicator">
-						({{ t('opencatalogi', '{count} selected', { count: selectedObjects.length }) }})
+						({{ t('softwarecatalog', '{count} selected', { count: selectedObjects.length }) }})
 					</span>
 				</div>
 				<div class="viewActions">
@@ -40,7 +41,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 					<div v-if="searchQuery !== undefined" class="viewSearch">
 						<NcTextField
 							:value="searchQuery"
-							:placeholder="t('opencatalogi', 'Search...')"
+							:placeholder="t('softwarecatalog', 'Search...')"
 							trailing-button-icon="close"
 							:show-trailing-button="searchQuery && searchQuery.length > 0"
 							@trailing-button-click="handleClearSearch"
@@ -56,8 +57,8 @@ import { objectStore, navigationStore } from '../store/store.js'
 						v-if="massActions && massActions.length > 0"
 						:force-name="true"
 						:disabled="selectedObjects.length === 0"
-						:title="selectedObjects.length === 0 ? `Select one or more ${objectTypePlural} to use mass actions` : `Mass actions (${selectedObjects.length} selected)`"
-						:menu-name="`Mass Actions (${selectedObjects.length})`">
+						:title="selectedObjects.length === 0 ? t('softwarecatalog', 'Select one or more {type} to use mass actions', { type: objectTypePlural }) : t('softwarecatalog', 'Mass actions ({count} selected)', { count: selectedObjects.length })"
+						:menu-name="t('softwarecatalog', 'Mass Actions ({count})', { count: selectedObjects.length })"
 						<template #icon>
 							<FormatListChecks :size="20" />
 						</template>
@@ -91,7 +92,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 					<!-- View Mode Switch -->
 					<div class="viewModeSwitchContainer">
 						<NcCheckboxRadioSwitch
-							v-tooltip="`See ${objectTypePlural} as cards`"
+							v-tooltip="t('softwarecatalog', 'See {type} as cards', { type: objectTypePlural })"
 							:checked="viewMode === 'cards'"
 							:button-variant="true"
 							value="cards"
@@ -99,10 +100,10 @@ import { objectStore, navigationStore } from '../store/store.js'
 							type="radio"
 							button-variant-grouped="horizontal"
 							@update:checked="() => setViewMode('cards')">
-							Cards
+							{{ t('softwarecatalog', 'Cards') }}
 						</NcCheckboxRadioSwitch>
 						<NcCheckboxRadioSwitch
-							v-tooltip="`See ${objectTypePlural} as a table`"
+							v-tooltip="t('softwarecatalog', 'See {type} as a table', { type: objectTypePlural })"
 							:checked="viewMode === 'table'"
 							:button-variant="true"
 							value="table"
@@ -110,7 +111,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 							type="radio"
 							button-variant-grouped="horizontal"
 							@update:checked="() => setViewMode('table')">
-							Table
+							{{ t('softwarecatalog', 'Table') }}
 						</NcCheckboxRadioSwitch>
 					</div>
 
@@ -118,7 +119,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 					<NcActions
 						:force-name="true"
 						:inline="actions && actions.length > 2 ? 3 : actions?.length || 2"
-						menu-name="Actions">
+						:menu-name="t('softwarecatalog', 'Actions')">
 						<NcActionButton
 							v-for="action in actions"
 							:key="action.id"
@@ -138,13 +139,13 @@ import { objectStore, navigationStore } from '../store/store.js'
 						v-if="viewMode === 'table' && showColumnSelector"
 						:force-name="true"
 						:inline="1"
-						menu-name="Columns">
+						:menu-name="t('softwarecatalog', 'Columns')">
 						<template #icon>
 							<FormatColumns :size="20" />
 						</template>
 
 						<!-- Metadata Section -->
-						<NcActionCaption name="Metadata" />
+						<NcActionCaption :name="t('softwarecatalog', 'Metadata')" />
 						<NcActionCheckbox
 							v-for="meta in metadataColumns"
 							:key="`meta_${meta.id}`"
@@ -154,7 +155,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 						</NcActionCheckbox>
 
 						<!-- Properties Section -->
-						<NcActionCaption v-if="propertyColumns && propertyColumns.length > 0" name="Properties" />
+						<NcActionCaption v-if="propertyColumns && propertyColumns.length > 0" :name="t('softwarecatalog', 'Properties')" />
 						<NcActionCheckbox
 							v-for="prop in propertyColumns"
 							:key="`prop_${prop.id}`"
@@ -205,7 +206,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 										<component :is="cardIcon" :size="20" />
 										{{ getObjectTitle(item) }}
 									</h2>
-									<NcActions :primary="true" menu-name="Actions">
+									<NcActions :primary="true" :menu-name="t('softwarecatalog', 'Actions')">
 										<template #icon>
 											<DotsHorizontal :size="20" />
 										</template>
@@ -229,7 +230,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 										{{ getObjectSummary(item) }}
 									</p>
 									<p v-else class="noSummaryText">
-										{{ t('opencatalogi', 'No description available') }}
+										{{ t('softwarecatalog', 'No description available') }}
 									</p>
 
 									<!-- Show key properties in a compact format -->
@@ -247,9 +248,9 @@ import { objectStore, navigationStore } from '../store/store.js'
 									<table class="statisticsTable">
 										<thead>
 											<tr>
-												<th>{{ t('opencatalogi', 'Property') }}</th>
-												<th>{{ t('opencatalogi', 'Value') }}</th>
-												<th>{{ t('opencatalogi', 'Status') }}</th>
+												<th>{{ t('softwarecatalog', 'Property') }}</th>
+												<th>{{ t('softwarecatalog', 'Value') }}</th>
+												<th>{{ t('softwarecatalog', 'Status') }}</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -271,7 +272,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 											{{ getObjectSummary(item) }}
 										</p>
 										<p v-else class="noSummaryText">
-											{{ t('opencatalogi', 'No description available') }}
+											{{ t('softwarecatalog', 'No description available') }}
 										</p>
 									</div>
 
@@ -377,7 +378,7 @@ import { objectStore, navigationStore } from '../store/store.js'
 										</span>
 									</th>
 									<th class="tableColumnActions">
-										{{ t('opencatalogi', 'Actions') }}
+										{{ t('softwarecatalog', 'Actions') }}
 									</th>
 								</tr>
 							</thead>
@@ -729,17 +730,17 @@ export default {
 		},
 		emptyContentName() {
 			if (objectStore.isLoading(this.objectType)) {
-				return t('opencatalogi', `Loading ${this.objectTypePlural}...`)
+				return t('softwarecatalog', 'Loading {type}...', { type: this.objectTypePlural })
 			} else if (!this.filteredObjects.length) {
-				return t('opencatalogi', `No ${this.objectTypePlural} found`)
+				return t('softwarecatalog', 'No {type} found', { type: this.objectTypePlural })
 			}
 			return ''
 		},
 		emptyContentDescription() {
 			if (objectStore.isLoading(this.objectType)) {
-				return t('opencatalogi', `Please wait while we fetch your ${this.objectTypePlural}.`)
+				return t('softwarecatalog', 'Please wait while we fetch your {type}.', { type: this.objectTypePlural })
 			} else if (!this.filteredObjects.length) {
-				return t('opencatalogi', `No ${this.objectTypePlural} are available.`)
+				return t('softwarecatalog', 'No {type} are available.', { type: this.objectTypePlural })
 			}
 			return ''
 		},
@@ -873,7 +874,7 @@ export default {
 			}
 
 			// For other objects or fallback, use the @self.name (which we fixed) or other fallbacks
-			return item?.title || item?.name || item?.naam || item?.['@self']?.name || this.getObjectId(item) || 'Unknown'
+			return item?.title || item?.name || item?.naam || item?.['@self']?.name || this.getObjectId(item) || t('softwarecatalog', 'Unknown')
 		},
 
 		getObjectSummary(item) {
