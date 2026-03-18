@@ -1,5 +1,28 @@
 <template>
 	<div>
+		<!-- Version Information Card -->
+		<CnVersionInfoCard
+			:app-name="'Software Catalogus'"
+			:app-version="appVersion"
+			:is-up-to-date="true"
+			:show-update-button="true"
+			:title="t('softwarecatalog', 'Version Information')"
+			:description="t('softwarecatalog', 'Information about the current Software Catalogus installation')">
+			<template #footer>
+				<div class="cn-support-info">
+					<h4>{{ t('softwarecatalog', 'Support') }}</h4>
+					<p>
+						{{ t('softwarecatalog', 'For support, contact us at') }}
+						<a href="mailto:support@conduction.nl">support@conduction.nl</a>
+					</p>
+					<p>
+						{{ t('softwarecatalog', 'For a Service Level Agreement (SLA), contact') }}
+						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
+					</p>
+				</div>
+			</template>
+		</CnVersionInfoCard>
+
 		<NcSettingsSection
 			name="Software Catalog Configuration"
 			description="Configure OpenRegister schema mappings for Software Catalog objects"
@@ -74,6 +97,7 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
+import { CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import { settingsStore } from '../../store/store.js'
 import Web from 'vue-material-design-icons/Web.vue'
 import OpenRegisterIntegration from './sections/OpenRegisterIntegration.vue'
@@ -96,6 +120,7 @@ import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 export default defineComponent({
 	name: 'SoftwareCatalogSettings',
 	components: {
+		CnVersionInfoCard,
 		NcSettingsSection,
 		NcTextField,
 		OpenRegisterIntegration,
@@ -124,6 +149,7 @@ export default defineComponent({
 	 */
 	data() {
 		return {
+			appVersion: document.getElementById('settings')?.dataset?.version || 'Unknown',
 			savingCatalogLocation: false,
 			catalogLocation: '',
 		}

@@ -7,4 +7,4 @@ Util::addStyle($appId, 'main');
 
 ?>
 
-<div id="settings"></div>
+<div id="settings" data-version="<?php echo \OCP\App::getAppVersion($appId); ?>"></div>
