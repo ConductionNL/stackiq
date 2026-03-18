@@ -135,7 +135,7 @@ class OrganizationSyncService
         // Normalize path - remove '$.' prefix if present for PostgreSQL.
         $cleanPath = ltrim($path, '$.');
 
-        if (empty($isPostgres) === false) {
+        if ($isPostgres === true) {
             // PostgreSQL: Use ->> operator for text extraction.
             // Cast to json first if needed, then extract.
             return "({$column}::json->>'{$cleanPath}')";
@@ -167,7 +167,7 @@ class OrganizationSyncService
         $platform   = $this->db->getDatabasePlatform();
         $isPostgres = $platform->getName() === 'postgresql';
 
-        if (empty($isPostgres) === false) {
+        if ($isPostgres === true) {
             // PostgreSQL: Use @> operator with jsonb.
             return "({$column}::jsonb @> '\"{$value}\"'::jsonb)";
         }
@@ -464,7 +464,7 @@ class OrganizationSyncService
         $platform   = $this->db->getDatabasePlatform();
         $isPostgres = $platform->getName() === 'postgresql';
 
-        if (empty($isPostgres) === false) {
+        if ($isPostgres === true) {
             $jsonContainsCheck = "NOT (oo.users::jsonb @> to_jsonb(o.username::text))";
         } else {
             $jsonContainsCheck = "JSON_CONTAINS(oo.users, CONCAT('\"', o.username, '\"')) = 0";

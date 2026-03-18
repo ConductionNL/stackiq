@@ -48,7 +48,7 @@ class SettingsService
      *
      * @var string The name of the app
      */
-    private string $appName;
+    private string $_appName;
 
     /**
      * Cache for schema IDs by object type to avoid repeated database queries
@@ -486,7 +486,7 @@ class SettingsService
         try {
             // Check if auto-configuration has already been completed.
             $autoConfigCompleted = $this->config->getValueString($this->_appName, 'auto_config_completed', 'false') === 'true';
-            if (empty($autoConfigCompleted) === false) {
+            if ($autoConfigCompleted === true) {
                 $this->logger->info('Auto-configuration already completed, skipping');
                 return [];
             }
@@ -1375,7 +1375,7 @@ class SettingsService
                                 );
 
                         // In force mode, we want to surface import errors more prominently.
-                        if (empty($force) === false) {
+                        if ($force === true) {
                             throw new \RuntimeException('Force import failed: '.$e->getMessage(), 0, $e);
                         }
                     }//end try
@@ -2973,7 +2973,7 @@ class SettingsService
 
             $resetItems = ['auto_config_completed_flag'];
 
-            if (empty($resetConfiguration) === false) {
+            if ($resetConfiguration === true) {
                 // Reset schema and register configurations.
                 $configKeysToReset = [
                     'voorzieningen_organisatie_source',
@@ -3122,7 +3122,7 @@ class SettingsService
                 $message .= ' and auto-configured';
             }
 
-            if (empty($forceImport) === false) {
+            if ($forceImport === true) {
                 $message .= ' (forced import)';
             }
 
@@ -5797,7 +5797,7 @@ class SettingsService
      */
     private function determineOrganisationType(\OCA\OpenRegister\Db\Organisation $organisation): string
     {
-        $name = strtolower($organisation->getName() === true);
+        $name = strtolower($organisation->getName());
 
         if (strpos($name, 'gemeente') !== false) {
             return 'Gemeente';

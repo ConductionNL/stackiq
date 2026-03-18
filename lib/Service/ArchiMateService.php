@@ -1842,7 +1842,7 @@ class ArchiMateService
             $isAmefType      = in_array($schemaType, $amefObjectTypes, true) === true;
 
             // Use AMEF register ID for AMEF types, otherwise use per-type register ID.
-            if (empty($isAmefType) === false) {
+            if ($isAmefType === true) {
                 $registerId = $this->getAmefRegisterId();
             } else {
                 $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
@@ -2235,13 +2235,13 @@ class ArchiMateService
                         )
                         ) === false;
 
-                if (empty($wasCreated) === false) {
+                if ($wasCreated === true) {
                     $statistics[$sectionKey]['created']++;
-                } else if (empty($wasUpdated) === false) {
+                } else if ($wasUpdated === true) {
                     $statistics[$sectionKey]['updated']++;
-                } else if (empty($wasSkipped) === false) {
+                } else if ($wasSkipped === true) {
                     $statistics[$sectionKey]['skipped']++;
-                } else if (empty($hasErrors) === false) {
+                } else if ($hasErrors === true) {
                     // Add to errors array for this section.
                     $errorInfo = array_filter(
                             $saveResult['invalid'] ?? [],

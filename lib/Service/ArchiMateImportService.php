@@ -3152,7 +3152,7 @@ class ArchiMateImportService
         foreach ($element as $key => $value) {
             if (in_array($key, $excludedKeys) === false && in_array($key, $basicProperties) === false) {
                 // Only include non-object values or simple arrays.
-                if (is_scalar($value) === true || (is_array($value) === true && $this->isComplexArra === falsey(array: $value))) {
+                if (is_scalar($value) === true || (is_array($value) === true && $this->isComplexArray($value) === false)) {
                     $properties[$key] = $value;
                 }
             }
@@ -5736,13 +5736,13 @@ class ArchiMateImportService
                         )
                         ) === false;
 
-                if (empty($wasCreated) === false) {
+                if ($wasCreated === true) {
                     $statistics[$sectionKey]['created']++;
-                } else if (empty($wasUpdated) === false) {
+                } else if ($wasUpdated === true) {
                     $statistics[$sectionKey]['updated']++;
-                } else if (empty($wasSkipped) === false) {
+                } else if ($wasSkipped === true) {
                     $statistics[$sectionKey]['unchanged']++;
-                } else if (empty($hasErrors) === false) {
+                } else if ($hasErrors === true) {
                     // Add to errors array for this section.
                     $errorInfo = array_filter(
                             $saveResult['invalid'] ?? [],

@@ -243,7 +243,7 @@ class ArchiMateExportService
                 $shouldSkip = true;
             }
 
-            if (empty($shouldSkip) === false) {
+            if ($shouldSkip === true) {
                 continue;
             }
 
@@ -1335,7 +1335,7 @@ XML;
 
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
                 if ($attrKey === 'xsi:type') {
-                    if (empty($isPropertyDefinition) === false) {
+                    if ($isPropertyDefinition === true) {
                         $attributes['type'] = (string) $attrValue;
                     } else {
                         $attributes['xsi:type'] = (string) $attrValue;
@@ -1367,7 +1367,7 @@ XML;
             if (isset($data[$attrName]) === true && isset($attributes[$attrName]) === false) {
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
                 if ($attrName === 'type') {
-                    if (empty($isPropertyDefinition) === false) {
+                    if ($isPropertyDefinition === true) {
                         $attributes['type'] = (string) $data[$attrName];
                     } else if (isset($attributes['xsi:type']) === false) {
                         $attributes['xsi:type'] = (string) $data[$attrName];

@@ -46,7 +46,7 @@ class SoftwareCatalogueService
      *
      * @var string
      */
-    private string $appName;
+    private string $_appName;
 
     /**
      * SoftwareCatalogueService constructor
@@ -159,7 +159,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            if (empty($result) === false) {
+            if ($result === true) {
                 // Get the username from the processed object.
                 $updatedObjectData = $contactpersoonObject->getObject();
                 $username          = $updatedObjectData['username'] ?? '';
@@ -420,7 +420,7 @@ class SoftwareCatalogueService
             // First, sync the organization with OpenRegister.
             $syncResult = $this->syncOrganizationWithOpenRegister(organizationObject: $organizationObject);
 
-            if (empty($syncResult) === false) {
+            if ($syncResult === true) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Successfully synced organization with OpenRegister',
                         [
@@ -614,7 +614,7 @@ class SoftwareCatalogueService
             // Sync the organization with OpenRegister.
             $syncResult = $this->syncOrganizationWithOpenRegister(organizationObject: $organizationObject);
 
-            if (empty($syncResult) === false) {
+            if ($syncResult === true) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Successfully synced organization with OpenRegister',
                         [
@@ -654,7 +654,7 @@ class SoftwareCatalogueService
                     ]
                 );
 
-                if (empty($becameActive) === false) {
+                if ($becameActive === true) {
                     $organizationUuid = $newData['id'] ?? $organizationObject->getId();
 
                     $this->_logger->info(
@@ -714,7 +714,7 @@ class SoftwareCatalogueService
                     ]
                 );
 
-                if (empty($becameInactive) === false) {
+                if ($becameInactive === true) {
                     // Deactivate SoftwareCatalog-specific users in this organization.
                     $organizationUuid = $newData['id'] ?? $organizationObject->getId();
                     $this->deactivateSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
@@ -1129,7 +1129,7 @@ class SoftwareCatalogueService
                 if (empty($username) === true) {
                     // Generate username and create user if needed.
                     $result = $this->_contactPersonHandler->processContactpersoon($contactpersoonObject, true);
-                    if (empty($result) === false) {
+                    if ($result === true) {
                         $updatedData = $contactpersoonObject->getObject();
                         $username    = $updatedData['username'] ?? '';
                     }

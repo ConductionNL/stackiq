@@ -1610,7 +1610,7 @@ class SymfonyEmailService
             $template = ($templates[$templateName] ?? '');
             // Template is valid if it's not empty or if we have a default template.
             $defaultTpl = $this->getDefaultTemplate(templateName: $templateName);
-            if (empty($template) === true && empty($defaultTpl === true) === true) {
+            if (empty($template) === true && empty($defaultTpl) === true) {
                 return false;
             }
         }
