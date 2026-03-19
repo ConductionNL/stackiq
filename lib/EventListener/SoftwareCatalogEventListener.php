@@ -68,7 +68,6 @@ class SoftwareCatalogEventListener implements IEventListener
      * @param Event $event The event to handle
      *
      * @return void
-     *
      */
     public function handle(Event $event): void
     {

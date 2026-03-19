@@ -85,7 +85,6 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
-     *
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
@@ -161,7 +160,6 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     *
      */
     public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse
     {
@@ -252,7 +250,6 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     *
      */
     public function getAllGebruiksForAmbtenaar(): JSONResponse
     {
@@ -271,7 +268,7 @@ class AangebodenGebruikController extends Controller
             $isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
             if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
-                $user = $this->userSession->getUser();
+                $user       = $this->userSession->getUser();
                     $userId = 'null';
                 if ($user !== null) {
                 }
@@ -379,7 +376,7 @@ class AangebodenGebruikController extends Controller
             $isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
             if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
-                $user = $this->userSession->getUser();
+                $user       = $this->userSession->getUser();
                     $userId = 'null';
                 if ($user !== null) {
                 }
@@ -532,7 +529,6 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
-     *
      */
     public function getGebruiksWhereDeelnemers(): JSONResponse
     {
@@ -606,7 +602,6 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
-     *
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
     {
@@ -653,14 +648,13 @@ class AangebodenGebruikController extends Controller
             );
 
             // Determine appropriate HTTP status code.
+            $statusCode = 500;
             if ($result['success'] === true) {
                 $statusCode = 200;
             } else if ($result['error'] === 'Gebruik object not found') {
                 $statusCode = 404;
             } else if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
                 $statusCode = 403;
-            } else {
-                $statusCode = 500;
             }
 
             $this->logger->info(
@@ -715,7 +709,6 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
-     *
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
     {
@@ -762,14 +755,13 @@ class AangebodenGebruikController extends Controller
             );
 
             // Determine appropriate HTTP status code.
+            $statusCode = 500;
             if ($result['success'] === true) {
                 $statusCode = 200;
             } else if ($result['error'] === 'Gebruik object not found') {
                 $statusCode = 404;
             } else if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
                 $statusCode = 403;
-            } else {
-                $statusCode = 500;
             }
 
             $this->logger->info(

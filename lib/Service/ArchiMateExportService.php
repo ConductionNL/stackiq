@@ -2628,7 +2628,7 @@ XML;
         string $bronPropDefId,
         string $prefix=''
     ): array {
-        $elements = [];
+        $elements     = [];
             $idPrefix = 'id-swc-app-';
         if ($prefix !== '') {
         }
@@ -2664,7 +2664,7 @@ XML;
         string $bronPropDefId,
         string $prefix=''
     ): array {
-        $relationships = [];
+        $relationships   = [];
             $appIdPrefix = 'id-swc-app-';
         if ($prefix !== '') {
         }

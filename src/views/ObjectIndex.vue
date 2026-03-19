@@ -1,74 +1,69 @@
+/**
+ * ObjectIndex.vue
+ * Dynamic object index page using CnIndexPage for any registered object type.
+ * Replaces GenericObjectTable with the shared component library.
+ *
+ * @category Views
+ * @package  softwarecatalog
+ * @author   Conduction b.v. <info@conduction.nl>
+ * @license  EUPL-1.2
+ * @version  2.0.0
+ * @link     https://github.com/ConductionNL/softwarecatalog
+ */
+
+<script setup>
+import { translate as t } from '@nextcloud/l10n'
+import { navigationStore, objectStore } from '../store/store.js'
+</script>
+
 <template>
-	<GenericObjectTable
-		:object-type="objectType"
-		:object-type-plural="objectTypePlural"
+	<CnIndexPage
+		ref="indexPage"
 		:title="objectTitle"
 		:description="objectDescription"
-		:empty-icon="objectIcon"
-		:card-icon="objectIcon"
-		:properties="objectProperties"
-		:object-actions="objectActions"
-		:mass-actions="objectMassActions"
-		:actions="defaultActions"
-		:add-action="addAction"
-		:help-url="helpUrl"
-		:card-display-mode="cardDisplayMode"
-		:custom-card-component="customCardComponent"
-		:filters="objectFilters"
-		@mounted="onMounted" />
+		:schema="objectSchema"
+		:objects="currentObjects"
+		:pagination="currentPagination"
+		:loading="currentLoading"
+		:sort-key="sortKey"
+		:sort-order="sortOrder"
+		:selectable="true"
+		:selected-ids="selectedIds"
+		:include-columns="visibleColumns"
+		:view-mode="viewMode"
+		:show-view-toggle="true"
+		:row-actions="rowActionsDef"
+		@sort="onSort"
+		@page-changed="onPageChange"
+		@page-size-changed="onPageSizeChange"
+		@row-click="onRowClick"
+		@select="onSelect"
+		@refresh="onRefresh"
+		@add="onAdd" />
 </template>
 
 <script>
-import GenericObjectTable from '../components/GenericObjectTable.vue'
-import { objectStore } from '../store/store.js'
+import { CnIndexPage } from '@conduction/nextcloud-vue'
 
-// Default icons - these will be overridden by schema icons when available
-import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
-import Plus from 'vue-material-design-icons/Plus.vue'
-import Eye from 'vue-material-design-icons/Eye.vue'
-import Pencil from 'vue-material-design-icons/Pencil.vue'
-import Delete from 'vue-material-design-icons/Delete.vue'
-import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
-
-/**
- * @class ObjectIndex
- * @module Views
- * @package
- * @author Claude AI
- * @copyright 2023 Conduction
- * @license EUPL-1.2
- * @version 1.0.0
- * @see https://github.com/OpenCatalogi/opencatalogi
- *
- * Dynamic ObjectIndex component that can display any object type
- * based on schema configuration from settings.
- */
 export default {
 	name: 'ObjectIndex',
 	components: {
-		GenericObjectTable,
+		CnIndexPage,
 	},
+
+	inject: {
+		sidebarState: { default: null },
+	},
+
 	props: {
-		/**
-		 * Object type slug from schema
-		 * @type {string}
-		 */
 		objectType: {
 			type: String,
 			required: true,
 		},
-		/**
-		 * Custom card component override
-		 * @type {object | null}
-		 */
 		customCardComponent: {
 			type: [String, Object],
 			default: null,
 		},
-		/**
-		 * Card display mode override
-		 * @type {string}
-		 */
 		cardDisplayMode: {
 			type: String,
 			default: 'mixed',
@@ -76,20 +71,48 @@ export default {
 	},
 
 	data() {
-		return {}
+		return {
+			objectSchema: null,
+			sortKey: null,
+			sortOrder: 'asc',
+			viewMode: 'table',
+			visibleColumns: null,
+			selectedIds: [],
+			searchQuery: '',
+			searchDebounceTimeout: null,
+			currentFilters: {},
+			storeUnsubscribe: null,
+			rowActionsDef: [
+				{
+					id: 'view',
+					label: t('softwarecatalog', 'View'),
+					icon: 'eye',
+				},
+				{
+					id: 'edit',
+					label: t('softwarecatalog', 'Edit'),
+					icon: 'pencil',
+				},
+				{
+					id: 'copy',
+					label: t('softwarecatalog', 'Copy'),
+					icon: 'content-copy',
+				},
+				{
+					id: 'delete',
+					label: t('softwarecatalog', 'Delete'),
+					icon: 'delete',
+					destructive: true,
+				},
+			],
+		}
 	},
 
 	computed: {
-		/**
-		 * Get schema configuration from settings
-		 * @return {object|null} Schema configuration
-		 */
 		schemaConfig() {
 			if (!objectStore.settings?.schemaConfigurations) {
 				return null
 			}
-
-			// Look for schema in all registers
 			const schemas = objectStore.settings.schemaConfigurations
 			for (const register of Object.keys(schemas)) {
 				const schemaData = schemas[register]?.schemas?.[this.objectType]
@@ -100,13 +123,18 @@ export default {
 			return null
 		},
 
-		/**
-		 * Get object type plural form
-		 * @return {string} Pluralized object type name
-		 */
+		objectTitle() {
+			return this.schemaConfig?.title || this.objectType
+		},
+
+		objectDescription() {
+			const plural = this.objectTypePlural
+			return this.schemaConfig?.description
+				|| t('softwarecatalog', 'Manage your {type}', { type: plural.toLowerCase() })
+		},
+
 		objectTypePlural() {
 			if (this.schemaConfig?.title) {
-				// Simple pluralization - add 's' or 'en' for Dutch
 				const title = this.schemaConfig.title.toLowerCase()
 				if (title.endsWith('e')) {
 					return this.schemaConfig.title + 'n'
@@ -116,235 +144,193 @@ export default {
 			return this.objectType + 's'
 		},
 
-		/**
-		 * Get object title from schema
-		 * @return {string} Object title
-		 */
-		objectTitle() {
-			return this.schemaConfig?.title || this.objectType
+		currentObjects() {
+			const collection = objectStore.getCollection(this.objectType)
+			if (Array.isArray(collection)) return collection
+			return collection?.results || []
 		},
 
-		/**
-		 * Get object description from schema
-		 * @return {string} Object description
-		 */
-		objectDescription() {
-			return this.schemaConfig?.description || `Manage your ${this.objectTypePlural.toLowerCase()} and their configurations`
+		currentPagination() {
+			return objectStore.getPagination(this.objectType)
+				|| { total: 0, page: 1, pages: 1, limit: 20 }
 		},
 
-		/**
-		 * Get object icon from schema
-		 * @return {object} Vue icon component
-		 */
-		objectIcon() {
-			const iconName = this.schemaConfig?.icon
-			if (iconName) {
-				// Dynamic import would be ideal, but for now use a mapping
-				const iconMap = this.getIconMap()
-				return iconMap[iconName] || OfficeBuildingOutline
-			}
-			return OfficeBuildingOutline
-		},
-
-		/**
-		 * Generate object properties for table display
-		 * @return {Array} Array of property configurations
-		 */
-		objectProperties() {
-			if (!this.schemaConfig?.properties) {
-				return []
-			}
-
-			// Generate properties from schema
-			const properties = []
-			const schemaProps = this.schemaConfig.properties
-
-			// Get first 6 most important properties (visible, ordered)
-			const visibleProps = Object.keys(schemaProps)
-				.filter(key => schemaProps[key].visible !== false)
-				.sort((a, b) => {
-					const orderA = schemaProps[a].order || 999
-					const orderB = schemaProps[b].order || 999
-					return orderA - orderB
-				})
-				.slice(0, 6)
-
-			visibleProps.forEach(propKey => {
-				const prop = schemaProps[propKey]
-				properties.push({
-					key: propKey,
-					label: prop.title || propKey,
-					sortable: true,
-					searchable: true,
-				})
-			})
-
-			return properties
-		},
-
-		/**
-		 * Generate object filters based on schema
-		 * @return {Array} Array of filter configurations
-		 */
-		objectFilters() {
-			const filters = []
-
-			// Add status filter if status field exists
-			if (this.schemaConfig?.properties?.status) {
-				const statusProp = this.schemaConfig.properties.status
-				if (statusProp.enum && statusProp.enum.length > 0) {
-					filters.push({
-						key: 'status',
-						label: 'Status',
-						options: [
-							{ value: 'all', label: 'Alle statussen' },
-							...statusProp.enum.map(status => ({
-								value: status,
-								label: status,
-							})),
-						],
-					})
-				}
-			}
-
-			return filters
-		},
-
-		/**
-		 * Object-specific actions
-		 * @return {Array} Array of object actions
-		 */
-		objectActions() {
-			return [
-				{
-					id: 'view',
-					label: 'View',
-					icon: Eye,
-					handler: (item) => {
-						console.info('View item:', item)
-						// TODO: Navigate to detail page
-					},
-				},
-				{
-					id: 'edit',
-					label: 'Edit',
-					icon: Pencil,
-					handler: (item) => {
-						console.info('Edit item:', item)
-						// TODO: Navigate to edit page
-					},
-				},
-				{
-					id: 'delete',
-					label: 'Delete',
-					icon: Delete,
-					handler: (item) => {
-						console.info('Delete item:', item)
-						// TODO: Implement delete functionality
-					},
-				},
-			]
-		},
-
-		/**
-		 * Mass actions for bulk operations
-		 * @return {Array} Array of mass actions
-		 */
-		objectMassActions() {
-			return [
-				{
-					id: 'delete',
-					label: 'Delete Selected',
-					icon: Delete,
-					handler: (selectedItems) => {
-						console.info('Delete items:', selectedItems)
-						// TODO: Implement bulk delete
-					},
-				},
-			]
-		},
-
-		/**
-		 * Default page actions
-		 * @return {Array} Array of default actions
-		 */
-		defaultActions() {
-			return [
-				{
-					id: 'help',
-					label: 'Help',
-					icon: HelpCircleOutline,
-					handler: () => {
-						if (this.helpUrl) {
-							window.open(this.helpUrl, '_blank')
-						}
-					},
-				},
-			]
-		},
-
-		/**
-		 * Add action configuration
-		 * @return {object} Add action configuration
-		 */
-		addAction() {
-			return {
-				id: 'add',
-				label: `Add ${this.objectTitle}`,
-				icon: Plus,
-				handler: () => {
-					objectStore.clearActiveObject(this.objectType)
-					console.info(`Add new ${this.objectType}`)
-					// TODO: Navigate to create page
-				},
-			}
-		},
-
-		/**
-		 * Help URL for this object type
-		 * @return {string|null} Help URL
-		 */
-		helpUrl() {
-			return `https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/${this.objectType}`
+		currentLoading() {
+			return objectStore.isLoading(this.objectType)
 		},
 	},
 
-	methods: {
-		/**
-		 * Handle component mounted event
-		 * @return {Promise<void>}
-		 */
-		async onMounted() {
-			// Ensure settings are loaded and object types are registered
-			if (!objectStore.settings) {
-				await objectStore.fetchSettings()
+	watch: {
+		objectType(newType, oldType) {
+			if (newType !== oldType) {
+				this.onObjectTypeChange()
 			}
+		},
+	},
 
-			// Fetch the collection for this object type
+	async mounted() {
+		if (!objectStore.settings) {
+			await objectStore.fetchSettings()
+		}
+		await this.fetchObjectSchema()
+		this.setupSidebar()
+		await this.fetchWithFilters()
+	},
+
+	beforeDestroy() {
+		if (this.searchDebounceTimeout) {
+			clearTimeout(this.searchDebounceTimeout)
+		}
+		if (this.storeUnsubscribe) {
+			this.storeUnsubscribe()
+		}
+		if (this.sidebarState) {
+			this.sidebarState.active = false
+			this.sidebarState.schema = null
+			this.sidebarState.onSearch = null
+			this.sidebarState.onFilterChange = null
+			this.sidebarState.onColumnsChange = null
+		}
+	},
+
+	methods: {
+		async onObjectTypeChange() {
+			this.sortKey = null
+			this.sortOrder = 'asc'
+			this.selectedIds = []
+			this.searchQuery = ''
+			this.currentFilters = {}
+			this.objectSchema = null
+			this.visibleColumns = null
+
+			await this.fetchObjectSchema()
+			this.setupSidebar()
+			await this.fetchWithFilters()
+		},
+
+		async fetchObjectSchema() {
 			try {
-				await objectStore.fetchCollection(this.objectType)
+				const config = objectStore.getSchemaConfig(this.objectType)
+				if (!config?.schema) return
+				const schemaId = typeof config.schema === 'object'
+					? config.schema?.id || config.schema?.uuid
+					: config.schema
+				const response = await fetch(
+					`/index.php/apps/openregister/api/schemas/${schemaId}`,
+					{ headers: { 'OCS-APIRequest': 'true' } },
+				)
+				if (response.ok) {
+					this.objectSchema = await response.json()
+				}
 			} catch (error) {
-				console.error(`Failed to fetch ${this.objectType} collection:`, error)
+				console.warn('Failed to fetch schema for ' + this.objectType + ':', error)
 			}
 		},
 
-		/**
-		 * Get icon mapping for dynamic icon loading
-		 * @return {object} Icon name to component mapping
-		 */
-		getIconMap() {
-			// This would ideally be dynamically imported, but for now we use a static map
-			// In a future version, we could implement dynamic icon loading
-			return {
-				OfficeBuildingOutline,
-				AccountMultiple: require('vue-material-design-icons/AccountMultiple.vue').default,
-				ApplicationCog: require('vue-material-design-icons/ApplicationCog.vue').default,
-				FileDocumentEdit: require('vue-material-design-icons/FileDocumentEdit.vue').default,
-				CheckCircle: require('vue-material-design-icons/CheckCircle.vue').default,
-				ViewModule: require('vue-material-design-icons/ViewModule.vue').default,
-				FileDocumentCheck: require('vue-material-design-icons/FileDocumentCheck.vue').default,
-				Star: require('vue-material-design-icons/Star.vue').default,
+		setupSidebar() {
+			if (!this.sidebarState) return
+
+			this.sidebarState.active = true
+			this.sidebarState.schema = this.objectSchema
+			this.sidebarState.searchValue = this.searchQuery
+			this.sidebarState.activeFilters = { ...this.currentFilters }
+
+			this.sidebarState.onSearch = (value) => {
+				this.searchQuery = value
+				if (this.searchDebounceTimeout) {
+					clearTimeout(this.searchDebounceTimeout)
+				}
+				this.searchDebounceTimeout = setTimeout(() => {
+					this.fetchWithFilters()
+				}, 500)
 			}
+
+			this.sidebarState.onFilterChange = ({ key, values }) => {
+				if (!values || values.length === 0) {
+					const updated = { ...this.currentFilters }
+					delete updated[key]
+					this.currentFilters = updated
+				} else {
+					this.currentFilters = {
+						...this.currentFilters,
+						[key]: values,
+					}
+				}
+				if (this.sidebarState) {
+					this.sidebarState.activeFilters = {
+						...this.currentFilters,
+					}
+				}
+				this.fetchWithFilters()
+			}
+
+			this.sidebarState.onColumnsChange = (cols) => {
+				this.visibleColumns = cols
+			}
+		},
+
+		async fetchWithFilters(page = 1, limit = 20) {
+			try {
+				const params = {
+					_page: page,
+					_limit: limit,
+				}
+
+				if (this.searchQuery.trim()) {
+					params._search = this.searchQuery.trim()
+				}
+
+				if (this.sortKey) {
+					params._order = {
+						[this.sortKey]: this.sortOrder,
+					}
+				}
+
+				for (const [key, values] of Object.entries(this.currentFilters)) {
+					if (values && values.length > 0) {
+						params[key] = values.length === 1
+							? values[0]
+							: values
+					}
+				}
+
+				await objectStore.fetchCollection(this.objectType, params)
+			} catch (error) {
+				console.error('Error fetching ' + this.objectType + ':', error)
+			}
+		},
+
+		onSort({ key, order }) {
+			this.sortKey = key
+			this.sortOrder = order || 'asc'
+			this.fetchWithFilters()
+		},
+
+		onPageChange(page) {
+			this.fetchWithFilters(page)
+		},
+
+		onPageSizeChange(size) {
+			this.fetchWithFilters(1, size)
+		},
+
+		onRowClick(row) {
+			objectStore.setActiveObject(this.objectType, row)
+			navigationStore.setModal(this.objectType)
+		},
+
+		onSelect(ids) {
+			this.selectedIds = ids
+			objectStore.setSelectedObjects(ids)
+		},
+
+		onRefresh() {
+			this.fetchWithFilters()
+		},
+
+		onAdd() {
+			objectStore.clearActiveObject(this.objectType)
+			navigationStore.setModal(this.objectType)
 		},
 	},
 }

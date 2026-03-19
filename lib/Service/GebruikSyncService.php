@@ -258,6 +258,15 @@ class GebruikSyncService
             }
 
             // Update the gebruik object with AMEF slugs.
+            if (empty($amefSlugs) === true) {
+                $this->logger->info(
+                        'No AMEF elements with slugs found',
+                        [
+                            'gebruikId' => $gebruikUuid,
+                        ]
+                        );
+            }//end if
+
             if (empty($amefSlugs) === false) {
                 $gebruikData['amefElements'] = array_unique($amefSlugs);
                                 $this->updateGebruikObject(
@@ -274,14 +283,7 @@ class GebruikSyncService
                             'amefElementsCount' => count($amefSlugs),
                         ]
                         );
-            } else {
-                $this->logger->info(
-                        'No AMEF elements with slugs found',
-                        [
-                            'gebruikId' => $gebruikUuid,
-                        ]
-                        );
-            }//end if
+            }
 
             return $stats;
         } catch (Exception $e) {
@@ -437,8 +439,8 @@ class GebruikSyncService
                 $stats['statusUpdated'] = true;
 
                     $basedOnDate = null;
-            if ($targetDate  === null) {
-                $this->logger->info(
+                if ($targetDate === null) {
+                    $this->logger->info(
                         'No status update needed',
                         [
                             'app'           => 'softwarecatalog',
@@ -447,9 +449,9 @@ class GebruikSyncService
                             'targetStatus'  => $targetStatus,
                         ]
                         );
-            }
+                }
 
-            if ($targetDate !== null) {
+                if ($targetDate !== null) {
                 }
 
                 $this->logger->critical(

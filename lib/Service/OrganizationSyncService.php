@@ -584,7 +584,7 @@ class OrganizationSyncService
                 organizationSchema: $organizationSchema,
                 minutesBack: $minutesBack
             );
-                $syncModeValue = 'incremental';
+                $syncModeValue  = 'incremental';
             if ($minutesBack === 0) {
             }
 
@@ -685,7 +685,9 @@ class OrganizationSyncService
                         'query'           => $query,
                     ]
                 );
-            } else {
+            }//end if
+
+            if ($minutesBack <= 0) {
                 $this->logger->debug(
                     'OrganizationSyncService: Using searchObjects for all objects',
                     [
@@ -694,7 +696,7 @@ class OrganizationSyncService
                         'query'    => $query,
                     ]
                 );
-            }//end if
+            }
 
             // Use searchObjects method for filtering.
             $objects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
@@ -917,7 +919,9 @@ class OrganizationSyncService
                                 '📧 Organization activation email sent successfully',
                                 ['organisatieId' => $organisatieId]
                             );
-                        } else {
+                        }
+
+                        if (empty($emailSent) === true) {
                             $this->logger->info(
                                 '📧 Organization activation email not sent (disabled or not configured)',
                                 ['organisatieId' => $organisatieId]
@@ -1008,7 +1012,9 @@ class OrganizationSyncService
                                 '📧 Organization registration email sent successfully',
                                 ['organisatieId' => $organisatieId]
                             );
-                        } else {
+                        }
+
+                        if (empty($emailSent) === true) {
                             $this->logger->info(
                                 '📧 Organization registration email not sent (disabled or not configured)',
                                 ['organisatieId' => $organisatieId]
@@ -1023,7 +1029,9 @@ class OrganizationSyncService
                     register: $register,
                     organizationSchema: $organizationSchema
                     );
-                } else {
+                }//end if
+
+                if (empty($organisationEntity) === true) {
                     $this->logger->error(
                         '❌ ORGANISATION ENTITY CREATION FAILED',
                         [
@@ -1031,7 +1039,7 @@ class OrganizationSyncService
                             'organisatieId' => $organisatieId,
                         ]
                     );
-                }//end if
+                }
 
                 return $organisationEntity;
             }//end try
@@ -1185,7 +1193,7 @@ class OrganizationSyncService
             }
 
             // Check if user already exists.
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager  = \OC::$server->get('OCP\IUserManager');
                 $username = $email;
             if (empty($existingUsername) === false) {
             }
@@ -1222,19 +1230,19 @@ class OrganizationSyncService
                             'username'  => $username,
                         ]
                     );
-            }
+            }//end if
 
                 // User exists, update username in contact if needed.
-                if (empty($existingUsername) === true) {
-                    $this->logger->debug(
-                        'OrganizationSyncService: Updating contact person with username',
-                        [
-                            'contactId' => $contactPerson->getId(),
-                            'username'  => $username,
-                        ]
-                    );
-                    $stats['usersUpdated']++;
-                }
+            if (empty($existingUsername) === true) {
+                $this->logger->debug(
+                    'OrganizationSyncService: Updating contact person with username',
+                    [
+                        'contactId' => $contactPerson->getId(),
+                        'username'  => $username,
+                    ]
+                );
+                $stats['usersUpdated']++;
+            }
 
                 return $username;
         } catch (\Exception $e) {
@@ -1300,7 +1308,9 @@ class OrganizationSyncService
                         'totalUsers'       => count($allUsernames),
                     ]
                 );
-            } else {
+            }//end if
+
+            if ($currentUsersSet === $allUsernames) {
                 $this->logger->debug(
                     'OrganizationSyncService: Organisation entity users unchanged',
                     [
@@ -1308,7 +1318,7 @@ class OrganizationSyncService
                         'userCount'        => count($allUsernames),
                     ]
                 );
-            }//end if
+            }
         } catch (\Exception $e) {
             $this->logger->error(
                 'OrganizationSyncService: Failed to update organisation entity users',
@@ -1416,24 +1426,22 @@ class OrganizationSyncService
             }
 
             // Calculate efficiency metrics.
+            $efficiencyImprovement = 0;
             if (count($allOrganisatieObjects) > 0) {
                 $ratio = count($incrementalOrganisatieObjects) / count($allOrganisatieObjects);
                 $efficiencyImprovement = round(((1 - $ratio) * 100), 1);
-            } else {
-                $efficiencyImprovement = 0;
             }
 
                 $syncModeValue = 'incremental';
             if ($minutesBack === 0) {
             }
 
+            $messageValue = 'No organizations to process in the current time window';
             if (count($incrementalOrganisatieObjects) > 0) {
                 $orgCount     = $this->formatNumber(number: count($incrementalOrganisatieObjects));
                 $contactCount = $this->formatNumber(number: $predictedContactPersonsToProcess);
                 // phpcs:ignore Generic.Files.LineLength.TooLong
                 $messageValue = "Ready to process {$orgCount} organizations and {$contactCount} contact persons";
-            } else {
-                $messageValue = 'No organizations to process in the current time window';
             }
 
                 $nextScheduledSyncValue = 'Will process all organizations (full sync)';
@@ -1622,7 +1630,9 @@ class OrganizationSyncService
                     organizationObject: $organizationObject,
                     stats: $stats
                 );
-            } else {
+            }//end if
+
+            if (empty($organisationEntity) === true) {
                 $this->logger->error(
                     '❌ ORGANISATION ENTITY FAILED',
                     [
@@ -1632,7 +1642,7 @@ class OrganizationSyncService
                     ]
                 );
                 $stats['errors'][] = 'Failed to create/update organisation entity';
-            }//end if
+            }
 
             $stats['endTime']  = date('Y-m-d H:i:s');
             $stats['duration'] = round((microtime(true) - $startTime), 3);
@@ -1753,12 +1763,12 @@ class OrganizationSyncService
                         }
 
                         // Get the object data as array.
+                        $contactData = [];
+                        if (is_array($contactObject) === true) {
+                        }
+
                         if ($contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
                             $contactData = $contactObject->getObject();
-                        } else {
-                                $contactData = [];
-                            if (is_array($contactObject) === true) {
-                            }
                         }
 
                         // Add the UUID if not present.
@@ -2373,7 +2383,9 @@ class OrganizationSyncService
                                         'username'  => $user->getUID(),
                                     ]
                                 );
-                            } else {
+                            }//end if
+
+                            if (empty($user) === true) {
                                 $this->logger->error(
                                     'User account creation failed',
                                     [
@@ -2383,8 +2395,10 @@ class OrganizationSyncService
                                     ]
                                 );
                                 $stats['errors'][] = "Failed to create user account for {$email}";
-                            }//end if
-                        } else {
+                            }
+                        }//end if
+
+                        if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
                                 $organizationActiveValue = false;
                             if ($organisationEntity !== null) {
                             }
@@ -2399,7 +2413,7 @@ class OrganizationSyncService
                                     'email'              => $email,
                                 ]
                             );
-                        }//end if
+                        }
                     } catch (\Exception $e) {
                         // Organization not found in entity table = not active.
                         $this->logger->info(
@@ -2594,7 +2608,9 @@ class OrganizationSyncService
                                 );
 
                             $stats['usersCreated']++;
-                        } else {
+                        }//end if
+
+                        if ($user === null) {
                             $this->logger->debug(
                                 '[EVENT] Skipping contact - user account creation failed (likely no email)',
                                 [
@@ -2602,8 +2618,10 @@ class OrganizationSyncService
                                     'contactId' => $contactObject->getUuid(),
                                 ]
                             );
-                        }//end if
-                    } else {
+                        }
+                    }//end if
+
+                    if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
                             $organizationActiveValue = false;
                         if ($organisationEntity !== null) {
                         }
@@ -2619,7 +2637,7 @@ class OrganizationSyncService
                                 'email'          => $skipEmail,
                             ]
                         );
-                    }//end if
+                    }
                 } catch (\Exception $e) {
                     $this->logger->error(
                         '[EVENT] User creation failed for contact',
@@ -3110,17 +3128,17 @@ class OrganizationSyncService
             if (empty($organizationUuid) === false) {
                 $selfMetadata['organisation'] = $organizationUuid;
                     $sourceValue = 'object';
-            if (empty($organizationUuidOverride)  === true) {
-                $this->logger->warning(
+                if (empty($organizationUuidOverride) === true) {
+                    $this->logger->warning(
                     'OrganizationSyncService: No organization UUID found for contact person',
                     [
                         'contactId'   => $contactId,
                         'contactData' => $currentObject,
                     ]
-                );
-            }
+                    );
+                }
 
-            if (empty($organizationUuidOverride) === false) {
+                if (empty($organizationUuidOverride) === false) {
                 }
 
                 $this->logger->info(

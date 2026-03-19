@@ -1552,13 +1552,12 @@ class SymfonyEmailService
 
         $configured = ($hasCredentials === true && $hasTemplates === true);
 
+        $reason = $this->getConfigurationIssues(
+            hasCredentials: $hasCredentials,
+            hasTemplates: $hasTemplates
+        );
         if ($configured === true) {
             $reason = 'Email system fully configured';
-        } else {
-            $reason = $this->getConfigurationIssues(
-                hasCredentials: $hasCredentials,
-                hasTemplates: $hasTemplates
-            );
         }
 
         return [

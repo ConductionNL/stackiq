@@ -401,7 +401,7 @@ class ContactpersonenController extends Controller
             $contactpersoonObject->setObject($contactData);
 
             // Debug logging to understand data types before save.
-            $achternaamValue = $contactData['achternaam'] ?? 'not set';
+            $achternaamValue    = $contactData['achternaam'] ?? 'not set';
                 $achternaamType = 'not set';
             if (isset($contactData['achternaam']) === true) {
             }
@@ -629,20 +629,21 @@ class ContactpersonenController extends Controller
             $groupsToAdd = array_diff($validGroups, $curCatalogGroups);
             foreach ($groupsToAdd as $groupName) {
                 $group = $this->groupManager->get($groupName);
-                if ($group !== null) {
-                    if ($group->inGroup($user) === false) {
-                        $group->addUser($user);
-                        $this->logger->info(
-                                'Added user to group',
-                                [
-                                    'username' => $username,
-                                    'group'    => $groupName,
-                                ]
-                                );
-                    }
-                } else {
+                if ($group === null) {
                     $this->logger->warning(
                             'Group does not exist, skipping',
+                            [
+                                'username' => $username,
+                                'group'    => $groupName,
+                            ]
+                            );
+                    continue;
+                }
+
+                if ($group->inGroup($user) === false) {
+                    $group->addUser($user);
+                    $this->logger->info(
+                            'Added user to group',
                             [
                                 'username' => $username,
                                 'group'    => $groupName,
@@ -1072,7 +1073,6 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
      */
     public function testBulkUserInfo(): JSONResponse
     {

@@ -148,11 +148,9 @@ class AangebodenGebruikService
             $requestedPage  = $options['_page'] ?? 1;
 
             // Calculate offset from page or use explicit offset.
+            $requestedOffset = ($requestedPage - 1) * $requestedLimit;
             if (isset($options['_offset']) === true) {
                 $requestedOffset = $options['_offset'];
-            } else {
-                // Calculate offset from page number.
-                $requestedOffset = ($requestedPage - 1) * $requestedLimit;
             }
 
             // Fetch a large batch for filtering (since we filter post-fetch).
@@ -273,10 +271,9 @@ class AangebodenGebruikService
             $searchResult['page']    = $currentPage;
             $searchResult['limit']   = $requestedLimit;
             $searchResult['offset']  = $requestedOffset;
+            unset($searchResult['next']);
             if ($nextLink !== null) {
                 $searchResult['next'] = $nextLink;
-            } else {
-                unset($searchResult['next']);
             }
 
             if ($prevLink !== null) {
@@ -469,7 +466,9 @@ class AangebodenGebruikService
                     _multitenancy: false,
                     deleted: false
                 );
-            } else {
+            }//end if
+
+            if ($isOrganisationUuid === false) {
                 // For suite/module UUIDs, use 'uses' parameter to filter by relations.
                 // Add organization filter if provided.
                 if ($organisationFilter !== null) {

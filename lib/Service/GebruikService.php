@@ -23,7 +23,6 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for handling gebruik-related operations
- *
  */
 class GebruikService
 {

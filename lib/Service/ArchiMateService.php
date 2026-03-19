@@ -313,7 +313,7 @@ class ArchiMateService
             }
 
             // Look up the organization from Voorzieningen register.
-            $voorzConfig = $this->settingsService->getVoorzieningenConfig();
+            $voorzConfig       = $this->settingsService->getVoorzieningenConfig();
                 $orgRegisterId = null;
             if (empty($voorzConfig['register']) === false) {
             }
@@ -762,14 +762,12 @@ class ArchiMateService
             case 'direct':
                 if (is_string($current) === true) {
                 }
-
-                    return null;
+                return null;
 
             case 'value':
                 if (is_array($current) === true && isset($current['_value']) === true) {
                 }
-
-                    return null;
+                return null;
 
             case 'array_search':
                 if (is_array($current) === true) {

@@ -608,18 +608,18 @@ class ContactPersonHandler
                         );
 
                 return $user;
-            } else {
-                $this->_logger->error(
-                        '❌ USER CREATION RETURNED NULL',
-                        [
-                            'app'              => 'softwarecatalog',
-                            'username'         => $username,
-                            'email'            => $email,
-                            'contactpersoonId' => $contactId,
-                            'note'             => 'No exception thrown but createUser returned null',
-                        ]
-                        );
             }//end if
+
+            $this->_logger->error(
+                    '❌ USER CREATION RETURNED NULL',
+                    [
+                        'app'              => 'softwarecatalog',
+                        'username'         => $username,
+                        'email'            => $email,
+                        'contactpersoonId' => $contactId,
+                        'note'             => 'No exception thrown but createUser returned null',
+                    ]
+                    );
 
             return null;
         } catch (\Exception $e) {
@@ -702,6 +702,17 @@ class ContactPersonHandler
                 $organizationType = $this->getOrganizationType(organizationId: (string) $organizationId);
                 $roleGroup        = $this->getRoleGroupByOrganizationType(organizationType: $organizationType);
 
+                if (empty($roleGroup) === true) {
+                    $this->_logger->warning(
+                        'No role mapping found for organization type',
+                        [
+                            'username'         => $user->getUID(),
+                            'organizationId'   => $organizationId,
+                            'organizationType' => $organizationType,
+                        ]
+                    );
+                }
+
                 if (empty($roleGroup) === false) {
                     $this->addUserToGroupWithCheck(user: $user, groupName: $roleGroup, type: 'organization-type-role');
 
@@ -716,15 +727,6 @@ class ContactPersonHandler
                             'organizationType' => $organizationType,
                             'assignedRole'     => $roleGroup,
                             'rollenEnumValue'  => $assignedRole,
-                        ]
-                    );
-                } else {
-                    $this->_logger->warning(
-                        'No role mapping found for organization type',
-                        [
-                            'username'         => $user->getUID(),
-                            'organizationId'   => $organizationId,
-                            'organizationType' => $organizationType,
                         ]
                     );
                 }//end if
@@ -875,17 +877,7 @@ class ContactPersonHandler
                 return;
             }
 
-            if ($group->inGroup($user) === false) {
-                $group->addUser($user);
-                $this->_logger->info(
-                    'Added user to existing group',
-                    [
-                        'username'  => $user->getUID(),
-                        'groupName' => $groupName,
-                        'type'      => $type,
-                    ]
-                );
-            } else {
+            if ($group->inGroup($user) === true) {
                 $this->_logger->debug(
                     'User already in group',
                     [
@@ -894,7 +886,18 @@ class ContactPersonHandler
                         'type'      => $type,
                     ]
                 );
+                return;
             }
+
+            $group->addUser($user);
+            $this->_logger->info(
+                'Added user to existing group',
+                [
+                    'username'  => $user->getUID(),
+                    'groupName' => $groupName,
+                    'type'      => $type,
+                ]
+            );
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to add user to group with check: '.$e->getMessage(),
@@ -1012,14 +1015,16 @@ class ContactPersonHandler
         // For backward compatibility, try to find the user's contact data and update based on organization type.
         try {
             $contactObject = $this->findContactpersoonByUsername(username: $user->getUID());
-            if (empty($contactObject) === false) {
-                $contactData = $contactObject->getObject();
-                $this->updateUserGroupsFromContactData(user: $user, contactData: $contactData);
-            } else {
+            if (empty($contactObject) === true) {
                 $this->_logger->warning(
                     'Could not find contact person data for user - cannot update groups',
                     ['username' => $user->getUID()]
                 );
+            }
+
+            if (empty($contactObject) === false) {
+                $contactData = $contactObject->getObject();
+                $this->updateUserGroupsFromContactData(user: $user, contactData: $contactData);
             }
         } catch (\Exception $e) {
             $this->_logger->error(
@@ -1029,7 +1034,7 @@ class ContactPersonHandler
                     'exception' => $e,
                 ]
             );
-        }
+        }//end try
     }//end updateUserGroupsFromRoles()
 
     /**
@@ -1294,10 +1299,7 @@ class ContactPersonHandler
 
                     // Try to set the role property.
                     $roleProperty = $account->getProperty(\OCP\Accounts\IAccountManager::PROPERTY_ROLE);
-                    if ($roleProperty !== null) {
-                        $roleProperty->setValue($functie);
-                        $accountManager->updateAccount($account);
-                    } else {
+                    if ($roleProperty === null) {
                         // Property doesn't exist, create it.
                         $account->setProperty(
                             \OCP\Accounts\IAccountManager::PROPERTY_ROLE,
@@ -1305,6 +1307,11 @@ class ContactPersonHandler
                             \OCP\Accounts\IAccountManager::SCOPE_LOCAL,
                             \OCP\Accounts\IAccountManager::NOT_VERIFIED
                         );
+                        $accountManager->updateAccount($account);
+                    }
+
+                    if ($roleProperty !== null) {
+                        $roleProperty->setValue($functie);
                         $accountManager->updateAccount($account);
                     }
                 } catch (\Exception $e) {
@@ -1813,7 +1820,9 @@ class ContactPersonHandler
                             'email'    => $user->getEMailAddress(),
                         ]
                         );
-            } else {
+            }
+
+            if ($success !== true) {
                 $this->_logger->warning(
                         'Failed to send user creation email',
                         [
@@ -1992,18 +2001,7 @@ class ContactPersonHandler
         try {
             $user = $this->_userManager->get($username);
 
-            if (empty($user) === false) {
-                $user->setEnabled(false);
-
-                $this->_logger->info(
-                    'Set user account to inactive',
-                    [
-                        'username' => $username,
-                    ]
-                );
-
-                return true;
-            } else {
+            if (empty($user) === true) {
                 $this->_logger->warning(
                     'User not found when trying to set inactive',
                     [
@@ -2012,7 +2010,18 @@ class ContactPersonHandler
                 );
 
                 return false;
-            }//end if
+            }
+
+            $user->setEnabled(false);
+
+            $this->_logger->info(
+                'Set user account to inactive',
+                [
+                    'username' => $username,
+                ]
+            );
+
+            return true;
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to set user inactive: '.$e->getMessage(),
@@ -2038,18 +2047,7 @@ class ContactPersonHandler
         try {
             $user = $this->_userManager->get($username);
 
-            if (empty($user) === false) {
-                $user->setEnabled(true);
-
-                $this->_logger->info(
-                    'Set user account to active',
-                    [
-                        'username' => $username,
-                    ]
-                );
-
-                return true;
-            } else {
+            if (empty($user) === true) {
                 $this->_logger->warning(
                     'User not found when trying to set active',
                     [
@@ -2058,7 +2056,18 @@ class ContactPersonHandler
                 );
 
                 return false;
-            }//end if
+            }
+
+            $user->setEnabled(true);
+
+            $this->_logger->info(
+                'Set user account to active',
+                [
+                    'username' => $username,
+                ]
+            );
+
+            return true;
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to set user active: '.$e->getMessage(),

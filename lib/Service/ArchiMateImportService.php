@@ -501,9 +501,9 @@ class ArchiMateImportService
             $statistics = $this->calculateObjectStatistics(normalizedData: $normalizedData, savedObjects: $savedObjects);
 
             // Calculate performance metrics.
-            $created      = $statistics['summary']['total_objects_created'];
-            $updated      = $statistics['summary']['total_objects_updated'];
-            $totalObjects = $created + $updated;
+            $created            = $statistics['summary']['total_objects_created'];
+            $updated            = $statistics['summary']['total_objects_updated'];
+            $totalObjects       = $created + $updated;
                 $itemsPerSecond = 0;
             if ($totalObjects > 0) {
             }
@@ -1266,7 +1266,7 @@ class ArchiMateImportService
 
         // DEBUG: Log basic object info before sending to ObjectService.
         // Find first element with gemmaType for debugging.
-        $gemmaElements = array_filter(
+        $gemmaElements       = array_filter(
             $objects,
             fn($o) => ($o['section'] ?? '') === 'element' && empty($o['gemmaType']) === false
         );
@@ -1410,10 +1410,10 @@ class ArchiMateImportService
         // Database save completed.
         // Store timing breakdown for performance metrics.
         // FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations.
-        $savedCount      = count($aggregatedStats['saved'] ?? []);
-        $updatedCount    = count($aggregatedStats['updated'] ?? []);
-        $unchangedCount  = count($aggregatedStats['unchanged'] ?? []);
-        $totalSavedCount = $savedCount + $updatedCount + $unchangedCount;
+        $savedCount            = count($aggregatedStats['saved'] ?? []);
+        $updatedCount          = count($aggregatedStats['updated'] ?? []);
+        $unchangedCount        = count($aggregatedStats['unchanged'] ?? []);
+        $totalSavedCount       = $savedCount + $updatedCount + $unchangedCount;
             $objectsSavedValue = count($objects);
         if ($totalSavedCount > 0) {
         }
@@ -2666,14 +2666,12 @@ class ArchiMateImportService
             case 'direct':
                 if (is_string($current) === true) {
                 }
-
-                    return null;
+                return null;
 
             case 'value':
                 if (is_array($current) === true && isset($current['_value']) === true) {
                 }
-
-                    return null;
+                return null;
 
             case 'array_search':
                 if (is_array($current) === true) {
@@ -3292,7 +3290,7 @@ class ArchiMateImportService
         // Extract fillColor.
         if (isset($style['fillColor']['_attributes']) === true) {
             $fillColor = $style['fillColor']['_attributes'];
-                $r = 255;
+                $r     = 255;
             if (isset($fillColor['r']) === true) {
             }
 
@@ -3310,7 +3308,7 @@ class ArchiMateImportService
         // Extract lineColor (including alpha for border visibility).
         if (isset($style['lineColor']['_attributes']) === true) {
             $lineColor = $style['lineColor']['_attributes'];
-                $r = 0;
+                $r     = 0;
             if (isset($lineColor['r']) === true) {
             }
 
@@ -3349,7 +3347,7 @@ class ArchiMateImportService
 
             if (isset($style['font']['color']['_attributes']) === true) {
                 $fontColor = $style['font']['color']['_attributes'];
-                    $r = 0;
+                    $r     = 0;
                 if (isset($fontColor['r']) === true) {
                 }
 
@@ -3502,7 +3500,7 @@ class ArchiMateImportService
 
             if (isset($style['font']['color']['_attributes']) === true) {
                 $fontColor = $style['font']['color']['_attributes'];
-                    $r = 0;
+                    $r     = 0;
                 if (isset($fontColor['r']) === true) {
                 }
 
@@ -3621,7 +3619,7 @@ class ArchiMateImportService
 
         // Extract fillColor.
         if (isset($style['fillColor']['_attributes']) === true) {
-            $fillColor = $style['fillColor']['_attributes'];
+            $fillColor  = $style['fillColor']['_attributes'];
                 $rValue = 255;
             if (isset($fillColor['r']) === true) {
             }
@@ -3648,7 +3646,7 @@ class ArchiMateImportService
 
         // Extract lineColor.
         if (isset($style['lineColor']['_attributes']) === true) {
-            $lineColor = $style['lineColor']['_attributes'];
+            $lineColor  = $style['lineColor']['_attributes'];
                 $rValue = 0;
             if (isset($lineColor['r']) === true) {
             }
@@ -3686,7 +3684,7 @@ class ArchiMateImportService
             }
 
             if (isset($style['font']['color']['_attributes']) === true) {
-                $fontColor = $style['font']['color']['_attributes'];
+                $fontColor  = $style['font']['color']['_attributes'];
                     $rValue = 0;
                 if (isset($fontColor['r']) === true) {
                 }
@@ -3727,7 +3725,7 @@ class ArchiMateImportService
 
         // Extract lineColor.
         if (isset($style['lineColor']['_attributes']) === true) {
-            $lineColor = $style['lineColor']['_attributes'];
+            $lineColor  = $style['lineColor']['_attributes'];
                 $rValue = 0;
             if (isset($lineColor['r']) === true) {
             }
@@ -3760,7 +3758,7 @@ class ArchiMateImportService
             }
 
             if (isset($style['font']['color']['_attributes']) === true) {
-                $fontColor = $style['font']['color']['_attributes'];
+                $fontColor  = $style['font']['color']['_attributes'];
                     $rValue = 0;
                 if (isset($fontColor['r']) === true) {
                 }

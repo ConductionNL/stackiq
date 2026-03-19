@@ -1,5 +1,4 @@
 <script setup>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { navigationStore } from '../../store/store.js'
 import { reactive } from 'vue'
 </script>
@@ -310,7 +309,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .syncButton {
 	margin-block-start: 15px;
 	width: 100% !important;

@@ -541,7 +541,6 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing the auto-configuration results
      *
      * @NoCSRFRequired
-     *
      */
     public function autoConfigure(): JSONResponse
     {
@@ -555,14 +554,14 @@ class SettingsController extends Controller
                             'configuration' => $result,
                         ]
                         );
-            } else {
-                return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'No matching registers or schemas found for auto-configuration',
-                        ]
-                        );
             }
+
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'No matching registers or schemas found for auto-configuration',
+                    ]
+                    );
         } catch (\Exception $e) {
             $this->logger->error(
                     'Failed to auto-configure settings',
@@ -702,7 +701,6 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing sync results
      *
      * @NoCSRFRequired
-     *
      */
     public function performSync(int $minutesBack=0): JSONResponse
     {
@@ -724,15 +722,15 @@ class SettingsController extends Controller
                             'isOptimized' => true,
                         ]
                         );
-            } else {
-                // For incremental sync, use the original method.
-                $result = $this->orgSyncSvc->performManualSync($minutesBack);
-
-                if ($result['success'] === true) {
-                }
-
-                    return new JSONResponse($result, 500);
             }//end if
+
+            // For incremental sync, use the original method.
+            $result = $this->orgSyncSvc->performManualSync($minutesBack);
+
+            if ($result['success'] === true) {
+            }
+
+            return new JSONResponse($result, 500);
         } catch (\Exception $e) {
             $this->logger->error(
                     'Manual sync failed',
@@ -853,7 +851,6 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing reset results.
      *
      * @NoCSRFRequired
-     *
      */
     public function resetAutoConfig(): JSONResponse
     {
@@ -924,7 +921,6 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing import results.
      *
      * @NoCSRFRequired
-     *
      */
     public function manualImport(): JSONResponse
     {
@@ -1054,7 +1050,6 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing consolidated results
      *
      * @NoCSRFRequired
-     *
      */
     public function consolidatedAutoConfigure(): JSONResponse
     {
@@ -1066,14 +1061,12 @@ class SettingsController extends Controller
             $results = $this->settingsService->performConsolidatedAutoConfiguration($force);
 
             // Determine HTTP status based on results.
+            $httpStatus = 200;
             if ($results['success'] === false) {
                 // Multi-status or Server Error.
-                    $httpStatus = 500;
+                $httpStatus = 500;
                 if (empty($results['errors']) === false) {
                 }
-            } else {
-                // Success.
-                $httpStatus = 200;
             }
 
             return new JSONResponse($results, $httpStatus);
@@ -1377,7 +1370,9 @@ class SettingsController extends Controller
                 ];
 
                 $this->logger->info('JSON payload detected.', ['options' => $options]);
-            } else {
+            }//end if
+
+            if (isset($options) === false) {
                 $this->logger->error(
                         'No file uploaded or file path provided — DETAILED DEBUG',
                         [
@@ -1414,12 +1409,11 @@ class SettingsController extends Controller
             // OPTIMIZATION: Use optimized method if available or if explicitly requested.
             $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
             $hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
+            $this->logger->info('Using STANDARD ArchiMate import method.');
+            $result = $this->archiMateService->importArchiMateFileFromPath($options);
             if ($useOptimized === true && $hasOptimized === true) {
                 $this->logger->info('Using OPTIMIZED ArchiMate import method.');
                 $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
-            } else {
-                $this->logger->info('Using STANDARD ArchiMate import method.');
-                $result = $this->archiMateService->importArchiMateFileFromPath($options);
             }
 
             return new JSONResponse($result);
@@ -1987,7 +1981,6 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
      */
     public function updateEmailTemplate(string $templateName): JSONResponse
     {
@@ -2478,7 +2471,6 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Cancellation result
-     *
      */
     public function cancelArchiMateImport(): JSONResponse
     {
@@ -3124,7 +3116,6 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse The sync results
-     *
      */
     public function syncOrganisations(): JSONResponse
     {
@@ -3274,7 +3265,6 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
-     *
      */
     public function updateCronjobConfig(): JSONResponse
     {

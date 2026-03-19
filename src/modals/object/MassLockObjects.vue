@@ -8,7 +8,6 @@
  */
 
 <script setup>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
 </script>
 
@@ -216,7 +215,7 @@ export default {
 }
 </style>
 
-<style>
+<style scoped>
 /* Ensure mass action dialogs appear on top of other modals */
 .mass-action-dialog {
 	z-index: 10000 !important;

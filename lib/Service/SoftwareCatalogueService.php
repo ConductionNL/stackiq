@@ -1084,7 +1084,7 @@ class SoftwareCatalogueService
                     );
 
             // Get current and old data for comparison.
-            $newData = $contactpersoonObject->getObject();
+            $newData     = $contactpersoonObject->getObject();
                 $oldData = [];
             if ($oldContactpersoonObject !== null) {
             }
@@ -1640,8 +1640,7 @@ class SoftwareCatalogueService
                         ]
                         );
             }
-
-        }
+        }//end if
 
             $this->_logger->info(
                     'SoftwareCatalogueService: STEP 4A - Auth path: User logged in, creating org via mapper',
@@ -1695,49 +1694,49 @@ class SoftwareCatalogueService
                     );
 
             $this->_logger->info('SoftwareCatalogueService: STEP 4F - Calling organisationMapper->createWithUuid()');
-            try {
-                // Debug: Log the exact parameters being passed.
-                $this->_logger->info(
-                        'SoftwareCatalogueService: STEP 4F_DEBUG - Parameters for createWithUuid',
-                        [
-                            'name'        => $mappedData['naam'] ?? 'Unknown Organization',
-                            'description' => $mappedData['website'] ?? '',
-                            'uuid'        => $organizationUuid,
-                            'owner'       => $currentUser->getUID(),
-                            'users'       => $allUsernames,
-                            'isDefault'   => false,
-                            'uuidLength'  => strlen($organizationUuid),
-                            'uuidIsEmpty' => empty($organizationUuid) === true,
-                        ]
-                        );
+        try {
+            // Debug: Log the exact parameters being passed.
+            $this->_logger->info(
+                    'SoftwareCatalogueService: STEP 4F_DEBUG - Parameters for createWithUuid',
+                    [
+                        'name'        => $mappedData['naam'] ?? 'Unknown Organization',
+                        'description' => $mappedData['website'] ?? '',
+                        'uuid'        => $organizationUuid,
+                        'owner'       => $currentUser->getUID(),
+                        'users'       => $allUsernames,
+                        'isDefault'   => false,
+                        'uuidLength'  => strlen($organizationUuid),
+                        'uuidIsEmpty' => empty($organizationUuid) === true,
+                    ]
+                    );
 
-                $organisation = $organisationMapper->createWithUuid(
-                    $mappedData['naam'] ?? 'Unknown Organization',
-                    $mappedData['website'] ?? '',
-                // Use website as description.
-                    $organizationUuid,
-                // Pass the original UUID.
-                    $currentUser->getUID(),
-                // Set current user as owner.
-                    $allUsernames,
-                // Add all users including contact persons.
-                    false
-                // Not default.
-                );
-                $this->_logger->info(
-                    'SoftwareCatalogueService: STEP 4G - organisationMapper->createWithUuid() completed'
-                );
-            } catch (\Exception $e) {
-                $this->_logger->error(
-                        'SoftwareCatalogueService: STEP 4G - organisationMapper->createWithUuid() failed',
-                        [
-                            'error'      => $e->getMessage(),
-                            'errorClass' => get_class($e),
-                            'trace'      => $e->getTraceAsString(),
-                        ]
-                        );
-                throw $e;
-            }//end try
+            $organisation = $organisationMapper->createWithUuid(
+                $mappedData['naam'] ?? 'Unknown Organization',
+                $mappedData['website'] ?? '',
+            // Use website as description.
+                $organizationUuid,
+            // Pass the original UUID.
+                $currentUser->getUID(),
+            // Set current user as owner.
+                $allUsernames,
+            // Add all users including contact persons.
+                false
+            // Not default.
+            );
+            $this->_logger->info(
+                'SoftwareCatalogueService: STEP 4G - organisationMapper->createWithUuid() completed'
+            );
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                    'SoftwareCatalogueService: STEP 4G - organisationMapper->createWithUuid() failed',
+                    [
+                        'error'      => $e->getMessage(),
+                        'errorClass' => get_class($e),
+                        'trace'      => $e->getTraceAsString(),
+                    ]
+                    );
+            throw $e;
+        }//end try
 
             // Note: OpenRegister Organisation entity doesn't have status or type fields.
             // These are managed in the SoftwareCatalog object, not in the OpenRegister organisation.
@@ -2841,8 +2840,7 @@ class SoftwareCatalogueService
                                 'updatedUsers'     => $organizationUsers,
                             ]
                             );
-
-                }
+                }//end if
 
                     $this->_logger->debug(
                             'SoftwareCatalogueService: Contactpersoon already in organization',
