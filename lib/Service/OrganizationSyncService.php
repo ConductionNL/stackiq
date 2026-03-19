@@ -45,7 +45,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -165,10 +164,8 @@ class OrganizationSyncService
         }
 
         // MySQL/MariaDB: Use json_unquote(json_extract()).
-        if (str_starts_with($path, '$.') === true) {
-            $jsonPath = $path;
-        } else {
             $jsonPath = '$.'.$path;
+        if (str_starts_with($path, '$.') === true) {
         }
 
         return "json_unquote(json_extract({$column}, '{$jsonPath}'))";
@@ -493,10 +490,8 @@ class OrganizationSyncService
         $platform   = $this->db->getDatabasePlatform();
         $isPostgres = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
-        if ($isPostgres === true) {
-            $jsonContainsCheck = "NOT (oo.users::jsonb @> to_jsonb(o.username::text))";
-        } else {
             $jsonContainsCheck = "JSON_CONTAINS(oo.users, CONCAT('\"', o.username, '\"')) = 0";
+        if ($isPostgres === true) {
         }
 
         // Find contacts with a username whose username is NOT in their org's users array.
@@ -544,10 +539,8 @@ class OrganizationSyncService
      */
     public function performFullSync(int $minutesBack=10): array
     {
-        if ($minutesBack === 0) {
-            $syncModeValue = 'full';
-        } else {
             $syncModeValue = 'incremental';
+        if ($minutesBack === 0) {
         }
 
         $this->logger->info(
@@ -591,10 +584,8 @@ class OrganizationSyncService
                 organizationSchema: $organizationSchema,
                 minutesBack: $minutesBack
             );
-            if ($minutesBack === 0) {
-                $syncModeValue = 'full';
-            } else {
                 $syncModeValue = 'incremental';
+            if ($minutesBack === 0) {
             }
 
             $this->logger->info(
@@ -1195,10 +1186,8 @@ class OrganizationSyncService
 
             // Check if user already exists.
             $userManager = \OC::$server->get('OCP\IUserManager');
-            if (empty($existingUsername) === false) {
-                $username = $existingUsername;
-            } else {
                 $username = $email;
+            if (empty($existingUsername) === false) {
             }
 
             $user = $userManager->get($username);
@@ -1224,8 +1213,8 @@ class OrganizationSyncService
                             'username'  => $username,
                         ]
                     );
-                    return $username;
-                } else {
+                }
+
                     $this->logger->error(
                         'OrganizationSyncService: Failed to create user account',
                         [
@@ -1233,9 +1222,8 @@ class OrganizationSyncService
                             'username'  => $username,
                         ]
                     );
-                    return null;
-                }
-            } else {
+            }
+
                 // User exists, update username in contact if needed.
                 if (empty($existingUsername) === true) {
                     $this->logger->debug(
@@ -1249,7 +1237,6 @@ class OrganizationSyncService
                 }
 
                 return $username;
-            }//end if
         } catch (\Exception $e) {
             $this->logger->error(
                 'OrganizationSyncService: Failed to process contact person',
@@ -1436,10 +1423,8 @@ class OrganizationSyncService
                 $efficiencyImprovement = 0;
             }
 
-            if ($minutesBack === 0) {
-                $syncModeValue = 'full';
-            } else {
                 $syncModeValue = 'incremental';
+            if ($minutesBack === 0) {
             }
 
             if (count($incrementalOrganisatieObjects) > 0) {
@@ -1451,10 +1436,8 @@ class OrganizationSyncService
                 $messageValue = 'No organizations to process in the current time window';
             }
 
-            if ($minutesBack > 0) {
-                $nextScheduledSyncValue = "Will process organizations updated in the last {$minutesBack} minutes";
-            } else {
                 $nextScheduledSyncValue = 'Will process all organizations (full sync)';
+            if ($minutesBack > 0) {
             }
 
             return [
@@ -1773,10 +1756,8 @@ class OrganizationSyncService
                         if ($contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
                             $contactData = $contactObject->getObject();
                         } else {
-                            if (is_array($contactObject) === true) {
-                                $contactData = $contactObject;
-                            } else {
                                 $contactData = [];
+                            if (is_array($contactObject) === true) {
                             }
                         }
 
@@ -1931,10 +1912,8 @@ class OrganizationSyncService
                         _multitenancy: false
                     );
 
-                    if ($rawOrgObject !== null) {
-                        $rawOrgData = $rawOrgObject->getObject();
-                    } else {
                         $rawOrgData = [];
+                    if ($rawOrgObject !== null) {
                     }
 
                     $contactUuids = ($rawOrgData['contactpersonen'] ?? []);
@@ -2406,10 +2385,8 @@ class OrganizationSyncService
                                 $stats['errors'][] = "Failed to create user account for {$email}";
                             }//end if
                         } else {
-                            if ($organisationEntity !== null) {
-                                $organizationActiveValue = $organisationEntity->getActive();
-                            } else {
                                 $organizationActiveValue = false;
+                            if ($organisationEntity !== null) {
                             }
 
                             $this->logger->info(
@@ -2627,10 +2604,8 @@ class OrganizationSyncService
                             );
                         }//end if
                     } else {
-                        if ($organisationEntity !== null) {
-                            $organizationActiveValue = $organisationEntity->getActive();
-                        } else {
                             $organizationActiveValue = false;
+                        if ($organisationEntity !== null) {
                         }
 
                         $skipEmail = ($contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown');
@@ -2798,10 +2773,8 @@ class OrganizationSyncService
      */
     public function performScheduledSync(int $minutesBack=0): array
     {
-        if ($minutesBack === 0) {
-            $syncModeValue = 'full';
-        } else {
             $syncModeValue = 'incremental';
+        if ($minutesBack === 0) {
         }
 
         $this->logger->info(
@@ -2897,10 +2870,8 @@ class OrganizationSyncService
      */
     public function performManualSync(int $minutesBack=0): array
     {
-        if ($minutesBack === 0) {
-            $syncModeValue = 'full';
-        } else {
             $syncModeValue = 'incremental';
+        if ($minutesBack === 0) {
         }
 
         $this->logger->info(
@@ -2980,10 +2951,8 @@ class OrganizationSyncService
                 ]
             );
 
-            if ($minutesBack === 0) {
-                $syncModeValue = 'full';
-            } else {
                 $syncModeValue = 'incremental';
+            if ($minutesBack === 0) {
             }
 
             return [
@@ -3140,10 +3109,18 @@ class OrganizationSyncService
             $organizationUuid = ($organizationUuidOverride ?? $orgUuid);
             if (empty($organizationUuid) === false) {
                 $selfMetadata['organisation'] = $organizationUuid;
-                if (empty($organizationUuidOverride) === false) {
-                    $sourceValue = 'override';
-                } else {
                     $sourceValue = 'object';
+            if (empty($organizationUuidOverride)  === true) {
+                $this->logger->warning(
+                    'OrganizationSyncService: No organization UUID found for contact person',
+                    [
+                        'contactId'   => $contactId,
+                        'contactData' => $currentObject,
+                    ]
+                );
+            }
+
+            if (empty($organizationUuidOverride) === false) {
                 }
 
                 $this->logger->info(
@@ -3152,14 +3129,6 @@ class OrganizationSyncService
                         'contactId'        => $contactId,
                         'organizationUuid' => $organizationUuid,
                         'source'           => $sourceValue,
-                    ]
-                );
-            } else {
-                $this->logger->warning(
-                    'OrganizationSyncService: No organization UUID found for contact person',
-                    [
-                        'contactId'   => $contactId,
-                        'contactData' => $currentObject,
                     ]
                 );
             }//end if

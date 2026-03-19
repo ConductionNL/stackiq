@@ -43,7 +43,6 @@ use OCP\App\IAppManager;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -661,10 +660,8 @@ class SoftwareCatalogueService
             if ($newBeoordeling === 'actief') {
                 $becameActive = ($oldBeoordeling !== 'actief');
 
-                if ($becameActive === true) {
-                    $activeMessage = 'Organization became active, activating users';
-                } else {
                     $activeMessage = 'Organization is active';
+                if ($becameActive === true) {
                 }
 
                 $this->_logger->info(
@@ -721,10 +718,8 @@ class SoftwareCatalogueService
             if ($newBeoordeling === 'inactief' || $newBeoordeling === 'deactief') {
                 $becameInactive = ($oldBeoordeling === 'actief');
 
-                if ($becameInactive === true) {
-                    $inactiveMessage = 'Organization became inactive, deactivating users';
-                } else {
                     $inactiveMessage = 'Organization is inactive';
+                if ($becameInactive === true) {
                 }
 
                 $this->_logger->info(
@@ -1090,10 +1085,8 @@ class SoftwareCatalogueService
 
             // Get current and old data for comparison.
             $newData = $contactpersoonObject->getObject();
-            if ($oldContactpersoonObject !== null) {
-                $oldData = $oldContactpersoonObject->getObject();
-            } else {
                 $oldData = [];
+            if ($oldContactpersoonObject !== null) {
             }
 
             $newRoles = $newData['roles'] ?? [];
@@ -1517,10 +1510,8 @@ class SoftwareCatalogueService
         $userSession = \OC::$server->getUserSession();
         $currentUser = $userSession->getUser();
 
-        if ($currentUser !== null) {
-            $currentUserValue = $currentUser->getUID();
-        } else {
             $currentUserValue = 'null';
+        if ($currentUser !== null) {
         }
 
         $this->_logger->info(
@@ -1650,8 +1641,8 @@ class SoftwareCatalogueService
                         );
             }
 
-            return $savedOrganisation;
-        } else {
+        }
+
             $this->_logger->info(
                     'SoftwareCatalogueService: STEP 4A - Auth path: User logged in, creating org via mapper',
                     [
@@ -1761,7 +1752,6 @@ class SoftwareCatalogueService
                     );
 
             return $organisation;
-        }//end if
     }//end createOrganisationInOpenRegisterInternal()
 
     /**
@@ -2852,8 +2842,8 @@ class SoftwareCatalogueService
                             ]
                             );
 
-                    return true;
-                } else {
+                }
+
                     $this->_logger->debug(
                             'SoftwareCatalogueService: Contactpersoon already in organization',
                             [
@@ -2863,7 +2853,6 @@ class SoftwareCatalogueService
                             );
                     return true;
                     // Already there, consider it successful.
-                }//end if
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                 $this->_logger->error(
                         'SoftwareCatalogueService: Organization not found for contactpersoon',
@@ -2972,8 +2961,8 @@ class SoftwareCatalogueService
                                     ]
                                     );
                             sleep($retryDelay);
-                            continue;
-                        } else {
+                        }
+
                             $this->_logger->warning(
                                     'SoftwareCatalogueService: Primary contact person still has no username after retries',
                                     [
@@ -2982,7 +2971,6 @@ class SoftwareCatalogueService
                                     ]
                                     );
                             return;
-                        }//end if
                     }//end if
 
                     // Get the organization entity UUID - use the same UUID as the organization object.
@@ -3125,8 +3113,8 @@ class SoftwareCatalogueService
                                 ]
                                 );
                         sleep($retryDelay);
-                        continue;
-                    } else {
+                    }
+
                         $this->_logger->error(
                                 'SoftwareCatalogueService: Primary contact person not found after retries',
                                 [
@@ -3135,7 +3123,6 @@ class SoftwareCatalogueService
                                 ]
                                 );
                         return;
-                    }//end if
                 }//end try
             }//end for
         } catch (\Exception $e) {

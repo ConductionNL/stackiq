@@ -42,7 +42,6 @@ use OCP\IAppConfig;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -281,10 +280,8 @@ class ContactpersoonService
                                 ]
                             );
                         } else {
-                            if ($organisationEntity !== null) {
-                                $orgActive = $organisationEntity->getActive();
-                            } else {
                                 $orgActive = false;
+                            if ($organisationEntity !== null) {
                             }
 
                             $this->logger->info(
@@ -309,15 +306,15 @@ class ContactpersoonService
                             ]
                         );
                         return false;
-                    }//end try
-                } else {
+                }
+
                     $this->logger->warning(
                         'ContactpersoonService: Contactpersoon has no organization reference, skipping user creation',
                         ['contactId' => $contactId]
                     );
                     return false;
-                }//end if
-            } else {
+            }
+
                 $this->logger->info(
                     'ContactpersoonService: User account already exists',
                     [
@@ -574,10 +571,8 @@ class ContactpersoonService
     private function syncNameFieldsToUser(object $contactpersoonObject, ?object $oldContactpersoonObject): void
     {
         $newData = $contactpersoonObject->getObject();
-        if ($oldContactpersoonObject !== null) {
-            $oldData = $oldContactpersoonObject->getObject();
-        } else {
             $oldData = [];
+        if ($oldContactpersoonObject !== null) {
         }
 
         // Check if any name/functie fields have changed.

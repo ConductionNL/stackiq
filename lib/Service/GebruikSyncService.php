@@ -37,7 +37,6 @@ use DateTime;
  * @version  GIT: <git_id>
  * @link     https://github.com/conduction/nextcloud-software-catalog
  *
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -437,10 +436,20 @@ class GebruikSyncService
                 );
                 $stats['statusUpdated'] = true;
 
-                if ($targetDate !== null) {
-                    $basedOnDate = $targetDate->format('Y-m-d');
-                } else {
                     $basedOnDate = null;
+            if ($targetDate  === null) {
+                $this->logger->info(
+                        'No status update needed',
+                        [
+                            'app'           => 'softwarecatalog',
+                            'gebruikId'     => $gebruikUuid,
+                            'currentStatus' => $currentStatus,
+                            'targetStatus'  => $targetStatus,
+                        ]
+                        );
+            }
+
+            if ($targetDate !== null) {
                 }
 
                 $this->logger->critical(
@@ -451,16 +460,6 @@ class GebruikSyncService
                             'oldStatus'   => $currentStatus,
                             'newStatus'   => $targetStatus,
                             'basedOnDate' => $basedOnDate,
-                        ]
-                        );
-            } else {
-                $this->logger->info(
-                        'No status update needed',
-                        [
-                            'app'           => 'softwarecatalog',
-                            'gebruikId'     => $gebruikUuid,
-                            'currentStatus' => $currentStatus,
-                            'targetStatus'  => $targetStatus,
                         ]
                         );
             }//end if

@@ -69,7 +69,6 @@ class SoftwareCatalogEventListener implements IEventListener
      *
      * @return void
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function handle(Event $event): void
     {
@@ -325,7 +324,6 @@ class SoftwareCatalogEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function handleObjectUpdated(
         ObjectUpdatedEvent $event,
@@ -388,10 +386,8 @@ class SoftwareCatalogEventListener implements IEventListener
             $objectData = $object->getObject();
             $status     = strtolower($objectData['status'] ?? '');
 
-            if ($oldObject !== null) {
-                $oldStatus = strtolower($oldObject->getObject()['status'] ?? '');
-            } else {
                 $oldStatus = '';
+            if ($oldObject !== null) {
             }
 
             $logger->debug(

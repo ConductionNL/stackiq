@@ -264,7 +264,6 @@ class ContactpersonenController extends Controller
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
@@ -403,10 +402,8 @@ class ContactpersonenController extends Controller
 
             // Debug logging to understand data types before save.
             $achternaamValue = $contactData['achternaam'] ?? 'not set';
-            if (isset($contactData['achternaam']) === true) {
-                $achternaamType = gettype($contactData['achternaam']);
-            } else {
                 $achternaamType = 'not set';
+            if (isset($contactData['achternaam']) === true) {
             }
 
             $this->logger->info(
@@ -580,7 +577,6 @@ class ContactpersonenController extends Controller
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
@@ -1077,27 +1073,20 @@ class ContactpersonenController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function testBulkUserInfo(): JSONResponse
     {
         try {
-            if ($this->contactSvc !== null) {
-                $objectServiceAvail = 'available';
-            } else {
                 $objectServiceAvail = 'null';
+            if ($this->contactSvc !== null) {
             }
 
-            if ($this->userManager !== null) {
-                $userManagerAvail = 'available';
-            } else {
                 $userManagerAvail = 'null';
+            if ($this->userManager !== null) {
             }
 
-            if ($this->groupManager !== null) {
-                $groupManagerAvail = 'available';
-            } else {
                 $groupManagerAvail = 'null';
+            if ($this->groupManager !== null) {
             }
 
             $this->logger->info(

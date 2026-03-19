@@ -42,7 +42,6 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -1515,19 +1514,18 @@ class ViewService
             $transformedRelationship['identifier'] = $relationship['viewRelationshipId'] ?? null;
 
             // Add properties if available (check for relationship properties).
+            // Default: create properties array with relationship name if available.
+            $properties = [];
+            if (isset($relationship['label']) === true) {
+                $properties[] = [
+                    'propertyDefinitionRef' => 'propid-62',
+                    'value'                 => $relationship['label'],
+                ];
+            }
+
+            $transformedRelationship['properties'] = $properties;
             if (isset($relationship['properties']) === true) {
                 $transformedRelationship['properties'] = $relationship['properties'];
-            } else {
-                // Create properties array with relationship name if available.
-                $properties = [];
-                if (isset($relationship['label']) === true) {
-                    $properties[] = [
-                        'propertyDefinitionRef' => 'propid-62',
-                        'value'                 => $relationship['label'],
-                    ];
-                }
-
-                $transformedRelationship['properties'] = $properties;
             }
 
             // Ensure bendpoints are properly formatted.

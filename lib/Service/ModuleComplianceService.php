@@ -37,7 +37,6 @@ use Psr\Log\LoggerInterface;
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -364,10 +363,8 @@ class ModuleComplianceService
                             );
                 } else {
                     $tracking['invalidType']++;
-                    if (is_array($standaardversie) === true) {
-                        $standaardversieValue = json_encode($standaardversie);
-                    } else {
                         $standaardversieValue = (string) $standaardversie;
+                    if (is_array($standaardversie) === true) {
                     }
 
                     $this->logger->warning(

@@ -43,7 +43,6 @@ use OCA\SoftwareCatalog\Service\SymfonyEmailService;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -733,10 +732,8 @@ class ContactPersonHandler
 
             // Users are now tied to organisation entities in OpenRegister.
             // No need to add to organization-specific groups.
-            if ($isFirstContact === true) {
-                $organizationAdminGroupsValue = ($organizationAdminGroups ?? []);
-            } else {
                 $organizationAdminGroupsValue = [];
+            if ($isFirstContact === true) {
             }
 
             $this->_logger->info(
@@ -1247,10 +1244,9 @@ class ContactPersonHandler
 
         $fullName = implode(' ', $parts);
         if (empty($fullName) === false) {
-            return $fullName;
-        } else {
-            return ($contactData['email'] ?? $contactData['e-mailadres'] ?? 'Unknown User');
         }
+
+            return ($contactData['email'] ?? $contactData['e-mailadres'] ?? 'Unknown User');
     }//end getDisplayNameFromContactData()
 
     /**
@@ -1617,10 +1613,9 @@ class ContactPersonHandler
             );
 
             if (empty($manager) === false) {
-                return $manager;
-            } else {
-                return null;
             }
+
+                return null;
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to get user manager: '.$e->getMessage(),

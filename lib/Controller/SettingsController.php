@@ -542,7 +542,6 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function autoConfigure(): JSONResponse
     {
@@ -704,7 +703,6 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function performSync(int $minutesBack=0): JSONResponse
     {
@@ -731,10 +729,9 @@ class SettingsController extends Controller
                 $result = $this->orgSyncSvc->performManualSync($minutesBack);
 
                 if ($result['success'] === true) {
-                    return new JSONResponse($result);
-                } else {
-                    return new JSONResponse($result, 500);
                 }
+
+                    return new JSONResponse($result, 500);
             }//end if
         } catch (\Exception $e) {
             $this->logger->error(
@@ -857,7 +854,6 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function resetAutoConfig(): JSONResponse
     {
@@ -868,10 +864,9 @@ class SettingsController extends Controller
             $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
 
             if ($result['success'] === true) {
-                return new JSONResponse($result);
-            } else {
-                return new JSONResponse($result, 400);
             }
+
+                return new JSONResponse($result, 400);
         } catch (\Exception $e) {
             return new JSONResponse(
                     [
@@ -930,7 +925,6 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function manualImport(): JSONResponse
     {
@@ -959,10 +953,9 @@ class SettingsController extends Controller
             $result['timestamp'] = time();
 
             if ($result['success'] === true) {
-                return new JSONResponse($result);
-            } else {
-                return new JSONResponse($result, 400);
             }
+
+                return new JSONResponse($result, 400);
         } catch (\Exception $e) {
             $this->logger->error(
                     'SettingsController: Manual import failed',
@@ -1062,7 +1055,6 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function consolidatedAutoConfigure(): JSONResponse
     {
@@ -1076,10 +1068,8 @@ class SettingsController extends Controller
             // Determine HTTP status based on results.
             if ($results['success'] === false) {
                 // Multi-status or Server Error.
-                if (empty($results['errors']) === false) {
-                    $httpStatus = 207;
-                } else {
                     $httpStatus = 500;
+                if (empty($results['errors']) === false) {
                 }
             } else {
                 // Success.
@@ -1288,7 +1278,6 @@ class SettingsController extends Controller
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.Superglobals)
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function importArchiMate(): JSONResponse
     {
@@ -1353,10 +1342,8 @@ class SettingsController extends Controller
 
             if ($hasUploadedFiles === true || $hasFilesArray === true) {
                 // Use $_FILES as fallback if getUploadedFile doesn't work.
-                if ($uploadedFiles !== null) {
-                    $fileData = $uploadedFiles;
-                } else {
                     $fileData = $filesArray;
+                if ($uploadedFiles !== null) {
                 }
 
                 // Handle file upload.
@@ -1374,10 +1361,8 @@ class SettingsController extends Controller
                 $this->logger->info('File upload detected.', ['options' => $options]);
             } else if ($data !== null && isset($data['file_path']) === true) {
                 // Handle file path from JSON payload.
-                if (file_exists($data['file_path']) === true) {
-                    $fileSize = filesize($data['file_path']);
-                } else {
                     $fileSize = 0;
+                if (file_exists($data['file_path']) === true) {
                 }
 
                 $options = [
@@ -2003,7 +1988,6 @@ class SettingsController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function updateEmailTemplate(string $templateName): JSONResponse
     {
@@ -2026,10 +2010,8 @@ class SettingsController extends Controller
                 templateContent: $templateContent
             );
 
-            if ($success === true) {
-                $updateMsg = "Template {$templateName} updated successfully";
-            } else {
                 $updateMsg = "Failed to update template {$templateName}";
+            if ($success === true) {
             }
 
             return new JSONResponse(
@@ -2497,17 +2479,14 @@ class SettingsController extends Controller
      *
      * @return JSONResponse Cancellation result
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function cancelArchiMateImport(): JSONResponse
     {
         try {
             $result = $this->settingsService->cancelArchiMateImport();
 
-            if ($result['cancelled'] === true) {
-                $message = 'ArchiMate import cancelled successfully';
-            } else {
                 $message = 'ArchiMate import cancellation failed';
+            if ($result['cancelled'] === true) {
             }
 
             return new JSONResponse(
@@ -3146,7 +3125,6 @@ class SettingsController extends Controller
      *
      * @return JSONResponse The sync results
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function syncOrganisations(): JSONResponse
     {
@@ -3165,10 +3143,8 @@ class SettingsController extends Controller
             // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
-            if ($result['success'] === true) {
-                $statusCode = 200;
-            } else {
                 $statusCode = 500;
+            if ($result['success'] === true) {
             }
 
             $this->logger->info(
@@ -3299,7 +3275,6 @@ class SettingsController extends Controller
      *
      * @return JSONResponse Update result
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function updateCronjobConfig(): JSONResponse
     {
@@ -3307,10 +3282,8 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $result = $this->settingsService->updateCronjobConfig($data);
 
-            if ($result['success'] === true) {
-                $statusCode = 200;
-            } else {
                 $statusCode = 400;
+            if ($result['success'] === true) {
             }
 
             return new JSONResponse($result, $statusCode);

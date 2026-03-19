@@ -37,7 +37,6 @@ use Psr\Log\LoggerInterface;
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -353,16 +352,12 @@ class OrganizationHandler
                         contactgegevensSchemaId: $contactgegevensSchemaId
                     );
 
-                    if ($existingContactgegevens !== null) {
-                        $logMessage = 'Updating existing contactgegevens object';
-                    } else {
                         $logMessage = 'Creating new contactgegevens object';
+                    if ($existingContactgegevens !== null) {
                     }
 
-                    if ($existingContactgegevens !== null) {
-                        $existingId = $existingContactgegevens->getUuid();
-                    } else {
                         $existingId = null;
+                    if ($existingContactgegevens !== null) {
                     }
 
                     $this->_logger->info(
@@ -385,10 +380,8 @@ class OrganizationHandler
                             ]
                             );
 
-                    if (empty($titleParts) === false) {
-                        $title = implode(' ', $titleParts);
-                    } else {
                         $title = $contactpersoon['email'] ?? 'Contact Person';
+                    if (empty($titleParts) === false) {
                     }
 
                     // Create contactgegevens object with proper schema.
@@ -697,10 +690,8 @@ class OrganizationHandler
                         // Get user creation timestamps (fallback to 0 if not available).
                         if ($userA !== null) {
                             $lastLoginA = $userA->getLastLogin();
-                            if ($lastLoginA !== 0 && $lastLoginA !== null && $lastLoginA !== false) {
-                                $timeA = $lastLoginA;
-                            } else {
                                 $timeA = 0;
+                            if ($lastLoginA !== 0 && $lastLoginA !== null && $lastLoginA !== false) {
                             }
                         } else {
                             $timeA = 0;
@@ -708,10 +699,8 @@ class OrganizationHandler
 
                         if ($userB !== null) {
                             $lastLoginB = $userB->getLastLogin();
-                            if ($lastLoginB !== 0 && $lastLoginB !== null && $lastLoginB !== false) {
-                                $timeB = $lastLoginB;
-                            } else {
                                 $timeB = 0;
+                            if ($lastLoginB !== 0 && $lastLoginB !== null && $lastLoginB !== false) {
                             }
                         } else {
                             $timeB = 0;

@@ -24,7 +24,6 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for handling gebruik-related operations
  *
- * @SuppressWarnings(PHPMD.ElseExpression)
  */
 class GebruikService
 {
@@ -197,10 +196,9 @@ class GebruikService
                         if (method_exists($object, 'jsonSerialize') === true) {
                             $object = $object->jsonSerialize();
                         } else if (method_exists($object, 'getId') === true) {
-                            return $object->getId();
-                        } else {
-                            $object = $object->getObject();
                         }
+
+                            $object = $object->getObject();
                     }
 
                     return $object['@self']['id'] ?? $object['id'] ?? null;

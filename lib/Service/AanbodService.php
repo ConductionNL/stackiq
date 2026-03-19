@@ -44,7 +44,6 @@ use Exception;
  * @link      https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -191,10 +190,8 @@ class AanbodService
                     foreach ($searchResult['results'] ?? [] as $result) {
                         // Use jsonSerialize() instead of getObject() to include @self metadata.
                         // GetObject() only returns raw object data without @self.organisation.
-                        if (is_array($result) === true) {
-                            $resultData = $result;
-                        } else {
                             $resultData = $result->jsonSerialize();
+                        if (is_array($result) === true) {
                         }
 
                         $selfOrg = $resultData['@self']['organisation'] ?? null;
@@ -231,19 +228,15 @@ class AanbodService
             $requestedLimit = $options['_limit'] ?? $options['limit'] ?? 20;
             $requestedPage  = $options['_page'] ?? 1;
 
-            if (isset($options['_offset']) === true) {
-                $requestedOffset = $options['_offset'];
-            } else {
                 $requestedOffset = (($requestedPage - 1) * $requestedLimit);
+            if (isset($options['_offset']) === true) {
             }
 
             $totalFiltered    = count($allResults);
             $paginatedResults = array_slice($allResults, $requestedOffset, $requestedLimit);
 
-            if ($requestedLimit > 0) {
-                $totalPages = (int) ceil($totalFiltered / $requestedLimit);
-            } else {
                 $totalPages = 1;
+            if ($requestedLimit > 0) {
             }
 
             return [

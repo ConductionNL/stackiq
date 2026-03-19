@@ -31,7 +31,6 @@ use Psr\Log\LoggerInterface;
  * @version  GIT: 1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  *
- * @SuppressWarnings(PHPMD.ElseExpression)
  */
 class ProgressTracker
 {
@@ -372,10 +371,8 @@ class ProgressTracker
         }
 
         $overallProgress = $completedWeight + $currentPhaseProgress;
-        if ($totalWeight > 0) {
-            $percentage = intval(($overallProgress / $totalWeight) * 100);
-        } else {
             $percentage = 0;
+        if ($totalWeight > 0) {
         }
 
         return min(100, max(0, $percentage));

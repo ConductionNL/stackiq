@@ -46,7 +46,6 @@ use Symfony\Component\Mime\Address;
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessivePublicCount)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -262,10 +261,9 @@ class SettingsService
                     $rawRegisters = array_map(
                             function ($register) {
                                 if (is_object($register) === true && method_exists($register, 'jsonSerialize') === true) {
-                                    return $register->jsonSerialize();
-                                } else {
-                                    return (array) $register;
                                 }
+
+                                    return (array) $register;
                             },
                             $rawRegisters
                             );
@@ -445,10 +443,8 @@ class SettingsService
                     $stringValue = json_encode($value);
                 } else {
                     // Ensure value is converted to string as required by setValueString.
-                    if (is_string($value) === true) {
-                        $stringValue = $value;
-                    } else {
                         $stringValue = (string) $value;
+                    if (is_string($value) === true) {
                     }
                 }
 
@@ -943,10 +939,8 @@ class SettingsService
         // Fallback to legacy per-object-type register config.
         if ($result === null) {
             $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
-            if (empty($registerId) === false) {
-                $result = (int) $registerId;
-            } else {
                 $result = null;
+            if (empty($registerId) === false) {
             }
         }
 
@@ -1443,10 +1437,9 @@ class SettingsService
 
         $groups = json_decode($groupsJson, true);
         if (is_array($groups) === true) {
-            return $groups;
-        } else {
-            return [];
         }
+
+            return [];
     }//end getGenericUserGroups()
 
     /**
@@ -1521,10 +1514,9 @@ class SettingsService
 
         $groups = json_decode($groupsJson, true);
         if (is_array($groups) === true) {
-            return $groups;
-        } else {
-            return [];
         }
+
+            return [];
     }//end getSuperUserGroups()
 
     /**
@@ -2068,10 +2060,8 @@ class SettingsService
 
                 // Convert boolean values to strings.
                 if (is_bool($value) === true) {
-                    if ($value === true) {
-                        $value = 'true';
-                    } else {
                         $value = 'false';
+                    if ($value === true) {
                     }
                 }
 
@@ -2622,10 +2612,8 @@ class SettingsService
 
         switch ($transportType) {
             case 'smtp':
-                if (empty($emailSettings['smtpUsername']) === false) {
-                    $usernameValue = '***';
-                } else {
                     $usernameValue = 'none';
+                if (empty($emailSettings['smtpUsername']) === false) {
                 }
                 return [
                     'type'       => 'SMTP',
@@ -2811,10 +2799,8 @@ class SettingsService
             $dsn .= '?encryption='.$encryption;
         }
 
-        if (empty($encryption) === false && $encryption !== 'none') {
-            $encSuffix = '?encryption='.$encryption;
-        } else {
             $encSuffix = '';
+        if (empty($encryption) === false && $encryption !== 'none') {
         }
 
         $dsnPattern = sprintf('smtp://***:***@%s:%d%s', $host, $port, $encSuffix);
@@ -2965,10 +2951,8 @@ class SettingsService
             $openRegisterInstalled = $this->isOpenRegisterInstalled();
             $openRegisterEnabled   = $openRegisterInstalled && $this->isOpenRegisterEnabled();
 
-            if ($storedConfigVersion !== null) {
-                $versionComparisonValue = version_compare($currentAppVersion, $storedConfigVersion);
-            } else {
                 $versionComparisonValue = null;
+            if ($storedConfigVersion !== null) {
             }
 
             $versionInfo = [
@@ -3050,10 +3034,8 @@ class SettingsService
                     );
 
             // Return concise response to avoid serialization issues with large nested structures.
-            if ($success === true) {
-                $messageValue = 'Force update completed successfully';
-            } else {
                 $messageValue = 'Force update completed but configuration needs attention';
+            if ($success === true) {
             }
 
             return [
@@ -3198,10 +3180,8 @@ class SettingsService
             // If force import is requested or auto-config not completed, reset auto-configuration flag.
             if ($forceImport === true || $versionInfo['autoConfigCompleted'] === false) {
                 $this->config->setValueString($this->appName, 'auto_config_completed', 'false');
-                if ($forceImport === true) {
-                    $reasonValue = 'force_import';
-                } else {
                     $reasonValue = 'auto_config_not_completed';
+                if ($forceImport === true) {
                 }
 
                 $this->logger->info(
@@ -3582,16 +3562,12 @@ class SettingsService
                 $originalSlug  = $schema['slug'] ?? '';
                 $lowercaseSlug = strtolower($originalSlug);
 
-                if (isset($slugToKey[$originalSlug]) === true) {
-                    $hasMappingOriginalValue = 'YES';
-                } else {
                     $hasMappingOriginalValue = 'NO';
+                if (isset($slugToKey[$originalSlug]) === true) {
                 }
 
-                if (isset($slugToKey[$lowercaseSlug]) === true) {
-                    $hasMappingLowercaseValue = 'YES';
-                } else {
                     $hasMappingLowercaseValue = 'NO';
+                if (isset($slugToKey[$lowercaseSlug]) === true) {
                 }
 
                 $this->logger->info(
@@ -3707,10 +3683,9 @@ class SettingsService
             $registers = array_map(
                     function ($register) {
                         if (($register instanceof \OCA\OpenRegister\Db\Register)) {
-                            return $register->jsonSerialize();
-                        } else {
-                            return (array) $register;
                         }
+
+                            return (array) $register;
                     },
                     $registers
                     );
@@ -3775,10 +3750,8 @@ class SettingsService
                 }
             }//end foreach
 
-            if (isset($best) === true) {
-                $targetRegister = $best;
-            } else {
                 $targetRegister = $candidate;
+            if (isset($best) === true) {
             }
 
             if ($targetRegister === null) {
@@ -3804,10 +3777,8 @@ class SettingsService
                 $allowed = ['organization','element','relation','view','model','property-definition'];
                 if (in_array($slug, $allowed, true) === true) {
                     // Handle property-definition schema with underscore in config key.
-                    if ($slug === 'property-definition') {
-                        $configKey = 'property_definition_schema';
-                    } else {
                         $configKey = $slug.'_schema';
+                    if ($slug === 'property-definition') {
                     }
 
                     $config[$configKey] = (string) $schema['id'];
@@ -4202,16 +4173,12 @@ class SettingsService
             // Get AMEF object counts.
             $amefObjectCounts = $this->getAmefObjectCounts();
 
-            if (is_array($importDecoded) === true) {
-                $importValue = $importDecoded;
-            } else {
                 $importValue = [];
+            if (is_array($importDecoded) === true) {
             }
 
-            if (is_array($exportDecoded) === true) {
-                $exportValue = $exportDecoded;
-            } else {
                 $exportValue = [];
+            if (is_array($exportDecoded) === true) {
             }
 
             return [
@@ -5501,10 +5468,8 @@ class SettingsService
             if (isset($config['register']) === true) {
                 $targetRegisterId = (string) $config['register'];
             } else {
-                if (isset($existing['register']) === true) {
-                    $targetRegisterId = (string) $existing['register'];
-                } else {
                     $targetRegisterId = '';
+                if (isset($existing['register']) === true) {
                 }
             }
 
@@ -5980,10 +5945,8 @@ class SettingsService
                 }
 
                 // Prepare organisatie data with forced UUID.
-                if ($organisation->getActive() === true) {
-                    $statusValue = 'Actief';
-                } else {
                     $statusValue = 'Inactief';
+                if ($organisation->getActive() === true) {
                 }
 
                 $organisationsToCreate[] = [
@@ -6108,16 +6071,12 @@ class SettingsService
             }//end foreach
 
             $totalTime = microtime(true) - $startTime;
-            if ($results['created_count'] > 0) {
-                $overallPerformance = $results['created_count'] / $totalTime;
-            } else {
                 $overallPerformance = 0;
+            if ($results['created_count'] > 0) {
             }
 
-            if ($overallPerformance > 10) {
-                $estimatedImprovementValue = round($overallPerformance / 10, 1).'x faster than individual operations';
-            } else {
                 $estimatedImprovementValue = 'baseline';
+            if ($overallPerformance > 10) {
             }
 
             $createdCount  = $results['created_count'];
@@ -6165,10 +6124,12 @@ class SettingsService
         $name = strtolower($organisation->getName());
 
         if (strpos($name, 'gemeente') !== false) {
-            return 'Gemeente';
-        } else if (strpos($name, 'provincie') !== false) {
-            return 'Provincie';
-        } else if (strpos($name, 'ministerie') !== false) {
+        }
+
+        if (strpos($name, 'provincie') !== false) {
+        }
+
+        if (strpos($name, 'ministerie') !== false) {
             return 'Ministerie';
         } else {
             return 'Leverancier';

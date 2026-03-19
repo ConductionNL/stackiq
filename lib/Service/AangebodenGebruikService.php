@@ -44,7 +44,6 @@ use Exception;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -206,10 +205,8 @@ class AangebodenGebruikService
             $filteredResults = [];
             foreach ($searchResult['results'] ?? [] as $result) {
                 // Convert ObjectEntity to array if needed.
-                if (is_array(value: $result) === true) {
-                    $resultData = $result;
-                } else {
                     $resultData = $result->getObject();
+                if (is_array(value: $result) === true) {
                 }
 
                 $selfOrg = $resultData['@self']['organisation'] ?? null;
@@ -235,16 +232,12 @@ class AangebodenGebruikService
             $paginatedResults = array_slice(array: $filteredResults, offset: $requestedOffset, length: $requestedLimit);
 
             // Calculate pagination metadata.
-            if ($requestedLimit > 0) {
-                $totalPages = (int) ceil(num: $totalFiltered / $requestedLimit);
-            } else {
                 $totalPages = 1;
+            if ($requestedLimit > 0) {
             }
 
-            if ($requestedOffset > 0) {
-                $currentPage = (int) floor(num: $requestedOffset / $requestedLimit) + 1;
-            } else {
                 $currentPage = $requestedPage;
+            if ($requestedOffset > 0) {
             }
 
             // Build next/previous links.
@@ -412,10 +405,8 @@ class AangebodenGebruikService
             }
 
             // Get organization filter if provided (for ambtenaar).
-            if ($isAmbtenaar === true && isset($options['organisation']) === true) {
-                $organisationFilter = $options['organisation'];
-            } else {
                 $organisationFilter = null;
+            if ($isAmbtenaar === true && isset($options['organisation']) === true) {
             }
 
             // Build search query using ObjectService's buildSearchQuery.
@@ -823,10 +814,8 @@ class AangebodenGebruikService
 
                     // Process and add to results.
                     foreach ($gebruikItems as $gebruik) {
-                        if (is_array(value: $gebruik) === true) {
-                            $gebruikData = $gebruik;
-                        } else {
                             $gebruikData = $gebruik->jsonSerialize();
+                        if (is_array(value: $gebruik) === true) {
                         }
 
                         $gebruikData['_filter_type'] = 'deelnemers';
@@ -1358,10 +1347,8 @@ class AangebodenGebruikService
                 );
 
                 foreach ($suites as $suite) {
-                    if (is_array(value: $suite) === true) {
-                        $suiteData = $suite;
-                    } else {
                         $suiteData = $suite->getObject();
+                    if (is_array(value: $suite) === true) {
                     }
 
                     $appUuids[] = $suiteData['uuid'] ?? $suiteData['id'] ?? null;
@@ -1386,10 +1373,8 @@ class AangebodenGebruikService
                 );
 
                 foreach ($modules as $module) {
-                    if (is_array(value: $module) === true) {
-                        $moduleData = $module;
-                    } else {
                         $moduleData = $module->getObject();
+                    if (is_array(value: $module) === true) {
                     }
 
                     $appUuids[] = $moduleData['uuid'] ?? $moduleData['id'] ?? null;

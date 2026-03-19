@@ -86,7 +86,6 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      * @PublicPage
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
@@ -108,10 +107,8 @@ class AangebodenGebruikController extends Controller
             $result = $this->gebruikSvc->getGebruiksWhereAfnemer($options);
 
             // Determine HTTP status code based on whether there's an error.
-            if (isset($result['error']) === true) {
-                $statusCode = 500;
-            } else {
                 $statusCode = 200;
+            if (isset($result['error']) === true) {
             }
 
             $this->logger->info(
@@ -165,7 +162,6 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse
     {
@@ -202,10 +198,8 @@ class AangebodenGebruikController extends Controller
             );
 
             // Determine HTTP status code based on whether there's an error.
-            if (isset($result['error']) === true) {
-                $statusCode = 500;
-            } else {
                 $statusCode = 200;
+            if (isset($result['error']) === true) {
             }
 
             $this->logger->info(
@@ -259,7 +253,6 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getAllGebruiksForAmbtenaar(): JSONResponse
     {
@@ -279,10 +272,8 @@ class AangebodenGebruikController extends Controller
             if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
                 $user = $this->userSession->getUser();
-                if ($user !== null) {
-                    $userId = $user->getUID();
-                } else {
                     $userId = 'null';
+                if ($user !== null) {
                 }
 
                 $this->logger->info(
@@ -315,10 +306,8 @@ class AangebodenGebruikController extends Controller
             $result = $this->gebruikSvc->getAllGebruiksForAmbtenaar($options);
 
             // Determine HTTP status code based on whether there's an error.
-            if (isset($result['error']) === true) {
-                $statusCode = 500;
-            } else {
                 $statusCode = 200;
+            if (isset($result['error']) === true) {
             }
 
             $this->logger->info(
@@ -370,7 +359,6 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      * @PublicPage
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse
@@ -392,10 +380,8 @@ class AangebodenGebruikController extends Controller
             if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
                 $user = $this->userSession->getUser();
-                if ($user !== null) {
-                    $userId = $user->getUID();
-                } else {
                     $userId = 'null';
+                if ($user !== null) {
                 }
 
                 $this->logger->info(
@@ -432,10 +418,8 @@ class AangebodenGebruikController extends Controller
             );
 
             // Determine HTTP status code based on whether there's an error.
-            if (isset($result['error']) === true) {
-                $statusCode = 500;
-            } else {
                 $statusCode = 200;
+            if (isset($result['error']) === true) {
             }
 
             $this->logger->info(
@@ -549,7 +533,6 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      * @PublicPage
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getGebruiksWhereDeelnemers(): JSONResponse
     {
@@ -571,10 +554,8 @@ class AangebodenGebruikController extends Controller
             $result = $this->gebruikSvc->getGebruiksWhereDeelnemers($options);
 
             // Determine appropriate HTTP status code.
-            if ($result['success'] === true) {
-                $statusCode = 200;
-            } else {
                 $statusCode = 500;
+            if ($result['success'] === true) {
             }
 
             $this->logger->info(
@@ -626,7 +607,6 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      * @PublicPage
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
     {
@@ -736,7 +716,6 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      * @PublicPage
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
     {
