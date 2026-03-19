@@ -358,11 +358,12 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'organisationTitle' => $organisation->getName(),
                     ]
                     );
-            // Unknown event type.
-        } else {
+        }//end if
+
+        if (isset($data['eventType']) === false) {
             $data['eventType'] = 'Unknown';
             $data['note']      = 'Event type not specifically handled by SoftwareCatalog debug listener';
-        }//end if
+        }
 
         return $data;
 

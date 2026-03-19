@@ -464,7 +464,9 @@ class SoftwareCatalogEventListener implements IEventListener
                             ]
                             );
                 }//end try
-            } else {
+            }//end if
+
+            if (in_array(needle: $status, haystack: ['actief', 'active']) !== true || $status === $oldStatus) {
                 $logger->debug(
                         'SoftwareCatalog: Skipping non-active organization update',
                         [
@@ -473,7 +475,7 @@ class SoftwareCatalogEventListener implements IEventListener
                             'schemaId' => $objectSchemaId,
                         ]
                         );
-            }//end if
+            }
 
             return;
         }//end if

@@ -361,12 +361,11 @@ class ProgressTracker
         if ($currentPhaseIndex !== false) {
             $currentPhaseWeight = self::PHASES[$this->progress['phase']]['weight'];
 
+            // If no items to process, consider phase as complete.
+            $currentPhaseProgress = $currentPhaseWeight;
             if ($this->progress['total_items'] > 0) {
                 $itemRatio            = $this->progress['processed_items'] / $this->progress['total_items'];
                 $currentPhaseProgress = $itemRatio * $currentPhaseWeight;
-            } else {
-                // If no items to process, consider phase as complete.
-                $currentPhaseProgress = $currentPhaseWeight;
             }
         }
 
