@@ -550,8 +550,13 @@ class AangebodenGebruikController extends Controller
             $result = $this->gebruikSvc->getGebruiksWhereDeelnemers($options);
 
             // Determine appropriate HTTP status code.
-                $statusCode = 500;
+            $statusCode = 500;
             if ($result['success'] === true) {
+                $statusCode = 200;
+            } else if (($result['error'] ?? '') === 'Gebruik object not found') {
+                $statusCode = 404;
+            } else if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
+                $statusCode = 403;
             }
 
             $this->logger->info(
