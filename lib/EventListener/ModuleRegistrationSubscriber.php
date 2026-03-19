@@ -59,11 +59,14 @@ class ModuleRegistrationSubscriber implements IEventListener
             return;
         }
 
+        $object = null;
         if ($event instanceof ObjectCreatedEvent) {
             $object = $event->getObject();
         } else if ($event instanceof ObjectUpdatedEvent) {
             $object = $event->getNewObject();
-        } else {
+        }
+
+        if ($object === null) {
             return;
         }
 
@@ -78,8 +81,8 @@ class ModuleRegistrationSubscriber implements IEventListener
         }
 
         try {
-            $moduleRegistrationService = $this->container->get(ModuleRegistrationService::class);
-            $moduleRegistrationService->handleModuleRegistration($object);
+            $registrationSvc = $this->container->get(ModuleRegistrationService::class);
+            $registrationSvc->handleModuleRegistration($object);
         } catch (\Exception $e) {
             $logger = $this->container->get(LoggerInterface::class);
             $logger->error(

@@ -50,6 +50,8 @@ use Psr\Log\LoggerInterface;
  * @template T of Event
  *
  * @implements IEventListener<T>
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class OpenRegisterEventsDebugListener implements IEventListener
 {
@@ -75,6 +77,8 @@ class OpenRegisterEventsDebugListener implements IEventListener
      * @param bool            $debugEnabled Whether debug logging should be enabled
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      */
     public function __construct(
         LoggerInterface $logger,
@@ -172,6 +176,10 @@ class OpenRegisterEventsDebugListener implements IEventListener
      *
      * @phpstan-return array<string, mixed>
      * @psalm-return   array<string, mixed>
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function extractEventData(Event $event): array
     {

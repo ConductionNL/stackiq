@@ -27,7 +27,7 @@ class SoftwareCatalogAdmin implements ISettings
      *
      * @var IL10N
      */
-    private IL10N $l;
+    private IL10N $l10n;
 
     /**
      * The application configuration service.
@@ -47,13 +47,13 @@ class SoftwareCatalogAdmin implements ISettings
      * Constructor for SoftwareCatalogAdmin settings.
      *
      * @param IAppConfig  $config     The application configuration service
-     * @param IL10N       $l          The localization service
+     * @param IL10N       $l10n       The localization service
      * @param IAppManager $appManager The app manager service
      */
-    public function __construct(IAppConfig $config, IL10N $l, IAppManager $appManager)
+    public function __construct(IAppConfig $config, IL10N $l10n, IAppManager $appManager)
     {
         $this->config     = $config;
-        $this->l          = $l;
+        $this->l10n       = $l10n;
         $this->appManager = $appManager;
     }//end __construct()
 

@@ -41,23 +41,26 @@ use Psr\Log\LoggerInterface;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class AangebodenGebruikController extends Controller
 {
     /**
      * Constructor for AangebodenGebruikController.
      *
-     * @param string                   $appName                  The name of the app
-     * @param IRequest                 $request                  The HTTP request object
-     * @param IUserSession             $userSession              The user session service for getting the current user
-     * @param AangebodenGebruikService $aangebodenGebruikService The business logic service
-     * @param LoggerInterface          $logger                   The logger service for debugging and error reporting
+     * @param string                   $appName     The name of the app
+     * @param IRequest                 $request     The HTTP request object
+     * @param IUserSession             $userSession The user session service for getting the current user
+     * @param AangebodenGebruikService $gebruikSvc  The business logic service
+     * @param LoggerInterface          $logger      The logger service for debugging and error reporting
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly IUserSession $userSession,
-        private readonly AangebodenGebruikService $aangebodenGebruikService,
+        private readonly AangebodenGebruikService $gebruikSvc,
         private readonly LoggerInterface $logger
     ) {
         parent::__construct(appName: $appName, request: $request);
@@ -82,6 +85,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
@@ -159,6 +164,8 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse
     {
@@ -251,6 +258,8 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getAllGebruiksForAmbtenaar(): JSONResponse
     {
@@ -360,6 +369,9 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse
     {
@@ -536,6 +548,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getGebruiksWhereDeelnemers(): JSONResponse
     {
@@ -611,6 +625,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
     {
@@ -719,6 +735,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
     {
@@ -818,6 +836,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getApiDocumentation(): JSONResponse
     {
@@ -981,6 +1001,9 @@ class AangebodenGebruikController extends Controller
      * pagination, and other options. Always forces database source for real-time data.
      *
      * @return array Parsed options array with database source
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     private function parseQueryOptions(): array
     {

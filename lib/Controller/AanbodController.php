@@ -102,10 +102,9 @@ class AanbodController extends Controller
             $result = $this->aanbodService->getAanbod($options);
 
             // Determine HTTP status code based on whether there's an error.
+            $statusCode = 200;
             if (isset($result['error']) === true) {
                 $statusCode = 500;
-            } else {
-                $statusCode = 200;
             }
 
             $this->logger->info(
@@ -201,14 +200,13 @@ class AanbodController extends Controller
             $result = $this->aanbodService->acceptAanbod(uuid: $uuid, options: $options);
 
             // Determine appropriate HTTP status code.
+            $statusCode = 500;
             if ($result['success'] === true) {
                 $statusCode = 200;
             } else if ($result['error'] === 'Aanbod object not found') {
                 $statusCode = 404;
             } else if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
                 $statusCode = 403;
-            } else {
-                $statusCode = 500;
             }
 
             $this->logger->info(
@@ -301,14 +299,13 @@ class AanbodController extends Controller
             $result = $this->aanbodService->denyAanbod(uuid: $uuid, options: $options);
 
             // Determine appropriate HTTP status code.
+            $statusCode = 500;
             if ($result['success'] === true) {
                 $statusCode = 200;
             } else if ($result['error'] === 'Aanbod object not found') {
                 $statusCode = 404;
             } else if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
                 $statusCode = 403;
-            } else {
-                $statusCode = 500;
             }
 
             $this->logger->info(

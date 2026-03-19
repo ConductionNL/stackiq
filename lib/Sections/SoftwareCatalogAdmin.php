@@ -25,7 +25,7 @@ class SoftwareCatalogAdmin implements IIconSection
      *
      * @var IL10N
      */
-    private IL10N $l;
+    private IL10N $l10n;
 
     /**
      * The URL generator service.
@@ -37,12 +37,12 @@ class SoftwareCatalogAdmin implements IIconSection
     /**
      * Constructor for SoftwareCatalogAdmin section.
      *
-     * @param IL10N         $l            The localization service
+     * @param IL10N         $l10n         The localization service
      * @param IURLGenerator $urlGenerator The URL generator service
      */
-    public function __construct(IL10N $l, IURLGenerator $urlGenerator)
+    public function __construct(IL10N $l10n, IURLGenerator $urlGenerator)
     {
-        $this->l            = $l;
+        $this->l10n         = $l10n;
         $this->urlGenerator = $urlGenerator;
     }//end __construct()
 
@@ -74,7 +74,7 @@ class SoftwareCatalogAdmin implements IIconSection
      */
     public function getName(): string
     {
-        return $this->l->t('Software Catalog');
+        return $this->l10n->t('Software Catalog');
     }//end getName()
 
     /**

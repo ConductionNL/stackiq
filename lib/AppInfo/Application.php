@@ -17,17 +17,31 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\AppInfo;
 
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
-use OCP\AppFramework\App;
-use OCP\AppFramework\Bootstrap\IBootContext;
-use OCP\AppFramework\Bootstrap\IBootstrap;
-use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob;
+use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
 use OCA\SoftwareCatalog\EventListener\TestEventListener;
 use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
 use OCA\SoftwareCatalog\EventListener\ModuleRegistrationSubscriber;
 use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
-
+use OCA\SoftwareCatalog\Service\ArchiMateExportService;
+use OCA\SoftwareCatalog\Service\ArchiMateImportService;
+use OCA\SoftwareCatalog\Service\ArchiMateService;
+use OCA\SoftwareCatalog\Service\ContactpersoonService;
+use OCA\SoftwareCatalog\Service\GebruikSyncService;
+use OCA\SoftwareCatalog\Service\ModuleComplianceService;
+use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
+use OCA\SoftwareCatalog\Service\ModuleVersionService;
+use OCA\SoftwareCatalog\Service\OrganisatieService;
+use OCA\SoftwareCatalog\Service\OrganizationSyncService;
+use OCA\SoftwareCatalog\Service\ProgressTracker;
+use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
+use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
+use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
+use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCA\SoftwareCatalog\Service\ViewService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -42,20 +56,22 @@ use OCA\OpenRegister\Event\RegisterUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaCreatedEvent;
 use OCA\OpenRegister\Event\SchemaDeletedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
-use OCP\User\Events\UserLoggedInEvent;
+use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
+use OCP\App\IAppManager;
+use OCP\AppFramework\App;
+use OCP\AppFramework\Bootstrap\IBootContext;
+use OCP\AppFramework\Bootstrap\IBootstrap;
+use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IDBConnection;
-use OCP\IUserManager;
-use OCP\IGroupManager;
 use OCP\IAppConfig;
-use OCP\App\IAppManager;
-use OCP\ICacheFactory;
-use Psr\Log\LoggerInterface;
+use OCP\IGroupManager;
+use OCP\IUserManager;
 use OCP\Security\ISecureRandom;
+use OCP\User\Events\UserLoggedInEvent;
 use Psr\Container\ContainerInterface;
-use OCA\SoftwareCatalog\Service\SymfonyEmailService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\GebruikSyncService;
+use Psr\Log\LoggerInterface;
 
 /**
  * Main Application class for SoftwareCatalog
@@ -66,6 +82,8 @@ use OCA\SoftwareCatalog\Service\GebruikSyncService;
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Application extends App implements IBootstrap
 {
@@ -88,6 +106,8 @@ class Application extends App implements IBootstrap
      * @param IRegistrationContext $context Registration context
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function register(IRegistrationContext $context): void
     {
@@ -97,12 +117,12 @@ class Application extends App implements IBootstrap
         $context->registerService(
                 'OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler',
                 function (ContainerInterface $c) {
-                    return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler(
+                    return new OrganizationHandler(
                     _groupManager: $c->get(IGroupManager::class),
                     _userManager: $c->get(IUserManager::class),
                     _container: $c,
                     _appManager: $c->get(IAppManager::class),
-                    _logger: $c->get(\Psr\Log\LoggerInterface::class)
+                    _logger: $c->get(LoggerInterface::class)
                     );
                 }
                 );
@@ -110,14 +130,14 @@ class Application extends App implements IBootstrap
         $context->registerService(
                 'OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler',
                 function (ContainerInterface $c) {
-                    return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler(
+                    return new ContactPersonHandler(
                     _userManager: $c->get(IUserManager::class),
-                    _secureRandom: $c->get(\OCP\Security\ISecureRandom::class),
+                    _secureRandom: $c->get(ISecureRandom::class),
                     _groupManager: $c->get(IGroupManager::class),
                     _config: $c->get(IAppConfig::class),
                     _container: $c,
                     _appManager: $c->get(IAppManager::class),
-                    _logger: $c->get(\Psr\Log\LoggerInterface::class),
+                    _logger: $c->get(LoggerInterface::class),
                     _emailService: $c->get(SymfonyEmailService::class),
                     config: $c->get(IConfig::class)
                     );
@@ -127,13 +147,13 @@ class Application extends App implements IBootstrap
         $context->registerService(
                 'OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler',
                 function (ContainerInterface $c) {
-                    return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler(
+                    return new GroupHandler(
                     _groupManager: $c->get(IGroupManager::class),
                     _userManager: $c->get(IUserManager::class),
                     _appConfig: $c->get(IAppConfig::class),
                     _container: $c,
                     _appManager: $c->get(IAppManager::class),
-                    _logger: $c->get(\Psr\Log\LoggerInterface::class)
+                    _logger: $c->get(LoggerInterface::class)
                     );
                 }
                 );
@@ -141,10 +161,10 @@ class Application extends App implements IBootstrap
         $context->registerService(
                 'OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler',
                 function (ContainerInterface $c) {
-                    return new \OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler(
+                    return new HierarchyHandler(
                     _organizationHandler: $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler'),
                     _contactPersonHandler: $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
-                    _logger: $c->get(\Psr\Log\LoggerInterface::class)
+                    _logger: $c->get(LoggerInterface::class)
                     );
                 }
                 );
@@ -175,11 +195,11 @@ class Application extends App implements IBootstrap
         // Contact person event listeners are still active for real-time processing.
         // Register new focused services.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\OrganisatieService::class,
+                OrganisatieService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\OrganisatieService(
+                    return new OrganisatieService(
                     organizationHandler: $container->get(
-                        \OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler::class
+                        OrganizationHandler::class
                     ),
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     container: $container,
@@ -192,17 +212,17 @@ class Application extends App implements IBootstrap
                 );
 
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ContactpersoonService::class,
+                ContactpersoonService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ContactpersoonService(
+                    return new ContactpersoonService(
                     contactPersonHandler: $container->get(
-                        \OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler::class
+                        ContactPersonHandler::class
                     ),
                     groupHandler: $container->get(
-                        \OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler::class
+                        GroupHandler::class
                     ),
                     hierarchyHandler: $container->get(
-                        \OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler::class
+                        HierarchyHandler::class
                     ),
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     container: $container,
@@ -241,11 +261,11 @@ class Application extends App implements IBootstrap
 
         // Register organization sync service.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\OrganizationSyncService::class,
+                OrganizationSyncService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\OrganizationSyncService(
-                    organisatieService: $container->get(\OCA\SoftwareCatalog\Service\OrganisatieService::class),
-                    contactpersoonService: $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
+                    return new OrganizationSyncService(
+                    organisatieService: $container->get(OrganisatieService::class),
+                    contactpersoonService: $container->get(ContactpersoonService::class),
                     emailService: $container->get(SymfonyEmailService::class),
                     config: $container->get(IAppConfig::class),
                     logger: $container->get('Psr\Log\LoggerInterface'),
@@ -258,9 +278,9 @@ class Application extends App implements IBootstrap
 
         // Register gebruik sync service.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\GebruikSyncService::class,
+                GebruikSyncService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\GebruikSyncService(
+                    return new GebruikSyncService(
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class)
                     );
@@ -270,9 +290,9 @@ class Application extends App implements IBootstrap
         // Event listener uses direct service access like OpenCatalogi - no service registration needed.
         // Register module compliance service.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ModuleComplianceService::class,
+                ModuleComplianceService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ModuleComplianceService(
+                    return new ModuleComplianceService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
@@ -282,9 +302,9 @@ class Application extends App implements IBootstrap
 
         // Register module registration service (auto-sets geregistreerdDoor).
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ModuleRegistrationService::class,
+                ModuleRegistrationService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ModuleRegistrationService(
+                    return new ModuleRegistrationService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
@@ -294,9 +314,9 @@ class Application extends App implements IBootstrap
 
         // Register module version service (creates default 1.0.0 version for new modules).
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ModuleVersionService::class,
+                ModuleVersionService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ModuleVersionService(
+                    return new ModuleVersionService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
@@ -306,9 +326,9 @@ class Application extends App implements IBootstrap
 
         // Register ArchiMate import service.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ArchiMateImportService::class,
+                ArchiMateImportService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ArchiMateImportService(
+                    return new ArchiMateImportService(
                     config: $container->get(IAppConfig::class),
                     rootFolder: $container->get('OCP\Files\IRootFolder'),
                     userSession: $container->get('OCP\IUserSession'),
@@ -316,16 +336,16 @@ class Application extends App implements IBootstrap
                     container: $container,
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class),
-                    organisationService: $container->get(\OCA\OpenRegister\Service\OrganisationService::class)
+                    organisationService: $container->get(OpenRegisterOrganisationService::class)
                     );
                 }
                 );
 
         // Register ArchiMate export service.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ArchiMateExportService::class,
+                ArchiMateExportService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ArchiMateExportService(
+                    return new ArchiMateExportService(
                     logger: $container->get('Psr\Log\LoggerInterface')
                     );
                 }
@@ -333,9 +353,9 @@ class Application extends App implements IBootstrap
 
         // Register ArchiMate import/export service.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ArchiMateService::class,
+                ArchiMateService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ArchiMateService(
+                    return new ArchiMateService(
                     config: $container->get(IAppConfig::class),
                     rootFolder: $container->get('OCP\Files\IRootFolder'),
                     userSession: $container->get('OCP\IUserSession'),
@@ -343,17 +363,17 @@ class Application extends App implements IBootstrap
                     container: $container,
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class),
-                    importService: $container->get(\OCA\SoftwareCatalog\Service\ArchiMateImportService::class),
-                    exportService: $container->get(\OCA\SoftwareCatalog\Service\ArchiMateExportService::class)
+                    importService: $container->get(ArchiMateImportService::class),
+                    exportService: $container->get(ArchiMateExportService::class)
                     );
                 }
                 );
 
         // Register View service for ArchiMate views with enrichment capabilities.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ViewService::class,
+                ViewService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ViewService(
+                    return new ViewService(
                     config: $container->get(IAppConfig::class),
                     appManager: $container->get('OCP\App\IAppManager'),
                     container: $container,
@@ -367,9 +387,9 @@ class Application extends App implements IBootstrap
 
         // Register progress tracking service.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ProgressTracker::class,
+                ProgressTracker::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ProgressTracker(
+                    return new ProgressTracker(
                     session: $container->get('OCP\ISession'),
                     logger: $container->get('Psr\Log\LoggerInterface')
                     );
@@ -378,11 +398,11 @@ class Application extends App implements IBootstrap
 
         // Register background job for organization contact synchronization.
         $context->registerService(
-                \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob::class,
+                OrganizationContactSyncJob::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob(
+                    return new OrganizationContactSyncJob(
                     time: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-                    syncService: $container->get(\OCA\SoftwareCatalog\Service\OrganizationSyncService::class),
+                    syncService: $container->get(OrganizationSyncService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
                     );
                 }
@@ -390,16 +410,16 @@ class Application extends App implements IBootstrap
 
         // Register ContactpersonenController with explicit dependencies for /me endpoint.
         $context->registerService(
-                \OCA\SoftwareCatalog\Controller\ContactpersonenController::class,
+                ContactpersonenController::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Controller\ContactpersonenController(
+                    return new ContactpersonenController(
                     appName: self::APP_ID,
                     request: $container->get('OCP\IRequest'),
                     settingsService: $container->get(SettingsService::class),
                     contactPersonHandler: $container->get(
                         'OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'
                     ),
-                    contactpersoonService: $container->get(\OCA\SoftwareCatalog\Service\ContactpersoonService::class),
+                    contactpersoonService: $container->get(ContactpersoonService::class),
                     userManager: $container->get('OCP\IUserManager'),
                     groupManager: $container->get('OCP\IGroupManager'),
                     userSession: $container->get('OCP\IUserSession'),
@@ -417,6 +437,8 @@ class Application extends App implements IBootstrap
      * @param IBootContext $context Boot context
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function boot(IBootContext $context): void
     {

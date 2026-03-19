@@ -90,9 +90,8 @@ class ViewController extends Controller
             $result = $this->viewService->getAllViews($options);
 
             // Return appropriate HTTP status code.
-            if ($result['success'] === true) {
-                $statusCode = 200;
-            } else {
+            $statusCode = 200;
+            if ($result['success'] !== true) {
                 $statusCode = 500;
             }
 
@@ -181,12 +180,11 @@ class ViewController extends Controller
             );
 
             // Return appropriate HTTP status code.
+            $statusCode = 500;
             if ($result['success'] === true) {
                 $statusCode = 200;
             } else if ($result['view'] === null) {
                 $statusCode = 404;
-            } else {
-                $statusCode = 500;
             }
 
             $this->logger->info(
@@ -246,9 +244,9 @@ class ViewController extends Controller
             $options['include_gebruik'] = $this->parseBooleanParam(value: $includeGebruik);
         }
 
-        $includeDeelnamesGebruik = $this->request->getParam('include_deelnames_gebruik');
-        if ($includeDeelnamesGebruik !== null) {
-            $options['include_deelnames_gebruik'] = $this->parseBooleanParam(value: $includeDeelnamesGebruik);
+        $inclDeelGebruik = $this->request->getParam('include_deelnames_gebruik');
+        if ($inclDeelGebruik !== null) {
+            $options['include_deelnames_gebruik'] = $this->parseBooleanParam(value: $inclDeelGebruik);
         }
 
         $this->logger->debug(
@@ -258,7 +256,7 @@ class ViewController extends Controller
                         'include_products'          => $includeProducts,
                         'include_modules'           => $includeModules,
                         'include_gebruik'           => $includeGebruik,
-                        'include_deelnames_gebruik' => $includeDeelnamesGebruik,
+                        'include_deelnames_gebruik' => $inclDeelGebruik,
                     ],
                     'parsed_options' => $options,
                 ]
@@ -304,6 +302,8 @@ class ViewController extends Controller
      * @PublicPage
      *
      * @return JSONResponse JSON response with API documentation
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getApiDocumentation(): JSONResponse
     {

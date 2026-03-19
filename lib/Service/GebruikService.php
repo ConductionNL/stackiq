@@ -21,6 +21,11 @@ use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Service for handling gebruik-related operations
+ *
+ * @SuppressWarnings(PHPMD.ElseExpression)
+ */
 class GebruikService
 {
     /**

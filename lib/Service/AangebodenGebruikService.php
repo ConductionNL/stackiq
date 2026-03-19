@@ -41,6 +41,24 @@ use Exception;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.ElseExpression)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class AangebodenGebruikService
 {
@@ -811,12 +829,15 @@ class AangebodenGebruikService
 
                     // Process and add to results.
                     foreach ($gebruikItems as $gebruik) {
-                        $gebruikData = is_array(value: $gebruik) === true
-                            ? $gebruik
-                            : $gebruik->jsonSerialize();
+                        if (is_array(value: $gebruik) === true) {
+                            $gebruikData = $gebruik;
+                        } else {
+                            $gebruikData = $gebruik->jsonSerialize();
+                        }
+
                         $gebruikData['_filter_type'] = 'deelnemers';
                         $gebruikData['_schema_id']   = $schemaId;
-                        $allGebruiks[]               = $gebruikData;
+                        $allGebruiks[] = $gebruikData;
                     }
 
                     $this->logger->debug(

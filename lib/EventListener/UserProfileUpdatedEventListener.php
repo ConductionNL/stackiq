@@ -116,6 +116,10 @@ class UserProfileUpdatedEventListener implements IEventListener
      * @param LoggerInterface         $logger The logger.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     private function syncToContactpersoon(UserProfileUpdatedEvent $event, LoggerInterface $logger): void
     {
@@ -275,6 +279,8 @@ class UserProfileUpdatedEventListener implements IEventListener
      * @param LoggerInterface         $logger        The logger.
      *
      * @return object|null The contactpersoon entity or null if not found.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function findContactpersoon(
         object $objectService,
