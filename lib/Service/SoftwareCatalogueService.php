@@ -1496,6 +1496,8 @@ class SoftwareCatalogueService
      * @param string                                        $organizationUuid    The organization UUID to use
      *
      * @return \OCA\OpenRegister\Db\Organisation The created organization
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $organisationService reserved for future direct service calls
      */
     private function createOrganisationInOpenRegisterInternal(
         \OCA\OpenRegister\Service\OrganisationService $organisationService,
@@ -1766,6 +1768,8 @@ class SoftwareCatalogueService
      * @param array                                         $mappedData           The mapped organization data
      *
      * @return \OCA\OpenRegister\Db\Organisation The updated organization
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $organisationService reserved for future direct service calls
      */
     private function updateOrganisationInOpenRegister(
         \OCA\OpenRegister\Service\OrganisationService $organisationService,

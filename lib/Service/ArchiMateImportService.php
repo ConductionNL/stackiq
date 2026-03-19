@@ -54,7 +54,6 @@ use SimpleXMLElement;
  * @SuppressWarnings(PHPMD.ShortVariable)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.UnusedPrivateField)
@@ -1192,6 +1191,8 @@ class ArchiMateImportService
      * @param string $modelIdentifier Model identifier for linking
      *
      * @return array Section object with @self structure
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $modelIdentifier reserved for future model linking
      */
     private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
     {
@@ -2353,6 +2354,8 @@ class ArchiMateImportService
      * @param array $savedObjects Saved objects from ObjectService::saveObjects
      *
      * @return array Statistics array
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $savedObjects reserved for future statistics enrichment
      */
     private function calculateOptimizedStatistics(array $savedObjects): array
     {
@@ -4599,6 +4602,8 @@ class ArchiMateImportService
      * @param array $propDefMap       Property definition map
      *
      * @return array Elements lookup for view processing
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $processedObjects reserved for fallback enrichment
      */
     private function buildElementsLookupFromRawData(
         array $rawElementsData,
@@ -5740,6 +5745,8 @@ class ArchiMateImportService
      * @param array $savedObjects   Objects that were saved to database
      *
      * @return array Comprehensive statistics
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $savedObjects reserved for future saved-vs-expected comparison
      */
     private function calculateObjectStatistics(array $normalizedData, array $savedObjects): array
     {

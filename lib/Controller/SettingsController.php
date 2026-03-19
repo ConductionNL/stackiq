@@ -48,7 +48,6 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.LongVariable)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
 class SettingsController extends Controller
 {

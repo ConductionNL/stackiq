@@ -178,14 +178,14 @@ class ContactPersonHandlerTest extends TestCase
     }
 
     /**
-     * Test addUserToGroupWithCheck method behavior
+     * Test addUserToGroupWithCheck adds user to existing group
      *
      * This test verifies that the addUserToGroupWithCheck method
-     * only adds users to existing groups and does not create new groups.
+     * adds a user to a group when the group exists.
      *
      * @return void
      */
-    public function testAddUserToGroupWithCheck(): void
+    public function testAddUserToGroupWithCheckExistingGroup(): void
     {
         // Create mocks
         $user = $this->createMock(IUser::class);
@@ -199,7 +199,7 @@ class ContactPersonHandlerTest extends TestCase
         $method = $reflection->getMethod('addUserToGroupWithCheck');
         $method->setAccessible(true);
 
-        // Test case 1: Group exists, user not in group - should add user
+        // Group exists, user not in group - should add user
         $this->groupManager->expects($this->once())
             ->method('get')
             ->with('existing-group')
@@ -221,8 +221,28 @@ class ContactPersonHandlerTest extends TestCase
             );
 
         $method->invoke($this->contactPersonHandler, $user, 'existing-group', 'test-type');
+    }
 
-        // Test case 2: Group does not exist - should log warning and not create group
+    /**
+     * Test addUserToGroupWithCheck skips non-existing group
+     *
+     * This test verifies that the addUserToGroupWithCheck method
+     * logs a warning and does not create a group when it does not exist.
+     *
+     * @return void
+     */
+    public function testAddUserToGroupWithCheckNonExistingGroup(): void
+    {
+        // Create mocks
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('testuser');
+
+        // Use reflection to access the private method
+        $reflection = new ReflectionClass($this->contactPersonHandler);
+        $method = $reflection->getMethod('addUserToGroupWithCheck');
+        $method->setAccessible(true);
+
+        // Group does not exist - should log warning and not create group
         $this->groupManager->expects($this->once())
             ->method('get')
             ->with('non-existing-group')
