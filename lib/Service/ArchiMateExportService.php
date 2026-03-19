@@ -1096,7 +1096,7 @@ XML;
                         folder: $sectionFolder,
                         object: $object,
                         sectionName: $sectionName,
-                        propertyDefinitionMap: $propertyDefinitionMap
+                        propertyDefinitionMap: $propDefMap
                     );
                 }
 
@@ -1186,7 +1186,7 @@ XML;
             $xmlData = $object['xml'];
             unset($xmlData['_essential_data']);
         } else {
-            $xmlData = $this->cleanObjectDataForXml(object: $object, propDefMap: $propDefMap);
+            $xmlData = $this->cleanObjectDataForXml(object: $object, propDefMap: $propertyDefinitionMap);
         }
 
         if (is_array($xmlData) === true && empty($xmlData) === false) {
@@ -1498,8 +1498,8 @@ XML;
     /**
      * Clean object data for XML export.
      *
-     * @param array $object                The object data to clean.
-     * @param array $propertyDefinitionMap Property definition map.
+     * @param array $object     The object data to clean.
+     * @param array $propDefMap Property definition map.
      *
      * @return array The cleaned object data.
      */
@@ -1652,17 +1652,17 @@ XML;
         }
 
         // Add properties from root fields using propertyDefinitionMap ONLY if no properties were already processed.
-        if (empty($propDefMap) === false && isset($data['properties']) === false) {
-            $this->addPropertiesFromRootFields(node: $node, object: $data, propDefMap: $propDefMap);
+        if (empty($propertyDefinitionMap) === false && isset($data['properties']) === false) {
+            $this->addPropertiesFromRootFields(node: $node, object: $data, propDefMap: $propertyDefinitionMap);
         }
     }//end addCleanDataToXmlNode()
 
     /**
      * Add properties to XML node using propertyDefinitionMap from model.
      *
-     * @param \SimpleXMLElement $node                  XML node to add properties to.
-     * @param array             $object                The object with root-level properties.
-     * @param array             $propertyDefinitionMap Map of property name to ref.
+     * @param \SimpleXMLElement $node       XML node to add properties to.
+     * @param array             $object     The object with root-level properties.
+     * @param array             $propDefMap Map of property name to ref.
      *
      * @return void
      */
@@ -2281,7 +2281,8 @@ XML;
                 throw new \InvalidArgumentException("Property missing value element: $propRef");
             }
 
-            $value = trim((string) $valueElements[0]);
+            $value   = trim((string) $valueElements[0]);
+            $propRef = (string) $attributes['propertyDefinitionRef'];
             if (empty($value) === true) {
                 throw new \InvalidArgumentException("Property has empty value: $propRef");
             }
@@ -3195,7 +3196,7 @@ XML;
                         folder: $elementsFolder,
                         object: $obj,
                         sectionName: 'elements',
-                        propertyDefinitionMap: $propertyDefinitionMap
+                        propertyDefinitionMap: $propDefMap
                     );
                 }
             }
@@ -3228,7 +3229,7 @@ XML;
                         folder: $relsFolder,
                         object: $obj,
                         sectionName: 'relationships',
-                        propertyDefinitionMap: $propertyDefinitionMap
+                        propertyDefinitionMap: $propDefMap
                     );
                 }
             }
@@ -3260,7 +3261,7 @@ XML;
                         folder: $propDefsFolder,
                         object: $obj,
                         sectionName: 'property_definitions',
-                        propertyDefinitionMap: $propertyDefinitionMap
+                        propertyDefinitionMap: $propDefMap
                     );
                 }
             }
@@ -3334,7 +3335,7 @@ XML;
                         folder: $diagramsFolder,
                         object: $obj,
                         sectionName: 'views',
-                        propertyDefinitionMap: $propertyDefinitionMap
+                        propertyDefinitionMap: $propDefMap
                     );
                 }
             }

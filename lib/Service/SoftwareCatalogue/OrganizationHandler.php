@@ -518,9 +518,9 @@ class OrganizationHandler
 
             $existingObjects = $objectService->findAll(
                 config: [
-                    'filters' => $searchFilters,
+                    'filters'   => $searchFilters,
                     '_register' => $registerId,
-                    '_schema' => $contactgegevensSchemaId,
+                    '_schema'   => $contactgegevensSchemaId,
                 ]
             );
 

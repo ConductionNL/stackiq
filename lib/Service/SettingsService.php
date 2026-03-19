@@ -508,11 +508,11 @@ class SettingsService
         try {
             // Check if auto-configuration has already been completed.
             $autoConfigCompleted = $this->config->getValueString(
-                $this->_appName,
+                $this->appName,
                     'auto_config_completed',
                     'false'
             ) === 'true';
-            if (empty($autoConfigCompleted) === false) {
+            if ($autoConfigCompleted === true) {
                 $this->logger->info('Auto-configuration already completed, skipping');
                 return [];
             }
@@ -1848,7 +1848,7 @@ class SettingsService
     {
         $this->logger->debug('SoftwareCatalog: Loading email settings from configuration');
 
-        $app      = $this->_appName;
+        $app      = $this->appName;
         $settings = [
             'enabled'                         => $this->config->getValueString(
                 $app,
@@ -2980,7 +2980,7 @@ class SettingsService
                 'versionComparison'     => $versionComparisonValue,
                 'isFullyConfigured'     => $this->isFullyConfigured(),
                 'autoConfigCompleted'   => $this->config->getValueString(
-                    $this->_appName,
+                    $this->appName,
                         'auto_config_completed',
                         'false'
                 ) === 'true',
@@ -3930,17 +3930,17 @@ class SettingsService
         if (is_array($decoded) === false) {
             $decoded = [
                 'register'              => $this->config->getValueString(
-                    $this->_appName,
+                    $this->appName,
                         'voorzieningen_register',
                         ''
                 ),
                 'organisatie_schema'    => $this->config->getValueString(
-                    $this->_appName,
+                    $this->appName,
                         'voorzieningen_organisatie_schema',
                         ''
                 ),
                 'contactpersoon_schema' => $this->config->getValueString(
-                    $this->_appName,
+                    $this->appName,
                         'voorzieningen_contactpersoon_schema',
                         ''
                 ),
@@ -4062,32 +4062,32 @@ class SettingsService
                 // Fallback to individual config values for backward compatibility.
                 $decoded = [
                     'register_id'          => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_register_id',
                             ''
                     ),
                     'organizations_schema' => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_organizations_schema',
                             ''
                     ),
                     'elements_schema'      => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_elements_schema',
                             ''
                     ),
                     'relationships_schema' => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_relationships_schema',
                             ''
                     ),
                     'views_schema'         => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_views_schema',
                             ''
                     ),
                     'models_schema'        => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_models_schema',
                             ''
                     ),
@@ -4631,7 +4631,7 @@ class SettingsService
 
         try {
             // 1. Migrate Voorzieningen configuration.
-            $an = $this->_appName;
+            $an = $this->appName;
             $voorzieningenConfig = [
                 'register'                => $this->config->getValueString(
                     $an,

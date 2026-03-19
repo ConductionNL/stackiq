@@ -147,6 +147,8 @@ class OrganizationSyncService
      * @param string $path   The JSON path to extract (e.g., '$.status' or 'status')
      *
      * @return string The SQL expression for JSON extraction
+     *
+     * @psalm-suppress UndefinedClass
      */
     private function jsonExtract(string $column, string $path): string
     {
@@ -182,6 +184,8 @@ class OrganizationSyncService
      * @param string $value  The value to check for
      *
      * @return string The SQL expression for JSON contains check
+     *
+     * @psalm-suppress UndefinedClass
      */
     private function jsonContains(string $column, string $value): string
     {
@@ -468,6 +472,8 @@ class OrganizationSyncService
      * Perform synchronization of users.
      *
      * @return array The sync statistics.
+     *
+     * @psalm-suppress UndefinedClass
      */
     public function performUserSync(): array
     {
