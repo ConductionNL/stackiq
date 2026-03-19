@@ -137,6 +137,23 @@ This agent tests the following steps from the test flow (`testen.md`):
 | #454 | Wizard koppelingen: Reeds bestaande koppelingen voor worden niet gevonden | Step 11 |
 | #456 | Consistentie in werking van wizards | Step 7 |
 | #457 | Koppeling: verwijderen geeft een 400-error | Step 11 |
+| #6 | Standaarden registreren bij pakket | Step 16 |
+| #73 | Meerdere contactpersonen registreren en koppelen | Step 5 |
+| #335 | Diensten Wizards | Step 9 |
+| #405 | Applicatie verwijderen die door dienst ondersteund wordt | Step 7 |
+| #415 | Spelling "Applicatie informatie" | Step 7 |
+| #430 | Beheertabel toont kolom Compliancy met applicatienamen | Step 7 |
+| #432 | Koppeling naamgeving niet consistent | Step 11 |
+| #433 | Import koppelingen lijkt niet goed te gaan | Step 11 |
+| #434 | Eerste account leverancier niet beschikbaar als contactpersoon | Step 5 |
+| #436 | Error bij ophalen applicatie overzicht | Step 7 |
+| #439 | Error na openen Applicatie-overzicht | Step 7 |
+| #441 | Mapping versies gaat niet goed bij geimporteerde applicaties | Step 7 |
+| #442 | Opgevoerd document wijzigt van naam naar bewijs_<getal> | Step 7 |
+| #419 | Standaarden en standaard-versie niet goed gekoppeld | Step 16 |
+| #420 | Gemeente-applicaties verschijnen niet in aanbod-endpoint | Step 12 |
+| #435 | Import: niet alle geimporteerde applicaties zichtbaar | Step 7 |
+| #437 | Geimporteerde leverancier: koppeling opslaan geeft foutmelding | Step 11 |
 
 ## Acceptance Criteria Reference
 
