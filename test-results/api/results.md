@@ -1,91 +1,87 @@
-# Softwarecatalogus — API Test Results
+# GEMMA Softwarecatalogus — API Test Results (Newman)
 
-**Date:** 2026-03-16
-**Environment:** local (http://localhost:8080)
-**Tool:** Newman v6 + Postman Collection
-**Duration:** 28s
-**Average response time:** 65ms (min: 21ms, max: 985ms)
+**Date:** 2026-03-19
+**Environment:** http://localhost:8080 (Backend)
+**Method:** Newman/Postman API tests
+**Duration:** 58.2s
+**Average response time:** 154ms (min: 31ms, max: 3.1s)
 
-## Summary
+---
 
-| Metric | Executed | Failed |
-|--------|----------|--------|
-| Iterations | 1 | 0 |
-| Requests | 334 | 0 |
-| Test scripts | 329 | 1 |
-| Pre-request scripts | 381 | 0 |
-| **Assertions** | **454** | **37** |
+## Overall Results
 
-**Pass rate:** 91.9% (417/454)
+| Metric | Count |
+|--------|-------|
+| **Total requests** | 334 |
+| **Total assertions** | 454 |
+| **Passed** | 447 |
+| **Failed** | 7 |
+| **Pass rate** | 98.5% |
 
-## Failed Assertions by Issue
+---
 
-### Folder 01 - Public API & Search (3 failures)
-| # | Assertion | Issue |
-|---|-----------|-------|
-| 1 | #144 AC1: Search returns results | #144 |
-| 2 | #144 AC5: Results contain beschrijvingKort | #144 |
-| 3 | #344 AC3: Multiple reference components available | #344 |
+## Failed Assertions (7)
 
-### Folder 03 - Object CRUD (4 failures)
-| # | Assertion | Issue |
-|---|-----------|-------|
-| 4 | #400 AC3: Koppeling visible in list | #400 |
-| 5 | #400 AC4: Re-save works without errors | #400 |
-| 6 | #400 AC5: Data persisted correctly | #400 |
-| 7 | #452 AC1: Applicatie has koppelingen array via _extend | #452 |
+### 1. #144 AC5: Results contain beschrijvingKort
+- **Folder:** 01 - Public API & Search
+- **Issue:** #144 — Search functionality
+- **Error:** `expected false to be true`
+- **Analysis:** Search results missing `beschrijvingKort` field — may not be populated in module data
 
-### Folder 04 - Data Migration & Import (1 failure)
-| # | Assertion | Issue |
-|---|-----------|-------|
-| 8 | #435 AC3: Import total is substantial | #435 |
+### 2. #344 AC3: Multiple reference components available
+- **Folder:** 01 - Public API & Search
+- **Issue:** #344 — Reference component filters (extended)
+- **Error:** `expected +0 to be above +0`
+- **Analysis:** No reference component facet buckets returned — referentieComponenten facet has 0 values
 
-### Folder 10 - Glossary & Content (5 failures)
-| # | Assertion | Issue |
-|---|-----------|-------|
-| 9 | #155 AC1: Glossary endpoint returns data | #155 |
-| 10 | #155 AC2: Glossary search accessible | #155 |
-| 11 | #155 AC3: Glossary has terms | #155 |
-| 12 | #155 AC4: Glossary search is case-insensitive | #155 |
-| 13 | #332: Authenticated search works | #332 |
+### 3. #414: Deelnemers endpoint accessible
+- **Folder:** 02 - RBAC & Organization Scoping
+- **Issue:** #414 — Deelnemers read access
+- **Error:** `expected 500 to be one of [ 200, 404 ]`
+- **Analysis:** Deelnemers endpoint returns HTTP 500 instead of proper response — server error
 
-### Folder 11 - Publications & Catalogs (25 failures — systemic)
-The OpenCatalogi publications API returns HTTP 500 errors across all endpoints.
+### 4. #400 AC3: Koppeling visible in list
+- **Folder:** 03 - Object CRUD
+- **Issue:** #400 — Koppeling save
+- **Error:** `expected false to be true`
+- **Analysis:** Created koppeling not found in list after creation — possibly cascading from creation issue
 
-| # | Assertion | Notes |
-|---|-----------|-------|
-| 14 | Catalogi endpoint returns 200 | HTTP 500 |
-| 15-17 | Catalog existence, slug, config | JSON parse errors (HTML 500 response) |
-| 18-20 | Publications endpoint, results, pagination | HTTP 500 |
-| 22-26 | Search, structure, pagination | HTTP 500 |
-| 27-29 | Faceted search, facets, counts | HTTP 500 |
-| 30-31 | Schema-filtered facet, readable names | HTTP 500 |
-| 32-33 | Dienst facet, diensttype | HTTP 500 |
-| 34-36 | Publication detail (404), metadata | HTTP 404/500 |
-| 37-38 | Catalog-scoped search | JSON parse errors |
+### 5. #400 AC4: Re-save works without errors
+- **Folder:** 03 - Object CRUD
+- **Issue:** #400 — Koppeling save
+- **Error:** `expected 404 to be one of [ 200, 201 ]`
+- **Analysis:** PUT to koppeling returns 404 — object not found for re-save (cascading from AC3)
 
-## Analysis
+### 6. #400 AC5: Data persisted correctly
+- **Folder:** 03 - Object CRUD
+- **Issue:** #400 — Koppeling save
+- **Error:** `expected response to have status code 200 but got 404`
+- **Analysis:** GET for koppeling returns 404 — cascading from failed creation
 
-**Folders 00-10 (core API): 12 failures**
-- **#144**: Publications-based search not returning results
-- **#344**: Only 1 reference component available (data gap)
-- **#400**: Koppeling CRUD — visibility and re-save broken
-- **#452**: `_extend` not returning koppelingen array on applicaties
-- **#435**: Import data count below threshold
-- **#155**: Glossary endpoint not implemented or empty
-- **#332**: Authenticated search endpoint issue
+### 7. #452 AC1: Applicatie has koppelingen array via _extend
+- **Folder:** 03 - Object CRUD
+- **Issue:** #452 — Koppelingen count in applicatie overview
+- **Error:** `Should find Makelaarsuite: expected +0 to be above +0`
+- **Analysis:** `_extend` on applicatie does not return koppelingen — relation not resolved
 
-**Folder 11 (Publications & Catalogs): 25 failures — SYSTEMIC**
-The entire OpenCatalogi publications API returns HTTP 500. This is a single root cause issue, not 25 separate bugs. The publications/catalogs feature needs investigation.
+---
 
-## Passing Folders (highlights)
-- **00 - Setup**: 68/68 passed — all test data created successfully
-- **01 - Public API & Search**: Most assertions pass — facets, pagination, UUID resolution working
-- **02 - RBAC & Organization Scoping**: All passing — org scoping works correctly
-- **05 - ArchiMate & Views**: All passing
-- **06 - User Profile & Authentication**: All passing
-- **08 - Aanbod & Gebruik**: All passing
-- **09 - Data Quality & Naming**: All passing
+## Issues Summary
+
+### FAIL (5 distinct issues)
+| Issue | Title | Failures | Severity | Summary |
+|-------|-------|----------|----------|---------|
+| #414 | Deelnemers read access | 1 | HIGH | Server 500 on deelnemers endpoint |
+| #400 | Koppeling save | 3 | HIGH | Koppeling CRUD broken — cascading failures |
+| #452 | Koppelingen count | 1 | MEDIUM | `_extend` doesn't resolve koppelingen relation |
+| #144 | Search functionality | 1 | LOW | Missing `beschrijvingKort` field in results |
+| #344 | Ref component filters | 1 | LOW | Reference component facet returns 0 buckets |
+
+### PASS (all other tested issues)
+All assertions passed for: #85, #315, #343, #345, #346, #440, #105, #300, #307, #394, #6, #65, #73, #365, #382, #437, #23, #435, #148, #160, #393, #413, #266, #286, #352, #353, #396, #15, #354, #418, #419, #420, #186, #347, #381, #406, #407, #409, #155, #332, #280, #302, #333, #336, #340, #349, #358, #363, #374, #398, #443, and Publications & Catalogs tests.
+
+---
 
 ## HTML Report
-Available at: `softwarecatalog/test-results/api/report.html`
+
+Full interactive report: [report.html](report.html)
