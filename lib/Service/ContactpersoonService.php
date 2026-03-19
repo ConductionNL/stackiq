@@ -458,11 +458,11 @@ class ContactpersoonService
             $contactData['username'] = $username;
             $contactpersoonObject->setObject($contactData);
 
-            // FIX #434: Use ObjectEntityMapper directly instead of ObjectService::saveObject().
+            // FIX #434: Use MagicMapper directly instead of ObjectService::saveObject().
             // To avoid validation errors on the organisatie field (stored as UUID string but.
             // Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
             // That could interfere with the ongoing org activation process.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactpersoonObject);
 
             $this->logger->info(
@@ -1192,10 +1192,10 @@ class ContactpersoonService
                 $contactObject->setOrganisation($organizationUuid);
             }
 
-            // FIX #434: Use ObjectEntityMapper directly instead of ObjectService::saveObject().
+            // FIX #434: Use MagicMapper directly instead of ObjectService::saveObject().
             // To avoid validation errors on the organisatie field (stored as UUID string but.
             // Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactObject);
 
             $this->logger->info(

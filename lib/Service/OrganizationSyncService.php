@@ -421,7 +421,7 @@ class OrganizationSyncService
                     $restoredData = $contactEntity->getObject();
                     $restoredData['organisatie'] = $savedOrganisatie;
                     $contactEntity->setObject($restoredData);
-                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
                     $objectMapper->update($contactEntity);
                 }
 
@@ -2025,7 +2025,7 @@ class OrganizationSyncService
                     if (empty($contactData['organisatie']) === true) {
                         $contactData['organisatie'] = $organizationUuid;
                         $contactObject->setObject($contactData);
-                        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
                         $objectMapper->update($contactObject);
                         $this->logger->info(
                             '[FLOW] Set missing organisatie field on related contact',
@@ -2188,7 +2188,7 @@ class OrganizationSyncService
                     $restoredData = $contactObject->getObject();
                     $restoredData['organisatie'] = $savedOrganisatie;
                     $contactObject->setObject($restoredData);
-                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
                     $objectMapper->update($contactObject);
                 }
             }//end if
@@ -2202,7 +2202,7 @@ class OrganizationSyncService
                     $contactObjectData['organisatie'] = $organizationUuid;
                     $contactObject->setObject($contactObjectData);
                     $contactObject->setOrganisation($organizationUuid);
-                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
                     $objectMapper->update($contactObject);
                     $this->logger->info(
                         '[FLOW] Set missing organisatie field on contact person',
@@ -2300,7 +2300,7 @@ class OrganizationSyncService
                                 $contactObjectData = $contactObject->getObject();
                                 $contactObjectData['username'] = $user->getUID();
 
-                                // FIX #434: Use ObjectEntityMapper::update() directly instead of.
+                                // FIX #434: Use MagicMapper::update() directly instead of.
                                 // ObjectService::saveObject() to persist the username. This avoids:.
                                 // 1. Having to strip the organisatie field (saveObject validates it.
                                 // as object type but it is stored as a UUID string).
@@ -2321,7 +2321,7 @@ class OrganizationSyncService
                                 );
 
                                 try {
-                                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+                                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
                                     $objectMapper->update($contactObject);
                                     $this->logger->info(
                                         'Contact saved with username',
@@ -3038,8 +3038,8 @@ class OrganizationSyncService
             $organisatieObject->setOwner($organisationEntityUuid);
             $organisatieObject->setOrganisation($organisationEntityUuid);
 
-            // Save using ObjectEntityMapper directly to bypass validation and ensure metadata is persisted.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            // Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
+            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($organisatieObject);
 
             $this->logger->info(
@@ -3161,8 +3161,8 @@ class OrganizationSyncService
                 $contactObject->setOrganisation($organizationUuid);
             }
 
-            // Save using ObjectEntityMapper directly to bypass validation and ensure metadata is persisted.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            // Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
+            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactObject);
 
             $this->logger->info(
