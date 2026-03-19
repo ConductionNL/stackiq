@@ -1,4 +1,13 @@
 <?php
+/**
+ * ArchiMate Export Service.
+ *
+ * @category Service
+ * @package  OCA\SoftwareCatalog\Service
+ * @author   Conduction b.v. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://conduction.nl
+ */
 
 /**
  * ArchiMate Export Service for the SoftwareCatalog app
@@ -46,9 +55,9 @@ use Psr\Log\LoggerInterface;
 class ArchiMateExportService
 {
     /**
-     * Constructor for ArchiMateExportService
+     * Constructor.
      *
-     * @param LoggerInterface $logger Logger instance
+     * @param LoggerInterface $logger The logger instance.
      */
     public function __construct(
         private readonly LoggerInterface $logger
@@ -66,10 +75,10 @@ class ArchiMateExportService
      * - `_text` key is treated as mixed content text.
      * - Numeric arrays produce repeated child elements with the same tag name.
      *
-     * @param array             $data The associative array to convert
-     * @param \SimpleXMLElement $xml  The XML element to add to
+     * @param array             $data The data array to convert.
+     * @param \SimpleXMLElement $xml  The XML element to populate.
      *
-     * @return \SimpleXMLElement The modified XML element
+     * @return \SimpleXMLElement The populated XML element.
      */
     public function arrayToXml(array $data, \SimpleXMLElement $xml): \SimpleXMLElement
     {
@@ -190,9 +199,8 @@ class ArchiMateExportService
             }
 
             // Special handling for elementProperties and other nested structures - filter out problematic fields.
-            if (($key === 'elementProperties' || $key === 'properties' || $key === 'viewNodes')
-                && is_array($value) === true
-            ) {
+            $nestedKeys = ['elementProperties', 'properties', 'viewNodes'];
+            if (in_array($key, $nestedKeys, true) === true && is_array($value) === true) {
                 $value = $this->filterProblematicFields(data: $value, fieldsToRemove: $propertyLikeFields);
             }
 
@@ -225,11 +233,11 @@ class ArchiMateExportService
     }//end arrayToXml()
 
     /**
-     * Check if an array is a sequential list
+     * Check if an array is a numeric list (sequential integer keys).
      *
-     * @param array $arr The array to check
+     * @param array $arr The array to check.
      *
-     * @return bool True if the array is a list
+     * @return bool True if the array is a list.
      */
     private function isList(array $arr): bool
     {
@@ -237,11 +245,11 @@ class ArchiMateExportService
     }//end isList()
 
     /**
-     * Split a namespaced key into prefix and local name
+     * Split a namespaced key into prefix and local parts.
      *
-     * @param string $key The key to split
+     * @param string $key The key to split.
      *
-     * @return array Array of [prefix, localName]
+     * @return array Array of [prefix, localName].
      */
     private function splitNamespacedKey(string $key): array
     {
@@ -265,12 +273,12 @@ class ArchiMateExportService
     }//end splitNamespacedKey()
 
     /**
-     * Recursively filter out problematic fields from nested data structures
+     * Recursively filter out problematic fields from nested data structures.
      *
-     * @param array $data           The data structure to filter
-     * @param array $fieldsToRemove List of field names to remove
+     * @param array $data           The data structure to filter.
+     * @param array $fieldsToRemove List of field names to remove.
      *
-     * @return array Filtered data structure
+     * @return array Filtered data structure.
      */
     private function filterProblematicFields(array $data, array $fieldsToRemove): array
     {
@@ -317,12 +325,12 @@ class ArchiMateExportService
     }//end filterProblematicFields()
 
     /**
-     * Get the namespace URI for a given prefix from an XML element
+     * Get the namespace URI for a given prefix from an XML element.
      *
-     * @param \SimpleXMLElement $xml    The XML element to inspect
-     * @param string            $prefix The namespace prefix
+     * @param \SimpleXMLElement $xml    The XML element to inspect.
+     * @param string            $prefix The namespace prefix to look up.
      *
-     * @return string The namespace URI or empty string
+     * @return string The namespace URI, or empty string if not found.
      */
     private function getNamespaceUri(\SimpleXMLElement $xml, string $prefix): string
     {
@@ -346,24 +354,26 @@ class ArchiMateExportService
     }//end getNamespaceUri()
 
     /**
-     * Create a clean ArchiMate XML structure with proper namespaces
+     * Create a clean ArchiMate XML structure with proper namespaces.
      *
-     * @param array $modelMetadata Model metadata from the database
+     * @param array $modelMetadata Model metadata from the database.
      *
-     * @return \SimpleXMLElement Root XML element ready for population
+     * @return \SimpleXMLElement Root XML element ready for population.
      */
     public function createCleanArchiMateXml(array $modelMetadata): \SimpleXMLElement
     {
-        $modelName = $modelMetadata['name'] ?? 'ArchiMate Model';
-        $modelId   = $modelMetadata['identifier'] ?? 'model-'.uniqid();
+        $modelName  = $modelMetadata['name'] ?? 'ArchiMate Model';
+        $modelId    = $modelMetadata['identifier'] ?? 'model-'.uniqid();
+        $schemaBase = 'http://www.opengroup.org/xsd/archimate/3.0/';
+        $schemaXsd  = 'http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd';
+        $schemaLoc  = $schemaBase.' '.$schemaXsd;
 
         $xmlString = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
-<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" 
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/"
        xmlns:xml="http://www.w3.org/XML/1998/namespace"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-       xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/
-       http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="{$schemaLoc}"
        identifier="{$modelId}">
 </model>
 XML;
@@ -377,14 +387,14 @@ XML;
     }//end createCleanArchiMateXml()
 
     /**
-     * Generic method to add any collection of objects to XML
+     * Generic method to add any collection of objects to XML.
      *
-     * @param \SimpleXMLElement $xml          Root XML element
-     * @param array             $objects      Array of objects from database
-     * @param string            $folderName   Name for the folder
-     * @param string            $folderId     ID for the folder
-     * @param string            $folderType   Type attribute for the folder
-     * @param string            $childTagName Tag name for child elements
+     * @param \SimpleXMLElement $xml          Root XML element.
+     * @param array             $objects      Array of objects from database.
+     * @param string            $folderName   Name for the folder.
+     * @param string            $folderId     ID for the folder.
+     * @param string            $folderType   Type attribute for the folder.
+     * @param string            $childTagName Tag name for child elements.
      *
      * @return void
      */
@@ -411,10 +421,10 @@ XML;
     }//end addObjectsToXml()
 
     /**
-     * Convenience method for elements
+     * Convenience method for elements.
      *
-     * @param \SimpleXMLElement $xml      Root XML element
-     * @param array             $elements Array of element objects
+     * @param \SimpleXMLElement $xml      The root XML element.
+     * @param array             $elements The elements to add.
      *
      * @return void
      */
@@ -431,10 +441,10 @@ XML;
     }//end addElementsToXml()
 
     /**
-     * Convenience method for relationships
+     * Convenience method for relationships.
      *
-     * @param \SimpleXMLElement $xml           Root XML element
-     * @param array             $relationships Array of relationship objects
+     * @param \SimpleXMLElement $xml           The root XML element.
+     * @param array             $relationships The relationships to add.
      *
      * @return void
      */
@@ -451,10 +461,10 @@ XML;
     }//end addRelationshipsToXml()
 
     /**
-     * Specialized method for views with custom node handling
+     * Specialized method for views with custom node handling.
      *
-     * @param \SimpleXMLElement $xml   Root XML element
-     * @param array             $views Array of view objects
+     * @param \SimpleXMLElement $xml   The root XML element.
+     * @param array             $views The views to add.
      *
      * @return void
      */
@@ -484,10 +494,10 @@ XML;
     }//end addViewsToXml()
 
     /**
-     * Convenience method for organizations
+     * Convenience method for organizations.
      *
-     * @param \SimpleXMLElement $xml           Root XML element
-     * @param array             $organizations Array of organization objects
+     * @param \SimpleXMLElement $xml           The root XML element.
+     * @param array             $organizations The organizations to add.
      *
      * @return void
      */
@@ -504,10 +514,10 @@ XML;
     }//end addOrganizationsToXml()
 
     /**
-     * Specialized method to add a view to the views folder with custom node handling
+     * Specialized method to add a view to the views folder with custom node handling.
      *
-     * @param \SimpleXMLElement $folder The folder XML element
-     * @param array             $view   The view data
+     * @param \SimpleXMLElement $folder The folder XML element.
+     * @param array             $view   The view data to add.
      *
      * @return void
      */
@@ -530,9 +540,8 @@ XML;
         }
 
         // DEBUG: Check if this is our target view with nodes.
-        if (isset($viewData['_identifier']) === true
-            && $viewData['_identifier'] === 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af'
-        ) {
+        $targetId = 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af';
+        if (isset($viewData['_identifier']) === true && $viewData['_identifier'] === $targetId) {
             if (is_array($viewData['node'] ?? null) === true) {
                 $nodeCountValue = count($viewData['node']);
             } else {
@@ -597,11 +606,11 @@ XML;
     }//end addViewToFolder()
 
     /**
-     * Extract view data from different possible formats
+     * Extract view data from different possible formats.
      *
-     * @param array $view The view data array
+     * @param array $view The view data to extract from.
      *
-     * @return array|null The extracted view data or null
+     * @return array|null The extracted view data, or null if not found.
      */
     private function extractViewData(array $view): ?array
     {
@@ -640,10 +649,10 @@ XML;
     }//end extractViewData()
 
     /**
-     * Add basic view data (attributes, name, documentation, properties) to view node
+     * Add basic view data (attributes, name, documentation, properties) to view node.
      *
-     * @param \SimpleXMLElement $viewNode The view XML node
-     * @param array             $viewData The view data array
+     * @param \SimpleXMLElement $viewNode The view XML node.
+     * @param array             $viewData The view data array.
      *
      * @return void
      */
@@ -682,10 +691,10 @@ XML;
     }//end addViewBasicData()
 
     /**
-     * Add view nodes with proper nested structure handling
+     * Add view nodes with proper nested structure handling.
      *
-     * @param \SimpleXMLElement $viewNode The view XML node
-     * @param array             $nodes    Array of node data
+     * @param \SimpleXMLElement $viewNode The view XML node.
+     * @param array             $nodes    The node data arrays.
      *
      * @return void
      */
@@ -698,10 +707,10 @@ XML;
     }//end addViewNodes()
 
     /**
-     * Add view connections with proper nested structure handling
+     * Add view connections with proper nested structure handling.
      *
-     * @param \SimpleXMLElement $viewNode    The view XML node
-     * @param array             $connections Array of connection data
+     * @param \SimpleXMLElement $viewNode    The view XML node.
+     * @param array             $connections The connection data arrays.
      *
      * @return void
      */
@@ -714,11 +723,11 @@ XML;
     }//end addViewConnections()
 
     /**
-     * Generic method to add any object to a folder - determines everything from the JSON data
+     * Generic method to add any object to a folder.
      *
-     * @param \SimpleXMLElement $folder       The folder XML element
-     * @param array             $object       The object data
-     * @param string            $childTagName Tag name for child elements
+     * @param \SimpleXMLElement $folder       The folder XML element.
+     * @param array             $object       The object data.
+     * @param string            $childTagName Tag name for child elements.
      *
      * @return void
      */
@@ -766,13 +775,13 @@ XML;
      * requires both register AND schema in the query. Without schema, the query
      * falls back to the generic objects table (which is empty for magic-table registers).
      *
-     * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService
-     * @param int                                     $registerId    AMEF register ID
-     * @param array                                   $schemaIdMap   Mapping of schema IDs to schema types
+     * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService.
+     * @param int                                     $registerId    AMEF register ID.
+     * @param array                                   $schemaIdMap   Mapping of schema IDs to schema types.
      *
-     * @return array Array of objects from all schemas in the register
+     * @return array Array of objects from all schemas in the register.
      *
-     * @throws \RuntimeException If retrieval fails
+     * @throws \RuntimeException If retrieval fails.
      */
     public function getObjectsFromDatabase(
         \OCA\OpenRegister\Service\ObjectService $objectService,
@@ -881,10 +890,10 @@ XML;
     }//end getObjectsFromDatabase()
 
     /**
-     * Add property definitions to XML
+     * Add property definitions to XML.
      *
-     * @param \SimpleXMLElement $xml                 Root XML element
-     * @param array             $propertyDefinitions Array of property definitions
+     * @param \SimpleXMLElement $xml                 The root XML element.
+     * @param array             $propertyDefinitions The property definitions.
      *
      * @return void
      */
@@ -909,12 +918,12 @@ XML;
      * 3. Direct XML generation without intermediate arrays
      * 4. No JSON serialization overhead
      *
-     * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService
-     * @param int                                     $registerId    AMEF register ID
-     * @param array                                   $schemaIdMap   Mapping of schema IDs
-     * @param string|null                             $organization  Organization filter
+     * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService.
+     * @param int                                     $registerId    AMEF register ID.
+     * @param array                                   $schemaIdMap   Schema IDs to types mapping.
+     * @param string|null                             $organization  Organization filter.
      *
-     * @return string Generated XML
+     * @return string Generated XML.
      */
     public function exportArchiMateXml(
         \OCA\OpenRegister\Service\ObjectService $objectService,
@@ -970,10 +979,10 @@ XML;
      * - Direct XML generation per section
      * - No unnecessary loops or checks
      *
-     * @param array $objects     Raw objects from database
-     * @param array $schemaIdMap Schema ID to type mapping (unused)
+     * @param array $objects     Raw objects from database.
+     * @param array $schemaIdMap Schema ID to type mapping.
      *
-     * @return string Generated XML
+     * @return string Generated XML.
      */
     private function generateXmlDirectly(array $objects, array $schemaIdMap): string
     {
@@ -1087,7 +1096,7 @@ XML;
                         folder: $sectionFolder,
                         object: $object,
                         sectionName: $sectionName,
-                        propDefMap: $propDefMap
+                        propertyDefinitionMap: $propertyDefinitionMap
                     );
                 }
 
@@ -1116,12 +1125,12 @@ XML;
     }//end generateXmlDirectly()
 
     /**
-     * Create section element in XML (matching original ArchiMate structure)
+     * Create section element in XML (matching original ArchiMate structure).
      *
-     * @param \SimpleXMLElement $xml         Root XML element
-     * @param string            $sectionName The section name
+     * @param \SimpleXMLElement $xml         The root XML element.
+     * @param string            $sectionName The section name.
      *
-     * @return \SimpleXMLElement|null The section folder element
+     * @return \SimpleXMLElement|null The created section element.
      */
     private function createSectionFolder(\SimpleXMLElement $xml, string $sectionName): ?\SimpleXMLElement
     {
@@ -1146,12 +1155,12 @@ XML;
     }//end createSectionFolder()
 
     /**
-     * Add object directly to XML with properties from root fields
+     * Add object directly to XML with properties from root fields.
      *
-     * @param \SimpleXMLElement $folder      The folder element
-     * @param array             $object      The object data
-     * @param string            $sectionName The section name
-     * @param array             $propDefMap  Property definition map
+     * @param \SimpleXMLElement $folder                The folder XML element.
+     * @param array             $object                The object data.
+     * @param string            $sectionName           The section name.
+     * @param array             $propertyDefinitionMap Property definition map.
      *
      * @return void
      */
@@ -1159,7 +1168,7 @@ XML;
         \SimpleXMLElement $folder,
         array $object,
         string $sectionName,
-        array $propDefMap
+        array $propertyDefinitionMap
     ): void {
         $tagName = match ($sectionName) {
             'organizations' => 'item',
@@ -1188,17 +1197,17 @@ XML;
                     node: $objectNode,
                     data: $xmlData,
                     sectionName: $sectionName,
-                    propDefMap: $propDefMap
+                    propertyDefinitionMap: $propertyDefinitionMap
                 );
             }
         }
     }//end addObjectDirectlyToXmlWithProperties()
 
     /**
-     * Add view data to XML node with specialized handling for nodes and connections
+     * Add view data to XML node with specialized handling for nodes and connections.
      *
-     * @param \SimpleXMLElement $viewNode The view XML node
-     * @param array             $viewData The view data array
+     * @param \SimpleXMLElement $viewNode The view XML node.
+     * @param array             $viewData The view data array.
      *
      * @return void
      */
@@ -1235,11 +1244,8 @@ XML;
         // Add xsi:type if present.
         foreach (['_xsi__type', 'xsi:type', '_xsi:type'] as $typeKey) {
             if (isset($viewData[$typeKey]) === true) {
-                $viewNode->addAttribute(
-                    'xsi:type',
-                        (string) $viewData[$typeKey],
-                    'http://www.w3.org/2001/XMLSchema-instance'
-                );
+                $xsiNs = 'http://www.w3.org/2001/XMLSchema-instance';
+                $viewNode->addAttribute('xsi:type', (string) $viewData[$typeKey], $xsiNs);
                 break;
             }
         }
@@ -1283,10 +1289,10 @@ XML;
     }//end addViewDataToXmlNode()
 
     /**
-     * Add node data to XML element with specialized handling for node attributes and nested elements
+     * Add node data to XML element with specialized handling.
      *
-     * @param \SimpleXMLElement $nodeElement The node XML element
-     * @param array             $nodeData    The node data array
+     * @param \SimpleXMLElement $nodeElement The node XML element.
+     * @param array             $nodeData    The node data array.
      *
      * @return void
      */
@@ -1332,8 +1338,8 @@ XML;
 
                 // Skip if we already added this attribute from the direct keys.
                 $knownAttrs = ['identifier', 'x', 'y', 'w', 'h', 'elementRef', 'xsi:type'];
-                if (in_array($attrKey, $knownAttrs, true) === true
-                    || in_array($attrKey, $addedNodeAttrs, true) === true
+                if (in_array($attrKey, $knownAttrs) === true
+                    || in_array($attrKey, $addedNodeAttrs) === true
                 ) {
                     continue;
                 }
@@ -1378,7 +1384,7 @@ XML;
             }
         }
 
-        // ViewRef.
+        // ViewRef handling.
         if (isset($nodeData['viewRef']) === true) {
             $viewRefData = $nodeData['viewRef'];
             if (is_array($viewRefData) === true) {
@@ -1404,10 +1410,10 @@ XML;
     }//end addNodeDataToXmlElement()
 
     /**
-     * Add organization item to XML with XSD-required child order
+     * Add organization item to XML with XSD-required child order.
      *
-     * @param \SimpleXMLElement $itemNode The item XML node
-     * @param array             $itemData The item data array
+     * @param \SimpleXMLElement $itemNode The item XML node.
+     * @param array             $itemData The item data array.
      *
      * @return void
      */
@@ -1467,11 +1473,11 @@ XML;
     }//end addOrganizationItemToXml()
 
     /**
-     * Format XML output with proper indentation and line breaks for readability
+     * Format XML output with proper indentation and line breaks.
      *
-     * @param string $xmlString The XML string to format
+     * @param string $xmlString The raw XML string.
      *
-     * @return string The formatted XML string
+     * @return string The formatted XML string.
      */
     private function formatXmlOutput(string $xmlString): string
     {
@@ -1490,12 +1496,12 @@ XML;
     }//end formatXmlOutput()
 
     /**
-     * Clean object data for XML export - remove metadata and duplicate attributes
+     * Clean object data for XML export.
      *
-     * @param array $object     The object data
-     * @param array $propDefMap Property definition map
+     * @param array $object                The object data to clean.
+     * @param array $propertyDefinitionMap Property definition map.
      *
-     * @return array Cleaned object data
+     * @return array The cleaned object data.
      */
     private function cleanObjectDataForXml(array $object, array $propDefMap=[]): array
     {
@@ -1520,6 +1526,7 @@ XML;
                 && $key !== '_text'
                 && $key !== '_xsi__type'
             ) {
+                // Remove single underscore fields that have clean equivalents.
                 $cleanKey = substr($key, 1);
                 if (isset($cleanData[$cleanKey]) === true) {
                     $fieldsToRemove[] = $key;
@@ -1542,12 +1549,12 @@ XML;
     }//end cleanObjectDataForXml()
 
     /**
-     * Add clean data to XML node with proper ArchiMate structure
+     * Add clean data to XML node with proper ArchiMate structure.
      *
-     * @param \SimpleXMLElement $node        The XML node
-     * @param array             $data        The data to add
-     * @param string|null       $sectionName The section name
-     * @param array             $propDefMap  Property definition map
+     * @param \SimpleXMLElement $node                  The XML node.
+     * @param array             $data                  The data array.
+     * @param string|null       $sectionName           The section name.
+     * @param array             $propertyDefinitionMap Property definition map.
      *
      * @return void
      */
@@ -1555,7 +1562,7 @@ XML;
         \SimpleXMLElement $node,
         array $data,
         ?string $sectionName=null,
-        array $propDefMap=[]
+        array $propertyDefinitionMap=[]
     ): void {
         // Extract attributes from various possible locations.
         $attributes = [];
@@ -1594,17 +1601,24 @@ XML;
         foreach (['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type', '_type'] as $typeKey) {
             if (isset($data[$typeKey]) === true) {
                 $isPropertyDefinition = ($sectionName === 'property_definitions');
-                if ($typeKey === '_type' && $isPropertyDefinition === true && isset($attributes['type']) === false) {
+                $isTypeKey            = ($typeKey === '_type');
+                if ($isTypeKey === true
+                    && $isPropertyDefinition === true
+                    && isset($attributes['type']) === false
+                ) {
                     $attributes['type'] = (string) $data[$typeKey];
                     break;
-                } else if (in_array($typeKey, ['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type'], true) === true
+                }
+
+                $xsiTypes = ['xsi:type', 'xsi_type', '_xsi:type', '_xsi__type'];
+                if (in_array($typeKey, $xsiTypes) === true
                     && isset($attributes['xsi:type']) === false
                 ) {
                     $attributes['xsi:type'] = (string) $data[$typeKey];
                     break;
                 }
             }
-        }
+        }//end foreach
 
         foreach (['source', 'target', 'accessType', 'isDirected', 'type'] as $attrName) {
             if (isset($data[$attrName]) === true && isset($attributes[$attrName]) === false) {
@@ -1644,11 +1658,11 @@ XML;
     }//end addCleanDataToXmlNode()
 
     /**
-     * Add properties to XML node using propertyDefinitionMap from model
+     * Add properties to XML node using propertyDefinitionMap from model.
      *
-     * @param \SimpleXMLElement $node       XML node to add properties to
-     * @param array             $object     The object with root-level properties
-     * @param array             $propDefMap Map of property name to propertyDefinitionRef
+     * @param \SimpleXMLElement $node                  XML node to add properties to.
+     * @param array             $object                The object with root-level properties.
+     * @param array             $propertyDefinitionMap Map of property name to ref.
      *
      * @return void
      */
@@ -1680,10 +1694,10 @@ XML;
     }//end addPropertiesFromRootFields()
 
     /**
-     * Add properties section to XML
+     * Add properties section to XML.
      *
-     * @param \SimpleXMLElement $node       The XML node
-     * @param array             $properties Array of properties
+     * @param \SimpleXMLElement $node       The XML node.
+     * @param array             $properties The properties array.
      *
      * @return void
      */
@@ -1769,11 +1783,8 @@ XML;
                     // Add xml:lang if present in various forms (including double underscore from import service).
                     foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                         if (isset($property['value'][$langKey]) === true) {
-                            $valueNode->addAttribute(
-                                'xml:lang',
-                                    $property['value'][$langKey],
-                                'http://www.w3.org/XML/1998/namespace'
-                            );
+                            $xmlNs = 'http://www.w3.org/XML/1998/namespace';
+                            $valueNode->addAttribute('xml:lang', $property['value'][$langKey], $xmlNs);
                             break;
                         }
                     }
@@ -1787,11 +1798,11 @@ XML;
     }//end addPropertiesToXml()
 
     /**
-     * Add a child element with text content and optional xml:lang attribute
+     * Add a child element with text content and optional xml:lang attribute.
      *
-     * @param \SimpleXMLElement $parent  The parent XML element
-     * @param string            $tagName The tag name
-     * @param mixed             $data    The data to add
+     * @param \SimpleXMLElement $parent  The parent XML element.
+     * @param string            $tagName The tag name for the child.
+     * @param mixed             $data    The text data or array with _value.
      *
      * @return void
      */
@@ -1820,11 +1831,11 @@ XML;
     }//end addLangTextChild()
 
     /**
-     * Extract model metadata from objects
+     * Extract model metadata from objects.
      *
-     * @param array $objects Array of objects
+     * @param array $objects The objects to extract metadata from.
      *
-     * @return array The model metadata
+     * @return array The model metadata array.
      */
     private function extractModelMetadata(array $objects): array
     {
@@ -1842,10 +1853,10 @@ XML;
     }//end extractModelMetadata()
 
     /**
-     * Add model metadata (name, documentation, properties) to XML root
+     * Add model metadata (name, documentation, properties) to XML root.
      *
-     * @param \SimpleXMLElement $xml           Root XML element
-     * @param array             $modelMetadata The model metadata
+     * @param \SimpleXMLElement $xml           The root XML element.
+     * @param array             $modelMetadata The model metadata.
      *
      * @return void
      */
@@ -1896,10 +1907,10 @@ XML;
     }//end addModelMetadataToXml()
 
     /**
-     * Optimized method to add data to XML node
+     * Optimized method to add data to XML node.
      *
-     * @param \SimpleXMLElement $node The XML node
-     * @param array             $data The data to add
+     * @param \SimpleXMLElement $node The XML node.
+     * @param array             $data The data array.
      *
      * @return void
      */
@@ -1950,10 +1961,10 @@ XML;
     /**
      * Convert OpenRegister objects back to ArchiMate format
      *
-     * @param array $objects     OpenRegister objects from all schemas
-     * @param array $schemaIdMap Mapping of schema IDs to schema types
+     * @param array $objects     OpenRegister objects from all schemas.
+     * @param array $schemaIdMap Mapping of schema IDs to schema types.
      *
-     * @return array ArchiMate data structure
+     * @return array ArchiMate data structure.
      */
     public function convertFromOpenRegisterObjects(array $objects, array $schemaIdMap): array
     {
@@ -2029,10 +2040,10 @@ XML;
     /**
      * Organize objects by schema type based on their schema ID
      *
-     * @param array $objects     Raw objects from database
-     * @param array $schemaIdMap Mapping of schema IDs to schema types
+     * @param array $objects     Raw objects from database.
+     * @param array $schemaIdMap Mapping of schema IDs to schema types.
      *
-     * @return array Objects organized by schema type
+     * @return array Objects organized by schema type.
      */
     private function organizeObjectsBySchemaType(array $objects, array $schemaIdMap): array
     {
@@ -2064,9 +2075,9 @@ XML;
     /**
      * Map schema type to ArchiMate section name
      *
-     * @param string $schemaType Schema type from AMEF config
+     * @param string $schemaType Schema type from AMEF config.
      *
-     * @return string Section name for ArchiMate data structure
+     * @return string Section name for ArchiMate data structure.
      */
     private function mapSchemaTypeToSection(string $schemaType): string
     {
@@ -2085,9 +2096,9 @@ XML;
     /**
      * Reconstruct the proper nested XML structure for export
      *
-     * @param array $archiMateData Flattened ArchiMate data
+     * @param array $archiMateData Flattened ArchiMate data.
      *
-     * @return array Properly nested XML structure
+     * @return array Properly nested XML structure.
      */
     private function reconstructNestedXmlStructure(array $archiMateData): array
     {
@@ -2116,12 +2127,12 @@ XML;
     /**
      * Run comprehensive Quality Assurance checks on exported XML
      *
-     * @param string $xmlString  The generated XML string
-     * @param array  $sourceData The original source data for reference
+     * @param string $xmlString  The generated XML string.
+     * @param array  $sourceData The original source data for reference.
      *
      * @return void
      *
-     * @throws \InvalidArgumentException If any QA check fails
+     * @throws \InvalidArgumentException If any QA check fails.
      */
     private function runQualityAssuranceChecks(string $xmlString, array $sourceData): void
     {
@@ -2158,9 +2169,9 @@ XML;
     }//end runQualityAssuranceChecks()
 
     /**
-     * Validate that every element has xsi:type and unique identifier
+     * Validate that every element has xsi:type and unique identifier.
      *
-     * @param \SimpleXMLElement $xml The XML element to validate
+     * @param \SimpleXMLElement $xml The XML to validate.
      *
      * @return void
      */
@@ -2195,9 +2206,9 @@ XML;
     }//end validateElementsHaveTypeAndIdentifier()
 
     /**
-     * Validate that every relationship has xsi:type, source, target with valid references
+     * Validate that every relationship has xsi:type, source, target.
      *
-     * @param \SimpleXMLElement $xml The XML element to validate
+     * @param \SimpleXMLElement $xml The XML to validate.
      *
      * @return void
      */
@@ -2245,9 +2256,9 @@ XML;
     }//end validateRelationshipsHaveSourceTarget()
 
     /**
-     * Validate that no properties are empty; all have propertyDefinitionRef and value
+     * Validate that no properties are empty.
      *
-     * @param \SimpleXMLElement $xml The XML element to validate
+     * @param \SimpleXMLElement $xml The XML to validate.
      *
      * @return void
      */
@@ -2266,16 +2277,13 @@ XML;
             // Check value element exists and has content.
             $valueElements = $property->xpath('value');
             if (empty($valueElements) === true) {
-                throw new \InvalidArgumentException(
-                    "Property missing value element: ".(string) $attributes['propertyDefinitionRef']
-                );
+                $propRef = (string) $attributes['propertyDefinitionRef'];
+                throw new \InvalidArgumentException("Property missing value element: $propRef");
             }
 
             $value = trim((string) $valueElements[0]);
             if (empty($value) === true) {
-                throw new \InvalidArgumentException(
-                    "Property has empty value: ".(string) $attributes['propertyDefinitionRef']
-                );
+                throw new \InvalidArgumentException("Property has empty value: $propRef");
             }
         }//end foreach
 
@@ -2283,9 +2291,9 @@ XML;
     }//end validatePropertiesAreNotEmpty()
 
     /**
-     * Validate that propid-2 exists for all elements and value equals identifier
+     * Validate that propid-2 exists for all elements.
      *
-     * @param \SimpleXMLElement $xml The XML element to validate
+     * @param \SimpleXMLElement $xml The XML to validate.
      *
      * @return void
      */
@@ -2311,8 +2319,14 @@ XML;
             $expectedValue = str_replace('id-', '', $identifier);
             // Remove 'id-' prefix for comparison.
             if ($objectIdValue !== $expectedValue) {
-                $msg = "propid-2 mismatch. Expected: {$expectedValue}, Got: {$objectIdValue} (Element: {$identifier})";
-                throw new \InvalidArgumentException($msg);
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'Element propid-2 value mismatch. Expected: %s, Got: %s (Element: %s)',
+                        $expectedValue,
+                        $objectIdValue,
+                        $identifier
+                    )
+                );
             }
         }//end foreach
 
@@ -2320,9 +2334,9 @@ XML;
     }//end validateObjectIdProperty()
 
     /**
-     * Validate that name/documentation text content is trimmed and whitespace normalized
+     * Validate that name/documentation text content is normalized.
      *
-     * @param \SimpleXMLElement $xml The XML element to validate
+     * @param \SimpleXMLElement $xml The XML to validate.
      *
      * @return void
      */
@@ -2342,10 +2356,17 @@ XML;
                     $parentId = ' (Parent: '.(string) $element->xpath('../@identifier')[0].')';
                 }
 
-                $msg = "Text not normalized in <{$tagName}>{$parentId}. Expected: '{$normalized}', Got: '{$content}'";
-                throw new \InvalidArgumentException($msg);
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        "Text content not normalized in <%s>%s. Expected: '%s', Got: '%s'",
+                        $tagName,
+                        $parentId,
+                        $normalized,
+                        $content
+                    )
+                );
             }
-        }
+        }//end foreach
 
         $this->logger->debug("Validated ".count($textElements)." text elements are properly trimmed and normalized");
     }//end validateTextContentNormalized()
@@ -2362,17 +2383,17 @@ XML;
      * referentiecomponenten, copies views with applications plotted inside, and
      * adds SWC-specific organization folders.
      *
-     * @param \OCA\OpenRegister\Service\ObjectService $objectService Object service
-     * @param int                                     $registerId    AMEF register ID
-     * @param array                                   $schemaIdMap   Schema ID map
-     * @param string                                  $orgName       Organization name
-     * @param string                                  $orgUuid       Organization UUID
-     * @param array                                   $gebruikData   Usage objects
-     * @param array                                   $modulesData   Module objects
-     * @param array                                   $deelnamesData Participation data
-     * @param array                                   $options       Export options
+     * @param \OCA\OpenRegister\Service\ObjectService $objectService The object service.
+     * @param int                                     $registerId    AMEF register ID.
+     * @param array                                   $schemaIdMap   Schema ID to type map.
+     * @param string                                  $orgName       Organization name.
+     * @param string                                  $orgUuid       Organization UUID.
+     * @param array                                   $gebruikData   Usage objects.
+     * @param array                                   $modulesData   Module objects.
+     * @param array                                   $deelnamesData Deelnames data.
+     * @param array                                   $options       Export options.
      *
-     * @return string Generated XML
+     * @return string Generated XML.
      */
     public function exportOrganizationArchiMateXml(
         \OCA\OpenRegister\Service\ObjectService $objectService,
@@ -2497,16 +2518,16 @@ XML;
     /**
      * Build lookup maps from gebruik and modules data.
      *
-     * @param array $gebruikData Usage data objects
-     * @param array $modulesData Module data objects
+     * @param array $gebruikData The gebruik data.
+     * @param array $modulesData The modules data.
      *
-     * @return array [moduleRefMap, moduleNameMap]
+     * @return array Array of [moduleRefMap, moduleNameMap].
      */
     private function buildModuleLookupMaps(array $gebruikData, array $modulesData): array
     {
-        // Module ID to refcomp identifiers.
+        // ModuleId => [refCompIdentifiers].
         $moduleRefMap = [];
-        // Module ID to name.
+        // ModuleId => name.
         $moduleNameMap = [];
         // Build name map from modules data.
         foreach ($modulesData as $module) {
@@ -2516,7 +2537,7 @@ XML;
 
             $id   = $module['id'] ?? $module['@self']['id'] ?? null;
             $name = $module['naam'] ?? $module['name'] ?? $module['@self']['name'] ?? null;
-            if ($id !== false && $name === true) {
+            if ($id !== null && $name !== null) {
                 $moduleNameMap[$id] = $name;
             }
         }
@@ -2581,9 +2602,9 @@ XML;
     /**
      * Check if a Bron property definition exists in base objects, add one if not.
      *
-     * @param array $baseObjects Base objects to check and modify
+     * @param array $baseObjects The base objects to check.
      *
-     * @return string The propertyDefinition identifier for Bron
+     * @return string The propertyDefinition identifier for Bron.
      */
     private function ensureBronPropertyDefinition(array &$baseObjects): string
     {
@@ -2616,12 +2637,12 @@ XML;
     /**
      * Generate ApplicationComponent element arrays for each module.
      *
-     * @param array  $moduleRefMap  Module reference map
-     * @param array  $moduleNameMap Module name map
-     * @param string $bronPropDefId Bron property definition ID
-     * @param string $prefix        Element ID prefix
+     * @param array  $moduleRefMap  Module to ref component ID map.
+     * @param array  $moduleNameMap Module to name map.
+     * @param string $bronPropDefId Bron property definition ID.
+     * @param string $prefix        Optional prefix for IDs.
      *
-     * @return array Array of element data arrays ready for XML generation
+     * @return array Array of element data arrays ready for XML generation.
      */
     private function generateApplicationElements(
         array $moduleRefMap,
@@ -2656,11 +2677,11 @@ XML;
     /**
      * Generate SpecializationRelationship arrays for module to refcomp mappings.
      *
-     * @param array  $moduleRefMap  Module reference map
-     * @param string $bronPropDefId Bron property definition ID
-     * @param string $prefix        Relationship ID prefix
+     * @param array  $moduleRefMap  Module to ref component ID map.
+     * @param string $bronPropDefId Bron property definition ID.
+     * @param string $prefix        Optional prefix for IDs.
      *
-     * @return array Array of relationship data arrays
+     * @return array Array of relationship data arrays.
      */
     private function generateSpecializationRelationships(
         array $moduleRefMap,
@@ -2704,15 +2725,15 @@ XML;
     }//end generateSpecializationRelationships()
 
     /**
-     * Copy qualifying views and inject application nodes inside referentiecomponent nodes.
+     * Copy qualifying views and inject application nodes.
      *
-     * @param array  $baseObjects   Base objects from database
-     * @param string $orgName       Organization name
-     * @param array  $appElements   Application elements
-     * @param array  $relationships Relationships
-     * @param string $bronPropDefId Bron property definition ID
+     * @param array  $baseObjects   The base objects from database.
+     * @param string $orgName       The organization name.
+     * @param array  $appElements   Application elements.
+     * @param array  $relationships Relationship data.
+     * @param string $bronPropDefId Bron property definition ID.
      *
-     * @return array Array of enriched view data arrays (XML blob format)
+     * @return array Array of enriched view data arrays.
      */
     private function copyAndEnrichViews(
         array $baseObjects,
@@ -2803,9 +2824,9 @@ XML;
     /**
      * Extract "Titel view SWC" property value from view XML data.
      *
-     * @param array $viewData The view data array
+     * @param array $viewData The view data array.
      *
-     * @return string|null The SWC title or null
+     * @return string|null The SWC title, or null if not found.
      */
     private function getViewSwcTitle(array $viewData): ?string
     {
@@ -2845,9 +2866,9 @@ XML;
     /**
      * Extract view name from view XML data.
      *
-     * @param array $viewData The view data array
+     * @param array $viewData The view data array.
      *
-     * @return string The view name
+     * @return string The view name.
      */
     private function getViewName(array $viewData): string
     {
@@ -2865,10 +2886,10 @@ XML;
     /**
      * Add Bron=Softwarecatalogus property to an XML data array.
      *
-     * @param array  $data          The data array to modify
-     * @param string $bronPropDefId Bron property definition ID
+     * @param array  $data          The data array.
+     * @param string $bronPropDefId The Bron property definition ID.
      *
-     * @return array Modified data array
+     * @return array The updated data array.
      */
     private function addBronProperty(array $data, string $bronPropDefId): array
     {
@@ -2896,20 +2917,17 @@ XML;
     /**
      * Walk the view node tree and inject application child nodes.
      *
-     * For each node whose elementRef matches a referentiecomponent with mapped apps,
-     * add child nodes and connection elements.
+     * @param array $viewData    The view data array.
+     * @param array $refCompApps The ref component apps map.
      *
-     * @param array $viewData    The view data array
-     * @param array $refCompApps Reference component applications map
-     *
-     * @return array Modified view data
+     * @return array The updated view data.
      */
     private function injectApplicationNodesInView(array $viewData, array $refCompApps): array
     {
         // Inject into top-level nodes.
         if (isset($viewData['node']) === true && is_array($viewData['node']) === true) {
             $nodes = $viewData['node'];
-            if ($this->isList(arr: $nodes) === false) {
+            if ($this->isList(arr: $nodes) === true) {
                 $nodes = [$nodes];
             }
 
@@ -2924,7 +2942,7 @@ XML;
             if (empty($newConnections) === false) {
                 if (isset($viewData['connection']) === false) {
                     $viewData['connection'] = [];
-                } else if ($this->isList(arr: $viewData['connection']) === false) {
+                } else if ($this->isList(arr: $viewData['connection']) === true) {
                     $viewData['connection'] = [$viewData['connection']];
                 }
 
@@ -2938,13 +2956,13 @@ XML;
     }//end injectApplicationNodesInView()
 
     /**
-     * Recursively process nodes, injecting application child nodes where appropriate.
+     * Recursively process nodes, injecting application child nodes.
      *
-     * @param array $nodes          The nodes to process
-     * @param array $refCompApps    Reference component applications map
-     * @param array $newConnections Array to collect new connections by reference
+     * @param array $nodes          The nodes to process.
+     * @param array $refCompApps    The ref component apps map.
+     * @param array $newConnections Accumulator for new connections.
      *
-     * @return array Modified nodes
+     * @return array The processed nodes.
      */
     private function processNodesForInjection(array $nodes, array $refCompApps, array &$newConnections): array
     {
@@ -2970,7 +2988,7 @@ XML;
                 // Ensure nested nodes array.
                 if (isset($node['node']) === false) {
                     $node['node'] = [];
-                } else if ($this->isList(arr: $node['node']) === false) {
+                } else if ($this->isList(arr: $node['node']) === true) {
                     $node['node'] = [$node['node']];
                 }
 
@@ -3019,7 +3037,7 @@ XML;
             // Recurse into nested nodes.
             if (isset($node['node']) === true && is_array($node['node']) === true) {
                 $nestedNodes = $node['node'];
-                if ($this->isList(arr: $nestedNodes) === false) {
+                if ($this->isList(arr: $nestedNodes) === true) {
                     $nestedNodes = [$nestedNodes];
                 }
 
@@ -3039,12 +3057,12 @@ XML;
     /**
      * Build SWC organization folder items.
      *
-     * @param array $gebruiktAppElements  Used application elements
-     * @param array $deelnamesAppElements Participation application elements
-     * @param array $relationships        Relationships
-     * @param array $viewCopies           View copies
+     * @param array $gebruiktAppElements  Gebruikt application elements.
+     * @param array $deelnamesAppElements Deelnames application elements.
+     * @param array $relationships        Relationship data.
+     * @param array $viewCopies           View copy data.
      *
-     * @return array Organization items for the SWC folders
+     * @return array Organization items for the SWC folders.
      */
     private function buildSwcOrganizationFolders(
         array $gebruiktAppElements,
@@ -3110,15 +3128,15 @@ XML;
     /**
      * Assemble the final organization-specific ArchiMate XML.
      *
-     * @param array  $baseObjects   Base objects from database
-     * @param string $orgName       Organization name
-     * @param array  $appElements   Application elements
-     * @param array  $relationships Relationships
-     * @param array  $viewCopies    View copies
-     * @param array  $swcFolders    SWC organization folders
-     * @param string $bronPropDefId Bron property definition ID
+     * @param array  $baseObjects   The base objects.
+     * @param string $orgName       The organization name.
+     * @param array  $appElements   Application elements.
+     * @param array  $relationships Relationship data.
+     * @param array  $viewCopies    View copy data.
+     * @param array  $swcFolders    SWC folder data.
+     * @param string $bronPropDefId Bron property definition ID.
      *
-     * @return string Generated XML string
+     * @return string The assembled XML string.
      */
     private function assembleOrganizationXml(
         array $baseObjects,
@@ -3177,7 +3195,7 @@ XML;
                         folder: $elementsFolder,
                         object: $obj,
                         sectionName: 'elements',
-                        propDefMap: $propDefMap
+                        propertyDefinitionMap: $propertyDefinitionMap
                     );
                 }
             }
@@ -3210,7 +3228,7 @@ XML;
                         folder: $relsFolder,
                         object: $obj,
                         sectionName: 'relationships',
-                        propDefMap: $propDefMap
+                        propertyDefinitionMap: $propertyDefinitionMap
                     );
                 }
             }
@@ -3242,7 +3260,7 @@ XML;
                         folder: $propDefsFolder,
                         object: $obj,
                         sectionName: 'property_definitions',
-                        propDefMap: $propDefMap
+                        propertyDefinitionMap: $propertyDefinitionMap
                     );
                 }
             }
@@ -3316,7 +3334,7 @@ XML;
                         folder: $diagramsFolder,
                         object: $obj,
                         sectionName: 'views',
-                        propDefMap: $propDefMap
+                        propertyDefinitionMap: $propertyDefinitionMap
                     );
                 }
             }

@@ -37,7 +37,7 @@ use Symfony\Component\Mime\Address;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  1.0.0
+ * @version  GIT: 1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
@@ -508,11 +508,11 @@ class SettingsService
         try {
             // Check if auto-configuration has already been completed.
             $autoConfigCompleted = $this->config->getValueString(
-                $this->appName,
+                $this->_appName,
                     'auto_config_completed',
                     'false'
             ) === 'true';
-            if ($autoConfigCompleted === true) {
+            if (empty($autoConfigCompleted) === false) {
                 $this->logger->info('Auto-configuration already completed, skipping');
                 return [];
             }
@@ -932,9 +932,8 @@ class SettingsService
         }
 
         // Check Voorzieningen register for organisatie/organization and contactpersoon/contact.
-        if ($result === null
-            && in_array($objectType, ['organisatie', 'organization', 'contactpersoon', 'contact'], true) === true
-        ) {
+        $orgContactTypes = ['organisatie', 'organization', 'contactpersoon', 'contact'];
+        if ($result === null && in_array($objectType, $orgContactTypes, true) === true) {
             $voorzieningenConfig = $this->getVoorzieningenConfig();
             if (isset($voorzieningenConfig['register']) === true && empty($voorzieningenConfig['register']) === false) {
                 $result = (int) $voorzieningenConfig['register'];
@@ -1849,138 +1848,139 @@ class SettingsService
     {
         $this->logger->debug('SoftwareCatalog: Loading email settings from configuration');
 
+        $app      = $this->_appName;
         $settings = [
             'enabled'                         => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_enabled',
                     'false'
             ) === 'true',
             'senderEmail'                     => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'sender_email',
                     'noreply@softwarecatalogus.nl'
             ),
             'senderName'                      => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'sender_name',
                     'Software Catalogus'
             ),
             'testReceiverOverride'            => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'test_receiver_override',
                     ''
             ),
             'organizationRegistrationEnabled' => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_org_registration_enabled',
                     'true'
             ) === 'true',
             'organizationActivationEnabled'   => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_org_activation_enabled',
                     'true'
             ) === 'true',
             'userCreationEnabled'             => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_user_creation_enabled',
                     'true'
             ) === 'true',
             'userPasswordEnabled'             => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_user_password_enabled',
                     'true'
             ) === 'true',
             'userOrganisationEnabled'         => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_user_organisation_enabled',
                     'true'
             ) === 'true',
 
             // Symfony Mailer transport configuration.
             'transportType'                   => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_transport_type',
                     'smtp'
             ),
 
             // SMTP configuration.
             'smtpHost'                        => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_smtp_host',
                     'localhost'
             ),
             'smtpPort'                        => (int) $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_smtp_port',
                     '587'
             ),
             'smtpEncryption'                  => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_smtp_encryption',
                     'tls'
             ),
             'smtpUsername'                    => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_smtp_username',
                     ''
             ),
             'smtpPassword'                    => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_smtp_password',
                     ''
             ),
 
             // SendGrid configuration.
             'sendgridApiKey'                  => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_sendgrid_api_key',
                     ''
             ),
 
             // Mailgun configuration.
             'mailgunApiKey'                   => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_mailgun_api_key',
                     ''
             ),
             'mailgunDomain'                   => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_mailgun_domain',
                     ''
             ),
 
             // Postmark configuration.
             'postmarkApiKey'                  => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_postmark_api_key',
                     ''
             ),
 
             // Amazon SES configuration.
             'sesAccessKey'                    => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_ses_access_key',
                     ''
             ),
             'sesSecretKey'                    => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_ses_secret_key',
                     ''
             ),
             'sesRegion'                       => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_ses_region',
                     'us-east-1'
             ),
 
             // Mailjet configuration.
             'mailjetApiKey'                   => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_mailjet_api_key',
                     ''
             ),
             'mailjetSecretKey'                => $this->config->getValueString(
-                $this->appName,
+                $app,
                     'email_mailjet_secret_key',
                     ''
             ),
@@ -2870,9 +2870,8 @@ class SettingsService
 
             // Get the configuration service to check stored version.
             $configurationService = $this->getConfigurationService();
-            $storedVersion        = $configurationService->getConfiguredAppVersion(
-                \OCA\SoftwareCatalog\AppInfo\Application::APP_ID
-            );
+            $appId         = \OCA\SoftwareCatalog\AppInfo\Application::APP_ID;
+            $storedVersion = $configurationService->getConfiguredAppVersion($appId);
 
             $this->logger->info(
                     'SettingsService: Version comparison details',
@@ -2943,9 +2942,8 @@ class SettingsService
             $storedConfigVersion  = null;
 
             try {
-                $storedConfigVersion = $configurationService->getConfiguredAppVersion(
-                    \OCA\SoftwareCatalog\AppInfo\Application::APP_ID
-                );
+                $appId = \OCA\SoftwareCatalog\AppInfo\Application::APP_ID;
+                $storedConfigVersion = $configurationService->getConfiguredAppVersion($appId);
             } catch (\Exception $e) {
                 $this->logger->warning(
                         'SettingsService: Could not retrieve stored configuration version',
@@ -2982,7 +2980,7 @@ class SettingsService
                 'versionComparison'     => $versionComparisonValue,
                 'isFullyConfigured'     => $this->isFullyConfigured(),
                 'autoConfigCompleted'   => $this->config->getValueString(
-                    $this->appName,
+                    $this->_appName,
                         'auto_config_completed',
                         'false'
                 ) === 'true',
@@ -3039,7 +3037,7 @@ class SettingsService
             // Version matching is less critical since we forced the update.
             $success = $importResult['success']
                 && ($finalVersionInfo['isFullyConfigured'] !== false
-                    || $finalVersionInfo['versionsMatch'] === true);
+                || $finalVersionInfo['versionsMatch'] === true);
 
             $this->logger->info(
                     'SettingsService: Force update completed',
@@ -3932,17 +3930,17 @@ class SettingsService
         if (is_array($decoded) === false) {
             $decoded = [
                 'register'              => $this->config->getValueString(
-                    $this->appName,
+                    $this->_appName,
                         'voorzieningen_register',
                         ''
                 ),
                 'organisatie_schema'    => $this->config->getValueString(
-                    $this->appName,
+                    $this->_appName,
                         'voorzieningen_organisatie_schema',
                         ''
                 ),
                 'contactpersoon_schema' => $this->config->getValueString(
-                    $this->appName,
+                    $this->_appName,
                         'voorzieningen_contactpersoon_schema',
                         ''
                 ),
@@ -4063,14 +4061,38 @@ class SettingsService
             if (is_array($decoded) === false) {
                 // Fallback to individual config values for backward compatibility.
                 $decoded = [
-                    'register_id'          => $this->config->getValueString($this->appName, 'amef_register_id', ''),
-                    'organizations_schema' => $this->config->getValueString($this->appName, 'amef_organizations_schema', ''),
-                    'elements_schema'      => $this->config->getValueString($this->appName, 'amef_elements_schema', ''),
-                    'relationships_schema' => $this->config->getValueString($this->appName, 'amef_relationships_schema', ''),
-                    'views_schema'         => $this->config->getValueString($this->appName, 'amef_views_schema', ''),
-                    'models_schema'        => $this->config->getValueString($this->appName, 'amef_models_schema', ''),
+                    'register_id'          => $this->config->getValueString(
+                        $this->_appName,
+                            'amef_register_id',
+                            ''
+                    ),
+                    'organizations_schema' => $this->config->getValueString(
+                        $this->_appName,
+                            'amef_organizations_schema',
+                            ''
+                    ),
+                    'elements_schema'      => $this->config->getValueString(
+                        $this->_appName,
+                            'amef_elements_schema',
+                            ''
+                    ),
+                    'relationships_schema' => $this->config->getValueString(
+                        $this->_appName,
+                            'amef_relationships_schema',
+                            ''
+                    ),
+                    'views_schema'         => $this->config->getValueString(
+                        $this->_appName,
+                            'amef_views_schema',
+                            ''
+                    ),
+                    'models_schema'        => $this->config->getValueString(
+                        $this->_appName,
+                            'amef_models_schema',
+                            ''
+                    ),
                 ];
-            }
+            }//end if
 
             return $decoded;
         }//end try
@@ -4609,39 +4631,40 @@ class SettingsService
 
         try {
             // 1. Migrate Voorzieningen configuration.
+            $an = $this->_appName;
             $voorzieningenConfig = [
                 'register'                => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'voorzieningen_register',
                         ''
                 ),
                 'organisatie_schema'      => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'voorzieningen_organisatie_schema',
                         ''
                 ),
                 'contactpersoon_schema'   => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'voorzieningen_contactpersoon_schema',
                         ''
                 ),
                 'organisatie_source'      => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'voorzieningen_organisatie_source',
                         'openregister'
                 ),
                 'contactpersoon_source'   => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'voorzieningen_contactpersoon_source',
                         'openregister'
                 ),
                 'organisatie_register'    => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'voorzieningen_organisatie_register',
                         ''
                 ),
                 'contactpersoon_register' => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'voorzieningen_contactpersoon_register',
                         ''
                 ),
@@ -4652,23 +4675,67 @@ class SettingsService
 
             // 2. Migrate AMEF configuration.
             $amefConfig = [
-                'register_id'           => $this->config->getValueString($this->appName, 'amef_register_id', ''),
-                'organizations_schema'  => $this->config->getValueString($this->appName, 'amef_organizations_schema', ''),
-                'elements_schema'       => $this->config->getValueString($this->appName, 'amef_elements_schema', ''),
-                'relationships_schema'  => $this->config->getValueString($this->appName, 'amef_relationships_schema', ''),
-                'views_schema'          => $this->config->getValueString($this->appName, 'amef_views_schema', ''),
-                'models_schema'         => $this->config->getValueString($this->appName, 'amef_models_schema', ''),
+                'register_id'           => $this->config->getValueString(
+                    $an,
+                        'amef_register_id',
+                        ''
+                ),
+                'organizations_schema'  => $this->config->getValueString(
+                    $an,
+                        'amef_organizations_schema',
+                        ''
+                ),
+                'elements_schema'       => $this->config->getValueString(
+                    $an,
+                        'amef_elements_schema',
+                        ''
+                ),
+                'relationships_schema'  => $this->config->getValueString(
+                    $an,
+                        'amef_relationships_schema',
+                        ''
+                ),
+                'views_schema'          => $this->config->getValueString(
+                    $an,
+                        'amef_views_schema',
+                        ''
+                ),
+                'models_schema'         => $this->config->getValueString(
+                    $an,
+                        'amef_models_schema',
+                        ''
+                ),
                 'organization_source'   => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'amef_organization_source',
                         'openregister'
                 ),
-                'organization_register' => $this->config->getValueString($this->appName, 'amef_organization_register', ''),
-                'organization_schema'   => $this->config->getValueString($this->appName, 'amef_organization_schema', ''),
-                // Note: These duplicated entries with typos are kept for backward compatibility but should be cleaned up.
-                'elementss_schema'      => $this->config->getValueString($this->appName, 'amef_elementss_schema', ''),
-                'organizationss_schema' => $this->config->getValueString($this->appName, 'amef_organizationss_schema', ''),
-                'relationshipss_schema' => $this->config->getValueString($this->appName, 'amef_relationshipss_schema', ''),
+                'organization_register' => $this->config->getValueString(
+                    $an,
+                        'amef_organization_register',
+                        ''
+                ),
+                'organization_schema'   => $this->config->getValueString(
+                    $an,
+                        'amef_organization_schema',
+                        ''
+                ),
+                // Note: Duplicated entries with typos kept for backward compatibility.
+                'elementss_schema'      => $this->config->getValueString(
+                    $an,
+                        'amef_elementss_schema',
+                        ''
+                ),
+                'organizationss_schema' => $this->config->getValueString(
+                    $an,
+                        'amef_organizationss_schema',
+                        ''
+                ),
+                'relationshipss_schema' => $this->config->getValueString(
+                    $an,
+                        'amef_relationshipss_schema',
+                        ''
+                ),
             ];
 
             $this->setAmefConfig(config: $amefConfig);
@@ -4677,117 +4744,117 @@ class SettingsService
             // 3. Migrate Email configuration.
             $emailConfig = [
                 'enabled'                  => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_enabled',
                         'false'
                 ) === 'true',
                 'transport_type'           => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_transport_type',
                         'smtp'
                 ),
                 'smtp_host'                => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_smtp_host',
                         ''
                 ),
                 'smtp_port'                => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_smtp_port',
                         '587'
                 ),
                 'smtp_username'            => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_smtp_username',
                         ''
                 ),
                 'smtp_password'            => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_smtp_password',
                         ''
                 ),
                 'smtp_encryption'          => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_smtp_encryption',
                         'tls'
                 ),
                 'sender_email'             => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'sender_email',
                         ''
                 ),
                 'sender_name'              => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'sender_name',
                         ''
                 ),
                 'mailjet_api_key'          => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_mailjet_api_key',
                         ''
                 ),
                 'mailjet_secret_key'       => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_mailjet_secret_key',
                         ''
                 ),
                 'sendgrid_api_key'         => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_sendgrid_api_key',
                         ''
                 ),
                 'mailgun_api_key'          => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_mailgun_api_key',
                         ''
                 ),
                 'mailgun_domain'           => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_mailgun_domain',
                         ''
                 ),
                 'postmark_api_key'         => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_postmark_api_key',
                         ''
                 ),
                 'ses_access_key'           => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_ses_access_key',
                         ''
                 ),
                 'ses_secret_key'           => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_ses_secret_key',
                         ''
                 ),
                 'ses_region'               => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_ses_region',
                         'us-east-1'
                 ),
                 'org_registration_enabled' => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_org_registration_enabled',
                         'true'
                 ) === 'true',
                 'org_activation_enabled'   => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_org_activation_enabled',
                         'true'
                 ) === 'true',
                 'user_creation_enabled'    => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_user_creation_enabled',
                         'true'
                 ) === 'true',
                 'user_password_enabled'    => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'email_user_password_enabled',
                         'true'
                 ) === 'true',
                 'test_receiver_override'   => $this->config->getValueString(
-                    $this->appName,
+                    $an,
                         'test_receiver_override',
                         ''
                 ),
@@ -5497,7 +5564,7 @@ class SettingsService
                             } else {
                                 // Skip invalid or cross-register ids.
                                 $this->logger->warning(
-                                        'Ignored AMEF config key due to invalid schema/register combination',
+                                        'SettingsService: Ignored AMEF config key, invalid schema/register combo',
                                         [
                                             'key'      => $key,
                                             'value'    => $value,

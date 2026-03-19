@@ -368,17 +368,23 @@ class SoftwareCatalogEventListenerTest extends TestCase
      *
      * @return void
      */
-    public function testHandleEventWithNullObject(): void
+    public function testHandleEventWithUnmatchedSchema(): void
     {
-        // Create ObjectCreatedEvent with null object
-        $event = new ObjectCreatedEvent(null);
+        // Create a mock ObjectEntity with a schema that doesn't match any configured schema
+        $object = $this->createMock(ObjectEntity::class);
+        $object->method('getSchema')->willReturn(999999);
+        $object->method('getUuid')->willReturn('test-uuid');
+        $object->method('getRegister')->willReturn(1);
 
-        // No service methods should be called
+        // Create ObjectCreatedEvent with a valid object but unmatched schema
+        $event = new ObjectCreatedEvent($object);
+
+        // No service methods should be called since schema doesn't match
         $this->softwareCatalogueService
             ->expects($this->never())
             ->method($this->anything());
 
-        // Handle the event - should return early
+        // Handle the event - should return early since schema doesn't match
         $this->eventListener->handle($event);
     }
 

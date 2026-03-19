@@ -56,6 +56,7 @@ module.exports = defineConfig([
 			'vue/enforce-style-attribute': ['error', { allow: ['scoped'] }],
 			'@typescript-eslint/no-explicit-any': 'off',
 			'n/no-missing-import': 'off',
+			'import/no-unresolved': ['error', { ignore: ['^@conduction/nextcloud-vue'] }],
 		},
 	},
 ])

@@ -816,6 +816,7 @@ export default {
 .object-id {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
+	font-family: monospace;
 	margin: 0;
 }
 
@@ -925,6 +926,32 @@ export default {
 	white-space: nowrap;
 }
 
+.file-table th, .relation-table th {
+	background-color: var(--color-background-dark);
+	font-weight: bold;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.report-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 8px;
+}
+
+.report-table th,
+.report-table td {
+	padding: 8px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.report-table th {
+	background-color: var(--color-background-dark);
+	font-weight: bold;
+}
+
 .file-table th:nth-child(1), .file-table td:nth-child(1) {
 	width: 60%;
 }
@@ -947,14 +974,6 @@ export default {
 
 .relation-table th:nth-child(3), .relation-table td:nth-child(3) {
 	width: 25%;
-}
-
-.file-table th, .relation-table th {
-	background-color: var(--color-background-dark);
-	font-weight: bold;
-	position: sticky;
-	top: 0;
-	z-index: 1;
 }
 
 .file-table tbody tr:hover,
@@ -999,12 +1018,6 @@ export default {
 	margin-top: 8px;
 }
 
-.object-id {
-	color: var(--color-text-maxcontrast);
-	font-size: 0.9em;
-	font-family: monospace;
-}
-
 .object-title {
 	color: var(--color-main-text);
 	font-weight: 500;
@@ -1031,24 +1044,6 @@ export default {
 
 .report-section li {
 	margin-bottom: 4px;
-}
-
-.report-table {
-	width: 100%;
-	border-collapse: collapse;
-	margin-top: 8px;
-}
-
-.report-table th,
-.report-table td {
-	padding: 8px 12px;
-	text-align: left;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.report-table th {
-	background-color: var(--color-background-dark);
-	font-weight: bold;
 }
 
 .error-text {

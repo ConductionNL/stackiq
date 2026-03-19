@@ -33,6 +33,11 @@ export default {
     margin-block-end: 4rem;
 }
 
+.dashboard-content > .graphs .content {
+    display: flex;
+    gap: 4px;
+}
+
 /* most searched terms */
 .dashboard-content > .most-searched-terms {
     display: grid;
@@ -112,10 +117,6 @@ body[data-theme-dark] .dashboard-content > .most-searched-terms > div {
 .dashboard-content > .graphs .full-width {
     grid-column-start: 1;
     grid-column-end: 3;
-}
-.dashboard-content > .graphs .content {
-    display: flex;
-    gap: 4px;
 }
 .dashboard-content > .graphs .dashboard-small-list {
     display: flex;

@@ -1396,9 +1396,10 @@ class ArchiMateService
                 $errorMessage .= "- {$item}\n";
             }
 
-            $errorMessage .= "\nPlease configure the AMEF register and all required schema IDs";
-            $errorMessage .= " in the SoftwareCatalog settings before importing.";
-            $errorMessage .= "\nYou can use the auto-configuration feature or set them manually via the admin interface.";
+            $settingsHint  = 'in the SoftwareCatalog settings before importing.';
+            $errorMessage .= "\nPlease configure the AMEF register and all required schema IDs $settingsHint";
+            $manualHint    = 'or set them manually via the admin interface.';
+            $errorMessage .= "\nYou can use the auto-configuration feature $manualHint";
 
             throw new \RuntimeException($errorMessage);
         }//end if
@@ -1613,11 +1614,7 @@ class ArchiMateService
             if (is_array($decoded) === false) {
                 // Fallback to individual config values for backward compatibility.
                 $decoded = [
-                    'register_id'                 => $this->config->getValueString(
-                        'softwarecatalog',
-                            'amef_register',
-                            ''
-                    ),
+                    'register_id'                 => $this->config->getValueString('softwarecatalog', 'amef_register', ''),
                     'model_schema_id'             => $this->config->getValueString(
                         'softwarecatalog',
                             'amef_model_schema',
@@ -2151,7 +2148,9 @@ class ArchiMateService
                     'total_batches_created'       => count($batches),
                     'batch_sizes'                 => array_map('count', $batches),
                     'estimated_batch_sizes_bytes' => array_map(
-                        fn($batch) => array_sum(array_map([$this, 'estimateObjectSize'], $batch)),
+                        fn($batch) => array_sum(
+                            array_map([$this, 'estimateObjectSize'], $batch)
+                        ),
                         $batches
                     ),
                 ]

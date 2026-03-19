@@ -1781,10 +1781,10 @@ class ContactPersonHandler
 
                     $organizationObject = $objectService->find(
                         $organizationId,
-                            [],
-                            false,
-                            $registerId,
-                            $organisatieSchemaId
+                        [],
+                        false,
+                        $registerId,
+                        $organisatieSchemaId
                     );
                     if (empty($organizationObject) === false) {
                         $organizationData = $organizationObject->getObject();
