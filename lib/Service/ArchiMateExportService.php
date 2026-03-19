@@ -362,7 +362,8 @@ class ArchiMateExportService
 <model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" 
        xmlns:xml="http://www.w3.org/XML/1998/namespace"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-       xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" 
+       xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/
+       http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd"
        identifier="{$modelId}">
 </model>
 XML;
@@ -529,7 +530,9 @@ XML;
         }
 
         // DEBUG: Check if this is our target view with nodes.
-        if (isset($viewData['_identifier']) === true && $viewData['_identifier'] === 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af') {
+        if (isset($viewData['_identifier']) === true
+            && $viewData['_identifier'] === 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af'
+        ) {
             if (is_array($viewData['node'] ?? null) === true) {
                 $nodeCountValue = count($viewData['node']);
             } else {
@@ -771,7 +774,11 @@ XML;
      *
      * @throws \RuntimeException If retrieval fails
      */
-    public function getObjectsFromDatabase(\OCA\OpenRegister\Service\ObjectService $objectService, int $registerId, array $schemaIdMap=[]): array
+    public function getObjectsFromDatabase(
+        \OCA\OpenRegister\Service\ObjectService $objectService,
+        int $registerId,
+        array $schemaIdMap=[]
+    ): array
     {
         $this->logger->info(
                 'Retrieving all objects from AMEF register',
@@ -927,7 +934,11 @@ XML;
                 );
 
         // Step 1: Get all objects from database (queries each schema separately for magic table support).
-        $objects = $this->getObjectsFromDatabase(objectService: $objectService, registerId: $registerId, schemaIdMap: $schemaIdMap);
+        $objects = $this->getObjectsFromDatabase(
+            objectService: $objectService,
+            registerId: $registerId,
+            schemaIdMap: $schemaIdMap
+        );
         $dbTime  = microtime(true) - $startTime;
 
         // Step 2: Process and generate XML in single optimized pass (no schema mapping needed).
@@ -1225,7 +1236,10 @@ XML;
         // Add xsi:type if present.
         foreach (['_xsi__type', 'xsi:type', '_xsi:type'] as $typeKey) {
             if (isset($viewData[$typeKey]) === true) {
-                $viewNode->addAttribute('xsi:type', (string) $viewData[$typeKey], 'http://www.w3.org/2001/XMLSchema-instance');
+                $viewNode->addAttribute(
+                    'xsi:type', (string) $viewData[$typeKey],
+                    'http://www.w3.org/2001/XMLSchema-instance'
+                );
                 break;
             }
         }
@@ -1563,7 +1577,10 @@ XML;
                     } else {
                         $attributes['xsi:type'] = (string) $attrValue;
                     }
-                } else if (in_array($attrKey, ['identifier', 'source', 'target', 'accessType', 'isDirected', 'type']) === true) {
+                } else if (in_array(
+                    $attrKey,
+                    ['identifier', 'source', 'target', 'accessType', 'isDirected', 'type']
+                ) === true) {
                     if ($attrKey === 'type' && $isPropertyDefinition === false) {
                         $attributes['xsi:type'] = (string) $attrValue;
                     } else {
@@ -1751,7 +1768,10 @@ XML;
                     // Add xml:lang if present in various forms (including double underscore from import service).
                     foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                         if (isset($property['value'][$langKey]) === true) {
-                            $valueNode->addAttribute('xml:lang', $property['value'][$langKey], 'http://www.w3.org/XML/1998/namespace');
+                            $valueNode->addAttribute(
+                                'xml:lang', $property['value'][$langKey],
+                                'http://www.w3.org/XML/1998/namespace'
+                            );
                             break;
                         }
                     }
@@ -2244,12 +2264,18 @@ XML;
             // Check value element exists and has content.
             $valueElements = $property->xpath('value');
             if (empty($valueElements) === true) {
-                throw new \InvalidArgumentException("Property missing value element: ".(string) $attributes['propertyDefinitionRef']);
+                throw new \InvalidArgumentException(
+                    "Property missing value element: "
+                    .(string) $attributes['propertyDefinitionRef']
+                );
             }
 
             $value = trim((string) $valueElements[0]);
             if (empty($value) === true) {
-                throw new \InvalidArgumentException("Property has empty value: ".(string) $attributes['propertyDefinitionRef']);
+                throw new \InvalidArgumentException(
+                    "Property has empty value: "
+                    .(string) $attributes['propertyDefinitionRef']
+                );
             }
         }
 
@@ -2285,7 +2311,9 @@ XML;
             $expectedValue = str_replace('id-', '', $identifier);
             // Remove 'id-' prefix for comparison.
             if ($objectIdValue !== $expectedValue) {
-                $msg = "Element propid-2 value mismatch. Expected: ".$expectedValue.", Got: ".$objectIdValue." (Element: ".$identifier.")";
+                $msg = "Element propid-2 value mismatch. Expected: "
+                    .$expectedValue.", Got: ".$objectIdValue
+                    ." (Element: ".$identifier.")";
                 throw new \InvalidArgumentException($msg);
             }
         }//end foreach
@@ -2316,7 +2344,9 @@ XML;
                     $parentId = ' (Parent: '.(string) $element->xpath('../@identifier')[0].')';
                 }
 
-                $msg = "Text content not normalized in <".$tagName.">".$parentId.". Expected: '".$normalized."', Got: '".$content."'";
+                $msg = "Text content not normalized in <".$tagName.">"
+                    .$parentId.". Expected: '".$normalized
+                    ."', Got: '".$content."'";
                 throw new \InvalidArgumentException($msg);
             }
         }
@@ -2372,7 +2402,11 @@ XML;
                 );
 
         // Step 1: Get all base GEMMA objects.
-        $baseObjects = $this->getObjectsFromDatabase(objectService: $objectService, registerId: $registerId, schemaIdMap: $schemaIdMap);
+        $baseObjects = $this->getObjectsFromDatabase(
+            objectService: $objectService,
+            registerId: $registerId,
+            schemaIdMap: $schemaIdMap
+        );
 
         // Step 2: Ensure Bron property definition.
         $bronPropDefId = $this->ensureBronPropertyDefinition(baseObjects: $baseObjects);
@@ -2593,7 +2627,12 @@ XML;
      *
      * @return array Array of element data arrays ready for XML generation
      */
-    private function generateApplicationElements(array $moduleRefMap, array $moduleNameMap, string $bronPropDefId, string $prefix=''): array
+    private function generateApplicationElements(
+        array $moduleRefMap,
+        array $moduleNameMap,
+        string $bronPropDefId,
+        string $prefix=''
+    ): array
     {
         $elements = [];
         if ($prefix !== '') {
@@ -2628,7 +2667,11 @@ XML;
      *
      * @return array Array of relationship data arrays
      */
-    private function generateSpecializationRelationships(array $moduleRefMap, string $bronPropDefId, string $prefix=''): array
+    private function generateSpecializationRelationships(
+        array $moduleRefMap,
+        string $bronPropDefId,
+        string $prefix=''
+    ): array
     {
         $relationships = [];
         if ($prefix !== '') {
@@ -2659,7 +2702,10 @@ XML;
             }
         }
 
-        $this->logger->debug('Generated specialization relationships', ['count' => count($relationships), 'prefix' => $prefix]);
+        $this->logger->debug(
+            'Generated specialization relationships',
+            ['count' => count($relationships), 'prefix' => $prefix]
+        );
         return $relationships;
     }//end generateSpecializationRelationships()
 
@@ -2983,7 +3029,11 @@ XML;
                     $nestedNodes = [$nestedNodes];
                 }
 
-                $node['node'] = $this->processNodesForInjection(nodes: $nestedNodes, refCompApps: $refCompApps, newConnections: $newConnections);
+                $node['node'] = $this->processNodesForInjection(
+                    nodes: $nestedNodes,
+                    refCompApps: $refCompApps,
+                    newConnections: $newConnections
+                );
             }
         }//end foreach
 

@@ -245,7 +245,10 @@ class ArchiMateService
 
             $registerId = $this->getAmefRegisterId();
             if ($registerId === null) {
-                throw new \RuntimeException('AMEF register ID is not configured. Please configure the AMEF register via the admin interface.');
+                throw new \RuntimeException(
+                    'AMEF register ID is not configured. '
+                    . 'Please configure the AMEF register via the admin interface.'
+                );
             }
 
             // Create schema ID mapping for the export service.
@@ -859,7 +862,10 @@ class ArchiMateService
         // STEP 1: Convert model metadata to model object.
         if (empty($normalizedData['model_metadata']) === false) {
             $this->logger->debug('Creating model object from metadata');
-            $objects[] = $this->createModelObject(metadata: $normalizedData['model_metadata'], modelIdentifier: $modelIdentifier);
+            $objects[] = $this->createModelObject(
+                metadata: $normalizedData['model_metadata'],
+                modelIdentifier: $modelIdentifier
+            );
         }
 
         // STEP 2: Convert each section to individual objects.
@@ -1019,11 +1025,21 @@ class ArchiMateService
 
         // PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets.
         $batchProcessingStartTime = microtime(true);
-        if (self::PERFORMANCE_OPTIMIZATIONS['parallel_processing'] === true && count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']) {
-            $result = $this->saveObjectsInParallelBatches(objects: $objects, objectService: $objectService, registerId: $registerId);
+        if (self::PERFORMANCE_OPTIMIZATIONS['parallel_processing'] === true
+            && count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']
+        ) {
+            $result = $this->saveObjectsInParallelBatches(
+                objects: $objects,
+                objectService: $objectService,
+                registerId: $registerId
+            );
         } else {
             // Fallback to single batch for small datasets.
-            $result = $this->saveObjectsInSingleBatch(objects: $objects, objectService: $objectService, registerId: $registerId);
+            $result = $this->saveObjectsInSingleBatch(
+                objects: $objects,
+                objectService: $objectService,
+                registerId: $registerId
+            );
         }
 
         $batchProcessingTime = microtime(true) - $batchProcessingStartTime;
@@ -1304,7 +1320,10 @@ class ArchiMateService
         // Get the AMEF register ID from configuration - throw error if missing.
         $amefConfig = $this->settingsService->getAmefConfig();
         if (isset($amefConfig['register']) === false || empty($amefConfig['register']) === true) {
-            throw new \InvalidArgumentException('AMEF register ID is not configured. Please configure the AMEF register via the admin interface.');
+            throw new \InvalidArgumentException(
+                'AMEF register ID is not configured. '
+                . 'Please configure the AMEF register via the admin interface.'
+            );
         }
 
         $registerId = (int) $amefConfig['register'];
@@ -1319,7 +1338,8 @@ class ArchiMateService
                 'view'                => $this->settingsService->getSchemaIdForObjectType('view'),
                 'organization'        => $this->settingsService->getSchemaIdForObjectType('organization'),
                 'property_definition' => $this->settingsService->getSchemaIdForObjectType('property_definition'),
-                // NOTE: 'property' removed - properties are never root-level AMEF objects, only nested within other elements.
+                // NOTE: 'property' removed - properties are never root-level
+                // AMEF objects, only nested within other elements.
             ],
         ];
 
@@ -1380,7 +1400,9 @@ class ArchiMateService
                 $errorMessage .= "- {$item}\n";
             }
 
-            $errorMessage .= "\nPlease configure the AMEF register and all required schema IDs in the SoftwareCatalog settings before importing.";
+            $errorMessage .= "\nPlease configure the AMEF register and all "
+                . "required schema IDs in the SoftwareCatalog settings "
+                . "before importing.";
             $errorMessage .= "\nYou can use the auto-configuration feature or set them manually via the admin interface.";
 
             throw new \RuntimeException($errorMessage);
@@ -1596,14 +1618,30 @@ class ArchiMateService
             if (is_array($decoded) === false) {
                 // Fallback to individual config values for backward compatibility.
                 $decoded = [
-                    'register_id'                 => $this->config->getValueString('softwarecatalog', 'amef_register', ''),
-                    'model_schema_id'             => $this->config->getValueString('softwarecatalog', 'amef_model_schema', ''),
-                    'elements_schema'             => $this->config->getValueString('softwarecatalog', 'amef_elements_schema', ''),
-                    'relationships_schema'        => $this->config->getValueString('softwarecatalog', 'amef_relationships_schema', ''),
-                    'views_schema'                => $this->config->getValueString('softwarecatalog', 'amef_views_schema', ''),
-                    'organizations_schema'        => $this->config->getValueString('softwarecatalog', 'amef_organizations_schema', ''),
-                    'folders_schema'              => $this->config->getValueString('softwarecatalog', 'amef_folders_schema', ''),
-                    'property_definitions_schema' => $this->config->getValueString('softwarecatalog', 'amef_property_definitions_schema', ''),
+                    'register_id' => $this->config->getValueString(
+                        'softwarecatalog', 'amef_register', ''
+                    ),
+                    'model_schema_id' => $this->config->getValueString(
+                        'softwarecatalog', 'amef_model_schema', ''
+                    ),
+                    'elements_schema' => $this->config->getValueString(
+                        'softwarecatalog', 'amef_elements_schema', ''
+                    ),
+                    'relationships_schema' => $this->config->getValueString(
+                        'softwarecatalog', 'amef_relationships_schema', ''
+                    ),
+                    'views_schema' => $this->config->getValueString(
+                        'softwarecatalog', 'amef_views_schema', ''
+                    ),
+                    'organizations_schema' => $this->config->getValueString(
+                        'softwarecatalog', 'amef_organizations_schema', ''
+                    ),
+                    'folders_schema' => $this->config->getValueString(
+                        'softwarecatalog', 'amef_folders_schema', ''
+                    ),
+                    'property_definitions_schema' => $this->config->getValueString(
+                        'softwarecatalog', 'amef_property_definitions_schema', ''
+                    ),
                 ];
             }
 
@@ -1637,8 +1675,12 @@ class ArchiMateService
             // Fallback to individual config values for backward compatibility.
             $decoded = [
                 'register'              => $this->config->getValueString('softwarecatalog', 'voorzieningen_register', ''),
-                'organisatie_schema'    => $this->config->getValueString('softwarecatalog', 'voorzieningen_organisatie_schema', ''),
-                'contactpersoon_schema' => $this->config->getValueString('softwarecatalog', 'voorzieningen_contactpersoon_schema', ''),
+                'organisatie_schema' => $this->config->getValueString(
+                    'softwarecatalog', 'voorzieningen_organisatie_schema', ''
+                ),
+                'contactpersoon_schema' => $this->config->getValueString(
+                    'softwarecatalog', 'voorzieningen_contactpersoon_schema', ''
+                ),
             ];
         }
 
@@ -1860,7 +1902,10 @@ class ArchiMateService
 
             // AMEF object types use a single register ID, not per-type register IDs.
             // Check if this is an AMEF object type.
-            $amefObjectTypes = ['model', 'element', 'relationship', 'view', 'property_definition', 'organization', 'property'];
+            $amefObjectTypes = [
+                'model', 'element', 'relationship', 'view',
+                'property_definition', 'organization', 'property',
+            ];
             $isAmefType      = in_array($schemaType, $amefObjectTypes, true) === true;
 
             // Use AMEF register ID for AMEF types, otherwise use per-type register ID.
@@ -2085,7 +2130,10 @@ class ArchiMateService
                     'total_objects'               => count($objects),
                     'total_batches_created'       => count($batches),
                     'batch_sizes'                 => array_map('count', $batches),
-                    'estimated_batch_sizes_bytes' => array_map(fn($batch) => array_sum(array_map([$this, 'estimateObjectSize'], $batch)), $batches),
+                    'estimated_batch_sizes_bytes' => array_map(
+                        fn($batch) => array_sum(array_map([$this, 'estimateObjectSize'], $batch)),
+                        $batches
+                    ),
                 ]
                 );
 
@@ -2271,7 +2319,8 @@ class ArchiMateService
                             );
 
                     if (empty($errorInfo) === false) {
-                        $statistics[$sectionKey]['errors'][] = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                        $statistics[$sectionKey]['errors'][]
+                            = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
                     }
                 } else {
                     // This shouldn't happen, but leave as fallback.
@@ -2861,7 +2910,9 @@ class ArchiMateService
      */
     private function processGemmaReferenceComponentStandards(array $objects): array
     {
-        $this->logger->info('Processing GEMMA Referentiecomponent-Standaard relationships with optimized single-pass algorithm');
+        $this->logger->info(
+            'Processing GEMMA Referentiecomponent-Standaard relationships with optimized single-pass algorithm'
+        );
 
         // OPTIMIZATION: Single-pass processing - collect all data types at once.
         $referentieComponenten = [];
