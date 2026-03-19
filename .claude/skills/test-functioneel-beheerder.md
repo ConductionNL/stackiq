@@ -81,6 +81,22 @@ Peter's account (`peter.vandijk@test.nl`) is in the Default Organisation. **Impo
 | #187 | Tekstvoorstellen (remaining text changes) | Step 7 |
 | #449 | Handleiding facets configureren klopt niet | Step 21 |
 | #450 | Back-end: Icoon voor publiceren verwijderen | Step 6 |
+| #23 | Data migratie verificatie | Step 19 |
+| #65 | Collega's toegang geven (contactpersonen beheer) | Step 5 |
+| #182 | Algemene voorwaarden, Privacyverklaring, Disclaimer, FAQ | Step 21 |
+| #188 | Aanmeldproces | Step 3 |
+| #208 | NC Dashboard organisatie overzicht table issue | Step 23 |
+| #209 | Help knop gaat naar niet bestaande pagina | Step 23 |
+| #231 | AMEFF exports foutmelding bij import in Archi | Step 24 |
+| #255 | Dashboard welkomstekst | Step 23 |
+| #268 | Dashboard tekst aanpassen na inloggen | Step 23 |
+| #329 | Teksten SWC definitief (PowerPoint vergelijking) | Step 7 |
+| #336 | Views | Step 22 |
+| #338 | Dashboard en Inloggen | Step 23 |
+| #339 | Activeren gebruikers | Step 3 |
+| #411 | Vraag: Required eisen uitgezet voor dataimport | Step 19 |
+| #417 | Vraag: Andere email adressen voor contactpersonen | Step 5 |
+| #431 | Aanmeldproces: tussenvoegsel niet meer aanwezig | Step 3 |
 
 ## Acceptance Criteria Reference
 

@@ -47,6 +47,10 @@ use Psr\Log\LoggerInterface;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ContactpersonenController extends Controller
 {
@@ -112,29 +116,31 @@ class ContactpersonenController extends Controller
      *
      * @var ContactpersoonService
      */
-    private ContactpersoonService $contactpersoonService;
+    private ContactpersoonService $contactSvc;
 
     /**
      * Constructor.
      *
-     * @param string                $appName               The app name
-     * @param IRequest              $request               The request object
-     * @param SettingsService       $settingsService       Settings service
-     * @param ContactPersonHandler  $contactPersonHandler  Contact person handler
-     * @param ContactpersoonService $contactpersoonService Contactpersoon service
-     * @param IUserManager          $userManager           User manager
-     * @param IGroupManager         $groupManager          Group manager
-     * @param IUserSession          $userSession           User session
-     * @param ContainerInterface    $container             Container for DI
-     * @param ISecureRandom         $secureRandom          Secure random generator
-     * @param LoggerInterface       $logger                Logger instance
+     * @param string                $appName              The app name
+     * @param IRequest              $request              The request object
+     * @param SettingsService       $settingsService      Settings service
+     * @param ContactPersonHandler  $contactPersonHandler Contact person handler
+     * @param ContactpersoonService $contactSvc           Contactpersoon service
+     * @param IUserManager          $userManager          User manager
+     * @param IGroupManager         $groupManager         Group manager
+     * @param IUserSession          $userSession          User session
+     * @param ContainerInterface    $container            Container for DI
+     * @param ISecureRandom         $secureRandom         Secure random generator
+     * @param LoggerInterface       $logger               Logger instance
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         string $appName,
         IRequest $request,
         SettingsService $settingsService,
         ContactPersonHandler $contactPersonHandler,
-        ContactpersoonService $contactpersoonService,
+        ContactpersoonService $contactSvc,
         IUserManager $userManager,
         IGroupManager $groupManager,
         IUserSession $userSession,
@@ -143,15 +149,15 @@ class ContactpersonenController extends Controller
         LoggerInterface $logger
     ) {
         parent::__construct(appName: $appName, request: $request);
-        $this->settingsService       = $settingsService;
-        $this->contactPersonHandler  = $contactPersonHandler;
-        $this->contactpersoonService = $contactpersoonService;
-        $this->userManager           = $userManager;
-        $this->groupManager          = $groupManager;
-        $this->userSession           = $userSession;
-        $this->container    = $container;
-        $this->secureRandom = $secureRandom;
-        $this->logger       = $logger;
+        $this->settingsService      = $settingsService;
+        $this->contactPersonHandler = $contactPersonHandler;
+        $this->contactSvc           = $contactSvc;
+        $this->userManager          = $userManager;
+        $this->groupManager         = $groupManager;
+        $this->userSession          = $userSession;
+        $this->container            = $container;
+        $this->secureRandom         = $secureRandom;
+        $this->logger = $logger;
     }//end __construct()
 
     /**
@@ -182,7 +188,7 @@ class ContactpersonenController extends Controller
             $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
 
             // Enhance with user information.
-            $enhancedContactpersonen = [];
+            $enhancedContacts = [];
             foreach ($contactpersonen['results'] as $contactpersoon) {
                 $contactData = $contactpersoon->getObject();
                 $username    = $contactData['username'] ?? null;
@@ -211,7 +217,7 @@ class ContactpersonenController extends Controller
                     }
                 }
 
-                $enhancedContactpersonen[] = [
+                $enhancedContacts[] = [
                     'id'   => $contactpersoon->getId(),
                     'uuid' => $contactpersoon->getUuid(),
                     'data' => $contactData,
@@ -222,8 +228,8 @@ class ContactpersonenController extends Controller
             return new JSONResponse(
                     [
                         'success'         => true,
-                        'contactpersonen' => $enhancedContactpersonen,
-                        'total'           => $contactpersonen['total'] ?? count($enhancedContactpersonen),
+                        'contactpersonen' => $enhancedContacts,
+                        'total'           => $contactpersonen['total'] ?? count($enhancedContacts),
                     ]
                     );
         } catch (\Exception $e) {
@@ -254,6 +260,10 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
@@ -350,7 +360,7 @@ class ContactpersonenController extends Controller
                 // Call the ContactPersonHandler to update groups based on contact data.
                 $this->contactPersonHandler->updateUserGroupsFromContactData(
                     user: $user,
-                    objectData: $contactData
+                    contactData: $contactData
                 );
             }
 
@@ -358,7 +368,7 @@ class ContactpersonenController extends Controller
             $this->contactPersonHandler->addUserToOrganizationEntity(
                 contactpersoonObject: $contactpersoonObject,
                 username: $user->getUID(),
-                organizationId: $organizationId
+                organizationUuidOverride: $organizationId
             );
 
             // Update the contactpersoon object with the username.
@@ -391,11 +401,9 @@ class ContactpersonenController extends Controller
             $contactpersoonObject->setObject($contactData);
 
             // Debug logging to understand data types before save.
-            $achternaamValue = $contactData['achternaam'] ?? 'not set';
-            if (isset($contactData['achternaam']) === true) {
-                $achternaamType = gettype($contactData['achternaam']);
-            } else {
+            $achternaamValue    = $contactData['achternaam'] ?? 'not set';
                 $achternaamType = 'not set';
+            if (isset($contactData['achternaam']) === true) {
             }
 
             $this->logger->info(
@@ -409,9 +417,9 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            // Save using ObjectEntityMapper directly to bypass schema validation.
+            // Save using MagicMapper directly to bypass schema validation.
             // This avoids "Unresolved reference" errors when schema references can't be resolved.
-            $objectMapper = $this->container->get('OCA\OpenRegister\Db\ObjectEntityMapper');
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactpersoonObject);
 
             $this->logger->info(
@@ -423,13 +431,13 @@ class ContactpersonenController extends Controller
                     );
 
             // Get user groups to include in response.
-            $userGroups            = $this->groupManager->getUserGroups($user);
-            $softwareCatalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
-            $userGroupNames        = [];
+            $userGroups     = $this->groupManager->getUserGroups($user);
+            $catalogGroups  = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
+            $userGroupNames = [];
 
             foreach ($userGroups as $group) {
                 $groupId = $group->getGID();
-                if (in_array(needle: $groupId, haystack: $softwareCatalogGroups) === true) {
+                if (in_array(needle: $groupId, haystack: $catalogGroups) === true) {
                     $userGroupNames[] = $groupId;
                 }
             }
@@ -566,6 +574,9 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
@@ -589,17 +600,17 @@ class ContactpersonenController extends Controller
             $validGroups = array_intersect($groups, $allowedGroups);
 
             // Get current user groups (only software catalog groups).
-            $currentGroups = $this->groupManager->getUserGroups($user);
-            $currentSoftwareCatalogGroups = [];
+            $currentGroups    = $this->groupManager->getUserGroups($user);
+            $curCatalogGroups = [];
 
             foreach ($currentGroups as $group) {
                 if (in_array(needle: $group->getGID() === true, haystack: $allowedGroups) === true) {
-                    $currentSoftwareCatalogGroups[] = $group->getGID();
+                    $curCatalogGroups[] = $group->getGID();
                 }
             }
 
             // Remove user from groups they should no longer be in.
-            $groupsToRemove = array_diff($currentSoftwareCatalogGroups, $validGroups);
+            $groupsToRemove = array_diff($curCatalogGroups, $validGroups);
             foreach ($groupsToRemove as $groupName) {
                 $group = $this->groupManager->get($groupName);
                 if ($group !== null && $group->inGroup($user) === true) {
@@ -615,23 +626,24 @@ class ContactpersonenController extends Controller
             }
 
             // Add user to new groups (only if they exist).
-            $groupsToAdd = array_diff($validGroups, $currentSoftwareCatalogGroups);
+            $groupsToAdd = array_diff($validGroups, $curCatalogGroups);
             foreach ($groupsToAdd as $groupName) {
                 $group = $this->groupManager->get($groupName);
-                if ($group !== null) {
-                    if ($group->inGroup($user) === false) {
-                        $group->addUser($user);
-                        $this->logger->info(
-                                'Added user to group',
-                                [
-                                    'username' => $username,
-                                    'group'    => $groupName,
-                                ]
-                                );
-                    }
-                } else {
+                if ($group === null) {
                     $this->logger->warning(
                             'Group does not exist, skipping',
+                            [
+                                'username' => $username,
+                                'group'    => $groupName,
+                            ]
+                            );
+                    continue;
+                }
+
+                if ($group->inGroup($user) === false) {
+                    $group->addUser($user);
+                    $this->logger->info(
+                            'Added user to group',
                             [
                                 'username' => $username,
                                 'group'    => $groupName,
@@ -711,7 +723,7 @@ class ContactpersonenController extends Controller
             }
 
             // Get contact persons with user details using the service.
-            $contactPersons = $this->contactpersoonService->getContactPersonsWithUserDetailsForOrganization(
+            $contactPersons = $this->contactSvc->getContactPersonsWithUserDetailsForOrganization(
                 $organizationUuid
             );
 
@@ -777,6 +789,8 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getUserInfo(string $contactpersoonId): JSONResponse
     {
@@ -825,12 +839,12 @@ class ContactpersonenController extends Controller
             if (empty($username) === false) {
                 $user = $this->userManager->get($username);
                 if ($user !== null) {
-                    $userGroups            = $this->groupManager->getUserGroups($user);
-                    $softwareCatalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
+                    $userGroups    = $this->groupManager->getUserGroups($user);
+                    $catalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
 
                     foreach ($userGroups as $group) {
                         $groupId = $group->getGID();
-                        if (in_array(needle: $groupId, haystack: $softwareCatalogGroups) === true) {
+                        if (in_array(needle: $groupId, haystack: $catalogGroups) === true) {
                             $userInfo['groups'][] = $groupId;
                         }
                     }
@@ -972,13 +986,13 @@ class ContactpersonenController extends Controller
     {
         try {
             // Delegate to service.
-            $this->contactpersoonService->disableUserForContactpersoon($contactpersoonId);
+            $this->contactSvc->disableUserForContactpersoon($contactpersoonId);
 
             $this->logger->info(
                     'User account disabled',
                     [
                         'contactpersoonId' => $contactpersoonId,
-                        'disabled_by'      => $this->userId,
+                        'disabled_by'      => $this->userSession->getUser()?->getUID(),
                     ]
                     );
             return new JSONResponse(
@@ -1019,13 +1033,13 @@ class ContactpersonenController extends Controller
     {
         try {
             // Delegate to service.
-            $this->contactpersoonService->enableUserForContactpersoon($contactpersoonId);
+            $this->contactSvc->enableUserForContactpersoon($contactpersoonId);
 
             $this->logger->info(
                     'User account enabled',
                     [
                         'contactpersoonId' => $contactpersoonId,
-                        'enabled_by'       => $this->userId,
+                        'enabled_by'       => $this->userSession->getUser()?->getUID(),
                     ]
                     );
             return new JSONResponse(
@@ -1063,22 +1077,16 @@ class ContactpersonenController extends Controller
     public function testBulkUserInfo(): JSONResponse
     {
         try {
-            if ($this->objectService !== null) {
-                $objectServiceAvail = 'available';
-            } else {
                 $objectServiceAvail = 'null';
+            if ($this->contactSvc !== null) {
             }
 
-            if ($this->userManager !== null) {
-                $userManagerAvail = 'available';
-            } else {
                 $userManagerAvail = 'null';
+            if ($this->userManager !== null) {
             }
 
-            if ($this->groupManager !== null) {
-                $groupManagerAvail = 'available';
-            } else {
                 $groupManagerAvail = 'null';
+            if ($this->groupManager !== null) {
             }
 
             $this->logger->info(
@@ -1151,7 +1159,7 @@ class ContactpersonenController extends Controller
             }
 
             // Delegate to service.
-            $bulkUserInfo = $this->contactpersoonService->getBulkUserInfo($contactpersoonIds);
+            $bulkUserInfo = $this->contactSvc->getBulkUserInfo($contactpersoonIds);
 
             return new JSONResponse(
                     [
@@ -1188,6 +1196,8 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getMe(): JSONResponse
     {

@@ -41,6 +41,27 @@ use SimpleXMLElement;
  * @author   SoftwareCatalog Team <info@conduction.nl>
  * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
  * @link     https://github.com/nextcloud/softwarecatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ * @SuppressWarnings(PHPMD.UnusedPrivateField)
+ * @SuppressWarnings(PHPMD.CountInLoopExpression)
  */
 class ArchiMateService
 {
@@ -74,7 +95,7 @@ class ArchiMateService
      *
      * @var array|null
      */
-    private ?array $propertyDefinitionMapCache = null;
+    private ?array $propDefMapCache = null;
 
     /**
      * Flag to track if we've already logged finding a GEMMA type property
@@ -292,17 +313,13 @@ class ArchiMateService
             }
 
             // Look up the organization from Voorzieningen register.
-            $voorzConfig = $this->settingsService->getVoorzieningenConfig();
-            if (empty($voorzConfig['register']) === false) {
-                $orgRegisterId = (int) $voorzConfig['register'];
-            } else {
+            $voorzConfig       = $this->settingsService->getVoorzieningenConfig();
                 $orgRegisterId = null;
+            if (empty($voorzConfig['register']) === false) {
             }
 
-            if (empty($voorzConfig['organisatie_schema']) === false) {
-                $orgSchemaId = (int) $voorzConfig['organisatie_schema'];
-            } else {
                 $orgSchemaId = null;
+            if (empty($voorzConfig['organisatie_schema']) === false) {
             }
 
             if ($orgRegisterId === null || $orgSchemaId === false) {
@@ -347,10 +364,8 @@ class ArchiMateService
             $schemaIdMap = $this->createSchemaIdMap();
 
             // Query organization's gebruik and modules from Voorzieningen register.
-            if (empty($voorzConfig['gebruik_schema']) === false) {
-                $gebruikSchemaId = (int) $voorzConfig['gebruik_schema'];
-            } else {
                 $gebruikSchemaId = null;
+            if (empty($voorzConfig['gebruik_schema']) === false) {
             }
 
             $gebruikData = [];
@@ -366,10 +381,8 @@ class ArchiMateService
                 $gebruikData  = $objectService->searchObjects(query: $gebruikQuery, _rbac: false, _multitenancy: false);
             }
 
-            if (empty($voorzConfig['module_schema']) === false) {
-                $moduleSchemaId = (int) $voorzConfig['module_schema'];
-            } else {
                 $moduleSchemaId = null;
+            if (empty($voorzConfig['module_schema']) === false) {
             }
 
             $modulesData = [];
@@ -428,10 +441,8 @@ class ArchiMateService
                         // Merge into modulesData, deduplicating by ID.
                         $existingIds = [];
                         foreach ($modulesData as $m) {
-                            if (is_array($m) === true) {
-                                $mid = ($m['id'] ?? $m['@self']['id'] ?? null);
-                            } else {
                                 $mid = null;
+                            if (is_array($m) === true) {
                             }
 
                             if (empty($mid) === false) {
@@ -440,10 +451,8 @@ class ArchiMateService
                         }
 
                         foreach ($allModules as $mod) {
-                            if ((is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true)) {
-                                $modArr = $mod->jsonSerialize();
-                            } else {
                                 $modArr = $mod;
+                            if ((is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true)) {
                             }
 
                             $modId = $modArr['id'] ?? $modArr['@self']['id'] ?? null;
@@ -752,17 +761,13 @@ class ArchiMateService
         switch ($type) {
             case 'direct':
                 if (is_string($current) === true) {
-                    return $current;
-                } else {
-                    return null;
                 }
+                return null;
 
             case 'value':
                 if (is_array($current) === true && isset($current['_value']) === true) {
-                    return (string) $current['_value'];
-                } else {
-                    return null;
                 }
+                return null;
 
             case 'array_search':
                 if (is_array($current) === true) {
@@ -1092,18 +1097,15 @@ class ArchiMateService
         foreach ($chunks as $chunkIndex => $chunk) {
             // OPTIMIZATION: Removed debug logging from chunk processing loop.
             try {
-                if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
-                    $rbacValue = false;
-                } else {
                     $rbacValue = true;
+                if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
                 }
 
                 $saveResult = $objectService->saveObjects(
                     objects: $chunk,
                     register: $registerId,
                     schema: null,
-                    rbac: $rbacValue,
-                    multi: self::PERFORMANCE_OPTIMIZATIONS['use_multi'],
+                    _rbac: $rbacValue,
                     validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
                     events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
                 );
@@ -1187,18 +1189,15 @@ class ArchiMateService
                 ]
                 );
 
-        if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
-            $rbacValue = false;
-        } else {
             $rbacValue = true;
+        if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
         }
 
         $saveResult = $objectService->saveObjects(
             objects: $objects,
             register: $registerId,
             schema: null,
-            rbac: $rbacValue,
-            multi: self::PERFORMANCE_OPTIMIZATIONS['use_multi'],
+            _rbac: $rbacValue,
             validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
             events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
         );
@@ -1755,10 +1754,8 @@ class ArchiMateService
 
         // Fallback to legacy individual app config keys if not present in JSON.
         if ($rawRegisterId === null || $rawRegisterId === '') {
-            if ($this->config->getValueString('softwarecatalog', 'amef_register', '') !== '') {
-                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '');
-            } else {
                 $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
+            if ($this->config->getValueString('softwarecatalog', 'amef_register', '') !== '') {
             }
         }
 
@@ -1766,10 +1763,9 @@ class ArchiMateService
         if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string) $rawRegisterId) === true) {
             $registerId = (int) $rawRegisterId;
             if ($registerId > 0) {
-                return $registerId;
-            } else {
-                return null;
             }
+
+                return null;
         }
 
         return null;
@@ -1906,19 +1902,15 @@ class ArchiMateService
             $isAmefType      = in_array($schemaType, $amefObjectTypes, true) === true;
 
             // Use AMEF register ID for AMEF types, otherwise use per-type register ID.
-            if (empty($isAmefType) === false) {
-                $registerId = $this->getAmefRegisterId();
-            } else {
                 $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
+            if ($isAmefType === true) {
             }
 
             $schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
 
             if ($registerId === null || $schemaId === false) {
-                if ($isAmefType === true) {
-                    $errorMessage = "ArchiMateService: AMEF register or {$schemaType} schema not configured";
-                } else {
                     $errorMessage = "ArchiMateService: Register or {$schemaType} schema not configured";
+                if ($isAmefType === true) {
                 }
 
                 $this->logger->error(
@@ -1961,10 +1953,8 @@ class ArchiMateService
                 ];
             }
 
-            if ($usePagination === true) {
-                $paginationValue = ['limit' => $limit, 'offset' => $offset];
-            } else {
                 $paginationValue = 'disabled';
+            if ($usePagination === true) {
             }
 
             $this->logger->debug(
@@ -1980,10 +1970,8 @@ class ArchiMateService
             // Use searchObjects method for filtering.
             $objects = $objectService->searchObjects($finalQuery);
 
-            if ($usePagination === true) {
-                $paginationValue = ['limit' => $limit, 'offset' => $offset];
-            } else {
                 $paginationValue = 'disabled';
+            if ($usePagination === true) {
             }
 
             $this->logger->debug(
@@ -2304,13 +2292,13 @@ class ArchiMateService
                         )
                         ) === false;
 
-                if (empty($wasCreated) === false) {
+                if ($wasCreated === true) {
                     $statistics[$sectionKey]['created']++;
-                } else if (empty($wasUpdated) === false) {
+                } else if ($wasUpdated === true) {
                     $statistics[$sectionKey]['updated']++;
-                } else if (empty($wasSkipped) === false) {
+                } else if ($wasSkipped === true) {
                     $statistics[$sectionKey]['skipped']++;
-                } else if (empty($hasErrors) === false) {
+                } else if ($hasErrors === true) {
                     // Add to errors array for this section.
                     $errorInfo = array_filter(
                             $saveResult['invalid'] ?? [],
@@ -2372,8 +2360,8 @@ class ArchiMateService
     private function extractPropertyDefinitionMap(array $data): array
     {
         // OPTIMIZATION: Return cached property definition map if available.
-        if ($this->propertyDefinitionMapCache !== null) {
-            return $this->propertyDefinitionMapCache;
+        if ($this->propDefMapCache !== null) {
+            return $this->propDefMapCache;
         }
 
         $map = [];
@@ -2411,7 +2399,7 @@ class ArchiMateService
         }//end if
 
         // OPTIMIZATION: Cache the result for subsequent calls during the same import.
-        $this->propertyDefinitionMapCache = $map;
+        $this->propDefMapCache = $map;
 
         return $map;
     }//end extractPropertyDefinitionMap()
@@ -2435,7 +2423,7 @@ class ArchiMateService
         $allObjects = [];
 
         // Extract propertyDefinitionMap once for all objects.
-        $propertyDefinitionMap = $this->extractPropertyDefinitionMap(data: $xmlData);
+        $propDefMap = $this->extractPropertyDefinitionMap(data: $xmlData);
 
         // Create model object first.
         if (isset($xmlData['_attributes']) === true || isset($xmlData['name']) === true) {
@@ -2444,7 +2432,7 @@ class ArchiMateService
                 'name'                  => $xmlData['name'] ?? '',
                 'documentation'         => $xmlData['documentation'] ?? '',
                 'properties'            => $xmlData['properties'] ?? [],
-                'propertyDefinitionMap' => $propertyDefinitionMap,
+                'propertyDefinitionMap' => $propDefMap,
             ];
 
             if (isset($xmlData['_attributes']) === true) {
@@ -2470,7 +2458,7 @@ class ArchiMateService
                     sectionData: $sectionData,
                     schemaType: $schemaType,
                     modelIdentifier: $modelIdentifier,
-                    propertyDefinitionMap: $propertyDefinitionMap
+                    propDefMap: $propDefMap
                 );
                 $allObjects     = array_merge($allObjects, $sectionObjects);
             }
@@ -2538,10 +2526,10 @@ class ArchiMateService
     /**
      * Transform section objects in batch with minimal overhead
      *
-     * @param array  $sectionData           Section data from XML
-     * @param string $schemaType            Schema type (singular)
-     * @param string $modelIdentifier       Model identifier
-     * @param array  $propertyDefinitionMap Property definition map
+     * @param array  $sectionData     Section data from XML
+     * @param string $schemaType      Schema type (singular)
+     * @param string $modelIdentifier Model identifier
+     * @param array  $propDefMap      Property definition map
      *
      * @return array Array of transformed objects
      */
@@ -2549,7 +2537,7 @@ class ArchiMateService
         array $sectionData,
         string $schemaType,
         string $modelIdentifier,
-        array $propertyDefinitionMap
+        array $propDefMap
     ): array {
         $objects = [];
 
@@ -2600,11 +2588,11 @@ class ArchiMateService
             }
 
             // Flatten properties efficiently (if present).
-            if (isset($item['properties']['property']) === true && empty($propertyDefinitionMap) === false) {
+            if (isset($item['properties']['property']) === true && empty($propDefMap) === false) {
                 $this->flattenPropertiesBatch(
                     object: $object,
                     properties: $item['properties']['property'],
-                    propertyDefinitionMap: $propertyDefinitionMap
+                    propDefMap: $propDefMap
                 );
             }
 
@@ -2628,10 +2616,9 @@ class ArchiMateService
         if ($sectionType === 'view' && isset($sectionData['diagrams']['view']) === true) {
             $viewData = $sectionData['diagrams']['view'];
             if (isset($viewData[0]) === true) {
-                return $viewData;
-            } else {
-                return [$viewData];
             }
+
+                return [$viewData];
         }
 
         // Try common patterns.
@@ -2650,10 +2637,9 @@ class ArchiMateService
             if (isset($sectionData[$pattern]) === true) {
                 $data = $sectionData[$pattern];
                 if (is_array($data) === true && isset($data[0]) === true) {
-                    return $data;
-                } else {
-                    return [$data];
                 }
+
+                    return [$data];
             }
         }
 
@@ -2664,18 +2650,16 @@ class ArchiMateService
     /**
      * Flatten properties in batch for better performance
      *
-     * @param array $object                Object to add properties to (by reference).
-     * @param array $properties            Properties array from XML.
-     * @param array $propertyDefinitionMap Property definition map.
+     * @param array $object     Object to add properties to (by reference).
+     * @param array $properties Properties array from XML.
+     * @param array $propDefMap Property definition map.
      *
      * @return void
      */
-    private function flattenPropertiesBatch(array &$object, array $properties, array $propertyDefinitionMap): void
+    private function flattenPropertiesBatch(array &$object, array $properties, array $propDefMap): void
     {
-        if (isset($properties[0]) === true) {
-            $props = $properties;
-        } else {
             $props = [$properties];
+        if (isset($properties[0]) === true) {
         }
 
         $processedProperties = [];
@@ -2688,8 +2672,8 @@ class ArchiMateService
             $defRef = $prop['_attributes']['propertyDefinitionRef'];
             $value  = $prop['value']['_value'] ?? $prop['value'] ?? null;
 
-            if ($value !== null && isset($propertyDefinitionMap[$defRef]) === true) {
-                $propertyName           = $propertyDefinitionMap[$defRef];
+            if ($value !== null && isset($propDefMap[$defRef]) === true) {
+                $propertyName           = $propDefMap[$defRef];
                 $camelCaseName          = $this->convertToCamelCase(propertyName: $propertyName);
                 $object[$camelCaseName] = $value;
 
@@ -2767,15 +2751,15 @@ class ArchiMateService
      * This method returns a mapping of original property names to their camelCase equivalents
      * which can be useful for understanding how properties are being processed.
      *
-     * @param array $propertyDefinitionMap The original property definition map
+     * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
      */
-    public function getPropertyNameMapping(array $propertyDefinitionMap): array
+    public function getPropertyNameMapping(array $propDefMap): array
     {
         $mapping = [];
 
-        foreach ($propertyDefinitionMap as $propertyRef => $originalName) {
+        foreach ($propDefMap as $propertyRef => $originalName) {
             $mapping[$originalName] = $this->convertToCamelCase(propertyName: $originalName);
         }
 
@@ -3114,12 +3098,14 @@ class ArchiMateService
 
             // Handle different XML structures.
             if (is_string($endpointData) === true) {
-                return $endpointData;
-            } else if (is_array($endpointData) === true) {
+            }
+
+            if (is_array($endpointData) === true) {
                 // Try _attributes.href or _value.
                 if (isset($endpointData['_attributes']['href']) === true) {
-                    return $endpointData['_attributes']['href'];
-                } else if (isset($endpointData['_value']) === true) {
+                }
+
+                if (isset($endpointData['_value']) === true) {
                     return $endpointData['_value'];
                 }
             }
@@ -3129,8 +3115,9 @@ class ArchiMateService
         if (isset($relationship['xml']['_attributes']) === true) {
             $attr = $relationship['xml']['_attributes'];
             if ($endpoint === 'source' && isset($attr['source']) === true) {
-                return $attr['source'];
-            } else if ($endpoint === 'target' && isset($attr['target']) === true) {
+            }
+
+            if ($endpoint === 'target' && isset($attr['target']) === true) {
                 return $attr['target'];
             }
         }

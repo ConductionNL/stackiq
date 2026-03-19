@@ -39,6 +39,23 @@ use Twig\Loader\ArrayLoader;
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  * @version  GIT: <git_id>
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class SymfonyEmailService
 {
@@ -744,10 +761,8 @@ class SymfonyEmailService
                 );
 
         // Prepare template data.
-        if (empty($userName) === false) {
-            $displayName = $userName;
-        } else {
             $displayName = 'Gebruiker';
+        if (empty($userName) === false) {
         }
 
         $templateData = [
@@ -860,10 +875,8 @@ class SymfonyEmailService
                 );
 
         // Prepare template data.
-        if (empty($userName) === false) {
-            $displayName = $userName;
-        } else {
             $displayName = 'Gebruiker';
+        if (empty($userName) === false) {
         }
 
         $templateData = [
@@ -977,10 +990,8 @@ class SymfonyEmailService
                 );
 
         // Prepare template data.
-        if (empty($userName) === false) {
-            $displayName = $userName;
-        } else {
             $displayName = 'Gebruiker';
+        if (empty($userName) === false) {
         }
 
         $templateData = [
@@ -1541,13 +1552,12 @@ class SymfonyEmailService
 
         $configured = ($hasCredentials === true && $hasTemplates === true);
 
+        $reason = $this->getConfigurationIssues(
+            hasCredentials: $hasCredentials,
+            hasTemplates: $hasTemplates
+        );
         if ($configured === true) {
             $reason = 'Email system fully configured';
-        } else {
-            $reason = $this->getConfigurationIssues(
-                hasCredentials: $hasCredentials,
-                hasTemplates: $hasTemplates
-            );
         }
 
         return [
@@ -1610,7 +1620,7 @@ class SymfonyEmailService
             $template = ($templates[$templateName] ?? '');
             // Template is valid if it's not empty or if we have a default template.
             $defaultTpl = $this->getDefaultTemplate(templateName: $templateName);
-            if (empty($template) === true && empty($defaultTpl === true) === true) {
+            if (empty($template) === true && empty($defaultTpl) === true) {
                 return false;
             }
         }

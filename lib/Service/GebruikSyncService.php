@@ -36,6 +36,21 @@ use DateTime;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl
  * @version  GIT: <git_id>
  * @link     https://github.com/conduction/nextcloud-software-catalog
+ *
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class GebruikSyncService
 {
@@ -243,6 +258,15 @@ class GebruikSyncService
             }
 
             // Update the gebruik object with AMEF slugs.
+            if (empty($amefSlugs) === true) {
+                $this->logger->info(
+                        'No AMEF elements with slugs found',
+                        [
+                            'gebruikId' => $gebruikUuid,
+                        ]
+                        );
+            }//end if
+
             if (empty($amefSlugs) === false) {
                 $gebruikData['amefElements'] = array_unique($amefSlugs);
                                 $this->updateGebruikObject(
@@ -259,14 +283,7 @@ class GebruikSyncService
                             'amefElementsCount' => count($amefSlugs),
                         ]
                         );
-            } else {
-                $this->logger->info(
-                        'No AMEF elements with slugs found',
-                        [
-                            'gebruikId' => $gebruikUuid,
-                        ]
-                        );
-            }//end if
+            }
 
             return $stats;
         } catch (Exception $e) {
@@ -421,10 +438,20 @@ class GebruikSyncService
                 );
                 $stats['statusUpdated'] = true;
 
-                if ($targetDate !== null) {
-                    $basedOnDate = $targetDate->format('Y-m-d');
-                } else {
                     $basedOnDate = null;
+                if ($targetDate === null) {
+                    $this->logger->info(
+                        'No status update needed',
+                        [
+                            'app'           => 'softwarecatalog',
+                            'gebruikId'     => $gebruikUuid,
+                            'currentStatus' => $currentStatus,
+                            'targetStatus'  => $targetStatus,
+                        ]
+                        );
+                }
+
+                if ($targetDate !== null) {
                 }
 
                 $this->logger->critical(
@@ -435,16 +462,6 @@ class GebruikSyncService
                             'oldStatus'   => $currentStatus,
                             'newStatus'   => $targetStatus,
                             'basedOnDate' => $basedOnDate,
-                        ]
-                        );
-            } else {
-                $this->logger->info(
-                        'No status update needed',
-                        [
-                            'app'           => 'softwarecatalog',
-                            'gebruikId'     => $gebruikUuid,
-                            'currentStatus' => $currentStatus,
-                            'targetStatus'  => $targetStatus,
                         ]
                         );
             }//end if

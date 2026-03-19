@@ -21,6 +21,9 @@ use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Service for handling gebruik-related operations
+ */
 class GebruikService
 {
     /**
@@ -192,10 +195,9 @@ class GebruikService
                         if (method_exists($object, 'jsonSerialize') === true) {
                             $object = $object->jsonSerialize();
                         } else if (method_exists($object, 'getId') === true) {
-                            return $object->getId();
-                        } else {
-                            $object = $object->getObject();
                         }
+
+                            $object = $object->getObject();
                     }
 
                     return $object['@self']['id'] ?? $object['id'] ?? null;

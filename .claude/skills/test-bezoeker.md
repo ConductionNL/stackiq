@@ -47,6 +47,11 @@ This persona tests everything an **unauthenticated user** sees. The search page 
 | #448 | Overzichtspagina's: vormgeving inconsistent | Verify dienst/koppeling detail pages match applicatie layout |
 | #453 | Zoeken: filters van slag met filter Type=Koppeling | Verify Type=Koppeling filter correctly scopes other facets |
 | #455 | Tabblad koppelingen en contactpersonen publiekelijk niet getoond | Verify Koppelingen and Contactpersonen tabs visible on public app detail pages |
+| #205 | Gedepubliceerde applicatie nog vindbaar | Verify depublished applications do NOT appear in public search |
+| #333 | UUID uit filters refcomp en standaarden | Verify reference component and standards filters show names, not UUIDs |
+| #398 | Zoeken: Filter met UUID's onder leveranciers | Verify leverancier filter shows readable names, not UUIDs |
+| #438 | Zoeken: verschillende vormgeving Diensten na filteren | Verify dienst card layout is consistent across filter combinations |
+| #440 | Zoeken: Organisatietype teveel aan opties | Verify Organisatietype filter shows only 4 options: gemeente, samenwerking, leverancier, community |
 
 ## Acceptance Criteria Reference
 

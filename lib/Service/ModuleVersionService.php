@@ -28,6 +28,8 @@ use Psr\Log\LoggerInterface;
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
  */
 class ModuleVersionService
 {
@@ -104,10 +106,9 @@ class ModuleVersionService
                 _multitenancy: false
             );
 
+            $versionCount = 0;
             if (is_array($existingVersions) === true) {
                 $versionCount = count($existingVersions);
-            } else {
-                $versionCount = 0;
             }
 
             if ($versionCount > 0) {

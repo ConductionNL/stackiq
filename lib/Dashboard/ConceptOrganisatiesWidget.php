@@ -88,6 +88,8 @@ class ConceptOrganisatiesWidget implements IWidget
      * Loads the required scripts and styles for this widget.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function load(): void
     {

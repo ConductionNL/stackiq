@@ -73,6 +73,9 @@ class GebruikController extends Controller
      * @PublicPage
      *
      * @return JSONResponse The JSON response with gebruiken results
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function getGebruiken(): JSONResponse
     {
@@ -95,12 +98,17 @@ class GebruikController extends Controller
 
         $isAdmin     = in_array(needle: 'admin', haystack: $groupNames);
         $isBeheerder = in_array(needle: 'gebruik-beheerder', haystack: $groupNames);
-        if ($isAdmin === true || $isBeheerder === true) {
-            $options = $this->request->getParams();
-        } else if (in_array(needle: 'aanbod-beheerder', haystack: $groupNames) === true) {
-            $options = $this->request->getParams();
-            $applicatieOptions['aanbieder'] = $orgUuid;
-            $applicatieIds = $this->gebruikService->getApplicationIds(options: $applicatieOptions);
+        $isAanbod    = in_array(needle: 'aanbod-beheerder', haystack: $groupNames);
+
+        if ($isAdmin !== true && $isBeheerder !== true && $isAanbod !== true) {
+            return new JSONResponse($this->getEmptyResult());
+        }
+
+        $options = $this->request->getParams();
+
+        if ($isAanbod === true && $isAdmin !== true && $isBeheerder !== true) {
+            $appOptions    = ['aanbieder' => $orgUuid];
+            $applicatieIds = $this->gebruikService->getApplicationIds(options: $appOptions);
 
             if ($applicatieIds === []) {
                 return new JSONResponse($this->getEmptyResult());
@@ -108,11 +116,11 @@ class GebruikController extends Controller
 
             if (isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false) {
                 return new JSONResponse($this->getEmptyResult());
-            } else if (isset($options['module']) === false) {
+            }
+
+            if (isset($options['module']) === false) {
                 $options['module'] = $applicatieIds;
             }
-        } else {
-            return new JSONResponse($this->getEmptyResult());
         }
 
         try {

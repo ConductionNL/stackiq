@@ -36,11 +36,11 @@ class ContactpersoonServiceExample
     /**
      * ContactpersoonServiceExample constructor
      *
-     * @param ContactpersoonService $contactpersoonService The contactpersoon service
-     * @param LoggerInterface       $logger                Logger interface
+     * @param ContactpersoonService $contactSvc The contactpersoon service
+     * @param LoggerInterface       $logger     Logger interface
      */
     public function __construct(
-        private readonly ContactpersoonService $contactpersoonService,
+        private readonly ContactpersoonService $contactSvc,
         private readonly LoggerInterface $logger
     ) {
     }//end __construct()
@@ -65,7 +65,7 @@ class ContactpersoonServiceExample
                     );
 
             // Use the service method to get contact persons with user details.
-            $contactPersons = $this->contactpersoonService->getContactPersonsWithUserDetailsForOrganization(
+            $contactPersons = $this->contactSvc->getContactPersonsWithUserDetailsForOrganization(
                 organizationUuid: $organizationUuid
             );
 

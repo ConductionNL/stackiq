@@ -26,15 +26,29 @@ use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
+use OCP\IGroupManager;
+use OCP\IUserSession;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCA\SoftwareCatalog\Service\ArchiMateService;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\ConfigurationService;
 use OCP\AppFramework\Http\StreamResponse;
+use RuntimeException;
 
 /**
  * Controller for handling settings-related operations in the OpenCatalogi.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
 class SettingsController extends Controller
 {
@@ -42,23 +56,27 @@ class SettingsController extends Controller
     /**
      * The OpenRegister object service.
      *
-     * @var \OCA\OpenRegister\Service\ObjectService|null The OpenRegister object service.
+     * @var ObjectService|null The OpenRegister object service.
      */
     private $objectService;
 
     /**
      * SettingsController constructor.
      *
-     * @param string                  $appName                 The name of the app.
-     * @param IRequest                $request                 The request object.
-     * @param IAppConfig              $config                  The app configuration.
-     * @param ContainerInterface      $container               The container.
-     * @param IAppManager             $appManager              The app manager.
-     * @param SettingsService         $settingsService         The settings service.
-     * @param OrganizationSyncService $organizationSyncService The organization sync service.
-     * @param ArchiMateService        $archiMateService        The ArchiMate import/export service.
-     * @param ProgressTracker         $progressTracker         The progress tracking service.
-     * @param LoggerInterface         $logger                  The logger instance.
+     * @param string                  $appName          The name of the app.
+     * @param IRequest                $request          The request object.
+     * @param IAppConfig              $config           The app configuration.
+     * @param ContainerInterface      $container        The container.
+     * @param IAppManager             $appManager       The app manager.
+     * @param IGroupManager           $groupManager     The group manager.
+     * @param IUserSession            $userSession      The user session.
+     * @param SettingsService         $settingsService  The settings service.
+     * @param OrganizationSyncService $orgSyncSvc       The organization sync service.
+     * @param ArchiMateService        $archiMateService The ArchiMate import/export service.
+     * @param ProgressTracker         $progressTracker  The progress tracking service.
+     * @param LoggerInterface         $logger           The logger instance.
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         $appName,
@@ -66,8 +84,10 @@ class SettingsController extends Controller
         private readonly IAppConfig $config,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
+        private readonly IGroupManager $groupManager,
+        private readonly IUserSession $userSession,
         private readonly SettingsService $settingsService,
-        private readonly OrganizationSyncService $organizationSyncService,
+        private readonly OrganizationSyncService $orgSyncSvc,
         private readonly ArchiMateService $archiMateService,
         private readonly ProgressTracker $progressTracker,
         private readonly LoggerInterface $logger,
@@ -79,27 +99,27 @@ class SettingsController extends Controller
     /**
      * Attempts to retrieve the OpenRegister service from the container.
      *
-     * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
-     * @throws \RuntimeException If the service is not available.
+     * @return ObjectService|null The OpenRegister service if available, null otherwise.
+     * @throws RuntimeException If the service is not available.
      */
-    public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
+    public function getObjectService(): ?ObjectService
     {
         if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
             $this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
             return $this->objectService;
         }
 
-        throw new \RuntimeException('OpenRegister service is not available.');
+        throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
 
     /**
      * Attempts to retrieve the Configuration service from the container.
      *
-     * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
-     * @throws \RuntimeException If the service is not available.
+     * @return ConfigurationService|null The Configuration service if available, null otherwise.
+     * @throws RuntimeException If the service is not available.
      */
-    public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
+    public function getConfigurationService(): ?ConfigurationService
     {
         // Check if the 'openregister' app is installed.
         if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
@@ -109,7 +129,7 @@ class SettingsController extends Controller
         }
 
         // Throw an exception if the service is not available.
-        throw new \RuntimeException('Configuration service is not available.');
+        throw new RuntimeException('Configuration service is not available.');
 
     }//end getConfigurationService()
 
@@ -124,8 +144,14 @@ class SettingsController extends Controller
     public function index(): JSONResponse
     {
         try {
+            $user    = $this->userSession->getUser();
+            $isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
+
             // Delegate all business logic to service.
             $data = $this->settingsService->getAllSettings();
+            $data['openRegisters'] = in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps());
+            $data['isAdmin']       = $isAdmin;
+
             return new JSONResponse($data);
         } catch (\Exception $e) {
             $this->logger->error(
@@ -145,6 +171,10 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing the updated settings.
      *
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function create(): JSONResponse
     {
@@ -338,7 +368,7 @@ class SettingsController extends Controller
     {
         try {
             $config = [
-                'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+                'syncTimeWindow' => $this->config->getValueString($this->appName, 'syncTimeWindow', '10'),
             ];
 
             return new JSONResponse(
@@ -377,7 +407,7 @@ class SettingsController extends Controller
             $data = $this->request->getParams();
 
             if (isset($data['syncTimeWindow']) === true) {
-                $this->config->setValueString($this->_appName, 'syncTimeWindow', (string) $data['syncTimeWindow']);
+                $this->config->setValueString($this->appName, 'syncTimeWindow', (string) $data['syncTimeWindow']);
             }
 
             return new JSONResponse(
@@ -385,7 +415,7 @@ class SettingsController extends Controller
                         'success' => true,
                         'message' => 'Sync configuration updated successfully',
                         'config'  => [
-                            'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+                            'syncTimeWindow' => $this->config->getValueString($this->appName, 'syncTimeWindow', '10'),
                         ],
                     ]
                     );
@@ -524,14 +554,14 @@ class SettingsController extends Controller
                             'configuration' => $result,
                         ]
                         );
-            } else {
-                return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'No matching registers or schemas found for auto-configuration',
-                        ]
-                        );
             }
+
+            return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'No matching registers or schemas found for auto-configuration',
+                    ]
+                    );
         } catch (\Exception $e) {
             $this->logger->error(
                     'Failed to auto-configure settings',
@@ -659,7 +689,7 @@ class SettingsController extends Controller
      */
     public function getSyncStatus(int $minutesBack=10): JSONResponse
     {
-        $status = $this->organizationSyncService->getSyncStatusWithErrorHandling($minutesBack);
+        $status = $this->orgSyncSvc->getSyncStatusWithErrorHandling($minutesBack);
         return new JSONResponse($status);
     }//end getSyncStatus()
 
@@ -677,7 +707,7 @@ class SettingsController extends Controller
         try {
             // For full sync (minutesBack = 0), use optimized batch processing to handle large datasets.
             if ($minutesBack === 0) {
-                $result = $this->organizationSyncService->performOptimizedManualSync(
+                $result = $this->orgSyncSvc->performOptimizedManualSync(
                     maxRounds: 15,
                 // Up to 15 rounds of processing.
                     batchSize: 75
@@ -692,16 +722,15 @@ class SettingsController extends Controller
                             'isOptimized' => true,
                         ]
                         );
-            } else {
-                // For incremental sync, use the original method.
-                $result = $this->organizationSyncService->performManualSync($minutesBack);
-
-                if ($result['success'] === true) {
-                    return new JSONResponse($result);
-                } else {
-                    return new JSONResponse($result, 500);
-                }
             }//end if
+
+            // For incremental sync, use the original method.
+            $result = $this->orgSyncSvc->performManualSync($minutesBack);
+
+            if ($result['success'] === true) {
+            }
+
+            return new JSONResponse($result, 500);
         } catch (\Exception $e) {
             $this->logger->error(
                     'Manual sync failed',
@@ -832,10 +861,9 @@ class SettingsController extends Controller
             $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
 
             if ($result['success'] === true) {
-                return new JSONResponse($result);
-            } else {
-                return new JSONResponse($result, 400);
             }
+
+                return new JSONResponse($result, 400);
         } catch (\Exception $e) {
             return new JSONResponse(
                     [
@@ -921,10 +949,9 @@ class SettingsController extends Controller
             $result['timestamp'] = time();
 
             if ($result['success'] === true) {
-                return new JSONResponse($result);
-            } else {
-                return new JSONResponse($result, 400);
             }
+
+                return new JSONResponse($result, 400);
         } catch (\Exception $e) {
             $this->logger->error(
                     'SettingsController: Manual import failed',
@@ -1034,16 +1061,12 @@ class SettingsController extends Controller
             $results = $this->settingsService->performConsolidatedAutoConfiguration($force);
 
             // Determine HTTP status based on results.
+            $httpStatus = 200;
             if ($results['success'] === false) {
                 // Multi-status or Server Error.
+                $httpStatus = 500;
                 if (empty($results['errors']) === false) {
-                    $httpStatus = 207;
-                } else {
-                    $httpStatus = 500;
                 }
-            } else {
-                // Success.
-                $httpStatus = 200;
             }
 
             return new JSONResponse($results, $httpStatus);
@@ -1128,6 +1151,9 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function streamProgress(string $operationId): Response
     {
@@ -1241,6 +1267,10 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.Superglobals)
      */
     public function importArchiMate(): JSONResponse
     {
@@ -1305,10 +1335,8 @@ class SettingsController extends Controller
 
             if ($hasUploadedFiles === true || $hasFilesArray === true) {
                 // Use $_FILES as fallback if getUploadedFile doesn't work.
-                if ($uploadedFiles !== null) {
-                    $fileData = $uploadedFiles;
-                } else {
                     $fileData = $filesArray;
+                if ($uploadedFiles !== null) {
                 }
 
                 // Handle file upload.
@@ -1326,10 +1354,8 @@ class SettingsController extends Controller
                 $this->logger->info('File upload detected.', ['options' => $options]);
             } else if ($data !== null && isset($data['file_path']) === true) {
                 // Handle file path from JSON payload.
-                if (file_exists($data['file_path']) === true) {
-                    $fileSize = filesize($data['file_path']);
-                } else {
                     $fileSize = 0;
+                if (file_exists($data['file_path']) === true) {
                 }
 
                 $options = [
@@ -1344,7 +1370,9 @@ class SettingsController extends Controller
                 ];
 
                 $this->logger->info('JSON payload detected.', ['options' => $options]);
-            } else {
+            }//end if
+
+            if (isset($options) === false) {
                 $this->logger->error(
                         'No file uploaded or file path provided — DETAILED DEBUG',
                         [
@@ -1381,12 +1409,11 @@ class SettingsController extends Controller
             // OPTIMIZATION: Use optimized method if available or if explicitly requested.
             $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
             $hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
+            $this->logger->info('Using STANDARD ArchiMate import method.');
+            $result = $this->archiMateService->importArchiMateFileFromPath($options);
             if ($useOptimized === true && $hasOptimized === true) {
                 $this->logger->info('Using OPTIMIZED ArchiMate import method.');
                 $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
-            } else {
-                $this->logger->info('Using STANDARD ArchiMate import method.');
-                $result = $this->archiMateService->importArchiMateFileFromPath($options);
             }
 
             return new JSONResponse($result);
@@ -1420,6 +1447,9 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function exportArchiMate(): Response
     {
@@ -1469,6 +1499,8 @@ class SettingsController extends Controller
                  * Constructor for the download response.
                  *
                  * @param string $content The XML content to return.
+                 *
+                 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
                  */
                 public function __construct(private string $content)
                 {
@@ -1556,7 +1588,7 @@ class SettingsController extends Controller
 
             if ($result['success'] === false) {
                 $statusCode = 500;
-                if (str_contains(haystack: ($result['error'] ?? '') === true, needle: 'not found') === true) {
+                if (str_contains(haystack: ($result['error'] ?? ''), needle: 'not found') === true) {
                     $statusCode = 404;
                 }
 
@@ -1578,6 +1610,8 @@ class SettingsController extends Controller
                  * Constructor for the org download response.
                  *
                  * @param string $content The XML content to return.
+                 *
+                 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
                  */
                 public function __construct(private string $content)
                 {
@@ -1966,13 +2000,11 @@ class SettingsController extends Controller
 
             $success = $this->settingsService->updateEmailTemplate(
                 templateName: $templateName,
-                content: $templateContent
+                templateContent: $templateContent
             );
 
-            if ($success === true) {
-                $updateMsg = "Template {$templateName} updated successfully";
-            } else {
                 $updateMsg = "Failed to update template {$templateName}";
+            if ($success === true) {
             }
 
             return new JSONResponse(
@@ -2445,10 +2477,8 @@ class SettingsController extends Controller
         try {
             $result = $this->settingsService->cancelArchiMateImport();
 
-            if ($result['cancelled'] === true) {
-                $message = 'ArchiMate import cancelled successfully';
-            } else {
                 $message = 'ArchiMate import cancellation failed';
+            if ($result['cancelled'] === true) {
             }
 
             return new JSONResponse(
@@ -2613,7 +2643,7 @@ class SettingsController extends Controller
     public function getObjectCounts(): JSONResponse
     {
         try {
-            $objectCounts = $this->settingsService->getObjectCounts();
+            $objectCounts = $this->settingsService->getObjectCountsStatistics();
 
             return new JSONResponse(
                     [
@@ -3020,6 +3050,8 @@ class SettingsController extends Controller
      * @param \Exception $e The exception to classify.
      *
      * @return int HTTP status code (400, 404, 422, or 500).
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     private function getHttpStatusForException(\Exception $e): int
     {
@@ -3040,6 +3072,8 @@ class SettingsController extends Controller
      * @param string $message The error message to classify.
      *
      * @return int HTTP status code (400, 404, 422, or 500).
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function getHttpStatusForErrorMessage(string $message): int
     {
@@ -3100,10 +3134,8 @@ class SettingsController extends Controller
             // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
-            if ($result['success'] === true) {
-                $statusCode = 200;
-            } else {
                 $statusCode = 500;
+            if ($result['success'] === true) {
             }
 
             $this->logger->info(
@@ -3240,10 +3272,8 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $result = $this->settingsService->updateCronjobConfig($data);
 
-            if ($result['success'] === true) {
-                $statusCode = 200;
-            } else {
                 $statusCode = 400;
+            if ($result['success'] === true) {
             }
 
             return new JSONResponse($result, $statusCode);

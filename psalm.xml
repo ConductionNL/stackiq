@@ -83,7 +83,7 @@
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
                 <referencedClass name="OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler"/>
                 <referencedClass name="OCA\OpenRegister\Db\ObjectEntity"/>
-                <referencedClass name="OCA\OpenRegister\Db\ObjectEntityMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\MagicMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\Organisation"/>

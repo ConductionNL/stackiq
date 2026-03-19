@@ -98,6 +98,59 @@ echo "  Nextcloud is reachable at ${NC_URL}"
 echo ""
 
 # ─────────────────────────────────────────────
+# Step 0b: Initialize app configurations
+# ─────────────────────────────────────────────
+echo "--- Step 0b: Initializing app configurations ---"
+
+# Initialize SWC settings (imports softwarecatalogus_register.json)
+SWC_INIT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
+  "${NC_URL}/index.php/apps/softwarecatalog/api/settings/initialize" \
+  -H "Content-Type: application/json" 2>&1)
+SWC_CONFIGURED=$(echo "$SWC_INIT" | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('fullyConfigured', False))" 2>/dev/null || echo "false")
+echo "  SWC settings: configured=$SWC_CONFIGURED"
+
+# Check if OpenCatalogi publication register exists
+OC_CATALOG_SCHEMA=$(docker exec nextcloud php occ config:app:get opencatalogi catalog_schema 2>/dev/null || echo "")
+if [ -z "$OC_CATALOG_SCHEMA" ]; then
+  echo "  OpenCatalogi not configured — importing publication register..."
+
+  # Import OpenCatalogi publication_register.json via OpenRegister config import
+  OC_REGISTER_FILE="/var/www/html/custom_apps/opencatalogi/lib/Settings/publication_register.json"
+  if docker exec nextcloud test -f "$OC_REGISTER_FILE"; then
+    IMPORT_RESULT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
+      "${NC_URL}/index.php/apps/openregister/api/configurations/import" \
+      -F "file=@-" < <(docker exec nextcloud cat "$OC_REGISTER_FILE") 2>&1)
+    IMPORT_OK=$(echo "$IMPORT_RESULT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print('OK' if d.get('message','') == 'Import successful' else 'FAIL')" 2>/dev/null || echo "FAIL")
+    echo "  Publication register import: $IMPORT_OK"
+
+    # Run repair step to trigger OpenCatalogi auto-configuration
+    echo "  Running maintenance:repair for OpenCatalogi initialization..."
+    docker exec nextcloud php occ maintenance:repair 2>&1 | grep -i "catalogi\|softwarecatalog" | head -5
+  else
+    echo "  WARN: publication_register.json not found in opencatalogi app"
+  fi
+else
+  echo "  OpenCatalogi already configured (catalog_schema=$OC_CATALOG_SCHEMA)"
+fi
+
+# Re-initialize SWC to configure OpenCatalogi page/menu/theme settings
+curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
+  "${NC_URL}/index.php/apps/softwarecatalog/api/settings/initialize" \
+  -H "Content-Type: application/json" > /dev/null 2>&1
+
+# Verify final state
+REGISTER_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+  "${NC_URL}/index.php/apps/openregister/api/registers" 2>&1 | \
+  python3 -c "import sys,json; print(len(json.loads(sys.stdin.read()).get('results',[])))" 2>/dev/null || echo "?")
+SCHEMA_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+  "${NC_URL}/index.php/apps/openregister/api/schemas" 2>&1 | \
+  python3 -c "import sys,json; print(len(json.loads(sys.stdin.read()).get('results',[])))" 2>/dev/null || echo "?")
+echo "  Registers: $REGISTER_COUNT, Schemas: $SCHEMA_COUNT"
+echo "Done."
+
+echo ""
+
+# ─────────────────────────────────────────────
 # Step 1: Create Nextcloud user accounts
 # ─────────────────────────────────────────────
 echo "--- Step 1: Creating Nextcloud user accounts ---"
@@ -532,7 +585,8 @@ LEVER_APP_UUID=$(create_object "voorzieningen" "module" "{
     \"naam\": \"Test Applicatie Leverancier\",
     \"beschrijvingKort\": \"Een test applicatie van Test Leverancier BV voor geautomatiseerde tests\",
     \"beschrijvingLang\": \"Deze applicatie is aangemaakt door het test setup script om de beheer-, wizard- en zoekfunctionaliteit te testen.\",
-    \"geregistreerdDoor\": \"${LEVER_REG}\",
+    \"geregistreerdDoor\": \"Leverancier\",
+    \"referentieComponenten\": [\"e-Formulieren\", \"Zaakafhandelcomponent\"],
     \"status\": \"Actief\"
 }" "applicatie for Test Leverancier BV" "Test Applicatie Leverancier" "jan.pietersen@test.nl:${PASSWORD}")
 
@@ -540,7 +594,8 @@ LEVER_APP_UUID=$(create_object "voorzieningen" "module" "{
 LEVER2_APP_UUID=$(create_object "voorzieningen" "module" "{
     \"naam\": \"Test Applicatie Leverancier 2\",
     \"beschrijvingKort\": \"Een test applicatie van Test Leverancier 2 voor cross-vendor tests\",
-    \"geregistreerdDoor\": \"${LEVER2_REG}\",
+    \"geregistreerdDoor\": \"Leverancier\",
+    \"referentieComponenten\": [\"Zaakafhandelcomponent\"],
     \"status\": \"Actief\"
 }" "applicatie for Test Leverancier 2" "Test Applicatie Leverancier 2" "jan.vandeberg@testleverancier.nl:${PASSWORD}")
 
@@ -550,7 +605,7 @@ LEVER_DIENST_UUID=$(create_object "voorzieningen" "dienst" "{
     \"beschrijvingKort\": \"Een test dienst voor geautomatiseerde tests\",
     \"type\": [\"Implementatieondersteuning\"],
     \"aanbieder\": \"${LEVER_REG}\",
-    \"geregistreerdDoor\": \"${LEVER_REG}\",
+    \"geregistreerdDoor\": \"Leverancier\",
     \"status\": \"Actief\"
 }" "dienst for Test Leverancier BV" "Test Dienst Leverancier" "jan.pietersen@test.nl:${PASSWORD}")
 
@@ -558,7 +613,8 @@ LEVER_DIENST_UUID=$(create_object "voorzieningen" "dienst" "{
 GEMEENTE_APP_UUID=$(create_object "voorzieningen" "module" "{
     \"naam\": \"Test Applicatie Gemeente\",
     \"beschrijvingKort\": \"Een test applicatie geregistreerd door Test Gemeente\",
-    \"geregistreerdDoor\": \"${GEMEENTE_REG}\",
+    \"geregistreerdDoor\": \"Gemeente\",
+    \"referentieComponenten\": [\"Zaakafhandelcomponent\", \"e-Formulieren\"],
     \"status\": \"Actief\"
 }" "applicatie for Test Gemeente" "Test Applicatie Gemeente" "maria.vanderberg@test.nl:${PASSWORD}")
 
@@ -735,6 +791,188 @@ if len(orgs) == 1:
 else:
     print(f'  WARN: Contacts span {len(orgs)} orgs: {orgs} — possible RBAC leak')
 " 2>/dev/null
+
+# ─────────────────────────────────────────────
+# Step 8b: Import AMEF test data (ArchiMate views, elements, models)
+# ─────────────────────────────────────────────
+echo ""
+echo "--- Step 8b: Importing AMEF test data ---"
+
+AMEF_FILE="/var/www/html/custom_apps/softwarecatalog/data/GEMMA release.xml"
+if docker exec nextcloud test -f "$AMEF_FILE"; then
+    # Check if AMEF views already exist (full GEMMA release has 248 views)
+    VIEW_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+        "${NC_URL}/index.php/apps/openregister/api/objects/vng-gemma/view?_limit=1" 2>&1 | \
+        python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('total',0))" 2>/dev/null || echo "0")
+
+    if [ "$VIEW_COUNT" = "0" ]; then
+        echo "  Importing full GEMMA release AMEF data via PHP CLI..."
+        # HTTP endpoint times out on the 13MB file, so use PHP CLI with no timeout
+        docker exec nextcloud bash -c "cat > /tmp/import-gemma.php << 'IMPORTEOF'
+<?php
+require \"/var/www/html/lib/base.php\";
+try {
+    \\\$svc = \\OC::\\\$server->get(\\OCA\\SoftwareCatalog\\Service\\ArchiMateImportService::class);
+    \\\$r = \\\$svc->importArchiMateFileFromPathOptimized([
+        \"filePath\" => \"$AMEF_FILE\",
+        \"fileName\" => \"GEMMA release.xml\",
+        \"fileSize\" => filesize(\"$AMEF_FILE\"),
+        \"updateExisting\" => true,
+        \"processingMode\" => \"speed\",
+    ]);
+    \\\$pm = \\\$r[\"performance_metrics\"] ?? [];
+    echo json_encode([\"objects\" => \\\$pm[\"objects_processed\"] ?? 0, \"time\" => \\\$pm[\"total_time_seconds\"] ?? 0]);
+} catch (\\Throwable \\\$e) { echo json_encode([\"error\" => \\\$e->getMessage()]); }
+IMPORTEOF" 2>/dev/null
+
+        AMEF_RESULT=$(docker exec nextcloud php -d max_execution_time=0 -d memory_limit=4096M /tmp/import-gemma.php 2>/dev/null)
+        AMEF_OBJECTS=$(echo "$AMEF_RESULT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(f'{d.get(\"objects\",\"?\")} objects in {d.get(\"time\",\"?\")}s')" 2>/dev/null || echo "error")
+        echo "  AMEF import: $AMEF_OBJECTS"
+    else
+        echo "  AMEF data already imported ($VIEW_COUNT views)"
+    fi
+else
+    echo "  WARN: GEMMA release.xml not found at $AMEF_FILE"
+fi
+
+# ─────────────────────────────────────────────
+# Step 8c: Create test koppeling and glossary objects
+# ─────────────────────────────────────────────
+echo ""
+echo "--- Step 8c: Creating test koppelingen and glossary ---"
+
+# Create a test koppeling (as leverancier user)
+KOPPELING_CHECK=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+    "${NC_URL}/index.php/apps/openregister/api/objects/voorzieningen/koppeling?_limit=1" 2>&1 | \
+    python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('total',0))" 2>/dev/null || echo "0")
+
+if [ "$KOPPELING_CHECK" = "0" ]; then
+    echo "  Creating test koppelingen..."
+
+    # Get applicatie UUIDs for linking
+    APP_UUID=$(curl -s -u "jan.pietersen@test.nl:${PASSWORD}" \
+        "${NC_URL}/index.php/apps/openregister/api/objects/voorzieningen/module?_limit=1&_search=Test+Applicatie+Leverancier" 2>&1 | \
+        python3 -c "import sys,json; r=json.loads(sys.stdin.read()).get('results',[]); print(r[0]['uuid'] if r else '')" 2>/dev/null || echo "")
+
+    if [ -n "$APP_UUID" ]; then
+        # Create koppeling
+        KOPPELING_RESULT=$(curl -s -u "jan.pietersen@test.nl:${PASSWORD}" -X POST \
+            "${NC_URL}/index.php/apps/openregister/api/objects/voorzieningen/koppeling" \
+            -H "Content-Type: application/json" \
+            -d "{
+                \"naam\": \"Test Koppeling REST API\",
+                \"type\": \"REST\",
+                \"status\": \"Actief\",
+                \"moduleA\": \"${APP_UUID}\",
+                \"omschrijving\": \"Test koppeling voor API-tests\"
+            }" 2>&1)
+        KOPPELING_UUID=$(echo "$KOPPELING_RESULT" | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('uuid',''))" 2>/dev/null || echo "")
+        if [ -n "$KOPPELING_UUID" ]; then
+            echo "  Created koppeling: $KOPPELING_UUID"
+        else
+            echo "  WARN: Failed to create koppeling"
+        fi
+    else
+        echo "  WARN: No applicatie found to link koppeling to"
+    fi
+else
+    echo "  Koppelingen already exist ($KOPPELING_CHECK)"
+fi
+
+# Create glossary test terms (in publication register, glossary schema)
+GLOSSARY_SCHEMA=$(docker exec nextcloud php occ config:app:get opencatalogi glossary_schema 2>/dev/null || echo "")
+GLOSSARY_REGISTER=$(docker exec nextcloud php occ config:app:get opencatalogi glossary_register 2>/dev/null || echo "")
+
+if [ -n "$GLOSSARY_SCHEMA" ] && [ -n "$GLOSSARY_REGISTER" ]; then
+    GLOSSARY_CHECK=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+        "${NC_URL}/index.php/apps/openregister/api/objects/${GLOSSARY_REGISTER}/${GLOSSARY_SCHEMA}?_limit=1" 2>&1 | \
+        python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('total',0))" 2>/dev/null || echo "0")
+
+    if [ "$GLOSSARY_CHECK" = "0" ]; then
+        echo "  Creating glossary test terms..."
+        for term_data in \
+            '{"title":"API","definition":"Application Programming Interface - een set van protocollen en tools voor het bouwen van softwareapplicaties.","category":"Technisch"}' \
+            '{"title":"GEMMA","definition":"GEMeentelijke Model Architectuur - de landelijke referentiearchitectuur voor gemeenten.","category":"Architectuur"}' \
+            '{"title":"SaaS","definition":"Software as a Service - een softwaredistributiemodel waarbij applicaties worden gehost door een serviceprovider.","category":"Dienstverlening"}'; do
+            TERM_RESULT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
+                "${NC_URL}/index.php/apps/openregister/api/objects/${GLOSSARY_REGISTER}/${GLOSSARY_SCHEMA}" \
+                -H "Content-Type: application/json" \
+                -d "$term_data" 2>&1)
+            TERM_TITLE=$(echo "$term_data" | python3 -c "import sys,json; print(json.loads(sys.stdin.read())['title'])" 2>/dev/null)
+            TERM_OK=$(echo "$TERM_RESULT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print('OK' if d.get('id') or d.get('uuid') else 'FAIL')" 2>/dev/null || echo "FAIL")
+            echo "  Glossary term '$TERM_TITLE': $TERM_OK"
+        done
+    else
+        echo "  Glossary terms already exist ($GLOSSARY_CHECK)"
+    fi
+else
+    echo "  WARN: Glossary schema/register not configured (schema=$GLOSSARY_SCHEMA, register=$GLOSSARY_REGISTER)"
+fi
+
+# ─────────────────────────────────────────────
+# Step 8d: Create a listing to expose data as publications
+# ─────────────────────────────────────────────
+echo ""
+echo "--- Step 8d: Creating publication listing ---"
+
+LISTING_SCHEMA=$(docker exec nextcloud php occ config:app:get opencatalogi listing_schema 2>/dev/null || echo "")
+LISTING_REGISTER=$(docker exec nextcloud php occ config:app:get opencatalogi listing_register 2>/dev/null || echo "")
+CATALOG_SCHEMA=$(docker exec nextcloud php occ config:app:get opencatalogi catalog_schema 2>/dev/null || echo "")
+CATALOG_REGISTER=$(docker exec nextcloud php occ config:app:get opencatalogi catalog_register 2>/dev/null || echo "")
+
+if [ -n "$LISTING_SCHEMA" ] && [ -n "$CATALOG_SCHEMA" ]; then
+    # Check if a catalog exists
+    CATALOG_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+        "${NC_URL}/index.php/apps/opencatalogi/api/catalogi" 2>&1 | \
+        python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('total',0))" 2>/dev/null || echo "0")
+
+    if [ "$CATALOG_COUNT" = "0" ]; then
+        echo "  Creating default catalog..."
+        CATALOG_RESULT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
+            "${NC_URL}/index.php/apps/openregister/api/objects/${CATALOG_REGISTER}/${CATALOG_SCHEMA}" \
+            -H "Content-Type: application/json" \
+            -d '{
+                "title": "Softwarecatalogus",
+                "slug": "softwarecatalogus",
+                "description": "GEMMA Softwarecatalogus - de catalogus voor gemeentelijke software",
+                "listed": true
+            }' 2>&1)
+        CATALOG_UUID=$(echo "$CATALOG_RESULT" | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('uuid',''))" 2>/dev/null || echo "")
+        echo "  Catalog: ${CATALOG_UUID:-FAILED}"
+    else
+        echo "  Catalog already exists ($CATALOG_COUNT)"
+        CATALOG_UUID=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+            "${NC_URL}/index.php/apps/opencatalogi/api/catalogi" 2>&1 | \
+            python3 -c "import sys,json; r=json.loads(sys.stdin.read()).get('results',[]); print(r[0]['uuid'] if r else '')" 2>/dev/null || echo "")
+    fi
+
+    # Create a listing that exposes voorzieningen/module as publications
+    if [ -n "$CATALOG_UUID" ]; then
+        LISTING_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
+            "${NC_URL}/index.php/apps/opencatalogi/api/listings" 2>&1 | \
+            python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('total',0))" 2>/dev/null || echo "0")
+
+        if [ "$LISTING_COUNT" = "0" ]; then
+            echo "  Creating listing for applicaties..."
+            LISTING_RESULT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
+                "${NC_URL}/index.php/apps/opencatalogi/api/listings" \
+                -H "Content-Type: application/json" \
+                -d "{
+                    \"title\": \"Applicaties\",
+                    \"catalog\": \"${CATALOG_UUID}\",
+                    \"register\": 3,
+                    \"schema\": 19,
+                    \"status\": \"published\"
+                }" 2>&1)
+            LISTING_OK=$(echo "$LISTING_RESULT" | python3 -c "import sys,json; print('OK' if json.loads(sys.stdin.read()).get('uuid') else 'FAIL')" 2>/dev/null || echo "FAIL")
+            echo "  Listing: $LISTING_OK"
+        else
+            echo "  Listings already exist ($LISTING_COUNT)"
+        fi
+    fi
+else
+    echo "  WARN: Listing/catalog schema not configured"
+fi
 
 # ─────────────────────────────────────────────
 # Step 9: Clear rate limiting again (login attempts above may trigger it)

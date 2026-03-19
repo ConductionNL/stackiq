@@ -72,11 +72,11 @@ class InitializeSettings implements IRepairStep
         $output->startProgress(1);
 
         try {
-            $currentAppVersion      = $this->appManager->getAppVersion(Application::APP_ID);
-            $lastInitializedVersion = $this->config->getValueString(Application::APP_ID, 'last_initialized_version', '');
+            $currentAppVersion = $this->appManager->getAppVersion(Application::APP_ID);
+            $lastInitVersion   = $this->config->getValueString(Application::APP_ID, 'last_initialized_version', '');
 
             // Only initialize if version changed or never initialized.
-            if ($lastInitializedVersion === $currentAppVersion) {
+            if ($lastInitVersion === $currentAppVersion) {
                 $output->info('Settings already initialized for version '.$currentAppVersion);
                 $output->advance(1);
                 $output->finishProgress();

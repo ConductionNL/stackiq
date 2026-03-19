@@ -41,6 +41,23 @@ use Exception;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class AangebodenGebruikService
 {
@@ -131,11 +148,9 @@ class AangebodenGebruikService
             $requestedPage  = $options['_page'] ?? 1;
 
             // Calculate offset from page or use explicit offset.
+            $requestedOffset = ($requestedPage - 1) * $requestedLimit;
             if (isset($options['_offset']) === true) {
                 $requestedOffset = $options['_offset'];
-            } else {
-                // Calculate offset from page number.
-                $requestedOffset = ($requestedPage - 1) * $requestedLimit;
             }
 
             // Fetch a large batch for filtering (since we filter post-fetch).
@@ -188,10 +203,8 @@ class AangebodenGebruikService
             $filteredResults = [];
             foreach ($searchResult['results'] ?? [] as $result) {
                 // Convert ObjectEntity to array if needed.
-                if (is_array(value: $result) === true) {
-                    $resultData = $result;
-                } else {
                     $resultData = $result->getObject();
+                if (is_array(value: $result) === true) {
                 }
 
                 $selfOrg = $resultData['@self']['organisation'] ?? null;
@@ -217,16 +230,12 @@ class AangebodenGebruikService
             $paginatedResults = array_slice(array: $filteredResults, offset: $requestedOffset, length: $requestedLimit);
 
             // Calculate pagination metadata.
-            if ($requestedLimit > 0) {
-                $totalPages = (int) ceil(num: $totalFiltered / $requestedLimit);
-            } else {
                 $totalPages = 1;
+            if ($requestedLimit > 0) {
             }
 
-            if ($requestedOffset > 0) {
-                $currentPage = (int) floor(num: $requestedOffset / $requestedLimit) + 1;
-            } else {
                 $currentPage = $requestedPage;
+            if ($requestedOffset > 0) {
             }
 
             // Build next/previous links.
@@ -262,10 +271,9 @@ class AangebodenGebruikService
             $searchResult['page']    = $currentPage;
             $searchResult['limit']   = $requestedLimit;
             $searchResult['offset']  = $requestedOffset;
+            unset($searchResult['next']);
             if ($nextLink !== null) {
                 $searchResult['next'] = $nextLink;
-            } else {
-                unset($searchResult['next']);
             }
 
             if ($prevLink !== null) {
@@ -394,10 +402,8 @@ class AangebodenGebruikService
             }
 
             // Get organization filter if provided (for ambtenaar).
-            if ($isAmbtenaar === true && isset($options['organisation']) === true) {
-                $organisationFilter = $options['organisation'];
-            } else {
                 $organisationFilter = null;
+            if ($isAmbtenaar === true && isset($options['organisation']) === true) {
             }
 
             // Build search query using ObjectService's buildSearchQuery.
@@ -458,10 +464,11 @@ class AangebodenGebruikService
                     query: $searchQuery,
                     _rbac: false,
                     _multitenancy: false,
-                    published: false,
                     deleted: false
                 );
-            } else {
+            }//end if
+
+            if ($isOrganisationUuid === false) {
                 // For suite/module UUIDs, use 'uses' parameter to filter by relations.
                 // Add organization filter if provided.
                 if ($organisationFilter !== null) {
@@ -481,7 +488,6 @@ class AangebodenGebruikService
                     query: $searchQuery,
                     _rbac: false,
                     _multitenancy: false,
-                    published: false,
                     deleted: false,
                     uses: $uuid
                 );
@@ -586,8 +592,6 @@ class AangebodenGebruikService
                 _rbac: false,
                 // Disable multitenancy to access objects from all organisations.
                 _multitenancy: false,
-                // Include unpublished objects.
-                published: false,
                 // Exclude deleted objects.
                 deleted: false
             );
@@ -704,8 +708,6 @@ class AangebodenGebruikService
             // Disable RBAC to access any object.
                 _multitenancy: false,
             // Disable multitenancy to access objects from any organisation.
-                published: false,
-            // Include unpublished objects.
                 deleted: false,
             // Exclude deleted objects.
                 uses: $suiteId
@@ -811,10 +813,8 @@ class AangebodenGebruikService
 
                     // Process and add to results.
                     foreach ($gebruikItems as $gebruik) {
-                        if (is_array(value: $gebruik) === true) {
-                            $gebruikData = $gebruik;
-                        } else {
                             $gebruikData = $gebruik->jsonSerialize();
+                        if (is_array(value: $gebruik) === true) {
                         }
 
                         $gebruikData['_filter_type'] = 'deelnemers';
@@ -1298,7 +1298,6 @@ class AangebodenGebruikService
             query: $searchQuery,
             _rbac: false,
             _multitenancy: false,
-            published: false,
             deleted: false
         );
 
@@ -1347,10 +1346,8 @@ class AangebodenGebruikService
                 );
 
                 foreach ($suites as $suite) {
-                    if (is_array(value: $suite) === true) {
-                        $suiteData = $suite;
-                    } else {
                         $suiteData = $suite->getObject();
+                    if (is_array(value: $suite) === true) {
                     }
 
                     $appUuids[] = $suiteData['uuid'] ?? $suiteData['id'] ?? null;
@@ -1375,10 +1372,8 @@ class AangebodenGebruikService
                 );
 
                 foreach ($modules as $module) {
-                    if (is_array(value: $module) === true) {
-                        $moduleData = $module;
-                    } else {
                         $moduleData = $module->getObject();
+                    if (is_array(value: $module) === true) {
                     }
 
                     $appUuids[] = $moduleData['uuid'] ?? $moduleData['id'] ?? null;
@@ -1464,7 +1459,6 @@ class AangebodenGebruikService
             query: $searchQuery,
             _rbac: false,
             _multitenancy: false,
-            published: false,
             deleted: false,
             uses: $relatedUuid
         );

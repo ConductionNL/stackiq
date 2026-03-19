@@ -188,7 +188,7 @@ export default {
 }
 </style>
 
-<style>
+<style scoped>
 /* Ensure mass action dialogs appear on top of other modals */
 .mass-action-dialog {
 	z-index: 10000 !important;

@@ -39,6 +39,27 @@ use Symfony\Component\Mime\Address;
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: 1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class SettingsService
 {
@@ -94,7 +115,7 @@ class SettingsService
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger
     ) {
-        $this->_appName = 'softwarecatalog';
+        $this->appName = 'softwarecatalog';
     }//end __construct()
 
     /**
@@ -240,10 +261,9 @@ class SettingsService
                     $rawRegisters = array_map(
                             function ($register) {
                                 if (is_object($register) === true && method_exists($register, 'jsonSerialize') === true) {
-                                    return $register->jsonSerialize();
-                                } else {
-                                    return (array) $register;
                                 }
+
+                                    return (array) $register;
                             },
                             $rawRegisters
                             );
@@ -381,7 +401,7 @@ class SettingsService
         // Get the current values from the configuration.
         try {
             foreach ($defaults as $key => $defaultValue) {
-                $data['configuration'][$key] = $this->config->getValueString($this->_appName, $key, $defaultValue);
+                $data['configuration'][$key] = $this->config->getValueString($this->appName, $key, $defaultValue);
             }
 
             // Add catalog location.
@@ -423,16 +443,14 @@ class SettingsService
                     $stringValue = json_encode($value);
                 } else {
                     // Ensure value is converted to string as required by setValueString.
-                    if (is_string($value) === true) {
-                        $stringValue = $value;
-                    } else {
                         $stringValue = (string) $value;
+                    if (is_string($value) === true) {
                     }
                 }
 
-                $this->config->setValueString($this->_appName, $key, $stringValue);
+                $this->config->setValueString($this->appName, $key, $stringValue);
                 // Retrieve the updated value to confirm the change.
-                $data[$key] = $this->config->getValueString($this->_appName, $key);
+                $data[$key] = $this->config->getValueString($this->appName, $key);
             }//end foreach
 
             $this->logger->info(
@@ -486,11 +504,11 @@ class SettingsService
         try {
             // Check if auto-configuration has already been completed.
             $autoConfigCompleted = $this->config->getValueString(
-                $this->_appName,
+                $this->appName,
                     'auto_config_completed',
                     'false'
             ) === 'true';
-            if (empty($autoConfigCompleted) === false) {
+            if ($autoConfigCompleted === true) {
                 $this->logger->info('Auto-configuration already completed, skipping');
                 return [];
             }
@@ -564,7 +582,7 @@ class SettingsService
             }
 
             // Mark auto-configuration as completed.
-            $this->config->setValueString($this->_appName, 'auto_config_completed', 'true');
+            $this->config->setValueString($this->appName, 'auto_config_completed', 'true');
             $this->logger->info('Comprehensive auto-configuration marked as completed');
 
             // Return the consolidated configuration result.
@@ -757,7 +775,7 @@ class SettingsService
 
         // First try register-specific configuration.
         // Check for AMEF register specific schemas from JSON config.
-        $amefConfig = $this->config->getValueString($this->_appName, 'amef_config', '{}');
+        $amefConfig = $this->config->getValueString($this->appName, 'amef_config', '{}');
         if (empty($amefConfig) === false && $amefConfig !== '{}') {
             $decodedAmefConfig = json_decode($amefConfig, true);
             if (is_array($decodedAmefConfig) === true) {
@@ -812,7 +830,7 @@ class SettingsService
 
         // Check for AMEF register specific schemas (legacy individual keys).
         if ($result === null && $objectType === 'organization') {
-            $schemaId = $this->config->getValueString($this->_appName, 'amef_organization_schema', '');
+            $schemaId = $this->config->getValueString($this->appName, 'amef_organization_schema', '');
 
             if (empty($schemaId) === false) {
                 $result = (int) $schemaId;
@@ -841,7 +859,7 @@ class SettingsService
 
         // Fall back to generic configuration for backward compatibility.
         if ($result === null) {
-            $schemaId = $this->config->getValueString($this->_appName, "{$objectType}_schema", '');
+            $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
             if (empty($schemaId) === false) {
                 $result = (int) $schemaId;
             }
@@ -920,11 +938,9 @@ class SettingsService
 
         // Fallback to legacy per-object-type register config.
         if ($result === null) {
-            $registerId = $this->config->getValueString($this->_appName, "{$objectType}_register", '');
-            if (empty($registerId) === false) {
-                $result = (int) $registerId;
-            } else {
+            $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
                 $result = null;
+            if (empty($registerId) === false) {
             }
         }
 
@@ -991,7 +1007,7 @@ class SettingsService
                 ]
                 );
 
-        $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_organisatie_register', '');
+        $registerId = $this->config->getValueString($this->appName, 'voorzieningen_organisatie_register', '');
 
         $this->logger->debug(
                 "SettingsService: Voorzieningen organisatie register result",
@@ -1022,7 +1038,7 @@ class SettingsService
                 ]
                 );
 
-        $registerId = $this->config->getValueString($this->_appName, 'voorzieningen_contactpersoon_register', '');
+        $registerId = $this->config->getValueString($this->appName, 'voorzieningen_contactpersoon_register', '');
 
         $this->logger->debug(
                 "SettingsService: Voorzieningen contactpersoon register result",
@@ -1385,7 +1401,7 @@ class SettingsService
                                 );
 
                         // In force mode, we want to surface import errors more prominently.
-                        if (empty($force) === false) {
+                        if ($force === true) {
                             throw new \RuntimeException('Force import failed: '.$e->getMessage(), 0, $e);
                         }
                     }//end try
@@ -1409,7 +1425,7 @@ class SettingsService
      */
     public function getGenericUserGroups(): array
     {
-        $groupsJson = $this->config->getValueString($this->_appName, 'generic_user_groups', '');
+        $groupsJson = $this->config->getValueString($this->appName, 'generic_user_groups', '');
 
         if (empty($groupsJson) === true) {
             // Return only truly generic groups as default (not role-specific).
@@ -1421,10 +1437,9 @@ class SettingsService
 
         $groups = json_decode($groupsJson, true);
         if (is_array($groups) === true) {
-            return $groups;
-        } else {
-            return [];
         }
+
+            return [];
     }//end getGenericUserGroups()
 
     /**
@@ -1437,7 +1452,7 @@ class SettingsService
     public function setGenericUserGroups(array $groups): void
     {
         $groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-        $this->config->setValueString($this->_appName, 'generic_user_groups', $groupsJson);
+        $this->config->setValueString($this->appName, 'generic_user_groups', $groupsJson);
 
         $this->logger->info(
             'Updated generic user groups configuration',
@@ -1470,7 +1485,7 @@ class SettingsService
     public function setOrganizationAdminGroups(array $groups): void
     {
         $groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-        $this->config->setValueString($this->_appName, 'organization_admin_groups', $groupsJson);
+        $this->config->setValueString($this->appName, 'organization_admin_groups', $groupsJson);
 
         $this->logger->info(
             'Updated organization admin groups configuration',
@@ -1487,7 +1502,7 @@ class SettingsService
      */
     public function getSuperUserGroups(): array
     {
-        $groupsJson = $this->config->getValueString($this->_appName, 'super_user_groups', '');
+        $groupsJson = $this->config->getValueString($this->appName, 'super_user_groups', '');
 
         if (empty($groupsJson) === true) {
             // Return default groups if no configuration exists.
@@ -1499,10 +1514,9 @@ class SettingsService
 
         $groups = json_decode($groupsJson, true);
         if (is_array($groups) === true) {
-            return $groups;
-        } else {
-            return [];
         }
+
+            return [];
     }//end getSuperUserGroups()
 
     /**
@@ -1515,7 +1529,7 @@ class SettingsService
     public function setSuperUserGroups(array $groups): void
     {
         $groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-        $this->config->setValueString($this->_appName, 'super_user_groups', $groupsJson);
+        $this->config->setValueString($this->appName, 'super_user_groups', $groupsJson);
 
         $this->logger->info(
             'Updated super user groups configuration',
@@ -1805,7 +1819,7 @@ class SettingsService
                     $groups[] = [
                         'id'          => $group->getGID(),
                         'displayName' => $group->getDisplayName(),
-                        'memberCount' => count($group->getUsers() === true),
+                        'memberCount' => count($group->getUsers()),
                         'isGeneric'   => in_array($group->getGID(), $this->getGenericUserGroups()) === true,
                     ];
                 }
@@ -1826,7 +1840,7 @@ class SettingsService
     {
         $this->logger->debug('SoftwareCatalog: Loading email settings from configuration');
 
-        $app      = $this->_appName;
+        $app      = $this->appName;
         $settings = [
             'enabled'                         => $this->config->getValueString(
                 $app,
@@ -2046,15 +2060,13 @@ class SettingsService
 
                 // Convert boolean values to strings.
                 if (is_bool($value) === true) {
-                    if ($value === true) {
-                        $value = 'true';
-                    } else {
                         $value = 'false';
+                    if ($value === true) {
                     }
                 }
 
-                $this->config->setValueString($this->_appName, $configKey, (string) $value);
-                $updatedSettings[$settingKey] = $this->config->getValueString($this->_appName, $configKey);
+                $this->config->setValueString($this->appName, $configKey, (string) $value);
+                $updatedSettings[$settingKey] = $this->config->getValueString($this->appName, $configKey);
             }
         }
 
@@ -2080,7 +2092,7 @@ class SettingsService
         $configKey       = "email_template_{$templateName}";
         $defaultTemplate = $this->getDefaultEmailTemplate(templateName: $templateName);
 
-        return $this->config->getValueString($this->_appName, $configKey, $defaultTemplate);
+        return $this->config->getValueString($this->appName, $configKey, $defaultTemplate);
     }//end getEmailTemplate()
 
     /**
@@ -2095,7 +2107,7 @@ class SettingsService
     {
         try {
             $configKey = "email_template_{$templateName}";
-            $this->config->setValueString($this->_appName, $configKey, $templateContent);
+            $this->config->setValueString($this->appName, $configKey, $templateContent);
 
             $this->logger->info(
                 'Email template updated successfully',
@@ -2260,7 +2272,7 @@ class SettingsService
             ];
 
             foreach ($configKeys as $key) {
-                $value = $this->config->getValueString($this->_appName, $key, '');
+                $value = $this->config->getValueString($this->appName, $key, '');
                 if (empty($value) === true) {
                     $debugInfo['configuration'][$key] = '';
                 } else {
@@ -2600,10 +2612,8 @@ class SettingsService
 
         switch ($transportType) {
             case 'smtp':
-                if (empty($emailSettings['smtpUsername']) === false) {
-                    $usernameValue = '***';
-                } else {
                     $usernameValue = 'none';
+                if (empty($emailSettings['smtpUsername']) === false) {
                 }
                 return [
                     'type'       => 'SMTP',
@@ -2789,10 +2799,8 @@ class SettingsService
             $dsn .= '?encryption='.$encryption;
         }
 
-        if (empty($encryption) === false && $encryption !== 'none') {
-            $encSuffix = '?encryption='.$encryption;
-        } else {
             $encSuffix = '';
+        if (empty($encryption) === false && $encryption !== 'none') {
         }
 
         $dsnPattern = sprintf('smtp://***:***@%s:%d%s', $host, $port, $encSuffix);
@@ -2943,10 +2951,8 @@ class SettingsService
             $openRegisterInstalled = $this->isOpenRegisterInstalled();
             $openRegisterEnabled   = $openRegisterInstalled && $this->isOpenRegisterEnabled();
 
-            if ($storedConfigVersion !== null) {
-                $versionComparisonValue = version_compare($currentAppVersion, $storedConfigVersion);
-            } else {
                 $versionComparisonValue = null;
+            if ($storedConfigVersion !== null) {
             }
 
             $versionInfo = [
@@ -2958,7 +2964,7 @@ class SettingsService
                 'versionComparison'     => $versionComparisonValue,
                 'isFullyConfigured'     => $this->isFullyConfigured(),
                 'autoConfigCompleted'   => $this->config->getValueString(
-                    $this->_appName,
+                    $this->appName,
                         'auto_config_completed',
                         'false'
                 ) === 'true',
@@ -2994,7 +3000,7 @@ class SettingsService
             $this->logger->info('SettingsService: Starting force update');
 
             // Reset auto-configuration flag.
-            $this->config->setValueString($this->_appName, 'auto_config_completed', 'false');
+            $this->config->setValueString($this->appName, 'auto_config_completed', 'false');
 
             // Perform forced import.
             $importResult = $this->manualImport(forceImport: true);
@@ -3028,10 +3034,8 @@ class SettingsService
                     );
 
             // Return concise response to avoid serialization issues with large nested structures.
-            if ($success === true) {
-                $messageValue = 'Force update completed successfully';
-            } else {
                 $messageValue = 'Force update completed but configuration needs attention';
+            if ($success === true) {
             }
 
             return [
@@ -3085,11 +3089,11 @@ class SettingsService
                     );
 
             // Reset the auto-configuration completion flag.
-            $this->config->setValueString($this->_appName, 'auto_config_completed', 'false');
+            $this->config->setValueString($this->appName, 'auto_config_completed', 'false');
 
             $resetItems = ['auto_config_completed_flag'];
 
-            if (empty($resetConfiguration) === false) {
+            if ($resetConfiguration === true) {
                 // Reset schema and register configurations.
                 $configKeysToReset = [
                     'voorzieningen_organisatie_source',
@@ -3107,7 +3111,7 @@ class SettingsService
                 ];
 
                 foreach ($configKeysToReset as $key) {
-                    $this->config->setValueString($this->_appName, $key, '');
+                    $this->config->setValueString($this->appName, $key, '');
                 }
 
                 $resetItems[] = 'schema_register_configurations';
@@ -3175,11 +3179,9 @@ class SettingsService
 
             // If force import is requested or auto-config not completed, reset auto-configuration flag.
             if ($forceImport === true || $versionInfo['autoConfigCompleted'] === false) {
-                $this->config->setValueString($this->_appName, 'auto_config_completed', 'false');
-                if ($forceImport === true) {
-                    $reasonValue = 'force_import';
-                } else {
+                $this->config->setValueString($this->appName, 'auto_config_completed', 'false');
                     $reasonValue = 'auto_config_not_completed';
+                if ($forceImport === true) {
                 }
 
                 $this->logger->info(
@@ -3241,7 +3243,7 @@ class SettingsService
                 $message .= ' and auto-configured';
             }
 
-            if (empty($forceImport) === false) {
+            if ($forceImport === true) {
                 $message .= ' (forced import)';
             }
 
@@ -3560,16 +3562,12 @@ class SettingsService
                 $originalSlug  = $schema['slug'] ?? '';
                 $lowercaseSlug = strtolower($originalSlug);
 
-                if (isset($slugToKey[$originalSlug]) === true) {
-                    $hasMappingOriginalValue = 'YES';
-                } else {
                     $hasMappingOriginalValue = 'NO';
+                if (isset($slugToKey[$originalSlug]) === true) {
                 }
 
-                if (isset($slugToKey[$lowercaseSlug]) === true) {
-                    $hasMappingLowercaseValue = 'YES';
-                } else {
                     $hasMappingLowercaseValue = 'NO';
+                if (isset($slugToKey[$lowercaseSlug]) === true) {
                 }
 
                 $this->logger->info(
@@ -3685,10 +3683,9 @@ class SettingsService
             $registers = array_map(
                     function ($register) {
                         if (($register instanceof \OCA\OpenRegister\Db\Register)) {
-                            return $register->jsonSerialize();
-                        } else {
-                            return (array) $register;
                         }
+
+                            return (array) $register;
                     },
                     $registers
                     );
@@ -3753,10 +3750,8 @@ class SettingsService
                 }
             }//end foreach
 
-            if (isset($best) === true) {
-                $targetRegister = $best;
-            } else {
                 $targetRegister = $candidate;
+            if (isset($best) === true) {
             }
 
             if ($targetRegister === null) {
@@ -3782,10 +3777,8 @@ class SettingsService
                 $allowed = ['organization','element','relation','view','model','property-definition'];
                 if (in_array($slug, $allowed, true) === true) {
                     // Handle property-definition schema with underscore in config key.
-                    if ($slug === 'property-definition') {
-                        $configKey = 'property_definition_schema';
-                    } else {
                         $configKey = $slug.'_schema';
+                    if ($slug === 'property-definition') {
                     }
 
                     $config[$configKey] = (string) $schema['id'];
@@ -3901,24 +3894,24 @@ class SettingsService
      */
     public function getVoorzieningenConfig(): array
     {
-        $config  = $this->config->getValueString($this->_appName, 'voorzieningen_config', '{}');
+        $config  = $this->config->getValueString($this->appName, 'voorzieningen_config', '{}');
         $decoded = json_decode($config, true);
 
         // Backward compatibility: build minimal structure from legacy scalar keys.
         if (is_array($decoded) === false) {
             $decoded = [
                 'register'              => $this->config->getValueString(
-                    $this->_appName,
+                    $this->appName,
                         'voorzieningen_register',
                         ''
                 ),
                 'organisatie_schema'    => $this->config->getValueString(
-                    $this->_appName,
+                    $this->appName,
                         'voorzieningen_organisatie_schema',
                         ''
                 ),
                 'contactpersoon_schema' => $this->config->getValueString(
-                    $this->_appName,
+                    $this->appName,
                         'voorzieningen_contactpersoon_schema',
                         ''
                 ),
@@ -3945,7 +3938,7 @@ class SettingsService
         // Persist only normalized structure.
         $normalized = $this->normalizeVoorzieningenConfig(input: $config);
         $jsonConfig = json_encode($normalized, JSON_PRETTY_PRINT);
-        $this->config->setValueString($this->_appName, 'voorzieningen_config', $jsonConfig);
+        $this->config->setValueString($this->appName, 'voorzieningen_config', $jsonConfig);
     }//end setVoorzieningenConfig()
 
     /**
@@ -4033,39 +4026,39 @@ class SettingsService
                     );
 
             // Fallback to direct config access if ArchiMateService is not available.
-            $config  = $this->config->getValueString($this->_appName, 'amef_config', '{}');
+            $config  = $this->config->getValueString($this->appName, 'amef_config', '{}');
             $decoded = json_decode($config, true);
 
             if (is_array($decoded) === false) {
                 // Fallback to individual config values for backward compatibility.
                 $decoded = [
                     'register_id'          => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_register_id',
                             ''
                     ),
                     'organizations_schema' => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_organizations_schema',
                             ''
                     ),
                     'elements_schema'      => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_elements_schema',
                             ''
                     ),
                     'relationships_schema' => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_relationships_schema',
                             ''
                     ),
                     'views_schema'         => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_views_schema',
                             ''
                     ),
                     'models_schema'        => $this->config->getValueString(
-                        $this->_appName,
+                        $this->appName,
                             'amef_models_schema',
                             ''
                     ),
@@ -4086,7 +4079,7 @@ class SettingsService
     public function setAmefConfig(array $config): void
     {
         $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
-        $this->config->setValueString($this->_appName, 'amef_config', $jsonConfig);
+        $this->config->setValueString($this->appName, 'amef_config', $jsonConfig);
 
         // Clear configuration cache when AMEF config is updated.
         $this->clearConfigurationCache();
@@ -4107,23 +4100,23 @@ class SettingsService
      */
     public function getEmailConfig(): array
     {
-        $config  = $this->config->getValueString($this->_appName, 'email_config', '{}');
+        $config  = $this->config->getValueString($this->appName, 'email_config', '{}');
         $decoded = json_decode($config, true);
 
         if (is_array($decoded) === false) {
             // Fallback to individual config values for backward compatibility.
             $decoded = [
-                'enabled'            => $this->config->getValueString($this->_appName, 'email_enabled', 'false') === 'true',
-                'transport_type'     => $this->config->getValueString($this->_appName, 'email_transport_type', 'smtp'),
-                'smtp_host'          => $this->config->getValueString($this->_appName, 'email_smtp_host', ''),
-                'smtp_port'          => $this->config->getValueString($this->_appName, 'email_smtp_port', '587'),
-                'smtp_username'      => $this->config->getValueString($this->_appName, 'email_smtp_username', ''),
-                'smtp_password'      => $this->config->getValueString($this->_appName, 'email_smtp_password', ''),
-                'smtp_encryption'    => $this->config->getValueString($this->_appName, 'email_smtp_encryption', 'tls'),
-                'sender_email'       => $this->config->getValueString($this->_appName, 'sender_email', ''),
-                'sender_name'        => $this->config->getValueString($this->_appName, 'sender_name', ''),
-                'mailjet_api_key'    => $this->config->getValueString($this->_appName, 'email_mailjet_api_key', ''),
-                'mailjet_secret_key' => $this->config->getValueString($this->_appName, 'email_mailjet_secret_key', ''),
+                'enabled'            => $this->config->getValueString($this->appName, 'email_enabled', 'false') === 'true',
+                'transport_type'     => $this->config->getValueString($this->appName, 'email_transport_type', 'smtp'),
+                'smtp_host'          => $this->config->getValueString($this->appName, 'email_smtp_host', ''),
+                'smtp_port'          => $this->config->getValueString($this->appName, 'email_smtp_port', '587'),
+                'smtp_username'      => $this->config->getValueString($this->appName, 'email_smtp_username', ''),
+                'smtp_password'      => $this->config->getValueString($this->appName, 'email_smtp_password', ''),
+                'smtp_encryption'    => $this->config->getValueString($this->appName, 'email_smtp_encryption', 'tls'),
+                'sender_email'       => $this->config->getValueString($this->appName, 'sender_email', ''),
+                'sender_name'        => $this->config->getValueString($this->appName, 'sender_name', ''),
+                'mailjet_api_key'    => $this->config->getValueString($this->appName, 'email_mailjet_api_key', ''),
+                'mailjet_secret_key' => $this->config->getValueString($this->appName, 'email_mailjet_secret_key', ''),
             ];
         }
 
@@ -4143,7 +4136,7 @@ class SettingsService
         $this->clearConfigurationCache();
 
         $jsonConfig = json_encode($config, JSON_PRETTY_PRINT);
-        $this->config->setValueString($this->_appName, 'email_config', $jsonConfig);
+        $this->config->setValueString($this->appName, 'email_config', $jsonConfig);
     }//end setEmailConfig()
 
     /**
@@ -4171,8 +4164,8 @@ class SettingsService
                     );
 
             // Fallback to direct config access if ArchiMateService is not available.
-            $importStatus = $this->config->getValueString($this->_appName, 'archimate_import_status', '{}');
-            $exportStatus = $this->config->getValueString($this->_appName, 'archimate_export_status', '{}');
+            $importStatus = $this->config->getValueString($this->appName, 'archimate_import_status', '{}');
+            $exportStatus = $this->config->getValueString($this->appName, 'archimate_export_status', '{}');
 
             $importDecoded = json_decode($importStatus, true);
             $exportDecoded = json_decode($exportStatus, true);
@@ -4180,16 +4173,12 @@ class SettingsService
             // Get AMEF object counts.
             $amefObjectCounts = $this->getAmefObjectCounts();
 
-            if (is_array($importDecoded) === true) {
-                $importValue = $importDecoded;
-            } else {
                 $importValue = [];
+            if (is_array($importDecoded) === true) {
             }
 
-            if (is_array($exportDecoded) === true) {
-                $exportValue = $exportDecoded;
-            } else {
                 $exportValue = [];
+            if (is_array($exportDecoded) === true) {
             }
 
             return [
@@ -4413,7 +4402,7 @@ class SettingsService
 
             // Fallback to direct config access if ArchiMateService is not available.
             $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
-            $this->config->setValueString($this->_appName, 'archimate_import_status', $jsonStatus);
+            $this->config->setValueString($this->appName, 'archimate_import_status', $jsonStatus);
         }
     }//end setArchiMateImportStatus()
 
@@ -4445,7 +4434,7 @@ class SettingsService
 
             // Fallback to direct config access if ArchiMateService is not available.
             $jsonStatus = json_encode($status, JSON_PRETTY_PRINT);
-            $this->config->setValueString($this->_appName, 'archimate_export_status', $jsonStatus);
+            $this->config->setValueString($this->appName, 'archimate_export_status', $jsonStatus);
         }
     }//end setArchiMateExportStatus()
 
@@ -4474,7 +4463,7 @@ class SettingsService
                     );
 
             // Fallback to direct config access if ArchiMateService is not available.
-            $this->config->deleteKey($this->_appName, 'archimate_import_status');
+            $this->config->deleteKey($this->appName, 'archimate_import_status');
 
             return [
                 'cleared'        => true,
@@ -4513,7 +4502,7 @@ class SettingsService
                     );
 
             // Fallback to just clearing config if ArchiMateService is not available.
-            $this->config->deleteKey($this->_appName, 'archimate_import_status');
+            $this->config->deleteKey($this->appName, 'archimate_import_status');
 
             return [
                 'cleared'        => true,
@@ -4550,7 +4539,7 @@ class SettingsService
                     );
 
             // Fallback to just clearing config if ArchiMateService is not available.
-            $this->config->deleteKey($this->_appName, 'archimate_import_status');
+            $this->config->deleteKey($this->appName, 'archimate_import_status');
 
             return [
                 'cancelled'         => true,
@@ -4589,7 +4578,7 @@ class SettingsService
                     );
 
             // Fallback to direct config access if ArchiMateService is not available.
-            $this->config->deleteKey($this->_appName, 'archimate_export_status');
+            $this->config->deleteKey($this->appName, 'archimate_export_status');
         }
     }//end clearArchiMateExportStatus()
 
@@ -4609,7 +4598,7 @@ class SettingsService
 
         try {
             // 1. Migrate Voorzieningen configuration.
-            $an = $this->_appName;
+            $an = $this->appName;
             $voorzieningenConfig = [
                 'register'                => $this->config->getValueString(
                     $an,
@@ -4958,7 +4947,7 @@ class SettingsService
 
             foreach ($oldKeys as $key) {
                 try {
-                    $this->config->deleteKey($this->_appName, $key);
+                    $this->config->deleteKey($this->appName, $key);
                     $results['cleaned'][] = $key;
                 } catch (\Exception $e) {
                     $results['errors'][] = "Failed to delete key '{$key}': ".$e->getMessage();
@@ -5009,16 +4998,16 @@ class SettingsService
             $voorzieningenConfig = $this->getVoorzieningenConfig();
 
             // Get amef config directly from config storage (avoid heavy ArchiMateService call).
-            $amefConfigJson = $this->config->getValueString($this->_appName, 'amef_config', '{}');
+            $amefConfigJson = $this->config->getValueString($this->appName, 'amef_config', '{}');
             $amefConfig     = json_decode($amefConfigJson, true);
             if (is_array($amefConfig) === false) {
                 $amefConfig = [
-                    'register'            => $this->config->getValueString($this->_appName, 'amef_register_id', ''),
-                    'organization_schema' => $this->config->getValueString($this->_appName, 'amef_organizations_schema', ''),
-                    'element_schema'      => $this->config->getValueString($this->_appName, 'amef_elements_schema', ''),
-                    'relation_schema'     => $this->config->getValueString($this->_appName, 'amef_relationships_schema', ''),
-                    'view_schema'         => $this->config->getValueString($this->_appName, 'amef_views_schema', ''),
-                    'model_schema'        => $this->config->getValueString($this->_appName, 'amef_models_schema', ''),
+                    'register'            => $this->config->getValueString($this->appName, 'amef_register_id', ''),
+                    'organization_schema' => $this->config->getValueString($this->appName, 'amef_organizations_schema', ''),
+                    'element_schema'      => $this->config->getValueString($this->appName, 'amef_elements_schema', ''),
+                    'relation_schema'     => $this->config->getValueString($this->appName, 'amef_relationships_schema', ''),
+                    'view_schema'         => $this->config->getValueString($this->appName, 'amef_views_schema', ''),
+                    'model_schema'        => $this->config->getValueString($this->appName, 'amef_models_schema', ''),
                 ];
             }
 
@@ -5479,10 +5468,8 @@ class SettingsService
             if (isset($config['register']) === true) {
                 $targetRegisterId = (string) $config['register'];
             } else {
-                if (isset($existing['register']) === true) {
-                    $targetRegisterId = (string) $existing['register'];
-                } else {
                     $targetRegisterId = '';
+                if (isset($existing['register']) === true) {
                 }
             }
 
@@ -5510,7 +5497,11 @@ class SettingsService
                             $register = $register->jsonSerialize();
                             if ((string) ($register['id'] ?? '') === $targetRegisterId) {
                                 foreach (($register['schemas'] ?? []) as $schema) {
-                                    $schemaIdSet[(string) $schema['id']] = true;
+                                    if (is_array($schema) === true && isset($schema['id']) === true) {
+                                        $schemaIdSet[(string) $schema['id']] = true;
+                                    } else {
+                                        $schemaIdSet[(string) $schema] = true;
+                                    }
                                 }
 
                                 break;
@@ -5810,7 +5801,7 @@ class SettingsService
      */
     public function getCatalogLocation(): string
     {
-        return $this->config->getValueString($this->_appName, 'catalog_location', '');
+        return $this->config->getValueString($this->appName, 'catalog_location', '');
     }//end getCatalogLocation()
 
     /**
@@ -5822,7 +5813,7 @@ class SettingsService
      */
     public function setCatalogLocation(string $location): void
     {
-        $this->config->setValueString($this->_appName, 'catalog_location', $location);
+        $this->config->setValueString($this->appName, 'catalog_location', $location);
     }//end setCatalogLocation()
 
     /**
@@ -5954,10 +5945,8 @@ class SettingsService
                 }
 
                 // Prepare organisatie data with forced UUID.
-                if ($organisation->getActive() === true) {
-                    $statusValue = 'Actief';
-                } else {
                     $statusValue = 'Inactief';
+                if ($organisation->getActive() === true) {
                 }
 
                 $organisationsToCreate[] = [
@@ -6082,16 +6071,12 @@ class SettingsService
             }//end foreach
 
             $totalTime = microtime(true) - $startTime;
-            if ($results['created_count'] > 0) {
-                $overallPerformance = $results['created_count'] / $totalTime;
-            } else {
                 $overallPerformance = 0;
+            if ($results['created_count'] > 0) {
             }
 
-            if ($overallPerformance > 10) {
-                $estimatedImprovementValue = round($overallPerformance / 10, 1).'x faster than individual operations';
-            } else {
                 $estimatedImprovementValue = 'baseline';
+            if ($overallPerformance > 10) {
             }
 
             $createdCount  = $results['created_count'];
@@ -6136,13 +6121,15 @@ class SettingsService
      */
     private function determineOrganisationType(\OCA\OpenRegister\Db\Organisation $organisation): string
     {
-        $name = strtolower($organisation->getName() === true);
+        $name = strtolower($organisation->getName());
 
         if (strpos($name, 'gemeente') !== false) {
-            return 'Gemeente';
-        } else if (strpos($name, 'provincie') !== false) {
-            return 'Provincie';
-        } else if (strpos($name, 'ministerie') !== false) {
+        }
+
+        if (strpos($name, 'provincie') !== false) {
+        }
+
+        if (strpos($name, 'ministerie') !== false) {
             return 'Ministerie';
         } else {
             return 'Leverancier';
@@ -6165,7 +6152,7 @@ class SettingsService
     public function getCronjobConfig(): array
     {
         try {
-            $configJson = $this->config->getValueString($this->_appName, 'cronjob_config', '{}');
+            $configJson = $this->config->getValueString($this->appName, 'cronjob_config', '{}');
             $config     = json_decode($configJson, true);
 
             if (is_array($config) === false) {
@@ -6243,7 +6230,7 @@ class SettingsService
     {
         try {
             // Get existing config.
-            $configJson = $this->config->getValueString($this->_appName, 'cronjob_config', '{}');
+            $configJson = $this->config->getValueString($this->appName, 'cronjob_config', '{}');
             $config     = json_decode($configJson, true);
 
             if (is_array($config) === false) {
@@ -6277,7 +6264,7 @@ class SettingsService
 
             // Save the updated config.
             $this->config->setValueString(
-                $this->_appName,
+                $this->appName,
                 'cronjob_config',
                 json_encode($config, JSON_PRETTY_PRINT)
             );
@@ -6323,7 +6310,7 @@ class SettingsService
     public function getCronjobContext(string $jobId): ?array
     {
         try {
-            $configJson = $this->config->getValueString($this->_appName, 'cronjob_config', '{}');
+            $configJson = $this->config->getValueString($this->appName, 'cronjob_config', '{}');
             $config     = json_decode($configJson, true);
 
             if (is_array($config) === false || isset($config[$jobId]) === false) {

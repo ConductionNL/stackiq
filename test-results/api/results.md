@@ -1,65 +1,87 @@
-# Softwarecatalogus — API Test Results
+# GEMMA Softwarecatalogus — API Test Results (Newman)
 
-**Date:** 2026-03-10 (Run 2)
-**Environment:** local (http://localhost:8080)
-**Tool:** Newman v6 + Postman Collection
-**Duration:** 2m 17.2s
+**Date:** 2026-03-19
+**Environment:** http://localhost:8080 (Backend)
+**Method:** Newman/Postman API tests
+**Duration:** 58.2s
+**Average response time:** 154ms (min: 31ms, max: 3.1s)
 
-## Summary
+---
 
-| Metric | Executed | Failed |
-|--------|----------|--------|
-| Iterations | 1 | 0 |
-| Requests | 334 | 0 |
-| Test scripts | 329 | 0 |
-| Pre-request scripts | 381 | 0 |
-| **Assertions** | **454** | **1** |
+## Overall Results
 
-**Pass rate:** 99.8% (453/454)
+| Metric | Count |
+|--------|-------|
+| **Total requests** | 334 |
+| **Total assertions** | 454 |
+| **Passed** | 447 |
+| **Failed** | 7 |
+| **Pass rate** | 98.5% |
 
-## Failed Tests
+---
 
-| # | Test | Detail |
-|---|------|--------|
-| #433 AC2 | Koppelingen have moduleB field | `expected +0 to be above +0` — No koppelingen have `moduleB` populated. Data migration issue: koppeling import may not be mapping the second module reference. |
+## Failed Assertions (7)
 
-## Previously Failing (now fixed)
+### 1. #144 AC5: Results contain beschrijvingKort
+- **Folder:** 01 - Public API & Search
+- **Issue:** #144 — Search functionality
+- **Error:** `expected false to be true`
+- **Analysis:** Search results missing `beschrijvingKort` field — may not be populated in module data
 
-### #400 — Koppeling save (was 3 failures, now 0)
-### #437 — Imported leverancier koppeling (was 2 failures, now 0)
+### 2. #344 AC3: Multiple reference components available
+- **Folder:** 01 - Public API & Search
+- **Issue:** #344 — Reference component filters (extended)
+- **Error:** `expected +0 to be above +0`
+- **Analysis:** No reference component facet buckets returned — referentieComponenten facet has 0 values
 
-**Root cause:** `$uuidPat` variable was undefined in `ValidateObject.php:transformPropertyForOpenRegister()`. A null pattern was passed to the JSON Schema validator, which threw "pattern value must be a string" and returned a misleading 403 error.
+### 3. #414: Deelnemers endpoint accessible
+- **Folder:** 02 - RBAC & Organization Scoping
+- **Issue:** #414 — Deelnemers read access
+- **Error:** `expected 500 to be one of [ 200, 404 ]`
+- **Analysis:** Deelnemers endpoint returns HTTP 500 instead of proper response — server error
 
-**Fix:** Added `$uuidPat` definition at the top of `transformPropertyForOpenRegister()`.
+### 4. #400 AC3: Koppeling visible in list
+- **Folder:** 03 - Object CRUD
+- **Issue:** #400 — Koppeling save
+- **Error:** `expected false to be true`
+- **Analysis:** Created koppeling not found in list after creation — possibly cascading from creation issue
 
-## Performance
+### 5. #400 AC4: Re-save works without errors
+- **Folder:** 03 - Object CRUD
+- **Issue:** #400 — Koppeling save
+- **Error:** `expected 404 to be one of [ 200, 201 ]`
+- **Analysis:** PUT to koppeling returns 404 — object not found for re-save (cascading from AC3)
 
-- Average response time: 384ms
-- Min: 43ms
-- Max: 24.1s
-- Std dev: 2.2s
-- Total data received: 4.95MB
+### 6. #400 AC5: Data persisted correctly
+- **Folder:** 03 - Object CRUD
+- **Issue:** #400 — Koppeling save
+- **Error:** `expected response to have status code 200 but got 404`
+- **Analysis:** GET for koppeling returns 404 — cascading from failed creation
 
-## Per-Folder Results
+### 7. #452 AC1: Applicatie has koppelingen array via _extend
+- **Folder:** 03 - Object CRUD
+- **Issue:** #452 — Koppelingen count in applicatie overview
+- **Error:** `Should find Makelaarsuite: expected +0 to be above +0`
+- **Analysis:** `_extend` on applicatie does not return koppelingen — relation not resolved
 
-| Folder | All Pass? |
-|--------|-----------|
-| 00 - Setup | Yes |
-| 01 - Public API & Search | Yes |
-| 02 - RBAC & Organization Scoping | Yes |
-| 03 - Object CRUD | Yes |
-| 04 - Data Migration & Import | No (1 fail: #433 AC2) |
-| 05 - ArchiMate & Views | Yes |
-| 06 - User Profile & Authentication | Yes |
-| 07 - Export & Reporting | Yes |
-| 08 - Aanbod & Gebruik | Yes |
-| 09 - Data Quality & Naming | Yes |
-| 10 - Glossary & Content | Yes |
-| 11 - Publications & Catalogs | Yes |
+---
 
-## Notes
+## Issues Summary
 
-- Non-existent publication returns 500 instead of 404 (known issue, test accommodates both)
-- All RBAC scoping tests pass — organization-based filtering works correctly
-- All UUID resolution tests pass — facets show readable names
-- Test count increased from 424 to 454 assertions (30 new tests added since last run)
+### FAIL (5 distinct issues)
+| Issue | Title | Failures | Severity | Summary |
+|-------|-------|----------|----------|---------|
+| #414 | Deelnemers read access | 1 | HIGH | Server 500 on deelnemers endpoint |
+| #400 | Koppeling save | 3 | HIGH | Koppeling CRUD broken — cascading failures |
+| #452 | Koppelingen count | 1 | MEDIUM | `_extend` doesn't resolve koppelingen relation |
+| #144 | Search functionality | 1 | LOW | Missing `beschrijvingKort` field in results |
+| #344 | Ref component filters | 1 | LOW | Reference component facet returns 0 buckets |
+
+### PASS (all other tested issues)
+All assertions passed for: #85, #315, #343, #345, #346, #440, #105, #300, #307, #394, #6, #65, #73, #365, #382, #437, #23, #435, #148, #160, #393, #413, #266, #286, #352, #353, #396, #15, #354, #418, #419, #420, #186, #347, #381, #406, #407, #409, #155, #332, #280, #302, #333, #336, #340, #349, #358, #363, #374, #398, #443, and Publications & Catalogs tests.
+
+---
+
+## HTML Report
+
+Full interactive report: [report.html](report.html)

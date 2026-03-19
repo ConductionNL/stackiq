@@ -73,40 +73,7 @@ class TestEventListener implements IEventListener
                 );
 
         // Handle UserLoggedInEvent specifically.
-        if ($event instanceof UserLoggedInEvent) {
-            $user = $event->getUser();
-
-            $this->logger->info(
-                    'SoftwareCatalog TestEventListener: User logged in successfully!',
-                    [
-                        'userId'          => $user->getUID(),
-                        'userDisplayName' => $user->getDisplayName(),
-                        'userEmail'       => $user->getEMailAddress(),
-                        'timestamp'       => date('Y-m-d H:i:s'),
-                        'eventType'       => 'UserLoggedInEvent',
-                    ]
-                    );
-
-            // Test that we can access Nextcloud services.
-            try {
-                $this->logger->debug(
-                        'SoftwareCatalog TestEventListener: Event listener is working correctly!',
-                        [
-                            'message'    => 'This confirms that event listeners are properly registered and triggered',
-                            'userId'     => $user->getUID(),
-                            'eventClass' => get_class($event),
-                        ]
-                        );
-            } catch (\Exception $e) {
-                $this->logger->error(
-                        'SoftwareCatalog TestEventListener: Error in event processing',
-                        [
-                            'exception' => $e->getMessage(),
-                            'trace'     => $e->getTraceAsString(),
-                        ]
-                        );
-            }
-        } else {
+        if (($event instanceof UserLoggedInEvent) === false) {
             // Log other events we might receive.
             $this->logger->debug(
                     'SoftwareCatalog TestEventListener: Received unhandled event',
@@ -115,6 +82,40 @@ class TestEventListener implements IEventListener
                         'timestamp'  => date('Y-m-d H:i:s'),
                     ]
                     );
-        }//end if
+            return;
+        }
+
+        $user = $event->getUser();
+
+        $this->logger->info(
+                'SoftwareCatalog TestEventListener: User logged in successfully!',
+                [
+                    'userId'          => $user->getUID(),
+                    'userDisplayName' => $user->getDisplayName(),
+                    'userEmail'       => $user->getEMailAddress(),
+                    'timestamp'       => date('Y-m-d H:i:s'),
+                    'eventType'       => 'UserLoggedInEvent',
+                ]
+                );
+
+        // Test that we can access Nextcloud services.
+        try {
+            $this->logger->debug(
+                    'SoftwareCatalog TestEventListener: Event listener is working correctly!',
+                    [
+                        'message'    => 'This confirms that event listeners are properly registered and triggered',
+                        'userId'     => $user->getUID(),
+                        'eventClass' => get_class($event),
+                    ]
+                    );
+        } catch (\Exception $e) {
+            $this->logger->error(
+                    'SoftwareCatalog TestEventListener: Error in event processing',
+                    [
+                        'exception' => $e->getMessage(),
+                        'trace'     => $e->getTraceAsString(),
+                    ]
+                    );
+        }
     }//end handle()
 }//end class

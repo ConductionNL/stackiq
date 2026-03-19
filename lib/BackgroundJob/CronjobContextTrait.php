@@ -54,7 +54,7 @@ trait CronjobContextTrait
      *
      * @var string|null
      */
-    private ?string $cronjobOrganisationUuid = null;
+    private ?string $cronOrgUuid = null;
 
     /**
      * Whether the context was successfully set

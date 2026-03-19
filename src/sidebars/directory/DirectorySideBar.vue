@@ -309,7 +309,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .syncButton {
 	margin-block-start: 15px;
 	width: 100% !important;
