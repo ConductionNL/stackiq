@@ -78,6 +78,7 @@ The authoritative RBAC rules are in `softwarecatalog/lib/Settings/softwarecatalo
 | #315 | Hoge prioriteit: Zoekpagina toont deel gemeentelijk applicatielandschap | Step 14 |
 | #447 | Zoeken: concept leverancier zonder VNG triage direct vindbaar | Step 3 |
 | #455 | Tabblad koppelingen en contactpersonen publiekelijk niet getoond — RBAC? | Step 12 |
+| #414 | Mogen deelnemers gebruiksobjecten lezen | Step 12 |
 
 ## Testing Hints for Specific Issues
 

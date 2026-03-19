@@ -22,7 +22,6 @@ namespace OCA\SoftwareCatalog\BackgroundJob;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
-use Psr\Log\LoggerInterface;
 
 /**
  * Background job for comprehensive organization and contact person synchronization
@@ -49,32 +48,22 @@ class OrganizationContactSyncJob extends TimedJob
      *
      * @var OrganizationSyncService The service handling sync operations
      */
-    private OrganizationSyncService $organizationSyncService;
-
-    /**
-     * Logger instance for this cronjob
-     *
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
+    private OrganizationSyncService $orgSyncService;
 
     /**
      * Constructor for OrganizationContactSyncJob
      *
-     * @param ITimeFactory            $timeFactory             The time factory for job scheduling
-     * @param OrganizationSyncService $organizationSyncService The sync service
-     * @param LoggerInterface         $logger                  The logger instance
+     * @param ITimeFactory            $timeFactory    The time factory for job scheduling
+     * @param OrganizationSyncService $orgSyncService The sync service
      */
     public function __construct(
         ITimeFactory $timeFactory,
-        OrganizationSyncService $organizationSyncService,
-        LoggerInterface $logger
+        OrganizationSyncService $orgSyncService
     ) {
         parent::__construct(time: $timeFactory);
-        $this->setInterval(interval: 300);
+        $this->setInterval(seconds: 300);
         // 5 minutes.
-        $this->organizationSyncService = $organizationSyncService;
-        $this->logger = $logger;
+        $this->orgSyncService = $orgSyncService;
     }//end __construct()
 
     /**
@@ -87,9 +76,11 @@ class OrganizationContactSyncJob extends TimedJob
      * @param mixed $argument Job arguments (not used)
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function run($argument): void
     {
-        $this->organizationSyncService->performScheduledSync();
+        $this->orgSyncService->performScheduledSync();
     }//end run()
 }//end class

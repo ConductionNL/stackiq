@@ -28,6 +28,10 @@ use Psr\Log\LoggerInterface;
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
+ *
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
  */
 class ModuleRegistrationService
 {

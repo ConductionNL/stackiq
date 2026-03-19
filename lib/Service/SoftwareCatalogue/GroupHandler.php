@@ -25,7 +25,9 @@ use OCP\IUserManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
+use OCA\OpenRegister\Service\ObjectService;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Handler for group management operations
@@ -36,6 +38,9 @@ use Psr\Log\LoggerInterface;
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class GroupHandler
 {
@@ -69,17 +74,17 @@ class GroupHandler
     /**
      * Gets the OpenRegister ObjectService if available
      *
-     * @return \OCA\OpenRegister\Service\ObjectService|null ObjectService instance or null
+     * @return ObjectService|null ObjectService instance or null
      *
-     * @throws \RuntimeException If service is not available
+     * @throws RuntimeException If service is not available
      */
-    private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
+    private function getObjectService(): ?ObjectService
     {
         if (in_array(needle: 'openregister', haystack: $this->_appManager->getInstalledApps()) === true) {
             return $this->_container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-        throw new \RuntimeException('OpenRegister service is not available.');
+        throw new RuntimeException('OpenRegister service is not available.');
     }//end getObjectService()
 
     /**

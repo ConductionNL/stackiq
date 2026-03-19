@@ -59,6 +59,9 @@ class ModuleComplianceSubscriber implements IEventListener
      * @param Event $event The event to handle
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function handle(Event $event): void
     {
@@ -78,12 +81,15 @@ class ModuleComplianceSubscriber implements IEventListener
         }
 
         // Get object from event - different methods for different event types.
+        $object = null;
         if ($event instanceof ObjectCreatedEvent) {
             $object = $event->getObject();
         } else if ($event instanceof ObjectUpdatedEvent) {
             // Use getNewObject() for updated events.
             $object = $event->getNewObject();
-        } else {
+        }
+
+        if ($object === null) {
             return;
         }
 
@@ -115,8 +121,8 @@ class ModuleComplianceSubscriber implements IEventListener
 
         try {
             // Handle module compliance update.
-            $moduleComplianceService = $this->container->get(ModuleComplianceService::class);
-            $moduleComplianceService->handleModuleComplianceUpdate($object);
+            $complianceSvc = $this->container->get(ModuleComplianceService::class);
+            $complianceSvc->handleModuleComplianceUpdate($object);
 
             $logger->info(
                     'ModuleComplianceSubscriber: Successfully processed module compliance update',

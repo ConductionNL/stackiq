@@ -11,6 +11,7 @@
  */
 
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { navigationStore, objectStore } from '../../store/store.js'
 import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 import AddContactpersoonModal from '../../components/AddContactpersoonModal.vue'
@@ -120,16 +121,16 @@ export default {
 			organisationModalMode: 'create',
 			// Row actions definition for CnIndexPage
 			rowActionsDef: [
-				{ id: 'view', label: 'View', icon: 'eye' },
-				{ id: 'edit', label: 'Edit', icon: 'pencil' },
-				{ id: 'copy', label: 'Copy', icon: 'content-copy' },
-				{ id: 'delete', label: 'Delete', icon: 'delete', destructive: true },
+				{ id: 'view', label: t('softwarecatalog', 'View'), icon: 'eye' },
+				{ id: 'edit', label: t('softwarecatalog', 'Edit'), icon: 'pencil' },
+				{ id: 'copy', label: t('softwarecatalog', 'Copy'), icon: 'content-copy' },
+				{ id: 'delete', label: t('softwarecatalog', 'Delete'), icon: 'delete', destructive: true },
 			],
 			// Object actions for OrganisatieCard
 			organisatieObjectActions: [
 				{
 					id: 'view',
-					label: 'View',
+					label: t('softwarecatalog', 'View'),
 					icon: Eye,
 					handler: (organisatie) => {
 						const publicationUrl = `https://www.softwarecatalogus.nl/publicatie/${organisatie.id}`
@@ -138,7 +139,7 @@ export default {
 				},
 				{
 					id: 'edit',
-					label: 'Edit',
+					label: t('softwarecatalog', 'Edit'),
 					icon: Pencil,
 					handler: (organisatie) => {
 						this.editOrganisation(organisatie)
@@ -146,7 +147,7 @@ export default {
 				},
 				{
 					id: 'copy',
-					label: 'Copy',
+					label: t('softwarecatalog', 'Copy'),
 					icon: ContentCopy,
 					handler: (organisatie) => {
 						this.copyOrganisation(organisatie)
@@ -154,7 +155,7 @@ export default {
 				},
 				{
 					id: 'goToOrganisation',
-					label: 'Go to organisation',
+					label: t('softwarecatalog', 'Go to organisation'),
 					icon: OpenInNew,
 					condition: (organisatie) => organisatie.website && organisatie.website.trim().length > 0,
 					handler: (organisatie) => {
@@ -163,7 +164,7 @@ export default {
 				},
 				{
 					id: 'addContactpersoon',
-					label: 'Contactpersoon toevoegen',
+					label: t('softwarecatalog', 'Add contactpersoon'),
 					icon: AccountMultiple,
 					handler: (organisatie) => {
 						this.addContactpersoon(organisatie)
@@ -171,7 +172,7 @@ export default {
 				},
 				{
 					id: 'activeren',
-					label: 'Activeren',
+					label: t('softwarecatalog', 'Activate'),
 					icon: CheckCircle,
 					condition: (organisatie) => organisatie.status === 'Concept' || organisatie.status === 'Deactief',
 					handler: (organisatie) => {
@@ -186,7 +187,7 @@ export default {
 				},
 				{
 					id: 'deactiveren',
-					label: 'Deactiveren',
+					label: t('softwarecatalog', 'Deactivate'),
 					icon: CloseCircle,
 					condition: (organisatie) => organisatie.status?.toLowerCase() === 'actief',
 					handler: (organisatie) => {
@@ -201,7 +202,7 @@ export default {
 				},
 				{
 					id: 'delete',
-					label: 'Delete',
+					label: t('softwarecatalog', 'Delete'),
 					icon: TrashCanOutline,
 					handler: (organisatie) => {
 						objectStore.setActiveObject('organisatie', organisatie)

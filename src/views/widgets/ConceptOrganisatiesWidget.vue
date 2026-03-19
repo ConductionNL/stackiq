@@ -1,4 +1,5 @@
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { objectStore } from '../../store/store.js'
 </script>
 
@@ -6,7 +7,7 @@ import { objectStore } from '../../store/store.js'
 	<div class="concept-organisaties-widget">
 		<div class="widget-header">
 			<NcButton type="tertiary"
-				:aria-label="t('softwarecatalog', 'Vernieuwen')"
+				:aria-label="t('softwarecatalog', 'Refresh')"
 				@click="fetchData">
 				<template #icon>
 					<RefreshIcon :size="20" />
@@ -28,13 +29,13 @@ import { objectStore } from '../../store/store.js'
 							icon="icon-checkmark"
 							:close-after-click="true"
 							@click="onAccept(item)">
-							Accepteren
+							{{ t('softwarecatalog', 'Accept') }}
 						</NcActionButton>
 					</template>
 				</NcDashboardWidgetItem>
 			</template>
 			<template #empty-content>
-				<NcEmptyContent :title="t('softwarecatalog', 'Geen concept organisaties gevonden')">
+				<NcEmptyContent :title="t('softwarecatalog', 'No concept organisations found')">
 					<template #icon>
 						<DomainIcon />
 					</template>
@@ -84,7 +85,7 @@ export default {
 				.filter((item) => item.status?.toLowerCase() === 'concept')
 				.map((item) => ({
 					id: item.id,
-					mainText: item.naam || item.name || item.title || 'Onbekende organisatie',
+					mainText: item.naam || item.name || item.title || t('softwarecatalog', 'Unknown organisation'),
 					subText: item.website || item.type || '',
 					avatarUrl: getTheme() === 'light' ? '/apps-extra/softwarecatalog/img/app-dark.svg' : '/apps-extra/softwarecatalog/img/app.svg',
 				}))

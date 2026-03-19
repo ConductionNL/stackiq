@@ -41,23 +41,26 @@ use Psr\Log\LoggerInterface;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class AangebodenGebruikController extends Controller
 {
     /**
      * Constructor for AangebodenGebruikController.
      *
-     * @param string                   $appName                  The name of the app
-     * @param IRequest                 $request                  The HTTP request object
-     * @param IUserSession             $userSession              The user session service for getting the current user
-     * @param AangebodenGebruikService $aangebodenGebruikService The business logic service
-     * @param LoggerInterface          $logger                   The logger service for debugging and error reporting
+     * @param string                   $appName     The name of the app
+     * @param IRequest                 $request     The HTTP request object
+     * @param IUserSession             $userSession The user session service for getting the current user
+     * @param AangebodenGebruikService $gebruikSvc  The business logic service
+     * @param LoggerInterface          $logger      The logger service for debugging and error reporting
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly IUserSession $userSession,
-        private readonly AangebodenGebruikService $aangebodenGebruikService,
+        private readonly AangebodenGebruikService $gebruikSvc,
         private readonly LoggerInterface $logger
     ) {
         parent::__construct(appName: $appName, request: $request);
@@ -82,6 +85,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
@@ -100,7 +105,7 @@ class AangebodenGebruikController extends Controller
             $options = $this->parseQueryOptions();
 
             // Get gebruiks from service where org is afnemer.
-            $result = $this->aangebodenGebruikService->getGebruiksWhereAfnemer($options);
+            $result = $this->gebruikSvc->getGebruiksWhereAfnemer($options);
 
             // Determine HTTP status code based on whether there's an error.
             if (isset($result['error']) === true) {
@@ -159,6 +164,8 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse
     {
@@ -188,7 +195,7 @@ class AangebodenGebruikController extends Controller
             }
 
             // Get koppelingen and gebruiks for UUID from service.
-            $result = $this->aangebodenGebruikService->getKoppelingenGebruikByUuid(
+            $result = $this->gebruikSvc->getKoppelingenGebruikByUuid(
                 uuid: $uuid,
                 options: $options,
                 isAmbtenaar: $isAmbtenaar
@@ -251,6 +258,8 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getAllGebruiksForAmbtenaar(): JSONResponse
     {
@@ -303,7 +312,7 @@ class AangebodenGebruikController extends Controller
             $options = $this->parseQueryOptions();
 
             // Get all gebruiks from service (ignoring RBAC/multitenancy).
-            $result = $this->aangebodenGebruikService->getAllGebruiksForAmbtenaar($options);
+            $result = $this->gebruikSvc->getAllGebruiksForAmbtenaar($options);
 
             // Determine HTTP status code based on whether there's an error.
             if (isset($result['error']) === true) {
@@ -360,6 +369,9 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse
     {
@@ -414,8 +426,8 @@ class AangebodenGebruikController extends Controller
             $options = $this->parseQueryOptions();
 
             // Get single gebruik from service (ignoring RBAC/multitenancy).
-            $result = $this->aangebodenGebruikService->getSingleGebruikForAmbtenaar(
-                gebruikId: $gebruikId,
+            $result = $this->gebruikSvc->getSingleGebruikForAmbtenaar(
+                suiteId: $gebruikId,
                 options: $options
             );
 
@@ -536,6 +548,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getGebruiksWhereDeelnemers(): JSONResponse
     {
@@ -554,7 +568,7 @@ class AangebodenGebruikController extends Controller
             $options = $this->parseQueryOptions();
 
             // Get gebruiks from service where org is in deelnemers.
-            $result = $this->aangebodenGebruikService->getGebruiksWhereDeelnemers($options);
+            $result = $this->gebruikSvc->getGebruiksWhereDeelnemers($options);
 
             // Determine appropriate HTTP status code.
             if ($result['success'] === true) {
@@ -611,6 +625,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
     {
@@ -651,7 +667,7 @@ class AangebodenGebruikController extends Controller
             }
 
             // Update gebruik @self property via service.
-            $result = $this->aangebodenGebruikService->setGebruikSelfToActiveOrg(
+            $result = $this->gebruikSvc->setGebruikSelfToActiveOrg(
                 gebruikId: $gebruikId,
                 options: $options
             );
@@ -719,6 +735,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
     {
@@ -759,7 +777,7 @@ class AangebodenGebruikController extends Controller
             }
 
             // Delete gebruik object via service.
-            $result = $this->aangebodenGebruikService->deleteGebruikAsAfnemer(
+            $result = $this->gebruikSvc->deleteGebruikAsAfnemer(
                 gebruikId: $gebruikId,
                 options: $options
             );
@@ -818,6 +836,8 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getApiDocumentation(): JSONResponse
     {
@@ -981,6 +1001,9 @@ class AangebodenGebruikController extends Controller
      * pagination, and other options. Always forces database source for real-time data.
      *
      * @return array Parsed options array with database source
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     private function parseQueryOptions(): array
     {

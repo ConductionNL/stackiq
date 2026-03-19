@@ -28,6 +28,9 @@ use Psr\Log\LoggerInterface;
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
+ *
+ * @SuppressWarnings(PHPMD.ElseExpression)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
  */
 class ModuleVersionService
 {

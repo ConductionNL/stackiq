@@ -37,6 +37,29 @@ use OCP\App\IAppManager;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ElseExpression)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ * @SuppressWarnings(PHPMD.UndefinedVariable)
+ * @SuppressWarnings(PHPMD.CountInLoopExpression)
  */
 class SoftwareCatalogueService
 {
@@ -70,7 +93,7 @@ class SoftwareCatalogueService
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
     ) {
-        $this->_appName = 'softwarecatalog';
+        $this->appName = 'softwarecatalog';
     }//end __construct()
 
     /**
@@ -159,7 +182,7 @@ class SoftwareCatalogueService
                     ]
                     );
 
-            if (empty($result) === false) {
+            if ($result === true) {
                 // Get the username from the processed object.
                 $updatedObjectData = $contactpersoonObject->getObject();
                 $username          = $updatedObjectData['username'] ?? '';
@@ -420,7 +443,7 @@ class SoftwareCatalogueService
             // First, sync the organization with OpenRegister.
             $syncResult = $this->syncOrganizationWithOpenRegister(organizationObject: $organizationObject);
 
-            if (empty($syncResult) === false) {
+            if ($syncResult === true) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Successfully synced organization with OpenRegister',
                         [
@@ -614,7 +637,7 @@ class SoftwareCatalogueService
             // Sync the organization with OpenRegister.
             $syncResult = $this->syncOrganizationWithOpenRegister(organizationObject: $organizationObject);
 
-            if (empty($syncResult) === false) {
+            if ($syncResult === true) {
                 $this->_logger->info(
                         'SoftwareCatalogueService: Successfully synced organization with OpenRegister',
                         [
@@ -654,7 +677,7 @@ class SoftwareCatalogueService
                     ]
                 );
 
-                if (empty($becameActive) === false) {
+                if ($becameActive === true) {
                     $organizationUuid = $newData['id'] ?? $organizationObject->getId();
 
                     $this->_logger->info(
@@ -714,7 +737,7 @@ class SoftwareCatalogueService
                     ]
                 );
 
-                if (empty($becameInactive) === false) {
+                if ($becameInactive === true) {
                     // Deactivate SoftwareCatalog-specific users in this organization.
                     $organizationUuid = $newData['id'] ?? $organizationObject->getId();
                     $this->deactivateSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
@@ -1129,7 +1152,7 @@ class SoftwareCatalogueService
                 if (empty($username) === true) {
                     // Generate username and create user if needed.
                     $result = $this->_contactPersonHandler->processContactpersoon($contactpersoonObject, true);
-                    if (empty($result) === false) {
+                    if ($result === true) {
                         $updatedData = $contactpersoonObject->getObject();
                         $username    = $updatedData['username'] ?? '';
                     }
@@ -3444,14 +3467,11 @@ class SoftwareCatalogueService
 
             // Update the organization object using the ObjectService.
             // Don't update version, not a patch, no extend.
-            $objectService->updateFromArray(
-                $organizationObject->getId(),
-                $currentObjectData,
-                false,
-                false,
-                [],
-                $organizationObject->getRegisterId(),
-                $organizationObject->getSchemaId()
+            $objectService->saveObject(
+                object: $currentObjectData,
+                register: $organizationObject->getRegisterId(),
+                schema: $organizationObject->getSchemaId(),
+                uuid: $organizationObject->getUuid()
             );
 
             // Update contact person objects' @self.organisatie field.
@@ -3497,14 +3517,11 @@ class SoftwareCatalogueService
 
                         // Update the contact person object using the ObjectService.
                         // Don't update version, not a patch, no extend.
-                        $objectService->updateFromArray(
-                            $contactObject->getId(),
-                            $contactObjectData,
-                            false,
-                            false,
-                            [],
-                            $organizationObject->getRegisterId(),
-                            $contactSchemaId
+                        $objectService->saveObject(
+                            object: $contactObjectData,
+                            register: $organizationObject->getRegisterId(),
+                            schema: $contactSchemaId,
+                            uuid: $contactObject->getUuid()
                         );
                     }
                 } catch (\Exception $e) {

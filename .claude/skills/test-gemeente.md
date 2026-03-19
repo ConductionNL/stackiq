@@ -92,6 +92,10 @@ Maria's active organization is **Test Gemeente**. The internal Nextcloud org UUI
 | #346 | Zoeken: paginering werkt niet | Step 14 |
 | #347 | Zoeken: Dienstkaartje toont array | **MOVED → bezoeker** (public search page) |
 | #349 | Zoeken: UUID's onder standaarden filter | Step 14 |
+| #261 | Wizards: pas te testen na RBAC | Step 10 |
+| #311 | Altijd inlog-account en -organisatie tonen | Step 4 |
+| #331 | Koppeling relatie Applicatie | Step 11 |
+| #418 | Performance: applicaties dropdown traag bij dienst wizard | Step 10 |
 
 ## Acceptance Criteria Reference
 

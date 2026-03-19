@@ -48,6 +48,8 @@ Sarah's account is in the Default Organisation (expected for VNG roles). The org
 | Issue | Title | Test Step |
 |-------|-------|-----------|
 | #148 | (VNGR) GEMMA-architectuur opvraagbaar met API | Step 12 |
+| #412 | Niet alle AMEF views hebben documentatie | Step 15 |
+| #413 | Views testen vs softwarecatalogus scope | Step 19 |
 
 ## Acceptance Criteria Reference
 

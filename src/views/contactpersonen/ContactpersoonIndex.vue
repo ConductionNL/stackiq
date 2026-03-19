@@ -11,6 +11,7 @@
  */
 
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
@@ -56,42 +57,42 @@ export default {
 			contactpersoonProperties: [
 				{
 					id: 'voornaam',
-					label: 'Voornaam',
+					label: t('softwarecatalog', 'First name'),
 					key: 'voornaam',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'achternaam',
-					label: 'Achternaam',
+					label: t('softwarecatalog', 'Last name'),
 					key: 'achternaam',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'e-mailadres',
-					label: 'E-mailadres',
+					label: t('softwarecatalog', 'Email address'),
 					key: 'e-mailadres',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'telefoonnummer',
-					label: 'Telefoonnummer',
+					label: t('softwarecatalog', 'Phone number'),
 					key: 'telefoonnummer',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'functie',
-					label: 'Functie',
+					label: t('softwarecatalog', 'Function'),
 					key: 'functie',
 					sortable: true,
 					searchable: true,
 				},
 				{
 					id: 'organisatie',
-					label: 'Organisatie',
+					label: t('softwarecatalog', 'Organisation'),
 					key: 'organisatie.value',
 					sortable: false,
 					searchable: true,
@@ -100,7 +101,7 @@ export default {
 			contactpersoonObjectActions: [
 				{
 					id: 'view',
-					label: 'View',
+					label: t('softwarecatalog', 'View'),
 					icon: Eye,
 					handler: (contactpersoon) => {
 						objectStore.setActiveObject('contactpersoon', contactpersoon)
@@ -109,7 +110,7 @@ export default {
 				},
 				{
 					id: 'edit',
-					label: 'Edit',
+					label: t('softwarecatalog', 'Edit'),
 					icon: Pencil,
 					handler: (contactpersoon) => {
 						objectStore.setActiveObject('contactpersoon', contactpersoon)
@@ -118,7 +119,7 @@ export default {
 				},
 				{
 					id: 'copy',
-					label: 'Copy',
+					label: t('softwarecatalog', 'Copy'),
 					icon: ContentCopy,
 					handler: (contactpersoon) => {
 						objectStore.setActiveObject('contactpersoon', contactpersoon)
@@ -130,7 +131,7 @@ export default {
 				},
 				{
 					id: 'delete',
-					label: 'Delete',
+					label: t('softwarecatalog', 'Delete'),
 					icon: TrashCanOutline,
 					handler: (contactpersoon) => {
 						objectStore.setActiveObject('contactpersoon', contactpersoon)
@@ -144,7 +145,7 @@ export default {
 			contactpersoonMassActions: [
 				{
 					id: 'massDelete',
-					label: 'Delete Selected',
+					label: t('softwarecatalog', 'Delete Selected'),
 					icon: Delete,
 					handler: () => {
 						navigationStore.setDialog('massDeleteObjects', {
@@ -155,7 +156,7 @@ export default {
 				},
 				{
 					id: 'massPublish',
-					label: 'Publish Selected',
+					label: t('softwarecatalog', 'Publish Selected'),
 					icon: PublishIcon,
 					handler: () => {
 						navigationStore.setDialog('massPublishObjects', {
@@ -166,7 +167,7 @@ export default {
 				},
 				{
 					id: 'massDepublish',
-					label: 'Depublish Selected',
+					label: t('softwarecatalog', 'Depublish Selected'),
 					icon: PublishOffIcon,
 					handler: () => {
 						navigationStore.setDialog('massDepublishObjects', {
@@ -179,7 +180,7 @@ export default {
 			contactpersoonActions: [
 				{
 					id: 'add',
-					label: 'Add Contactpersoon',
+					label: t('softwarecatalog', 'Add Contactpersoon'),
 					icon: Plus,
 					primary: true,
 					handler: () => {
@@ -189,7 +190,7 @@ export default {
 				},
 				{
 					id: 'refresh',
-					label: 'Refresh',
+					label: t('softwarecatalog', 'Refresh'),
 					icon: Refresh,
 					handler: () => {
 						objectStore.fetchCollection('contactpersoon')
@@ -198,7 +199,7 @@ export default {
 				},
 				{
 					id: 'help',
-					label: 'Help',
+					label: t('softwarecatalog', 'Help'),
 					icon: HelpCircleOutline,
 					handler: () => {
 						window.open('https://conduction.gitbook.io/softwarecatalog-nextcloud/beheerders/contactpersonen', '_blank')
@@ -207,7 +208,7 @@ export default {
 			],
 			addContactpersoonAction: {
 				id: 'add',
-				label: 'Add Contactpersoon',
+				label: t('softwarecatalog', 'Add Contactpersoon'),
 				icon: Plus,
 				handler: () => {
 					objectStore.clearActiveObject('contactpersoon')

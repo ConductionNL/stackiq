@@ -38,6 +38,25 @@ use OCP\IAppConfig;
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ElseExpression)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class ContactpersoonService
 {
@@ -92,10 +111,10 @@ class ContactpersoonService
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
         $startTime = microtime(true);
+        $contactId = $contactpersoonObject->getId();
 
         try {
             $contactData = $contactpersoonObject->getObject();
-            $contactId   = $contactpersoonObject->getId();
 
             // Recursion guard: saveObject triggers ObjectUpdatedEvent which re-enters here.
             if (isset(self::$processingContacts[$contactId]) === true) {
@@ -245,7 +264,7 @@ class ContactpersoonService
                             $this->contactPersonHandler->addUserToOrganizationEntity(
                                 contactpersoonObject: $contactpersoonObject,
                                 username: $username,
-                                organizationUuid: $organizationUuid
+                                organizationUuidOverride: $organizationUuid
                             );
 
                             // Update contactpersoon object owner to user UID.

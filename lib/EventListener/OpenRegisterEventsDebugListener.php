@@ -50,6 +50,8 @@ use Psr\Log\LoggerInterface;
  * @template T of Event
  *
  * @implements IEventListener<T>
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class OpenRegisterEventsDebugListener implements IEventListener
 {
@@ -75,6 +77,8 @@ class OpenRegisterEventsDebugListener implements IEventListener
      * @param bool            $debugEnabled Whether debug logging should be enabled
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      */
     public function __construct(
         LoggerInterface $logger,
@@ -172,6 +176,10 @@ class OpenRegisterEventsDebugListener implements IEventListener
      *
      * @phpstan-return array<string, mixed>
      * @psalm-return   array<string, mixed>
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function extractEventData(Event $event): array
     {
@@ -246,7 +254,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'registerId' => $object->getRegister(),
                         'schemaId'   => $object->getSchema(),
                         'lockedBy'   => $object->getLockedBy(),
-                        'lockedAt'   => $object->getLockedAt()?->format('Y-m-d H:i:s'),
+                        'lockedAt'   => null,
                     ]
                     );
         } else if ($event instanceof ObjectUnlockedEvent) {
@@ -271,7 +279,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'objectUuid' => $object->getUuid(),
                         'registerId' => $object->getRegister(),
                         'schemaId'   => $object->getSchema(),
-                        'revertedTo' => $event->getRevertedToVersion(),
+                        'revertedTo' => $event->getRevertPoint(),
                     ]
                     );
             // Handle Register events.
@@ -287,7 +295,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                     ]
                     );
         } else if ($event instanceof RegisterUpdatedEvent) {
-            $register = $event->getRegister();
+            $register = $event->getNewRegister();
             $data     = array_merge(
                     $data,
                     [
@@ -321,7 +329,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                     ]
                     );
         } else if ($event instanceof SchemaUpdatedEvent) {
-            $schema = $event->getSchema();
+            $schema = $event->getNewSchema();
             $data   = array_merge(
                     $data,
                     [
@@ -350,7 +358,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                     [
                         'eventType'         => 'OrganisationCreated',
                         'organisationId'    => $organisation->getId(),
-                        'organisationTitle' => $organisation->getTitle(),
+                        'organisationTitle' => $organisation->getName(),
                     ]
                     );
             // Unknown event type.

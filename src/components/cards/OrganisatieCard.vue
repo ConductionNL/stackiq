@@ -61,7 +61,7 @@
 						{{ truncateText(item.beschrijvingLang, 150) }}
 					</p>
 					<p v-else class="noDescription">
-						{{ t('softwarecatalog', 'Geen beschrijving beschikbaar') }}
+						{{ t('softwarecatalog', 'No description available') }}
 					</p>
 				</div>
 

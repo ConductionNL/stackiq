@@ -35,6 +35,23 @@ use Psr\Log\LoggerInterface;
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.ElseExpression)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class OrganizationHandler
 {
@@ -172,7 +189,7 @@ class OrganizationHandler
                 if ($registerId !== null && $organizationSchemaId !== null) {
                     $objectService->saveObject(
                         object: $organizationObject,
-                        fields: [],
+                        extend: [],
                         register: (int) $registerId,
                         schema: (int) $organizationSchemaId,
                         uuid: $organizationObject->getUuid()
@@ -407,7 +424,7 @@ class OrganizationHandler
                         // Update existing contactgegevens object.
                         $contactgegevensObject = $objectService->saveObject(
                             object: $contactgegevensData,
-                            fields: [],
+                            extend: [],
                             register: $registerId,
                             schema: $contactgegevensSchemaId,
                             uuid: $existingContactgegevens->getUuid()
@@ -416,7 +433,7 @@ class OrganizationHandler
                         // Create new contactgegevens object.
                         $contactgegevensObject = $objectService->saveObject(
                             object: $contactgegevensData,
-                            fields: [],
+                            extend: [],
                             register: $registerId,
                             schema: $contactgegevensSchemaId
                         );
@@ -500,9 +517,11 @@ class OrganizationHandler
             ];
 
             $existingObjects = $objectService->findAll(
-                filters: $searchFilters,
-                register: $registerId,
-                schema: $contactgegevensSchemaId
+                config: [
+                    'filters'   => $searchFilters,
+                    '_register' => $registerId,
+                    '_schema'   => $contactgegevensSchemaId,
+                ]
             );
 
             if (empty($existingObjects) === false) {

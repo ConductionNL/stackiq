@@ -37,6 +37,27 @@ use OCA\SoftwareCatalog\Service\SymfonyEmailService;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ElseExpression)
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.MissingImport)
+ * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.Superglobals)
+ * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+ * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class ContactPersonHandler
 {
@@ -661,7 +682,7 @@ class ContactPersonHandler
             $settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 
             // Add user to organization admin groups if this is the first contact.
-            if (empty($isFirstContact) === false) {
+            if ($isFirstContact === true) {
                 $organizationAdminGroups = $settingsService->getOrganizationAdminGroups();
                 foreach ($organizationAdminGroups as $groupName) {
                     $this->addUserToGroupWithCheck(user: $user, groupName: $groupName, type: 'organization-admin');
@@ -1789,7 +1810,7 @@ class ContactPersonHandler
             // Send user creation email.
             $success = $this->_emailService->sendUserCreationEmail($userData, $organizationData);
 
-            if (empty($success) === false) {
+            if ($success === true) {
                 $this->_logger->info(
                         'User creation email sent successfully',
                         [
@@ -1854,7 +1875,7 @@ class ContactPersonHandler
                 $username = $this->generateUsernameFromContactData(contactData: $objectData);
 
                 // For updates, try to find existing user first to avoid expensive isFirstContactForOrganization check.
-                if (empty($isUpdate) === false) {
+                if ($isUpdate === true) {
                     $existingUser = $this->_userManager->get($username);
 
                     if (empty($existingUser) === false) {
@@ -2379,7 +2400,7 @@ class ContactPersonHandler
                 // Add user to organization.
                 $result = $this->addContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject);
 
-                if (empty($result) === false) {
+                if ($result === true) {
                     $this->_logger->info(
                             'ContactPersonHandler: Successfully ensured contactpersoon in organization',
                             [

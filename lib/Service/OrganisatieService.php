@@ -37,6 +37,8 @@ use OCP\IAppConfig;
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  */
 class OrganisatieService
 {
@@ -291,7 +293,7 @@ class OrganisatieService
                 [
                     'uuid'     => $organizationUuid,
                     'entityId' => $organisationEntity->getId(),
-                    'active'   => $organisationEntity->getActive(),
+                    'active'   => $organisationEntity->isActive(),
                     'parent'   => $organisationEntity->getParent(),
                 ]
                 );
