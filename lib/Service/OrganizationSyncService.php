@@ -257,7 +257,10 @@ class OrganizationSyncService
             return $stats;
         }
 
-        $this->logger->info('OrganizationSync: '.$totalRemaining.' active orgs without entity, processing batch of '.$batchSize);
+        $this->logger->info(
+            'OrganizationSync: '.$totalRemaining
+            .' active orgs without entity, processing batch of '.$batchSize
+        );
 
         // Query active orgs that don't have an OpenRegister organisation entity yet.
         $qb = $this->db->getQueryBuilder();
@@ -738,7 +741,12 @@ class OrganizationSyncService
      *
      * @return void
      */
-    private function processOrganisatieObject(object $organisatieObject, string $register, string $contactSchema, array &$stats): void
+    private function processOrganisatieObject(
+        object $organisatieObject,
+        string $register,
+        string $contactSchema,
+        array &$stats
+    ): void
     {
         $objectData    = $organisatieObject->getObject();
         $organisatieId = ($objectData['id'] ?? $organisatieObject->getId());
@@ -762,7 +770,11 @@ class OrganizationSyncService
         }
 
         // Step 2: Get all contact persons for this organisation.
-        $contactPersons = $this->getContactPersonsForOrganisation(organisatieId: $organisatieId, register: $register, contactSchema: $contactSchema);
+        $contactPersons = $this->getContactPersonsForOrganisation(
+            organisatieId: $organisatieId,
+            register: $register,
+            contactSchema: $contactSchema
+        );
         $this->logger->debug(
             'OrganizationSyncService: Found contact persons',
             [
@@ -798,7 +810,11 @@ class OrganizationSyncService
      */
     public function ensureOrganisationEntityPublic(object $organisatieObject, array &$stats, bool $sendEmails=true): ?object
     {
-        return $this->ensureOrganisationEntity(organisatieObject: $organisatieObject, stats: $stats, sendEmails: $sendEmails);
+        return $this->ensureOrganisationEntity(
+            organisatieObject: $organisatieObject,
+            stats: $stats,
+            sendEmails: $sendEmails
+        );
 
     }//end ensureOrganisationEntityPublic()
 
@@ -1410,7 +1426,10 @@ class OrganizationSyncService
 
             // Calculate efficiency metrics.
             if (count($allOrganisatieObjects) > 0) {
-                $efficiencyImprovement = round(((1 - (count($incrementalOrganisatieObjects) / count($allOrganisatieObjects))) * 100), 1);
+                $efficiencyImprovement = round(
+                    ((1 - (count($incrementalOrganisatieObjects) / count($allOrganisatieObjects))) * 100),
+                    1
+                );
             } else {
                 $efficiencyImprovement = 0;
             }
@@ -1613,7 +1632,11 @@ class OrganizationSyncService
                     ]
                 );
 
-                $this->processRelatedContactPersons(organizationUuid: $organizationUuid, organizationObject: $organizationObject, stats: $stats);
+                $this->processRelatedContactPersons(
+                    organizationUuid: $organizationUuid,
+                    organizationObject: $organizationObject,
+                    stats: $stats
+                );
             } else {
                 $this->logger->error(
                     '❌ ORGANISATION ENTITY FAILED',
@@ -1756,7 +1779,9 @@ class OrganizationSyncService
                         }
 
                         // Add the UUID if not present.
-                        if (isset($contactData['id']) === false && $contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
+                        if (isset($contactData['id']) === false
+                            && $contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity
+                        ) {
                             $contactData['id'] = $contactObject->getUuid();
                         }
                     }//end if
@@ -2252,7 +2277,10 @@ class OrganizationSyncService
                                     'entitiesCreated' => 0,
                                     'entitiesUpdated' => 0,
                                 ];
-                                $organisationEntity = $this->ensureOrganisationEntity(organisatieObject: $orgObject, stats: $backupStats);
+                                $organisationEntity = $this->ensureOrganisationEntity(
+                                    organisatieObject: $orgObject,
+                                    stats: $backupStats
+                                );
                             }
                         } catch (\Exception $backupEx) {
                             $this->logger->error(
@@ -2269,7 +2297,9 @@ class OrganizationSyncService
                     try {
                         if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
                             // Determine if this is the first contact for the organization.
-                            $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization($contactObject, $contactObjectData);
+                            $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization(
+                                $contactObject, $contactObjectData
+                            );
 
                             $this->logger->info(
                                 'Creating user account for contact person (org is active)',
@@ -2338,7 +2368,9 @@ class OrganizationSyncService
                                 }//end try
 
                                 // Add user to organization entity in database.
-                                $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID(), $organizationUuid);
+                                $this->contactpersonHandler->addUserToOrganizationEntity(
+                                    $contactObject, $user->getUID(), $organizationUuid
+                                );
 
                                 // Update contactpersoon object owner to user UID and organisation.
                                 $this->updateContactpersoonObjectOwner(
@@ -2491,7 +2523,10 @@ class OrganizationSyncService
                                 'entitiesCreated' => 0,
                                 'entitiesUpdated' => 0,
                             ];
-                            $organisationEntity = $this->ensureOrganisationEntity(organisatieObject: $orgObject, stats: $backupStats);
+                            $organisationEntity = $this->ensureOrganisationEntity(
+                                organisatieObject: $orgObject,
+                                stats: $backupStats
+                            );
                         }
                     } catch (\Exception $backupEx) {
                         $this->logger->error(
@@ -2508,7 +2543,9 @@ class OrganizationSyncService
                 try {
                     if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
                         // Determine if this is the first contact for the organization.
-                        $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization($contactObject, $contactEntityObject);
+                        $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization(
+                            $contactObject, $contactEntityObject
+                        );
 
                         $this->logger->info(
                             '[EVENT] OrganizationSyncService: Creating user account for contact person (org is active)',
@@ -2516,7 +2553,8 @@ class OrganizationSyncService
                                 'contactId'          => $contactObject->getUuid(),
                                 'organizationId'     => $organizationUuid,
                                 'organizationActive' => true,
-                                'email'              => ($contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown'),
+                                'email'              => ($contactEntityObject['email']
+                                    ?? $contactEntityObject['e-mailadres'] ?? 'unknown'),
                                 'isFirstContact'     => $isFirstContact,
                             ]
                         );
@@ -2557,7 +2595,9 @@ class OrganizationSyncService
                             }
 
                             // Add user to organization entity in database.
-                            $this->contactpersonHandler->addUserToOrganizationEntity($contactObject, $user->getUID(), $organizationUuid);
+                            $this->contactpersonHandler->addUserToOrganizationEntity(
+                                $contactObject, $user->getUID(), $organizationUuid
+                            );
 
                             // Update contactpersoon object owner to user UID.
                             $this->updateContactpersoonObjectOwner(
@@ -2586,13 +2626,15 @@ class OrganizationSyncService
                         }
 
                         $this->logger->info(
-                            '[EVENT] OrganizationSyncService: Skipping user creation - organization not active or entity not found',
+                            '[EVENT] OrganizationSyncService: Skipping user creation'
+                            . ' - organization not active or entity not found',
                             [
                                 'contactId'          => $contactObject->getUuid(),
                                 'organizationId'     => $organizationUuid,
                                 'organizationFound'  => $organisationEntity !== null,
                                 'organizationActive' => $organizationActiveValue,
-                                'email'              => ($contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown'),
+                                'email'              => ($contactEntityObject['email']
+                                    ?? $contactEntityObject['e-mailadres'] ?? 'unknown'),
                             ]
                         );
                     }//end if
@@ -2610,7 +2652,9 @@ class OrganizationSyncService
 
             $stats['contactPersonsProcessed']++;
             $stats['endTime']  = date('Y-m-d H:i:s');
-            $stats['duration'] = ((new \DateTime($stats['endTime']))->getTimestamp() - (new \DateTime($stats['startTime']))->getTimestamp());
+            $endTimestamp      = (new \DateTime($stats['endTime']))->getTimestamp();
+            $startTimestamp    = (new \DateTime($stats['startTime']))->getTimestamp();
+            $stats['duration'] = ($endTimestamp - $startTimestamp);
 
             $this->logger->info(
                 '[EVENT] OrganizationSyncService: Specific contact person processing completed',
@@ -3085,7 +3129,9 @@ class OrganizationSyncService
 
             // Set the organisation field in @self metadata to the organization UUID.
             // Use override if provided, otherwise try to get from object data.
-            $organizationUuid = ($organizationUuidOverride ?? $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '');
+            $organizationUuid = ($organizationUuidOverride
+                ?? $currentObject['organisation']
+                ?? $currentObject['organisatie'] ?? '');
             if (empty($organizationUuid) === false) {
                 $selfMetadata['organisation'] = $organizationUuid;
                 if (empty($organizationUuidOverride) === false) {

@@ -86,7 +86,8 @@ class ArchiMateExportService
                 // Skip legacy _attributes bag, handle individual underscored keys as attributes.
                 $attrKey = substr($key, 1);
 
-                // Skip malformed attribute keys that would create invalid XML (e.g., __propertyDefinitionRef -> :propertyDefinitionRef).
+                // Skip malformed attribute keys that would create invalid XML
+                // (e.g., __propertyDefinitionRef -> :propertyDefinitionRef).
                 if (str_starts_with($attrKey, '__') === true || $attrKey === '') {
                     continue;
                 }
@@ -189,7 +190,9 @@ class ArchiMateExportService
             }
 
             // Special handling for elementProperties and other nested structures - filter out problematic fields.
-            if (($key === 'elementProperties' || $key === 'properties' || $key === 'viewNodes') && is_array($value) === true) {
+            if (($key === 'elementProperties' || $key === 'properties' || $key === 'viewNodes')
+                && is_array($value) === true
+            ) {
                 $value = $this->filterProblematicFields(data: $value, fieldsToRemove: $propertyLikeFields);
             }
 
@@ -1074,7 +1077,7 @@ XML;
                         folder: $sectionFolder,
                         object: $object,
                         sectionName: $sectionName,
-                        propertyDefinitionMap: $propDefMap
+                        propDefMap: $propDefMap
                     );
                 }
 
@@ -1164,7 +1167,7 @@ XML;
             $xmlData = $object['xml'];
             unset($xmlData['_essential_data']);
         } else {
-            $xmlData = $this->cleanObjectDataForXml(object: $object, propertyDefinitionMap: $propDefMap);
+            $xmlData = $this->cleanObjectDataForXml(object: $object, propDefMap: $propDefMap);
         }
 
         if (is_array($xmlData) === true && empty($xmlData) === false) {
@@ -1175,7 +1178,7 @@ XML;
                     node: $objectNode,
                     data: $xmlData,
                     sectionName: $sectionName,
-                    propertyDefinitionMap: $propDefMap
+                    propDefMap: $propDefMap
                 );
             }
         }
@@ -1618,7 +1621,7 @@ XML;
 
         // Add properties from root fields using propertyDefinitionMap ONLY if no properties were already processed.
         if (empty($propDefMap) === false && isset($data['properties']) === false) {
-            $this->addPropertiesFromRootFields(node: $node, object: $data, propertyDefinitionMap: $propDefMap);
+            $this->addPropertiesFromRootFields(node: $node, object: $data, propDefMap: $propDefMap);
         }
     }//end addCleanDataToXmlNode()
 
@@ -3130,7 +3133,7 @@ XML;
                         folder: $elementsFolder,
                         object: $obj,
                         sectionName: 'elements',
-                        propertyDefinitionMap: $propDefMap
+                        propDefMap: $propDefMap
                     );
                 }
             }
@@ -3163,7 +3166,7 @@ XML;
                         folder: $relsFolder,
                         object: $obj,
                         sectionName: 'relationships',
-                        propertyDefinitionMap: $propDefMap
+                        propDefMap: $propDefMap
                     );
                 }
             }
@@ -3195,7 +3198,7 @@ XML;
                         folder: $propDefsFolder,
                         object: $obj,
                         sectionName: 'property_definitions',
-                        propertyDefinitionMap: $propDefMap
+                        propDefMap: $propDefMap
                     );
                 }
             }
@@ -3269,7 +3272,7 @@ XML;
                         folder: $diagramsFolder,
                         object: $obj,
                         sectionName: 'views',
-                        propertyDefinitionMap: $propDefMap
+                        propDefMap: $propDefMap
                     );
                 }
             }

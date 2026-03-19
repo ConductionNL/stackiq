@@ -65,7 +65,7 @@ class ContactpersoonServiceExample
                     );
 
             // Use the service method to get contact persons with user details.
-            $contactPersons = $this->contactpersoonService->getContactPersonsWithUserDetailsForOrganization(
+            $contactPersons = $this->contactSvc->getContactPersonsWithUserDetailsForOrganization(
                 organizationUuid: $organizationUuid
             );
 

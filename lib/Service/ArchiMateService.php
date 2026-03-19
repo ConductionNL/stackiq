@@ -2324,8 +2324,8 @@ class ArchiMateService
     private function extractPropertyDefinitionMap(array $data): array
     {
         // OPTIMIZATION: Return cached property definition map if available.
-        if ($this->propertyDefinitionMapCache !== null) {
-            return $this->propertyDefinitionMapCache;
+        if ($this->propDefMapCache !== null) {
+            return $this->propDefMapCache;
         }
 
         $map = [];
@@ -2363,7 +2363,7 @@ class ArchiMateService
         }//end if
 
         // OPTIMIZATION: Cache the result for subsequent calls during the same import.
-        $this->propertyDefinitionMapCache = $map;
+        $this->propDefMapCache = $map;
 
         return $map;
     }//end extractPropertyDefinitionMap()
@@ -2422,7 +2422,7 @@ class ArchiMateService
                     sectionData: $sectionData,
                     schemaType: $schemaType,
                     modelIdentifier: $modelIdentifier,
-                    propertyDefinitionMap: $propDefMap
+                    propDefMap: $propDefMap
                 );
                 $allObjects     = array_merge($allObjects, $sectionObjects);
             }
@@ -2556,7 +2556,7 @@ class ArchiMateService
                 $this->flattenPropertiesBatch(
                     object: $object,
                     properties: $item['properties']['property'],
-                    propertyDefinitionMap: $propDefMap
+                    propDefMap: $propDefMap
                 );
             }
 

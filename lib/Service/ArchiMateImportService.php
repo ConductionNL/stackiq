@@ -362,7 +362,7 @@ class ArchiMateImportService
             $saveTime     = microtime(true) - $saveStartTime;
 
             // Capture detailed save timing from internal tracking.
-            $saveBreakdown = $this->lastSaveTimingBreakdown;
+            $saveBreakdown = $this->lastSaveTiming;
 
             $totalTime      = microtime(true) - $startTime;
             $itemsPerSecond = count($allObjects) / max($totalTime, 0.001);
@@ -794,7 +794,7 @@ class ArchiMateImportService
                     'Property definitions extracted and mapped',
                     [
                         'total_properties' => count($propDefMap),
-                        'property_mapping' => $this->getPropertyNameMapping(propertyDefinitionMap: $propDefMap),
+                        'property_mapping' => $this->getPropertyNameMapping(propDefMap: $propDefMap),
                     ]
                     );
         }
@@ -884,7 +884,7 @@ class ArchiMateImportService
                         sectionData: $sectionData,
                         sectionName: $section,
                         modelIdentifier: $modelIdentifier,
-                        propertyDefinitionMap: $propDefMap
+                        propDefMap: $propDefMap
                     );
                 }
             }//end if
@@ -1405,7 +1405,7 @@ class ArchiMateImportService
             $objectsSavedValue = count($objects);
         }
 
-        $this->lastSaveTimingBreakdown = [
+        $this->lastSaveTiming = [
             'total_save_seconds'           => round($totalSaveTime, 3),
             'service_init_seconds'         => round($serviceInitTime, 3),
             'gemma_processing_seconds'     => round($gemmaProcessingTime, 3),
@@ -2093,8 +2093,8 @@ class ArchiMateImportService
     private function extractPropertyDefinitionMap(array $data): array
     {
         // OPTIMIZATION: Return cached property definition map if available.
-        if ($this->propertyDefinitionMapCache !== null) {
-            return $this->propertyDefinitionMapCache;
+        if ($this->propMapCache !== null) {
+            return $this->propMapCache;
         }
 
         $map = [];
@@ -2136,7 +2136,7 @@ class ArchiMateImportService
         }//end if
 
         // OPTIMIZATION: Cache the result for subsequent calls during the same import.
-        $this->propertyDefinitionMapCache = $map;
+        $this->propMapCache = $map;
 
         return $map;
     }//end extractPropertyDefinitionMap()
@@ -2576,8 +2576,8 @@ class ArchiMateImportService
     private function extractIdentifier(array $item, string $sectionName=''): ?string
     {
         // OPTIMIZATION: Use cached patterns for section-specific identifier extraction.
-        if (isset($this->identifierPatternCache[$sectionName]) === true) {
-            $patterns = $this->identifierPatternCache[$sectionName];
+        if (isset($this->idPatternCache[$sectionName]) === true) {
+            $patterns = $this->idPatternCache[$sectionName];
 
             // Try cached patterns in order of success frequency.
             foreach ($patterns as $pattern) {
@@ -2590,7 +2590,7 @@ class ArchiMateImportService
 
         // OPTIMIZATION: Build pattern cache on first encounter of section type.
         $patterns = $this->buildIdentifierPatternsForSection(sectionName: $sectionName);
-        $this->identifierPatternCache[$sectionName] = $patterns;
+        $this->idPatternCache[$sectionName] = $patterns;
 
         // Try all patterns and return first successful match.
         foreach ($patterns as $pattern) {
@@ -3209,7 +3209,7 @@ class ArchiMateImportService
             if (in_array($key, $excludedKeys) === false && in_array($key, $basicProperties) === false) {
                 // Only include non-object values or simple arrays.
                 if (is_scalar($value) === true
-                    || (is_array($value) === true && $this->isComplexArray(element: $value) === false)
+                    || (is_array($value) === true && $this->isComplexArray(array: $value) === false)
                 ) {
                     $properties[$key] = $value;
                 }
@@ -3863,7 +3863,7 @@ class ArchiMateImportService
                 }
 
                 // Log the first successful match for debugging.
-                if (isset($this->gemmaTypePropertyFound) === false) {
+                if ($this->gemmaTypePropFound === false) {
                     $this->logger->debug(
                             'GEMMA Type property found',
                             [
@@ -3872,7 +3872,7 @@ class ArchiMateImportService
                                 'object_id'     => $object['identifier'] ?? 'unknown',
                             ]
                             );
-                    $this->gemmaTypePropertyFound = true;
+                    $this->gemmaTypePropFound = true;
                 }
 
                 return $value;
@@ -3967,7 +3967,7 @@ class ArchiMateImportService
                 // Process Referentiecomponent-Standaard relationships.
                 $this->processRelationshipImmediate(
                     relationship: $object,
-                    referentieComponenten: $refComponenten,
+                    refComponenten: $refComponenten,
                     standaarden: $standaarden,
                     gemmaRelationshipMap: $gemmaRelationshipMap
                 );
@@ -3977,7 +3977,7 @@ class ArchiMateImportService
                     relationship: $object,
                     standaardVersies: $standaardVersies,
                     standaarden: $standaarden,
-                    standaardVersieRelationshipMap: $stdVersieRelMap
+                    stdVersieRelMap: $stdVersieRelMap
                 );
             }
         }
@@ -4359,7 +4359,7 @@ class ArchiMateImportService
         $elementsLookup = $this->buildElementsLookupFromRawData(
             rawElementsData: $allLookups['elements'],
             processedObjects: $nonViewObjects,
-            propertyDefinitionMap: $propDefMap
+            propDefMap: $propDefMap
         );
 
         $bulkTime = microtime(true) - $bulkProcessingStart;
@@ -4382,9 +4382,9 @@ class ArchiMateImportService
         unset($allLookups, $elementsLookup, $propDefMap);
         $this->camelCaseCache = [];
         // Clear property name cache.
-        $this->identifierPatternCache = [];
+        $this->idPatternCache = [];
         // Clear identifier pattern cache.
-        $this->propertyDefinitionMapCache = null;
+        $this->propMapCache = null;
         // Clear property definition cache.
         // Force garbage collection to free memory immediately.
         if (function_exists('gc_collect_cycles') === true) {
@@ -4499,7 +4499,7 @@ class ArchiMateImportService
 
             // Flatten properties efficiently (same as other sections).
             if (isset($item['properties']['property']) === true && empty($propDefMap) === false) {
-                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propertyDefinitionMap: $propDefMap);
+                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propDefMap: $propDefMap);
 
                 // Keep @self.id as the full ArchiMate identifier (set above).
                 // so stored IDs match GEMMA Online URLs (id-e0f57689-...).
@@ -4897,7 +4897,7 @@ class ArchiMateImportService
 
             // Flatten properties efficiently (if present).
             if (isset($item['properties']['property']) === true && empty($propDefMap) === false) {
-                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propertyDefinitionMap: $propDefMap);
+                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propDefMap: $propDefMap);
 
                 // FIXED: After properties are flattened, update ID and slug if objectId is available.
                 if (isset($object['objectId']) === true) {
@@ -5373,7 +5373,7 @@ class ArchiMateImportService
 
             // Fast flatten properties.
             if (isset($item['properties']['property']) === true && empty($propDefMap) === false) {
-                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propertyDefinitionMap: $propDefMap);
+                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propDefMap: $propDefMap);
 
                 // Fast ID/slug update.
                 if (isset($object['objectId']) === true) {
@@ -5448,7 +5448,7 @@ class ArchiMateImportService
         return $this->bulkTransformViews(
             viewItems: $items,
             modelIdentifier: $modelIdentifier,
-            propertyDefinitionMap: $propDefMap,
+            propDefMap: $propDefMap,
             elementsLookup: $filteredLookup
         );
     }//end processViewsMaximumSpeed()
@@ -5533,7 +5533,7 @@ class ArchiMateImportService
 
             // Fast properties flattening.
             if (isset($item['properties']['property']) === true && empty($propDefMap) === false) {
-                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propertyDefinitionMap: $propDefMap);
+                $this->flattenPropertiesBatch(object: $object, properties: $item['properties']['property'], propDefMap: $propDefMap);
 
                 // Keep @self.id as the full ArchiMate identifier (set above).
                 // so stored IDs match GEMMA Online URLs (id-e0f57689-...).
