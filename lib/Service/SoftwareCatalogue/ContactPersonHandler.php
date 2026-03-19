@@ -51,7 +51,6 @@ use OCA\SoftwareCatalog\Service\SymfonyEmailService;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -1144,6 +1143,8 @@ class ContactPersonHandler
      * @param array  $objectData    The contact data
      *
      * @return bool True if this is the first contact for the organization
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $objectData reserved for future organization-contact checks
      */
     public function isFirstContactForOrganization(object $contactObject, array $objectData): bool
     {
@@ -2166,6 +2167,8 @@ class ContactPersonHandler
      * @param array      $objectData The contact person data
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $objectData reserved for future email personalization
      */
     private function sendAccountSuspensionEmail(\OCP\IUser $user, array $objectData): void
     {

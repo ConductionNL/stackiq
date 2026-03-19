@@ -44,7 +44,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -960,6 +959,8 @@ XML;
      * @param array $schemaIdMap Schema ID to type mapping.
      *
      * @return string Generated XML.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $schemaIdMap reserved for schema-type filtering
      */
     private function generateXmlDirectly(array $objects, array $schemaIdMap): string
     {
@@ -2110,6 +2111,8 @@ XML;
      * @return void
      *
      * @throws \InvalidArgumentException If any QA check fails.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $sourceData reserved for cross-referencing QA checks
      */
     private function runQualityAssuranceChecks(string $xmlString, array $sourceData): void
     {
@@ -2372,6 +2375,8 @@ XML;
      * @param array                                   $options       Export options.
      *
      * @return string Generated XML.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $orgUuid reserved for future organization-specific filtering
      */
     public function exportOrganizationArchiMateXml(
         \OCA\OpenRegister\Service\ObjectService $objectService,

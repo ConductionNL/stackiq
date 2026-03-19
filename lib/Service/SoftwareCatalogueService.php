@@ -51,7 +51,6 @@ use OCP\App\IAppManager;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -887,6 +886,8 @@ class SoftwareCatalogueService
      * @param object $oldGebruikerObject The old gebruiker object
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $oldGebruikerObject reserved for future diff-based updates
      */
     public function handleGebruikerUpdate(object $gebruikerObject, object $oldGebruikerObject): void
     {
@@ -973,6 +974,8 @@ class SoftwareCatalogueService
      * @param mixed  $revertPoint   The revert point
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $revertPoint reserved for future revert logic
      */
     public function syncUserWithRevertedContact(object $contactObject, mixed $revertPoint): void
     {
@@ -992,6 +995,8 @@ class SoftwareCatalogueService
      * @param mixed  $revertPoint     The revert point
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $revertPoint reserved for future revert logic
      */
     public function updateUserFromRevertedGebruiker(object $gebruikerObject, mixed $revertPoint): void
     {
