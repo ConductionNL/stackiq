@@ -137,6 +137,7 @@
 
 <script>
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+// eslint-disable-next-line import/named
 import { CnDashboardPage } from '@conduction/nextcloud-vue'
 import { objectStore, navigationStore } from '../store/store.js'
 

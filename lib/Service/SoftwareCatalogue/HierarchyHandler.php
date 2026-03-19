@@ -32,7 +32,6 @@ use Psr\Log\LoggerInterface;
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  *
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)

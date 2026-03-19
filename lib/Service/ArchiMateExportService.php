@@ -36,7 +36,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -344,10 +343,8 @@ class ArchiMateExportService
             return $wellKnown[$prefix];
         }
 
-        if ($xml->getDocNamespaces(true) !== false) {
-            $namespaces = $xml->getDocNamespaces(true);
-        } else {
             $namespaces = [];
+        if ($xml->getDocNamespaces(true) !== false) {
         }
 
         return $namespaces[$prefix] ?? '';
@@ -542,16 +539,12 @@ XML;
         // DEBUG: Check if this is our target view with nodes.
         $targetId = 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af';
         if (isset($viewData['_identifier']) === true && $viewData['_identifier'] === $targetId) {
-            if (is_array($viewData['node'] ?? null) === true) {
-                $nodeCountValue = count($viewData['node']);
-            } else {
                 $nodeCountValue = 0;
+            if (is_array($viewData['node'] ?? null) === true) {
             }
 
-            if (isset($viewData['node'][0]) === true) {
-                $nodeSampleValue = $viewData['node'][0];
-            } else {
                 $nodeSampleValue = 'NO FIRST NODE';
+            if (isset($viewData['node'][0]) === true) {
             }
 
             $this->logger->debug(
@@ -569,16 +562,12 @@ XML;
                     );
         }//end if
 
-        if (is_array($viewData['node'] ?? null) === true) {
-            $nodeCountValue = count($viewData['node']);
-        } else {
             $nodeCountValue = 0;
+        if (is_array($viewData['node'] ?? null) === true) {
         }
 
-        if (is_array($viewData['connection'] ?? null) === true) {
-            $connectionCountValue = count($viewData['connection']);
-        } else {
             $connectionCountValue = 0;
+        if (is_array($viewData['connection'] ?? null) === true) {
         }
 
         $this->logger->debug(
@@ -616,32 +605,26 @@ XML;
     {
         // Format 1: OpenRegister object format with properties.xml_data.
         if (isset($view['properties']['xml_data']) === true) {
-            if (is_string($view['properties']['xml_data']) === true) {
-                $xmlData = json_decode($view['properties']['xml_data'], true);
-            } else {
                 $xmlData = $view['properties']['xml_data'];
+            if (is_string($view['properties']['xml_data']) === true) {
             }
 
             if (is_array($xmlData) === true) {
-                return $xmlData;
-            } else {
-                return null;
             }
+
+                return null;
         }
 
         // Format 2: Object with xml_data field (from database).
         if (isset($view['xml_data']) === true) {
-            if (is_string($view['xml_data']) === true) {
-                $xmlData = json_decode($view['xml_data'], true);
-            } else {
                 $xmlData = $view['xml_data'];
+            if (is_string($view['xml_data']) === true) {
             }
 
             if (is_array($xmlData) === true) {
-                return $xmlData;
-            } else {
-                return null;
             }
+
+                return null;
         }
 
         // Format 3: Direct XML data (from convertFromOpenRegisterObjects).
@@ -741,10 +724,8 @@ XML;
         // 3. Raw object data as fallback.
         if (isset($object['properties']['xml_data']) === true) {
             // Format 1: OpenRegister object format.
-            if (is_string($object['properties']['xml_data']) === true) {
-                $xmlData = json_decode($object['properties']['xml_data'], true);
-            } else {
                 $xmlData = $object['properties']['xml_data'];
+            if (is_string($object['properties']['xml_data']) === true) {
             }
 
             if (is_array($xmlData) === true) {
@@ -752,10 +733,8 @@ XML;
             }
         } else if (isset($object['xml_data']) === true) {
             // Format 2: Object with xml_data field (from database).
-            if (is_string($object['xml_data']) === true) {
-                $xmlData = json_decode($object['xml_data'], true);
-            } else {
                 $xmlData = $object['xml_data'];
+            if (is_string($object['xml_data']) === true) {
             }
 
             if (is_array($xmlData) === true) {
@@ -2566,10 +2545,8 @@ XML;
             }
 
             foreach ($refComps as $refComp) {
-                if (is_string($refComp) === true) {
-                    $refCompUuid = $refComp;
-                } else {
                     $refCompUuid = ($refComp['id'] ?? $refComp['uuid'] ?? null);
+                if (is_string($refComp) === true) {
                 }
 
                 if ($refCompUuid === null) {
@@ -2651,11 +2628,9 @@ XML;
         string $bronPropDefId,
         string $prefix=''
     ): array {
-        $elements = [];
-        if ($prefix !== '') {
-            $idPrefix = 'id-swc-'.$prefix.'-app-';
-        } else {
+        $elements     = [];
             $idPrefix = 'id-swc-app-';
+        if ($prefix !== '') {
         }
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
@@ -2689,17 +2664,13 @@ XML;
         string $bronPropDefId,
         string $prefix=''
     ): array {
-        $relationships = [];
-        if ($prefix !== '') {
-            $appIdPrefix = 'id-swc-'.$prefix.'-app-';
-        } else {
+        $relationships   = [];
             $appIdPrefix = 'id-swc-app-';
+        if ($prefix !== '') {
         }
 
-        if ($prefix !== '') {
-            $relIdPrefix = 'id-swc-'.$prefix.'-rel-';
-        } else {
             $relIdPrefix = 'id-swc-rel-';
+        if ($prefix !== '') {
         }
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
@@ -2854,10 +2825,9 @@ XML;
             $propName = $prop['_name'] ?? $prop['name'] ?? '';
             if (is_string($propName) === true && stripos($propName, 'Titel view SWC') !== false && $value !== null) {
                 if (is_string($value) === true) {
-                    return $value;
-                } else {
-                    return null;
                 }
+
+                    return null;
             }
         }
 

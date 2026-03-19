@@ -37,7 +37,6 @@ use Psr\Log\LoggerInterface;
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -189,7 +188,9 @@ class ModuleComplianceService
                             'standaarden' => $standaardversieUuids,
                         ]
                         );
-            } else {
+            }//end if
+
+            if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === false) {
                 $this->logger->debug(
                         'ModuleComplianceService: Standaarden are already up to date',
                         [
@@ -197,7 +198,7 @@ class ModuleComplianceService
                             'moduleUuid' => $moduleUuid,
                         ]
                         );
-            }//end if
+            }
 
             $endTime       = microtime(true);
             $executionTime = round(($endTime - $startTime) * 1000, 2);
@@ -328,58 +329,7 @@ class ModuleComplianceService
             $complianceData  = $complianceObject->getObject();
             $standaardversie = $complianceData['standaardversie'] ?? null;
 
-            if ($standaardversie !== null) {
-                $tracking['withStandaardversie']++;
-
-                // Handle both string UUID and object with UUID property.
-                if (is_string($standaardversie) === true) {
-                    $tracking['stringType']++;
-                    $standaardversieUuids[] = $standaardversie;
-                    $this->logger->debug(
-                            'ModuleComplianceService: Found string standaardversie',
-                            [
-                                'complianceId'    => $complianceObject->getId(),
-                                'standaardversie' => $standaardversie,
-                            ]
-                            );
-                } else if (is_array($standaardversie) === true && isset($standaardversie['uuid']) === true) {
-                    $tracking['arrayType']++;
-                    $standaardversieUuids[] = $standaardversie['uuid'];
-                    $this->logger->debug(
-                            'ModuleComplianceService: Found array standaardversie',
-                            [
-                                'complianceId'    => $complianceObject->getId(),
-                                'standaardversie' => $standaardversie['uuid'],
-                            ]
-                            );
-                } else if (is_object($standaardversie) === true && isset($standaardversie->uuid) === true) {
-                    $tracking['objectType']++;
-                    $standaardversieUuids[] = $standaardversie->uuid;
-                    $this->logger->debug(
-                            'ModuleComplianceService: Found object standaardversie',
-                            [
-                                'complianceId'    => $complianceObject->getId(),
-                                'standaardversie' => $standaardversie->uuid,
-                            ]
-                            );
-                } else {
-                    $tracking['invalidType']++;
-                    if (is_array($standaardversie) === true) {
-                        $standaardversieValue = json_encode($standaardversie);
-                    } else {
-                        $standaardversieValue = (string) $standaardversie;
-                    }
-
-                    $this->logger->warning(
-                            'ModuleComplianceService: Invalid standaardversie type',
-                            [
-                                'complianceId' => $complianceObject->getId(),
-                                'type'         => gettype($standaardversie),
-                                'value'        => $standaardversieValue,
-                            ]
-                            );
-                }//end if
-            } else {
+            if ($standaardversie === null) {
                 $tracking['withoutStandaardversie']++;
                 $this->logger->debug(
                         'ModuleComplianceService: Compliance object missing standaardversie',
@@ -388,7 +338,62 @@ class ModuleComplianceService
                             'complianceUuid' => $complianceData['uuid'] ?? 'unknown',
                         ]
                         );
+                continue;
+            }
+
+            $tracking['withStandaardversie']++;
+
+            // Handle both string UUID and object with UUID property.
+            if (is_string($standaardversie) === true) {
+                $tracking['stringType']++;
+                $standaardversieUuids[] = $standaardversie;
+                $this->logger->debug(
+                        'ModuleComplianceService: Found string standaardversie',
+                        [
+                            'complianceId'    => $complianceObject->getId(),
+                            'standaardversie' => $standaardversie,
+                        ]
+                        );
+            } else if (is_array($standaardversie) === true && isset($standaardversie['uuid']) === true) {
+                $tracking['arrayType']++;
+                $standaardversieUuids[] = $standaardversie['uuid'];
+                $this->logger->debug(
+                        'ModuleComplianceService: Found array standaardversie',
+                        [
+                            'complianceId'    => $complianceObject->getId(),
+                            'standaardversie' => $standaardversie['uuid'],
+                        ]
+                        );
+            } else if (is_object($standaardversie) === true && isset($standaardversie->uuid) === true) {
+                $tracking['objectType']++;
+                $standaardversieUuids[] = $standaardversie->uuid;
+                $this->logger->debug(
+                        'ModuleComplianceService: Found object standaardversie',
+                        [
+                            'complianceId'    => $complianceObject->getId(),
+                            'standaardversie' => $standaardversie->uuid,
+                        ]
+                        );
             }//end if
+
+            if (is_string($standaardversie) === false
+                && (is_array($standaardversie) === false || isset($standaardversie['uuid']) === false)
+                && (is_object($standaardversie) === false || isset($standaardversie->uuid) === false)
+            ) {
+                $tracking['invalidType']++;
+                    $standaardversieValue = (string) $standaardversie;
+                if (is_array($standaardversie) === true) {
+                }
+
+                $this->logger->warning(
+                        'ModuleComplianceService: Invalid standaardversie type',
+                        [
+                            'complianceId' => $complianceObject->getId(),
+                            'type'         => gettype($standaardversie),
+                            'value'        => $standaardversieValue,
+                        ]
+                        );
+            }
         }//end foreach
 
         // Remove duplicates and empty values.
@@ -583,7 +588,9 @@ class ModuleComplianceService
                             'module'          => $moduleUuid,
                             'standaardversie' => $standaardversie,
                         ];
-                    } else {
+                    }
+
+                    if ($standaardversie === null) {
                         $results['samples']['complianceWithoutStandaardversie'][] = [
                             'id'     => $complianceObject->getId(),
                             'uuid'   => $complianceData['uuid'] ?? 'unknown',
@@ -601,13 +608,16 @@ class ModuleComplianceService
                 }
 
                 // Handle both string UUID and object with UUID property.
+                $moduleUuidValue = null;
                 if (is_string($moduleUuid) === true) {
                     $moduleUuidValue = $moduleUuid;
                 } else if (is_array($moduleUuid) === true && isset($moduleUuid['uuid']) === true) {
                     $moduleUuidValue = $moduleUuid['uuid'];
                 } else if (is_object($moduleUuid) === true && isset($moduleUuid->uuid) === true) {
                     $moduleUuidValue = $moduleUuid->uuid;
-                } else {
+                }
+
+                if ($moduleUuidValue === null) {
                     $results['errors'][] = 'Invalid module reference in compliance object: '.$complianceObject->getId();
                     continue;
                 }
@@ -737,7 +747,9 @@ class ModuleComplianceService
                                     'count'       => count($standaardversieUuids),
                                 ]
                                 );
-                    } else {
+                    }//end if
+
+                    if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === false) {
                         $results['modulesAlreadyUpToDate']++;
 
                         // Add to full modules list.

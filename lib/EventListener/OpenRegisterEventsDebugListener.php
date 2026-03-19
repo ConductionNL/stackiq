@@ -179,7 +179,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function extractEventData(Event $event): array
     {
@@ -207,10 +206,8 @@ class OpenRegisterEventsDebugListener implements IEventListener
             $newObject = $event->getNewObject();
             $oldObject = $event->getOldObject();
 
-            if ($oldObject !== null) {
-                $oldObjectData = $this->getSafeObjectData(objectData: $oldObject->getObject());
-            } else {
                 $oldObjectData = null;
+            if ($oldObject !== null) {
             }
 
             $data = array_merge(
@@ -361,11 +358,12 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'organisationTitle' => $organisation->getName(),
                     ]
                     );
-            // Unknown event type.
-        } else {
+        }//end if
+
+        if (isset($data['eventType']) === false) {
             $data['eventType'] = 'Unknown';
             $data['note']      = 'Event type not specifically handled by SoftwareCatalog debug listener';
-        }//end if
+        }
 
         return $data;
 

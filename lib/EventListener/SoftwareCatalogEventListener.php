@@ -68,8 +68,6 @@ class SoftwareCatalogEventListener implements IEventListener
      * @param Event $event The event to handle
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function handle(Event $event): void
     {
@@ -325,7 +323,6 @@ class SoftwareCatalogEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function handleObjectUpdated(
         ObjectUpdatedEvent $event,
@@ -388,10 +385,8 @@ class SoftwareCatalogEventListener implements IEventListener
             $objectData = $object->getObject();
             $status     = strtolower($objectData['status'] ?? '');
 
-            if ($oldObject !== null) {
-                $oldStatus = strtolower($oldObject->getObject()['status'] ?? '');
-            } else {
                 $oldStatus = '';
+            if ($oldObject !== null) {
             }
 
             $logger->debug(
@@ -468,7 +463,9 @@ class SoftwareCatalogEventListener implements IEventListener
                             ]
                             );
                 }//end try
-            } else {
+            }//end if
+
+            if (in_array(needle: $status, haystack: ['actief', 'active']) !== true || $status === $oldStatus) {
                 $logger->debug(
                         'SoftwareCatalog: Skipping non-active organization update',
                         [
@@ -477,7 +474,7 @@ class SoftwareCatalogEventListener implements IEventListener
                             'schemaId' => $objectSchemaId,
                         ]
                         );
-            }//end if
+            }
 
             return;
         }//end if

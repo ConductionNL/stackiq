@@ -20,7 +20,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .dashboard-content {
     margin-inline: auto;
     max-width: 1000px;

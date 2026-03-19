@@ -37,7 +37,6 @@ use Psr\Log\LoggerInterface;
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -186,15 +185,7 @@ class OrganizationHandler
                 $registerId           = $settingsService->getVoorzieningenRegisterId();
                 $organizationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-                if ($registerId !== null && $organizationSchemaId !== null) {
-                    $objectService->saveObject(
-                        object: $organizationObject,
-                        extend: [],
-                        register: (int) $registerId,
-                        schema: (int) $organizationSchemaId,
-                        uuid: $organizationObject->getUuid()
-                    );
-                } else {
+                if ($registerId === null || $organizationSchemaId === null) {
                     $this->_logger->warning(
                         'Missing register or schema ID for organization, using fallback save method',
                         [
@@ -203,6 +194,16 @@ class OrganizationHandler
                         ]
                     );
                     $objectService->saveObject($organizationObject);
+                }
+
+                if ($registerId !== null && $organizationSchemaId !== null) {
+                    $objectService->saveObject(
+                        object: $organizationObject,
+                        extend: [],
+                        register: (int) $registerId,
+                        schema: (int) $organizationSchemaId,
+                        uuid: $organizationObject->getUuid()
+                    );
                 }
 
                 $this->_logger->info(
@@ -353,16 +354,12 @@ class OrganizationHandler
                         contactgegevensSchemaId: $contactgegevensSchemaId
                     );
 
-                    if ($existingContactgegevens !== null) {
-                        $logMessage = 'Updating existing contactgegevens object';
-                    } else {
                         $logMessage = 'Creating new contactgegevens object';
+                    if ($existingContactgegevens !== null) {
                     }
 
-                    if ($existingContactgegevens !== null) {
-                        $existingId = $existingContactgegevens->getUuid();
-                    } else {
                         $existingId = null;
+                    if ($existingContactgegevens !== null) {
                     }
 
                     $this->_logger->info(
@@ -385,10 +382,8 @@ class OrganizationHandler
                             ]
                             );
 
-                    if (empty($titleParts) === false) {
-                        $title = implode(' ', $titleParts);
-                    } else {
                         $title = $contactpersoon['email'] ?? 'Contact Person';
+                    if (empty($titleParts) === false) {
                     }
 
                     // Create contactgegevens object with proper schema.
@@ -420,6 +415,13 @@ class OrganizationHandler
                     }
 
                     // Create or update the contactgegevens object via ObjectService.
+                    // Create new contactgegevens object.
+                    $contactgegevensObject = $objectService->saveObject(
+                        object: $contactgegevensData,
+                        extend: [],
+                        register: $registerId,
+                        schema: $contactgegevensSchemaId
+                    );
                     if ($existingContactgegevens !== null) {
                         // Update existing contactgegevens object.
                         $contactgegevensObject = $objectService->saveObject(
@@ -429,25 +431,16 @@ class OrganizationHandler
                             schema: $contactgegevensSchemaId,
                             uuid: $existingContactgegevens->getUuid()
                         );
-                    } else {
-                        // Create new contactgegevens object.
-                        $contactgegevensObject = $objectService->saveObject(
-                            object: $contactgegevensData,
-                            extend: [],
-                            register: $registerId,
-                            schema: $contactgegevensSchemaId
-                        );
-                    }//end if
+                    }
 
                     if ($contactgegevensObject !== null) {
                         $processedContacts[] = $contactgegevensObject;
 
+                        $actionLogMessage = 'Created new contactgegevens from contactpersoon';
+                        $actionValue      = 'create';
                         if ($existingContactgegevens !== null) {
                             $actionLogMessage = 'Updated existing contactgegevens from contactpersoon';
                             $actionValue      = 'update';
-                        } else {
-                            $actionLogMessage = 'Created new contactgegevens from contactpersoon';
-                            $actionValue      = 'create';
                         }
 
                         $this->_logger->info(
@@ -695,26 +688,18 @@ class OrganizationHandler
                         $userB = $this->_userManager->get($b);
 
                         // Get user creation timestamps (fallback to 0 if not available).
+                        $timeA = 0;
                         if ($userA !== null) {
                             $lastLoginA = $userA->getLastLogin();
                             if ($lastLoginA !== 0 && $lastLoginA !== null && $lastLoginA !== false) {
-                                $timeA = $lastLoginA;
-                            } else {
-                                $timeA = 0;
                             }
-                        } else {
-                            $timeA = 0;
                         }
 
+                        $timeB = 0;
                         if ($userB !== null) {
                             $lastLoginB = $userB->getLastLogin();
                             if ($lastLoginB !== 0 && $lastLoginB !== null && $lastLoginB !== false) {
-                                $timeB = $lastLoginB;
-                            } else {
-                                $timeB = 0;
                             }
-                        } else {
-                            $timeB = 0;
                         }
 
                         return $timeA <=> $timeB;

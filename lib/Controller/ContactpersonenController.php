@@ -264,7 +264,6 @@ class ContactpersonenController extends Controller
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
@@ -402,11 +401,9 @@ class ContactpersonenController extends Controller
             $contactpersoonObject->setObject($contactData);
 
             // Debug logging to understand data types before save.
-            $achternaamValue = $contactData['achternaam'] ?? 'not set';
-            if (isset($contactData['achternaam']) === true) {
-                $achternaamType = gettype($contactData['achternaam']);
-            } else {
+            $achternaamValue    = $contactData['achternaam'] ?? 'not set';
                 $achternaamType = 'not set';
+            if (isset($contactData['achternaam']) === true) {
             }
 
             $this->logger->info(
@@ -580,7 +577,6 @@ class ContactpersonenController extends Controller
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
@@ -633,20 +629,21 @@ class ContactpersonenController extends Controller
             $groupsToAdd = array_diff($validGroups, $curCatalogGroups);
             foreach ($groupsToAdd as $groupName) {
                 $group = $this->groupManager->get($groupName);
-                if ($group !== null) {
-                    if ($group->inGroup($user) === false) {
-                        $group->addUser($user);
-                        $this->logger->info(
-                                'Added user to group',
-                                [
-                                    'username' => $username,
-                                    'group'    => $groupName,
-                                ]
-                                );
-                    }
-                } else {
+                if ($group === null) {
                     $this->logger->warning(
                             'Group does not exist, skipping',
+                            [
+                                'username' => $username,
+                                'group'    => $groupName,
+                            ]
+                            );
+                    continue;
+                }
+
+                if ($group->inGroup($user) === false) {
+                    $group->addUser($user);
+                    $this->logger->info(
+                            'Added user to group',
                             [
                                 'username' => $username,
                                 'group'    => $groupName,
@@ -1076,28 +1073,20 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function testBulkUserInfo(): JSONResponse
     {
         try {
-            if ($this->contactSvc !== null) {
-                $objectServiceAvail = 'available';
-            } else {
                 $objectServiceAvail = 'null';
+            if ($this->contactSvc !== null) {
             }
 
-            if ($this->userManager !== null) {
-                $userManagerAvail = 'available';
-            } else {
                 $userManagerAvail = 'null';
+            if ($this->userManager !== null) {
             }
 
-            if ($this->groupManager !== null) {
-                $groupManagerAvail = 'available';
-            } else {
                 $groupManagerAvail = 'null';
+            if ($this->groupManager !== null) {
             }
 
             $this->logger->info(

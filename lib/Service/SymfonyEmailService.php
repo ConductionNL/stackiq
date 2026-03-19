@@ -42,7 +42,6 @@ use Twig\Loader\ArrayLoader;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -762,10 +761,8 @@ class SymfonyEmailService
                 );
 
         // Prepare template data.
-        if (empty($userName) === false) {
-            $displayName = $userName;
-        } else {
             $displayName = 'Gebruiker';
+        if (empty($userName) === false) {
         }
 
         $templateData = [
@@ -878,10 +875,8 @@ class SymfonyEmailService
                 );
 
         // Prepare template data.
-        if (empty($userName) === false) {
-            $displayName = $userName;
-        } else {
             $displayName = 'Gebruiker';
+        if (empty($userName) === false) {
         }
 
         $templateData = [
@@ -995,10 +990,8 @@ class SymfonyEmailService
                 );
 
         // Prepare template data.
-        if (empty($userName) === false) {
-            $displayName = $userName;
-        } else {
             $displayName = 'Gebruiker';
+        if (empty($userName) === false) {
         }
 
         $templateData = [
@@ -1559,13 +1552,12 @@ class SymfonyEmailService
 
         $configured = ($hasCredentials === true && $hasTemplates === true);
 
+        $reason = $this->getConfigurationIssues(
+            hasCredentials: $hasCredentials,
+            hasTemplates: $hasTemplates
+        );
         if ($configured === true) {
             $reason = 'Email system fully configured';
-        } else {
-            $reason = $this->getConfigurationIssues(
-                hasCredentials: $hasCredentials,
-                hasTemplates: $hasTemplates
-            );
         }
 
         return [

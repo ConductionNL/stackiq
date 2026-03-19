@@ -42,7 +42,6 @@ use OCP\IAppConfig;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ElseExpression)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -280,11 +279,11 @@ class ContactpersoonService
                                     'username'  => $username,
                                 ]
                             );
-                        } else {
-                            if ($organisationEntity !== null) {
-                                $orgActive = $organisationEntity->getActive();
-                            } else {
+                        }//end if
+
+                        if ($organisationEntity === null || $organisationEntity->getActive() !== true) {
                                 $orgActive = false;
+                            if ($organisationEntity !== null) {
                             }
 
                             $this->logger->info(
@@ -298,7 +297,7 @@ class ContactpersoonService
                                 ]
                             );
                             return false;
-                        }//end if
+                        }
                     } catch (\Exception $e) {
                         $this->logger->error(
                             'ContactpersoonService: User creation failed',
@@ -310,14 +309,14 @@ class ContactpersoonService
                         );
                         return false;
                     }//end try
-                } else {
+
                     $this->logger->warning(
                         'ContactpersoonService: Contactpersoon has no organization reference, skipping user creation',
                         ['contactId' => $contactId]
                     );
                     return false;
                 }//end if
-            } else {
+
                 $this->logger->info(
                     'ContactpersoonService: User account already exists',
                     [
@@ -390,15 +389,16 @@ class ContactpersoonService
         // Use the new organization type-based logic instead of old role-based logic.
         $userManager = \OC::$server->get('OCP\IUserManager');
         $user        = $userManager->get($username);
-        if ($user !== null) {
-            $contactData = $contactpersoonObject->getObject();
-            $this->contactPersonHandler->updateUserGroupsFromContactData(
-                user: $user,
-                contactData: $contactData
-            );
-        } else {
+        if ($user === null) {
             $this->logger->warning('User not found for group update', ['username' => $username]);
+            return;
         }
+
+        $contactData = $contactpersoonObject->getObject();
+        $this->contactPersonHandler->updateUserGroupsFromContactData(
+            user: $user,
+            contactData: $contactData
+        );
 
     }//end updateUserGroups()
 
@@ -573,11 +573,9 @@ class ContactpersoonService
      */
     private function syncNameFieldsToUser(object $contactpersoonObject, ?object $oldContactpersoonObject): void
     {
-        $newData = $contactpersoonObject->getObject();
-        if ($oldContactpersoonObject !== null) {
-            $oldData = $oldContactpersoonObject->getObject();
-        } else {
+        $newData     = $contactpersoonObject->getObject();
             $oldData = [];
+        if ($oldContactpersoonObject !== null) {
         }
 
         // Check if any name/functie fields have changed.
@@ -732,20 +730,22 @@ class ContactpersoonService
             $userManager = \OC::$server->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
+            if ($user === null) {
+                $this->logger->warning(
+                    'ContactpersoonService: User not found for deleted contact',
+                    [
+                        'contactId' => $contactObject->getId(),
+                        'username'  => $username,
+                    ]
+                );
+            }
+
             if ($user !== null) {
                 // Disable the user instead of deleting.
                 $user->setEnabled(false);
 
                 $this->logger->info(
                     'ContactpersoonService: Disabled user for deleted contact',
-                    [
-                        'contactId' => $contactObject->getId(),
-                        'username'  => $username,
-                    ]
-                );
-            } else {
-                $this->logger->warning(
-                    'ContactpersoonService: User not found for deleted contact',
                     [
                         'contactId' => $contactObject->getId(),
                         'username'  => $username,
@@ -871,6 +871,15 @@ class ContactpersoonService
                     $userDetails = null;
 
                     // If username exists, fetch user details.
+                    if ($username === null) {
+                        $this->logger->debug(
+                            'ContactpersoonService: No username found for contact person',
+                            [
+                                'contactPersonId' => $contactPerson->getId(),
+                            ]
+                        );
+                    }
+
                     if ($username !== null) {
                         $user = $userManager->get($username);
                         if ($user !== null) {
@@ -895,7 +904,9 @@ class ContactpersoonService
                                     'userEnabled'     => $user->isEnabled(),
                                 ]
                             );
-                        } else {
+                        }//end if
+
+                        if ($user === null) {
                             $this->logger->warning(
                                 'ContactpersoonService: User not found for username',
                                 [
@@ -903,14 +914,7 @@ class ContactpersoonService
                                     'username'        => $username,
                                 ]
                             );
-                        }//end if
-                    } else {
-                        $this->logger->debug(
-                            'ContactpersoonService: No username found for contact person',
-                            [
-                                'contactPersonId' => $contactPerson->getId(),
-                            ]
-                        );
+                        }
                     }//end if
 
                     // Create enhanced contact person object with user details spliced in.
@@ -1060,14 +1064,7 @@ class ContactpersoonService
                     // If user exists, get their current groups.
                     if (empty($username) === false) {
                         $user = $userManager->get($username);
-                        if ($user !== null) {
-                            $groupManager        = \OC::$server->get('OCP\IGroupManager');
-                            $userGroups          = $groupManager->getUserGroups($user);
-                            $userInfo['groups']  = array_keys($userGroups);
-                            $userInfo['enabled'] = $user->isEnabled();
-                            $userInfo['displayName'] = $user->getDisplayName();
-                            $userInfo['lastLogin']   = $user->getLastLogin();
-                        } else {
+                        if ($user === null) {
                             $this->logger->warning(
                                 'ContactpersoonService: User not found for bulk user info',
                                 [
@@ -1076,7 +1073,16 @@ class ContactpersoonService
                                 ]
                             );
                         }
-                    }
+
+                        if ($user !== null) {
+                            $groupManager        = \OC::$server->get('OCP\IGroupManager');
+                            $userGroups          = $groupManager->getUserGroups($user);
+                            $userInfo['groups']  = array_keys($userGroups);
+                            $userInfo['enabled'] = $user->isEnabled();
+                            $userInfo['displayName'] = $user->getDisplayName();
+                            $userInfo['lastLogin']   = $user->getLastLogin();
+                        }
+                    }//end if
 
                     $bulkUserInfo[$contactpersoonId] = $userInfo;
                 } catch (\Exception $e) {
@@ -1181,6 +1187,16 @@ class ContactpersoonService
             // Set the organisation field in @self metadata to the organization UUID.
             // This ensures the contact person is properly linked to their organization.
             $organizationUuid = ($currentObject['organisation'] ?? $currentObject['organisatie'] ?? '');
+            if (empty($organizationUuid) === true) {
+                $this->logger->warning(
+                    'ContactpersoonService: No organization UUID found for contact person',
+                    [
+                        'contactId'   => $contactId,
+                        'contactData' => $currentObject,
+                    ]
+                );
+            }
+
             if (empty($organizationUuid) === false) {
                 $selfMetadata['organisation'] = $organizationUuid;
                 $this->logger->info(
@@ -1188,14 +1204,6 @@ class ContactpersoonService
                     [
                         'contactId'        => $contactId,
                         'organizationUuid' => $organizationUuid,
-                    ]
-                );
-            } else {
-                $this->logger->warning(
-                    'ContactpersoonService: No organization UUID found for contact person',
-                    [
-                        'contactId'   => $contactId,
-                        'contactData' => $currentObject,
                     ]
                 );
             }
