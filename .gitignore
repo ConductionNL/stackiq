@@ -18,6 +18,9 @@
 /coverage/
 /coverage-frontend/
 
+.phpunit.cache/
+phpmetrics/
+
 # Data files
 /data/
 *.csv
