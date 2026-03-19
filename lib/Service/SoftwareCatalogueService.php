@@ -3385,12 +3385,14 @@ class SoftwareCatalogueService
             // Organization entity doesn't exist yet - this can happen due to race conditions.
             // Log and return gracefully, the organization sync will handle this later.
             $this->_logger->warning(
-                    'SoftwareCatalogueService: Organization entity not found (race condition), will be handled by organization sync',
+                    'SoftwareCatalogueService: Organization entity not found (race condition), '
+                    . 'will be handled by organization sync',
                     [
                         'contactPersonId' => $contactPersonObject->getId(),
                         'username'        => $email,
                         'organisatie'     => $organisatie,
-                        'message'         => 'This is expected during anonymous registration - organization entity is created after contact persons',
+                        'message'         => 'This is expected during anonymous registration'
+                            . ' - organization entity is created after contact persons',
                     ]
                     );
             return;
@@ -3501,7 +3503,10 @@ class SoftwareCatalogueService
 
                 // Find the contact person object.
                 try {
-                    $contactObject = $objectService->find($contactUuid, [], false, $organizationObject->getRegisterId(), $contactSchemaId);
+                    $contactObject = $objectService->find(
+                        $contactUuid, [], false,
+                        $organizationObject->getRegisterId(), $contactSchemaId
+                    );
                     if (empty($contactObject) === false) {
                         // Get the current object data and update the organisatie field.
                         $contactObjectData = $contactObject->getObject();

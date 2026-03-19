@@ -507,7 +507,9 @@ class SettingsService
     {
         try {
             // Check if auto-configuration has already been completed.
-            $autoConfigCompleted = $this->config->getValueString($this->appName, 'auto_config_completed', 'false') === 'true';
+            $autoConfigCompleted = $this->config->getValueString(
+                $this->appName, 'auto_config_completed', 'false'
+            ) === 'true';
             if ($autoConfigCompleted === true) {
                 $this->logger->info('Auto-configuration already completed, skipping');
                 return [];
@@ -789,7 +791,8 @@ class SettingsService
                     'property_definition' => 'property_definition_schema',
                 // Property definitions are root-level AMEF objects.
                     'organization'        => 'organization_schema',
-                    // NOTE: 'property' mapping removed - properties are never root-level AMEF objects, only nested within other elements.
+                    // NOTE: 'property' mapping removed - properties are never
+                    // root-level AMEF objects, only nested within other elements.
                 ];
 
                 $amefKey = $amefKeyMap[$objectType] ?? null;
@@ -820,7 +823,9 @@ class SettingsService
         // Only check voorzieningen config if object type exists in the key map.
         if ($result === null && isset($voorzieningenKeyMap[$objectType]) === true) {
             $voorzieningenKey = $voorzieningenKeyMap[$objectType];
-            if (isset($voorzieningenConfig[$voorzieningenKey]) === true && $voorzieningenConfig[$voorzieningenKey] !== null) {
+            if (isset($voorzieningenConfig[$voorzieningenKey]) === true
+                && $voorzieningenConfig[$voorzieningenKey] !== null
+            ) {
                 $result = (int) $voorzieningenConfig[$voorzieningenKey];
             }
         }
@@ -925,7 +930,9 @@ class SettingsService
         }
 
         // Check Voorzieningen register for organisatie/organization and contactpersoon/contact.
-        if ($result === null && in_array($objectType, ['organisatie', 'organization', 'contactpersoon', 'contact'], true) === true) {
+        if ($result === null
+            && in_array($objectType, ['organisatie', 'organization', 'contactpersoon', 'contact'], true) === true
+        ) {
             $voorzieningenConfig = $this->getVoorzieningenConfig();
             if (isset($voorzieningenConfig['register']) === true && empty($voorzieningenConfig['register']) === false) {
                 $result = (int) $voorzieningenConfig['register'];
@@ -1251,7 +1258,9 @@ class SettingsService
                                 );
                     } else {
                         // Fallback to general auto-configuration.
-                        $this->logger->info('SettingsService: Post-import auto-config yielded no results, trying general auto-config');
+                        $this->logger->info(
+                            'SettingsService: Post-import auto-config yielded no results, trying general auto-config'
+                        );
                         $configuration = $this->autoConfigure();
                         if (empty($configuration) === false) {
                             $this->updateSettings(data: $configuration);
@@ -1839,44 +1848,92 @@ class SettingsService
         $this->logger->debug('SoftwareCatalog: Loading email settings from configuration');
 
         $settings = [
-            'enabled'                         => $this->config->getValueString($this->appName, 'email_enabled', 'false') === 'true',
-            'senderEmail'                     => $this->config->getValueString($this->appName, 'sender_email', 'noreply@softwarecatalogus.nl'),
-            'senderName'                      => $this->config->getValueString($this->appName, 'sender_name', 'Software Catalogus'),
-            'testReceiverOverride'            => $this->config->getValueString($this->appName, 'test_receiver_override', ''),
-            'organizationRegistrationEnabled' => $this->config->getValueString($this->appName, 'email_org_registration_enabled', 'true') === 'true',
-            'organizationActivationEnabled'   => $this->config->getValueString($this->appName, 'email_org_activation_enabled', 'true') === 'true',
-            'userCreationEnabled'             => $this->config->getValueString($this->appName, 'email_user_creation_enabled', 'true') === 'true',
-            'userPasswordEnabled'             => $this->config->getValueString($this->appName, 'email_user_password_enabled', 'true') === 'true',
-            'userOrganisationEnabled'         => $this->config->getValueString($this->appName, 'email_user_organisation_enabled', 'true') === 'true',
+            'enabled' => $this->config->getValueString(
+                $this->appName, 'email_enabled', 'false'
+            ) === 'true',
+            'senderEmail' => $this->config->getValueString(
+                $this->appName, 'sender_email', 'noreply@softwarecatalogus.nl'
+            ),
+            'senderName' => $this->config->getValueString(
+                $this->appName, 'sender_name', 'Software Catalogus'
+            ),
+            'testReceiverOverride' => $this->config->getValueString(
+                $this->appName, 'test_receiver_override', ''
+            ),
+            'organizationRegistrationEnabled' => $this->config->getValueString(
+                $this->appName, 'email_org_registration_enabled', 'true'
+            ) === 'true',
+            'organizationActivationEnabled' => $this->config->getValueString(
+                $this->appName, 'email_org_activation_enabled', 'true'
+            ) === 'true',
+            'userCreationEnabled' => $this->config->getValueString(
+                $this->appName, 'email_user_creation_enabled', 'true'
+            ) === 'true',
+            'userPasswordEnabled' => $this->config->getValueString(
+                $this->appName, 'email_user_password_enabled', 'true'
+            ) === 'true',
+            'userOrganisationEnabled' => $this->config->getValueString(
+                $this->appName, 'email_user_organisation_enabled', 'true'
+            ) === 'true',
 
             // Symfony Mailer transport configuration.
-            'transportType'                   => $this->config->getValueString($this->appName, 'email_transport_type', 'smtp'),
+            'transportType' => $this->config->getValueString(
+                $this->appName, 'email_transport_type', 'smtp'
+            ),
 
             // SMTP configuration.
-            'smtpHost'                        => $this->config->getValueString($this->appName, 'email_smtp_host', 'localhost'),
-            'smtpPort'                        => (int) $this->config->getValueString($this->appName, 'email_smtp_port', '587'),
-            'smtpEncryption'                  => $this->config->getValueString($this->appName, 'email_smtp_encryption', 'tls'),
-            'smtpUsername'                    => $this->config->getValueString($this->appName, 'email_smtp_username', ''),
-            'smtpPassword'                    => $this->config->getValueString($this->appName, 'email_smtp_password', ''),
+            'smtpHost' => $this->config->getValueString(
+                $this->appName, 'email_smtp_host', 'localhost'
+            ),
+            'smtpPort' => (int) $this->config->getValueString(
+                $this->appName, 'email_smtp_port', '587'
+            ),
+            'smtpEncryption' => $this->config->getValueString(
+                $this->appName, 'email_smtp_encryption', 'tls'
+            ),
+            'smtpUsername' => $this->config->getValueString(
+                $this->appName, 'email_smtp_username', ''
+            ),
+            'smtpPassword' => $this->config->getValueString(
+                $this->appName, 'email_smtp_password', ''
+            ),
 
             // SendGrid configuration.
-            'sendgridApiKey'                  => $this->config->getValueString($this->appName, 'email_sendgrid_api_key', ''),
+            'sendgridApiKey' => $this->config->getValueString(
+                $this->appName, 'email_sendgrid_api_key', ''
+            ),
 
             // Mailgun configuration.
-            'mailgunApiKey'                   => $this->config->getValueString($this->appName, 'email_mailgun_api_key', ''),
-            'mailgunDomain'                   => $this->config->getValueString($this->appName, 'email_mailgun_domain', ''),
+            'mailgunApiKey' => $this->config->getValueString(
+                $this->appName, 'email_mailgun_api_key', ''
+            ),
+            'mailgunDomain' => $this->config->getValueString(
+                $this->appName, 'email_mailgun_domain', ''
+            ),
 
             // Postmark configuration.
-            'postmarkApiKey'                  => $this->config->getValueString($this->appName, 'email_postmark_api_key', ''),
+            'postmarkApiKey' => $this->config->getValueString(
+                $this->appName, 'email_postmark_api_key', ''
+            ),
 
             // Amazon SES configuration.
-            'sesAccessKey'                    => $this->config->getValueString($this->appName, 'email_ses_access_key', ''),
-            'sesSecretKey'                    => $this->config->getValueString($this->appName, 'email_ses_secret_key', ''),
-            'sesRegion'                       => $this->config->getValueString($this->appName, 'email_ses_region', 'us-east-1'),
+            'sesAccessKey' => $this->config->getValueString(
+                $this->appName, 'email_ses_access_key', ''
+            ),
+            'sesSecretKey' => $this->config->getValueString(
+                $this->appName, 'email_ses_secret_key', ''
+            ),
+            'sesRegion' => $this->config->getValueString(
+                $this->appName, 'email_ses_region', 'us-east-1'
+            ),
 
             // Mailjet configuration.
-            'mailjetApiKey'                   => $this->config->getValueString($this->appName, 'email_mailjet_api_key', ''),
-            'mailjetSecretKey'                => $this->config->getValueString($this->appName, 'email_mailjet_secret_key', ''),
+            'mailjetApiKey' => $this->config->getValueString(
+                $this->appName, 'email_mailjet_api_key', ''
+            ),
+            'mailjetSecretKey' => $this->config->getValueString(
+                $this->appName, 'email_mailjet_secret_key', ''
+            ),
 
             // Templates.
             'templates'                       => [
@@ -2487,7 +2544,8 @@ class SettingsService
             case 'smtp':
                 return empty($emailSettings['smtpHost']) === false && empty($emailSettings['smtpPort']) === false;
             case 'mailjet':
-                return empty($emailSettings['mailjetApiKey']) === false && empty($emailSettings['mailjetSecretKey']) === false;
+                return empty($emailSettings['mailjetApiKey']) === false
+                    && empty($emailSettings['mailjetSecretKey']) === false;
             case 'sendgrid':
                 return empty($emailSettings['sendgridApiKey']) === false;
             case 'mailgun':
@@ -2762,7 +2820,9 @@ class SettingsService
 
             // Get the configuration service to check stored version.
             $configurationService = $this->getConfigurationService();
-            $storedVersion        = $configurationService->getConfiguredAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+            $storedVersion = $configurationService->getConfiguredAppVersion(
+                \OCA\SoftwareCatalog\AppInfo\Application::APP_ID
+            );
 
             $this->logger->info(
                     'SettingsService: Version comparison details',
@@ -2833,7 +2893,9 @@ class SettingsService
             $storedConfigVersion  = null;
 
             try {
-                $storedConfigVersion = $configurationService->getConfiguredAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+                $storedConfigVersion = $configurationService->getConfiguredAppVersion(
+                    \OCA\SoftwareCatalog\AppInfo\Application::APP_ID
+                );
             } catch (\Exception $e) {
                 $this->logger->warning(
                         'SettingsService: Could not retrieve stored configuration version',
@@ -2869,7 +2931,9 @@ class SettingsService
                 'needsUpdate'           => $needsUpdate,
                 'versionComparison'     => $versionComparisonValue,
                 'isFullyConfigured'     => $this->isFullyConfigured(),
-                'autoConfigCompleted'   => $this->config->getValueString($this->appName, 'auto_config_completed', 'false') === 'true',
+                'autoConfigCompleted' => $this->config->getValueString(
+                    $this->appName, 'auto_config_completed', 'false'
+                ) === 'true',
                 'openRegisterInstalled' => $openRegisterInstalled,
                 'openRegisterEnabled'   => $openRegisterEnabled,
             ];
@@ -2921,7 +2985,9 @@ class SettingsService
 
             // For force update, if import succeeded, consider it successful.
             // Version matching is less critical since we forced the update.
-            $success = $importResult['success'] && ($finalVersionInfo['isFullyConfigured'] !== false || $finalVersionInfo['versionsMatch'] === true);
+            $success = $importResult['success']
+                && ($finalVersionInfo['isFullyConfigured'] !== false
+                    || $finalVersionInfo['versionsMatch'] === true);
 
             $this->logger->info(
                     'SettingsService: Force update completed',
@@ -3067,7 +3133,10 @@ class SettingsService
             $this->logger->info('SettingsService: Pre-import version info', $versionInfo);
 
             // Check if import is needed (unless forced).
-            if ($forceImport === null && $versionInfo['versionsMatch'] === true && $versionInfo['isFullyConfigured'] === true) {
+            if ($forceImport === null
+                && $versionInfo['versionsMatch'] === true
+                && $versionInfo['isFullyConfigured'] === true
+            ) {
                 $this->logger->info('SettingsService: Import not needed - versions match and fully configured');
                 return [
                     'success'     => false,
@@ -3317,7 +3386,10 @@ class SettingsService
             try {
                 $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
             } catch (\Exception $e) {
-                $this->logger->warning('SchemaMapper not available for Voorzieningen detection', ['error' => $e->getMessage()]);
+                $this->logger->warning(
+                    'SchemaMapper not available for Voorzieningen detection',
+                    ['error' => $e->getMessage()]
+                );
             }
 
             // Find the voorzieningen register by slug OR by presence of expected schema slugs.
@@ -3362,7 +3434,10 @@ class SettingsService
                                     $schemaDetails[] = $schemaEntity->jsonSerialize();
                                 }
                             } catch (\Exception $e) {
-                                $this->logger->warning('Failed to fetch schema details', ['schemaId' => $schema, 'error' => $e->getMessage()]);
+                                $this->logger->warning(
+                                    'Failed to fetch schema details',
+                                    ['schemaId' => $schema, 'error' => $e->getMessage()]
+                                );
                             }
                         }
                     }
