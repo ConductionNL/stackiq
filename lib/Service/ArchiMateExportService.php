@@ -778,8 +778,7 @@ XML;
         \OCA\OpenRegister\Service\ObjectService $objectService,
         int $registerId,
         array $schemaIdMap=[]
-    ): array
-    {
+    ): array {
         $this->logger->info(
                 'Retrieving all objects from AMEF register',
                 [
@@ -1237,7 +1236,8 @@ XML;
         foreach (['_xsi__type', 'xsi:type', '_xsi:type'] as $typeKey) {
             if (isset($viewData[$typeKey]) === true) {
                 $viewNode->addAttribute(
-                    'xsi:type', (string) $viewData[$typeKey],
+                    'xsi:type',
+                        (string) $viewData[$typeKey],
                     'http://www.w3.org/2001/XMLSchema-instance'
                 );
                 break;
@@ -1580,7 +1580,8 @@ XML;
                 } else if (in_array(
                     $attrKey,
                     ['identifier', 'source', 'target', 'accessType', 'isDirected', 'type']
-                ) === true) {
+                ) === true
+                ) {
                     if ($attrKey === 'type' && $isPropertyDefinition === false) {
                         $attributes['xsi:type'] = (string) $attrValue;
                     } else {
@@ -1769,7 +1770,8 @@ XML;
                     foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
                         if (isset($property['value'][$langKey]) === true) {
                             $valueNode->addAttribute(
-                                'xml:lang', $property['value'][$langKey],
+                                'xml:lang',
+                                    $property['value'][$langKey],
                                 'http://www.w3.org/XML/1998/namespace'
                             );
                             break;
@@ -1779,7 +1781,7 @@ XML;
                     // Simple string value.
                     $valueNode    = $propertyNode->addChild('value');
                     $valueNode[0] = (string) $property['value'];
-                }
+                }//end if
             }//end if
         }//end foreach
     }//end addPropertiesToXml()
@@ -2265,19 +2267,17 @@ XML;
             $valueElements = $property->xpath('value');
             if (empty($valueElements) === true) {
                 throw new \InvalidArgumentException(
-                    "Property missing value element: "
-                    .(string) $attributes['propertyDefinitionRef']
+                    "Property missing value element: ".(string) $attributes['propertyDefinitionRef']
                 );
             }
 
             $value = trim((string) $valueElements[0]);
             if (empty($value) === true) {
                 throw new \InvalidArgumentException(
-                    "Property has empty value: "
-                    .(string) $attributes['propertyDefinitionRef']
+                    "Property has empty value: ".(string) $attributes['propertyDefinitionRef']
                 );
             }
-        }
+        }//end foreach
 
         $this->logger->debug("Validated ".count($properties)." properties have propertyDefinitionRef and non-empty values");
     }//end validatePropertiesAreNotEmpty()
@@ -2311,9 +2311,7 @@ XML;
             $expectedValue = str_replace('id-', '', $identifier);
             // Remove 'id-' prefix for comparison.
             if ($objectIdValue !== $expectedValue) {
-                $msg = "Element propid-2 value mismatch. Expected: "
-                    .$expectedValue.", Got: ".$objectIdValue
-                    ." (Element: ".$identifier.")";
+                $msg = "propid-2 mismatch. Expected: {$expectedValue}, Got: {$objectIdValue} (Element: {$identifier})";
                 throw new \InvalidArgumentException($msg);
             }
         }//end foreach
@@ -2344,9 +2342,7 @@ XML;
                     $parentId = ' (Parent: '.(string) $element->xpath('../@identifier')[0].')';
                 }
 
-                $msg = "Text content not normalized in <".$tagName.">"
-                    .$parentId.". Expected: '".$normalized
-                    ."', Got: '".$content."'";
+                $msg = "Text not normalized in <{$tagName}>{$parentId}. Expected: '{$normalized}', Got: '{$content}'";
                 throw new \InvalidArgumentException($msg);
             }
         }
@@ -2632,8 +2628,7 @@ XML;
         array $moduleNameMap,
         string $bronPropDefId,
         string $prefix=''
-    ): array
-    {
+    ): array {
         $elements = [];
         if ($prefix !== '') {
             $idPrefix = 'id-swc-'.$prefix.'-app-';
@@ -2671,8 +2666,7 @@ XML;
         array $moduleRefMap,
         string $bronPropDefId,
         string $prefix=''
-    ): array
-    {
+    ): array {
         $relationships = [];
         if ($prefix !== '') {
             $appIdPrefix = 'id-swc-'.$prefix.'-app-';

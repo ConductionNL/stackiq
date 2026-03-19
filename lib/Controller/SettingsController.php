@@ -368,7 +368,7 @@ class SettingsController extends Controller
     {
         try {
             $config = [
-                'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+                'syncTimeWindow' => $this->config->getValueString($this->appName, 'syncTimeWindow', '10'),
             ];
 
             return new JSONResponse(
@@ -407,7 +407,7 @@ class SettingsController extends Controller
             $data = $this->request->getParams();
 
             if (isset($data['syncTimeWindow']) === true) {
-                $this->config->setValueString($this->_appName, 'syncTimeWindow', (string) $data['syncTimeWindow']);
+                $this->config->setValueString($this->appName, 'syncTimeWindow', (string) $data['syncTimeWindow']);
             }
 
             return new JSONResponse(
@@ -415,7 +415,7 @@ class SettingsController extends Controller
                         'success' => true,
                         'message' => 'Sync configuration updated successfully',
                         'config'  => [
-                            'syncTimeWindow' => $this->config->getValueString($this->_appName, 'syncTimeWindow', '10'),
+                            'syncTimeWindow' => $this->config->getValueString($this->appName, 'syncTimeWindow', '10'),
                         ],
                     ]
                     );
@@ -691,7 +691,7 @@ class SettingsController extends Controller
      */
     public function getSyncStatus(int $minutesBack=10): JSONResponse
     {
-        $status = $this->organizationSyncService->getSyncStatusWithErrorHandling($minutesBack);
+        $status = $this->orgSyncSvc->getSyncStatusWithErrorHandling($minutesBack);
         return new JSONResponse($status);
     }//end getSyncStatus()
 
@@ -711,7 +711,7 @@ class SettingsController extends Controller
         try {
             // For full sync (minutesBack = 0), use optimized batch processing to handle large datasets.
             if ($minutesBack === 0) {
-                $result = $this->organizationSyncService->performOptimizedManualSync(
+                $result = $this->orgSyncSvc->performOptimizedManualSync(
                     maxRounds: 15,
                 // Up to 15 rounds of processing.
                     batchSize: 75
@@ -728,7 +728,7 @@ class SettingsController extends Controller
                         );
             } else {
                 // For incremental sync, use the original method.
-                $result = $this->organizationSyncService->performManualSync($minutesBack);
+                $result = $this->orgSyncSvc->performManualSync($minutesBack);
 
                 if ($result['success'] === true) {
                     return new JSONResponse($result);
@@ -1609,7 +1609,7 @@ class SettingsController extends Controller
 
             if ($result['success'] === false) {
                 $statusCode = 500;
-                if (str_contains(haystack: ($result['error'] ?? '') === true, needle: 'not found') === true) {
+                if (str_contains(haystack: ($result['error'] ?? ''), needle: 'not found') === true) {
                     $statusCode = 404;
                 }
 
@@ -2023,7 +2023,7 @@ class SettingsController extends Controller
 
             $success = $this->settingsService->updateEmailTemplate(
                 templateName: $templateName,
-                content: $templateContent
+                templateContent: $templateContent
             );
 
             if ($success === true) {
@@ -2672,7 +2672,7 @@ class SettingsController extends Controller
     public function getObjectCounts(): JSONResponse
     {
         try {
-            $objectCounts = $this->settingsService->getObjectCounts();
+            $objectCounts = $this->settingsService->getObjectCountsStatistics();
 
             return new JSONResponse(
                     [

@@ -22,7 +22,6 @@ namespace OCA\SoftwareCatalog\BackgroundJob;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
-use Psr\Log\LoggerInterface;
 
 /**
  * Background job for comprehensive organization and contact person synchronization
@@ -52,29 +51,19 @@ class OrganizationContactSyncJob extends TimedJob
     private OrganizationSyncService $orgSyncService;
 
     /**
-     * Logger instance for this cronjob
-     *
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
-
-    /**
      * Constructor for OrganizationContactSyncJob
      *
      * @param ITimeFactory            $timeFactory    The time factory for job scheduling
      * @param OrganizationSyncService $orgSyncService The sync service
-     * @param LoggerInterface         $logger         The logger instance
      */
     public function __construct(
         ITimeFactory $timeFactory,
-        OrganizationSyncService $orgSyncService,
-        LoggerInterface $logger
+        OrganizationSyncService $orgSyncService
     ) {
         parent::__construct(time: $timeFactory);
-        $this->setInterval(interval: 300);
+        $this->setInterval(seconds: 300);
         // 5 minutes.
         $this->orgSyncService = $orgSyncService;
-        $this->logger         = $logger;
     }//end __construct()
 
     /**

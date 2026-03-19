@@ -401,9 +401,8 @@ class Application extends App implements IBootstrap
                 OrganizationContactSyncJob::class,
                 function ($container) {
                     return new OrganizationContactSyncJob(
-                    time: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-                    syncService: $container->get(OrganizationSyncService::class),
-                    logger: $container->get('Psr\Log\LoggerInterface')
+                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                    orgSyncService: $container->get(OrganizationSyncService::class)
                     );
                 }
                 );
@@ -419,7 +418,7 @@ class Application extends App implements IBootstrap
                     contactPersonHandler: $container->get(
                         'OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'
                     ),
-                    contactpersoonService: $container->get(ContactpersoonService::class),
+                    contactSvc: $container->get(ContactpersoonService::class),
                     userManager: $container->get('OCP\IUserManager'),
                     groupManager: $container->get('OCP\IGroupManager'),
                     userSession: $container->get('OCP\IUserSession'),

@@ -189,7 +189,7 @@ class OrganizationHandler
                 if ($registerId !== null && $organizationSchemaId !== null) {
                     $objectService->saveObject(
                         object: $organizationObject,
-                        fields: [],
+                        extend: [],
                         register: (int) $registerId,
                         schema: (int) $organizationSchemaId,
                         uuid: $organizationObject->getUuid()
@@ -424,7 +424,7 @@ class OrganizationHandler
                         // Update existing contactgegevens object.
                         $contactgegevensObject = $objectService->saveObject(
                             object: $contactgegevensData,
-                            fields: [],
+                            extend: [],
                             register: $registerId,
                             schema: $contactgegevensSchemaId,
                             uuid: $existingContactgegevens->getUuid()
@@ -433,7 +433,7 @@ class OrganizationHandler
                         // Create new contactgegevens object.
                         $contactgegevensObject = $objectService->saveObject(
                             object: $contactgegevensData,
-                            fields: [],
+                            extend: [],
                             register: $registerId,
                             schema: $contactgegevensSchemaId
                         );
@@ -517,9 +517,11 @@ class OrganizationHandler
             ];
 
             $existingObjects = $objectService->findAll(
-                filters: $searchFilters,
-                register: $registerId,
-                schema: $contactgegevensSchemaId
+                config: [
+                    'filters' => $searchFilters,
+                    '_register' => $registerId,
+                    '_schema' => $contactgegevensSchemaId,
+                ]
             );
 
             if (empty($existingObjects) === false) {

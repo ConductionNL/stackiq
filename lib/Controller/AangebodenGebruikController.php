@@ -105,7 +105,7 @@ class AangebodenGebruikController extends Controller
             $options = $this->parseQueryOptions();
 
             // Get gebruiks from service where org is afnemer.
-            $result = $this->aangebodenGebruikService->getGebruiksWhereAfnemer($options);
+            $result = $this->gebruikSvc->getGebruiksWhereAfnemer($options);
 
             // Determine HTTP status code based on whether there's an error.
             if (isset($result['error']) === true) {
@@ -195,7 +195,7 @@ class AangebodenGebruikController extends Controller
             }
 
             // Get koppelingen and gebruiks for UUID from service.
-            $result = $this->aangebodenGebruikService->getKoppelingenGebruikByUuid(
+            $result = $this->gebruikSvc->getKoppelingenGebruikByUuid(
                 uuid: $uuid,
                 options: $options,
                 isAmbtenaar: $isAmbtenaar
@@ -312,7 +312,7 @@ class AangebodenGebruikController extends Controller
             $options = $this->parseQueryOptions();
 
             // Get all gebruiks from service (ignoring RBAC/multitenancy).
-            $result = $this->aangebodenGebruikService->getAllGebruiksForAmbtenaar($options);
+            $result = $this->gebruikSvc->getAllGebruiksForAmbtenaar($options);
 
             // Determine HTTP status code based on whether there's an error.
             if (isset($result['error']) === true) {
@@ -426,8 +426,8 @@ class AangebodenGebruikController extends Controller
             $options = $this->parseQueryOptions();
 
             // Get single gebruik from service (ignoring RBAC/multitenancy).
-            $result = $this->aangebodenGebruikService->getSingleGebruikForAmbtenaar(
-                gebruikId: $gebruikId,
+            $result = $this->gebruikSvc->getSingleGebruikForAmbtenaar(
+                suiteId: $gebruikId,
                 options: $options
             );
 
@@ -568,7 +568,7 @@ class AangebodenGebruikController extends Controller
             $options = $this->parseQueryOptions();
 
             // Get gebruiks from service where org is in deelnemers.
-            $result = $this->aangebodenGebruikService->getGebruiksWhereDeelnemers($options);
+            $result = $this->gebruikSvc->getGebruiksWhereDeelnemers($options);
 
             // Determine appropriate HTTP status code.
             if ($result['success'] === true) {
@@ -667,7 +667,7 @@ class AangebodenGebruikController extends Controller
             }
 
             // Update gebruik @self property via service.
-            $result = $this->aangebodenGebruikService->setGebruikSelfToActiveOrg(
+            $result = $this->gebruikSvc->setGebruikSelfToActiveOrg(
                 gebruikId: $gebruikId,
                 options: $options
             );
@@ -777,7 +777,7 @@ class AangebodenGebruikController extends Controller
             }
 
             // Delete gebruik object via service.
-            $result = $this->aangebodenGebruikService->deleteGebruikAsAfnemer(
+            $result = $this->gebruikSvc->deleteGebruikAsAfnemer(
                 gebruikId: $gebruikId,
                 options: $options
             );

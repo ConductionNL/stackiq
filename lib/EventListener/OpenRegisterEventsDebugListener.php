@@ -254,7 +254,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'registerId' => $object->getRegister(),
                         'schemaId'   => $object->getSchema(),
                         'lockedBy'   => $object->getLockedBy(),
-                        'lockedAt'   => $object->getLockedAt()?->format('Y-m-d H:i:s'),
+                        'lockedAt'   => null,
                     ]
                     );
         } else if ($event instanceof ObjectUnlockedEvent) {
@@ -279,7 +279,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                         'objectUuid' => $object->getUuid(),
                         'registerId' => $object->getRegister(),
                         'schemaId'   => $object->getSchema(),
-                        'revertedTo' => $event->getRevertedToVersion(),
+                        'revertedTo' => $event->getRevertPoint(),
                     ]
                     );
             // Handle Register events.
@@ -295,7 +295,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                     ]
                     );
         } else if ($event instanceof RegisterUpdatedEvent) {
-            $register = $event->getRegister();
+            $register = $event->getNewRegister();
             $data     = array_merge(
                     $data,
                     [
@@ -329,7 +329,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                     ]
                     );
         } else if ($event instanceof SchemaUpdatedEvent) {
-            $schema = $event->getSchema();
+            $schema = $event->getNewSchema();
             $data   = array_merge(
                     $data,
                     [
@@ -358,7 +358,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
                     [
                         'eventType'         => 'OrganisationCreated',
                         'organisationId'    => $organisation->getId(),
-                        'organisationTitle' => $organisation->getTitle(),
+                        'organisationTitle' => $organisation->getName(),
                     ]
                     );
             // Unknown event type.

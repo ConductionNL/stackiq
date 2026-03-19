@@ -89,21 +89,21 @@ class SoftwareCatalogEventListener implements IEventListener
             if ($event instanceof ObjectCreatedEvent) {
                 $this->handleObjectCreated(
                     event: $event,
-                    contactpersoonService: $contactSvc,
+                    contactSvc: $contactSvc,
                     settingsService: $settingsService,
                     logger: $logger
                 );
             } else if ($event instanceof ObjectUpdatedEvent) {
                 $this->handleObjectUpdated(
                     event: $event,
-                    contactpersoonService: $contactSvc,
+                    contactSvc: $contactSvc,
                     settingsService: $settingsService,
                     logger: $logger
                 );
             } else if ($event instanceof ObjectDeletedEvent) {
                 $this->handleObjectDeleted(
                     event: $event,
-                    contactpersoonService: $contactSvc,
+                    contactSvc: $contactSvc,
                     settingsService: $settingsService,
                     logger: $logger
                 );

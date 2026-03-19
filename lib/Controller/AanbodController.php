@@ -197,7 +197,7 @@ class AanbodController extends Controller
             }
 
             // Accept aanbod object via service.
-            $result = $this->aanbodService->acceptAanbod(uuid: $uuid, options: $options);
+            $result = $this->aanbodService->acceptAanbod(aanbodId: $uuid, options: $options);
 
             // Determine appropriate HTTP status code.
             $statusCode = 500;
@@ -296,7 +296,7 @@ class AanbodController extends Controller
             }
 
             // Deny aanbod object via service.
-            $result = $this->aanbodService->denyAanbod(uuid: $uuid, options: $options);
+            $result = $this->aanbodService->denyAanbod(aanbodId: $uuid, options: $options);
 
             // Determine appropriate HTTP status code.
             $statusCode = 500;

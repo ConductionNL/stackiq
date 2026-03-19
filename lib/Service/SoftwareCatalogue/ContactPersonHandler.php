@@ -1780,7 +1780,11 @@ class ContactPersonHandler
                     }
 
                     $organizationObject = $objectService->find(
-                        $organizationId, [], false, $registerId, $organisatieSchemaId
+                        $organizationId,
+                            [],
+                            false,
+                            $registerId,
+                            $organisatieSchemaId
                     );
                     if (empty($organizationObject) === false) {
                         $organizationData = $organizationObject->getObject();
@@ -1888,8 +1892,7 @@ class ContactPersonHandler
                         $contactpersoonObject->setObject($objectData);
 
                         $this->_logger->info(
-                                'Username added to contactpersoon object during update, '
-                                . 'but not saved to prevent event loops',
+                                'Username added to contactpersoon during update, not saved to prevent event loops',
                                 [
                                     'username' => $username,
                                     'objectId' => $contactpersoonObject->getId(),

@@ -111,10 +111,10 @@ class ContactpersoonService
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
         $startTime = microtime(true);
+        $contactId = $contactpersoonObject->getId();
 
         try {
             $contactData = $contactpersoonObject->getObject();
-            $contactId   = $contactpersoonObject->getId();
 
             // Recursion guard: saveObject triggers ObjectUpdatedEvent which re-enters here.
             if (isset(self::$processingContacts[$contactId]) === true) {
@@ -264,7 +264,7 @@ class ContactpersoonService
                             $this->contactPersonHandler->addUserToOrganizationEntity(
                                 contactpersoonObject: $contactpersoonObject,
                                 username: $username,
-                                organizationUuid: $organizationUuid
+                                organizationUuidOverride: $organizationUuid
                             );
 
                             // Update contactpersoon object owner to user UID.

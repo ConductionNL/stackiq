@@ -246,8 +246,7 @@ class ArchiMateService
             $registerId = $this->getAmefRegisterId();
             if ($registerId === null) {
                 throw new \RuntimeException(
-                    'AMEF register ID is not configured. '
-                    . 'Please configure the AMEF register via the admin interface.'
+                    'AMEF register ID is not configured. Please configure the AMEF register via the admin interface.'
                 );
             }
 
@@ -1125,8 +1124,7 @@ class ArchiMateService
                     objects: $chunk,
                     register: $registerId,
                     schema: null,
-                    rbac: $rbacValue,
-                    multi: self::PERFORMANCE_OPTIMIZATIONS['use_multi'],
+                    _rbac: $rbacValue,
                     validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
                     events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
                 );
@@ -1220,8 +1218,7 @@ class ArchiMateService
             objects: $objects,
             register: $registerId,
             schema: null,
-            rbac: $rbacValue,
-            multi: self::PERFORMANCE_OPTIMIZATIONS['use_multi'],
+            _rbac: $rbacValue,
             validation: !self::PERFORMANCE_OPTIMIZATIONS['disable_validation'],
             events: !self::PERFORMANCE_OPTIMIZATIONS['disable_events']
         );
@@ -1321,8 +1318,7 @@ class ArchiMateService
         $amefConfig = $this->settingsService->getAmefConfig();
         if (isset($amefConfig['register']) === false || empty($amefConfig['register']) === true) {
             throw new \InvalidArgumentException(
-                'AMEF register ID is not configured. '
-                . 'Please configure the AMEF register via the admin interface.'
+                'AMEF register ID is not configured. Please configure the AMEF register via the admin interface.'
             );
         }
 
@@ -1400,9 +1396,8 @@ class ArchiMateService
                 $errorMessage .= "- {$item}\n";
             }
 
-            $errorMessage .= "\nPlease configure the AMEF register and all "
-                . "required schema IDs in the SoftwareCatalog settings "
-                . "before importing.";
+            $errorMessage .= "\nPlease configure the AMEF register and all required schema IDs";
+            $errorMessage .= " in the SoftwareCatalog settings before importing.";
             $errorMessage .= "\nYou can use the auto-configuration feature or set them manually via the admin interface.";
 
             throw new \RuntimeException($errorMessage);
@@ -1618,32 +1613,48 @@ class ArchiMateService
             if (is_array($decoded) === false) {
                 // Fallback to individual config values for backward compatibility.
                 $decoded = [
-                    'register_id' => $this->config->getValueString(
-                        'softwarecatalog', 'amef_register', ''
+                    'register_id'                 => $this->config->getValueString(
+                        'softwarecatalog',
+                            'amef_register',
+                            ''
                     ),
-                    'model_schema_id' => $this->config->getValueString(
-                        'softwarecatalog', 'amef_model_schema', ''
+                    'model_schema_id'             => $this->config->getValueString(
+                        'softwarecatalog',
+                            'amef_model_schema',
+                            ''
                     ),
-                    'elements_schema' => $this->config->getValueString(
-                        'softwarecatalog', 'amef_elements_schema', ''
+                    'elements_schema'             => $this->config->getValueString(
+                        'softwarecatalog',
+                            'amef_elements_schema',
+                            ''
                     ),
-                    'relationships_schema' => $this->config->getValueString(
-                        'softwarecatalog', 'amef_relationships_schema', ''
+                    'relationships_schema'        => $this->config->getValueString(
+                        'softwarecatalog',
+                            'amef_relationships_schema',
+                            ''
                     ),
-                    'views_schema' => $this->config->getValueString(
-                        'softwarecatalog', 'amef_views_schema', ''
+                    'views_schema'                => $this->config->getValueString(
+                        'softwarecatalog',
+                            'amef_views_schema',
+                            ''
                     ),
-                    'organizations_schema' => $this->config->getValueString(
-                        'softwarecatalog', 'amef_organizations_schema', ''
+                    'organizations_schema'        => $this->config->getValueString(
+                        'softwarecatalog',
+                            'amef_organizations_schema',
+                            ''
                     ),
-                    'folders_schema' => $this->config->getValueString(
-                        'softwarecatalog', 'amef_folders_schema', ''
+                    'folders_schema'              => $this->config->getValueString(
+                        'softwarecatalog',
+                            'amef_folders_schema',
+                            ''
                     ),
                     'property_definitions_schema' => $this->config->getValueString(
-                        'softwarecatalog', 'amef_property_definitions_schema', ''
+                        'softwarecatalog',
+                            'amef_property_definitions_schema',
+                            ''
                     ),
                 ];
-            }
+            }//end if
 
             return $decoded;
         } catch (\Exception $e) {
@@ -1675,11 +1686,15 @@ class ArchiMateService
             // Fallback to individual config values for backward compatibility.
             $decoded = [
                 'register'              => $this->config->getValueString('softwarecatalog', 'voorzieningen_register', ''),
-                'organisatie_schema' => $this->config->getValueString(
-                    'softwarecatalog', 'voorzieningen_organisatie_schema', ''
+                'organisatie_schema'    => $this->config->getValueString(
+                    'softwarecatalog',
+                        'voorzieningen_organisatie_schema',
+                        ''
                 ),
                 'contactpersoon_schema' => $this->config->getValueString(
-                    'softwarecatalog', 'voorzieningen_contactpersoon_schema', ''
+                    'softwarecatalog',
+                        'voorzieningen_contactpersoon_schema',
+                        ''
                 ),
             ];
         }
@@ -1903,8 +1918,13 @@ class ArchiMateService
             // AMEF object types use a single register ID, not per-type register IDs.
             // Check if this is an AMEF object type.
             $amefObjectTypes = [
-                'model', 'element', 'relationship', 'view',
-                'property_definition', 'organization', 'property',
+                'model',
+                'element',
+                'relationship',
+                'view',
+                'property_definition',
+                'organization',
+                'property',
             ];
             $isAmefType      = in_array($schemaType, $amefObjectTypes, true) === true;
 
@@ -2325,7 +2345,7 @@ class ArchiMateService
                 } else {
                     // This shouldn't happen, but leave as fallback.
                     $statistics[$sectionKey]['skipped']++;
-                }
+                }//end if
             }//end foreach
         } else {
             // Fallback to old method if no save result is available.

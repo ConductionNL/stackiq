@@ -151,7 +151,7 @@ class OrganizationSyncService
     private function jsonExtract(string $column, string $path): string
     {
         $platform   = $this->db->getDatabasePlatform();
-        $isPostgres = $platform->getName() === 'postgresql';
+        $isPostgres = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
         // Normalize path - remove '$.' prefix if present for PostgreSQL.
         $cleanPath = ltrim($path, '$.');
@@ -186,7 +186,7 @@ class OrganizationSyncService
     private function jsonContains(string $column, string $value): string
     {
         $platform   = $this->db->getDatabasePlatform();
-        $isPostgres = $platform->getName() === 'postgresql';
+        $isPostgres = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
         if ($isPostgres === true) {
             // PostgreSQL: Use @> operator with jsonb.
@@ -258,8 +258,7 @@ class OrganizationSyncService
         }
 
         $this->logger->info(
-            'OrganizationSync: '.$totalRemaining
-            .' active orgs without entity, processing batch of '.$batchSize
+            'OrganizationSync: '.$totalRemaining.' active orgs without entity, processing batch of '.$batchSize
         );
 
         // Query active orgs that don't have an OpenRegister organisation entity yet.
@@ -486,7 +485,7 @@ class OrganizationSyncService
 
         // Build JSON contains check - platform-specific.
         $platform   = $this->db->getDatabasePlatform();
-        $isPostgres = $platform->getName() === 'postgresql';
+        $isPostgres = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
         if ($isPostgres === true) {
             $jsonContainsCheck = "NOT (oo.users::jsonb @> to_jsonb(o.username::text))";
@@ -746,8 +745,7 @@ class OrganizationSyncService
         string $register,
         string $contactSchema,
         array &$stats
-    ): void
-    {
+    ): void {
         $objectData    = $organisatieObject->getObject();
         $organisatieId = ($objectData['id'] ?? $organisatieObject->getId());
 
@@ -2298,7 +2296,8 @@ class OrganizationSyncService
                         if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
                             // Determine if this is the first contact for the organization.
                             $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization(
-                                $contactObject, $contactObjectData
+                                $contactObject,
+                                    $contactObjectData
                             );
 
                             $this->logger->info(
@@ -2369,7 +2368,9 @@ class OrganizationSyncService
 
                                 // Add user to organization entity in database.
                                 $this->contactpersonHandler->addUserToOrganizationEntity(
-                                    $contactObject, $user->getUID(), $organizationUuid
+                                    $contactObject,
+                                        $user->getUID(),
+                                        $organizationUuid
                                 );
 
                                 // Update contactpersoon object owner to user UID and organisation.
@@ -2544,17 +2545,18 @@ class OrganizationSyncService
                     if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
                         // Determine if this is the first contact for the organization.
                         $isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization(
-                            $contactObject, $contactEntityObject
+                            $contactObject,
+                                $contactEntityObject
                         );
 
+                        $email = $contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown';
                         $this->logger->info(
                             '[EVENT] OrganizationSyncService: Creating user account for contact person (org is active)',
                             [
                                 'contactId'          => $contactObject->getUuid(),
                                 'organizationId'     => $organizationUuid,
                                 'organizationActive' => true,
-                                'email'              => ($contactEntityObject['email']
-                                    ?? $contactEntityObject['e-mailadres'] ?? 'unknown'),
+                                'email'              => $email,
                                 'isFirstContact'     => $isFirstContact,
                             ]
                         );
@@ -2596,7 +2598,9 @@ class OrganizationSyncService
 
                             // Add user to organization entity in database.
                             $this->contactpersonHandler->addUserToOrganizationEntity(
-                                $contactObject, $user->getUID(), $organizationUuid
+                                $contactObject,
+                                    $user->getUID(),
+                                    $organizationUuid
                             );
 
                             // Update contactpersoon object owner to user UID.
@@ -2625,16 +2629,15 @@ class OrganizationSyncService
                             $organizationActiveValue = false;
                         }
 
+                        $email = $contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown';
                         $this->logger->info(
-                            '[EVENT] OrganizationSyncService: Skipping user creation'
-                            . ' - organization not active or entity not found',
+                            '[EVENT] Skipping user creation - organization not active or entity not found',
                             [
                                 'contactId'          => $contactObject->getUuid(),
                                 'organizationId'     => $organizationUuid,
                                 'organizationFound'  => $organisationEntity !== null,
                                 'organizationActive' => $organizationActiveValue,
-                                'email'              => ($contactEntityObject['email']
-                                    ?? $contactEntityObject['e-mailadres'] ?? 'unknown'),
+                                'email'              => $email,
                             ]
                         );
                     }//end if
@@ -3129,9 +3132,8 @@ class OrganizationSyncService
 
             // Set the organisation field in @self metadata to the organization UUID.
             // Use override if provided, otherwise try to get from object data.
-            $organizationUuid = ($organizationUuidOverride
-                ?? $currentObject['organisation']
-                ?? $currentObject['organisatie'] ?? '');
+            $orgFromData      = $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '';
+            $organizationUuid = $organizationUuidOverride ?? $orgFromData;
             if (empty($organizationUuid) === false) {
                 $selfMetadata['organisation'] = $organizationUuid;
                 if (empty($organizationUuidOverride) === false) {

@@ -361,7 +361,7 @@ class ContactpersonenController extends Controller
                 // Call the ContactPersonHandler to update groups based on contact data.
                 $this->contactPersonHandler->updateUserGroupsFromContactData(
                     user: $user,
-                    objectData: $contactData
+                    contactData: $contactData
                 );
             }
 
@@ -369,7 +369,7 @@ class ContactpersonenController extends Controller
             $this->contactPersonHandler->addUserToOrganizationEntity(
                 contactpersoonObject: $contactpersoonObject,
                 username: $user->getUID(),
-                organizationId: $organizationId
+                organizationUuidOverride: $organizationId
             );
 
             // Update the contactpersoon object with the username.
@@ -995,7 +995,7 @@ class ContactpersonenController extends Controller
                     'User account disabled',
                     [
                         'contactpersoonId' => $contactpersoonId,
-                        'disabled_by'      => $this->userId,
+                        'disabled_by'      => $this->userSession->getUser()?->getUID(),
                     ]
                     );
             return new JSONResponse(
@@ -1042,7 +1042,7 @@ class ContactpersonenController extends Controller
                     'User account enabled',
                     [
                         'contactpersoonId' => $contactpersoonId,
-                        'enabled_by'       => $this->userId,
+                        'enabled_by'       => $this->userSession->getUser()?->getUID(),
                     ]
                     );
             return new JSONResponse(
@@ -1082,7 +1082,7 @@ class ContactpersonenController extends Controller
     public function testBulkUserInfo(): JSONResponse
     {
         try {
-            if ($this->objectService !== null) {
+            if ($this->contactSvc !== null) {
                 $objectServiceAvail = 'available';
             } else {
                 $objectServiceAvail = 'null';

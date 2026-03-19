@@ -293,7 +293,7 @@ class OrganisatieService
                 [
                     'uuid'     => $organizationUuid,
                     'entityId' => $organisationEntity->getId(),
-                    'active'   => $organisationEntity->getActive(),
+                    'active'   => $organisationEntity->isActive(),
                     'parent'   => $organisationEntity->getParent(),
                 ]
                 );
