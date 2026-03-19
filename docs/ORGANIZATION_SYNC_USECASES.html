@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-ORGANIZATION_SYNC_USECASES" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">Organization Synchronization Use Cases and Testing | Software Catalogus</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://softwarecatalog.app/docs/ORGANIZATION_SYNC_USECASES"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Organization Synchronization Use Cases and Testing | Software Catalogus"><meta data-rh="true" name="description" content="Date: July 24, 2025"><meta data-rh="true" property="og:description" content="Date: July 24, 2025"><link data-rh="true" rel="canonical" href="https://softwarecatalog.app/docs/ORGANIZATION_SYNC_USECASES"><link data-rh="true" rel="alternate" href="https://softwarecatalog.app/docs/ORGANIZATION_SYNC_USECASES" hreflang="en"><link data-rh="true" rel="alternate" href="https://softwarecatalog.app/docs/ORGANIZATION_SYNC_USECASES" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Organization Synchronization Use Cases and Testing","item":"https://softwarecatalog.app/docs/ORGANIZATION_SYNC_USECASES"}]}</script><link rel="stylesheet" href="/assets/css/styles.d44d5df4.css">
+<script src="/assets/js/runtime~main.8a863b48.js" defer="defer"></script>
+<script src="/assets/js/main.b4b07c12.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||"light"),document.documentElement.setAttribute("data-theme-choice",t||"light")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/"><div class="navbar__logo"><img src="/img/logo.svg" alt="Software Catalogus Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"><img src="/img/logo.svg" alt="Software Catalogus Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"></div><b class="navbar__title text--truncate">Software Catalogus</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/docs/FEATURES">Documentation</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/ConductionNL/softwarecatalog" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/FEATURES"><span title="Features" class="linkLabel_WmDU">Features</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/ANONYMOUS_USER_REGISTRATION_USECASE"><span title="Anonymous User Registration Use Case" class="linkLabel_WmDU">Anonymous User Registration Use Case</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/API_REFERENCE"><span title="API Reference" class="linkLabel_WmDU">API Reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/API_TESTING"><span title="API Testing Guide for SoftwareCatalog Integration" class="linkLabel_WmDU">API Testing Guide for SoftwareCatalog Integration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/ARCHIMATE_QUICK_TEST"><span title="ArchiMate Quick Test Reference" class="linkLabel_WmDU">ArchiMate Quick Test Reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/ARCHIMATE_TESTING_GUIDE"><span title="ArchiMate Import/Export Testing Guide" class="linkLabel_WmDU">ArchiMate Import/Export Testing Guide</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/ARCHITECTURE"><span title="Software Catalog Architecture" class="linkLabel_WmDU">Software Catalog Architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/CONFIGURATION"><span title="Configuration Guide" class="linkLabel_WmDU">Configuration Guide</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/CONTACTPERSOON_USER_DETAILS"><span title="ContactpersoonService with User Details Enhancement" class="linkLabel_WmDU">ContactpersoonService with User Details Enhancement</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/FRONTEND_INTEGRATION"><span title="Frontend Integration: Contactpersonen with User Details" class="linkLabel_WmDU">Frontend Integration: Contactpersonen with User Details</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/GOVERNMENT-FEATURES"><span title="Software Catalogus — Overheidsfunctionaliteiten" class="linkLabel_WmDU">Software Catalogus — Overheidsfunctionaliteiten</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/GROUP_MANAGEMENT"><span title="Group Management System" class="linkLabel_WmDU">Group Management System</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/MODULE_COMPLIANCE_SUBSCRIBER"><span title="Module Compliance Subscriber" class="linkLabel_WmDU">Module Compliance Subscriber</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/docs/ORGANIZATION_SYNC_USECASES"><span title="Organization Synchronization Use Cases and Testing" class="linkLabel_WmDU">Organization Synchronization Use Cases and Testing</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs"><span title="Software Catalog Documentation" class="linkLabel_WmDU">Software Catalog Documentation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/TESTING_ORGANIZATION_SYNC"><span title="Organization Synchronization Testing Guide" class="linkLabel_WmDU">Organization Synchronization Testing Guide</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/USER_GUIDE"><span title="User Guide" class="linkLabel_WmDU">User Guide</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/View_API"><span title="View API Documentation" class="linkLabel_WmDU">View API Documentation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/developers"><span title="Developer Guide" class="linkLabel_WmDU">Developer Guide</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/gmail-configuration-manual"><span title="Gmail Configuration Manual for Software Catalog" class="linkLabel_WmDU">Gmail Configuration Manual for Software Catalog</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/docs/styleguide"><span title="Styleguide" class="linkLabel_WmDU">Styleguide</span></a></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Organization Synchronization Use Cases and Testing</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Organization Synchronization Use Cases and Testing</h1></header>
+<p><strong>Date:</strong> July 24, 2025<br>
+<strong>App:</strong> SoftwareCatalog<br>
+<strong>Feature:</strong> Organization Synchronization with OpenRegister</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-quick-reference-for-new-conversation">🚨 QUICK REFERENCE FOR NEW CONVERSATION<a href="#-quick-reference-for-new-conversation" class="hash-link" aria-label="Direct link to 🚨 QUICK REFERENCE FOR NEW CONVERSATION" title="Direct link to 🚨 QUICK REFERENCE FOR NEW CONVERSATION" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="current-implementation-status">Current Implementation Status<a href="#current-implementation-status" class="hash-link" aria-label="Direct link to Current Implementation Status" title="Direct link to Current Implementation Status" translate="no">​</a></h3>
+<ul>
+<li class="">✅ <strong>Anonymous user registration</strong>: Fixed &quot;No user logged in&quot; error</li>
+<li class="">✅ <strong>Ownership assignment</strong>: Implemented automatic ownership transfer</li>
+<li class="">✅ <strong>User status management</strong>: Implemented activation/deactivation based on organization status</li>
+<li class="">✅ <strong>Admin user protection</strong>: Admin users remain unaffected by organization status changes</li>
+<li class="">🔄 <strong>Testing needed</strong>: Anonymous user registration via OpenConnector</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="key-api-endpoints">Key API Endpoints<a href="#key-api-endpoints" class="hash-link" aria-label="Direct link to Key API Endpoints" title="Direct link to Key API Endpoints" translate="no">​</a></h3>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain"># Anonymous registration (MAIN TEST)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">POST http://nextcloud.local/index.php/apps/openconnector/api/endpoint/register</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"># Authenticated organization management</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">POST http://localhost/index.php/apps/openregister/api/objects/6/35</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">PUT http://localhost/index.php/apps/openregister/api/objects/6/35/{UUID}</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">GET http://localhost/index.php/apps/openregister/api/organisations/{UUID}</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="essential-commands">Essential Commands<a href="#essential-commands" class="hash-link" aria-label="Direct link to Essential Commands" title="Direct link to Essential Commands" translate="no">​</a></h3>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain"># User management</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">docker-compose exec -u 33 nextcloud php /var/www/html/occ user:list</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">docker-compose exec -u 33 nextcloud php /var/www/html/occ user:info {username}</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"># Log monitoring</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i &quot;softwarecatalog&quot;</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"># Configuration</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_organisatie_schema</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="architecture-summary">Architecture Summary<a href="#architecture-summary" class="hash-link" aria-label="Direct link to Architecture Summary" title="Direct link to Architecture Summary" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Objects</strong>: OpenRegister schema-managed data (organisatie, contactpersoon)</li>
+<li class=""><strong>Entities</strong>: Nextcloud entities (organisation, user)</li>
+<li class=""><strong>Flow</strong>: Object creation → Entity creation → User creation → Ownership assignment</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="next-priority-test">Next Priority Test<a href="#next-priority-test" class="hash-link" aria-label="Direct link to Next Priority Test" title="Direct link to Next Priority Test" translate="no">​</a></h3>
+<ol>
+<li class="">Test anonymous user registration via OpenConnector</li>
+<li class="">Verify user creation and ownership assignment</li>
+<li class="">Test organization status changes affect user status</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="overview">Overview<a href="#overview" class="hash-link" aria-label="Direct link to Overview" title="Direct link to Overview" translate="no">​</a></h2>
+<p>This document outlines the use cases and testing scenarios for the new organization synchronization functionality in the Software Catalog app. The feature enables automatic synchronization between SoftwareCatalog organizations and OpenRegister, along with user status management based on organization status.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="use-cases">Use Cases<a href="#use-cases" class="hash-link" aria-label="Direct link to Use Cases" title="Direct link to Use Cases" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-organization-creation-synchronization">1. Organization Creation Synchronization<a href="#1-organization-creation-synchronization" class="hash-link" aria-label="Direct link to 1. Organization Creation Synchronization" title="Direct link to 1. Organization Creation Synchronization" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> A new organization is created in SoftwareCatalog</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Organization data is automatically synced to OpenRegister</li>
+<li class="">Status mapping: <code>actief</code> → <code>active: true</code>, <code>inactief</code>/<code>deactief</code> → <code>active: false</code></li>
+<li class="">Organization UUID is preserved across both systems</li>
+<li class="">Contactpersonen are processed and users are created (inactive initially)</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create a new organization in SoftwareCatalog with status <code>actief</code></li>
+<li class="">Verify organization appears in OpenRegister with <code>active: true</code></li>
+<li class="">Verify organization UUID is identical in both systems</li>
+<li class="">Create contactpersonen for the organization</li>
+<li class="">Verify users are created but set to inactive initially</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="2-organization-status-change---activation">2. Organization Status Change - Activation<a href="#2-organization-status-change---activation" class="hash-link" aria-label="Direct link to 2. Organization Status Change - Activation" title="Direct link to 2. Organization Status Change - Activation" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Organization status changes from <code>inactief</code> to <code>actief</code></p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Organization is updated in OpenRegister with <code>active: true</code></li>
+<li class="">All users in the organization are activated</li>
+<li class="">Activation email is sent to the organization</li>
+<li class="">Contactpersonen processing continues normally</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization with status <code>inactief</code></li>
+<li class="">Add contactpersonen (users will be inactive)</li>
+<li class="">Change organization status to <code>actief</code></li>
+<li class="">Verify all users become active</li>
+<li class="">Verify activation email is sent</li>
+<li class="">Verify organization has <code>active: true</code> in OpenRegister</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="3-organization-status-change---deactivation">3. Organization Status Change - Deactivation<a href="#3-organization-status-change---deactivation" class="hash-link" aria-label="Direct link to 3. Organization Status Change - Deactivation" title="Direct link to 3. Organization Status Change - Deactivation" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Organization status changes from <code>actief</code> to <code>inactief</code></p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Organization is updated in OpenRegister with <code>active: false</code></li>
+<li class="">All users in the organization are deactivated</li>
+<li class="">Users cannot log in but accounts are preserved</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization with status <code>actief</code></li>
+<li class="">Add contactpersonen (users will be active)</li>
+<li class="">Change organization status to <code>inactief</code></li>
+<li class="">Verify all users become inactive</li>
+<li class="">Verify users cannot log in</li>
+<li class="">Verify organization status is <code>inactive</code> in OpenRegister</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="4-organization-deletion">4. Organization Deletion<a href="#4-organization-deletion" class="hash-link" aria-label="Direct link to 4. Organization Deletion" title="Direct link to 4. Organization Deletion" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Organization is deleted from SoftwareCatalog</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">All users in the organization are deactivated</li>
+<li class="">Organization data is preserved in OpenRegister (no automatic deletion)</li>
+<li class="">Users cannot log in but accounts are preserved</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization with contactpersonen</li>
+<li class="">Delete the organization</li>
+<li class="">Verify all users become inactive</li>
+<li class="">Verify users cannot log in</li>
+<li class="">Verify organization still exists in OpenRegister</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="5-contactpersoon-creation-and-organization-membership">5. Contactpersoon Creation and Organization Membership<a href="#5-contactpersoon-creation-and-organization-membership" class="hash-link" aria-label="Direct link to 5. Contactpersoon Creation and Organization Membership" title="Direct link to 5. Contactpersoon Creation and Organization Membership" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> A new contactpersoon is created for an organization</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">User account is created (inactive initially)</li>
+<li class="">Username is added to organization&#x27;s <code>users</code> array</li>
+<li class="">User is assigned to appropriate groups based on roles</li>
+<li class="">Organization membership is properly established</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization in SoftwareCatalog</li>
+<li class="">Create contactpersoon for the organization</li>
+<li class="">Verify user account is created</li>
+<li class="">Verify username is added to organization&#x27;s users list</li>
+<li class="">Verify user is assigned to appropriate groups</li>
+<li class="">Verify user status matches organization status</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="6-contactpersoon-update-and-organization-membership">6. Contactpersoon Update and Organization Membership<a href="#6-contactpersoon-update-and-organization-membership" class="hash-link" aria-label="Direct link to 6. Contactpersoon Update and Organization Membership" title="Direct link to 6. Contactpersoon Update and Organization Membership" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> An existing contactpersoon is updated</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">User account is updated if needed</li>
+<li class="">Username remains in organization&#x27;s <code>users</code> array</li>
+<li class="">Group assignments are updated based on role changes</li>
+<li class="">Organization membership is maintained</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization with contactpersoon</li>
+<li class="">Update contactpersoon roles or details</li>
+<li class="">Verify user account is updated</li>
+<li class="">Verify username remains in organization&#x27;s users list</li>
+<li class="">Verify group assignments are updated</li>
+<li class="">Verify organization membership is maintained</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="7-cross-system-uuid-consistency">7. Cross-System UUID Consistency<a href="#7-cross-system-uuid-consistency" class="hash-link" aria-label="Direct link to 7. Cross-System UUID Consistency" title="Direct link to 7. Cross-System UUID Consistency" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Organizations and contactpersonen use UUIDs across systems</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Organization UUIDs are identical in SoftwareCatalog and OpenRegister</li>
+<li class="">Contactpersoon UUIDs are preserved during processing</li>
+<li class="">UUID-based lookups work correctly in both systems</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization and note UUID</li>
+<li class="">Verify same UUID appears in OpenRegister</li>
+<li class="">Create contactpersoon and note UUID</li>
+<li class="">Verify UUID is preserved during user creation</li>
+<li class="">Test UUID-based lookups in both systems</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="8-softwarecatalog-specific-user-status-management">8. SoftwareCatalog-Specific User Status Management<a href="#8-softwarecatalog-specific-user-status-management" class="hash-link" aria-label="Direct link to 8. SoftwareCatalog-Specific User Status Management" title="Direct link to 8. SoftwareCatalog-Specific User Status Management" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Organization status changes affect only SoftwareCatalog-specific users (from contactpersoon objects), while admin group users remain protected.</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">When organization becomes <code>inactief</code>: Only contactpersoon users are deactivated</li>
+<li class="">When organization becomes <code>actief</code>: Only contactpersoon users are activated</li>
+<li class="">Admin group users are never affected by organization status changes</li>
+<li class="">Contactpersoon users are identified by their usernames in the organization&#x27;s contactpersonen array</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization with status <code>actief</code></li>
+<li class="">Create contactpersonen for the organization (users will be active)</li>
+<li class="">Add admin users to admin group (they should remain unaffected)</li>
+<li class="">Change organization status to <code>inactief</code></li>
+<li class="">Verify only contactpersoon users become inactive</li>
+<li class="">Verify admin users remain active</li>
+<li class="">Change organization status back to <code>actief</code></li>
+<li class="">Verify only contactpersoon users become active again</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="9-contact-person-user-creation-and-management">9. Contact Person User Creation and Management<a href="#9-contact-person-user-creation-and-management" class="hash-link" aria-label="Direct link to 9. Contact Person User Creation and Management" title="Direct link to 9. Contact Person User Creation and Management" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Contact persons are automatically converted to user accounts and managed based on organization status.</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Contact person creation triggers user account creation</li>
+<li class="">Username is generated from contact person data</li>
+<li class="">User status matches organization status</li>
+<li class="">User is added to organization&#x27;s users list</li>
+<li class="">User can be activated/deactivated with organization status changes</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization in SoftwareCatalog</li>
+<li class="">Create contact person with organization reference</li>
+<li class="">Verify user account is created</li>
+<li class="">Verify username is added to organization&#x27;s users list</li>
+<li class="">Verify user status matches organization status</li>
+<li class="">Test organization status changes affect user status</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="10-admin-group-user-protection">10. Admin Group User Protection<a href="#10-admin-group-user-protection" class="hash-link" aria-label="Direct link to 10. Admin Group User Protection" title="Direct link to 10. Admin Group User Protection" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Admin group users are completely protected from organization status changes.</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Admin group users are always added to organizations</li>
+<li class="">Admin group users are never deactivated when organization becomes inactive</li>
+<li class="">Admin group users remain active regardless of organization status</li>
+<li class="">Only SoftwareCatalog-specific users (contactpersonen) are affected by status changes</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization with admin users present</li>
+<li class="">Add additional users to admin group</li>
+<li class="">Create contact persons for the organization</li>
+<li class="">Deactivate organization</li>
+<li class="">Verify admin users remain active</li>
+<li class="">Verify contact person users are deactivated</li>
+<li class="">Reactivate organization</li>
+<li class="">Verify admin users remain active</li>
+<li class="">Verify contact person users are reactivated</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="11-bulk-user-management">11. Bulk User Management<a href="#11-bulk-user-management" class="hash-link" aria-label="Direct link to 11. Bulk User Management" title="Direct link to 11. Bulk User Management" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Organizations with multiple contact persons can be managed in bulk.</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Multiple contact persons can be created for an organization</li>
+<li class="">All contact person users are managed together</li>
+<li class="">Bulk activation/deactivation works correctly</li>
+<li class="">Admin users remain protected during bulk operations</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization</li>
+<li class="">Create multiple contact persons (5-10 users)</li>
+<li class="">Verify all users are created and active</li>
+<li class="">Deactivate organization</li>
+<li class="">Verify all contact person users are deactivated</li>
+<li class="">Verify admin users remain active</li>
+<li class="">Reactivate organization</li>
+<li class="">Verify all contact person users are reactivated</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="12-nested-contact-person-objects">12. Nested Contact Person Objects<a href="#12-nested-contact-person-objects" class="hash-link" aria-label="Direct link to 12. Nested Contact Person Objects" title="Direct link to 12. Nested Contact Person Objects" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Contact persons are created as nested objects within organizations rather than as separate objects.</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Organizations can contain nested contact person objects</li>
+<li class="">Nested contact persons are automatically processed for user creation</li>
+<li class="">User accounts are created for each nested contact person</li>
+<li class="">User status matches organization status</li>
+<li class="">Nested contact persons respond to organization status changes</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization with nested contact persons in the <code>contactpersonen</code> array</li>
+<li class="">Verify contact persons are properly linked to the organization</li>
+<li class="">Verify user accounts are created for each nested contact person</li>
+<li class="">Test organization status changes affect nested contact person users</li>
+<li class="">Verify admin users remain unaffected</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="13-mixed-contact-person-creation-methods">13. Mixed Contact Person Creation Methods<a href="#13-mixed-contact-person-creation-methods" class="hash-link" aria-label="Direct link to 13. Mixed Contact Person Creation Methods" title="Direct link to 13. Mixed Contact Person Creation Methods" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Organizations can have both nested contact persons and separately created contact persons.</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Organizations can contain both nested and separate contact persons</li>
+<li class="">All contact persons (nested and separate) are properly managed</li>
+<li class="">User management works consistently regardless of creation method</li>
+<li class="">Organization status changes affect all contact person users uniformly</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Create organization with some nested contact persons</li>
+<li class="">Add additional contact persons via separate API calls</li>
+<li class="">Verify all contact persons are properly linked and managed</li>
+<li class="">Test organization status changes affect all users consistently</li>
+<li class="">Verify admin users remain protected throughout the process</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="14-anonymous-user-registration-via-openconnector">14. Anonymous User Registration via OpenConnector<a href="#14-anonymous-user-registration-via-openconnector" class="hash-link" aria-label="Direct link to 14. Anonymous User Registration via OpenConnector" title="Direct link to 14. Anonymous User Registration via OpenConnector" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Anonymous users register organizations through OpenConnector without having existing user accounts or organization entities.</p>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Anonymous user can create organization via OpenConnector endpoint</li>
+<li class="">System automatically creates organization entity in OpenRegister</li>
+<li class="">System creates user account for primary contact person</li>
+<li class="">Newly created user becomes owner of organization and contact person objects</li>
+<li class="">Organization entity is properly linked to all objects</li>
+<li class="">User can log in and access their organization</li>
+</ul>
+<p><strong>Test Steps:</strong></p>
+<ol>
+<li class="">Anonymous user submits organization registration via OpenConnector</li>
+<li class="">Verify organization object is created with admin as temporary owner</li>
+<li class="">Verify organization entity is created in OpenRegister</li>
+<li class="">Verify user account is created for primary contact person</li>
+<li class="">Verify ownership is transferred to newly created user</li>
+<li class="">Verify organization references are properly set</li>
+<li class="">Test user login and access to their organization</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="15-openregister-objects-vs-entities-architecture">15. OpenRegister Objects vs Entities Architecture<a href="#15-openregister-objects-vs-entities-architecture" class="hash-link" aria-label="Direct link to 15. OpenRegister Objects vs Entities Architecture" title="Direct link to 15. OpenRegister Objects vs Entities Architecture" translate="no">​</a></h3>
+<p><strong>Scenario:</strong> Understanding the distinction between OpenRegister objects and entities for proper system integration.</p>
+<p><strong>OpenRegister Objects:</strong></p>
+<ul>
+<li class="">Abstract data structures managed by schemas</li>
+<li class="">Stored in <code>oc_openregister_objects</code> table</li>
+<li class="">Have UUID, owner, organization, and schema-specific fields</li>
+<li class="">Examples: <code>organisatie</code> (schema 35), <code>contactpersoon</code> (schema 34)</li>
+<li class="">Created via REST API endpoints with register/schema parameters</li>
+<li class="">Support complex relationships and nested structures</li>
+</ul>
+<p><strong>OpenRegister Entities:</strong></p>
+<ul>
+<li class="">Classic Nextcloud entities with dedicated tables</li>
+<li class="">Stored in specific entity tables (e.g., <code>oc_openregister_organisations</code>)</li>
+<li class="">Have ID, UUID, name, status, and entity-specific fields</li>
+<li class="">Examples: <code>organisation</code> entity, <code>user</code> entity</li>
+<li class="">Created via entity-specific API endpoints</li>
+<li class="">Support standard Nextcloud entity operations</li>
+</ul>
+<p><strong>Conversion Process:</strong></p>
+<ol>
+<li class="">Object creation triggers event listeners</li>
+<li class="">Event listeners create corresponding entities</li>
+<li class="">Entities are linked back to objects via UUID references</li>
+<li class="">Ownership and relationships are established</li>
+<li class="">System maintains consistency between objects and entities</li>
+</ol>
+<p><strong>Expected Behavior:</strong></p>
+<ul>
+<li class="">Objects and entities maintain UUID consistency</li>
+<li class="">Changes to objects trigger entity updates</li>
+<li class="">Entity changes can trigger object updates (bidirectional sync)</li>
+<li class="">Proper ownership and relationship management</li>
+<li class="">Consistent data across both systems</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="testing-scenarios">Testing Scenarios<a href="#testing-scenarios" class="hash-link" aria-label="Direct link to Testing Scenarios" title="Direct link to Testing Scenarios" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="test-environment-setup">Test Environment Setup<a href="#test-environment-setup" class="hash-link" aria-label="Direct link to Test Environment Setup" title="Direct link to Test Environment Setup" translate="no">​</a></h3>
+<p><strong>Prerequisites:</strong></p>
+<ul>
+<li class="">SoftwareCatalog app enabled</li>
+<li class="">OpenRegister app enabled</li>
+<li class="">Proper schema and register configuration</li>
+<li class="">Test organization and contactpersoon schemas configured</li>
+</ul>
+<p><strong>Configuration Required:</strong></p>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">// SettingsService configuration</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">&#x27;voorzieningen_organisatie_schema&#x27; =&gt; &#x27;37&#x27;, // Organization schema ID</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">&#x27;voorzieningen_contactpersoon_schema&#x27; =&gt; &#x27;38&#x27;, // Contactpersoon schema ID</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">&#x27;voorzieningen_register&#x27; =&gt; &#x27;1&#x27;, // Register ID</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="test-data-requirements">Test Data Requirements<a href="#test-data-requirements" class="hash-link" aria-label="Direct link to Test Data Requirements" title="Direct link to Test Data Requirements" translate="no">​</a></h3>
+<p><strong>Organization Test Data:</strong></p>
+<div class="language-json codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-json codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;naam&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;Test Organization&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;type&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;Gemeente&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;website&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;https://test.org&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;beoordeling&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;actief&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;adres&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;Test Street 123&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;postcode&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;1234 AB&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;plaats&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;Test City&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;telefoon&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;+31 123 456 789&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;email&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;info@test.org&quot;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token punctuation" style="color:#393A34">}</span><br></span></code></pre></div></div>
+<p><strong>Contactpersoon Test Data:</strong></p>
+<div class="language-json codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-json codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;voornaam&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;John&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;achternaam&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;Doe&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;email&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;john.doe@test.org&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;telefoon&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;+31 123 456 789&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;functie&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;Manager&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;organisation&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;ORGANIZATION_UUID&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token property" style="color:#36acaa">&quot;roles&quot;</span><span class="token operator" style="color:#393A34">:</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">[</span><span class="token string" style="color:#e3116c">&quot;Functioneel-beheerder&quot;</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">&quot;Gebruik-beheerder&quot;</span><span class="token punctuation" style="color:#393A34">]</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token punctuation" style="color:#393A34">}</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="automated-test-cases">Automated Test Cases<a href="#automated-test-cases" class="hash-link" aria-label="Direct link to Automated Test Cases" title="Direct link to Automated Test Cases" translate="no">​</a></h3>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="test-case-1-organization-creation-flow">Test Case 1: Organization Creation Flow<a href="#test-case-1-organization-creation-flow" class="hash-link" aria-label="Direct link to Test Case 1: Organization Creation Flow" title="Direct link to Test Case 1: Organization Creation Flow" translate="no">​</a></h4>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">// Test organization creation and OpenRegister sync</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">public function testOrganizationCreationSync(): void</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">{</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 1. Create organization in SoftwareCatalog</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $organizationData = $this-&gt;createTestOrganization();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $organization = $this-&gt;createOrganization($organizationData);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 2. Verify organization exists in OpenRegister</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $openRegisterOrg = $this-&gt;findOrganizationInOpenRegister($organization-&gt;getUuid());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $this-&gt;assertNotNull($openRegisterOrg);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $this-&gt;assertEquals(&#x27;active&#x27;, $openRegisterOrg-&gt;getStatus());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 3. Verify UUID consistency</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $this-&gt;assertEquals($organization-&gt;getUuid(), $openRegisterOrg-&gt;getUuid());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">}</span><br></span></code></pre></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="test-case-2-user-status-management">Test Case 2: User Status Management<a href="#test-case-2-user-status-management" class="hash-link" aria-label="Direct link to Test Case 2: User Status Management" title="Direct link to Test Case 2: User Status Management" translate="no">​</a></h4>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">// Test user activation/deactivation based on organization status</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">public function testUserStatusManagement(): void</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">{</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 1. Create organization with inactive status</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $organization = $this-&gt;createOrganization([&#x27;beoordeling&#x27; =&gt; &#x27;inactief&#x27;]);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 2. Add contactpersoon</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $contactpersoon = $this-&gt;createContactpersoon($organization-&gt;getUuid());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 3. Verify user is inactive</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $user = $this-&gt;userManager-&gt;get($contactpersoon-&gt;getUsername());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $this-&gt;assertFalse($user-&gt;isEnabled());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 4. Activate organization</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $this-&gt;updateOrganization($organization-&gt;getUuid(), [&#x27;beoordeling&#x27; =&gt; &#x27;actief&#x27;]);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 5. Verify user is now active</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $user = $this-&gt;userManager-&gt;get($contactpersoon-&gt;getUsername());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $this-&gt;assertTrue($user-&gt;isEnabled());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">}</span><br></span></code></pre></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="test-case-3-organization-membership">Test Case 3: Organization Membership<a href="#test-case-3-organization-membership" class="hash-link" aria-label="Direct link to Test Case 3: Organization Membership" title="Direct link to Test Case 3: Organization Membership" translate="no">​</a></h4>
+<div class="language-php codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-php codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">// Test contactpersoon organization membership</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">public function testOrganizationMembership(): void</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">{</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 1. Create organization</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $organization = $this-&gt;createOrganization();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 2. Create contactpersoon</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $contactpersoon = $this-&gt;createContactpersoon($organization-&gt;getUuid());</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    // 3. Verify username is in organization&#x27;s users list</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $orgData = $organization-&gt;getObject();</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    $this-&gt;assertContains($contactpersoon-&gt;getUsername(), $orgData[&#x27;users&#x27;]);</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">}</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="manual-testing-checklist">Manual Testing Checklist<a href="#manual-testing-checklist" class="hash-link" aria-label="Direct link to Manual Testing Checklist" title="Direct link to Manual Testing Checklist" translate="no">​</a></h3>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="organization-management">Organization Management<a href="#organization-management" class="hash-link" aria-label="Direct link to Organization Management" title="Direct link to Organization Management" translate="no">​</a></h4>
+<ul class="contains-task-list containsTaskList_mC6p">
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Create organization with <code>actief</code> status</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify organization appears in OpenRegister with <code>active</code> status</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Create organization with <code>inactief</code> status</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify organization appears in OpenRegister with <code>inactive</code> status</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Update organization status from <code>inactief</code> to <code>actief</code></li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify all users become active</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Update organization status from <code>actief</code> to <code>inactief</code></li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify all users become inactive</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Delete organization</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify all users become inactive</li>
+</ul>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="contactpersoon-management">Contactpersoon Management<a href="#contactpersoon-management" class="hash-link" aria-label="Direct link to Contactpersoon Management" title="Direct link to Contactpersoon Management" translate="no">​</a></h4>
+<ul class="contains-task-list containsTaskList_mC6p">
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Create contactpersoon for active organization</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify user is created and active</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify username is added to organization&#x27;s users list</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Create contactpersoon for inactive organization</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify user is created but inactive</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Update contactpersoon roles</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify group assignments are updated</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify organization membership is maintained</li>
+</ul>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="error-handling">Error Handling<a href="#error-handling" class="hash-link" aria-label="Direct link to Error Handling" title="Direct link to Error Handling" translate="no">​</a></h4>
+<ul class="contains-task-list containsTaskList_mC6p">
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Test with missing OpenRegister configuration</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Test with invalid organization UUID</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Test with missing contactpersoon data</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Test with network connectivity issues</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Verify graceful error handling and logging</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="performance-considerations">Performance Considerations<a href="#performance-considerations" class="hash-link" aria-label="Direct link to Performance Considerations" title="Direct link to Performance Considerations" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="expected-performance">Expected Performance<a href="#expected-performance" class="hash-link" aria-label="Direct link to Expected Performance" title="Direct link to Expected Performance" translate="no">​</a></h3>
+<ul>
+<li class="">Organization sync: &lt; 2 seconds</li>
+<li class="">User status updates: &lt; 1 second per user</li>
+<li class="">Contactpersoon processing: &lt; 3 seconds</li>
+<li class="">Organization membership updates: &lt; 1 second</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="monitoring-points">Monitoring Points<a href="#monitoring-points" class="hash-link" aria-label="Direct link to Monitoring Points" title="Direct link to Monitoring Points" translate="no">​</a></h3>
+<ul>
+<li class="">Event listener execution time</li>
+<li class="">OpenRegister API response times</li>
+<li class="">User management operation times</li>
+<li class="">Database query performance</li>
+<li class="">Memory usage during bulk operations</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="security-considerations">Security Considerations<a href="#security-considerations" class="hash-link" aria-label="Direct link to Security Considerations" title="Direct link to Security Considerations" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="data-protection">Data Protection<a href="#data-protection" class="hash-link" aria-label="Direct link to Data Protection" title="Direct link to Data Protection" translate="no">​</a></h3>
+<ul>
+<li class="">Organization UUIDs are preserved across systems</li>
+<li class="">User credentials are not shared between systems</li>
+<li class="">Organization data is mapped securely</li>
+<li class="">Access controls are maintained per system</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="audit-trail">Audit Trail<a href="#audit-trail" class="hash-link" aria-label="Direct link to Audit Trail" title="Direct link to Audit Trail" translate="no">​</a></h3>
+<ul>
+<li class="">All organization sync operations are logged</li>
+<li class="">User status changes are tracked</li>
+<li class="">Organization membership updates are recorded</li>
+<li class="">Error conditions are logged with context</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="troubleshooting">Troubleshooting<a href="#troubleshooting" class="hash-link" aria-label="Direct link to Troubleshooting" title="Direct link to Troubleshooting" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="common-issues">Common Issues<a href="#common-issues" class="hash-link" aria-label="Direct link to Common Issues" title="Direct link to Common Issues" translate="no">​</a></h3>
+<p><strong>Organization not syncing to OpenRegister:</strong></p>
+<ul>
+<li class="">Check OpenRegister app is enabled</li>
+<li class="">Verify schema and register configuration</li>
+<li class="">Check network connectivity</li>
+<li class="">Review error logs for specific issues</li>
+</ul>
+<p><strong>Users not activating/deactivating:</strong></p>
+<ul>
+<li class="">Verify organization status changes are detected</li>
+<li class="">Check user manager permissions</li>
+<li class="">Review contactpersoon organization assignments</li>
+<li class="">Check for conflicting group assignments</li>
+</ul>
+<p><strong>UUID mismatches:</strong></p>
+<ul>
+<li class="">Verify organization creation order</li>
+<li class="">Check for duplicate organization creation</li>
+<li class="">Review UUID generation and assignment</li>
+<li class="">Verify cross-system UUID consistency</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="debug-commands">Debug Commands<a href="#debug-commands" class="hash-link" aria-label="Direct link to Debug Commands" title="Direct link to Debug Commands" translate="no">​</a></h3>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain"># Check organization sync status</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">docker exec -u 33 master-nextcloud-1 php /var/www/html/occ softwarecatalog:debug:organization-sync</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"># Check user status for organization</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">docker exec -u 33 master-nextcloud-1 php /var/www/html/occ softwarecatalog:debug:user-status --organization=UUID</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"># Check organization membership</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">docker exec -u 33 master-nextcloud-1 php /var/www/html/occ softwarecatalog:debug:organization-membership --organization=UUID</span><br></span></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="future-enhancements">Future Enhancements<a href="#future-enhancements" class="hash-link" aria-label="Direct link to Future Enhancements" title="Direct link to Future Enhancements" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="planned-features">Planned Features<a href="#planned-features" class="hash-link" aria-label="Direct link to Planned Features" title="Direct link to Planned Features" translate="no">​</a></h3>
+<ul>
+<li class="">Bidirectional sync (OpenRegister → SoftwareCatalog)</li>
+<li class="">Bulk organization operations</li>
+<li class="">Advanced status mapping</li>
+<li class="">Custom field synchronization</li>
+<li class="">Real-time sync notifications</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="integration-points">Integration Points<a href="#integration-points" class="hash-link" aria-label="Direct link to Integration Points" title="Direct link to Integration Points" translate="no">​</a></h3>
+<ul>
+<li class="">Email notification system</li>
+<li class="">Group management system</li>
+<li class="">User hierarchy management</li>
+<li class="">Audit trail system</li>
+<li class="">Reporting and analytics</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="conclusion">Conclusion<a href="#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion" translate="no">​</a></h2>
+<p>The organization synchronization feature provides seamless integration between SoftwareCatalog and OpenRegister, ensuring data consistency and proper user management. The comprehensive testing framework ensures reliable operation across various scenarios and edge cases.</p>
+<p>For questions or issues, refer to the SoftwareCatalog documentation or contact the development team.</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/ConductionNL/softwarecatalog/tree/main/docs/ORGANIZATION_SYNC_USECASES.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/docs/MODULE_COMPLIANCE_SUBSCRIBER"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Module Compliance Subscriber</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/docs"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Software Catalog Documentation</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#-quick-reference-for-new-conversation" class="table-of-contents__link toc-highlight">🚨 QUICK REFERENCE FOR NEW CONVERSATION</a><ul><li><a href="#current-implementation-status" class="table-of-contents__link toc-highlight">Current Implementation Status</a></li><li><a href="#key-api-endpoints" class="table-of-contents__link toc-highlight">Key API Endpoints</a></li><li><a href="#essential-commands" class="table-of-contents__link toc-highlight">Essential Commands</a></li><li><a href="#architecture-summary" class="table-of-contents__link toc-highlight">Architecture Summary</a></li><li><a href="#next-priority-test" class="table-of-contents__link toc-highlight">Next Priority Test</a></li></ul></li><li><a href="#overview" class="table-of-contents__link toc-highlight">Overview</a></li><li><a href="#use-cases" class="table-of-contents__link toc-highlight">Use Cases</a><ul><li><a href="#1-organization-creation-synchronization" class="table-of-contents__link toc-highlight">1. Organization Creation Synchronization</a></li><li><a href="#2-organization-status-change---activation" class="table-of-contents__link toc-highlight">2. Organization Status Change - Activation</a></li><li><a href="#3-organization-status-change---deactivation" class="table-of-contents__link toc-highlight">3. Organization Status Change - Deactivation</a></li><li><a href="#4-organization-deletion" class="table-of-contents__link toc-highlight">4. Organization Deletion</a></li><li><a href="#5-contactpersoon-creation-and-organization-membership" class="table-of-contents__link toc-highlight">5. Contactpersoon Creation and Organization Membership</a></li><li><a href="#6-contactpersoon-update-and-organization-membership" class="table-of-contents__link toc-highlight">6. Contactpersoon Update and Organization Membership</a></li><li><a href="#7-cross-system-uuid-consistency" class="table-of-contents__link toc-highlight">7. Cross-System UUID Consistency</a></li><li><a href="#8-softwarecatalog-specific-user-status-management" class="table-of-contents__link toc-highlight">8. SoftwareCatalog-Specific User Status Management</a></li><li><a href="#9-contact-person-user-creation-and-management" class="table-of-contents__link toc-highlight">9. Contact Person User Creation and Management</a></li><li><a href="#10-admin-group-user-protection" class="table-of-contents__link toc-highlight">10. Admin Group User Protection</a></li><li><a href="#11-bulk-user-management" class="table-of-contents__link toc-highlight">11. Bulk User Management</a></li><li><a href="#12-nested-contact-person-objects" class="table-of-contents__link toc-highlight">12. Nested Contact Person Objects</a></li><li><a href="#13-mixed-contact-person-creation-methods" class="table-of-contents__link toc-highlight">13. Mixed Contact Person Creation Methods</a></li><li><a href="#14-anonymous-user-registration-via-openconnector" class="table-of-contents__link toc-highlight">14. Anonymous User Registration via OpenConnector</a></li><li><a href="#15-openregister-objects-vs-entities-architecture" class="table-of-contents__link toc-highlight">15. OpenRegister Objects vs Entities Architecture</a></li></ul></li><li><a href="#testing-scenarios" class="table-of-contents__link toc-highlight">Testing Scenarios</a><ul><li><a href="#test-environment-setup" class="table-of-contents__link toc-highlight">Test Environment Setup</a></li><li><a href="#test-data-requirements" class="table-of-contents__link toc-highlight">Test Data Requirements</a></li><li><a href="#automated-test-cases" class="table-of-contents__link toc-highlight">Automated Test Cases</a></li><li><a href="#manual-testing-checklist" class="table-of-contents__link toc-highlight">Manual Testing Checklist</a></li></ul></li><li><a href="#performance-considerations" class="table-of-contents__link toc-highlight">Performance Considerations</a><ul><li><a href="#expected-performance" class="table-of-contents__link toc-highlight">Expected Performance</a></li><li><a href="#monitoring-points" class="table-of-contents__link toc-highlight">Monitoring Points</a></li></ul></li><li><a href="#security-considerations" class="table-of-contents__link toc-highlight">Security Considerations</a><ul><li><a href="#data-protection" class="table-of-contents__link toc-highlight">Data Protection</a></li><li><a href="#audit-trail" class="table-of-contents__link toc-highlight">Audit Trail</a></li></ul></li><li><a href="#troubleshooting" class="table-of-contents__link toc-highlight">Troubleshooting</a><ul><li><a href="#common-issues" class="table-of-contents__link toc-highlight">Common Issues</a></li><li><a href="#debug-commands" class="table-of-contents__link toc-highlight">Debug Commands</a></li></ul></li><li><a href="#future-enhancements" class="table-of-contents__link toc-highlight">Future Enhancements</a><ul><li><a href="#planned-features" class="table-of-contents__link toc-highlight">Planned Features</a></li><li><a href="#integration-points" class="table-of-contents__link toc-highlight">Integration Points</a></li></ul></li><li><a href="#conclusion" class="table-of-contents__link toc-highlight">Conclusion</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/docs/FEATURES">Documentation</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/ConductionNL/softwarecatalog" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 for <a href="https://openwebconcept.nl">Open Webconcept</a> by <a href="https://conduction.nl">Conduction B.V.</a></div></div></div></footer></div>
+</body>
+</html>
