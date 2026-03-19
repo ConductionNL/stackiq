@@ -52,9 +52,6 @@ use Exception;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -322,6 +319,8 @@ class AangebodenGebruikService
      * @return array searchObjectsPaginated result with koppelingen and gebruiks for the UUID.
      *
      * @throws Exception When OpenRegister service is not available.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isAmbtenaar is a simple privilege toggle
      */
     public function getKoppelingenGebruikByUuid(string $uuid, array $options=[], bool $isAmbtenaar=false): array
     {

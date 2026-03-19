@@ -53,9 +53,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -804,6 +801,8 @@ class OrganizationSyncService
      * @param bool   $sendEmails        Whether to send registration/activation emails.
      *
      * @return object|null The organisation entity or null on failure.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $sendEmails is a simple notification toggle
      */
     public function ensureOrganisationEntityPublic(object $organisatieObject, array &$stats, bool $sendEmails=true): ?object
     {
@@ -823,6 +822,8 @@ class OrganizationSyncService
      * @param bool   $sendEmails        Whether to send emails.
      *
      * @return object|null The organisation entity or null on failure.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $sendEmails is a simple notification toggle
      */
     private function ensureOrganisationEntity(object $organisatieObject, array &$stats, bool $sendEmails=true): ?object
     {
@@ -1829,6 +1830,8 @@ class OrganizationSyncService
      * @param array                             $stats              The statistics array to update.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $organizationObject reserved for future contact person enrichment
      */
     private function processRelatedContactPersons(string $organizationUuid, $organizationObject, array &$stats): void
     {

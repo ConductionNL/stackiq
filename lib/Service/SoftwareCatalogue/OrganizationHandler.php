@@ -45,9 +45,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -570,6 +567,8 @@ class OrganizationHandler
      * @param bool   $isFirstContact Whether this is the first contact in the organization
      *
      * @return array Array of roles
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isFirstContact is a simple role-assignment toggle
      */
     private function mapFunctieToRoles(string $functie, bool $isFirstContact=false): array
     {

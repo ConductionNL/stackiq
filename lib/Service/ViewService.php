@@ -50,9 +50,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -1240,6 +1237,8 @@ class ViewService
      * @param array  $productsData Products data to search in.
      *
      * @return array Products related to the node.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $productsData reserved for future node products matching
      */
     private function getNodeProducts(string $modelNodeId, array $productsData): array
     {

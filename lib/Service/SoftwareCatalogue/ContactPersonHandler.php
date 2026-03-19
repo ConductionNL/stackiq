@@ -52,8 +52,6 @@ use OCA\SoftwareCatalog\Service\SymfonyEmailService;
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -301,6 +299,8 @@ class ContactPersonHandler
      * @param bool   $isFirstContact       Whether this is the first contact.
      *
      * @return \OCP\IUser|null The created user or null if failed.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isFirstContact is a simple role-assignment toggle
      */
     public function createUserAccount(object $contactpersoonObject, bool $isFirstContact=false): ?\OCP\IUser
     {
@@ -663,6 +663,8 @@ class ContactPersonHandler
      * @param bool       $isFirstContact Whether this is the first contact of the organization.
      *
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isFirstContact is a simple role-assignment toggle
      */
     private function assignUserGroups(\OCP\IUser $user, array $objectData, bool $isFirstContact=false): string
     {
@@ -1854,6 +1856,8 @@ class ContactPersonHandler
      *
      * @return bool True if processing was successful
      * @throws \Exception If processing fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {

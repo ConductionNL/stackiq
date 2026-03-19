@@ -54,9 +54,7 @@ use Symfony\Component\Mime\Address;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.StaticAccess) — Transport::fromDsn is Symfony Mailer's static factory pattern
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -483,6 +481,8 @@ class SettingsService
      * @return array The auto-configuration results.
      *
      * @throws \RuntimeException If auto-configuration fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $force is a simple re-import toggle
      */
     public function autoConfigure(bool $force=false): array
     {
@@ -1337,6 +1337,8 @@ class SettingsService
      * @return array The loaded settings configuration
      *
      * @throws \RuntimeException If settings loading fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $force is a simple re-import toggle
      */
     public function loadSettings(bool $force=false): array
     {
@@ -3077,6 +3079,8 @@ class SettingsService
      * @param bool $resetConfiguration Whether to also clear schema/register settings
      *
      * @return array The reset results
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $resetConfiguration is a simple scope toggle
      */
     public function resetAutoConfiguration(bool $resetConfiguration=false): array
     {
@@ -3148,6 +3152,8 @@ class SettingsService
      * @param bool $forceImport Whether to force import regardless of version.
      *
      * @return array The import results with success/error information.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $forceImport is a simple re-import toggle
      */
     public function manualImport(bool $forceImport=false): array
     {
@@ -3284,6 +3290,8 @@ class SettingsService
      * @param bool $force Whether to force configuration loading.
      *
      * @return array Consolidated configuration results
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $force is a simple re-import toggle
      */
     public function performConsolidatedAutoConfiguration(bool $force=false): array
     {

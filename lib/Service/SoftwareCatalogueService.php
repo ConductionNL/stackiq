@@ -52,8 +52,6 @@ use OCP\App\IAppManager;
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -144,6 +142,8 @@ class SoftwareCatalogueService
      *
      * @return bool True if processing was successful
      * @throws \Exception If processing fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
