@@ -11,9 +11,9 @@ Base directory for this skill: /home/rubenlinde/nextcloud-docker-dev/workspace/s
 
 Run automated tests for the GEMMA Softwarecatalogus. Supports four test modes:
 
-1. **API tests** — Fast, low-cost Newman/Postman tests covering ~327 `[API]`-tagged acceptance criteria via HTTP assertions
-2. **Browser tests** — Thorough persona-based browser tests covering ~554 `[UI]`-tagged + ~28 `[HYBRID]`-tagged criteria
-3. **Both** — Run API tests first, then browser tests for complete ~909 criteria coverage
+1. **API tests** — Fast, low-cost Newman/Postman tests covering ~358 `[API]`-tagged acceptance criteria via HTTP assertions
+2. **Browser tests** — Thorough persona-based browser tests covering ~635 `[UI]`-tagged + ~36 `[HYBRID]`-tagged criteria
+3. **Both** — Run API tests first, then browser tests for complete ~1,029 criteria coverage
 4. **Open issues** — Issue-by-issue verification of all 72 open IGS issues, preparing GitHub reply comments with proof
 
 **Input**: Optional argument after `/swc:test`:
@@ -96,9 +96,9 @@ If no argument was provided (or argument is empty), ask the user using AskUserQu
 **Question**: "Which tests do you want to run?"
 | Option | Label | Description |
 |--------|-------|-------------|
-| 1 | **API tests (Recommended)** | Fast Newman/Postman tests — ~327 criteria, ~2 min, low cost. Covers all `[API]`-tagged acceptance criteria. |
-| 2 | **Browser tests** | Full persona-based browser testing — ~582 criteria, ~30 min, high token cost. Covers `[UI]` and `[HYBRID]` criteria with 7 parallel agents. |
-| 3 | **Both** | API tests first, then browser tests — complete ~909 criteria coverage. |
+| 1 | **API tests (Recommended)** | Fast Newman/Postman tests — ~358 criteria, ~2 min, low cost. Covers all `[API]`-tagged acceptance criteria. |
+| 2 | **Browser tests** | Full persona-based browser testing — ~671 criteria, ~30 min, high token cost. Covers `[UI]` and `[HYBRID]` criteria with 7 parallel agents. |
+| 3 | **Both** | API tests first, then browser tests — complete ~1,029 criteria coverage. |
 | 4 | **Open issues** | Process open IGS issues — prepare GitHub reply comments with proof. |
 | 5 | **Specific API folder** | Run just one API test category (e.g., RBAC, CRUD, Search). |
 

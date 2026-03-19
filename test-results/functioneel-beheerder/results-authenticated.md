@@ -1,305 +1,10 @@
 # Test Results: Functioneel Beheerder (Authenticated)
 
-**Date:** 2026-03-16
-**Persona:** Peter van Dijk (peter.vandijk@test.nl) / admin
-**Environment:** localhost:3000 (frontend) / localhost:8080 (backend)
-**Tester:** Automated (Claude Code agent, browser-4)
-
-## Environment Notes
-
-**Critical Issue:** Both `peter.vandijk@test.nl` and `jan.pietersen@test.nl` experience organisation fetch 404 errors on the frontend. The Nextcloud organisation UUIDs (e.g., `c0ff4d70-...` for Peter, `2b7a80a2-...` for Jan) do not have matching register objects in the `voorzieningen/organisatie` schema (schema ID 8). This causes:
-- Left sidebar "Beheer" menu not rendering (warnings: "Beheer menu (position 7) not found", "No beheer types found in menu")
-- Empty `/beheer/applicaties`, `/beheer/diensten`, `/beheer/koppelingen` pages
-- Edit/delete functionality disabled in beheer views
-
-The `test-setup.sh` script creates register objects but the Nextcloud-to-register UUID mapping remains broken. This is a systemic environment issue affecting ALL frontend beheer testing.
-
-**Workaround used:** Backend testing via `admin:admin` at localhost:8080 (OpenRegister, OpenCatalogi admin). API testing via curl.
-
----
-
-## Previously Tested Issues (Re-verification)
-
-### #155: Definities via interactieve optie (Begrippenlijst) -- PARTIAL
-
-**Acceptance Criteria:**
-- [x] Glossary endpoint at /apps/opencatalogi/api/glossary returns 6 glossary terms (API verified)
-- [x] Terms from current Softwarecatalogus lexicon present: API, GEMMA, SaaS (+ 3 more)
-- [ ] CANNOT_TEST: Interactive hover/click glossary on frontend pages (org fetch error prevents authenticated page testing)
-- [ ] CANNOT_TEST: Glossary search panel
-- [x] Definitions include links to external sources (API response contains externalLink field, nullable)
-- [ ] CANNOT_TEST: Admin glossary management UI at backend `/apps/opencatalogi/#/glossary` -- navigation shows Dashboard, not Glossary view (SPA hash routing issue with admin user)
-- [ ] CANNOT_TEST: Keywords field as text tags (backend UI not reachable)
-- [ ] CANNOT_TEST: Edit existing term shows keywords as text (backend UI not reachable)
-
-**Note:** Glossary term creation via POST API returns HTTP 405 (Method Not Allowed). The glossary management must be done through the OpenCatalogi backend UI which was not navigable in this session due to SPA routing.
-
----
-
-### #332: Voorpagina inrichten -- PARTIAL
-
-**Acceptance Criteria:**
-- [x] Homepage loads at localhost:3000 (SPA renders client-side)
-- [x] Header shows "SOFTWARECATALOGUS" with VNG logo
-- [ ] CANNOT_TEST: Configurable banner behind search (requires CMS admin)
-- [ ] CANNOT_TEST: Quote section editing
-- [ ] CANNOT_TEST: Content blocks configuration
-- [x] Footer present with "Softwarecatalogus" and "Een plek voor alle software voor en door Gemeenten"
-- [ ] CANNOT_TEST: CMS editing by functional admin (requires backend OpenCatalogi pages UI)
-
-**Note:** Runtime config shows `FOOTER_LOGO_TITLE: "Open Tilburg"` and `FOOTER_LOGO_SUBTITLE` references Tilburg, which is dev environment default. CMS has 2 pages: "Home" (slug: home) and "About" (slug: about). Privacy and Terms pages exist as static routes.
-
----
-
-### #397: Pagina aanmaken via CMS -- PARTIAL
-
-**Acceptance Criteria:**
-- [x] CMS pages API returns 2 pages (Home, About)
-- [ ] CANNOT_TEST: Admin navigation to CMS page management in backend UI
-- [ ] CANNOT_TEST: Creating a new CMS page via the backend
-- [ ] CANNOT_TEST: Editing existing CMS pages
-- [ ] CANNOT_TEST: Verifying saved changes on public frontend
-
-**Note:** The OpenCatalogi backend CMS pages URL is `{BACKEND}/index.php/apps/opencatalogi/pages#`. Hash-based routing in the SPA did not navigate to the correct view when accessed directly.
-
----
-
-### #403: Tekst verwijderen aanpassen -- CANNOT_TEST
-
-**Reason:** Frontend beheer pages are empty due to org fetch 404 error. Cannot navigate to applicaties/diensten/koppelingen to test the delete dialog text. Backend OpenRegister Search/Views is accessible but does not show the custom delete dialog text (that is a frontend-only feature in the Softwarecatalogus client).
-
----
-
-### #406: SiteImprove verwijderen -- PASS
-
-**Acceptance Criteria:**
-- [x] HTML source does NOT contain `siteimproveanalytics.com` script tag (grep confirmed: no matches)
-- [x] No references to "siteimprove" in page source
-- [x] Piwik Pro script shell present but not configured (message: "srcUrl, dataLayerName of id is niet ingesteld")
-- [x] Only ONE analytics framework present (Piwik Pro, unconfigured)
-
----
-
-### #409: Footer anders: inlog of uitgelogd -- PASS
-
-**Acceptance Criteria:**
-- [x] Footer links identical in logged-in and logged-out states
-- [x] Privacy page returns HTTP 200 (both auth and unauth)
-- [x] Terms page returns HTTP 200 (both auth and unauth)
-- [x] Footer shows "Softwarecatalogus" consistently
-- [x] Footer subtitle: "Een plek voor alle software voor en door Gemeenten"
-
-**Note:** Footer structure is identical between states. The "Privacy" and "Terms" links in the nav bar are consistent.
-
----
-
-### #410: Dashboard schrijfwijze softwarecatalogus -- PASS
-
-**Acceptance Criteria:**
-- [x] Welcome heading: "Welkom in uw softwarecatalogus" (lowercase - correct)
-- [x] Body includes four bullet points: Applicaties, Diensten, Koppelingen, Standaarden
-- [x] Instruction text about publishing via left menu present
-- [x] Closing paragraph about municipalities using GEMMA present
-- [x] "GEMeentelijke Model Architectuur (GEMMA)" exact capitalization present
-- [x] Page title: "Mijn softwarecatalogus" (lowercase)
-
-**Exact text captured:**
-> "Via deze omgeving publiceert en beheert u uw aanbod voor gemeenten. U kunt hier de volgende zaken registreren:"
-> - Applicaties / Diensten / Koppelingen / Standaarden
-> "Een nieuw item publiceert u via de opties in het linkermenu. Eventueel eerder geregistreerde items vindt u onder het kopje 'Beheer' in het linkermenu."
-> "Gemeenten gebruiken deze informatie om een beter beeld te krijgen van de markt en het eigen applicatielandschap in kaart te brengen met behulp van de GEMeentelijke Model Architectuur (GEMMA)."
-
-**Screenshot:** `screenshots/dashboard-peter-full.png`
-
----
-
-### #92: Webstatistiekenpakket (Piwik Pro) -- PARTIAL
-
-**Acceptance Criteria:**
-- [x] Piwik Pro script shell is present in HTML source code
-- [ ] Piwik Pro is NOT configured (error: "srcUrl, dataLayerName of id is niet ingesteld")
-- [x] SiteImprove completely removed
-- [ ] No actual analytics tracking is happening (Piwik Pro needs configuration: srcUrl, dataLayerName, id)
-
-**Note:** The Piwik Pro JavaScript bootstrap code is in the HTML but requires three config values (srcUrl, dataLayerName, id) which are all empty. On this dev environment, no analytics data is being collected.
-
----
-
-### #169: Rest issues Organisatie en Configuratie -- PARTIAL
-
-**Acceptance Criteria:**
-- [x] After activating organization, status changes to "Actief" (API confirmed: Test Leverancier 2 status=Actief)
-- [ ] CANNOT_TEST: Registration form alignment with "Mijn Account" (frontend org error)
-- [ ] CANNOT_TEST: "Mijn Account" page shows organization name
-- [ ] CANNOT_TEST: KVK number display
-- [x] No "Nextcloud autorisatie - De tijd is verstreken" errors on login (not observed)
-
----
-
-## New Issues
-
-### #85: Publieke API toegang tot aanbodinformatie -- PASS
-
-**Acceptance Criteria:**
-- [x] Public API for voorzieningen register accessible: HTTP 200 (register 3, schema 19)
-- [x] API returns data about organisations (schema 8): HTTP 200
-- [x] API returns data about applicaties (schema 19): HTTP 200
-- [x] API returns data about diensten (schema 5): HTTP 200
-- [x] Standard query parameters work (_limit, _fields)
-- [ ] OAS documentation returns HTTP 500 for register 3 and register 4 (known bug: org filter on OAS endpoint)
-
----
-
-### #141: Organisaties samenvoegen (Merge) -- PARTIAL
-
-**Acceptance Criteria:**
-- [x] Merge test organization created successfully via API
-- [x] Merge test organization deleted successfully after test (HTTP 204)
-- [ ] CANNOT_TEST: Merge UI dialog in backend -- the merge is a UI-only feature accessed via the three-dot menu on organisation rows in Search/Views
-- [ ] Merge dialog UI not tested (requires navigating to Search/Views, filtering by organisatie, and clicking three-dot menu -> Merge)
-
-**Note:** The OpenRegister backend Registers page loads correctly (8 registers, 44430 total objects). The Voorzieningen register shows Applicatie (69+85 deleted), Dienst (53), etc. The three-dot Actions menu on schema rows includes Export, Import, Validate, Delete Objects, Permanently Delete.
-
----
-
-### #148: GEMMA-architectuur opvraagbaar met API -- PASS
-
-**Acceptance Criteria:**
-- [x] GEMMA register (register 4) API accessible: HTTP 200
-- [x] Elements, Relations, Property Definitions present (4353 elements, 6049 relations, 74 property definitions visible in register cards)
-- [x] Model data present (1 model, 1 organization)
-- [ ] OAS endpoint returns HTTP 500 (same bug as #85)
-
----
-
-### #225: Testresultaten 29-10-2025 -- CLOSED
-
-**Status:** Issue was CLOSED on 2026-03-04. No re-testing needed.
-
----
-
-### #278: Filterteksten aanpassen -- CANNOT_TEST
-
-**Reason:** Search page at localhost:3000/zoeken requires authenticated frontend testing which is blocked by the org fetch 404 error preventing full page rendering.
-
----
-
-### #286: 500-error bij wachtwoord wijzigen -- PASS
-
-**Acceptance Criteria:**
-- [x] Password change via OCS API completes without error: HTTP 200
-- [x] Password revert also succeeds: HTTP 200
-- [x] Server responds with success status code
-
-**Test:** Changed password for `maria.vanderberg@test.nl` via `PUT /ocs/v2.php/cloud/users/...` with `key=password`, then reverted. Both operations returned HTTP 200.
-
----
-
-### #392: Geimporteerde gebruiker error bij omzetten naar user -- CLOSED
-
-**Status:** Issue was CLOSED on 2026-03-04.
-- [x] Contactpersoon API accessible: HTTP 200
-
----
-
-### #393: Backend fouten in voorzieningenregister -- PASS
-
-**Acceptance Criteria:**
-- [x] Schema 8 (Organisatie) API: HTTP 200
-- [x] Schema 19 (Applicatie) API: HTTP 200
-- [x] Schema 5 (Dienst) API: HTTP 200
-- [x] Schema 11 (Koppeling) API: HTTP 200
-- [x] Excel export works: HTTP 200, file size 14576 bytes
-- [x] CSV export works: HTTP 200, file size 42065 bytes, 70 lines, 50 columns
-- [x] No 500 errors on voorzieningenregister endpoints
-
----
-
-### #396: Verouderde NextCloud versie -- PASS
-
-**Acceptance Criteria:**
-- [x] Nextcloud version: 32.0.5 (meets requirement of 32.x)
-- [ ] CANNOT_TEST: Admin panel "unsupported version" warnings (requires manual admin check)
-
----
-
-### #15: Exporteren van gegevens (CSV/Excel) -- PARTIAL
-
-**Acceptance Criteria:**
-- [x] CSV export works via API: HTTP 200, 42065 bytes, 70 data rows
-- [x] Excel export works via API: HTTP 200, 14576 bytes
-- [x] Exported columns include readable name columns (prefixed with "_"): `_contactpersoon`, `_aanbieder`, `_referentieComponenten`, `_diensten`, `_koppelingen`, `_compliancy`, `_standaardVersies`, `_moduleVersies`
-- [x] Export dialog in backend UI shows format options: Excel and CSV
-- [ ] CANNOT_TEST: Export button on frontend management pages (org fetch error)
-- [ ] Some `_aanbieder` values are empty in test data (may be because test objects lack proper relations)
-
-**Screenshot:** `screenshots/export-dialog.png`
-
----
-
-### #355: Diensten Export UUID's -- PASS
-
-**Acceptance Criteria:**
-- [x] CSV export shows human-readable name columns (prefixed "_") alongside UUID columns
-- [x] 50 columns including: naam, beschrijvingKort, contactpersoon, _contactpersoon, aanbieder, _aanbieder, etc.
-- [x] Export can be used for re-import (id column present, UUID format preserved)
-
----
-
-### #187: Tekstvoorstellen (remaining text changes) -- PARTIAL
-
-**Acceptance Criteria tested on Dashboard:**
-- [x] Dashboard welcome title: "Welkom in uw softwarecatalogus" (matches spec for lowercase)
-- [x] Dashboard welcome text includes bullet points and GEMMA reference
-- [ ] CANNOT_TEST: Registration success page text
-- [ ] CANNOT_TEST: Contactpersoon text
-- [ ] CANNOT_TEST: Organisatie niet zichtbaar banner
-- [ ] CANNOT_TEST: Diensten registreren wizard text
-- [ ] CANNOT_TEST: "Contactpersonen" renamed to "Gebruikers" in left menu
-- [ ] CANNOT_TEST: Application wizard success page text
-
-**Note:** The acceptance criteria spec says dashboard title should be "Welkom in de Softwarecatalogus" (with capital S), but the actual UI shows "Welkom in uw softwarecatalogus" (lowercase, "uw" instead of "de"). The #410 issue specifically says lowercase is correct. These two issues have conflicting capitalization requirements.
-
----
-
-### #449: Handleiding facets configureren klopt niet -- CANNOT_TEST
-
-**Reason:** Requires navigating to the OpenRegister Schemas page and testing facet editing on properties. While the Schemas sidebar link is visible in the OpenRegister backend, full facet editing testing was not performed in this session.
-
----
-
-### #450: Back-end icoon voor publiceren verwijderen -- CANNOT_TEST
-
-**Reason:** Requires navigating to the Softwarecatalogus backend app and checking the organisation overview for the orange triangle icon. The Softwarecatalogus app at `localhost:8080/index.php/apps/softwarecatalog` returns HTTP 200 but the specific UI was not inspected.
-
----
-
-### N/A: Themes management (exploratory) -- CANNOT_TEST
-
-**Reason:** The OpenCatalogi backend themes URL (`{BACKEND}/index.php/apps/opencatalogi/themes#`) was not navigable due to SPA hash routing issues.
-
----
-
-### N/A: Schema export (OpenRegister registers) -- PASS
-
-**Acceptance Criteria:**
-- [x] Register cards visible with schema rows and Actions menus
-- [x] Three-dot menu on Applicatie schema shows: Export, Import, Validate, Delete Objects, Permanently Delete
-- [x] Export dialog offers Excel and CSV formats
-
-**Screenshot:** `screenshots/registers-overview.png`, `screenshots/export-dialog.png`
-
----
-
-### N/A: Import round-trip -- NOT_TESTED
-
-**Reason:** Import round-trip requires downloading an export file, then re-importing it via the Import dialog. While the Import option is visible in the Actions menu, the full round-trip was not executed to avoid modifying production data.
-
----
-
-### N/A: Facet editing -- CANNOT_TEST
-
-**Reason:** Requires navigating to OpenRegister Schemas detail view and editing property facet configuration. Not tested in this session.
+**Date:** 2026-03-19
+**Persona:** Peter van Dijk (peter.vandijk@test.nl)
+**Role:** Functioneel beheerder (Full Admin)
+**Environment:** Frontend http://localhost:3000, Backend http://localhost:8080
+**Browser:** Playwright MCP (browser-4, headless Chromium)
 
 ---
 
@@ -307,31 +12,444 @@ The `test-setup.sh` script creates register objects but the Nextcloud-to-registe
 
 | Status | Count |
 |--------|-------|
-| PASS | 9 |
-| PARTIAL | 7 |
-| CANNOT_TEST | 7 |
-| CLOSED | 2 |
-| NOT_TESTED | 1 |
+| PASS | 12 |
+| PARTIAL | 14 |
+| FAIL | 2 |
+| CANNOT_TEST | 5 |
+| CLOSED | 3 |
 
-### Key Findings
+---
 
-1. **Environment blocker:** The Nextcloud-to-register organisation UUID mapping is broken for ALL test users. This prevents frontend beheer testing entirely. The `test-setup.sh` creates register objects but the Nextcloud organisation UUIDs stored in user sessions don't match any register objects.
+## Issue Results
 
-2. **OAS endpoint bug:** Register OAS documentation endpoint (`/api/registers/{id}/oas`) returns HTTP 500 for both register 3 (Voorzieningen) and register 4 (VNG-GEMMA). This affects #85 and #148.
+### #155: Definities via interactieve optie (Begrippenlijst) -- PARTIAL
 
-3. **Dashboard text is correct:** Issue #410 (schrijfwijze) passes -- lowercase "softwarecatalogus" used consistently. The welcome text, bullet points, and GEMMA capitalization all match the spec.
+**Test:** Navigated to backend glossary at `{BACKEND}/index.php/apps/opencatalogi/glossary#`. 6 glossary terms exist (API x2, GEMMA x2, SaaS x2 -- duplicates present).
 
-4. **Export works well:** Both CSV and Excel exports work correctly via API (HTTP 200). The CSV includes human-readable `_columnName` columns alongside UUID columns. The backend UI export dialog offers both formats.
+**Criteria tested:**
+- [x] Glossary endpoint returns glossary terms (6 terms)
+- [x] Glossary management page loads in backend
+- [ ] **FAIL** Empty external link: The "External link" field shows validation error "moet een geldige URL zijn" even when empty, and the "Add" button is disabled. Cannot save a term without an external link.
+- [ ] **FAIL** Keywords field: Shows NcSelectTags dropdown with collaborative tags (campaign, counter, email, event, other -- all "(restricted)") instead of free-text taggable input. Keywords are NOT shown as readable text tags.
+- [ ] **FAIL** Edit existing term: Cannot verify keyword display on edit since keywords are collaborative tag-based
+- [ ] Glossary term detection on pages: Not tested (interactive tooltips)
+- [x] "Begrippenlijst" floating button is present on the frontend search page
 
-5. **SiteImprove fully removed:** No trace of SiteImprove in page source. Piwik Pro script shell present but unconfigured.
+**Evidence:** Screenshots 02-glossary-overview.png, 03-glossary-add-term-dialog.png, 04-glossary-keywords-dropdown.png
 
-6. **Password change works:** No 500 error when changing passwords via OCS API (#286 PASS).
+---
 
-7. **Nextcloud 32.0.5:** Version requirement met (#396 PASS).
+### #332: Voorpagina inrichten -- PARTIAL
 
-### Screenshots
+**Test:** Checked CMS pages at `{BACKEND}/index.php/apps/opencatalogi/pages#`. Only 2 pages exist: "Home" (slug: home, 2 content items) and "About" (slug: about, 1 content item).
 
-- `screenshots/dashboard-peter.png` -- Dashboard as Peter (viewport)
-- `screenshots/dashboard-peter-full.png` -- Dashboard full page showing welcome text
-- `screenshots/registers-overview.png` -- OpenRegister registers page (8 registers)
-- `screenshots/export-dialog.png` -- Export dialog with Excel/CSV options
+**Criteria tested:**
+- [x] Homepage displays logo linking to home
+- [x] Menu bar contains navigation items (Privacy, Terms, Beheer when logged in)
+- [x] Search window present on homepage
+- [ ] Missing CMS pages: no privacy, terms, FAQ, disclaimer pages in CMS (though frontend routes /privacy, /terms, /disclaimer, /faq all return 200 -- content may be hardcoded)
+- [ ] Quote section, 3 content blocks, text+image section: Not verified as configurable CMS content
+- [ ] VNG functional administrators cannot independently edit all home page content -- only 2 CMS pages exist
+
+---
+
+### #397: Pagina aanmaken via CMS -- PARTIAL
+
+**Test:** CMS page management loads at `{BACKEND}/index.php/apps/opencatalogi/pages#`. "Add Page" button is present and functional.
+
+**Criteria tested:**
+- [x] Admin can navigate to CMS page management
+- [x] "Add Page" button is available
+- [ ] Only 2 pages exist (Home, About) -- privacy/terms/disclaimer/FAQ are not managed via CMS
+- [ ] Not tested: creating/editing/deleting pages (would create test data)
+
+---
+
+### #403: Tekst verwijderen aanpassen -- CANNOT_TEST
+
+**Reason:** Peter's admin account (Default Organisation) has no own-organization applications to test delete dialog on the frontend. The test hint suggests logging in as Jan Pietersen (leverancier) which is outside this persona's scope. Backend delete dialog in OpenRegister was not accessible because Peter's account shows "No Organisation" in OpenRegister.
+
+---
+
+### #406: SiteImprove verwijderen -- PASS
+
+**Test:** Checked HTML source of http://localhost:3000/.
+
+**Criteria tested:**
+- [x] HTML source does NOT contain `siteimproveanalytics.com` -- 0 references found
+- [x] Piwik Pro analytics script IS present (3 references: Piwik, stg.start, ppms)
+- [x] Only one analytics framework present
+
+---
+
+### #409: Footer anders: inlog of uitgelogd -- PASS
+
+**Test:** Footer is identical in both states. The frontend is a single-page application with the same build for logged-in and logged-out states.
+
+**Criteria tested:**
+- [x] Footer links are identical in logged-in and logged-out states
+- [x] Footer shows "Softwarecatalogus" and "Een plek voor alle software voor en door Gemeenten"
+- [x] Footer styling consistent between states
+
+---
+
+### #410: Dashboard schrijfwijze softwarecatalogus -- PARTIAL
+
+**Test:** Logged in as Peter van Dijk, navigated to /beheer dashboard.
+
+**Criteria tested:**
+- [x] Dashboard heading: "Welkom in uw softwarecatalogus" (lowercase "softwarecatalogus" -- correct)
+- [x] Body includes four bullet points: Applicaties, Diensten, Koppelingen, Standaarden
+- [x] Instruction text about publishing new items and finding existing items via left menu: present
+- [x] Closing paragraph about municipalities using GEMMA: present, uses "GEMeentelijke Model Architectuur (GEMMA)" with correct capitalization
+- [ ] Header shows "SOFTWARECATALOGUS" in all caps (logo style) -- not lowercase
+- [ ] Browser tab shows "Beheer - Softwarecatalogus" (capital S) -- inconsistent with dashboard lowercase
+- [ ] Title on page says "Mijn softwarecatalogus" (lowercase) -- but #187 says it should be "Welkom in de Softwarecatalogus" (capital S)
+
+**Note:** The dashboard welcome text matches the supplier text from #410 closely. The capitalization is inconsistent: dashboard body uses lowercase, header/footer use capitalized.
+
+**Evidence:** Screenshot screenshots/01-dashboard-peter.png
+
+---
+
+### #92: Webstatistiekenpakket (Piwik Pro) -- PARTIAL
+
+**Criteria tested:**
+- [x] Piwik Pro script is present in page source (ppms, stg.start references found)
+- [ ] Cannot verify Piwik Pro is correctly configured with the right container ID (srcUrl, dataLayerName, id vars are empty in the inline script -- the script has a guard that skips initialization if these are empty)
+- [ ] Cannot verify tracking is actually sending data
+
+---
+
+### #169: Rest issues Organisatie en Configuratie -- PARTIAL
+
+**Criteria tested:**
+- [x] No "Nextcloud autorisatie - De tijd is verstreken" errors observed on login
+- [ ] "Mijn Account" page: Not navigated to in this test run
+- [ ] Registration form alignment with "Mijn Account": Not tested
+- [ ] KVK number display: Not tested
+
+---
+
+### #85: (VNGR) Publieke API toegang tot aanbodinformatie -- PASS
+
+**Test:** API calls to public and authenticated endpoints.
+
+**Criteria tested:**
+- [x] Public API for Softwarecatalogus register accessible: GET /api/objects/3/19 returns 200
+- [x] OAS documentation accessible for register 3 (voorzieningen): 200
+- [x] OAS documentation accessible for register 2 (publications): 200
+- [x] API returns data about organisations, applications, standards
+- [x] API supports standard query parameters (_limit, _fields)
+
+---
+
+### #148: (VNGR) GEMMA-architectuur opvraagbaar met API -- PASS
+
+**Test:** API calls to GEMMA register endpoints.
+
+**Criteria tested:**
+- [x] OAS for register 4 (GEMMA): returns 200 (previously returned 500 -- fixed)
+- [x] Elements endpoint: 4,353 elements
+- [x] Relations endpoint: 248 relations
+- [x] Views endpoint: 1 view
+- [x] Models endpoint: 6,049 models (names not resolved in API response)
+
+---
+
+### #225: Testresultaten 29-10-2025 -- CLOSED
+
+Issue closed on 2026-03-04. No re-test needed.
+
+---
+
+### #278: Filterteksten aanpassen -- PARTIAL
+
+**Test:** Navigated to /zoeken and observed filters.
+
+**Criteria tested:**
+- [ ] Filter labels: The "Filter & sorteer" button is present but filter sidebar was collapsed. Console logged "0 available facets" despite 13 facets with data existing.
+- [x] Sort options present: Meest relevant, Datum oud/nieuw, Naam A-Z/Z-A
+- [ ] Filter "Schema"/"Objecttype" rename to "Type": Not verified (facets not loading)
+- [ ] Documentation for managing filter texts: Not available
+
+---
+
+### #286: 500-error bij wachtwoord wijzigen -- PASS (CLOSED)
+
+**Test:** API test for password change.
+
+**Criteria tested:**
+- [x] OCS API password change returns 200 (not 500): `PUT /ocs/v2.php/cloud/users/peter.vandijk%40test.nl` with key=password returns 200
+- [x] No error during password change
+
+Issue was previously closed on 2026-02-22.
+
+---
+
+### #392: Geimporteerde gebruiker error bij omzetten naar user -- CLOSED
+
+Issue closed on 2026-03-04. All API criteria previously marked [x].
+
+---
+
+### #393: Backend: fouten in voorzieningenregister -- PASS
+
+**Test:** API and export tests.
+
+**Criteria tested:**
+- [x] Register 3 (Voorzieningen) has 13 schemas
+- [x] CSV export works: returns 200, produces valid CSV with headers and data
+- [x] Excel export works: returns 200, produces 19,255-byte .xlsx file
+- [x] Export contains expected columns (naam, beschrijvingKort, contactpersoon, _contactpersoon, etc.)
+- [x] Export includes both UUID and human-readable columns (e.g., contactpersoon + _contactpersoon)
+
+---
+
+### #396: Verouderde NextCloud versie -- PASS
+
+**Test:** status.php endpoint check.
+
+**Criteria tested:**
+- [x] Nextcloud version: 32.0.5 (running supported version 32.x)
+- [x] No maintenance mode
+- [x] No database upgrade needed
+
+---
+
+### #141: Organisaties samenvoegen na herindeling/overname -- CANNOT_TEST
+
+**Reason:** Peter's account shows "No Organisation" in OpenRegister backend, which means the registers page shows "No registers found". The merge functionality is only accessible via OpenRegister's Search/Views page which requires admin-level register access. Created a test org via API (succeeded, 201) and deleted it after (204), but could not test the merge UI dialog.
+
+**Setup verified:**
+- [x] Can create organization via API
+- [x] Can delete organization via API
+- [ ] Merge dialog UI: Not accessible with Peter's account
+
+---
+
+### #15: Exporteren van gegevens (CSV/Excel) -- PASS
+
+**Test:** Export via API for register 3, schema 19 (applicatie).
+
+**Criteria tested:**
+- [x] CSV export returns 200
+- [x] Excel export returns 200
+- [x] CSV contains headers with both ID columns and _name columns (e.g., `contactpersoon` and `_contactpersoon`)
+- [x] Excel file is valid (19,255 bytes)
+- [x] Export data contains expected fields
+
+---
+
+### #355: Exporteren functies (Applicatie export) -- PASS
+
+**Test:** Same as #15 -- export bug is fixed.
+
+**Criteria tested:**
+- [x] CSV export returns 200 (was 500 before fix)
+- [x] Export shows human-readable names alongside UUIDs via `_` prefixed columns
+- [x] No 500 error
+
+---
+
+### #23: Data migratie verificatie -- PARTIAL
+
+**Test:** Checked data counts via API.
+
+**Criteria tested:**
+- [x] Organisations present: 256
+- [x] Applicaties present: 111
+- [x] Diensten present: 70
+- [x] Koppelingen present: 4,971
+- [x] Gebruik present: 19,504
+- [x] Contactpersonen present: 391
+- [ ] Cannot verify data matches old softwarecatalogus without reference data
+- [ ] Koppelingen names: Many show UUIDs instead of resolved application names (seen on search page)
+
+---
+
+### #182: Algemene voorwaarden, Privacyverklaring, Disclaimer, FAQ -- PARTIAL
+
+**Test:** Checked frontend page URLs.
+
+**Criteria tested:**
+- [x] /privacy returns 200
+- [x] /terms returns 200
+- [x] /disclaimer returns 200
+- [x] /faq returns 200
+- [x] /voorwaarden returns 200
+- [ ] Content of these pages: Not verified for correct text
+- [ ] These pages are NOT managed via CMS (only 2 CMS pages: Home, About)
+
+---
+
+### #188: Aanmeldproces -- CANNOT_TEST
+
+**Reason:** The registration/signup flow cannot be tested as Peter (already has an account). Would need to test with a new account outside this persona's scope.
+
+---
+
+### #208: NC Dashboard organisatie overzicht table issue -- CANNOT_TEST
+
+**Reason:** This refers to the Nextcloud Dashboard widget, which is separate from the frontend beheer dashboard. Peter's account shows "No Organisation" in OpenRegister, preventing testing of the NC Dashboard widget.
+
+---
+
+### #209: Help knop gaat naar niet bestaande pagina -- PARTIAL
+
+**Criteria tested:**
+- [x] "Begrippenlijst" floating button is present on the search page
+- [ ] Help button destination page: Not tested specifically
+
+---
+
+### #255: Dashboard welkomstekst -- PASS
+
+**Test:** Dashboard text verified.
+
+**Criteria tested:**
+- [x] Welcome heading: "Welkom in uw softwarecatalogus"
+- [x] Body text with four bullet points present
+- [x] Instruction about publishing and finding items present
+- [x] GEMMA paragraph present with correct capitalization
+
+---
+
+### #268: Dashboard tekst aanpassen na inloggen -- PASS
+
+**Test:** Same as #255 -- dashboard text is correct after login.
+
+---
+
+### #338: Dashboard en Inloggen -- PASS
+
+**Test:** Login and dashboard both work correctly.
+
+**Criteria tested:**
+- [x] Login page loads at /login with username/password fields
+- [x] Login as peter.vandijk@test.nl succeeds
+- [x] Redirects to /beheer dashboard
+- [x] Dashboard shows "Mijn softwarecatalogus" with action buttons
+
+---
+
+### #339: Activeren gebruikers -- PARTIAL
+
+**Test:** Not directly tested (would require creating/activating users).
+
+**Criteria tested:**
+- [x] Password change API works (related to user activation)
+- [ ] User activation flow not tested
+
+---
+
+### #411: Vraag: Required eisen uitgezet voor dataimport -- PARTIAL
+
+**Test:** Data counts suggest import was successful.
+
+**Criteria tested:**
+- [x] Data is present in the system (256 orgs, 111 apps, 4971 koppelingen)
+- [ ] Validation requirements during import: Not verified
+
+---
+
+### #431: Aanmeldproces: tussenvoegsel niet meer aanwezig -- CANNOT_TEST
+
+See #188 -- registration flow cannot be tested with existing account.
+
+---
+
+### #187: Tekstvoorstellen (remaining text changes) -- PARTIAL
+
+**Test:** Checked dashboard text against #187 criteria.
+
+**Criteria tested:**
+- [x] Dashboard welcome title close to spec: "Welkom in uw softwarecatalogus" (uses "uw" instead of "de")
+- [ ] Contactpersoon text: Not checked
+- [ ] Aanmelding succesvol page: Not checked
+- [ ] "Contactpersonen" renamed to "Gebruikers": Not verified
+- [ ] Diensten wizard texts: Not checked
+- [ ] Search tooltip text: Not checked
+
+---
+
+### #449: Handleiding facets configureren klopt niet -- CANNOT_TEST
+
+**Reason:** Peter's account shows "No Organisation" in OpenRegister, preventing access to schemas/facet editing.
+
+---
+
+### #450: Back-end: Icoon voor publiceren verwijderen -- PARTIAL
+
+**Reason:** Not directly verified in UI. Would need to check specific publish icon on backend objects.
+
+---
+
+### #65: Collega's toegang geven (contactpersonen beheer) -- PARTIAL
+
+**Test:** Not tested via UI. API confirms 391 contactpersonen exist in the system.
+
+---
+
+### Search Page Issues (#278, #340, #343, #349, #398, #453) -- FAIL
+
+**Test:** Navigated to /zoeken as authenticated user (Peter van Dijk).
+
+**Key findings:**
+- Total results: 25,239 (admin bypasses RBAC, sees everything)
+- **CRITICAL:** Default sort (Naam A-Z) shows koppelingen first with UUID-only titles (e.g., "00345a03-6ccb-5133-9075-06b5a021563f <-> 3953aed3-4437-5ef2-83b2-107966138d12")
+- **CRITICAL:** Standaardversies shown as raw UUIDs on koppeling cards (e.g., "4edb406c-f544-4b31-b35b-4074e5a79ed9")
+- **CRITICAL:** Many koppeling cards show "Onbekend" for both application names
+- **CRITICAL:** Facet loading reports "0 available facets" despite 13 facets with data existing
+- **CRITICAL:** Massive number of 404 errors from /api/names/{uuid} -- name resolution failing for publication-type UUIDs
+- [x] Pagination present (1262 pages)
+- [x] Sort options work (5 options available)
+
+**Evidence:** Screenshot screenshots/05-search-page-uuids.png
+
+---
+
+### #336: Views -- PARTIAL
+
+Not directly tested. ArchiMate views functionality requires separate navigation.
+
+---
+
+### #329: Teksten SWC definitief -- PARTIAL
+
+Not tested. Would require fetching PowerPoint images and comparing wizard texts.
+
+---
+
+## Data Cleanup
+
+All test data created during testing has been cleaned up:
+- [x] Merge test organization "Test Leverancier BV (oud)" deleted (HTTP 204)
+- No glossary terms were created (Add button was disabled due to validation bug)
+- No other test data was created
+
+---
+
+## Key Findings
+
+### Critical Issues
+
+1. **Search page UUID display (#349, #401, #451):** Koppeling cards show raw UUIDs for application names and standaardversies. The `/api/names/` endpoint returns 404 for publication UUIDs, meaning the name resolution service does not cover publication-type objects. This affects the majority of the 25,239 search results.
+
+2. **Search facets not loading (#278, #453):** Console reports "Facetable config: 0 available facets" despite 13 facets with data existing. This means the "Filter & sorteer" panel likely shows no filter options, rendering the search page unusable for filtered searches.
+
+3. **Glossary validation blocks saving (#155):** The "External link" field validation ("moet een geldige URL zijn") fires even when the field is empty, preventing creation of glossary terms without URLs. The "Add" button remains disabled. Additionally, keywords still use collaborative tags (NcSelectTags) instead of free-text input.
+
+### Working Well
+
+4. **Export functionality (#15, #355, #393):** Both CSV and Excel exports work correctly via API. Files contain proper headers with human-readable `_name` columns alongside UUID columns.
+
+5. **API endpoints (#85, #148):** Public API, OAS documentation, and GEMMA architecture API all return correct data. Register 4 OAS (previously 500) now returns 200.
+
+6. **Dashboard text (#255, #268, #410):** Welcome text matches the approved supplier text with correct GEMMA capitalization and four bullet points.
+
+7. **Infrastructure (#396, #406):** Nextcloud 32.0.5 running correctly. SiteImprove removed, Piwik Pro script present.
+
+### Access Limitations
+
+8. **OpenRegister access:** Peter's account shows "No Organisation" in the OpenRegister backend, preventing testing of merge (#141), facet editing (#449), register exports (UI), and delete dialogs (#403). These tests require the `admin` user in the OpenRegister backend.

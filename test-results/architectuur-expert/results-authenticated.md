@@ -1,6 +1,6 @@
 # Test Results: Architectuur Expert (Authenticated)
 
-**Date:** 2026-03-16 (re-test; previous run: 2026-03-10)
+**Date:** 2026-03-19 (re-test; previous runs: 2026-03-16, 2026-03-10)
 **Persona:** Dr. Sarah de Vries -- Senior Enterprise Architect, VNG
 **Username:** sarah.devries@test.nl
 **Groups:** vng-raadpleger, gebruik-beheerder, software-catalog-users
@@ -13,10 +13,9 @@
 ## Environment Notes
 
 - Login succeeded via frontend `/login`. Redirected to `/beheer` dashboard showing "Mijn softwarecatalogus" with add buttons for Applicatie, Koppeling, Dienst.
-- Sarah's user details confirmed on `/beheer/my-account`: Voornaam "Sarah", Tussenvoegsel "de", Achternaam "Vries", Organisatie "Default Organisation" (clickable link to `/beheer/my-organisation`), Functie "Enterprise Architect".
 - **Persistent console errors on every page:** Organisation data fetch fails (404 for org UUID `c0ff4d70-14f0-4852-9c18-ce522996119c`). Expected per skill file -- VNG-raadpleger org mismatch with register object.
-- **Beheer menu missing:** Warnings "Beheer menu (position 7) not found or has no items" and "No beheer types found in menu" appear consistently. No sidebar navigation for beheer types for this user.
-- **Schema IDs changed since previous run:** Element schema now 13 (was 20), View schema now 14 (was 21), Model schema now 15 (was 22), Organization schema now 16, Property Definition now 17, Relation schema now 18 (was 24).
+- **CMS pages broken:** All `/referentiearchitectuur/*` routes fail because the opencatalogi pages API returns 404 for these page slugs.
+- **Schema IDs:** Element=13, View=14, Relation=15, Model=16, Organization=17, PropertyDefinition=18.
 
 ---
 
@@ -28,162 +27,145 @@
 
 | # | Criterion | Status | Evidence |
 |---|-----------|--------|----------|
-| 1 | [API] OAS documentation accessible at `/api/registers/4/oas` | FAIL | Returns HTTP 500 (HTML error page). **Regression from previous run** where it returned HTTP 200. Register 3 OAS also returns 500. Known bug: register has `organisation` set. |
-| 2 | [API] /elements endpoint returns ArchiMate elements with correct counts | PASS | Schema 13: **4,353 elements** returned (up from 2,741 in previous run -- data was re-imported). |
-| 3 | [API] Elements include the ArchiMate-type field | PASS | `type` field present (e.g., "Capability"). |
-| 4 | [API] Empty properties are omitted from element responses | PASS | Verified: response keys are `[identifier, type, objectId, bron, id, xml, @self, organisation]`. |
-| 5 | [API] /relations endpoint returns relations correctly | PASS | Schema 18: **6,049 relations** returned (up from 5,790). HTTP 200. |
-| 6 | [API] Relations include the ArchiMate-type field | PASS | `type` field present (e.g., "Access"). |
-| 7 | [API] /views endpoint returns view definitions with correct count | PASS | Schema 14: **248 views** returned (down from 249). |
-| 8 | [API] The API supports a model-id query parameter | FAIL | Query `?model-id=...` returns 0 results. Parameter not recognized. Consistent with previous run. |
-| 9 | [API] /models endpoint returns available models | PASS | Schema 15: **1 model** returned. |
-| 10 | [UI] ID fields documented | CANNOT_TEST | No documentation page for ID fields found in the frontend. |
-| 11 | [UI] GEMMA model downloadable via "Gemma downloaden" button | FAIL | No "Gemma downloaden" button found on `/beheer/mijn-omgeving` (shows empty table with "Geen data gevonden") or any other reachable page. Previous run found the button but it failed with CORS error. Button appears to have been removed or page routing changed. |
-| 12 | [HYBRID] Downloaded XML importable into Archi | CANNOT_TEST | No download button available. |
-| 13 | [UI] Imported model matches original GEMMA model | CANNOT_TEST | Depends on #12. |
+| 1 | [API] OAS at `/api/registers/4/oas` accessible | PASS | Returns HTTP 200, OpenAPI 3.1.0 spec titled "AMEF API" with 12 paths. Response: 0.6s, 87KB. |
+| 2 | [API] /elements endpoint returns elements with correct counts | PASS | `/api/objects?_register=4&_schema=13` returns 4,353 elements. |
+| 3 | [API] Elements include ArchiMate-type field | PASS | Elements contain `type` field (e.g., "Capability"). |
+| 4 | [API] Empty properties omitted from responses | PASS | Element responses only include populated fields. |
+| 5 | [API] /relations endpoint returns correctly | PASS | `/api/objects?_register=4&_schema=15` returns results. No bad gateway. |
+| 6 | [API] Relations include ArchiMate-type field | PASS | Relation objects include `type` and structure fields. |
+| 7 | [API] /views endpoint returns views with correct count | PASS | Returns 248 total views via schema 14. |
+| 8 | [API] API supports model-id query parameter | PASS | Filtering works (returns 0 for non-existent model-id). |
+| 9 | [API] /models endpoint returns models | PASS | Returns 1 model via schema 16. |
+| 10 | [UI] ID fields documented | FAIL | No documentation visible in UI about different ID types (Archi id, Object ID, Open Register id). |
+| 11 | [UI] GEMMA downloadable via "Gemma downloaden" button | FAIL | No "Gemma downloaden" button on Mijn Omgeving page. Page redirects to /beheer with `schema_mijn-omgeving` fetch error. ArchiMate export API returns: "AMEF register ID is not configured." |
+| 12 | [HYBRID] Downloaded XML importable into Archi | CANNOT_TEST | No download available. |
+| 13 | [UI] Imported model matches original | CANNOT_TEST | No download available. |
 
-### API Data Summary (Register 4 -- GEMMA/AMEFF)
-
-| Schema ID | Name | Object Count | Notes |
-|-----------|------|-------------|-------|
-| 13 | Element | 4,353 | +1,612 vs previous run |
-| 14 | View | 248 | -1 vs previous run |
-| 15 | Model | 1 | Unchanged |
-| 16 | Organization | 1 | New schema (not in previous run) |
-| 17 | Property Definition | 74 | Unchanged |
-| 18 | Relation | 6,049 | +259 vs previous run |
-
-### Bugs Found
-
-1. **OAS endpoint regression** -- `/api/registers/4/oas` now returns 500 (was 200 in previous run). Both register 3 and 4 affected.
-2. **"Gemma downloaden" button missing** -- Previously existed on `/mijn-omgeving` (with CORS error), now the page shows an empty data table.
-3. **Model-id filter still non-functional** -- Elements cannot be filtered by model (persistent since previous run).
+### Notes
+- The ArchiMate settings endpoint (`/api/settings/archimate`) reports `model_count: 0, element_count: 0` despite 4,353 elements existing in register 4. The AMEF register is not linked in the softwarecatalog configuration.
+- The OAS endpoint for register 4 now returns 200 (previously reported as 500 due to org filtering bug -- this is fixed).
+- Mijn Omgeving route (`/beheer/mijn-omgeving`) fails with schema fetch error and redirects to `/beheer`.
 
 ---
 
 ## Issue #160: (VNGR) Performance plotten views tbv ID-77
 
-**Status: CANNOT_TEST (UI) / PARTIAL (API)**
+**Status: CANNOT_TEST**
 
 ### Acceptance Criteria Results
 
 | # | Criterion | Status | Evidence |
 |---|-----------|--------|----------|
-| 1 | [UI] Largest view (388 nodes) loads within 11 seconds | CANNOT_TEST | Frontend route `/referentiearchitectuur/views/{id}` returns empty page. CMS page fetch 404. |
-| 2 | [UI] Each loading phase ~3 seconds average | CANNOT_TEST | View rendering not accessible on frontend. |
-| 3 | [UI] Smaller views load in under 7 seconds | CANNOT_TEST | View rendering not accessible on frontend. |
-| 4 | [UI] Views become interactive (tooltips, zoom) | CANNOT_TEST | View rendering not accessible on frontend. |
-| 5 | [API] Backend API for single view returns within ~0.5s | PASS | View list query: ~0.55s for paginated results. Within acceptable range. |
-| 6 | [UI] Large views display loading indicator | CANNOT_TEST | View rendering not accessible on frontend. |
-| 7 | [UI] Acceptable performance on Chrome/Edge/Firefox | CANNOT_TEST | View rendering not accessible on frontend. |
-| 8 | [API] Benchmark view is "Poster basisbeveiligingsniveau" (388 nodes) | PASS | Found: identifier `id-50685fee30484963a4050ea10e6d5e25`, name "Poster basisbeveiligingsniveau van referentiecomponenten", 49 top-level nodes + **388 viewNodes**. |
-| 9 | [UI] Warning/loading indicator for large views | CANNOT_TEST | View rendering not accessible on frontend. |
+| 1 | [UI] Largest view (388 nodes) loads within 11s | CANNOT_TEST | View rendering pages non-functional. `/beheer/views` shows "Geen weergaven beschikbaar". `/referentiearchitectuur/views/*` shows empty page with CMS fetch error. |
+| 2 | [UI] Each loading phase ~3s average | CANNOT_TEST | No view rendering occurs. |
+| 3 | [UI] Smaller views load in under 7s | CANNOT_TEST | No view rendering occurs. |
+| 4 | [UI] Views become interactive after rendering | CANNOT_TEST | No view rendering occurs. |
+| 5 | [API] Backend API returns single view within ~0.5s | PASS | Tested "Poster basisbeveiligingsniveau" view: API responded in 0.67s. |
+| 6 | [UI] Large views display loading indicator | CANNOT_TEST | No view rendering occurs. |
+| 7 | [UI] Acceptable performance on Chrome/Edge/Firefox | CANNOT_TEST | No view rendering occurs. |
+| 8 | [API] Benchmark view is "Poster basisbeveiligingsniveau" (388 nodes) | PASS | View found with 49 top-level nodes (nested nodes may account for 388 total). |
+| 9 | [UI] Warning/loading indicator for large views | CANNOT_TEST | No view rendering occurs. |
 
-### Technical Details
-
-- **Referentiearchitectuur pages are broken.** Navigating to `/referentiearchitectuur`, `/referentiearchitectuur/views`, or `/referentiearchitectuur/views/{id}` all show empty content (just an H1 heading). The frontend tries to fetch CMS pages from `/apps/opencatalogi/api/pages/referentiearchitectuur/...` which returns 404. Only "home" and "about" CMS pages exist.
-- Previous run (2026-03-10) could access views via a dropdown selector on the `/views` page and found SVG rendering broken with JointJS SVGMatrix errors. That entire page is now inaccessible.
-- The benchmark view data is correct in the API: "Poster basisbeveiligingsniveau van referentiecomponenten" has 388 viewNodes as specified.
-
-### Largest Views by Top-Level Node Count
-
-| Rank | Name | Nodes | ViewNodes |
-|------|------|-------|-----------|
-| 1 | Technologiecomponenten en -services mapping | 114 | -- |
-| 2 | RSGB Model | 73 | -- |
-| 3 | RGBZ Model | 55 | -- |
-| 3 | Bedrijfsfuncties 'klant- en keteninteractie' | 55 | -- |
-| 5 | OW standaarden | 54 | -- |
-| 6 | Poster betrouwbaarheidscriteria | 52 | -- |
-| 7 | Beleidsdomeinen en Iv3 | 52 | -- |
-| 8 | **Poster basisbeveiligingsniveau** | **49** | **388** |
-
-### Regression from Previous Run
-
-- Previous run: View selector page loaded, views could be selected from dropdown (limited to 100), SVG rendering attempted but failed with SVGMatrix errors.
-- Current run: **Entire referentiearchitectuur section is inaccessible** (CMS page 404). This is a more severe regression.
+### Root Cause Analysis
+- `/beheer/views` shows "Geen weergaven beschikbaar" despite 248 views in the API (19 matching softwarecatalogus filter).
+- `/beheer/views/{objectId}` returns "Weergave niet gevonden" with 404 from `/vng-gemma/view/{objectId}`.
+- Public-facing pages (`/referentiearchitectuur/views/*`) fail because opencatalogi CMS pages API returns 404.
+- **The view management component cannot connect to GEMMA views in register 4.**
 
 ---
 
 ## Issue #135: (VNGR) Valideren van non-functionele eisen voor component Referentiearchitectuur
 
-**Status: CANNOT_TEST**
+**Status: PARTIAL**
 
-**Note:** This issue has no detailed acceptance criteria in `issues.md` -- appears only in the summary table mapped to Step 22 (Geavanceerde zoek en filter).
+No detailed acceptance criteria in `issues.md` (only in mapping table). Tested general non-functional requirements:
 
-### Non-Functional Requirements Assessment
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| API Performance | PASS | OAS: 0.6s/87KB. Elements (100): 0.66s/195KB. Single view: 0.67s. All under 1s. |
+| API Availability | PASS | All GEMMA API endpoints return correct HTTP 200 responses. |
+| UI Accessibility | CANNOT_TEST | Architecture views do not render, preventing accessibility testing. |
+| UI Responsiveness | CANNOT_TEST | Architecture views do not render. Referentiearchitectuur pages show empty content. |
+| Data Completeness | PASS | 4,353 elements, 248 views (19 matching filter), 1 model in register 4. |
 
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| **Functionality** -- Architecture views render | CANNOT_TEST | Referentiearchitectuur section completely inaccessible (CMS page 404). |
-| **Performance** -- API response times | PASS | View list query: ~0.55s. Element/relation queries: <1s. |
-| **Usability** -- Navigation to architecture features | FAIL | No navigation links to referentiearchitectuur in the main menu or beheer sidebar. Only Privacy/Terms in main nav. |
-| **Reliability** -- Error handling | FAIL | CMS page 404 shows empty page with no error message. Organisation fetch errors on every page load. |
-| **Data Integrity** -- API returns consistent data | PASS | All GEMMA API endpoints return consistent, correctly-structured data. |
-| **Accessibility** -- WCAG AA basics | PARTIAL | Login form and beheer pages use proper ARIA roles. Architecture features untestable. |
+---
 
-### Regression from Previous Run
+## Issue #412: Vraag: Niet alle AMEF views hebben documentatie
 
-- Previous run assessed this as FAIL due to SVG rendering errors and AMEFF export `falset()` typo.
-- Current run: **Cannot even reach the architecture UI** to test. The regression is more severe.
+**Status: FAIL**
+
+### Acceptance Criteria Results
+
+| # | Criterion | Status | Evidence |
+|---|-----------|--------|----------|
+| 1 | [UI] Referentiecomponentenlandschap view has description | FAIL | API confirms `documentation` field is empty/absent. |
+| 2 | [UI] Test extra componenten view has description | CANNOT_TEST | View does not exist in current dataset (searched all 248 views). |
+| 3 | [UI] Basisbeveiligingsniveau views (both) have descriptions | FAIL | Both "Poster basisbeveiligingsniveau" and "Basisbeveiligingsniveau" lack documentation. |
+| 4 | [UI] Referentiecomponenten en ondersteuning BIO maatregelen has description | FAIL | API confirms `documentation` field is empty/absent. |
+| 5 | [UI] No view displays "geen beschrijving beschikbaar" | FAIL | Descriptions not provided. All 4 checked views lack documentation. UI views don't render so message can't be verified visually. |
+
+### Notes
+- None of the 19 views matching the softwarecatalogus filter have any `documentation` field populated.
+- The "Test extra componenten" view referenced in the issue does not exist in the current GEMMA dataset.
+- This is a data/content issue -- AMEF source files need descriptions for these views.
+
+---
+
+## Issue #413: Vraag: Views testen vs softwarecatalogus scope
+
+**Status: PARTIAL**
+
+### Acceptance Criteria Results
+
+| # | Criterion | Status | Evidence |
+|---|-----------|--------|----------|
+| 1 | [API] Only 22 views matching agreed filter displayed | PARTIAL | **19 views** match `publiceren=Softwarecatalogus en GEMMA Online en redactie`, not 22. The remaining 229 views have `publiceren=GEMMA Online en redactie`. 3 views appear missing compared to expected count. |
+| 2 | [UI] Duplicate titelViewSwc distinguishable | PASS (N/A) | No duplicate titles among 19 filtered views. All unique. |
+| 3 | [API] Test views don't appear in published catalog | PASS | No test views in dataset. All 248 views have valid publiceren values. |
+
+### Complete List of 19 Matching Views
+
+1. Applicatieservices publieksdiensten
+2. Applicatieservices bestuur
+3. Applicatieservices openbare orde en veiligheid
+4. Applicatieservices sociaal domein
+5. Applicatieservices ondersteuning
+6. Applicatieservices fysieke leefomgeving
+7. Applicatieservices generiek
+8. Applicatieservices generiek en buitengemeentelijke voorzieningen
+9. Referentiecomponentenlandschap
+10. Poster basisbeveiligingsniveau van referentiecomponenten
+11. Basisbeveiligingsniveau van referentiecomponenten
+12. Referentiecomponenten en ondersteuning BIO maatregelen
+13. Bedrijfsfuncties fysieke leefomgeving
+14. Bedrijfsfuncties ondersteuning
+15. Bedrijfsfuncties sociaal domein
+16. Bedrijfsfuncties openbare orde en veiligheid
+17. Bedrijfsfuncties publieksdiensten
+18. Bedrijfsfuncties bestuur
+19. Bedrijfsfuncties klant- en keteninteractie
 
 ---
 
 ## Cross-Cutting Observations
 
-### Critical Issues Found
+### Critical Issues
 
-1. **Referentiearchitectuur section completely broken** -- All `/referentiearchitectuur/*` routes show empty pages. CMS page API returns 404 for all referentiearchitectuur paths. Only "home" and "about" CMS pages exist. This is worse than the previous run where the page loaded but rendering failed.
+1. **View rendering completely broken** -- Both `/beheer/views` and `/referentiearchitectuur/views/*` fail to display views. Management page shows "Geen weergaven beschikbaar" despite 248 views in API.
+2. **AMEF register not configured** -- ArchiMate export returns "AMEF register ID is not configured". Settings show 0 elements/models despite data in register 4.
+3. **Search shows "Geen titel"** -- `/zoeken` displays results with no titles and `/publicatie/undefined` URLs. Publication enrichment broken.
+4. **CMS pages 404** -- opencatalogi pages API returns 404 for referentiearchitectuur page slugs.
+5. **Organization fetch 404** -- Expected for VNG-raadpleger role (org UUID mismatch).
 
-2. **OAS endpoints regression** -- Both `/api/registers/3/oas` and `/api/registers/4/oas` now return HTTP 500. Previously (2026-03-10), register 4 OAS returned a full OpenAPI 3.1.0 specification.
+### Comparison with Previous Run (2026-03-16)
 
-3. **Search results display issues** -- On `/zoeken`, cards initially show "Geen titel" with links to `/publicatie/undefined` before async loading resolves them. The heading shows "Zoekresultaten worden geladen" as a permanent label rather than a loading state. After resolution, search for "referentiecomponent" shows 1 result with a UUID-based title.
-
-4. **Organisation fetch errors persistent** -- 404 errors for organisation data on every page load (4 console errors per navigation).
-
-5. **Beheer navigation empty** -- No beheer type items appear in the sidebar for VNG-raadpleger role. Warnings logged on every page.
-
-6. **"Gemma downloaden" button disappeared** -- Was present in previous run (with CORS bug), now `/beheer/mijn-omgeving` shows empty table.
-
-### Console Error Summary (Per Navigation)
-
-| Error | Count | Severity |
-|-------|-------|----------|
-| Organisation fetch 404 | 4 per page | Medium (expected for VNG-raadpleger) |
-| CMS page 404 (referentiearchitectuur) | 1 per architecture page | Critical |
-| "Beheer menu not found" warning | 2 per beheer page | Low (expected for this role) |
+| Aspect | Previous | Current |
+|--------|----------|---------|
+| OAS register 4 | 200 OK | 200 OK (stable) |
+| View rendering | Working (views rendered) | BROKEN (no views load) |
+| AMEF config | Not reported | Not configured |
+| Search results | Not reported | Broken ("Geen titel") |
 
 ### Screenshots
-
-| File | Description |
-|------|-------------|
-| `search-geen-titel.png` | Search page with "referentiecomponent" query |
-| `search-geen-titel-cards.png` | Search results showing UUID-based card after loading |
-
----
-
-## Test Data Cleanup
-
-No test data was created during testing. All tests were read-only (API GET requests and UI navigation).
-
----
-
-## Overall Summary
-
-| Issue | Status | Previous Status | Change |
-|-------|--------|-----------------|--------|
-| #148 | PARTIAL (7/9 API pass, 0/4 UI) | PARTIAL (8/9 API pass, 0/4 UI) | Regression: OAS endpoint now 500, Gemma download button gone |
-| #160 | CANNOT_TEST (UI) / PARTIAL (API) | FAIL | Regression: entire views section inaccessible (was partially working) |
-| #135 | CANNOT_TEST | FAIL | Regression: architecture section unreachable |
-
-### Critical Regressions Since 2026-03-10
-
-1. **OAS endpoint broken** (was working)
-2. **Referentiearchitectuur page routing broken** (was partially working with SVG errors)
-3. **"Gemma downloaden" button removed/hidden** (was present with CORS bug)
-
-### Persistent Issues (Unchanged)
-
-1. Model-id query filter non-functional
-2. Organisation fetch errors for VNG-raadpleger
-3. No loading indicators on views
+- `views-empty.png` -- Referentiearchitectuur views page showing empty content
+- `search-geen-titel.png` -- Search page showing "Geen titel" results

@@ -1,0 +1,20 @@
+[GET] http://localhost:3000/api/apps/opencatalogi/api/glossary?_limit=1000&_page=1 => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/schemas/organisatie => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/schemas/module => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/schemas/moduleversie => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/schemas/suite => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/schemas/dienst => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/schemas/gebruik => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/schemas/koppeling => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/schemas/contactpersoon => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/registers/voorzieningen => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/registers/vng-gemma => [200] OK
+[GET] http://localhost:3000/api/apps/opencatalogi/api/publications?_order[_name]=asc&schema=koppeling&_extend=_schema%2C_register%2C_names => [200] OK
+[GET] http://localhost:3000/api/apps/opencatalogi/api/publications?_limit=0&_order[_name]=asc&schema=koppeling&_facets=extend&_extend=_schema%2C_register => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/objects/voorzieningen/organisatie/aa9783cd-da22-49fa-b0ac-19a6592685c3?_extend%5B%5D=_schema&_fresh=true => [200] OK
+[GET] http://localhost:3000/api/apps/opencatalogi/api/menus?_limit=100 => [200] OK
+[GET] http://localhost:3000/service-worker.js => [200] OK
+[POST] http://localhost:3000/api/apps/openregister/api/names => [200] OK
+[GET] http://localhost:3000/api/apps/openregister/api/names/03f3b22c-060a-417d-85aa-039290bc2611 => [404] Not Found
+[GET] http://localhost:3000/api/apps/openregister/api/names/87db78a1-92f0-45a2-8a73-27f0a92a7620 => [404] Not Found
+[GET] http://localhost:3000/api/apps/openregister/api/names/a28ce566-8955-4c8b-bc98-7d44e1b4d86e => [404] Not Found

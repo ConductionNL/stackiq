@@ -926,24 +926,51 @@ if [ -n "$LISTING_SCHEMA" ] && [ -n "$CATALOG_SCHEMA" ]; then
         "${NC_URL}/index.php/apps/opencatalogi/api/catalogi" 2>&1 | \
         python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('total',0))" 2>/dev/null || echo "0")
 
+    # Get voorzieningen register ID and all schema IDs from softwarecatalog config
+    VOORZ_CONFIG=$(docker exec nextcloud php occ config:app:get softwarecatalog voorzieningen_config 2>/dev/null || echo "{}")
+    VOORZ_REGISTER=$(echo "$VOORZ_CONFIG" | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('register','3'))" 2>/dev/null || echo "3")
+    # Extract all schema IDs from voorzieningen_config (dienst, module, koppeling, organisatie, etc.)
+    VOORZ_SCHEMAS=$(echo "$VOORZ_CONFIG" | python3 -c "
+import sys, json
+cfg = json.loads(sys.stdin.read())
+schemas = [v for k, v in cfg.items() if k.endswith('_schema')]
+print(json.dumps(schemas))
+" 2>/dev/null || echo '["19","11","7","8","9","5","4","20","21","3"]')
+
     if [ "$CATALOG_COUNT" = "0" ]; then
-        echo "  Creating default catalog..."
+        echo "  Creating default catalog with all voorzieningen schemas..."
         CATALOG_RESULT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
             "${NC_URL}/index.php/apps/openregister/api/objects/${CATALOG_REGISTER}/${CATALOG_SCHEMA}" \
             -H "Content-Type: application/json" \
-            -d '{
-                "title": "Softwarecatalogus",
-                "slug": "softwarecatalogus",
-                "description": "GEMMA Softwarecatalogus - de catalogus voor gemeentelijke software",
-                "listed": true
-            }' 2>&1)
+            -d "{
+                \"title\": \"Softwarecatalogus\",
+                \"slug\": \"softwarecatalogus\",
+                \"description\": \"GEMMA Softwarecatalogus - de catalogus voor gemeentelijke software\",
+                \"listed\": true,
+                \"registers\": [\"${VOORZ_REGISTER}\"],
+                \"schemas\": ${VOORZ_SCHEMAS},
+                \"status\": \"stable\"
+            }" 2>&1)
         CATALOG_UUID=$(echo "$CATALOG_RESULT" | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('uuid',''))" 2>/dev/null || echo "")
-        echo "  Catalog: ${CATALOG_UUID:-FAILED}"
+        echo "  Catalog: ${CATALOG_UUID:-FAILED} (schemas: ${VOORZ_SCHEMAS})"
     else
         echo "  Catalog already exists ($CATALOG_COUNT)"
         CATALOG_UUID=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
             "${NC_URL}/index.php/apps/opencatalogi/api/catalogi" 2>&1 | \
-            python3 -c "import sys,json; r=json.loads(sys.stdin.read()).get('results',[]); print(r[0]['uuid'] if r else '')" 2>/dev/null || echo "")
+            python3 -c "import sys,json; r=json.loads(sys.stdin.read()).get('results',[]); print(r[0]['id'] if r else '')" 2>/dev/null || echo "")
+
+        # Ensure catalog has all voorzieningen schemas (fix missing schemas like dienst)
+        if [ -n "$CATALOG_UUID" ]; then
+            echo "  Updating catalog schemas to include all voorzieningen schemas..."
+            curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X PUT \
+                "${NC_URL}/index.php/apps/openregister/api/objects/${CATALOG_REGISTER}/${CATALOG_SCHEMA}/${CATALOG_UUID}" \
+                -H "Content-Type: application/json" \
+                -d "{
+                    \"registers\": [\"${VOORZ_REGISTER}\"],
+                    \"schemas\": ${VOORZ_SCHEMAS}
+                }" > /dev/null 2>&1
+            echo "  Catalog updated with schemas: ${VOORZ_SCHEMAS}"
+        fi
     fi
 
     # Create a listing that exposes voorzieningen/module as publications
