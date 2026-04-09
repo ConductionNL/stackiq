@@ -28,3 +28,7 @@
 
 # Sync timestamp (local only)
 .last-update
+
+# Test/build artifacts
+.docusaurus
+.phpunit.result.cache
