@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 const { VueLoaderPlugin } = require('vue-loader')
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 
 const buildMode = process.env.NODE_ENV
 const isDev = buildMode === 'development'
@@ -28,41 +29,40 @@ webpackConfig.entry = {
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const useLocalLib = fs.existsSync(localLib)
 
-webpackConfig.resolve = {
-	extensions: ['.ts', '.tsx', '.vue', '.js'],
-	alias: {
-		'@': path.resolve(__dirname, 'src'),
-		...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
-		// Deduplicate shared packages so the aliased library source uses
-		// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
-		'vue$': path.resolve(__dirname, 'node_modules/vue'),
-		'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
-		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
+webpackConfig.resolve = webpackConfig.resolve || {}
+webpackConfig.resolve.modules = [path.resolve(__dirname, 'node_modules'), 'node_modules']
+webpackConfig.resolve.alias = {
+	...(webpackConfig.resolve.alias || {}),
+	'@': path.resolve(__dirname, 'src'),
+	...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
+	// Deduplicate shared packages so the aliased library source uses
+	// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
+	'vue$': path.resolve(__dirname, 'node_modules/vue'),
+	'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
+	'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
+}
+
+webpackConfig.module.rules.push(
+	{
+		test: /\.vue$/,
+		loader: 'vue-loader',
 	},
-}
+	{
+		test: /\.ts$/,
+		loader: 'ts-loader',
+		exclude: /node_modules/,
+		options: { appendTsSuffixTo: [/\.vue$/] },
+	},
+	{
+		test: /\.css$/,
+		use: ['style-loader', 'css-loader'],
+	},
+)
 
-webpackConfig.module = {
-	rules: [
-		{
-			test: /\.vue$/,
-			loader: 'vue-loader',
-		},
-		{
-			test: /\.ts$/,
-			loader: 'ts-loader',
-			exclude: /node_modules/,
-			options: { appendTsSuffixTo: [/\.vue$/] },
-		},
-		{
-			test: /\.css$/,
-			use: ['style-loader', 'css-loader'],
-		},
-	],
-}
-
-webpackConfig.plugins = [
+webpackConfig.plugins.push(
 	new VueLoaderPlugin(),
-]
+	new NodePolyfillPlugin({ additionalAliases: ['process'] }),
+)
 
 // Force @nextcloud/dialogs to resolve from this app's node_modules,
 // preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.

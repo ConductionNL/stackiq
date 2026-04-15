@@ -27,7 +27,7 @@
 			<MainMenu />
 			<Views />
 			<CnIndexSidebar
-				v-if="sidebarState.active"
+				v-if="sidebarState.active && !objectSidebarState.active"
 				:schema="sidebarState.schema"
 				:visible-columns="sidebarState.visibleColumns"
 				:search-value="sidebarState.searchValue"
@@ -38,6 +38,19 @@
 				@search="onSidebarSearch"
 				@columns-change="onSidebarColumnsChange"
 				@filter-change="onSidebarFilterChange" />
+
+			<!-- Object sidebar (files/notes/tags/tasks/audit trail — controlled by CnDetailPage) -->
+			<CnObjectSidebar
+				v-if="objectSidebarState.active"
+				:object-type="objectSidebarState.objectType"
+				:object-id="objectSidebarState.objectId"
+				:title="objectSidebarState.title"
+				:subtitle="objectSidebarState.subtitle"
+				:register="objectSidebarState.register"
+				:schema="objectSidebarState.schema"
+				:hidden-tabs="objectSidebarState.hiddenTabs"
+				:open.sync="objectSidebarState.open" />
+
 			<Modals />
 			<Dialogs />
 		</template>
@@ -55,7 +68,7 @@
 
 import Vue from 'vue'
 import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import { CnIndexSidebar } from '@conduction/nextcloud-vue'
+import { CnObjectSidebar, CnIndexSidebar } from '@conduction/nextcloud-vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
 import Modals from './modals/Modals.vue'
@@ -71,6 +84,7 @@ export default {
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
+		CnObjectSidebar,
 		CnIndexSidebar,
 		MainMenu,
 		Modals,
@@ -80,6 +94,7 @@ export default {
 
 	provide() {
 		return {
+			objectSidebarState: this.objectSidebarState,
 			sidebarState: this.sidebarState,
 		}
 	},
@@ -87,6 +102,17 @@ export default {
 	data() {
 		return {
 			storesReady: false,
+			objectSidebarState: {
+				active: false,
+				open: true,
+				objectType: '',
+				objectId: '',
+				title: '',
+				subtitle: '',
+				register: '',
+				schema: '',
+				hiddenTabs: [],
+			},
 			sidebarState: Vue.observable({
 				active: false,
 				open: true,
