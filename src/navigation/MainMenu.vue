@@ -5,7 +5,7 @@
 			<!-- Dashboard -->
 			<NcAppNavigationItem
 				:active="navigationStore.selected === 'dashboard'"
-				name="Dashboard"
+				:name="t('softwarecatalog', 'Dashboard')"
 				@click="navigationStore.setSelected('dashboard')">
 				<template #icon>
 					<ViewDashboard :size="20" />
@@ -27,7 +27,7 @@
 
 		<NcAppNavigationSettings>
 			<NcAppNavigationItem
-				name="Settings"
+				:name="t('softwarecatalog', 'Settings')"
 				@click="$emit('open-settings')">
 				<template #icon>
 					<Cog :size="20" />

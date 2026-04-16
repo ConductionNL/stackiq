@@ -18,19 +18,17 @@
 
 <template>
 	<AlwaysVisibleSection
-		name="Background Jobs Configuration"
-		description="Configure user and organisation context for background jobs to enable proper authorization"
+		:name="t('softwarecatalog', 'Background Jobs Configuration')"
+		:description="t('softwarecatalog', 'Configure user and organisation context for background jobs to enable proper authorization')"
 		:loading="loading"
-		loading-text="Loading cronjob configuration..."
+		:loading-text="t('softwarecatalog', 'Loading cronjob configuration...')"
 		:show-save-button="false"
 		:show-refresh-button="true"
 		@refresh="loadConfig">
 		<div v-if="!loading" class="cronjob-configuration">
 			<!-- Information Note -->
 			<NcNoteCard type="info" class="info-card">
-				Background jobs (cronjobs) need a user and organisation context to properly
-				access data with correct permissions. Configure each job below to set which
-				user and organisation it should run as.
+				{{ t('softwarecatalog', 'Background jobs (cronjobs) need a user and organisation context to properly access data with correct permissions. Configure each job below to set which user and organisation it should run as.') }}
 			</NcNoteCard>
 
 			<!-- Cronjob Cards -->
@@ -46,7 +44,7 @@
 								:checked="job.enabled"
 								type="switch"
 								@update:checked="updateJobEnabled(job.id, $event)">
-								{{ job.enabled ? 'Enabled' : 'Disabled' }}
+								{{ job.enabled ? t('softwarecatalog', 'Enabled') : t('softwarecatalog', 'Disabled') }}
 							</NcCheckboxRadioSwitch>
 						</div>
 						<p class="cronjob-description">
@@ -54,32 +52,32 @@
 						</p>
 						<span class="cronjob-interval">
 							<Clock :size="16" />
-							Runs every {{ formatInterval(job.interval) }}
+							{{ t('softwarecatalog', 'Runs every {interval}', { interval: formatInterval(job.interval) }) }}
 						</span>
 					</div>
 
 					<div class="cronjob-config">
 						<div class="config-row">
 							<div class="config-field">
-								<label :for="'user-' + job.id">Run as User</label>
+								<label :for="'user-' + job.id">{{ t('softwarecatalog', 'Run as User') }}</label>
 								<NcSelect
 									:id="'user-' + job.id"
 									v-model="job.selectedUser"
 									:options="userOptions"
 									:loading="loadingUsers"
 									:disabled="!job.enabled || savingJob === job.id"
-									input-label="Select a user" />
+									:input-label="t('softwarecatalog', 'Select a user')" />
 							</div>
 
 							<div class="config-field">
-								<label :for="'org-' + job.id">Run in Organisation</label>
+								<label :for="'org-' + job.id">{{ t('softwarecatalog', 'Run in Organisation') }}</label>
 								<NcSelect
 									:id="'org-' + job.id"
 									v-model="job.selectedOrganisation"
 									:options="organisationOptions"
 									:loading="loadingOrganisations"
 									:disabled="!job.enabled || savingJob === job.id"
-									input-label="Select an organisation" />
+									:input-label="t('softwarecatalog', 'Select an organisation')" />
 							</div>
 						</div>
 
@@ -93,7 +91,7 @@
 									<NcLoadingIcon v-if="savingJob === job.id" :size="20" />
 									<ContentSave v-else :size="20" />
 								</template>
-								{{ savingJob === job.id ? 'Saving...' : 'Save Configuration' }}
+								{{ savingJob === job.id ? t('softwarecatalog', 'Saving...') : t('softwarecatalog', 'Save Configuration') }}
 							</NcButton>
 
 							<NcButton
@@ -104,18 +102,18 @@
 									<NcLoadingIcon v-if="runningJob === job.id" :size="20" />
 									<Play v-else :size="20" />
 								</template>
-								{{ runningJob === job.id ? 'Running...' : 'Run Now' }}
+								{{ runningJob === job.id ? t('softwarecatalog', 'Running...') : t('softwarecatalog', 'Run Now') }}
 							</NcButton>
 
 							<!-- Status indicator -->
 							<div :class="['config-status', job.userId && job.organisationUuid ? 'success' : 'warning']">
 								<template v-if="job.userId && job.organisationUuid">
 									<Check :size="16" class="status-icon success" />
-									<span class="status-text">Configured - Job will run with proper authorization</span>
+									<span class="status-text">{{ t('softwarecatalog', 'Configured - Job will run with proper authorization') }}</span>
 								</template>
 								<template v-else>
 									<AlertCircle :size="16" class="status-icon warning" />
-									<span class="status-text">Not configured - Job may encounter RBAC errors</span>
+									<span class="status-text">{{ t('softwarecatalog', 'Not configured - Job may encounter RBAC errors') }}</span>
 								</template>
 							</div>
 						</div>
@@ -250,7 +248,7 @@ export default {
 				])
 			} catch (error) {
 				console.error('Failed to load cronjob configuration:', error)
-				showError('Failed to load cronjob configuration')
+				showError(t('softwarecatalog', 'Failed to load cronjob configuration'))
 			} finally {
 				this.loading = false
 			}
@@ -429,13 +427,13 @@ export default {
 					// Update local state.
 					job.userId = job.selectedUser?.value || null
 					job.organisationUuid = job.selectedOrganisation?.value || null
-					showSuccess('Cronjob configuration saved')
+					showSuccess(t('softwarecatalog', 'Cronjob configuration saved'))
 				} else {
-					showError(response.data.message || 'Failed to save configuration')
+					showError(response.data.message || t('softwarecatalog', 'Failed to save configuration'))
 				}
 			} catch (error) {
 				console.error('Failed to save job config:', error)
-				showError('Failed to save cronjob configuration')
+				showError(t('softwarecatalog', 'Failed to save cronjob configuration'))
 			} finally {
 				this.savingJob = null
 			}
@@ -449,7 +447,7 @@ export default {
 		 */
 		async runJob(job) {
 			if (!job.userId || !job.organisationUuid) {
-				showError('Please configure and save user and organisation first')
+				showError(t('softwarecatalog', 'Please configure and save user and organisation first'))
 				return
 			}
 
@@ -459,13 +457,13 @@ export default {
 				const response = await axios.post(generateUrl('/apps/softwarecatalog/api/settings/sync'))
 
 				if (response.data.success) {
-					showSuccess('Background job executed successfully')
+					showSuccess(t('softwarecatalog', 'Background job executed successfully'))
 				} else {
-					showError(response.data.message || 'Job execution failed')
+					showError(response.data.message || t('softwarecatalog', 'Job execution failed'))
 				}
 			} catch (error) {
 				console.error('Failed to run job:', error)
-				showError('Failed to run background job: ' + (error.response?.data?.message || error.message))
+				showError(t('softwarecatalog', 'Failed to run background job: {error}', { error: error.response?.data?.message || error.message }))
 			} finally {
 				this.runningJob = null
 			}
@@ -489,16 +487,6 @@ export default {
 			}
 		},
 
-		/**
-		 * Translation helper
-		 *
-		 * @param {string} app App name
-		 * @param {string} text Text to translate
-		 * @return {string} Translated text
-		 */
-		t(app, text) {
-			return text
-		},
 	},
 }
 </script>

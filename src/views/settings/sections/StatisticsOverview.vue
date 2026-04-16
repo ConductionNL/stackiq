@@ -1,11 +1,11 @@
 <template>
 	<NcSettingsSection
-		name="Object Statistics"
-		description="Overview of objects stored in configured registers">
+		:name="t('softwarecatalog', 'Object Statistics')"
+		:description="t('softwarecatalog', 'Overview of objects stored in configured registers')">
 		<!-- Refresh Button in Title Section -->
 		<template #title>
 			<div class="section-title-with-button">
-				<span>Object Statistics</span>
+				<span>{{ t('softwarecatalog', 'Object Statistics') }}</span>
 				<NcButton
 					:disabled="loadingStats"
 					class="title-refresh-button"
@@ -13,7 +13,7 @@
 					<template #icon>
 						<RefreshIcon :size="16" />
 					</template>
-					{{ loadingStats ? 'Loading...' : 'Refresh' }}
+					{{ loadingStats ? t('softwarecatalog', 'Loading...') : t('softwarecatalog', 'Refresh') }}
 				</NcButton>
 			</div>
 		</template>
@@ -22,7 +22,7 @@
 			<!-- Last Updated Info -->
 			<div class="statistics-header">
 				<span v-if="statistics.timestamp" class="last-updated">
-					Last updated: {{ formatTimestamp(statistics.timestamp) }}
+					{{ t('softwarecatalog', 'Last updated: {date}', { date: formatTimestamp(statistics.timestamp) }) }}
 				</span>
 			</div>
 
@@ -31,11 +31,11 @@
 				<table>
 					<thead>
 						<tr>
-							<th>Register</th>
-							<th>Object Type</th>
-							<th>Count</th>
-							<th>Status</th>
-							<th>Actions</th>
+							<th>{{ t('softwarecatalog', 'Register') }}</th>
+							<th>{{ t('softwarecatalog', 'Object Type') }}</th>
+							<th>{{ t('softwarecatalog', 'Count') }}</th>
+							<th>{{ t('softwarecatalog', 'Status') }}</th>
+							<th>{{ t('softwarecatalog', 'Actions') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -53,7 +53,7 @@
 								<span
 									class="status-badge"
 									:class="stat.configured ? 'status-configured' : 'status-not-configured'">
-									{{ stat.configured ? 'Configured' : 'Not Configured' }}
+									{{ stat.configured ? t('softwarecatalog', 'Configured') : t('softwarecatalog', 'Not Configured') }}
 								</span>
 							</td>
 							<td class="actions-cell">
@@ -66,7 +66,7 @@
 									<template #icon>
 										<SyncIcon :size="16" />
 									</template>
-									{{ bulkSyncLoading ? 'Syncing...' : 'Sync Standards' }}
+									{{ bulkSyncLoading ? t('softwarecatalog', 'Syncing...') : t('softwarecatalog', 'Sync Standards') }}
 								</NcButton>
 							</td>
 						</tr>
@@ -77,8 +77,8 @@
 			<!-- No Data Message -->
 			<NcEmptyContent
 				v-else-if="!loadingStats"
-				name="No Statistics Available"
-				description="No configured registers found or statistics could not be loaded.">
+				:name="t('softwarecatalog', 'No Statistics Available')"
+				:description="t('softwarecatalog', 'No configured registers found or statistics could not be loaded.')">
 				<template #icon>
 					<ChartLineIcon />
 				</template>
@@ -87,7 +87,7 @@
 			<!-- Loading State -->
 			<div v-if="loadingStats" class="loading-container">
 				<NcLoadingIcon :size="32" />
-				<p>Loading statistics...</p>
+				<p>{{ t('softwarecatalog', 'Loading statistics...') }}</p>
 			</div>
 
 			<!-- Error State -->
@@ -100,73 +100,73 @@
 		<NcModal v-if="showSyncDialog" @close="closeBulkSyncDialog">
 			<div class="bulk-sync-dialog">
 				<div class="modal-header">
-					<h2>Bulk Sync Module Standards</h2>
+					<h2>{{ t('softwarecatalog', 'Bulk Sync Module Standards') }}</h2>
 				</div>
 
 				<div class="modal-content">
 					<!-- Preview Section -->
 					<div v-if="!syncCompleted" class="preview-section">
-						<h3>What will happen:</h3>
+						<h3>{{ t('softwarecatalog', 'What will happen:') }}</h3>
 						<ul class="preview-list">
-							<li>Scan all {{ complianceCount }} compliance objects</li>
-							<li>Extract standaardversie references from each compliance object</li>
-							<li>Find the corresponding module for each compliance object</li>
-							<li>Update module standaarden arrays with extracted standaardversie IDs</li>
-							<li>Save modules only if changes are needed</li>
+							<li>{{ t('softwarecatalog', 'Scan all {count} compliance objects', { count: complianceCount }) }}</li>
+							<li>{{ t('softwarecatalog', 'Extract standaardversie references from each compliance object') }}</li>
+							<li>{{ t('softwarecatalog', 'Find the corresponding module for each compliance object') }}</li>
+							<li>{{ t('softwarecatalog', 'Update module standaarden arrays with extracted standaardversie IDs') }}</li>
+							<li>{{ t('softwarecatalog', 'Save modules only if changes are needed') }}</li>
 						</ul>
 
 						<div v-if="bulkSyncLoading" class="loading-section">
 							<NcLoadingIcon :size="24" />
-							<p>Processing compliance objects...</p>
+							<p>{{ t('softwarecatalog', 'Processing compliance objects...') }}</p>
 							<div class="progress-info">
-								<p>Processed: {{ syncProgress.processed }} / {{ syncProgress.total }}</p>
-								<p>Modules updated: {{ syncProgress.modulesUpdated }}</p>
+								<p>{{ t('softwarecatalog', 'Processed: {processed} / {total}', { processed: syncProgress.processed, total: syncProgress.total }) }}</p>
+								<p>{{ t('softwarecatalog', 'Modules updated: {count}', { count: syncProgress.modulesUpdated }) }}</p>
 							</div>
 						</div>
 					</div>
 
 					<!-- Results Section -->
 					<div v-if="syncCompleted" class="results-section">
-						<h3>Sync Results:</h3>
+						<h3>{{ t('softwarecatalog', 'Sync Results:') }}</h3>
 						<div class="results-stats">
 							<div class="stat-item">
-								<span class="stat-label">Compliance objects processed:</span>
+								<span class="stat-label">{{ t('softwarecatalog', 'Compliance objects processed:') }}</span>
 								<span class="stat-value">{{ syncResults.totalProcessed }}</span>
 							</div>
 							<div class="stat-item">
-								<span class="stat-label">Modules found:</span>
+								<span class="stat-label">{{ t('softwarecatalog', 'Modules found:') }}</span>
 								<span class="stat-value">{{ syncResults.modulesFound }}</span>
 							</div>
 							<div class="stat-item">
-								<span class="stat-label">Modules updated:</span>
+								<span class="stat-label">{{ t('softwarecatalog', 'Modules updated:') }}</span>
 								<span class="stat-value success-value">{{ syncResults.modulesUpdated }}</span>
 							</div>
 							<div class="stat-item">
-								<span class="stat-label">Modules already up-to-date:</span>
+								<span class="stat-label">{{ t('softwarecatalog', 'Modules already up-to-date:') }}</span>
 								<span class="stat-value">{{ syncResults.modulesAlreadyUpToDate || 0 }}</span>
 							</div>
 							<div class="stat-item">
-								<span class="stat-label">Modules with no standards:</span>
+								<span class="stat-label">{{ t('softwarecatalog', 'Modules with no standards:') }}</span>
 								<span class="stat-value warning-value">{{ syncResults.modulesWithNoStandards || 0 }}</span>
 							</div>
 							<div class="stat-item">
-								<span class="stat-label">Standards added:</span>
+								<span class="stat-label">{{ t('softwarecatalog', 'Standards added:') }}</span>
 								<span class="stat-value">{{ syncResults.standardsAdded }}</span>
 							</div>
 						</div>
 
 						<!-- Modules Table -->
 						<div v-if="syncResults.modules && syncResults.modules.length > 0" class="modules-table-section">
-							<h4>Processed Modules ({{ syncResults.modules.length }}):</h4>
+							<h4>{{ t('softwarecatalog', 'Processed Modules ({count}):', { count: syncResults.modules.length }) }}</h4>
 							<div class="modules-table-container">
 								<table class="modules-table">
 									<thead>
 										<tr>
-											<th>Module Name</th>
-											<th>Status</th>
-											<th>Reason</th>
-											<th>Compliance Count</th>
-											<th>Standards Count</th>
+											<th>{{ t('softwarecatalog', 'Module Name') }}</th>
+											<th>{{ t('softwarecatalog', 'Status') }}</th>
+											<th>{{ t('softwarecatalog', 'Reason') }}</th>
+											<th>{{ t('softwarecatalog', 'Compliance Count') }}</th>
+											<th>{{ t('softwarecatalog', 'Standards Count') }}</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -201,7 +201,7 @@
 						</div>
 
 						<div v-if="syncResults.errors.length > 0" class="errors-section">
-							<h4>Errors:</h4>
+							<h4>{{ t('softwarecatalog', 'Errors:') }}</h4>
 							<ul class="error-list">
 								<li v-for="errorMsg in syncResults.errors" :key="errorMsg">
 									{{ errorMsg }}
@@ -217,10 +217,10 @@
 						:disabled="bulkSyncLoading"
 						type="primary"
 						@click="startBulkSync">
-						{{ bulkSyncLoading ? 'Syncing...' : 'Start Sync' }}
+						{{ bulkSyncLoading ? t('softwarecatalog', 'Syncing...') : t('softwarecatalog', 'Start Sync') }}
 					</NcButton>
 					<NcButton @click="closeBulkSyncDialog">
-						{{ syncCompleted ? 'Close' : 'Cancel' }}
+						{{ syncCompleted ? t('softwarecatalog', 'Close') : t('softwarecatalog', 'Cancel') }}
 					</NcButton>
 				</div>
 			</div>

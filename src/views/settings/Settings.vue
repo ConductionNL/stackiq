@@ -1,41 +1,41 @@
 <template>
 	<div>
 		<NcSettingsSection
-			name="Software Catalog"
-			description="A central place for managing your software"
+			:name="t('softwarecatalog', 'Software Catalog')"
+			:description="t('softwarecatalog', 'A central place for managing your software')"
 			doc-url="https://docs.softwarecatalog.nl" />
 
 		<NcSettingsSection
-			name="Data storage"
-			description="Configure where to store your publication data">
+			:name="t('softwarecatalog', 'Data storage')"
+			:description="t('softwarecatalog', 'Configure where to store your publication data')">
 			<div v-if="!loading">
 				<!-- Warning if OpenRegister is not installed -->
 				<NcNoteCard v-if="!settings.openRegisters" type="warning">
-					Open Register is not installed. Please install it to use the Open Catalogi app with full functionality.
+					{{ t('softwarecatalog', 'Open Register is not installed. Please install it to use the Open Catalogi app with full functionality.') }}
 				</NcNoteCard>
 
 				<!-- Register Selection -->
 				<div class="register-selection">
-					<h3>Register</h3>
-					<p>Select the register to store all your publicatie data</p>
+					<h3>{{ t('softwarecatalog', 'Register') }}</h3>
+					<p>{{ t('softwarecatalog', 'Select the register to store all your publication data') }}</p>
 
 					<NcSelect
 						v-model="selectedRegister"
 						:options="registerOptions"
-						input-label="Register"
+						:input-label="t('softwarecatalog', 'Register')"
 						:disabled="loading || !settings.openRegisters"
 						@change="handleRegisterChange" />
 				</div>
 
 				<!-- Warning if selected register has no schemas -->
 				<NcNoteCard v-if="selectedRegister && !hasSchemas" type="warning">
-					The selected register has no schemas. Please create schemas in this register or select a different register.
+					{{ t('softwarecatalog', 'The selected register has no schemas. Please create schemas in this register or select a different register.') }}
 				</NcNoteCard>
 
 				<!-- Object Type Schema Configuration -->
 				<div v-if="selectedRegister && hasSchemas" class="schema-configuration">
-					<h3>Schema Configuration</h3>
-					<p>Select which schema to use for each object type</p>
+					<h3>{{ t('softwarecatalog', 'Schema Configuration') }}</h3>
+					<p>{{ t('softwarecatalog', 'Select which schema to use for each object type') }}</p>
 
 					<div v-for="objectType in settings.objectTypes" :key="objectType" class="object-type-section">
 						<div class="object-type-header">
@@ -45,7 +45,7 @@
 						<NcSelect
 							v-model="configuration[objectType].schema"
 							:options="computedSchemaOptions"
-							input-label="Schema"
+							:input-label="t('softwarecatalog', 'Schema')"
 							:disabled="loading" />
 					</div>
 				</div>
@@ -60,7 +60,7 @@
 							<NcLoadingIcon v-if="saving" :size="20" />
 							<Save v-else :size="20" />
 						</template>
-						Save Configuration
+						{{ t('softwarecatalog', 'Save Configuration') }}
 					</NcButton>
 				</div>
 			</div>
@@ -73,13 +73,13 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			name="Other Configuration"
-			description="Configure additional application settings">
+			:name="t('softwarecatalog', 'Other Configuration')"
+			:description="t('softwarecatalog', 'Configure additional application settings')">
 			<div v-if="!loading">
 				<!-- Catalog Location -->
 				<div class="catalog-location-section">
-					<h3>Catalog Location</h3>
-					<p>Set the base URL for your catalog interface</p>
+					<h3>{{ t('softwarecatalog', 'Catalog Location') }}</h3>
+					<p>{{ t('softwarecatalog', 'Set the base URL for your catalog interface') }}</p>
 
 					<NcTextField
 						:value.sync="catalogLocation"
@@ -94,7 +94,7 @@
 
 					<div class="catalog-location-help">
 						<p class="help-text">
-							This URL will be used for "Go to organisation" links. The system will append "/beheer" to this URL.
+							{{ t('softwarecatalog', 'This URL will be used for "Go to organisation" links. The system will append "/beheer" to this URL.') }}
 						</p>
 					</div>
 
@@ -108,7 +108,7 @@
 								<NcLoadingIcon v-if="savingCatalogLocation" :size="20" />
 								<Save v-else :size="20" />
 							</template>
-							Save Catalog Location
+							{{ t('softwarecatalog', 'Save Catalog Location') }}
 						</NcButton>
 					</div>
 				</div>

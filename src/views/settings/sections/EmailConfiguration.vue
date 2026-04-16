@@ -18,52 +18,52 @@
 
 <template>
 	<AlwaysVisibleSection
-		name="Email Configuration"
-		description="Configure email settings for notifications and user management"
+		:name="t('softwarecatalog', 'Email Configuration')"
+		:description="t('softwarecatalog', 'Configure email settings for notifications and user management')"
 		:loading="loading"
 		:show-save-button="true"
 		:can-save="canSave"
 		:saving="saving"
-		save-button-text="Save Email Settings"
+		:save-button-text="t('softwarecatalog', 'Save Email Settings')"
 		:has-info-content="true"
 		@save="saveEmailSettings">
 		<StandardTabs
 			:tabs="[
-				{ key: 'settings', title: 'Settings' },
-				{ key: 'email-types', title: 'Email Types' },
-				{ key: 'testing', title: 'Testing' },
-				{ key: 'templates', title: 'Templates' }
+				{ key: 'settings', title: t('softwarecatalog', 'Settings') },
+				{ key: 'email-types', title: t('softwarecatalog', 'Email Types') },
+				{ key: 'testing', title: t('softwarecatalog', 'Testing') },
+				{ key: 'templates', title: t('softwarecatalog', 'Templates') }
 			]"
 			:active-tab="activeTab"
 			@update:active-tab="activeTab = $event">
 			<div v-show="activeTab === 'settings'" class="tab-panel">
 				<div class="email-settings-section">
-					<h3>Email Settings</h3>
-					<p>Configure email notifications for organization and user events</p>
+					<h3>{{ t('softwarecatalog', 'Email Settings') }}</h3>
+					<p>{{ t('softwarecatalog', 'Configure email notifications for organization and user events') }}</p>
 
 					<!-- Enable Email Notifications -->
 					<div class="setting-group">
 						<NcCheckboxRadioSwitch
 							:checked.sync="emailSettings.enabled"
 							type="switch">
-							Enable Email Notifications
+							{{ t('softwarecatalog', 'Enable Email Notifications') }}
 						</NcCheckboxRadioSwitch>
 						<p class="setting-description">
-							Enable or disable all email notifications from the system
+							{{ t('softwarecatalog', 'Enable or disable all email notifications from the system') }}
 						</p>
 					</div>
 
 					<!-- Sender Information -->
 					<div class="setting-group">
-						<h4>Sender Information</h4>
+						<h4>{{ t('softwarecatalog', 'Sender Information') }}</h4>
 						<NcTextField
-							label="Sender Email"
+							:label="t('softwarecatalog', 'Sender Email')"
 							placeholder="noreply@example.com"
 							:disabled="!emailSettings.enabled"
 							:value="(emailSettings.senderEmail || '').toString()"
 							@update:value="emailSettings.senderEmail = $event" />
 						<NcTextField
-							label="Sender Name"
+							:label="t('softwarecatalog', 'Sender Name')"
 							placeholder="Software Catalog"
 							:disabled="!emailSettings.enabled"
 							:value="(emailSettings.senderName || '').toString()"
@@ -72,45 +72,45 @@
 
 					<!-- Test Receiver Override -->
 					<div class="setting-group">
-						<h4>Test Configuration</h4>
+						<h4>{{ t('softwarecatalog', 'Test Configuration') }}</h4>
 						<NcTextField
-							label="Test Receiver Override"
+							:label="t('softwarecatalog', 'Test Receiver Override')"
 							placeholder="test@example.com"
 							:disabled="!emailSettings.enabled"
 							:value="(emailSettings.testReceiverOverride || '').toString()"
 							@update:value="emailSettings.testReceiverOverride = $event" />
 						<p class="setting-description">
-							If set, all emails will be sent to this address instead of the intended recipients (useful for testing)
+							{{ t('softwarecatalog', 'If set, all emails will be sent to this address instead of the intended recipients (useful for testing)') }}
 						</p>
 					</div>
 
 					<!-- Transport Configuration -->
 					<div class="setting-group">
-						<h4>Email Transport</h4>
+						<h4>{{ t('softwarecatalog', 'Email Transport') }}</h4>
 						<NcSelect
 							:value.sync="emailSettings.transportType"
 							:options="[
 								{ label: 'SMTP', value: 'smtp' },
 								{ label: 'Mailjet', value: 'mailjet' },
 								{ label: 'SendGrid', value: 'sendgrid' },
-								{ label: 'Local Mail', value: 'mail' }
+								{ label: t('softwarecatalog', 'Local Mail'), value: 'mail' }
 							]"
-							input-label="Transport Type"
+							:input-label="t('softwarecatalog', 'Transport Type')"
 							:disabled="!emailSettings.enabled" />
 					</div>
 
 					<!-- SMTP Configuration -->
 					<div v-if="emailSettings.transportType === 'smtp'" class="setting-group smtp-config">
-						<h4>SMTP Configuration</h4>
+						<h4>{{ t('softwarecatalog', 'SMTP Configuration') }}</h4>
 						<div class="smtp-fields">
 							<NcTextField
-								label="SMTP Host"
+								:label="t('softwarecatalog', 'SMTP Host')"
 								placeholder="smtp.gmail.com"
 								:disabled="!emailSettings.enabled"
 								:value="(emailSettings.smtpHost || '').toString()"
 								@update:value="emailSettings.smtpHost = $event" />
 							<NcTextField
-								label="SMTP Port"
+								:label="t('softwarecatalog', 'SMTP Port')"
 								placeholder="587"
 								type="text"
 								:disabled="!emailSettings.enabled"
@@ -119,21 +119,21 @@
 							<NcSelect
 								:value.sync="emailSettings.smtpEncryption"
 								:options="[
-									{ label: 'None', value: 'none' },
+									{ label: t('softwarecatalog', 'None'), value: 'none' },
 									{ label: 'TLS', value: 'tls' },
 									{ label: 'SSL', value: 'ssl' }
 								]"
-								input-label="Encryption"
+								:input-label="t('softwarecatalog', 'Encryption')"
 								:disabled="!emailSettings.enabled" />
 							<NcTextField
-								label="SMTP Username"
+								:label="t('softwarecatalog', 'SMTP Username')"
 								placeholder="your-email@gmail.com"
 								:disabled="!emailSettings.enabled"
 								:value="(emailSettings.smtpUsername || '').toString()"
 								@update:value="emailSettings.smtpUsername = $event" />
 							<NcPasswordField
-								label="SMTP Password"
-								placeholder="Your app password"
+								:label="t('softwarecatalog', 'SMTP Password')"
+								:placeholder="t('softwarecatalog', 'Your app password')"
 								:disabled="!emailSettings.enabled"
 								:value="(emailSettings.smtpPassword || '').toString()"
 								@update:value="emailSettings.smtpPassword = $event" />
@@ -142,14 +142,14 @@
 
 					<!-- Mailjet Configuration -->
 					<div v-else-if="emailSettings.transportType === 'mailjet'" class="setting-group">
-						<h4>Mailjet Configuration</h4>
+						<h4>{{ t('softwarecatalog', 'Mailjet Configuration') }}</h4>
 						<NcTextField
-							label="Mailjet API Key"
+							:label="t('softwarecatalog', 'Mailjet API Key')"
 							:disabled="!emailSettings.enabled"
 							:value="(emailSettings.mailjetApiKey || '').toString()"
 							@update:value="emailSettings.mailjetApiKey = $event" />
 						<NcPasswordField
-							label="Mailjet API Secret"
+							:label="t('softwarecatalog', 'Mailjet API Secret')"
 							:disabled="!emailSettings.enabled"
 							:value="(emailSettings.mailjetApiSecret || '').toString()"
 							@update:value="emailSettings.mailjetApiSecret = $event" />
@@ -159,18 +159,18 @@
 
 			<div v-show="activeTab === 'email-types'" class="tab-panel">
 				<div class="email-types-section">
-					<h3>Email Types</h3>
-					<p>Configure which types of emails are automatically sent</p>
+					<h3>{{ t('softwarecatalog', 'Email Types') }}</h3>
+					<p>{{ t('softwarecatalog', 'Configure which types of emails are automatically sent') }}</p>
 
 					<div class="email-type-group">
 						<NcCheckboxRadioSwitch
 							:checked.sync="emailSettings.organizationRegistrationEnabled"
 							type="switch"
 							:disabled="!emailSettings.enabled">
-							Organization Registration
+							{{ t('softwarecatalog', 'Organization Registration') }}
 						</NcCheckboxRadioSwitch>
 						<p class="setting-description">
-							Send emails when new organizations are registered
+							{{ t('softwarecatalog', 'Send emails when new organizations are registered') }}
 						</p>
 					</div>
 
@@ -179,10 +179,10 @@
 							:checked.sync="emailSettings.organizationActivationEnabled"
 							type="switch"
 							:disabled="!emailSettings.enabled">
-							Organization Activation
+							{{ t('softwarecatalog', 'Organization Activation') }}
 						</NcCheckboxRadioSwitch>
 						<p class="setting-description">
-							Send emails when organizations are activated
+							{{ t('softwarecatalog', 'Send emails when organizations are activated') }}
 						</p>
 					</div>
 
@@ -191,10 +191,10 @@
 							:checked.sync="emailSettings.userCreationEnabled"
 							type="switch"
 							:disabled="!emailSettings.enabled">
-							User Creation
+							{{ t('softwarecatalog', 'User Creation') }}
 						</NcCheckboxRadioSwitch>
 						<p class="setting-description">
-							Send emails when new user accounts are created
+							{{ t('softwarecatalog', 'Send emails when new user accounts are created') }}
 						</p>
 					</div>
 
@@ -203,10 +203,10 @@
 							:checked.sync="emailSettings.userPasswordEnabled"
 							type="switch"
 							:disabled="!emailSettings.enabled">
-							Password Reset
+							{{ t('softwarecatalog', 'Password Reset') }}
 						</NcCheckboxRadioSwitch>
 						<p class="setting-description">
-							Send emails for password reset requests
+							{{ t('softwarecatalog', 'Send emails for password reset requests') }}
 						</p>
 					</div>
 				</div>
@@ -214,13 +214,13 @@
 
 			<div v-show="activeTab === 'testing'" class="tab-panel">
 				<div class="email-testing-section">
-					<h3>Email Testing</h3>
-					<p>Test your email configuration to ensure emails are delivered correctly</p>
+					<h3>{{ t('softwarecatalog', 'Email Testing') }}</h3>
+					<p>{{ t('softwarecatalog', 'Test your email configuration to ensure emails are delivered correctly') }}</p>
 
 					<!-- Connection Test -->
 					<div class="test-group">
-						<h4>Connection Test</h4>
-						<p>Test the connection to your email provider</p>
+						<h4>{{ t('softwarecatalog', 'Connection Test') }}</h4>
+						<p>{{ t('softwarecatalog', 'Test the connection to your email provider') }}</p>
 						<NcButton
 							type="secondary"
 							:disabled="!emailSettings.enabled || testingConnection"
@@ -229,7 +229,7 @@
 								<NcLoadingIcon v-if="testingConnection" :size="20" />
 								<Email v-else :size="20" />
 							</template>
-							{{ testingConnection ? 'Testing...' : 'Test Connection' }}
+							{{ testingConnection ? t('softwarecatalog', 'Testing...') : t('softwarecatalog', 'Test Connection') }}
 						</NcButton>
 
 						<div v-if="connectionTestResult" class="test-result">
@@ -241,11 +241,11 @@
 
 					<!-- Send Test Email -->
 					<div class="test-group">
-						<h4>Send Test Email</h4>
-						<p>Send a test email to verify delivery</p>
+						<h4>{{ t('softwarecatalog', 'Send Test Email') }}</h4>
+						<p>{{ t('softwarecatalog', 'Send a test email to verify delivery') }}</p>
 						<NcTextField
 							:value.sync="testEmailAddress"
-							label="Test Email Address"
+							:label="t('softwarecatalog', 'Test Email Address')"
 							placeholder="test@example.com" />
 						<NcButton
 							type="primary"
@@ -255,7 +255,7 @@
 								<NcLoadingIcon v-if="testingEmail" :size="20" />
 								<Email v-else :size="20" />
 							</template>
-							{{ testingEmail ? 'Sending...' : 'Send Test Email' }}
+							{{ testingEmail ? t('softwarecatalog', 'Sending...') : t('softwarecatalog', 'Send Test Email') }}
 						</NcButton>
 
 						<div v-if="testEmailResult" class="test-result">
@@ -269,8 +269,8 @@
 
 			<div v-show="activeTab === 'templates'" class="tab-panel">
 				<div class="email-templates-section">
-					<h3>Email Templates</h3>
-					<p>Customize email templates for different types of notifications</p>
+					<h3>{{ t('softwarecatalog', 'Email Templates') }}</h3>
+					<p>{{ t('softwarecatalog', 'Customize email templates for different types of notifications') }}</p>
 
 					<div class="template-tabs">
 						<div class="tab-buttons">
@@ -288,7 +288,7 @@
 								<h4>{{ getActiveTemplateName() }}</h4>
 								<p>{{ getActiveTemplateDescription() }}</p>
 								<div class="available-variables">
-									<h5>Available Variables:</h5>
+									<h5>{{ t('softwarecatalog', 'Available Variables:') }}</h5>
 									<div class="variables-list">
 										<span
 											v-for="(description, variable) in getActiveTemplateVariables()"
@@ -303,8 +303,8 @@
 
 							<NcTextArea
 								:value="getActiveTemplateContent()"
-								:placeholder="'Enter your template content here...'"
-								label="Template Content"
+								:placeholder="t('softwarecatalog', 'Enter your template content here...')"
+								:label="t('softwarecatalog', 'Template Content')"
 								rows="15"
 								@update:value="updateTemplateContent($event)" />
 
@@ -312,7 +312,7 @@
 								<NcButton
 									type="secondary"
 									@click="resetTemplate">
-									Reset to Default
+									{{ t('softwarecatalog', 'Reset to Default') }}
 								</NcButton>
 								<NcButton
 									type="primary"
@@ -322,13 +322,13 @@
 										<NcLoadingIcon v-if="savingTemplate" :size="20" />
 										<Save v-else :size="20" />
 									</template>
-									Save Template
+									{{ t('softwarecatalog', 'Save Template') }}
 								</NcButton>
 							</div>
 
 							<div v-if="templateSaveResult" class="save-results">
 								<NcNoteCard :type="templateSaveResult.success ? 'success' : 'error'">
-									{{ templateSaveResult.message || 'Template saved successfully!' }}
+									{{ templateSaveResult.message || t('softwarecatalog', 'Template saved successfully!') }}
 								</NcNoteCard>
 							</div>
 						</div>
@@ -565,7 +565,7 @@ export default {
 				console.error('Connection test failed:', error)
 				this.connectionTestResult = {
 					success: false,
-					message: 'Connection test failed: ' + error.message,
+					message: t('softwarecatalog', 'Connection test failed: {error}', { error: error.message }),
 				}
 			} finally {
 				this.testingConnection = false
@@ -586,7 +586,7 @@ export default {
 				console.error('Test email failed:', error)
 				this.testEmailResult = {
 					success: false,
-					message: 'Test email failed: ' + error.message,
+					message: t('softwarecatalog', 'Test email failed: {error}', { error: error.message }),
 				}
 			} finally {
 				this.testingEmail = false
@@ -679,10 +679,10 @@ export default {
 			try {
 				// Template reset functionality is not yet implemented in the backend
 				console.info('Template reset functionality is not yet implemented in the backend')
-				showSuccess('Template reset functionality will be available in a future update')
+				showSuccess(t('softwarecatalog', 'Template reset functionality will be available in a future update'))
 			} catch (error) {
 				console.error('Failed to reset template:', error)
-				showError('Failed to reset template: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to reset template: {error}', { error: error.message }))
 			}
 		},
 
@@ -697,15 +697,15 @@ export default {
 			try {
 				// Template save functionality is not yet implemented in the backend
 				console.info('Template save functionality is not yet implemented in the backend')
-				this.templateSaveResult = { success: true, message: 'Template saved locally (backend implementation pending)' }
-				showSuccess('Template save functionality will be available in a future update')
+				this.templateSaveResult = { success: true, message: t('softwarecatalog', 'Template saved locally (backend implementation pending)') }
+				showSuccess(t('softwarecatalog', 'Template save functionality will be available in a future update'))
 			} catch (error) {
 				console.error('Failed to save template:', error)
 				this.templateSaveResult = {
 					success: false,
-					message: 'Failed to save template: ' + error.message,
+					message: t('softwarecatalog', 'Failed to save template: {error}', { error: error.message }),
 				}
-				showError('Failed to save template: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to save template: {error}', { error: error.message }))
 			} finally {
 				this.savingTemplate = false
 			}

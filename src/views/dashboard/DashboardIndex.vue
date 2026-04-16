@@ -1,10 +1,10 @@
 <template>
 	<NcAppContent>
 		<h2 class="pageHeader">
-			Dashboard
+			{{ t('softwarecatalog', 'Dashboard') }}
 		</h2>
 
-		Welkom!
+		{{ t('softwarecatalog', 'Welcome!') }}
 	</NcAppContent>
 </template>
 

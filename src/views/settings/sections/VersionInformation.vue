@@ -18,11 +18,11 @@
 
 <template>
 	<AlwaysVisibleSection
-		name="Version Information"
-		description="Current application and configuration versions"
+		:name="t('softwarecatalog', 'Version Information')"
+		:description="t('softwarecatalog', 'Current application and configuration versions')"
 		:loading="loadingVersionInfo"
 		:show-refresh-button="false"
-		loading-text="Loading version information..."
+		:loading-text="t('softwarecatalog', 'Loading version information...')"
 		:has-info-content="true">
 		<template #header-actions>
 			<NcButton
@@ -30,14 +30,14 @@
 				type="secondary"
 				:disabled="autoConfiguring"
 				@click="consolidatedAutoConfigure">
-				Auto Configure
+				{{ t('softwarecatalog', 'Auto Configure') }}
 			</NcButton>
 			<NcButton
 				class="ml-8"
 				type="error"
 				:disabled="autoConfiguring"
 				@click="handleForceUpdate">
-				Force Update
+				{{ t('softwarecatalog', 'Force Update') }}
 			</NcButton>
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === true"
@@ -45,31 +45,31 @@
 				type="tertiary"
 				:disabled="autoConfiguring"
 				@click="handleResetAutoConfig">
-				Reset Auto-Config
+				{{ t('softwarecatalog', 'Reset Auto-Config') }}
 			</NcButton>
 		</template>
 
 		<div class="version-info">
 			<div class="version-details">
 				<div class="version-item">
-					<strong>Application:</strong> {{ versionInfo.appName }} v{{ versionInfo.appVersion }}
+					<strong>{{ t('softwarecatalog', 'Application:') }}</strong> {{ versionInfo.appName }} v{{ versionInfo.appVersion }}
 				</div>
 				<div class="version-item">
-					<strong>Configured Version:</strong>
+					<strong>{{ t('softwarecatalog', 'Configured Version:') }}</strong>
 					<span v-if="versionInfo.configuredVersion">{{ versionInfo.configuredVersion }}</span>
-					<span v-else class="no-version">Not configured</span>
+					<span v-else class="no-version">{{ t('softwarecatalog', 'Not configured') }}</span>
 				</div>
 				<div class="version-item">
-					<strong>Status:</strong>
-					<span v-if="versionInfo.versionsMatch" class="status-ok">✓ Up to date</span>
-					<span v-else-if="versionInfo.needsUpdate" class="status-warning">⚠ Update needed</span>
-					<span v-else class="status-error">✗ Version mismatch</span>
+					<strong>{{ t('softwarecatalog', 'Status:') }}</strong>
+					<span v-if="versionInfo.versionsMatch" class="status-ok">✓ {{ t('softwarecatalog', 'Up to date') }}</span>
+					<span v-else-if="versionInfo.needsUpdate" class="status-warning">⚠ {{ t('softwarecatalog', 'Update needed') }}</span>
+					<span v-else class="status-error">✗ {{ t('softwarecatalog', 'Version mismatch') }}</span>
 				</div>
 				<div class="version-item">
-					<strong>Open Register:</strong>
-					<span v-if="versionInfo.openRegisterEnabled" class="status-ok">✓ Installed and active</span>
-					<span v-else-if="versionInfo.openRegisterInstalled" class="status-warning">⚠ Installed but not enabled</span>
-					<span v-else class="status-error">✗ Not installed</span>
+					<strong>{{ t('softwarecatalog', 'Open Register:') }}</strong>
+					<span v-if="versionInfo.openRegisterEnabled" class="status-ok">✓ {{ t('softwarecatalog', 'Installed and active') }}</span>
+					<span v-else-if="versionInfo.openRegisterInstalled" class="status-warning">⚠ {{ t('softwarecatalog', 'Installed but not enabled') }}</span>
+					<span v-else class="status-error">✗ {{ t('softwarecatalog', 'Not installed') }}</span>
 				</div>
 			</div>
 

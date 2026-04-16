@@ -24,8 +24,8 @@
 		</CnVersionInfoCard>
 
 		<NcSettingsSection
-			name="Software Catalog Configuration"
-			description="Configure OpenRegister schema mappings for Software Catalog objects"
+			:name="t('softwarecatalog', 'Software Catalog Configuration')"
+			:description="t('softwarecatalog', 'Configure OpenRegister schema mappings for Software Catalog objects')"
 			doc-url="https://docs.opencatalogi.nl" />
 
 		<!-- Version Information Section -->
@@ -36,21 +36,21 @@
 
 		<!-- General Settings Section -->
 		<AlwaysVisibleSection
-			name="General Settings"
-			description="Configure basic application settings"
+			:name="t('softwarecatalog', 'General Settings')"
+			:description="t('softwarecatalog', 'Configure basic application settings')"
 			:loading="store.loadingGeneralSettings"
-			loading-text="Loading general settings..."
+			:loading-text="t('softwarecatalog', 'Loading general settings...')"
 			:show-save-button="true"
 			:show-refresh-button="true"
 			:can-save="catalogLocationChanged"
 			:saving="savingCatalogLocation"
-			save-button-text="Save General Settings"
+			:save-button-text="t('softwarecatalog', 'Save General Settings')"
 			@save="saveGeneralSettings"
 			@refresh="refreshGeneralSettings">
 			<!-- Software Catalog Location -->
 			<div class="catalog-location-section">
-				<h3>Software Catalog Location</h3>
-				<p>Set the base URL for your software catalog interface</p>
+				<h3>{{ t('softwarecatalog', 'Software Catalog Location') }}</h3>
+				<p>{{ t('softwarecatalog', 'Set the base URL for your software catalog interface') }}</p>
 
 				<NcTextField
 					:value="catalogLocation"
@@ -65,7 +65,7 @@
 
 				<div class="catalog-location-help">
 					<p class="help-text">
-						This URL will be used for external links to your software catalog. The system will append "/beheer" to this URL for management interfaces.
+						{{ t('softwarecatalog', 'This URL will be used for external links to your software catalog. The system will append "/beheer" to this URL for management interfaces.') }}
 					</p>
 				</div>
 			</div>

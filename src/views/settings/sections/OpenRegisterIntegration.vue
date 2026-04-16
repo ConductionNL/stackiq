@@ -18,30 +18,30 @@
 
 <template>
 	<AlwaysVisibleSection
-		name="OpenRegister Integration"
-		description="Configure which schemas to use for organizations, contacts, and users"
+		:name="t('softwarecatalog', 'OpenRegister Integration')"
+		:description="t('softwarecatalog', 'Configure which schemas to use for organizations, contacts, and users')"
 		:loading="loading"
-		loading-text="Loading OpenRegister configuration..."
+		:loading-text="t('softwarecatalog', 'Loading OpenRegister configuration...')"
 		:show-save-button="true"
 		:show-refresh-button="true"
 		:can-save="canSave"
 		:saving="saving"
-		save-button-text="Save Configuration"
+		:save-button-text="t('softwarecatalog', 'Save Configuration')"
 		@save="saveConfiguration"
 		@refresh="refreshSettings">
 		<div v-if="!loading">
 			<!-- Warning if OpenRegister is not installed -->
 			<NcNoteCard v-if="!versionInfo.openRegisterEnabled" type="warning">
-				OpenRegister is not installed or not available. Please install it to use the Software Catalog with full functionality.
+				{{ t('softwarecatalog', 'OpenRegister is not installed or not available. Please install it to use the Software Catalog with full functionality.') }}
 			</NcNoteCard>
 
 			<!-- Tabs for OpenRegister Configuration -->
 			<div v-if="versionInfo.openRegisterEnabled" class="openregister-tabs">
 				<StandardTabs
 					:tabs="[
-						{ key: 'general', title: 'General Configuration' },
-						{ key: 'voorzieningen', title: `Voorzieningen${hasVoorzieningenConfigChanges() ? ' *' : ''}` },
-						{ key: 'amef', title: `AMEF${hasAmefConfigChanges() ? ' *' : ''}` },
+						{ key: 'general', title: t('softwarecatalog', 'General Configuration') },
+						{ key: 'voorzieningen', title: t('softwarecatalog', 'Voorzieningen') + (hasVoorzieningenConfigChanges() ? ' *' : '') },
+						{ key: 'amef', title: 'AMEF' + (hasAmefConfigChanges() ? ' *' : '') },
 					]"
 					:active-tab="activeTab"
 					@update:active-tab="activeTab = $event">
@@ -53,7 +53,7 @@
 									<NcSelect
 										v-model="voorzieningenRegister"
 										:options="registerOptions"
-										input-label="Select Voorzieningen Register"
+										:input-label="t('softwarecatalog', 'Select Voorzieningen Register')"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
 										@change="handleVoorzieningenRegisterChange" />
@@ -63,7 +63,7 @@
 									<NcSelect
 										v-model="amefRegister"
 										:options="registerOptions"
-										input-label="Select AMEF Register"
+										:input-label="t('softwarecatalog', 'Select AMEF Register')"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
 										@change="handleAmefRegisterChange" />
@@ -100,13 +100,13 @@
 							<!-- Voorzieningen Empty State -->
 							<div v-else-if="voorzieningenRegister && voorzieningenSchemas.length === 0">
 								<NcNoteCard type="warning">
-									The selected Voorzieningen register has no schemas. Please create schemas in this register.
+									{{ t('softwarecatalog', 'The selected Voorzieningen register has no schemas. Please create schemas in this register.') }}
 								</NcNoteCard>
 							</div>
 							<!-- No Register Selected -->
 							<div v-else>
 								<NcNoteCard type="info">
-									Please select a Voorzieningen register in the General Configuration tab first.
+									{{ t('softwarecatalog', 'Please select a Voorzieningen register in the General Configuration tab first.') }}
 								</NcNoteCard>
 							</div>
 						</div>
@@ -140,13 +140,13 @@
 							<!-- AMEF Empty State -->
 							<div v-else-if="amefRegister && amefSchemas.length === 0">
 								<NcNoteCard type="warning">
-									The selected AMEF register has no schemas. Please create schemas in this register.
+									{{ t('softwarecatalog', 'The selected AMEF register has no schemas. Please create schemas in this register.') }}
 								</NcNoteCard>
 							</div>
 							<!-- No Register Selected -->
 							<div v-else>
 								<NcNoteCard type="info">
-									Please select an AMEF register in the General Configuration tab first.
+									{{ t('softwarecatalog', 'Please select an AMEF register in the General Configuration tab first.') }}
 								</NcNoteCard>
 							</div>
 						</div>
@@ -412,10 +412,10 @@ export default {
 			this.saving = true
 			try {
 				await this.store.saveConfiguration()
-				showSuccess('OpenRegister configuration saved successfully')
+				showSuccess(t('softwarecatalog', 'OpenRegister configuration saved successfully'))
 			} catch (error) {
 				console.error('Failed to save OpenRegister configuration:', error)
-				showError('Failed to save OpenRegister configuration: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to save OpenRegister configuration: {error}', { error: error.message }))
 			} finally {
 				this.saving = false
 			}
@@ -431,10 +431,10 @@ export default {
 			try {
 				// Reload essential OpenRegister configuration data
 				await this.store.loadOpenRegisterEssentials()
-				showSuccess('OpenRegister configuration refreshed successfully')
+				showSuccess(t('softwarecatalog', 'OpenRegister configuration refreshed successfully'))
 			} catch (error) {
 				console.error('Failed to refresh OpenRegister configuration:', error)
-				showError('Failed to refresh OpenRegister configuration: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to refresh OpenRegister configuration: {error}', { error: error.message }))
 			}
 		},
 	},

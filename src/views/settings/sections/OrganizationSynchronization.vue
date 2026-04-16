@@ -18,16 +18,16 @@
 
 <template>
 	<AlwaysVisibleSection
-		name="Organization Synchronization"
-		description="Synchronize organization data between OpenRegister and external systems"
+		:name="t('softwarecatalog', 'Organization Synchronization')"
+		:description="t('softwarecatalog', 'Synchronize organization data between OpenRegister and external systems')"
 		:loading="loading"
 		:show-save-button="true"
 		:show-refresh-button="true"
 		:can-save="hasTimeWindowChanges"
 		:saving="savingConfig"
-		save-button-text="Save Configuration"
+		:save-button-text="t('softwarecatalog', 'Save Configuration')"
 		:refreshing="loadingSyncStatus"
-		refresh-button-text="Refresh Status"
+		:refresh-button-text="t('softwarecatalog', 'Refresh Status')"
 		:has-info-content="true"
 		@save="saveConfiguration"
 		@refresh="refreshConfiguration">
@@ -40,24 +40,24 @@
 					<NcLoadingIcon v-if="performingSync" :size="20" />
 					<Sync v-else :size="20" />
 				</template>
-				{{ selectedTimeWindow && selectedTimeWindow.value === 0 ? 'Full Sync Now' : 'Incremental Sync Now' }}
+				{{ selectedTimeWindow && selectedTimeWindow.value === 0 ? t('softwarecatalog', 'Full Sync Now') : t('softwarecatalog', 'Incremental Sync Now') }}
 			</NcButton>
 		</template>
 		<div>
 			<div class="sync-section">
-				<p>Monitor the status of organization and contact person synchronization</p>
+				<p>{{ t('softwarecatalog', 'Monitor the status of organization and contact person synchronization') }}</p>
 
 				<!-- Time Window Configuration -->
 				<div class="time-window-configuration">
-					<h4>Incremental Sync Time Window</h4>
-					<p>Configure how far back to look for updated organizations during incremental synchronization</p>
+					<h4>{{ t('softwarecatalog', 'Incremental Sync Time Window') }}</h4>
+					<p>{{ t('softwarecatalog', 'Configure how far back to look for updated organizations during incremental synchronization') }}</p>
 
 					<div class="time-window-row">
 						<div class="time-window-selector">
 							<NcSelect
 								v-model="selectedTimeWindow"
 								:options="timeWindowOptions"
-								input-label="Time Window"
+								:input-label="t('softwarecatalog', 'Time Window')"
 								:disabled="loading || loadingSyncStatus"
 								@change="handleTimeWindowChange" />
 						</div>
@@ -72,7 +72,7 @@
 									<NcLoadingIcon v-if="loading" :size="20" />
 									<Refresh v-else :size="20" />
 								</template>
-								Refresh Configuration
+								{{ t('softwarecatalog', 'Refresh Configuration') }}
 							</NcButton>
 
 							<NcButton
@@ -83,7 +83,7 @@
 									<NcLoadingIcon v-if="loadingSyncStatus" :size="20" />
 									<Refresh v-else :size="20" />
 								</template>
-								Refresh Status
+								{{ t('softwarecatalog', 'Refresh Status') }}
 							</NcButton>
 						</div>
 					</div>
@@ -97,47 +97,47 @@
 					<div v-if="syncStatus" class="status-info">
 						<div class="configuration-overview">
 							<div class="config-item">
-								<span class="config-label">Configuration:</span>
-								<span v-if="syncStatus.configured" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
+								<span class="config-label">{{ t('softwarecatalog', 'Configuration:') }}</span>
+								<span v-if="syncStatus.configured" class="status-configured">✓ {{ t('softwarecatalog', 'Configured') }}</span>
+								<span v-else class="status-missing">⚠ {{ t('softwarecatalog', 'Not configured') }}</span>
 							</div>
 
 							<div v-if="syncStatus.configured" class="config-details">
 								<div class="config-item">
-									<span class="config-label">Sync Mode:</span>
-									<span class="config-value">{{ syncStatus.syncMode || 'Unknown' }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Sync Mode:') }}</span>
+									<span class="config-value">{{ syncStatus.syncMode || t('softwarecatalog', 'Unknown') }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Time Window:</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Time Window:') }}</span>
 									<span class="config-value">{{ formatTimeWindow(syncStatus.timeWindow) }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Total Organizations:</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Total Organizations:') }}</span>
 									<span class="config-value">{{ formatNumber(syncStatus.totalOrganizationObjects) || 0 }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Organizations to Process:</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Organizations to Process:') }}</span>
 									<span class="config-value" :class="getProcessingClass(syncStatus.organizationsToProcess)">{{ syncStatus.organizationsToProcess || 0 }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Contact Persons to Process:</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Contact Persons to Process:') }}</span>
 									<span class="config-value" :class="getProcessingClass(syncStatus.contactPersonsToProcess)">{{ syncStatus.contactPersonsToProcess || 0 }}</span>
 								</div>
 								<div v-if="syncStatus.efficiencyImprovement" class="config-item">
-									<span class="config-label">Efficiency Improvement:</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Efficiency Improvement:') }}</span>
 									<span class="config-value efficiency-highlight">{{ syncStatus.efficiencyImprovement }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Organization Entities:</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Organization Entities:') }}</span>
 									<span class="config-value">{{ formatNumber(syncStatus.totalOrganizationEntities) || 0 }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Contact Schema:</span>
-									<span v-if="syncStatus.contactSchemaConfigured" class="status-configured">✓ Configured</span>
-									<span v-else class="status-missing">⚠ Not configured</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Contact Schema:') }}</span>
+									<span v-if="syncStatus.contactSchemaConfigured" class="status-configured">✓ {{ t('softwarecatalog', 'Configured') }}</span>
+									<span v-else class="status-missing">⚠ {{ t('softwarecatalog', 'Not configured') }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Last Sync:</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Last Sync:') }}</span>
 									<span class="config-value">{{ formatLastSyncTime(syncStatus.lastSyncTime) }}</span>
 								</div>
 							</div>
@@ -148,7 +148,7 @@
 					</div>
 					<div v-else class="status-loading">
 						<NcLoadingIcon :size="20" />
-						Loading sync status...
+						{{ t('softwarecatalog', 'Loading sync status...') }}
 					</div>
 				</div>
 
@@ -161,18 +161,18 @@
 						<div class="sync-result-content">
 							<strong>{{ syncResult.message }}</strong>
 							<div v-if="syncResult.success && syncResult.results" class="sync-statistics">
-								<h5>Synchronization Results:</h5>
+								<h5>{{ t('softwarecatalog', 'Synchronization Results:') }}</h5>
 								<ul>
-									<li>Organizations processed: {{ syncResult.results.organizationsProcessed }}</li>
-									<li>Entities created: {{ syncResult.results.entitiesCreated }}</li>
-									<li>Entities updated: {{ syncResult.results.entitiesUpdated }}</li>
-									<li>Contact persons processed: {{ syncResult.results.contactPersonsProcessed }}</li>
-									<li>Users created: {{ syncResult.results.usersCreated }}</li>
-									<li>Users updated: {{ syncResult.results.usersUpdated }}</li>
-									<li>Duration: {{ syncResult.results.duration }}</li>
+									<li>{{ t('softwarecatalog', 'Organizations processed: {count}', { count: syncResult.results.organizationsProcessed }) }}</li>
+									<li>{{ t('softwarecatalog', 'Entities created: {count}', { count: syncResult.results.entitiesCreated }) }}</li>
+									<li>{{ t('softwarecatalog', 'Entities updated: {count}', { count: syncResult.results.entitiesUpdated }) }}</li>
+									<li>{{ t('softwarecatalog', 'Contact persons processed: {count}', { count: syncResult.results.contactPersonsProcessed }) }}</li>
+									<li>{{ t('softwarecatalog', 'Users created: {count}', { count: syncResult.results.usersCreated }) }}</li>
+									<li>{{ t('softwarecatalog', 'Users updated: {count}', { count: syncResult.results.usersUpdated }) }}</li>
+									<li>{{ t('softwarecatalog', 'Duration: {duration}', { duration: syncResult.results.duration }) }}</li>
 								</ul>
 								<div v-if="syncResult.results.errors && syncResult.results.errors.length > 0" class="sync-errors">
-									<h5>Errors encountered:</h5>
+									<h5>{{ t('softwarecatalog', 'Errors encountered:') }}</h5>
 									<ul>
 										<li v-for="error in syncResult.results.errors" :key="error">
 											{{ error }}
@@ -186,8 +186,8 @@
 
 				<!-- Organisation Sync to Voorzieningen Section -->
 				<div class="organisation-voorzieningen-sync">
-					<h4>Sync Organisations to Voorzieningen Register</h4>
-					<p>Synchronize OpenRegister organisations to the voorzieningen register as organisatie objects.</p>
+					<h4>{{ t('softwarecatalog', 'Sync Organisations to Voorzieningen Register') }}</h4>
+					<p>{{ t('softwarecatalog', 'Synchronize OpenRegister organisations to the voorzieningen register as organisatie objects.') }}</p>
 
 					<div class="voorzieningen-sync-controls">
 						<div class="sync-options">
@@ -197,11 +197,11 @@
 										v-model="orgSyncOptions.dryRun"
 										type="checkbox"
 										:disabled="performingOrgSync">
-									Dry Run (preview only)
+									{{ t('softwarecatalog', 'Dry Run (preview only)') }}
 								</label>
 							</div>
 							<div class="option-group">
-								<label for="batch-size">Batch Size:</label>
+								<label for="batch-size">{{ t('softwarecatalog', 'Batch Size:') }}</label>
 								<input
 									id="batch-size"
 									v-model.number="orgSyncOptions.batchSize"
@@ -221,7 +221,7 @@
 									<NcLoadingIcon v-if="performingOrgSync" :size="20" />
 									<Sync v-else :size="20" />
 								</template>
-								{{ orgSyncOptions.dryRun ? 'Preview Sync' : 'Sync Organisations' }}
+								{{ orgSyncOptions.dryRun ? t('softwarecatalog', 'Preview Sync') : t('softwarecatalog', 'Sync Organisations') }}
 							</NcButton>
 						</div>
 					</div>
@@ -235,31 +235,31 @@
 							<div class="sync-result-content">
 								<strong>{{ orgSyncResult.message }}</strong>
 								<div v-if="orgSyncResult.results" class="sync-statistics">
-									<h5>Organisation Sync Results:</h5>
+									<h5>{{ t('softwarecatalog', 'Organisation Sync Results:') }}</h5>
 									<ul>
-										<li>Total organisations: {{ orgSyncResult.results.total_organisations }}</li>
-										<li>Already existing: {{ orgSyncResult.results.existing_count }}</li>
+										<li>{{ t('softwarecatalog', 'Total organisations: {count}', { count: orgSyncResult.results.total_organisations }) }}</li>
+										<li>{{ t('softwarecatalog', 'Already existing: {count}', { count: orgSyncResult.results.existing_count }) }}</li>
 										<li v-if="!orgSyncOptions.dryRun">
-											Created: {{ orgSyncResult.results.created_count }}
+											{{ t('softwarecatalog', 'Created: {count}', { count: orgSyncResult.results.created_count }) }}
 										</li>
 										<li v-if="orgSyncOptions.dryRun">
-											Would create: {{ orgSyncResult.results.to_create_count }}
+											{{ t('softwarecatalog', 'Would create: {count}', { count: orgSyncResult.results.to_create_count }) }}
 										</li>
 										<li v-if="orgSyncResult.results.failed_count > 0">
-											Failed: {{ orgSyncResult.results.failed_count }}
+											{{ t('softwarecatalog', 'Failed: {count}', { count: orgSyncResult.results.failed_count }) }}
 										</li>
 										<li v-if="orgSyncResult.results.total_time_seconds">
-											Duration: {{ orgSyncResult.results.total_time_seconds }}s
+											{{ t('softwarecatalog', 'Duration: {seconds}s', { seconds: orgSyncResult.results.total_time_seconds }) }}
 										</li>
 										<li v-if="orgSyncResult.results.overall_objects_per_second">
-											Performance: {{ orgSyncResult.results.overall_objects_per_second }} orgs/sec
+											{{ t('softwarecatalog', 'Performance: {rate} orgs/sec', { rate: orgSyncResult.results.overall_objects_per_second }) }}
 										</li>
 									</ul>
 									<div v-if="orgSyncResult.results.performance && orgSyncResult.results.performance.length > 0" class="batch-performance">
-										<h5>Batch Performance:</h5>
+										<h5>{{ t('softwarecatalog', 'Batch Performance:') }}</h5>
 										<ul>
 											<li v-for="batch in orgSyncResult.results.performance" :key="batch.batch">
-												Batch {{ batch.batch }}: {{ batch.objects }} objects in {{ batch.time_seconds }}s ({{ batch.objects_per_second }} orgs/sec)
+												{{ t('softwarecatalog', 'Batch {batch}: {objects} objects in {seconds}s ({rate} orgs/sec)', { batch: batch.batch, objects: batch.objects, seconds: batch.time_seconds, rate: batch.objects_per_second }) }}
 											</li>
 										</ul>
 									</div>
@@ -269,23 +269,23 @@
 					</div>
 
 					<div class="voorzieningen-sync-info">
-						<p><strong>What this does:</strong> This sync ensures that all organisations from OpenRegister exist as organisatie objects in the voorzieningen register. This is needed for cross-organisation workflows like leverancier-gemeente gebruik suggestions.</p>
-						<p><strong>Performance:</strong> Uses bulk operations for optimal performance with large numbers of organisations (1000+).</p>
-						<p><strong>Safety:</strong> Only creates missing organisations - existing ones are skipped. Use dry run to preview changes.</p>
+						<p><strong>{{ t('softwarecatalog', 'What this does:') }}</strong> {{ t('softwarecatalog', 'This sync ensures that all organisations from OpenRegister exist as organisatie objects in the voorzieningen register. This is needed for cross-organisation workflows like leverancier-gemeente gebruik suggestions.') }}</p>
+						<p><strong>{{ t('softwarecatalog', 'Performance:') }}</strong> {{ t('softwarecatalog', 'Uses bulk operations for optimal performance with large numbers of organisations (1000+).') }}</p>
+						<p><strong>{{ t('softwarecatalog', 'Safety:') }}</strong> {{ t('softwarecatalog', 'Only creates missing organisations - existing ones are skipped. Use dry run to preview changes.') }}</p>
 					</div>
 				</div>
 
 				<div class="sync-info">
-					<h4>About Synchronization</h4>
-					<p>The synchronization process ensures that:</p>
+					<h4>{{ t('softwarecatalog', 'About Synchronization') }}</h4>
+					<p>{{ t('softwarecatalog', 'The synchronization process ensures that:') }}</p>
 					<ul>
-						<li><strong>Organization entities:</strong> Every organization object has a corresponding organization entity</li>
-						<li><strong>User accounts:</strong> Contact persons have Nextcloud user accounts</li>
-						<li><strong>Relationships:</strong> Organization entities maintain correct user lists</li>
-						<li><strong>Status consistency:</strong> Organization active status reflects the 'beoordeling' field</li>
+						<li><strong>{{ t('softwarecatalog', 'Organization entities:') }}</strong> {{ t('softwarecatalog', 'Every organization object has a corresponding organization entity') }}</li>
+						<li><strong>{{ t('softwarecatalog', 'User accounts:') }}</strong> {{ t('softwarecatalog', 'Contact persons have Nextcloud user accounts') }}</li>
+						<li><strong>{{ t('softwarecatalog', 'Relationships:') }}</strong> {{ t('softwarecatalog', 'Organization entities maintain correct user lists') }}</li>
+						<li><strong>{{ t('softwarecatalog', 'Status consistency:') }}</strong> {{ t('softwarecatalog', "Organization active status reflects the 'beoordeling' field") }}</li>
 					</ul>
-					<p><strong>Time-based filtering:</strong> Organizations remain in the sync queue based on their last update time in OpenRegister, not when they were last processed. An organization will naturally "age out" of the time window once it hasn't been updated for longer than the selected time period.</p>
-					<p><strong>Automatic synchronization:</strong> This process runs every 5 minutes in the background using incremental sync (10-minute window by default). Use manual sync for immediate updates or troubleshooting.</p>
+					<p><strong>{{ t('softwarecatalog', 'Time-based filtering:') }}</strong> {{ t('softwarecatalog', 'Organizations remain in the sync queue based on their last update time in OpenRegister, not when they were last processed. An organization will naturally "age out" of the time window once it hasn\'t been updated for longer than the selected time period.') }}</p>
+					<p><strong>{{ t('softwarecatalog', 'Automatic synchronization:') }}</strong> {{ t('softwarecatalog', 'This process runs every 5 minutes in the background using incremental sync (10-minute window by default). Use manual sync for immediate updates or troubleshooting.') }}</p>
 				</div>
 			</div>
 		</div>
@@ -522,7 +522,7 @@ export default {
 				this.syncStatus = data
 			} catch (error) {
 				console.error('Failed to load sync status:', error)
-				showError('Failed to load synchronization status: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to load synchronization status: {error}', { error: error.message }))
 			} finally {
 				this.loadingSyncStatus = false
 			}
@@ -561,19 +561,19 @@ export default {
 				this.syncResult = result
 
 				if (result.success) {
-					showSuccess('Manual synchronization completed successfully')
+					showSuccess(t('softwarecatalog', 'Manual synchronization completed successfully'))
 					// Reload sync status to reflect changes
 					await this.loadSyncStatus()
 				} else {
-					throw new Error(result.message || 'Synchronization failed')
+					throw new Error(result.message || t('softwarecatalog', 'Synchronization failed'))
 				}
 			} catch (error) {
 				console.error('Failed to perform manual sync:', error)
 				this.syncResult = {
 					success: false,
-					message: 'Failed to perform manual synchronization: ' + error.message,
+					message: t('softwarecatalog', 'Failed to perform manual synchronization: {error}', { error: error.message }),
 				}
-				showError('Failed to perform manual synchronization: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to perform manual synchronization: {error}', { error: error.message }))
 			} finally {
 				this.performingSync = false
 			}
@@ -603,10 +603,10 @@ export default {
 				await this.store.saveConfiguration()
 				// Update the original time window to match the saved value
 				this.originalTimeWindow = { ...this.selectedTimeWindow }
-				showSuccess('Time window configuration saved successfully')
+				showSuccess(t('softwarecatalog', 'Time window configuration saved successfully'))
 			} catch (error) {
 				console.error('Failed to save time window configuration:', error)
-				showError('Failed to save time window configuration: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to save time window configuration: {error}', { error: error.message }))
 			} finally {
 				this.savingConfig = false
 			}
@@ -636,10 +636,10 @@ export default {
 			if (!this.selectedTimeWindow) return ''
 
 			if (this.selectedTimeWindow.value === 0) {
-				return 'Full synchronization will process all organizations regardless of when they were last updated.'
+				return t('softwarecatalog', 'Full synchronization will process all organizations regardless of when they were last updated.')
 			}
 
-			return `Incremental synchronization will process organizations updated within the last ${this.selectedTimeWindow.label}.`
+			return t('softwarecatalog', 'Incremental synchronization will process organizations updated within the last {window}.', { window: this.selectedTimeWindow.label })
 		},
 
 		/**
@@ -649,10 +649,10 @@ export default {
 		 * @return {string} Formatted time window
 		 */
 		formatTimeWindow(minutes) {
-			if (!minutes || minutes === 0) return 'Full sync'
-			if (minutes < 60) return `${minutes} minutes`
-			if (minutes < 1440) return `${Math.floor(minutes / 60)} hours`
-			return `${Math.floor(minutes / 1440)} days`
+			if (!minutes || minutes === 0) return t('softwarecatalog', 'Full sync')
+			if (minutes < 60) return t('softwarecatalog', '{minutes} minutes', { minutes })
+			if (minutes < 1440) return t('softwarecatalog', '{hours} hours', { hours: Math.floor(minutes / 60) })
+			return t('softwarecatalog', '{days} days', { days: Math.floor(minutes / 1440) })
 		},
 
 		/**
@@ -673,12 +673,12 @@ export default {
 		 * @return {string} Formatted time
 		 */
 		formatLastSyncTime(timestamp) {
-			if (!timestamp) return 'Never'
+			if (!timestamp) return t('softwarecatalog', 'Never')
 			try {
 				const date = new Date(timestamp)
 				return date.toLocaleString()
 			} catch {
-				return 'Invalid date'
+				return t('softwarecatalog', 'Invalid date')
 			}
 		},
 
@@ -725,18 +725,20 @@ export default {
 				this.orgSyncResult = result
 
 				if (result.success) {
-					const actionText = this.orgSyncOptions.dryRun ? 'Organisation sync preview completed' : 'Organisation sync completed successfully'
+					const actionText = this.orgSyncOptions.dryRun
+						? t('softwarecatalog', 'Organisation sync preview completed')
+						: t('softwarecatalog', 'Organisation sync completed successfully')
 					showSuccess(actionText)
 				} else {
-					throw new Error(result.message || 'Organisation sync failed')
+					throw new Error(result.message || t('softwarecatalog', 'Organisation sync failed'))
 				}
 			} catch (error) {
 				console.error('Failed to perform organisation sync:', error)
 				this.orgSyncResult = {
 					success: false,
-					message: 'Failed to perform organisation sync: ' + error.message,
+					message: t('softwarecatalog', 'Failed to perform organisation sync: {error}', { error: error.message }),
 				}
-				showError('Failed to perform organisation sync: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to perform organisation sync: {error}', { error: error.message }))
 			} finally {
 				this.performingOrgSync = false
 			}

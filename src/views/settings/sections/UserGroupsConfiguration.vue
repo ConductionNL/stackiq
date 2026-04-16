@@ -18,43 +18,43 @@
 
 <template>
 	<AlwaysVisibleSection
-		name="User Groups Configuration"
-		description="Configure user groups for different access levels and permissions"
+		:name="t('softwarecatalog', 'User Groups Configuration')"
+		:description="t('softwarecatalog', 'Configure user groups for different access levels and permissions')"
 		:loading="loading"
-		loading-text="Loading user groups..."
+		:loading-text="t('softwarecatalog', 'Loading user groups...')"
 		:show-save-button="true"
 		:show-refresh-button="true"
 		:can-save="hasChanges"
 		:saving="savingGroups"
-		save-button-text="Save User Groups"
+		:save-button-text="t('softwarecatalog', 'Save User Groups')"
 		:has-info-content="true"
 		@save="saveAllGroups"
 		@refresh="loadAllGroups">
 		<StandardTabs
 			:tabs="[
-				{ key: 'generic-groups', title: 'Generic Groups' },
-				{ key: 'organization-admin-groups', title: 'Organization Admin Groups' },
-				{ key: 'super-user-groups', title: 'Super User Groups' }
+				{ key: 'generic-groups', title: t('softwarecatalog', 'Generic Groups') },
+				{ key: 'organization-admin-groups', title: t('softwarecatalog', 'Organization Admin Groups') },
+				{ key: 'super-user-groups', title: t('softwarecatalog', 'Super User Groups') }
 			]"
 			:active-tab="activeTab"
 			@update:active-tab="activeTab = $event">
 			<!-- Generic Groups Tab -->
 			<div v-show="activeTab === 'generic-groups'" class="tab-panel">
-				<h3>Generic User Groups</h3>
-				<p>Define the list of generic user groups that can be assigned to users based on their roles</p>
+				<h3>{{ t('softwarecatalog', 'Generic User Groups') }}</h3>
+				<p>{{ t('softwarecatalog', 'Define the list of generic user groups that can be assigned to users based on their roles') }}</p>
 
 				<div class="groups-configuration">
-					<h4>Current Generic User Groups</h4>
+					<h4>{{ t('softwarecatalog', 'Current Generic User Groups') }}</h4>
 					<div class="group-list">
 						<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
 							<NcTextField
 								:value="(group || '').toString()"
-								:placeholder="'Group name'"
-								label="Group Name"
+								:placeholder="t('softwarecatalog', 'Group name')"
+								:label="t('softwarecatalog', 'Group Name')"
 								@update:value="updateGroupName(index, $event)" />
 							<NcButton
 								type="tertiary-no-background"
-								:aria-label="'Remove group'"
+								:aria-label="t('softwarecatalog', 'Remove group')"
 								@click="removeGroup(index)">
 								<template #icon>
 									<Close :size="16" />
@@ -70,7 +70,7 @@
 							<template #icon>
 								<Plus :size="20" />
 							</template>
-							Add Group
+							{{ t('softwarecatalog', 'Add Group') }}
 						</NcButton>
 					</div>
 
@@ -79,7 +79,7 @@
 							<template #icon>
 								<Alert :size="20" />
 							</template>
-							<strong>Validation Errors:</strong>
+							<strong>{{ t('softwarecatalog', 'Validation Errors:') }}</strong>
 							<ul>
 								<li v-for="error in groupValidation.errors" :key="error">
 									{{ error }}
@@ -90,24 +90,24 @@
 
 					<div v-if="groupsSaveResult" class="save-results">
 						<NcNoteCard v-if="groupsSaveResult.success" type="success">
-							Groups saved successfully!
+							{{ t('softwarecatalog', 'Groups saved successfully!') }}
 						</NcNoteCard>
 						<NcNoteCard v-else type="error">
-							{{ groupsSaveResult.error || 'Failed to save groups' }}
+							{{ groupsSaveResult.error || t('softwarecatalog', 'Failed to save groups') }}
 						</NcNoteCard>
 					</div>
 
 					<div class="groups-info">
-						<h4>Group Information</h4>
-						<p>These groups will be used for:</p>
+						<h4>{{ t('softwarecatalog', 'Group Information') }}</h4>
+						<p>{{ t('softwarecatalog', 'These groups will be used for:') }}</p>
 						<ul>
-							<li><strong>Role-based assignment:</strong> Users will be automatically assigned to groups based on their roles</li>
-							<li><strong>Permission management:</strong> Groups can be used to control access to different parts of the system</li>
-							<li><strong>Organization structure:</strong> Special groups like 'ambtenaar' are available for manual assignment (no automatic assignment based on organization type)</li>
+							<li><strong>{{ t('softwarecatalog', 'Role-based assignment:') }}</strong> {{ t('softwarecatalog', 'Users will be automatically assigned to groups based on their roles') }}</li>
+							<li><strong>{{ t('softwarecatalog', 'Permission management:') }}</strong> {{ t('softwarecatalog', 'Groups can be used to control access to different parts of the system') }}</li>
+							<li><strong>{{ t('softwarecatalog', 'Organization structure:') }}</strong> {{ t('softwarecatalog', "Special groups like 'ambtenaar' are available for manual assignment (no automatic assignment based on organization type)") }}</li>
 						</ul>
 
 						<div class="default-groups-info">
-							<h5>Recommended Groups:</h5>
+							<h5>{{ t('softwarecatalog', 'Recommended Groups:') }}</h5>
 							<ul>
 								<li v-for="group in genericUserGroups" :key="group">
 									<code>{{ group }}</code> - {{ getGroupDescription(group) }}
@@ -120,21 +120,21 @@
 
 			<!-- Organization Admin Groups Tab -->
 			<div v-show="activeTab === 'organization-admin-groups'" class="tab-panel">
-				<h3>Organization Admin Groups</h3>
-				<p>Define groups that organization administrators (first contacts) are automatically assigned to</p>
+				<h3>{{ t('softwarecatalog', 'Organization Admin Groups') }}</h3>
+				<p>{{ t('softwarecatalog', 'Define groups that organization administrators (first contacts) are automatically assigned to') }}</p>
 
 				<div class="groups-configuration">
-					<h4>Current Organization Admin Groups</h4>
+					<h4>{{ t('softwarecatalog', 'Current Organization Admin Groups') }}</h4>
 					<div class="group-list">
 						<div v-for="(group, index) in organizationAdminGroups" :key="index" class="group-item">
 							<NcTextField
 								:value="group || ''"
-								:placeholder="'Group name'"
-								label="Group Name"
+								:placeholder="t('softwarecatalog', 'Group name')"
+								:label="t('softwarecatalog', 'Group Name')"
 								@update:value="updateOrganizationAdminGroupName(index, $event)" />
 							<NcButton
 								type="tertiary-no-background"
-								:aria-label="'Remove group'"
+								:aria-label="t('softwarecatalog', 'Remove group')"
 								@click="removeOrganizationAdminGroup(index)">
 								<template #icon>
 									<Close :size="16" />
@@ -150,23 +150,23 @@
 							<template #icon>
 								<Plus :size="20" />
 							</template>
-							Add Organization Admin Group
+							{{ t('softwarecatalog', 'Add Organization Admin Group') }}
 						</NcButton>
 					</div>
 
 					<div v-if="organizationAdminGroupsSaveResult" class="save-results">
 						<NcNoteCard :type="organizationAdminGroupsSaveResult.success ? 'success' : 'error'">
-							{{ organizationAdminGroupsSaveResult.success ? 'Organization admin groups saved successfully!' : organizationAdminGroupsSaveResult.error }}
+							{{ organizationAdminGroupsSaveResult.success ? t('softwarecatalog', 'Organization admin groups saved successfully!') : organizationAdminGroupsSaveResult.error }}
 						</NcNoteCard>
 					</div>
 
 					<div class="groups-info">
-						<h4>Organization Admin Group Information</h4>
-						<p>These groups will be assigned to:</p>
+						<h4>{{ t('softwarecatalog', 'Organization Admin Group Information') }}</h4>
+						<p>{{ t('softwarecatalog', 'These groups will be assigned to:') }}</p>
 						<ul>
-							<li><strong>First contacts:</strong> The first contact person created for an organization</li>
-							<li><strong>Organization administrators:</strong> Users designated as organization administrators</li>
-							<li><strong>Management permissions:</strong> Users who need to manage their organization's data</li>
+							<li><strong>{{ t('softwarecatalog', 'First contacts:') }}</strong> {{ t('softwarecatalog', 'The first contact person created for an organization') }}</li>
+							<li><strong>{{ t('softwarecatalog', 'Organization administrators:') }}</strong> {{ t('softwarecatalog', 'Users designated as organization administrators') }}</li>
+							<li><strong>{{ t('softwarecatalog', 'Management permissions:') }}</strong> {{ t('softwarecatalog', "Users who need to manage their organization's data") }}</li>
 						</ul>
 					</div>
 				</div>
@@ -174,21 +174,21 @@
 
 			<!-- Super User Groups Tab -->
 			<div v-show="activeTab === 'super-user-groups'" class="tab-panel">
-				<h3>Super User Groups</h3>
-				<p>Define groups that super users (system administrators) are automatically assigned to</p>
+				<h3>{{ t('softwarecatalog', 'Super User Groups') }}</h3>
+				<p>{{ t('softwarecatalog', 'Define groups that super users (system administrators) are automatically assigned to') }}</p>
 
 				<div class="groups-configuration">
-					<h4>Current Super User Groups</h4>
+					<h4>{{ t('softwarecatalog', 'Current Super User Groups') }}</h4>
 					<div class="group-list">
 						<div v-for="(group, index) in superUserGroups" :key="index" class="group-item">
 							<NcTextField
 								:value="group || ''"
-								:placeholder="'Group name'"
-								label="Group Name"
+								:placeholder="t('softwarecatalog', 'Group name')"
+								:label="t('softwarecatalog', 'Group Name')"
 								@update:value="updateSuperUserGroupName(index, $event)" />
 							<NcButton
 								type="tertiary-no-background"
-								:aria-label="'Remove group'"
+								:aria-label="t('softwarecatalog', 'Remove group')"
 								@click="removeSuperUserGroup(index)">
 								<template #icon>
 									<Close :size="16" />
@@ -204,23 +204,23 @@
 							<template #icon>
 								<Plus :size="20" />
 							</template>
-							Add Super User Group
+							{{ t('softwarecatalog', 'Add Super User Group') }}
 						</NcButton>
 					</div>
 
 					<div v-if="superUserGroupsSaveResult" class="save-results">
 						<NcNoteCard :type="superUserGroupsSaveResult.success ? 'success' : 'error'">
-							{{ superUserGroupsSaveResult.success ? 'Super user groups saved successfully!' : superUserGroupsSaveResult.error }}
+							{{ superUserGroupsSaveResult.success ? t('softwarecatalog', 'Super user groups saved successfully!') : superUserGroupsSaveResult.error }}
 						</NcNoteCard>
 					</div>
 
 					<div class="groups-info">
-						<h4>Super User Group Information</h4>
-						<p>These groups will be assigned to:</p>
+						<h4>{{ t('softwarecatalog', 'Super User Group Information') }}</h4>
+						<p>{{ t('softwarecatalog', 'These groups will be assigned to:') }}</p>
 						<ul>
-							<li><strong>System administrators:</strong> Users with full system access</li>
-							<li><strong>Platform managers:</strong> Users who manage the entire platform</li>
-							<li><strong>Advanced permissions:</strong> Users who need access to all system features</li>
+							<li><strong>{{ t('softwarecatalog', 'System administrators:') }}</strong> {{ t('softwarecatalog', 'Users with full system access') }}</li>
+							<li><strong>{{ t('softwarecatalog', 'Platform managers:') }}</strong> {{ t('softwarecatalog', 'Users who manage the entire platform') }}</li>
+							<li><strong>{{ t('softwarecatalog', 'Advanced permissions:') }}</strong> {{ t('softwarecatalog', 'Users who need access to all system features') }}</li>
 						</ul>
 					</div>
 				</div>
@@ -494,10 +494,10 @@ export default {
 			try {
 				// Use the settings store's centralized save method
 				await this.store.saveConfiguration()
-				showSuccess('All user groups saved successfully')
+				showSuccess(t('softwarecatalog', 'All user groups saved successfully'))
 			} catch (error) {
 				console.error('Failed to save all groups:', error)
-				showError('Failed to save user groups: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to save user groups: {error}', { error: error.message }))
 			}
 		},
 
@@ -507,10 +507,10 @@ export default {
 		async loadAllGroups() {
 			try {
 				await this.store.loadUserGroupsOnly()
-				showSuccess('User groups reloaded successfully')
+				showSuccess(t('softwarecatalog', 'User groups reloaded successfully'))
 			} catch (error) {
 				console.error('Failed to reload groups:', error)
-				showError('Failed to reload user groups: ' + error.message)
+				showError(t('softwarecatalog', 'Failed to reload user groups: {error}', { error: error.message }))
 			}
 		},
 	},

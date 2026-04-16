@@ -16,8 +16,8 @@
 
 			<!-- Settings (if you have a settings page) -->
 			<div v-else-if="navigationStore.selected === 'settings'" class="settingsPlaceholder">
-				<h2>Settings</h2>
-				<p>Settings page would go here</p>
+				<h2>{{ t('softwarecatalog', 'Settings') }}</h2>
+				<p>{{ t('softwarecatalog', 'Settings page would go here') }}</p>
 			</div>
 
 			<!-- Default/fallback -->

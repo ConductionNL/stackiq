@@ -1,7 +1,7 @@
 <template>
 	<CnDashboardPage
-		title="Dashboard"
-		description="Overzicht van uw softwarecatalogus en configuraties"
+		:title="t('softwarecatalog', 'Dashboard')"
+		:description="t('softwarecatalog', 'Overview of your software catalog and configurations')"
 		:widgets="widgetDefs"
 		:layout="dashboardLayout"
 		:loading="loading">
@@ -11,7 +11,7 @@
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
 				</template>
-				Vernieuwen
+				{{ t('softwarecatalog', 'Refresh') }}
 			</NcButton>
 		</template>
 
@@ -20,10 +20,10 @@
 			<NcNoteCard type="info" class="infoBox">
 				<div class="infoBoxContent">
 					<h3 class="infoBoxTitle">
-						Beheer van Organisaties
+						{{ t('softwarecatalog', 'Organisation Management') }}
 					</h3>
 					<p class="infoBoxText">
-						Organisaties kunnen worden geaccepteerd en beheerd via de organisaties pagina. Het aanmaken en bewerken van gebruikers gaat ook via de organisatie pagina, omdat deze onderdeel zijn van organisaties.
+						{{ t('softwarecatalog', 'Organisations can be accepted and managed via the organisations page. Creating and editing users also goes via the organisation page, as they are part of organisations.') }}
 					</p>
 					<div class="infoBoxActions">
 						<NcButton
@@ -32,7 +32,7 @@
 							<template #icon>
 								<OfficeBuildingOutline :size="16" />
 							</template>
-							Ga naar Organisaties
+							{{ t('softwarecatalog', 'Go to Organisations') }}
 						</NcButton>
 					</div>
 				</div>
@@ -43,18 +43,18 @@
 		<template #widget-stats-table-1>
 			<div class="statisticsTableContainer">
 				<div class="statisticsTableHeader">
-					<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
+					<span class="lastUpdated">{{ t('softwarecatalog', 'Last updated: {date}', { date: formatDate(new Date()) }) }}</span>
 				</div>
 
 				<table class="objectStatisticsTable">
 					<thead>
 						<tr>
-							<th>Object Type</th>
+							<th>{{ t('softwarecatalog', 'Object Type') }}</th>
 							<th class="countHeader">
-								Aantal
+								{{ t('softwarecatalog', 'Count') }}
 							</th>
 							<th class="manageHeader">
-								Beheren
+								{{ t('softwarecatalog', 'Manage') }}
 							</th>
 						</tr>
 					</thead>
@@ -73,11 +73,11 @@
 									<template #icon>
 										<component :is="getIconForObjectType(stat.slug)" :size="16" />
 									</template>
-									Beheren
+									{{ t('softwarecatalog', 'Manage') }}
 								</NcButton>
 								<span v-else class="disabledManage">
 									<component :is="getIconForObjectType(stat.slug)" :size="16" />
-									<span class="strikethrough">Beheren</span>
+									<span class="strikethrough">{{ t('softwarecatalog', 'Manage') }}</span>
 								</span>
 							</td>
 						</tr>
@@ -90,18 +90,18 @@
 		<template #widget-stats-table-2>
 			<div class="statisticsTableContainer">
 				<div class="statisticsTableHeader">
-					<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
+					<span class="lastUpdated">{{ t('softwarecatalog', 'Last updated: {date}', { date: formatDate(new Date()) }) }}</span>
 				</div>
 
 				<table class="objectStatisticsTable">
 					<thead>
 						<tr>
-							<th>Object Type</th>
+							<th>{{ t('softwarecatalog', 'Object Type') }}</th>
 							<th class="countHeader">
-								Aantal
+								{{ t('softwarecatalog', 'Count') }}
 							</th>
 							<th class="manageHeader">
-								Beheren
+								{{ t('softwarecatalog', 'Manage') }}
 							</th>
 						</tr>
 					</thead>
@@ -120,11 +120,11 @@
 									<template #icon>
 										<component :is="getIconForObjectType(stat.slug)" :size="16" />
 									</template>
-									Beheren
+									{{ t('softwarecatalog', 'Manage') }}
 								</NcButton>
 								<span v-else class="disabledManage">
 									<component :is="getIconForObjectType(stat.slug)" :size="16" />
-									<span class="strikethrough">Beheren</span>
+									<span class="strikethrough">{{ t('softwarecatalog', 'Manage') }}</span>
 								</span>
 							</td>
 						</tr>
@@ -198,9 +198,9 @@ export default {
 		 */
 		widgetDefs() {
 			return [
-				{ id: 'info-box', title: 'Beheer Informatie' },
-				{ id: 'stats-table-1', title: 'Object Statistieken (1)' },
-				{ id: 'stats-table-2', title: 'Object Statistieken (2)' },
+				{ id: 'info-box', title: t('softwarecatalog', 'Management Information') },
+				{ id: 'stats-table-1', title: t('softwarecatalog', 'Object Statistics (1)') },
+				{ id: 'stats-table-2', title: t('softwarecatalog', 'Object Statistics (2)') },
 			]
 		},
 
