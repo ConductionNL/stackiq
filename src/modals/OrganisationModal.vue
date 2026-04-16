@@ -42,7 +42,7 @@
 					<div class="form-row">
 						<NcTextField
 							:value="formData.beschrijvingKort"
-							:label="t('softwarecatalog', 'Short Description')"
+							:label="t('softwarecatalog', 'Short description')"
 							:placeholder="t('softwarecatalog', 'Brief description of the organisation')"
 							@update:value="formData.beschrijvingKort = $event" />
 					</div>
@@ -68,7 +68,7 @@
 						<NcTextField
 							:value="formData.oin"
 							:label="t('softwarecatalog', 'OIN')"
-							:placeholder="t('softwarecatalog', 'Organisation Identification Number')"
+							:placeholder="t('softwarecatalog', 'Organisation identification number')"
 							@update:value="formData.oin = $event" />
 					</div>
 
@@ -101,7 +101,7 @@
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>
-						{{ isEditMode ? t('softwarecatalog', 'Update Organisation') : t('softwarecatalog', 'Create Organisation') }}
+						{{ isEditMode ? t('softwarecatalog', 'Update organisation') : t('softwarecatalog', 'Create organisation') }}
 					</NcButton>
 				</div>
 			</form>
@@ -183,11 +183,11 @@ export default {
 		},
 		modalTitle() {
 			if (this.isEditMode) {
-				return this.t('softwarecatalog', 'Edit Organisation')
+				return this.t('softwarecatalog', 'Edit organisation')
 			} else if (this.isCopyMode) {
-				return this.t('softwarecatalog', 'Copy Organisation')
+				return this.t('softwarecatalog', 'Copy organisation')
 			}
-			return this.t('softwarecatalog', 'Create Organisation')
+			return this.t('softwarecatalog', 'Create organisation')
 		},
 		isFormValid() {
 			return this.formData.naam.trim().length > 0

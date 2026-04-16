@@ -1,6 +1,6 @@
 <template>
 	<NcAppSidebar
-		:name="t('softwarecatalog', 'Software Catalog')"
+		:name="t('softwarecatalog', 'Software catalog')"
 		:subname="t('softwarecatalog', 'Quick navigation')">
 		<NcAppSidebarTab id="info-tab" :name="t('softwarecatalog', 'Information')" :order="1">
 			<template #icon>

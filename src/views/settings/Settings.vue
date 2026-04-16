@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<NcSettingsSection
-			:name="t('softwarecatalog', 'Software Catalog')"
+			:name="t('softwarecatalog', 'Software catalog')"
 			:description="t('softwarecatalog', 'A central place for managing your software')"
 			doc-url="https://docs.softwarecatalog.nl" />
 
@@ -34,7 +34,7 @@
 
 				<!-- Object Type Schema Configuration -->
 				<div v-if="selectedRegister && hasSchemas" class="schema-configuration">
-					<h3>{{ t('softwarecatalog', 'Schema Configuration') }}</h3>
+					<h3>{{ t('softwarecatalog', 'Schema configuration') }}</h3>
 					<p>{{ t('softwarecatalog', 'Select which schema to use for each object type') }}</p>
 
 					<div v-for="objectType in settings.objectTypes" :key="objectType" class="object-type-section">
@@ -60,7 +60,7 @@
 							<NcLoadingIcon v-if="saving" :size="20" />
 							<Save v-else :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Save Configuration') }}
+						{{ t('softwarecatalog', 'Save configuration') }}
 					</NcButton>
 				</div>
 			</div>
@@ -73,17 +73,17 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			:name="t('softwarecatalog', 'Other Configuration')"
+			:name="t('softwarecatalog', 'Other configuration')"
 			:description="t('softwarecatalog', 'Configure additional application settings')">
 			<div v-if="!loading">
 				<!-- Catalog Location -->
 				<div class="catalog-location-section">
-					<h3>{{ t('softwarecatalog', 'Catalog Location') }}</h3>
+					<h3>{{ t('softwarecatalog', 'Catalog location') }}</h3>
 					<p>{{ t('softwarecatalog', 'Set the base URL for your catalog interface') }}</p>
 
 					<NcTextField
 						:value.sync="catalogLocation"
-						:label="t('softwarecatalog', 'Catalog Location URL')"
+						:label="t('softwarecatalog', 'Catalog location URL')"
 						:placeholder="t('softwarecatalog', 'https://catalog.example.com')"
 						:disabled="loading || savingCatalogLocation"
 						@update:value="onCatalogLocationChange">
@@ -108,7 +108,7 @@
 								<NcLoadingIcon v-if="savingCatalogLocation" :size="20" />
 								<Save v-else :size="20" />
 							</template>
-							{{ t('softwarecatalog', 'Save Catalog Location') }}
+							{{ t('softwarecatalog', 'Save catalog location') }}
 						</NcButton>
 					</div>
 				</div>

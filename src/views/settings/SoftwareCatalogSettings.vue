@@ -6,7 +6,7 @@
 			:app-version="appVersion"
 			:is-up-to-date="true"
 			:show-update-button="true"
-			:title="t('softwarecatalog', 'Version Information')"
+			:title="t('softwarecatalog', 'Version information')"
 			:description="t('softwarecatalog', 'Information about the current Software Catalogus installation')">
 			<template #footer>
 				<div class="cn-support-info">
@@ -24,8 +24,8 @@
 		</CnVersionInfoCard>
 
 		<NcSettingsSection
-			:name="t('softwarecatalog', 'Software Catalog Configuration')"
-			:description="t('softwarecatalog', 'Configure OpenRegister schema mappings for Software Catalog objects')"
+			:name="t('softwarecatalog', 'Software catalog configuration')"
+			:description="t('softwarecatalog', 'Configure OpenRegister schema mappings for Software catalog objects')"
 			doc-url="https://docs.opencatalogi.nl" />
 
 		<!-- Version Information Section -->
@@ -36,7 +36,7 @@
 
 		<!-- General Settings Section -->
 		<AlwaysVisibleSection
-			:name="t('softwarecatalog', 'General Settings')"
+			:name="t('softwarecatalog', 'General settings')"
 			:description="t('softwarecatalog', 'Configure basic application settings')"
 			:loading="store.loadingGeneralSettings"
 			:loading-text="t('softwarecatalog', 'Loading general settings...')"
@@ -44,17 +44,17 @@
 			:show-refresh-button="true"
 			:can-save="catalogLocationChanged"
 			:saving="savingCatalogLocation"
-			:save-button-text="t('softwarecatalog', 'Save General Settings')"
+			:save-button-text="t('softwarecatalog', 'Save general settings')"
 			@save="saveGeneralSettings"
 			@refresh="refreshGeneralSettings">
 			<!-- Software Catalog Location -->
 			<div class="catalog-location-section">
-				<h3>{{ t('softwarecatalog', 'Software Catalog Location') }}</h3>
+				<h3>{{ t('softwarecatalog', 'Software catalog location') }}</h3>
 				<p>{{ t('softwarecatalog', 'Set the base URL for your software catalog interface') }}</p>
 
 				<NcTextField
 					:value="catalogLocation"
-					:label="t('softwarecatalog', 'Software Catalog Location URL')"
+					:label="t('softwarecatalog', 'Software catalog location URL')"
 					:placeholder="t('softwarecatalog', 'https://catalog.example.com')"
 					:disabled="store.loading"
 					@update:value="onCatalogLocationChange">

@@ -159,7 +159,7 @@
 		<!-- Password Change Dialog -->
 		<NcDialog
 			v-if="showPasswordDialog"
-			:name="t('softwarecatalog', 'Change Password')"
+			:name="t('softwarecatalog', 'Change password')"
 			size="small"
 			@closing="closePasswordDialog">
 			<div class="password-dialog">
@@ -274,7 +274,7 @@
 		<!-- Groups Management Dialog -->
 		<NcDialog
 			v-if="showGroupsDialog"
-			:name="t('softwarecatalog', 'Manage User Groups')"
+			:name="t('softwarecatalog', 'Manage user groups')"
 			size="normal"
 			@closing="closeGroupsDialog">
 			<div class="groups-dialog">

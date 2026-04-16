@@ -26,7 +26,7 @@
 		:show-refresh-button="true"
 		:can-save="canSave"
 		:saving="saving"
-		:save-button-text="t('softwarecatalog', 'Save Configuration')"
+		:save-button-text="t('softwarecatalog', 'Save configuration')"
 		@save="saveConfiguration"
 		@refresh="refreshSettings">
 		<div v-if="!loading">
@@ -39,7 +39,7 @@
 			<div v-if="versionInfo.openRegisterEnabled" class="openregister-tabs">
 				<StandardTabs
 					:tabs="[
-						{ key: 'general', title: t('softwarecatalog', 'General Configuration') },
+						{ key: 'general', title: t('softwarecatalog', 'General configuration') },
 						{ key: 'voorzieningen', title: t('softwarecatalog', 'Voorzieningen') + (hasVoorzieningenConfigChanges() ? ' *' : '') },
 						{ key: 'amef', title: 'AMEF' + (hasAmefConfigChanges() ? ' *' : '') },
 					]"
@@ -53,7 +53,7 @@
 									<NcSelect
 										v-model="voorzieningenRegister"
 										:options="registerOptions"
-										:input-label="t('softwarecatalog', 'Select Voorzieningen Register')"
+										:input-label="t('softwarecatalog', 'Select Voorzieningen register')"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
 										@change="handleVoorzieningenRegisterChange" />

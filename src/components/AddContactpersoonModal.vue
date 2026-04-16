@@ -13,7 +13,7 @@ Modal component for adding new contactpersoon to an organisation
 
 <template>
 	<NcDialog v-if="show"
-		:name="t('softwarecatalog', 'Add Contactpersoon')"
+		:name="t('softwarecatalog', 'Add contactpersoon')"
 		size="small"
 		@closing="closeModal">
 		<div class="add-contactpersoon-modal">
@@ -25,7 +25,7 @@ Modal component for adding new contactpersoon to an organisation
 				<div class="form-row">
 					<NcTextField
 						:value="formData.voornaam"
-						:label="t('softwarecatalog', 'First Name')"
+						:label="t('softwarecatalog', 'First name')"
 						:placeholder="t('softwarecatalog', 'Enter first name')"
 						class="compact-field"
 						required
@@ -35,7 +35,7 @@ Modal component for adding new contactpersoon to an organisation
 				<div class="form-row">
 					<NcTextField
 						:value="formData.achternaam"
-						:label="t('softwarecatalog', 'Last Name')"
+						:label="t('softwarecatalog', 'Last name')"
 						:placeholder="t('softwarecatalog', 'Enter last name')"
 						class="compact-field"
 						required
@@ -46,7 +46,7 @@ Modal component for adding new contactpersoon to an organisation
 					<NcTextField
 						:value="formData['e-mailadres']"
 						type="email"
-						:label="t('softwarecatalog', 'Email Address')"
+						:label="t('softwarecatalog', 'Email address')"
 						:placeholder="t('softwarecatalog', 'Enter email address')"
 						class="compact-field"
 						required
@@ -63,7 +63,7 @@ Modal component for adding new contactpersoon to an organisation
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Add Contactpersoon') }}
+						{{ t('softwarecatalog', 'Add contactpersoon') }}
 					</NcButton>
 				</div>
 			</form>
