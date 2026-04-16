@@ -1,11 +1,11 @@
 <template>
 	<NcSettingsSection
-		:name="t('softwarecatalog', 'Object Statistics')"
+		:name="t('softwarecatalog', 'Object statistics')"
 		:description="t('softwarecatalog', 'Overview of objects stored in configured registers')">
 		<!-- Refresh Button in Title Section -->
 		<template #title>
 			<div class="section-title-with-button">
-				<span>{{ t('softwarecatalog', 'Object Statistics') }}</span>
+				<span>{{ t('softwarecatalog', 'Object statistics') }}</span>
 				<NcButton
 					:disabled="loadingStats"
 					class="title-refresh-button"
@@ -32,7 +32,7 @@
 					<thead>
 						<tr>
 							<th>{{ t('softwarecatalog', 'Register') }}</th>
-							<th>{{ t('softwarecatalog', 'Object Type') }}</th>
+							<th>{{ t('softwarecatalog', 'Object type') }}</th>
 							<th>{{ t('softwarecatalog', 'Count') }}</th>
 							<th>{{ t('softwarecatalog', 'Status') }}</th>
 							<th>{{ t('softwarecatalog', 'Actions') }}</th>
@@ -66,7 +66,7 @@
 									<template #icon>
 										<SyncIcon :size="16" />
 									</template>
-									{{ bulkSyncLoading ? t('softwarecatalog', 'Syncing...') : t('softwarecatalog', 'Sync Standards') }}
+									{{ bulkSyncLoading ? t('softwarecatalog', 'Syncing...') : t('softwarecatalog', 'Sync standards') }}
 								</NcButton>
 							</td>
 						</tr>
@@ -77,7 +77,7 @@
 			<!-- No Data Message -->
 			<NcEmptyContent
 				v-else-if="!loadingStats"
-				:name="t('softwarecatalog', 'No Statistics Available')"
+				:name="t('softwarecatalog', 'No statistics available')"
 				:description="t('softwarecatalog', 'No configured registers found or statistics could not be loaded.')">
 				<template #icon>
 					<ChartLineIcon />
@@ -100,7 +100,7 @@
 		<NcModal v-if="showSyncDialog" @close="closeBulkSyncDialog">
 			<div class="bulk-sync-dialog">
 				<div class="modal-header">
-					<h2>{{ t('softwarecatalog', 'Bulk Sync Module Standards') }}</h2>
+					<h2>{{ t('softwarecatalog', 'Bulk sync module standards') }}</h2>
 				</div>
 
 				<div class="modal-content">
@@ -127,7 +127,7 @@
 
 					<!-- Results Section -->
 					<div v-if="syncCompleted" class="results-section">
-						<h3>{{ t('softwarecatalog', 'Sync Results:') }}</h3>
+						<h3>{{ t('softwarecatalog', 'Sync results:') }}</h3>
 						<div class="results-stats">
 							<div class="stat-item">
 								<span class="stat-label">{{ t('softwarecatalog', 'Compliance objects processed:') }}</span>
@@ -162,11 +162,11 @@
 								<table class="modules-table">
 									<thead>
 										<tr>
-											<th>{{ t('softwarecatalog', 'Module Name') }}</th>
+											<th>{{ t('softwarecatalog', 'Module name') }}</th>
 											<th>{{ t('softwarecatalog', 'Status') }}</th>
 											<th>{{ t('softwarecatalog', 'Reason') }}</th>
-											<th>{{ t('softwarecatalog', 'Compliance Count') }}</th>
-											<th>{{ t('softwarecatalog', 'Standards Count') }}</th>
+											<th>{{ t('softwarecatalog', 'Compliance count') }}</th>
+											<th>{{ t('softwarecatalog', 'Standards count') }}</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -217,7 +217,7 @@
 						:disabled="bulkSyncLoading"
 						type="primary"
 						@click="startBulkSync">
-						{{ bulkSyncLoading ? t('softwarecatalog', 'Syncing...') : t('softwarecatalog', 'Start Sync') }}
+						{{ bulkSyncLoading ? t('softwarecatalog', 'Syncing...') : t('softwarecatalog', 'Start sync') }}
 					</NcButton>
 					<NcButton @click="closeBulkSyncDialog">
 						{{ syncCompleted ? t('softwarecatalog', 'Close') : t('softwarecatalog', 'Cancel') }}

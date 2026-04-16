@@ -18,7 +18,7 @@
 
 <template>
 	<AlwaysVisibleSection
-		:name="t('softwarecatalog', 'User Groups Configuration')"
+		:name="t('softwarecatalog', 'User groups configuration')"
 		:description="t('softwarecatalog', 'Configure user groups for different access levels and permissions')"
 		:loading="loading"
 		:loading-text="t('softwarecatalog', 'Loading user groups...')"
@@ -26,31 +26,31 @@
 		:show-refresh-button="true"
 		:can-save="hasChanges"
 		:saving="savingGroups"
-		:save-button-text="t('softwarecatalog', 'Save User Groups')"
+		:save-button-text="t('softwarecatalog', 'Save user groups')"
 		:has-info-content="true"
 		@save="saveAllGroups"
 		@refresh="loadAllGroups">
 		<StandardTabs
 			:tabs="[
-				{ key: 'generic-groups', title: t('softwarecatalog', 'Generic Groups') },
-				{ key: 'organization-admin-groups', title: t('softwarecatalog', 'Organization Admin Groups') },
-				{ key: 'super-user-groups', title: t('softwarecatalog', 'Super User Groups') }
+				{ key: 'generic-groups', title: t('softwarecatalog', 'Generic groups') },
+				{ key: 'organization-admin-groups', title: t('softwarecatalog', 'Organization admin groups') },
+				{ key: 'super-user-groups', title: t('softwarecatalog', 'Super user groups') }
 			]"
 			:active-tab="activeTab"
 			@update:active-tab="activeTab = $event">
 			<!-- Generic Groups Tab -->
 			<div v-show="activeTab === 'generic-groups'" class="tab-panel">
-				<h3>{{ t('softwarecatalog', 'Generic User Groups') }}</h3>
+				<h3>{{ t('softwarecatalog', 'Generic user groups') }}</h3>
 				<p>{{ t('softwarecatalog', 'Define the list of generic user groups that can be assigned to users based on their roles') }}</p>
 
 				<div class="groups-configuration">
-					<h4>{{ t('softwarecatalog', 'Current Generic User Groups') }}</h4>
+					<h4>{{ t('softwarecatalog', 'Current generic user groups') }}</h4>
 					<div class="group-list">
 						<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
 							<NcTextField
 								:value="(group || '').toString()"
 								:placeholder="t('softwarecatalog', 'Group name')"
-								:label="t('softwarecatalog', 'Group Name')"
+								:label="t('softwarecatalog', 'Group name')"
 								@update:value="updateGroupName(index, $event)" />
 							<NcButton
 								type="tertiary-no-background"
@@ -70,7 +70,7 @@
 							<template #icon>
 								<Plus :size="20" />
 							</template>
-							{{ t('softwarecatalog', 'Add Group') }}
+							{{ t('softwarecatalog', 'Add group') }}
 						</NcButton>
 					</div>
 
@@ -79,7 +79,7 @@
 							<template #icon>
 								<Alert :size="20" />
 							</template>
-							<strong>{{ t('softwarecatalog', 'Validation Errors:') }}</strong>
+							<strong>{{ t('softwarecatalog', 'Validation errors:') }}</strong>
 							<ul>
 								<li v-for="error in groupValidation.errors" :key="error">
 									{{ error }}
@@ -98,7 +98,7 @@
 					</div>
 
 					<div class="groups-info">
-						<h4>{{ t('softwarecatalog', 'Group Information') }}</h4>
+						<h4>{{ t('softwarecatalog', 'Group information') }}</h4>
 						<p>{{ t('softwarecatalog', 'These groups will be used for:') }}</p>
 						<ul>
 							<li><strong>{{ t('softwarecatalog', 'Role-based assignment:') }}</strong> {{ t('softwarecatalog', 'Users will be automatically assigned to groups based on their roles') }}</li>
@@ -107,7 +107,7 @@
 						</ul>
 
 						<div class="default-groups-info">
-							<h5>{{ t('softwarecatalog', 'Recommended Groups:') }}</h5>
+							<h5>{{ t('softwarecatalog', 'Recommended groups:') }}</h5>
 							<ul>
 								<li v-for="group in genericUserGroups" :key="group">
 									<code>{{ group }}</code> - {{ getGroupDescription(group) }}
@@ -120,17 +120,17 @@
 
 			<!-- Organization Admin Groups Tab -->
 			<div v-show="activeTab === 'organization-admin-groups'" class="tab-panel">
-				<h3>{{ t('softwarecatalog', 'Organization Admin Groups') }}</h3>
+				<h3>{{ t('softwarecatalog', 'Organization admin groups') }}</h3>
 				<p>{{ t('softwarecatalog', 'Define groups that organization administrators (first contacts) are automatically assigned to') }}</p>
 
 				<div class="groups-configuration">
-					<h4>{{ t('softwarecatalog', 'Current Organization Admin Groups') }}</h4>
+					<h4>{{ t('softwarecatalog', 'Current organization admin groups') }}</h4>
 					<div class="group-list">
 						<div v-for="(group, index) in organizationAdminGroups" :key="index" class="group-item">
 							<NcTextField
 								:value="group || ''"
 								:placeholder="t('softwarecatalog', 'Group name')"
-								:label="t('softwarecatalog', 'Group Name')"
+								:label="t('softwarecatalog', 'Group name')"
 								@update:value="updateOrganizationAdminGroupName(index, $event)" />
 							<NcButton
 								type="tertiary-no-background"
@@ -150,7 +150,7 @@
 							<template #icon>
 								<Plus :size="20" />
 							</template>
-							{{ t('softwarecatalog', 'Add Organization Admin Group') }}
+							{{ t('softwarecatalog', 'Add organization admin group') }}
 						</NcButton>
 					</div>
 
@@ -161,7 +161,7 @@
 					</div>
 
 					<div class="groups-info">
-						<h4>{{ t('softwarecatalog', 'Organization Admin Group Information') }}</h4>
+						<h4>{{ t('softwarecatalog', 'Organization admin group information') }}</h4>
 						<p>{{ t('softwarecatalog', 'These groups will be assigned to:') }}</p>
 						<ul>
 							<li><strong>{{ t('softwarecatalog', 'First contacts:') }}</strong> {{ t('softwarecatalog', 'The first contact person created for an organization') }}</li>
@@ -174,17 +174,17 @@
 
 			<!-- Super User Groups Tab -->
 			<div v-show="activeTab === 'super-user-groups'" class="tab-panel">
-				<h3>{{ t('softwarecatalog', 'Super User Groups') }}</h3>
+				<h3>{{ t('softwarecatalog', 'Super user groups') }}</h3>
 				<p>{{ t('softwarecatalog', 'Define groups that super users (system administrators) are automatically assigned to') }}</p>
 
 				<div class="groups-configuration">
-					<h4>{{ t('softwarecatalog', 'Current Super User Groups') }}</h4>
+					<h4>{{ t('softwarecatalog', 'Current super user groups') }}</h4>
 					<div class="group-list">
 						<div v-for="(group, index) in superUserGroups" :key="index" class="group-item">
 							<NcTextField
 								:value="group || ''"
 								:placeholder="t('softwarecatalog', 'Group name')"
-								:label="t('softwarecatalog', 'Group Name')"
+								:label="t('softwarecatalog', 'Group name')"
 								@update:value="updateSuperUserGroupName(index, $event)" />
 							<NcButton
 								type="tertiary-no-background"
@@ -204,7 +204,7 @@
 							<template #icon>
 								<Plus :size="20" />
 							</template>
-							{{ t('softwarecatalog', 'Add Super User Group') }}
+							{{ t('softwarecatalog', 'Add super user group') }}
 						</NcButton>
 					</div>
 
@@ -215,7 +215,7 @@
 					</div>
 
 					<div class="groups-info">
-						<h4>{{ t('softwarecatalog', 'Super User Group Information') }}</h4>
+						<h4>{{ t('softwarecatalog', 'Super user group information') }}</h4>
 						<p>{{ t('softwarecatalog', 'These groups will be assigned to:') }}</p>
 						<ul>
 							<li><strong>{{ t('softwarecatalog', 'System administrators:') }}</strong> {{ t('softwarecatalog', 'Users with full system access') }}</li>

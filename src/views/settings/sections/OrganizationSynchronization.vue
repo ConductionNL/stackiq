@@ -18,20 +18,20 @@
 
 <template>
 	<AlwaysVisibleSection
-		:name="t('softwarecatalog', 'Organization Synchronization')"
+		:name="t('softwarecatalog', 'Organization synchronization')"
 		:description="t('softwarecatalog', 'Synchronize organization data between OpenRegister and external systems')"
 		:loading="loading"
 		:show-save-button="true"
 		:show-refresh-button="true"
 		:can-save="hasTimeWindowChanges"
 		:saving="savingConfig"
-		:save-button-text="t('softwarecatalog', 'Save Configuration')"
+		:save-button-text="t('softwarecatalog', 'Save configuration')"
 		:refreshing="loadingSyncStatus"
-		:refresh-button-text="t('softwarecatalog', 'Refresh Status')"
+		:refresh-button-text="t('softwarecatalog', 'Refresh status')"
 		:has-info-content="true"
 		@save="saveConfiguration"
 		@refresh="refreshConfiguration">
-		<template #header-actions>
+		<template #actions>
 			<NcButton
 				type="primary"
 				:disabled="loading || performingSync"
@@ -40,7 +40,7 @@
 					<NcLoadingIcon v-if="performingSync" :size="20" />
 					<Sync v-else :size="20" />
 				</template>
-				{{ selectedTimeWindow && selectedTimeWindow.value === 0 ? t('softwarecatalog', 'Full Sync Now') : t('softwarecatalog', 'Incremental Sync Now') }}
+				{{ selectedTimeWindow && selectedTimeWindow.value === 0 ? t('softwarecatalog', 'Full sync now') : t('softwarecatalog', 'Incremental sync now') }}
 			</NcButton>
 		</template>
 		<div>
@@ -49,7 +49,7 @@
 
 				<!-- Time Window Configuration -->
 				<div class="time-window-configuration">
-					<h4>{{ t('softwarecatalog', 'Incremental Sync Time Window') }}</h4>
+					<h4>{{ t('softwarecatalog', 'Incremental sync time window') }}</h4>
 					<p>{{ t('softwarecatalog', 'Configure how far back to look for updated organizations during incremental synchronization') }}</p>
 
 					<div class="time-window-row">
@@ -57,7 +57,7 @@
 							<NcSelect
 								v-model="selectedTimeWindow"
 								:options="timeWindowOptions"
-								:input-label="t('softwarecatalog', 'Time Window')"
+								:input-label="t('softwarecatalog', 'Time window')"
 								:disabled="loading || loadingSyncStatus"
 								@change="handleTimeWindowChange" />
 						</div>
@@ -72,7 +72,7 @@
 									<NcLoadingIcon v-if="loading" :size="20" />
 									<Refresh v-else :size="20" />
 								</template>
-								{{ t('softwarecatalog', 'Refresh Configuration') }}
+								{{ t('softwarecatalog', 'Refresh configuration') }}
 							</NcButton>
 
 							<NcButton
@@ -83,7 +83,7 @@
 									<NcLoadingIcon v-if="loadingSyncStatus" :size="20" />
 									<Refresh v-else :size="20" />
 								</template>
-								{{ t('softwarecatalog', 'Refresh Status') }}
+								{{ t('softwarecatalog', 'Refresh status') }}
 							</NcButton>
 						</div>
 					</div>
@@ -104,15 +104,15 @@
 
 							<div v-if="syncStatus.configured" class="config-details">
 								<div class="config-item">
-									<span class="config-label">{{ t('softwarecatalog', 'Sync Mode:') }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Sync mode:') }}</span>
 									<span class="config-value">{{ syncStatus.syncMode || t('softwarecatalog', 'Unknown') }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">{{ t('softwarecatalog', 'Time Window:') }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Time window:') }}</span>
 									<span class="config-value">{{ formatTimeWindow(syncStatus.timeWindow) }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">{{ t('softwarecatalog', 'Total Organizations:') }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Total organizations:') }}</span>
 									<span class="config-value">{{ formatNumber(syncStatus.totalOrganizationObjects) || 0 }}</span>
 								</div>
 								<div class="config-item">
@@ -120,24 +120,24 @@
 									<span class="config-value" :class="getProcessingClass(syncStatus.organizationsToProcess)">{{ syncStatus.organizationsToProcess || 0 }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">{{ t('softwarecatalog', 'Contact Persons to Process:') }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Contact persons to process:') }}</span>
 									<span class="config-value" :class="getProcessingClass(syncStatus.contactPersonsToProcess)">{{ syncStatus.contactPersonsToProcess || 0 }}</span>
 								</div>
 								<div v-if="syncStatus.efficiencyImprovement" class="config-item">
-									<span class="config-label">{{ t('softwarecatalog', 'Efficiency Improvement:') }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Efficiency improvement:') }}</span>
 									<span class="config-value efficiency-highlight">{{ syncStatus.efficiencyImprovement }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">{{ t('softwarecatalog', 'Organization Entities:') }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Organization entities:') }}</span>
 									<span class="config-value">{{ formatNumber(syncStatus.totalOrganizationEntities) || 0 }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">{{ t('softwarecatalog', 'Contact Schema:') }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Contact schema:') }}</span>
 									<span v-if="syncStatus.contactSchemaConfigured" class="status-configured">✓ {{ t('softwarecatalog', 'Configured') }}</span>
 									<span v-else class="status-missing">⚠ {{ t('softwarecatalog', 'Not configured') }}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">{{ t('softwarecatalog', 'Last Sync:') }}</span>
+									<span class="config-label">{{ t('softwarecatalog', 'Last sync:') }}</span>
 									<span class="config-value">{{ formatLastSyncTime(syncStatus.lastSyncTime) }}</span>
 								</div>
 							</div>
@@ -161,7 +161,7 @@
 						<div class="sync-result-content">
 							<strong>{{ syncResult.message }}</strong>
 							<div v-if="syncResult.success && syncResult.results" class="sync-statistics">
-								<h5>{{ t('softwarecatalog', 'Synchronization Results:') }}</h5>
+								<h5>{{ t('softwarecatalog', 'Synchronization results:') }}</h5>
 								<ul>
 									<li>{{ t('softwarecatalog', 'Organizations processed: {count}', { count: syncResult.results.organizationsProcessed }) }}</li>
 									<li>{{ t('softwarecatalog', 'Entities created: {count}', { count: syncResult.results.entitiesCreated }) }}</li>
@@ -186,7 +186,7 @@
 
 				<!-- Organisation Sync to Voorzieningen Section -->
 				<div class="organisation-voorzieningen-sync">
-					<h4>{{ t('softwarecatalog', 'Sync Organisations to Voorzieningen Register') }}</h4>
+					<h4>{{ t('softwarecatalog', 'Sync organisations to Voorzieningen register') }}</h4>
 					<p>{{ t('softwarecatalog', 'Synchronize OpenRegister organisations to the voorzieningen register as organisatie objects.') }}</p>
 
 					<div class="voorzieningen-sync-controls">
@@ -197,11 +197,11 @@
 										v-model="orgSyncOptions.dryRun"
 										type="checkbox"
 										:disabled="performingOrgSync">
-									{{ t('softwarecatalog', 'Dry Run (preview only)') }}
+									{{ t('softwarecatalog', 'Dry run (preview only)') }}
 								</label>
 							</div>
 							<div class="option-group">
-								<label for="batch-size">{{ t('softwarecatalog', 'Batch Size:') }}</label>
+								<label for="batch-size">{{ t('softwarecatalog', 'Batch size:') }}</label>
 								<input
 									id="batch-size"
 									v-model.number="orgSyncOptions.batchSize"
@@ -221,7 +221,7 @@
 									<NcLoadingIcon v-if="performingOrgSync" :size="20" />
 									<Sync v-else :size="20" />
 								</template>
-								{{ orgSyncOptions.dryRun ? t('softwarecatalog', 'Preview Sync') : t('softwarecatalog', 'Sync Organisations') }}
+								{{ orgSyncOptions.dryRun ? t('softwarecatalog', 'Preview sync') : t('softwarecatalog', 'Sync organisations') }}
 							</NcButton>
 						</div>
 					</div>
@@ -235,7 +235,7 @@
 							<div class="sync-result-content">
 								<strong>{{ orgSyncResult.message }}</strong>
 								<div v-if="orgSyncResult.results" class="sync-statistics">
-									<h5>{{ t('softwarecatalog', 'Organisation Sync Results:') }}</h5>
+									<h5>{{ t('softwarecatalog', 'Organisation sync results:') }}</h5>
 									<ul>
 										<li>{{ t('softwarecatalog', 'Total organisations: {count}', { count: orgSyncResult.results.total_organisations }) }}</li>
 										<li>{{ t('softwarecatalog', 'Already existing: {count}', { count: orgSyncResult.results.existing_count }) }}</li>
@@ -256,7 +256,7 @@
 										</li>
 									</ul>
 									<div v-if="orgSyncResult.results.performance && orgSyncResult.results.performance.length > 0" class="batch-performance">
-										<h5>{{ t('softwarecatalog', 'Batch Performance:') }}</h5>
+										<h5>{{ t('softwarecatalog', 'Batch performance:') }}</h5>
 										<ul>
 											<li v-for="batch in orgSyncResult.results.performance" :key="batch.batch">
 												{{ t('softwarecatalog', 'Batch {batch}: {objects} objects in {seconds}s ({rate} orgs/sec)', { batch: batch.batch, objects: batch.objects, seconds: batch.time_seconds, rate: batch.objects_per_second }) }}
@@ -276,7 +276,7 @@
 				</div>
 
 				<div class="sync-info">
-					<h4>{{ t('softwarecatalog', 'About Synchronization') }}</h4>
+					<h4>{{ t('softwarecatalog', 'About synchronization') }}</h4>
 					<p>{{ t('softwarecatalog', 'The synchronization process ensures that:') }}</p>
 					<ul>
 						<li><strong>{{ t('softwarecatalog', 'Organization entities:') }}</strong> {{ t('softwarecatalog', 'Every organization object has a corresponding organization entity') }}</li>

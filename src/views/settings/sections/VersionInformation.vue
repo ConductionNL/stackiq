@@ -18,26 +18,26 @@
 
 <template>
 	<AlwaysVisibleSection
-		:name="t('softwarecatalog', 'Version Information')"
+		:name="t('softwarecatalog', 'Version information')"
 		:description="t('softwarecatalog', 'Current application and configuration versions')"
 		:loading="loadingVersionInfo"
 		:show-refresh-button="false"
 		:loading-text="t('softwarecatalog', 'Loading version information...')"
 		:has-info-content="true">
-		<template #header-actions>
+		<template #actions>
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === false"
 				type="secondary"
 				:disabled="autoConfiguring"
 				@click="consolidatedAutoConfigure">
-				{{ t('softwarecatalog', 'Auto Configure') }}
+				{{ t('softwarecatalog', 'Auto configure') }}
 			</NcButton>
 			<NcButton
 				class="ml-8"
 				type="error"
 				:disabled="autoConfiguring"
 				@click="handleForceUpdate">
-				{{ t('softwarecatalog', 'Force Update') }}
+				{{ t('softwarecatalog', 'Force update') }}
 			</NcButton>
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === true"
@@ -45,7 +45,7 @@
 				type="tertiary"
 				:disabled="autoConfiguring"
 				@click="handleResetAutoConfig">
-				{{ t('softwarecatalog', 'Reset Auto-Config') }}
+				{{ t('softwarecatalog', 'Reset auto-config') }}
 			</NcButton>
 		</template>
 
@@ -55,7 +55,7 @@
 					<strong>{{ t('softwarecatalog', 'Application:') }}</strong> {{ versionInfo.appName }} v{{ versionInfo.appVersion }}
 				</div>
 				<div class="version-item">
-					<strong>{{ t('softwarecatalog', 'Configured Version:') }}</strong>
+					<strong>{{ t('softwarecatalog', 'Configured version:') }}</strong>
 					<span v-if="versionInfo.configuredVersion">{{ versionInfo.configuredVersion }}</span>
 					<span v-else class="no-version">{{ t('softwarecatalog', 'Not configured') }}</span>
 				</div>

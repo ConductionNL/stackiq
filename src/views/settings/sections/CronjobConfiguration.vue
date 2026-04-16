@@ -18,7 +18,7 @@
 
 <template>
 	<AlwaysVisibleSection
-		:name="t('softwarecatalog', 'Background Jobs Configuration')"
+		:name="t('softwarecatalog', 'Background jobs configuration')"
 		:description="t('softwarecatalog', 'Configure user and organisation context for background jobs to enable proper authorization')"
 		:loading="loading"
 		:loading-text="t('softwarecatalog', 'Loading cronjob configuration...')"
@@ -91,7 +91,7 @@
 									<NcLoadingIcon v-if="savingJob === job.id" :size="20" />
 									<ContentSave v-else :size="20" />
 								</template>
-								{{ savingJob === job.id ? t('softwarecatalog', 'Saving...') : t('softwarecatalog', 'Save Configuration') }}
+								{{ savingJob === job.id ? t('softwarecatalog', 'Saving...') : t('softwarecatalog', 'Save configuration') }}
 							</NcButton>
 
 							<NcButton
@@ -102,7 +102,7 @@
 									<NcLoadingIcon v-if="runningJob === job.id" :size="20" />
 									<Play v-else :size="20" />
 								</template>
-								{{ runningJob === job.id ? t('softwarecatalog', 'Running...') : t('softwarecatalog', 'Run Now') }}
+								{{ runningJob === job.id ? t('softwarecatalog', 'Running...') : t('softwarecatalog', 'Run now') }}
 							</NcButton>
 
 							<!-- Status indicator -->

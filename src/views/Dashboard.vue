@@ -5,7 +5,7 @@
 		:widgets="widgetDefs"
 		:layout="dashboardLayout"
 		:loading="loading">
-		<template #header-actions>
+		<template #actions>
 			<NcButton type="secondary" @click="refreshAllData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
@@ -20,7 +20,7 @@
 			<NcNoteCard type="info" class="infoBox">
 				<div class="infoBoxContent">
 					<h3 class="infoBoxTitle">
-						{{ t('softwarecatalog', 'Organisation Management') }}
+						{{ t('softwarecatalog', 'Organisation management') }}
 					</h3>
 					<p class="infoBoxText">
 						{{ t('softwarecatalog', 'Organisations can be accepted and managed via the organisations page. Creating and editing users also goes via the organisation page, as they are part of organisations.') }}
@@ -49,7 +49,7 @@
 				<table class="objectStatisticsTable">
 					<thead>
 						<tr>
-							<th>{{ t('softwarecatalog', 'Object Type') }}</th>
+							<th>{{ t('softwarecatalog', 'Object type') }}</th>
 							<th class="countHeader">
 								{{ t('softwarecatalog', 'Count') }}
 							</th>
@@ -96,7 +96,7 @@
 				<table class="objectStatisticsTable">
 					<thead>
 						<tr>
-							<th>{{ t('softwarecatalog', 'Object Type') }}</th>
+							<th>{{ t('softwarecatalog', 'Object type') }}</th>
 							<th class="countHeader">
 								{{ t('softwarecatalog', 'Count') }}
 							</th>
@@ -198,9 +198,9 @@ export default {
 		 */
 		widgetDefs() {
 			return [
-				{ id: 'info-box', title: t('softwarecatalog', 'Management Information') },
-				{ id: 'stats-table-1', title: t('softwarecatalog', 'Object Statistics (1)') },
-				{ id: 'stats-table-2', title: t('softwarecatalog', 'Object Statistics (2)') },
+				{ id: 'info-box', title: t('softwarecatalog', 'Management information') },
+				{ id: 'stats-table-1', title: t('softwarecatalog', 'Object statistics (1)') },
+				{ id: 'stats-table-2', title: t('softwarecatalog', 'Object statistics (2)') },
 			]
 		},
 
