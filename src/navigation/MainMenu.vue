@@ -1,6 +1,7 @@
 <template>
 	<NcAppNavigation>
 		<NcAppNavigationList>
+
 			<!-- Dashboard -->
 			<NcAppNavigationItem
 				:active="navigationStore.selected === 'dashboard'"
@@ -23,6 +24,16 @@
 				</template>
 			</NcAppNavigationItem>
 		</NcAppNavigationList>
+
+		<NcAppNavigationSettings>
+			<NcAppNavigationItem
+				name="Settings"
+				@click="$emit('open-settings')">
+				<template #icon>
+					<Cog :size="20" />
+				</template>
+			</NcAppNavigationItem>
+		</NcAppNavigationSettings>
 	</NcAppNavigation>
 </template>
 <script>
@@ -30,11 +41,13 @@ import {
 	NcAppNavigation,
 	NcAppNavigationList,
 	NcAppNavigationItem,
+	NcAppNavigationSettings,
 } from '@nextcloud/vue'
 import { navigationStore, objectStore } from '../store/store.js'
 
 // Icons
 import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
+import Cog from 'vue-material-design-icons/Cog.vue'
 import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import ApplicationCog from 'vue-material-design-icons/ApplicationCog.vue'
@@ -58,12 +71,15 @@ import Star from 'vue-material-design-icons/Star.vue'
  */
 export default {
 	name: 'MainMenu',
+	emits: ['open-settings'],
 	components: {
 		NcAppNavigation,
 		NcAppNavigationList,
 		NcAppNavigationItem,
+		NcAppNavigationSettings,
 		// Icons
 		ViewDashboard,
+		Cog,
 		OfficeBuildingOutline,
 		AccountMultiple,
 		ApplicationCog,

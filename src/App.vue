@@ -24,7 +24,8 @@
 
 		<!-- App loaded normally -->
 		<template v-else-if="storesReady && hasOpenRegisters">
-			<MainMenu />
+			<MainMenu @open-settings="settingsOpen = true" />
+			<UserSettings :open="settingsOpen" @update:open="settingsOpen = $event" />
 			<Views />
 			<CnIndexSidebar
 				v-if="sidebarState.active && !objectSidebarState.active"
@@ -71,6 +72,7 @@ import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from
 import { CnObjectSidebar, CnIndexSidebar } from '@conduction/nextcloud-vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
+import UserSettings from './views/settings/UserSettings.vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
 import Views from './views/Views.vue'
@@ -87,6 +89,7 @@ export default {
 		CnObjectSidebar,
 		CnIndexSidebar,
 		MainMenu,
+		UserSettings,
 		Modals,
 		Dialogs,
 		Views,
@@ -102,6 +105,7 @@ export default {
 	data() {
 		return {
 			storesReady: false,
+			settingsOpen: false,
 			objectSidebarState: {
 				active: false,
 				open: true,
