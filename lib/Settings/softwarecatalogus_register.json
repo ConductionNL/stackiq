@@ -3,7 +3,7 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.2.1"
+    "version": "2.3.0"
   },
   "x-openregister": {
     "type": "application",
@@ -1925,14 +1925,54 @@
           "read": [
             "gebruik-beheerder",
             "gebruik-raadpleger",
-            { "group": "aanbod-beheerder", "match": { "_organisation": "$organisation" } },
-            { "group": "ambtenaar", "match": { "_organisation": "$organisation" } },
-            { "group": "functioneel-beheerder", "match": { "_organisation": "$organisation" } },
-            { "group": "organisatie-beheerder", "match": { "_organisation": "$organisation" } },
-            { "group": "organisaties-beheerder", "match": { "_organisation": "$organisation" } },
-            { "group": "software-catalog-users", "match": { "_organisation": "$organisation" } },
-            { "group": "software-catalog-admins", "match": { "_organisation": "$organisation" } },
-            { "group": "vng-raadpleger", "match": { "_organisation": "$organisation" } }
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "ambtenaar",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "software-catalog-users",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "software-catalog-admins",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "vng-raadpleger",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
           ],
           "update": [
             "aanbod-beheerder",
@@ -1970,7 +2010,7 @@
         "slug": "organisatie",
         "title": "Organisatie",
         "description": "Een organisatie die voorzieningen aanbiedt",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "summary": "",
         "icon": "OfficeBuildingOutline",
         "required": [
@@ -2538,7 +2578,37 @@
             "CE-markering documenten",
             "Aanbestedingsdocumentatie"
           ],
-          "autoPublish": true
+          "autoPublish": true,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "Concept",
+            "final": [
+              "Deactief"
+            ],
+            "transitions": {
+              "activate": {
+                "from": [
+                  "Concept"
+                ],
+                "to": "Actief",
+                "description": "Activate the organisation."
+              },
+              "deactivate": {
+                "from": [
+                  "Actief"
+                ],
+                "to": "Deactief",
+                "description": "Deactivate the organisation."
+              },
+              "reactivate": {
+                "from": [
+                  "Deactief"
+                ],
+                "to": "Actief",
+                "description": "Re-activate a deactivated organisation."
+              }
+            }
+          }
         }
       },
       "gebruik": {
@@ -2546,7 +2616,7 @@
         "slug": "gebruik",
         "title": "Gebruik",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.1.5",
+        "version": "1.2.0",
         "summary": "",
         "icon": "Usage",
         "required": [
@@ -3006,7 +3076,44 @@
             "Contract",
             "Verwerkingsovereenkomst"
           ],
-          "autoPublish": false
+          "autoPublish": false,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "Verwerving",
+            "final": [
+              "Uitgefaseerd"
+            ],
+            "transitions": {
+              "plan": {
+                "from": [
+                  "Verwerving"
+                ],
+                "to": "Gepland",
+                "description": "Plan the usage."
+              },
+              "goLive": {
+                "from": [
+                  "Gepland"
+                ],
+                "to": "In productie",
+                "description": "Go live with the usage."
+              },
+              "phaseOut": {
+                "from": [
+                  "In productie"
+                ],
+                "to": "Uit te faseren",
+                "description": "Mark the usage to be phased out."
+              },
+              "retire": {
+                "from": [
+                  "Uit te faseren"
+                ],
+                "to": "Uitgefaseerd",
+                "description": "Retire the usage."
+              }
+            }
+          }
         }
       },
       "contract": {
@@ -3014,7 +3121,7 @@
         "slug": "contract",
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
-        "version": "0.0.11",
+        "version": "0.1.0",
         "summary": "",
         "icon": "FileDocumentEdit",
         "required": [
@@ -3244,7 +3351,37 @@
         "configuration": {
           "objectNameField": "contractNummer",
           "objectDescriptionField": "contractType",
-          "autoPublish": false
+          "autoPublish": false,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "In onderhandeling",
+            "final": [
+              "Verlopen"
+            ],
+            "transitions": {
+              "sign": {
+                "from": [
+                  "In onderhandeling"
+                ],
+                "to": "Actief",
+                "description": "Sign and activate the contract."
+              },
+              "expire": {
+                "from": [
+                  "Actief"
+                ],
+                "to": "Verlopen",
+                "description": "Mark the contract as expired."
+              },
+              "renegotiate": {
+                "from": [
+                  "Verlopen"
+                ],
+                "to": "In onderhandeling",
+                "description": "Re-open negotiation on an expired contract."
+              }
+            }
+          }
         }
       },
       "koppeling": {
@@ -3252,7 +3389,7 @@
         "slug": "koppeling",
         "title": "Koppeling",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
-        "version": "0.1.1",
+        "version": "0.2.0",
         "summary": "",
         "icon": "Link",
         "required": [
@@ -3577,7 +3714,38 @@
           "autoPublish": false,
           "objectNameField": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
           "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang"
+          "objectDescriptionField": "beschrijvingLang",
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "in ontwikkeling",
+            "final": [
+              "teruggetrokken"
+            ],
+            "transitions": {
+              "release": {
+                "from": [
+                  "in ontwikkeling"
+                ],
+                "to": "in gebruik",
+                "description": "Release the koppeling."
+              },
+              "sunset": {
+                "from": [
+                  "in gebruik"
+                ],
+                "to": "einde ondersteuning",
+                "description": "Mark the koppeling as end-of-support."
+              },
+              "withdraw": {
+                "from": [
+                  "in gebruik",
+                  "einde ondersteuning"
+                ],
+                "to": "teruggetrokken",
+                "description": "Withdraw the koppeling."
+              }
+            }
+          }
         }
       },
       "beoordeeling": {
@@ -6800,7 +6968,10 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/koppeling",
-              "inversedBy": ["moduleA", "moduleB"]
+              "inversedBy": [
+                "moduleA",
+                "moduleB"
+              ]
             }
           },
           "compliancy": {
@@ -7058,7 +7229,7 @@
         "slug": "moduleVersie",
         "title": "Applicatieversie",
         "description": "Schema voor applicatieversies",
-        "version": "0.0.10",
+        "version": "0.1.0",
         "summary": "",
         "icon": "ViewModule",
         "required": [],
@@ -7196,7 +7367,38 @@
           "objectNameField": "versie",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
-          "autoPublish": true
+          "autoPublish": true,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "in ontwikkeling",
+            "final": [
+              "teruggetrokken"
+            ],
+            "transitions": {
+              "release": {
+                "from": [
+                  "in ontwikkeling"
+                ],
+                "to": "in gebruik",
+                "description": "Release the module version."
+              },
+              "sunset": {
+                "from": [
+                  "in gebruik"
+                ],
+                "to": "einde ondersteuning",
+                "description": "Mark the module version as end-of-support."
+              },
+              "withdraw": {
+                "from": [
+                  "in gebruik",
+                  "einde ondersteuning"
+                ],
+                "to": "teruggetrokken",
+                "description": "Withdraw the module version."
+              }
+            }
+          }
         }
       }
     },
