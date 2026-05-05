@@ -19,6 +19,7 @@ namespace OCA\SoftwareCatalog\AppInfo;
 
 use OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
+use OCA\SoftwareCatalog\Dashboard\ConceptOrganisatiesWidget;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
 use OCA\SoftwareCatalog\EventListener\TestEventListener;
 use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
@@ -428,6 +429,9 @@ class Application extends App implements IBootstrap
                     );
                 }
                 );
+
+        // Dashboard widgets — see lib/Dashboard/*.php and src/*Widget.js.
+        $context->registerDashboardWidget(ConceptOrganisatiesWidget::class);
     }//end register()
 
     /**

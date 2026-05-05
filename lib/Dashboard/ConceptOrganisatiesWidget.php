@@ -93,9 +93,13 @@ class ConceptOrganisatiesWidget implements IWidget
      */
     public function load(): void
     {
-        $appId      = Application::APP_ID;
-        $scriptName = $appId.'-conceptOrganisatiesWidget';
-        Util::addScript(application: $appId, file: $scriptName);
+        $appId = Application::APP_ID;
+        // Shared chunks emitted by webpack splitChunks + runtimeChunk (see webpack.config.js).
+        // Order: runtime → vendor → nc-vue → widget.
+        Util::addScript(application: $appId, file: $appId.'-runtime');
+        Util::addScript(application: $appId, file: $appId.'-shared-vendor');
+        Util::addScript(application: $appId, file: $appId.'-shared-nc-vue');
+        Util::addScript(application: $appId, file: $appId.'-conceptOrganisatiesWidget');
         Util::addStyle(application: $appId, file: 'dashboardWidgets');
     }//end load()
 }//end class
