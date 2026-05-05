@@ -22,6 +22,10 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'settings.js'),
 		filename: appId + '-settings.js',
 	},
+	conceptOrganisatiesWidget: {
+		import: path.join(__dirname, 'src', 'conceptOrganisatiesWidget.js'),
+		filename: appId + '-conceptOrganisatiesWidget.js',
+	},
 }
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package
@@ -48,12 +52,6 @@ webpackConfig.module = {
 			loader: 'vue-loader',
 		},
 		{
-			test: /\.ts$/,
-			loader: 'ts-loader',
-			exclude: /node_modules/,
-			options: { appendTsSuffixTo: [/\.vue$/] },
-		},
-		{
 			test: /\.css$/,
 			use: ['style-loader', 'css-loader'],
 		},
@@ -67,5 +65,36 @@ webpackConfig.plugins = [
 // Force @nextcloud/dialogs to resolve from this app's node_modules,
 // preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
 webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
+
+// Shared chunks so widgets reuse Vue / Pinia / @nextcloud/vue + @conduction/nextcloud-vue
+// instead of bundling them per entry. Slashes \\/ used to match both posix and win paths.
+webpackConfig.optimization = {
+	...(webpackConfig.optimization || {}),
+	runtimeChunk: { name: 'runtime' },
+	splitChunks: {
+		...(webpackConfig.optimization?.splitChunks || {}),
+		chunks: 'all',
+		cacheGroups: {
+			default: false,
+			defaultVendors: false,
+			ncVue: {
+				name: appId + '-shared-nc-vue',
+				test: /[\\/]node_modules[\\/](@nextcloud[\\/]vue|@conduction[\\/]nextcloud-vue)[\\/]|[\\/]nextcloud-vue[\\/]src[\\/]/,
+				priority: 30,
+				reuseExistingChunk: true,
+				enforce: true,
+				filename: appId + '-shared-nc-vue.js',
+			},
+			vendor: {
+				name: appId + '-shared-vendor',
+				test: /[\\/]node_modules[\\/](vue|pinia|vue-material-design-icons|@vueuse|core-js)[\\/]/,
+				priority: 20,
+				reuseExistingChunk: true,
+				enforce: true,
+				filename: appId + '-shared-vendor.js',
+			},
+		},
+	},
+}
 
 module.exports = webpackConfig
