@@ -300,6 +300,7 @@ export default function Home() {
       <main className="marketing-page">
         <DetailHero
           appId="softwarecatalog"
+          background="cobalt"
           status={{ label: 'Stable', color: 'var(--c-mint-500)' }}
           version="v1.1"
           locales="NL · EN"
