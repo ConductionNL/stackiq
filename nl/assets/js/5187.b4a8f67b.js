@@ -1,1 +1,0 @@
-"use strict";(globalThis.webpackChunksoftwarecatalog_docs=globalThis.webpackChunksoftwarecatalog_docs||[]).push([[5187],{5187(a,e,s){s.d(e,{createTreemapServices:()=>c.d});var c=s(1592);s(6902)}}]);
