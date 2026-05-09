@@ -1,158 +1,157 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Conduction B.V. -->
+
+<!--
+ SoftwareCatalog app shell. Mounts CnAppRoot with the bundled manifest
+ and the customComponents registry; provides the `objectSidebarState`
+ channel so detail pages (CnDetailPage) can drive a single
+ host-rendered CnObjectSidebar through the #sidebar slot.
+
+ Global modals/dialogs (`<Modals />`, `<Dialogs />`) stay mounted at
+ the app root so legacy custom components (OrganisatieIndexView,
+ SoftwareCatalogSettingsPage) can still trigger them through the
+ navigationStore.modal channel.
+
+ @spec openspec/changes/softwarecatalog-manifest-v1/tasks.md#task-4.3
+-->
 <template>
-	<NcContent app-name="softwarecatalog">
-		<!-- OpenRegister not installed: show empty state -->
-		<NcAppContent v-if="storesReady && !hasOpenRegisters" class="open-register-missing">
-			<NcEmptyContent
-				:name="t('softwarecatalog', 'OpenRegister is required')"
-				:description="t('softwarecatalog', 'Software Catalogus needs the OpenRegister app to store and manage data. Please install OpenRegister from the app store to get started.')">
-				<template #icon>
-					<img :src="appIcon" class="open-register-icon">
-				</template>
-				<template #action>
-					<NcButton
-						v-if="isAdmin"
-						type="primary"
-						:href="appStoreUrl">
-						{{ t('softwarecatalog', 'Install OpenRegister') }}
-					</NcButton>
-					<p v-else class="open-register-admin-hint">
-						{{ t('softwarecatalog', 'Ask your administrator to install the OpenRegister app.') }}
-					</p>
-				</template>
-			</NcEmptyContent>
-		</NcAppContent>
+	<div class="softwarecatalog-app-root">
+		<CnAppRoot
+			:manifest="manifest"
+			:custom-components="customComponents"
+			:page-types="pageTypes"
+			app-id="softwarecatalog"
+			:translate="translateForApp"
+			:permissions="permissions">
+			<template #sidebar>
+				<CnObjectSidebar
+					v-if="objectSidebarState.active"
+					:title="objectSidebarState.title"
+					:subtitle="objectSidebarState.subtitle"
+					:object-type="objectSidebarState.objectType"
+					:object-id="objectSidebarState.objectId"
+					:register="objectSidebarState.register"
+					:schema="objectSidebarState.schema"
+					:hidden-tabs="objectSidebarState.hiddenTabs"
+					:tabs="objectSidebarState.tabs"
+					:open="objectSidebarState.open"
+					@update:open="objectSidebarState.open = $event" />
+			</template>
+		</CnAppRoot>
 
-		<!-- App loaded normally -->
-		<template v-else-if="storesReady && hasOpenRegisters">
-			<MainMenu />
-			<Views />
-			<CnIndexSidebar
-				v-if="sidebarState.active"
-				:schema="sidebarState.schema"
-				:visible-columns="sidebarState.visibleColumns"
-				:search-value="sidebarState.searchValue"
-				:active-filters="sidebarState.activeFilters"
-				:facet-data="sidebarState.facetData"
-				:open="sidebarState.open"
-				@update:open="sidebarState.open = $event"
-				@search="onSidebarSearch"
-				@columns-change="onSidebarColumnsChange"
-				@filter-change="onSidebarFilterChange" />
-			<Modals />
-			<Dialogs />
-		</template>
-
-		<!-- Loading -->
-		<NcAppContent v-else>
-			<div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-				<NcLoadingIcon :size="64" />
-			</div>
-		</NcAppContent>
-	</NcContent>
+		<!-- Legacy global modals + dialogs (keep until every consumer migrates to CnFormDialog / CnDeleteDialog). -->
+		<Modals />
+		<Dialogs />
+	</div>
 </template>
 
 <script>
-
 import Vue from 'vue'
-import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import { CnIndexSidebar } from '@conduction/nextcloud-vue'
-import { generateUrl, imagePath } from '@nextcloud/router'
-import MainMenu from './navigation/MainMenu.vue'
+import { translate as ncT } from '@nextcloud/l10n'
+import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
-import Views from './views/Views.vue'
 import { settingsStore } from './store/store.js'
 
 export default {
 	name: 'App',
+
 	components: {
-		NcContent,
-		NcAppContent,
-		NcButton,
-		NcEmptyContent,
-		NcLoadingIcon,
-		CnIndexSidebar,
-		MainMenu,
+		CnAppRoot,
+		CnObjectSidebar,
 		Modals,
 		Dialogs,
-		Views,
 	},
 
 	provide() {
 		return {
-			sidebarState: this.sidebarState,
+			// Channel for CnDetailPage → host-rendered CnObjectSidebar.
+			// Vue.observable makes the plain object reactive for Vue 2.
+			objectSidebarState: this.objectSidebarState,
 		}
+	},
+
+	props: {
+		/**
+		 * Manifest object — passed from main.js bootstrap. CnAppRoot reads
+		 * `manifest.dependencies` for the dependency-check phase and
+		 * `manifest.menu` for the default CnAppNav.
+		 */
+		manifest: {
+			type: Object,
+			required: true,
+		},
+		/**
+		 * Registry of consumer-injected components used by:
+		 *   - `type: "custom"` pages (`page.component`)
+		 *   - `headerComponent` / `actionsComponent` slot overrides
+		 *   - `pages[].config.sidebar.tabs[].component` (detail tab tabs)
+		 *   - `pages[].config.sections[].component` (settings rich sections)
+		 */
+		customComponents: {
+			type: Object,
+			default: () => ({}),
+		},
+		/**
+		 * Page-type registry — `{ index, detail, dashboard, settings, ... }`.
+		 * Wired through to descendant `CnPageRenderer` instances via
+		 * provide/inject.
+		 */
+		pageTypes: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	data() {
 		return {
-			storesReady: false,
-			sidebarState: Vue.observable({
+			objectSidebarState: Vue.observable({
 				active: false,
 				open: true,
-				schema: null,
-				visibleColumns: null,
-				searchValue: '',
-				activeFilters: {},
-				facetData: {},
-				onSearch: null,
-				onColumnsChange: null,
-				onFilterChange: null,
+				objectType: '',
+				objectId: '',
+				title: '',
+				subtitle: '',
+				register: '',
+				schema: '',
+				hiddenTabs: [],
+				tabs: undefined,
 			}),
 		}
 	},
 
 	computed: {
-		hasOpenRegisters() {
-			return settingsStore.hasOpenRegisters
-		},
-		isAdmin() {
-			return settingsStore.getIsAdmin
-		},
-		appIcon() {
-			return imagePath('softwarecatalog', 'app-dark.svg')
-		},
-		appStoreUrl() {
-			return generateUrl('/settings/apps/integration/openregister')
+		permissions() {
+			return window.OC?.currentUser?.permissions ?? []
 		},
 	},
 
 	async created() {
-		await settingsStore.loadSettings()
-		this.storesReady = true
+		// SoftwareCatalog stores still need to come up so legacy custom
+		// components (OrganisatieIndexView, SoftwareCatalogSettingsPage)
+		// keep working through the transition. CnAppRoot itself doesn't
+		// depend on them — the openregister dependency check happens via
+		// `manifest.dependencies` + `useAppStatus()`.
+		try {
+			await settingsStore.loadSettings()
+		} catch (e) {
+			// eslint-disable-next-line no-console
+			console.warn('[softwarecatalog] settingsStore.loadSettings() failed; continuing with defaults', e)
+		}
 	},
 
 	methods: {
-		onSidebarSearch(value) {
-			this.sidebarState.searchValue = value
-			if (typeof this.sidebarState.onSearch === 'function') {
-				this.sidebarState.onSearch(value)
-			}
-		},
-		onSidebarColumnsChange(columns) {
-			this.sidebarState.visibleColumns = columns
-			if (typeof this.sidebarState.onColumnsChange === 'function') {
-				this.sidebarState.onColumnsChange(columns)
-			}
-		},
-		onSidebarFilterChange(filter) {
-			if (typeof this.sidebarState.onFilterChange === 'function') {
-				this.sidebarState.onFilterChange(filter)
-			}
+		/**
+		 * Translate function passed down to CnAppRoot / CnAppNav /
+		 * CnPageRenderer. Closes over the Nextcloud `translate` import so
+		 * the lib never has to know our app id.
+		 *
+		 * @param {string} key Translation key.
+		 * @return {string} Translated string (or the key on miss).
+		 */
+		translateForApp(key) {
+			return ncT('softwarecatalog', key)
 		},
 	},
 }
 </script>
-
-<style scoped>
-.open-register-icon {
-	width: 64px;
-	height: 64px;
-	filter: var(--background-invert-if-dark);
-}
-
-.open-register-admin-hint {
-	color: var(--color-text-maxcontrast);
-	text-align: center;
-}
-</style>
