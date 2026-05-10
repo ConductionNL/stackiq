@@ -15,7 +15,8 @@
 		"lint-fix": "npm run lint -- --fix",
 		"test": "jest --silent",
 		"test-coverage": "jest --silent --coverage",
-		"stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css"
+		"stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css",
+		"check:manifest": "node tests/validate-manifest.js"
 	},
 	"browserslist": [
 		"extends @nextcloud/browserslist-config"
@@ -24,7 +25,8 @@
 		"@codemirror/lang-json": "^6.0.0",
 		"@fortawesome/fontawesome-svg-core": "^6.5.2",
 		"@fortawesome/free-solid-svg-icons": "^6.5.2",
-		"@conduction/nextcloud-vue": "^0.1.0-beta.17",
+		"@conduction/nextcloud-vue": "^1.0.0-beta.12",
+		"vue-router": "^3.6.5",
 		"@nextcloud/axios": "^2.5.0",
 		"@nextcloud/dialogs": "^3.2.0",
 		"@nextcloud/initial-state": "^2.2.0",

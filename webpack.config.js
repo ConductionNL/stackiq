@@ -55,6 +55,11 @@ webpackConfig.module = {
 			test: /\.css$/,
 			use: ['style-loader', 'css-loader'],
 		},
+		{
+			// SCSS used by aliased @conduction/nextcloud-vue components (e.g. CnCard, CnDataTable)
+			test: /\.scss$/,
+			use: ['style-loader', 'css-loader', 'sass-loader'],
+		},
 	],
 }
 
@@ -65,6 +70,15 @@ webpackConfig.plugins = [
 // Force @nextcloud/dialogs to resolve from this app's node_modules,
 // preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
 webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
+
+// Bypass @nextcloud/axios's `exports` field which only declares the `import`
+// condition. @nextcloud/vue's CJS bundle still uses require('@nextcloud/axios')
+// and webpack 5's CommonJS resolver fails the exports check with:
+//   "." is not exported under the conditions ["require","module","webpack",...]
+// Aliasing the bare specifier directly at the dist entry sidesteps the
+// exports field gate. Use the $-suffixed exact-match form so subpath imports
+// (e.g. @nextcloud/axios/dist/foo) keep their normal resolution.
+webpackConfig.resolve.alias['@nextcloud/axios$'] = path.resolve(__dirname, 'node_modules/@nextcloud/axios/dist/index.js')
 
 // Shared chunks so widgets reuse Vue / Pinia / @nextcloud/vue + @conduction/nextcloud-vue
 // instead of bundling them per entry. Slashes \\/ used to match both posix and win paths.
@@ -87,7 +101,7 @@ webpackConfig.optimization = {
 			},
 			vendor: {
 				name: appId + '-shared-vendor',
-				test: /[\\/]node_modules[\\/](vue|pinia|vue-material-design-icons|@vueuse|core-js)[\\/]/,
+				test: /[\\/]node_modules[\\/](vue|vue-router|pinia|vue-material-design-icons|@vueuse|core-js)[\\/]/,
 				priority: 20,
 				reuseExistingChunk: true,
 				enforce: true,
