@@ -10,6 +10,7 @@ import {
 	defaultPageTypes,
 	registerIcons,
 	registerTranslations,
+	useAppManifest,
 } from '@conduction/nextcloud-vue'
 import Tooltip from '@nextcloud/vue/dist/Directives/Tooltip.js'
 import pinia from './pinia.js'
@@ -77,14 +78,35 @@ tryLoadTranslations()
 const pageTypesProp = { ...defaultPageTypes }
 const customComponentsProp = { ...customComponents }
 
+// Resolve `@resolve:<key>` IAppConfig sentinels in `manifest.pages[].config`
+// (e.g. `@resolve:voorzieningen_register`) via the lib's
+// `manifest-resolve-sentinel` capability. The default `getAppConfigValue`
+// resolver consults `@nextcloud/initial-state` first (zero-network), then
+// falls back to `/apps/softwarecatalog/api/configs/{key}`. We don't pass
+// an override — the lib's default chain matches our backend provisioning.
+//
+// `useAppManifest` returns a reactive ref. The render function below reads
+// `manifestRef.value` so Vue re-renders App when sentinel resolution
+// completes. Until then, the bundled manifest (with raw sentinels) is the
+// initial value — fine for the first paint because the router is built
+// from page IDs / routes, which never carry sentinels per the lib's
+// schema validator.
+const { manifest: manifestRef } = useAppManifest('softwarecatalog', bundledManifest)
+
 new Vue({
 	pinia,
 	router,
-	render: (h) => h(App, {
-		props: {
-			manifest: bundledManifest,
-			customComponents: customComponentsProp,
-			pageTypes: pageTypesProp,
-		},
-	}),
+	// Wrap manifestRef in a computed via `data()` so Vue re-renders App
+	// when sentinel resolution swaps the manifest value. Reading
+	// `manifestRef.value` inside `render` registers the dependency on the
+	// composable's reactive ref.
+	render(h) {
+		return h(App, {
+			props: {
+				manifest: manifestRef.value,
+				customComponents: customComponentsProp,
+				pageTypes: pageTypesProp,
+			},
+		})
+	},
 }).$mount('#content')
