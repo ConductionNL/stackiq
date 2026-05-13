@@ -63,7 +63,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "contract",
-				"columns": ["naam", "leverancier", "ingangsdatum", "einddatum", { "key": "status", "label": "Status", "widget": "badge" }],
+				"columns": ["naam", "leverancier", { "key": "ingangsdatum", "label": "Start", "formatter": "date" }, { "key": "einddatum", "label": "End", "formatter": "date" }, { "key": "status", "label": "Status", "widget": "badge" }],
 				"sidebar": { "enabled": true, "showMetadata": true }
 			}
 		},
@@ -115,7 +115,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "beoordeeling",
-				"columns": ["titel", "auteur", "score", "datum"],
+				"columns": ["titel", "auteur", "score", { "key": "datum", "label": "Date", "formatter": "date" }],
 				"sidebar": { "enabled": true, "showMetadata": true }
 			}
 		},
@@ -141,7 +141,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "compliancy",
-				"columns": ["naam", "standaard", { "key": "status", "label": "Status", "widget": "badge" }, "datum"],
+				"columns": ["naam", "standaard", { "key": "status", "label": "Status", "widget": "badge" }, { "key": "datum", "label": "Date", "formatter": "date" }],
 				"sidebar": { "enabled": true, "showMetadata": true }
 			}
 		},
@@ -167,7 +167,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "moduleVersie",
-				"columns": ["versie", "module", "releaseDatum", { "key": "status", "label": "Status", "widget": "badge" }],
+				"columns": ["versie", "module", { "key": "releaseDatum", "label": "Released", "formatter": "date" }, { "key": "status", "label": "Status", "widget": "badge" }],
 				"sidebar": { "enabled": true, "showMetadata": true }
 			}
 		},
