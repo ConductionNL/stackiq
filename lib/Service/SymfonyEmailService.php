@@ -50,7 +50,7 @@ use Twig\Loader\ArrayLoader;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.StaticAccess) — Transport::fromDsn is Symfony Mailer's static factory pattern
+ * @SuppressWarnings(PHPMD.StaticAccess)             — Transport::fromDsn is Symfony Mailer's static factory pattern
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
