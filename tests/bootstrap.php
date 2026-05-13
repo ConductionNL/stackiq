@@ -36,10 +36,23 @@ if (!defined('OC_CONSOLE')) {
 
     // Load all enabled apps
     \OC_App::loadApps();
-    
+
     // Load our specific app
     \OC_App::loadApp('softwarecatalog');
-    
+
     // Clear hooks for testing
     OC_Hook::clear();
+}
+
+// OpenRegister test stubs. The real OCA\OpenRegister\Db\ObjectEntity has
+// __call magic getters that PHPUnit can't configure on a mock, so the unit
+// tests use the explicit stub in tests/Stubs/. It is loaded HERE — not via a
+// composer `autoload-dev` PSR-4 mapping of the foreign `OCA\OpenRegister\`
+// namespace, which would shadow the real OpenRegister classes in any
+// deployment whose vendor/ includes dev autoload entries (breaking every
+// OR-backed app). Only loaded when OpenRegister isn't actually installed.
+if (!class_exists('OCA\\OpenRegister\\Db\\ObjectEntity')) {
+    foreach (glob(__DIR__ . '/Stubs/{,**/}*.php', GLOB_BRACE) ?: [] as $stub) {
+        require_once $stub;
+    }
 }
