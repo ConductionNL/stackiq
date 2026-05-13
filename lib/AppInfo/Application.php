@@ -63,6 +63,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IDBConnection;
@@ -447,6 +448,30 @@ class Application extends App implements IBootstrap
     {
         // Background jobs are registered declaratively in appinfo/info.xml.
         // Initialization is handled by the Repair step (InitializeSettings).
-        // No per-request work needed here.
+        // Provision IAppConfig keys referenced as `@resolve:<key>` sentinels in
+        // src/manifest.json so @conduction/nextcloud-vue's resolver chain can
+        // pick them up synchronously via @nextcloud/initial-state (Step 1)
+        // without falling through to the deferred backend fetch (Step 2).
+        // See node_modules/@conduction/nextcloud-vue/src/utils/resolveManifestSentinels.js
+        // — readInitialState() calls loadState(appId, key, undefined).
+        $container    = $this->getContainer();
+        $initialState = $container->get(IInitialState::class);
+        $appConfig    = $container->get(IAppConfig::class);
+
+        // Keys must match every distinct `@resolve:<key>` sentinel in
+        // src/manifest.json. Discover with:
+        // grep -oE '@resolve:[a-z_]+' src/manifest.json | sort -u.
+        $resolveKeys = [
+            'voorzieningen_register',
+        ];
+        foreach ($resolveKeys as $key) {
+            $value       = $appConfig->getValueString(self::APP_ID, $key, '');
+            $provisioned = null;
+            if ($value !== '') {
+                $provisioned = $value;
+            }
+
+            $initialState->provideInitialState($key, $provisioned);
+        }
     }//end boot()
 }//end class

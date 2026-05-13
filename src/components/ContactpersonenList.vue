@@ -1279,219 +1279,219 @@ export default {
 
 <style scoped>
 .contactpersonen-list {
-  padding: 8px;
+	padding: 8px;
 }
 
 .loading,
 .error {
-  padding: 16px;
-  text-align: center;
+	padding: 16px;
+	text-align: center;
 }
 
 .contactpersonen-table {
-  margin-top: 8px;
+	margin-top: 8px;
 }
 
 .compact-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
 }
 
 .compact-table th,
 .compact-table td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
+	padding: 8px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .compact-table th {
-  font-weight: bold;
-  background-color: var(--color-background-hover);
-  font-size: 13px;
+	font-weight: bold;
+	background-color: var(--color-background-hover);
+	font-size: 13px;
 }
 
 .name-cell {
-  font-weight: 500;
-  max-width: 150px;
+	font-weight: 500;
+	max-width: 150px;
 }
 
 .email-cell {
-  max-width: 200px;
-  word-break: break-all;
+	max-width: 200px;
+	word-break: break-all;
 }
 
 .status-cell {
-  width: 80px;
+	width: 80px;
 }
 
 .groups-cell {
-  max-width: 150px;
+	max-width: 150px;
 }
 
 .actions-cell {
-  width: 60px;
+	width: 60px;
 }
 
 .groups {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px;
 }
 
 .no-groups {
-  color: var(--color-text-lighter);
-  font-size: 12px;
+	color: var(--color-text-lighter);
+	font-size: 12px;
 }
 
 .status-chip {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  text-align: center;
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 500;
+	text-align: center;
 }
 
 .status-success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+	background-color: #d4edda;
+	color: #155724;
+	border: 1px solid #c3e6cb;
 }
 
 .status-tertiary {
-  background-color: #f8f9fa;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
+	background-color: #f8f9fa;
+	color: #6c757d;
+	border: 1px solid #dee2e6;
 }
 
 .status-warning {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeaa7;
+	background-color: #fff3cd;
+	color: #856404;
+	border: 1px solid #ffeaa7;
 }
 
 .group-chip {
-  display: inline-block;
-  padding: 4px 8px;
-  margin: 2px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  background-color: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #90caf9;
-  white-space: nowrap;
+	display: inline-block;
+	padding: 4px 8px;
+	margin: 2px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 500;
+	background-color: #e3f2fd;
+	color: #1565c0;
+	border: 1px solid #90caf9;
+	white-space: nowrap;
 }
 
 .password-dialog {
-  padding: 12px;
-  min-width: 320px;
-  max-width: 400px;
+	padding: 12px;
+	min-width: 320px;
+	max-width: 400px;
 }
 
 .groups-dialog {
-  padding: 12px;
-  min-width: 350px;
-  max-width: 450px;
+	padding: 12px;
+	min-width: 350px;
+	max-width: 450px;
 }
 
 .dialog-description {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: var(--color-text-lighter);
+	margin: 0 0 12px 0;
+	font-size: 14px;
+	color: var(--color-text-lighter);
 }
 
 .password-input {
-  margin: 12px 0;
+	margin: 12px 0;
 }
 
 .groups-selection {
-  margin: 12px 0;
-  max-height: 200px;
-  overflow-y: auto;
+	margin: 12px 0;
+	max-height: 200px;
+	overflow-y: auto;
 }
 
 .groups-selection .checkbox-radio-switch {
-  margin-bottom: 6px;
+	margin-bottom: 6px;
 }
 
 .compact-checkbox {
-  padding: 4px 0;
+	padding: 4px 0;
 }
 
 .compact-input {
-  margin: 8px 0;
+	margin: 8px 0;
 }
 
 .dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 8px;
-  border-top: 1px solid var(--color-border);
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 12px;
+	padding-top: 8px;
+	border-top: 1px solid var(--color-border);
 }
 
 /* Make NcTextField more compact */
 .compact-input :deep(.input-field) {
-  margin-bottom: 8px;
+	margin-bottom: 8px;
 }
 
 .compact-input :deep(.input-field__main-wrapper) {
-  min-height: 36px;
+	min-height: 36px;
 }
 
 .compact-input :deep(.input-field__input) {
-  padding: 8px 12px;
-  font-size: 14px;
+	padding: 8px 12px;
+	font-size: 14px;
 }
 
 /* Password Requirements Styles */
 .password-requirements {
-  margin: 16px 0;
-  padding: 12px;
-  background: var(--color-background-dark);
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
+	margin: 16px 0;
+	padding: 12px;
+	background: var(--color-background-dark);
+	border-radius: 6px;
+	border: 1px solid var(--color-border);
 }
 
 .password-requirements h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-dark);
+	margin: 0 0 8px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--color-text-dark);
 }
 
 .requirements-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+	list-style: none;
+	padding: 0;
+	margin: 0;
 }
 
 .requirements-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 13px;
-  color: var(--color-text-lighter);
-  transition: color 0.2s ease;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 0;
+	font-size: 13px;
+	color: var(--color-text-lighter);
+	transition: color 0.2s ease;
 }
 
 .requirements-list li.requirement-met {
-  color: var(--color-success);
+	color: var(--color-success);
 }
 
 .check-icon {
-  color: var(--color-success);
+	color: var(--color-success);
 }
 
 .close-icon {
-  color: var(--color-error);
+	color: var(--color-error);
 }
 
 .loading-icon {
-  color: var(--color-text-lighter);
+	color: var(--color-text-lighter);
 }
 </style>

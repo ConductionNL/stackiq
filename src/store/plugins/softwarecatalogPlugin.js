@@ -29,7 +29,7 @@ function extractId(value) {
  * Build an API URL for an object using its @self metadata.
  *
  * @param {object} objectItem Object with @self metadata
- * @param {string} [action=null] Optional action endpoint (publish, lock, etc.)
+ * @param {string} [action] Optional action endpoint (publish, lock, etc.). Defaults to null.
  * @return {string} The constructed URL
  */
 function buildObjectUrl(objectItem, action = null) {
@@ -777,8 +777,8 @@ export function softwarecatalogPlugin() {
 			 * Lock an object.
 			 *
 			 * @param {object} objectItem Object to lock
-			 * @param {string} [process=null] Process name
-			 * @param {number} [duration=null] Duration in seconds
+			 * @param {string} [process] Process name. Defaults to null.
+			 * @param {number} [duration] Duration in seconds. Defaults to null.
 			 * @return {Promise<object>} Updated object
 			 */
 			async lockObject(objectItem, process = null, duration = null) {
@@ -869,7 +869,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {Array<object>} objects Objects to process
 			 * @param {Function} operation Per-object operation function
-			 * @param {Function} [onProgress=null] Progress callback
+			 * @param {Function} [onProgress] Progress callback. Defaults to null.
 			 * @return {Promise<{successful: Array, failed: Array}>} Results
 			 */
 			async _runMassOperation(objects, operation, onProgress = null) {
