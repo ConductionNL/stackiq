@@ -1,0 +1,27 @@
+# SoftwareCatalog
+
+> SoftwareCatalog is an open-source IT-asset-management app for the Nextcloud workspace.
+
+SoftwareCatalog is an open-source IT-asset-management app for the Nextcloud workspace. It keeps a central register of every application, licence, contract, and dependency the organisation runs, with renewal alerts before the auto-renewal date. Dashboard widgets surface upcoming renewals, an inventory snapshot by category, and discovery deltas showing newly added or removed apps. Built for the IT department that needs to know what runs where, without a separate asset database or second login. Released under EUPL-1.2 and maintained by Conduction since 2019.
+
+## Docs
+
+- [Tutorials](https://softwarecatalog.conduction.nl/tutorials): step-by-step walkthroughs.
+- [Features](https://softwarecatalog.conduction.nl/Features): what the app does, organised by capability.
+- [Use cases](https://softwarecatalog.conduction.nl/UseCases): real customer scenarios.
+- [Integrations](https://softwarecatalog.conduction.nl/Integrations): which external systems the app talks to.
+- [Technical](https://softwarecatalog.conduction.nl/Technical): architecture, data model, security posture.
+- [User guide](https://softwarecatalog.conduction.nl/user-guide): end-user documentation.
+- [API](https://softwarecatalog.conduction.nl/api): OpenAPI reference.
+
+## Optional
+
+- [Install](https://softwarecatalog.conduction.nl/installation): install from the Nextcloud app store.
+- [Source](https://softwarecatalog.conduction.nl): repository and issue tracker.
+- [App page](https://www.conduction.nl/apps/softwarecatalog): product positioning on conduction.nl.
+
+## Contact
+
+- Email: info@conduction.nl
+- GitHub: https://github.com/ConductionNL/softwarecatalog
+- Conduction B.V. · KvK 76741850 · Lauriergracht 14h, Amsterdam, Netherlands
