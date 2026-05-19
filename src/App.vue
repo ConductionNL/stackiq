@@ -19,6 +19,7 @@
 		<CnAppRoot
 			:manifest="manifest"
 			:custom-components="customComponents"
+			:registry="registry"
 			:page-types="pageTypes"
 			app-id="softwarecatalog"
 			:translate="translateForApp"
