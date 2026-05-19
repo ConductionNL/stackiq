@@ -56,6 +56,11 @@ export default {
 		MigrationObject,
 		MergeObject,
 	},
+	setup() {
+		return {
+			navigationStore,
+		}
+	},
 	computed: {
 		/**
 		 * Returns the object type if the current modal matches a generic object type,
@@ -70,11 +75,6 @@ export default {
 			}
 			return GENERIC_MODAL_OBJECT_TYPES.includes(modal) ? modal : null
 		},
-	},
-	setup() {
-		return {
-			navigationStore,
-		}
 	},
 }
 </script>

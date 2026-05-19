@@ -14,11 +14,6 @@
 			"OCA\\SoftwareCatalog\\": "lib/"
 		}
 	},
-	"autoload-dev": {
-		"psr-4": {
-			"OCA\\OpenRegister\\": "tests/Stubs/"
-		}
-	},
 	"scripts": {
 		"post-install-cmd": [
 			"@composer bin all install --ansi"
