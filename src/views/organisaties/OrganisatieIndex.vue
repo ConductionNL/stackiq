@@ -422,6 +422,8 @@ export default {
 
 		/**
 		 * Fetch organisaties with current search, filters, and pagination
+		 * @param {number} page  - Page number (1-based) to fetch
+		 * @param {number} limit - Maximum number of items per page
 		 */
 		async fetchOrganisatiesWithFilters(page = 1, limit = 20) {
 			try {

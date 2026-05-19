@@ -995,11 +995,11 @@ export default {
 	white-space: nowrap;
 }
 
-.option-group input[type="checkbox"] {
+.option-group input[type='checkbox'] {
 	margin-right: 8px;
 }
 
-.option-group input[type="number"] {
+.option-group input[type='number'] {
 	width: 80px;
 	padding: 4px 8px;
 	border: 1px solid var(--color-border);
