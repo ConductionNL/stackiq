@@ -93,6 +93,16 @@ export default {
 			default: () => ({}),
 		},
 		/**
+		 * 5-kind component registry (v2 manifest pattern per hydra ADR-036).
+		 * Each entry: { kind, component, ...kindMetadata }. Replaces
+		 * customComponents for v2 manifests; both coexist during the
+		 * transition window.
+		 */
+		registry: {
+			type: Object,
+			default: () => ({}),
+		},
+		/**
 		 * Page-type registry — `{ index, detail, dashboard, settings, ... }`.
 		 * Wired through to descendant `CnPageRenderer` instances via
 		 * provide/inject.

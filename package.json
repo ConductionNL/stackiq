@@ -23,7 +23,7 @@
 	],
 	"dependencies": {
 		"@codemirror/lang-json": "^6.0.0",
-		"@conduction/nextcloud-vue": "^1.0.0-beta.42",
+		"@conduction/nextcloud-vue": "^1.0.0-beta.58",
 		"@fortawesome/fontawesome-svg-core": "^6.5.2",
 		"@fortawesome/free-solid-svg-icons": "^6.5.2",
 		"@nextcloud/axios": "^2.5.0",
