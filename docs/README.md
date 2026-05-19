@@ -1,3 +1,7 @@
+---
+description: Get started with SoftwareCatalog, the IT-asset and licence register for Nextcloud. Inventory, contracts, dependencies, one record per install.
+---
+
 # Software Catalog Documentation
 
 Welcome to the Software Catalog app documentation. This app provides comprehensive user and organization management for Nextcloud, with automatic group assignment, organizational hierarchy management, and seamless integration with OpenRegister.
