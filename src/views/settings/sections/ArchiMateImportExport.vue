@@ -1387,7 +1387,7 @@ export default {
 }
 
 .missing-items li::before {
-	content: "✗";
+	content: '✗';
 	position: absolute;
 	left: -0.5rem;
 	top: 0.5rem;
@@ -1422,7 +1422,7 @@ export default {
 }
 
 .configuration-help h5::before {
-	content: "💡";
+	content: '💡';
 	font-size: 1.2rem;
 }
 
@@ -1579,7 +1579,7 @@ export default {
 }
 
 .error-details-header h5::before {
-	content: "⚠️";
+	content: '⚠️';
 	font-size: 1.3rem;
 }
 
@@ -1665,13 +1665,21 @@ export default {
 
 /* Error type colors */
 .error-type-badge.validation { background: #ffebee; color: #c62828; }
+
 .error-type-badge.schema { background: #e3f2fd; color: #1565c0; }
+
 .error-type-badge.reference { background: #f3e5f5; color: #7b1fa2; }
+
 .error-type-badge.property { background: #e8f5e8; color: #2e7d32; }
+
 .error-type-badge.constraint { background: #fff3e0; color: #ef6c00; }
+
 .error-type-badge.relationship { background: #fce4ec; color: #ad1457; }
+
 .error-type-badge.data_type { background: #e0f2f1; color: #00695c; }
+
 .error-type-badge.encoding { background: #f1f8e9; color: #558b2f; }
+
 .error-type-badge.general { background: #f5f5f5; color: #424242; }
 
 .error-message {

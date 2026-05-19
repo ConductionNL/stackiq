@@ -3826,9 +3826,9 @@ export default {
 }
 
 .viewObjectDialog .viewTable td.table-row-type {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	word-break: unset !important;
 }
 
@@ -3843,17 +3843,17 @@ export default {
 }
 
 .short-column {
-    width: 100px;
-    max-width: 100px;
-    overflow: hidden;
+	width: 100px;
+	max-width: 100px;
+	overflow: hidden;
 	text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .table-row-title {
-    width: 100%;
-    max-width: initial;
+	width: 100%;
+	max-width: initial;
 	white-space: normal;
 	word-break: break-word;
 }
@@ -3885,6 +3885,6 @@ export default {
 
 .viewObjectDialog .viewTable th.table-row-title,
 .viewObjectDialog .viewTable td.table-row-title {
-    width: 100%;
+	width: 100%;
 }
 </style>
