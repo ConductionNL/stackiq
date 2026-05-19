@@ -108,6 +108,7 @@ new Vue({
 				manifest: manifestRef.value,
 				customComponents: customComponentsProp,
 				pageTypes: pageTypesProp,
+				registry: registryProp,
 			},
 		})
 	},
