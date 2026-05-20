@@ -99,10 +99,23 @@
 		{
 			"id": "Organisaties",
 			"route": "/organisaties",
-			"type": "custom",
+			"type": "index",
 			"title": "Organisations",
-			"component": "OrganisatieIndexView",
-			"_note": "Lib gap: bespoke OrganisatieCard + AddContactpersoonModal flow. Internally drives CnIndexPage but owns CRUD orchestration the manifest can't express: OrganisationModal create/edit/copy, AddContactpersoonModal, activate/deactivate status dialogs, _extend: contactpersonen on the collection fetch, URL-hash deep links (search/filters/page), and cross-component organisation* store subscriptions. Residual custom surface is the modal/dialog/deep-link wiring; collapse to type:'index' when the manifest gains modal+deep-link declarative wiring."
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "organisatie",
+				"columns": [
+					"naam",
+					"type",
+					"status",
+					"contactpersonen"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"_note": "Bespoke modals (OrganisationModal create/edit/copy, AddContactpersoonModal, activate/deactivate) and URL-hash deep-link wiring still happen via cross-store subscriptions in the consumer — flipped to type:\"index\" so the page uses CnIndexPage's standard table/cards/sidebar; the bespoke modal/dialog UX is opened through the registry instead of replacing the page shell"
 		},
 		{
 			"id": "Contactpersonen",
