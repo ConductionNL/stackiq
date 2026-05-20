@@ -82,10 +82,19 @@
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Dashboard",
-			"component": "DashboardCustomView",
-			"_note": "TODO: manual migration required — custom page not auto-converted"
+			"config": {
+				"widgets": [
+					{ "id": "dashboardHome", "title": "Dashboard", "type": "custom" }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "dashboardHome", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+				]
+			},
+			"slots": {
+				"widget-dashboardHome": "DashboardCustomView"
+			}
 		},
 		{
 			"id": "Organisaties",
@@ -93,7 +102,7 @@
 			"type": "custom",
 			"title": "Organisations",
 			"component": "OrganisatieIndexView",
-			"_note": "TODO: manual migration required — custom page not auto-converted"
+			"_note": "Lib gap: bespoke OrganisatieCard + AddContactpersoonModal flow. Internally drives CnIndexPage but owns CRUD orchestration the manifest can't express: OrganisationModal create/edit/copy, AddContactpersoonModal, activate/deactivate status dialogs, _extend: contactpersonen on the collection fetch, URL-hash deep links (search/filters/page), and cross-component organisation* store subscriptions. Residual custom surface is the modal/dialog/deep-link wiring; collapse to type:'index' when the manifest gains modal+deep-link declarative wiring."
 		},
 		{
 			"id": "Contactpersonen",
