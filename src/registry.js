@@ -17,20 +17,10 @@
 //   - nextcloud-app-template scaffold-v2 (#44) — canonical layout
 //   - procest #512 / mydash #206 — first reference migrations
 
-import OrganisatieIndexView from './views/organisaties/OrganisatieIndex.vue'
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'
 
 export default {
-	// --- Lib gap: bespoke OrganisatieCard + AddContactpersoonModal flow. ---
-	// Bespoke modal/dialog/deep-link wiring around CnIndexPage. The
-	// Organisaties manifest entry is type:'custom' with a _note pointing
-	// here; the page mounts this view, which internally uses CnIndexPage.
-	OrganisatieIndexView: {
-		kind: 'page',
-		component: OrganisatieIndexView,
-	},
-
 	// --- Lib gap: settings sub-section orchestration. ---
 	// Multi-tab nav + ArchiMate status polling + register selector that
 	// the lib's type:'settings' rich-section widgets can't express yet.
