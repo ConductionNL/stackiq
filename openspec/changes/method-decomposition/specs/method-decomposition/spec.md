@@ -4,308 +4,440 @@ priority: high
 estimated_effort: large
 ---
 
-# Method Decomposition -- SoftwareCatalog
+# Method Decomposition — SoftwareCatalog
 
-## Goal
+## Purpose
 
-Eliminate 145 PHPMD complexity suppressions by decomposing complex methods into smaller, focused units. Each suppression represents a method or class that exceeds PHPMD's strict thresholds (CC>10, NPath>200, MethodLength>100, ClassLength>1000). The total codebase has 326 `@SuppressWarnings(PHPMD.*)` annotations; this spec targets the 145 that relate to structural complexity.
+Specify the requirements for eliminating 145 PHPMD complexity suppressions in
+`lib/` by decomposing complex methods and classes into smaller, focused units.
+Each suppression bypasses a strict PHPMD threshold (CC>10, NPath>200,
+MethodLength>100, ClassLength>1000). This is a pure refactoring change — no
+behavioral changes, no schema modifications, no new public API.
 
-## Current State
+**Current suppression inventory:**
 
-- **CyclomaticComplexity suppressions:** 31 (methods with >10 branches)
-- **NPathComplexity suppressions:** 26 (methods with >200 execution paths)
-- **ExcessiveMethodLength suppressions:** 35 (methods >100 lines)
-- **ExcessiveClassComplexity suppressions:** 19 (classes with too much logic)
-- **ExcessiveClassLength suppressions:** 14 (classes >1000 lines)
-- **CouplingBetweenObjects suppressions:** 12 (too many dependencies)
-- **TooManyMethods suppressions:** 8
+| Category | Count | Threshold |
+|----------|-------|-----------|
+| ExcessiveMethodLength | 35 | >100 lines |
+| CyclomaticComplexity | 31 | >10 branches |
+| NPathComplexity | 26 | >200 paths |
+| ExcessiveClassComplexity | 19 | — |
+| ExcessiveClassLength | 14 | >1000 lines |
+| CouplingBetweenObjects | 12 | >13 deps |
+| TooManyMethods | 8 | — |
 
-## Requirements
+## ADDED Requirements
 
 ### REQ-DECOMP-001: SettingsController Decomposition
 
-The `lib/Controller/SettingsController.php` (23 PHPMD suppressions) MUST be decomposed by extracting sync, module registration, and configuration logic into dedicated handler classes. The controller retains only thin action methods that delegate to handlers, reducing class-level complexity (ExcessiveClassLength, TooManyMethods, ExcessiveClassComplexity, CouplingBetweenObjects) and method-level complexity on `syncSoftwareCatalogue`, `registerModules`, `syncOrganizations`, and `configureArchiMate`.
+`lib/Controller/SettingsController.php` (23 PHPMD suppressions) MUST be
+decomposed by extracting sync, module registration, and configuration logic
+into dedicated handler classes. The controller MUST retain only thin action
+methods (≤10 lines per ADR-003) that delegate to handlers. Class-level
+suppressions (ExcessiveClassLength, TooManyMethods, ExcessiveClassComplexity,
+CouplingBetweenObjects) and method-level suppressions on `syncSoftwareCatalogue`,
+`registerModules`, `syncOrganizations`, and `configureArchiMate` MUST all be
+removed.
 
-**Scenarios:**
+#### Scenario: syncSoftwareCatalogue decomposed into SyncHandler
 
-1. **GIVEN** SettingsController has a `syncSoftwareCatalogue()` method with CC>10, NPath>200, and >100 lines **WHEN** the method is decomposed **THEN** a `SyncHandler` class is created with `validateSyncConfig()`, `prepareSyncData()`, `executeSyncBatch()`, and `buildSyncResponse()` methods, and the controller delegates to `SyncHandler::handle()`.
+- GIVEN `SettingsController::syncSoftwareCatalogue()` has CC>10, NPath>200, and >100 lines
+- WHEN the method is decomposed
+- THEN a `lib/Controller/Settings/SyncHandler.php` class MUST be created
+- AND it MUST expose `validateSyncConfig()`, `prepareSyncData()`, `executeSyncBatch()`, and `buildSyncResponse()` private methods
+- AND the controller MUST delegate to `SyncHandler::handle()` in ≤10 lines
 
-2. **GIVEN** SettingsController has `registerModules()` with ExcessiveMethodLength **WHEN** the method is decomposed **THEN** a `ModuleRegistrationHandler` class is created with `validateModuleInput()`, `resolveModuleDependencies()`, and `persistModules()` methods.
+#### Scenario: registerModules decomposed into ModuleRegistrationHandler
 
-3. **GIVEN** SettingsController injects 10+ dependencies (CouplingBetweenObjects) **WHEN** handlers are extracted **THEN** each handler receives only its required dependencies (e.g., SyncHandler gets ObjectService and SoftwareCatalogueService; ModuleRegistrationHandler gets ObjectService and ModuleRegistrationService), reducing the controller's constructor parameter count.
+- GIVEN `SettingsController::registerModules()` has ExcessiveMethodLength
+- WHEN the method is decomposed
+- THEN a `lib/Controller/Settings/ModuleRegistrationHandler.php` class MUST be created
+- AND it MUST expose `validateModuleInput()`, `resolveModuleDependencies()`, and `persistModules()` private methods
 
-4. **GIVEN** the decomposition is complete **WHEN** `composer check:strict` runs **THEN** PHPMD reports zero violations for SettingsController and all suppression annotations are removed from the file.
+#### Scenario: Constructor coupling reduced
 
-5. **GIVEN** the decomposition is complete **WHEN** the existing unit tests run **THEN** all tests pass without modification (pure refactoring, public API unchanged).
+- GIVEN `SettingsController` injects 10+ dependencies (CouplingBetweenObjects)
+- WHEN handlers are extracted
+- THEN `SyncHandler` MUST receive only `ObjectService` and `SoftwareCatalogueService`
+- AND `ModuleRegistrationHandler` MUST receive only `ObjectService` and `ModuleRegistrationService`
+- AND the controller's constructor parameter count MUST drop below 13
+
+#### Scenario: composer check:strict passes with no suppressions
+
+- GIVEN the decomposition is complete
+- WHEN `composer check:strict` runs
+- THEN PHPMD MUST report zero violations for `SettingsController.php`
+- AND all `@SuppressWarnings(PHPMD.*)` annotations MUST be removed from the file
+
+#### Scenario: Existing tests pass unchanged
+
+- GIVEN the decomposition is complete
+- WHEN the existing PHPUnit tests run
+- THEN all tests MUST pass without modification
+- AND no behavioral change MUST occur (pure refactoring)
 
 ### REQ-DECOMP-002: SoftwareCatalogEventListener Decomposition
 
-The `lib/EventListener/SoftwareCatalogEventListener.php` (11 suppressions) MUST be decomposed by extracting event-specific handling logic into separate handler methods and helper classes. The monolithic `handleModuleCreated`, `handleModuleUpdated`, and `handleOrganizationEvent` methods each have CC>10, NPath>200, and >100 lines.
+`lib/EventListener/SoftwareCatalogEventListener.php` (11 suppressions) MUST be
+decomposed by extracting event-specific handling logic into guard-clause-gated
+helper methods and a shared `ModuleEventProcessor` class. The monolithic
+`handleModuleCreated`, `handleModuleUpdated`, and `handleOrganizationEvent`
+methods each have CC>10, NPath>200, and >100 lines.
 
-**Scenarios:**
+#### Scenario: handleModuleCreated decomposed with guard clauses
 
-1. **GIVEN** `handleModuleCreated()` has nested conditional logic for module type detection, schema lookup, and property mapping **WHEN** the method is decomposed **THEN** guard clauses extract early-return validation into `validateModuleEvent()`, type-specific logic is extracted into `processModuleByType()`, and schema mapping is extracted into `mapModuleToSchema()`.
+- GIVEN `handleModuleCreated()` has nested conditional logic for module type detection, schema lookup, and property mapping
+- WHEN the method is decomposed
+- THEN guard clauses MUST extract early-return validation into a `validateModuleEvent()` private method
+- AND type-specific logic MUST be extracted into `processModuleByType()`
+- AND schema mapping MUST be extracted into `mapModuleToSchema()`
+- AND each extracted method MUST have CC<5
 
-2. **GIVEN** `handleModuleUpdated()` shares 60% of its logic with `handleModuleCreated()` **WHEN** both methods are decomposed **THEN** shared logic is extracted into a `ModuleEventProcessor` helper class used by both handlers, eliminating code duplication.
+#### Scenario: Shared logic extracted into ModuleEventProcessor
 
-3. **GIVEN** `handleOrganizationEvent()` has >200 execution paths **WHEN** the method is decomposed **THEN** independent conditional blocks are extracted into `handleOrganizationCreate()`, `handleOrganizationUpdate()`, and `handleOrganizationDelete()` private methods, each with NPath <50.
+- GIVEN `handleModuleUpdated()` shares 60% of its logic with `handleModuleCreated()`
+- WHEN both methods are decomposed
+- THEN shared logic MUST be extracted into a `ModuleEventProcessor` helper class
+- AND both handlers MUST delegate to `ModuleEventProcessor`
+- AND code duplication between the two handlers MUST be eliminated
+
+#### Scenario: handleOrganizationEvent split into three methods
+
+- GIVEN `handleOrganizationEvent()` has >200 execution paths
+- WHEN the method is decomposed
+- THEN independent conditional blocks MUST be extracted into `handleOrganizationCreate()`, `handleOrganizationUpdate()`, and `handleOrganizationDelete()` private methods
+- AND each extracted method MUST have NPath<50
 
 ### REQ-DECOMP-003: ContactpersonenController Decomposition
 
-The `lib/Controller/ContactpersonenController.php` (11 suppressions) MUST be decomposed by extracting create/update validation, bulk import, and export logic. The `create()` and `update()` methods each exceed CC and method length thresholds.
+`lib/Controller/ContactpersonenController.php` (11 suppressions) MUST be
+decomposed by extracting create/update validation, bulk import, and export
+logic. The `create()` and `update()` methods each exceed CC and method length
+thresholds.
 
-**Scenarios:**
+#### Scenario: create() decomposed into validate/enrich/persist phases
 
-1. **GIVEN** `create()` has >100 lines of validation, data preparation, and persistence logic **WHEN** decomposed **THEN** validation is extracted into `validateContactInput(array $data): array`, data enrichment into `enrichContactData(array $data): array`, and persistence into `persistContact(array $data): JSONResponse`.
+- GIVEN `create()` has >100 lines of validation, data preparation, and persistence logic
+- WHEN decomposed
+- THEN validation MUST be extracted into `validateContactInput(array $data): array`
+- AND data enrichment MUST be extracted into `enrichContactData(array $data): array`
+- AND persistence MUST be extracted into `persistContact(array $data): JSONResponse`
+- AND each extracted method MUST have CC<10
 
-2. **GIVEN** `bulkImport()` has ExcessiveMethodLength **WHEN** decomposed **THEN** CSV/JSON parsing is extracted into `parseImportFile()`, row validation into `validateImportRow()`, batch processing into `processImportBatch()`, and error collection into `buildImportReport()`.
+#### Scenario: bulkImport() decomposed into parse/validate/process/report
 
-3. **GIVEN** `exportContacts()` has ExcessiveMethodLength **WHEN** decomposed **THEN** query building is extracted into `buildExportQuery()`, format conversion into `formatExportData()`, and response building into `buildExportResponse()`.
+- GIVEN `bulkImport()` has ExcessiveMethodLength with batch processing, per-item validation, and error aggregation
+- WHEN decomposed
+- THEN CSV/JSON parsing MUST be extracted into `parseImportFile()`
+- AND row validation into `validateImportRow()`
+- AND batch processing into `processImportBatch()`
+- AND error collection into `buildImportReport()`
 
-4. **GIVEN** the controller has 3 class-level suppressions (ExcessiveClassLength, ExcessiveClassComplexity, CouplingBetweenObjects) **WHEN** handler extraction reduces class size **THEN** the controller class drops below 1000 lines and coupling drops below 13 dependencies.
+#### Scenario: exportContacts() decomposed
+
+- GIVEN `exportContacts()` has ExcessiveMethodLength
+- WHEN decomposed
+- THEN query building MUST be extracted into `buildExportQuery()`
+- AND format conversion into `formatExportData()`
+- AND response building into `buildExportResponse()`
+
+#### Scenario: Class-level suppressions removed
+
+- GIVEN the controller has 3 class-level suppressions (ExcessiveClassLength, ExcessiveClassComplexity, CouplingBetweenObjects)
+- WHEN handler extraction reduces class size
+- THEN the controller class MUST drop below 1000 lines
+- AND coupling MUST drop below 13 dependencies
 
 ### REQ-DECOMP-004: SoftwareCatalogueService Decomposition
 
-The `lib/Service/SoftwareCatalogueService.php` (20 suppressions) MUST be decomposed by splitting into focused service classes. This core service handles VNG Software Catalogus API synchronization with multiple concerns: API communication, data mapping, conflict resolution, and progress tracking.
+`lib/Service/SoftwareCatalogueService.php` (20 suppressions) MUST be
+decomposed by splitting into focused service classes. This core service handles
+VNG Software Catalogus API synchronization with multiple concerns: API
+communication, data mapping, conflict resolution, and progress tracking.
 
-**Scenarios:**
+#### Scenario: Concerns extracted into sub-services
 
-1. **GIVEN** SoftwareCatalogueService has 7+ class-level suppressions indicating an oversized god-class **WHEN** decomposed **THEN** API communication methods move to `SoftwareCatalogue/ApiClient.php`, data mapping to `SoftwareCatalogue/DataMapper.php`, and conflict resolution to `SoftwareCatalogue/ConflictResolver.php`.
+- GIVEN `SoftwareCatalogueService` has 7+ class-level suppressions indicating an oversized god-class
+- WHEN decomposed
+- THEN API communication methods MUST move to `lib/Service/SoftwareCatalogue/ApiClient.php`
+- AND data mapping MUST move to `lib/Service/SoftwareCatalogue/DataMapper.php`
+- AND conflict resolution MUST move to `lib/Service/SoftwareCatalogue/ConflictResolver.php`
 
-2. **GIVEN** the codebase already has a `SoftwareCatalogue/` subdirectory with handler classes (ContactPersonHandler, OrganizationHandler, HierarchyHandler, GroupHandler) **WHEN** additional extraction follows this pattern **THEN** consistency is maintained and the existing handler injection pattern (constructor DI, delegation from parent service) is reused.
+#### Scenario: Existing handler pattern reused
 
-3. **GIVEN** SoftwareCatalogueService methods contain progress tracking code interleaved with business logic **WHEN** decomposed **THEN** progress tracking calls are isolated to a ProgressTracker wrapper (which already exists at `lib/Service/ProgressTracker.php`), keeping business methods focused.
+- GIVEN the codebase already has a `SoftwareCatalogue/` subdirectory with handler classes
+- WHEN additional extraction follows this pattern
+- THEN consistency MUST be maintained
+- AND the existing handler injection pattern (constructor DI, delegation from parent service) MUST be reused without modification
+
+#### Scenario: Progress tracking isolated to ProgressTracker
+
+- GIVEN `SoftwareCatalogueService` methods contain progress tracking code interleaved with business logic
+- WHEN decomposed
+- THEN progress tracking calls MUST be isolated to the existing `lib/Service/ProgressTracker.php` wrapper
+- AND business methods MUST contain no inline progress tracking code
 
 ### REQ-DECOMP-005: SettingsService Decomposition
 
-The `lib/Service/SettingsService.php` (23 suppressions) MUST be decomposed. This service manages application configuration persistence with methods that validate, transform, and store multiple configuration sections. The high coupling comes from accessing many configuration keys across different domains.
+`lib/Service/SettingsService.php` (23 suppressions) MUST be decomposed. This
+service manages application configuration persistence with methods that
+validate, transform, and store multiple configuration sections. High coupling
+comes from accessing many configuration keys across different domains.
 
-**Scenarios:**
+#### Scenario: Domain-scoped settings handlers extracted
 
-1. **GIVEN** SettingsService handles sync settings, module settings, organization settings, and ArchiMate settings in one class **WHEN** decomposed **THEN** each configuration domain gets a dedicated handler: `SyncSettingsHandler`, `ModuleSettingsHandler`, `OrganizationSettingsHandler`, with SettingsService acting as a facade.
+- GIVEN `SettingsService` handles sync settings, module settings, organisation settings, and ArchiMate settings in one class
+- WHEN decomposed
+- THEN `lib/Service/Settings/SyncSettingsHandler.php` MUST be created for sync domain
+- AND `lib/Service/Settings/ModuleSettingsHandler.php` MUST be created for module domain
+- AND `lib/Service/Settings/OrganizationSettingsHandler.php` MUST be created for organisation domain
+- AND `SettingsService` MUST act as a facade delegating to these handlers
 
-2. **GIVEN** methods use deep conditional chains to validate configuration values **WHEN** decomposed **THEN** validation logic is extracted into `validate{Domain}Config()` methods using early returns and guard clauses, reducing CC below 10 per method.
+#### Scenario: Validation methods use guard clauses
 
-3. **GIVEN** the class has TooManyMethods suppression **WHEN** handler extraction moves groups of related methods to handlers **THEN** SettingsService retains only delegation methods (under 15 public methods).
+- GIVEN methods use deep conditional chains to validate configuration values
+- WHEN decomposed
+- THEN validation logic MUST be extracted into `validate{Domain}Config()` methods
+- AND these methods MUST use early returns and guard clauses
+- AND each method MUST have CC<10
+
+#### Scenario: TooManyMethods resolved
+
+- GIVEN the class has a `TooManyMethods` suppression
+- WHEN handler extraction moves groups of related methods to handlers
+- THEN `SettingsService` MUST retain only delegation methods
+- AND the public method count MUST be under 15
 
 ### REQ-DECOMP-006: ArchiMate Services Decomposition
 
-The `lib/Service/ArchiMateService.php` (18 suppressions), `lib/Service/ArchiMateImportService.php` (16 suppressions), and `lib/Service/ArchiMateExportService.php` (16 suppressions) MUST be decomposed. These services handle XML parsing, element-level processing, and relationship mapping with deeply nested loops and conditionals.
+`lib/Service/ArchiMateService.php` (18 suppressions),
+`lib/Service/ArchiMateImportService.php` (16 suppressions), and
+`lib/Service/ArchiMateExportService.php` (16 suppressions) MUST be decomposed.
+These services handle XML parsing, element-level processing, and relationship
+mapping with deeply nested loops and conditionals.
 
-**Scenarios:**
+#### Scenario: ArchiMateImportService element handlers extracted
 
-1. **GIVEN** ArchiMateImportService has methods that parse XML elements with nested switch statements for element types **WHEN** decomposed **THEN** each element type handler is extracted into a dedicated method (`importElement()`, `importRelationship()`, `importView()`, `importDiagram()`), each under 50 lines.
+- GIVEN `ArchiMateImportService` has methods that parse XML elements with nested switch statements for element types
+- WHEN decomposed
+- THEN each element type MUST be handled by a dedicated private method: `importElement()`, `importRelationship()`, `importView()`, `importDiagram()`
+- AND each extracted method MUST be under 50 lines
 
-2. **GIVEN** ArchiMateExportService builds XML with deep conditional nesting for attribute handling **WHEN** decomposed **THEN** attribute builders are extracted into `buildElementAttributes()`, `buildRelationshipAttributes()`, and `buildViewAttributes()` helper methods.
+#### Scenario: ArchiMateExportService attribute builders extracted
 
-3. **GIVEN** ArchiMateService coordinates import and export with 7 class-level suppressions **WHEN** decomposed **THEN** orchestration logic is simplified by delegating to the import/export services (which themselves are now cleaner), and validation logic is extracted into `validateArchiMateFile()`.
+- GIVEN `ArchiMateExportService` builds XML with deep conditional nesting for attribute handling
+- WHEN decomposed
+- THEN attribute builders MUST be extracted into `buildElementAttributes()`, `buildRelationshipAttributes()`, and `buildViewAttributes()` helper methods
 
-4. **GIVEN** all three services have CouplingBetweenObjects suppressions **WHEN** shared dependencies are grouped **THEN** a `ArchiMateContext` value object carries shared state (ObjectService, SettingsService, logger) reducing constructor parameter counts.
+#### Scenario: ArchiMateService orchestration simplified
+
+- GIVEN `ArchiMateService` coordinates import and export with 7 class-level suppressions
+- WHEN decomposed
+- THEN orchestration logic MUST be simplified by delegating to the import/export services
+- AND file validation logic MUST be extracted into `validateArchiMateFile()`
+
+#### Scenario: Shared dependencies grouped into ArchiMateContext
+
+- GIVEN all three services have `CouplingBetweenObjects` suppressions
+- WHEN shared dependencies are grouped
+- THEN an `ArchiMate/ArchiMateContext.php` value object MUST carry shared state (ObjectService, SettingsService, logger)
+- AND constructor parameter counts for all three services MUST drop below 13
 
 ### REQ-DECOMP-007: OrganizationSyncService Decomposition
 
-The `lib/Service/OrganizationSyncService.php` (7 class-level suppressions) MUST be decomposed by extracting sync logic into pipeline stages. The service pulls organization data from external sources with complex mapping, validation, and conflict resolution.
+`lib/Service/OrganizationSyncService.php` (7 suppressions) MUST be decomposed
+by extracting sync logic into pipeline stages. The service pulls organisation
+data from external sources with complex mapping, validation, and conflict
+resolution.
 
-**Scenarios:**
+#### Scenario: Sync method decomposed into pipeline stages
 
-1. **GIVEN** the sync method has >200 execution paths combining fetch, validate, transform, and persist phases **WHEN** decomposed **THEN** each phase becomes a private method: `fetchOrganizations()`, `validateOrganization()`, `transformOrganization()`, `persistOrganization()`, each with NPath <50.
+- GIVEN the sync method has >200 execution paths combining fetch, validate, transform, and persist phases
+- WHEN decomposed
+- THEN each phase MUST become a private method: `fetchOrganizations()`, `validateOrganization()`, `transformOrganization()`, `persistOrganization()`
+- AND each extracted method MUST have NPath<50
 
-2. **GIVEN** the service handles both create and update flows with shared validation **WHEN** decomposed **THEN** shared validation is extracted into `validateOrganizationData()` called by both `handleCreate()` and `handleUpdate()`.
+#### Scenario: Shared validation extracted for create and update
 
-3. **GIVEN** error handling is scattered throughout the sync method **WHEN** decomposed **THEN** error handling is centralized into `handleSyncError()` with consistent error logging and progress tracking.
+- GIVEN the service handles both create and update flows with shared validation
+- WHEN decomposed
+- THEN shared validation MUST be extracted into `validateOrganizationData()`
+- AND both `handleCreate()` and `handleUpdate()` MUST call this shared method
+
+#### Scenario: Error handling centralised
+
+- GIVEN error handling is scattered throughout the sync method
+- WHEN decomposed
+- THEN error handling MUST be centralised into `handleSyncError()`
+- AND all error paths MUST use consistent error logging and progress tracking
 
 ### REQ-DECOMP-008: ContactpersoonService Decomposition
 
-The `lib/Service/ContactpersoonService.php` (6 class-level suppressions) MUST be decomposed by extracting validation, enrichment, and persistence phases from the main business methods.
+`lib/Service/ContactpersoonService.php` (6 suppressions) MUST be decomposed by
+extracting validation, enrichment, and persistence phases from the main
+business methods.
 
-**Scenarios:**
+#### Scenario: Field validation extracted into ContactValidator
 
-1. **GIVEN** the service has methods exceeding CC>10 due to field-level validation checks **WHEN** decomposed **THEN** field validation is extracted into a `ContactValidator` helper with methods like `validateEmail()`, `validatePhone()`, `validateName()`, reducing CC below 10.
+- GIVEN the service has methods exceeding CC>10 due to field-level validation checks
+- WHEN decomposed
+- THEN field validation MUST be extracted into a `lib/Service/Contactpersoon/ContactValidator.php` helper
+- AND `ContactValidator` MUST expose `validateEmail()`, `validatePhone()`, and `validateName()` methods
+- AND each method MUST have CC<10
 
-2. **GIVEN** data enrichment logic (looking up organization, resolving duplicates) is interleaved with persistence **WHEN** decomposed **THEN** enrichment is extracted into `enrichContactData()` called before `persistContact()`.
+#### Scenario: Enrichment separated from persistence
 
-3. **GIVEN** the class has CouplingBetweenObjects suppression **WHEN** dependencies are analyzed **THEN** rarely-used dependencies (email service, export service) are lazy-loaded via ContainerInterface reducing immediate coupling.
+- GIVEN data enrichment logic (organisation lookup, duplicate resolution) is interleaved with persistence
+- WHEN decomposed
+- THEN enrichment MUST be extracted into `enrichContactData()` called before `persistContact()`
+- AND these two concerns MUST not be combined in a single method
+
+#### Scenario: Rarely-used dependencies lazy-loaded
+
+- GIVEN the class has a `CouplingBetweenObjects` suppression
+- WHEN dependencies are analyzed
+- THEN rarely-used dependencies (email service, export service) MUST be lazy-loaded via `ContainerInterface`
+- AND the constructor parameter count MUST drop below 13
 
 ### REQ-DECOMP-009: AangebodenGebruikController and Service Decomposition
 
-The `lib/Controller/AangebodenGebruikController.php` (6 suppressions) and `lib/Service/AangebodenGebruikService.php` (5 suppressions) MUST be decomposed. The controller's `create()`, `bulkCreate()`, and `updateStatus()` methods exceed complexity thresholds.
+`lib/Controller/AangebodenGebruikController.php` (6 suppressions) and
+`lib/Service/AangebodenGebruikService.php` (5 suppressions) MUST be decomposed.
+The controller's `create()`, `bulkCreate()`, and `updateStatus()` methods
+exceed complexity thresholds.
 
-**Scenarios:**
+#### Scenario: bulkCreate() decomposed into validate/process/aggregate
 
-1. **GIVEN** `bulkCreate()` has ExcessiveMethodLength with batch processing, validation per item, and error aggregation **WHEN** decomposed **THEN** the method delegates to `validateBulkInput()`, `processBulkItem()`, and `aggregateBulkResults()` private methods.
+- GIVEN `bulkCreate()` has ExcessiveMethodLength with batch processing, per-item validation, and error aggregation
+- WHEN decomposed
+- THEN the method MUST delegate to `validateBulkInput()`, `processBulkItem()`, and `aggregateBulkResults()` private methods
+- AND the public `bulkCreate()` method body MUST be ≤20 lines
 
-2. **GIVEN** `updateStatus()` has CC>10 due to status transition validation **WHEN** decomposed **THEN** status transition rules are extracted into a `StatusTransitionValidator` with a transition map, reducing the method to a simple `validate -> transition -> persist` flow.
+#### Scenario: updateStatus() complexity reduced via StatusTransitionValidator
 
-3. **GIVEN** the service has 5 class-level suppressions **WHEN** decomposed following the handler pattern **THEN** a `GebruikStatusHandler` and `GebruikBulkHandler` are created, each handling their specific concern.
+- GIVEN `updateStatus()` has CC>10 due to status transition validation
+- WHEN decomposed
+- THEN status transition rules MUST be extracted into a `lib/Service/AangebodenGebruik/StatusTransitionValidator.php` class with a transition map
+- AND the method MUST reduce to a simple `validate → transition → persist` flow with CC<5
+
+#### Scenario: Service decomposed into domain handlers
+
+- GIVEN the service has 5 class-level suppressions
+- WHEN decomposed following the handler pattern
+- THEN `lib/Service/AangebodenGebruik/GebruikStatusHandler.php` MUST be created for status concerns
+- AND `lib/Service/AangebodenGebruik/GebruikBulkHandler.php` MUST be created for bulk concerns
 
 ### REQ-DECOMP-010: ViewService and SymfonyEmailService Decomposition
 
-The `lib/Service/ViewService.php` (5 suppressions) and `lib/Service/SymfonyEmailService.php` (5 suppressions) MUST be decomposed. ViewService manages configurable data views with complex query building. SymfonyEmailService handles email composition with template rendering and attachment handling.
+`lib/Service/ViewService.php` (5 suppressions) and
+`lib/Service/SymfonyEmailService.php` (5 suppressions) MUST be decomposed.
+ViewService manages configurable data views with complex query building.
+SymfonyEmailService handles email composition with template rendering and
+attachment handling.
 
-**Scenarios:**
+#### Scenario: ViewService query building extracted into ViewQueryBuilder
 
-1. **GIVEN** ViewService has methods that build complex queries with multiple optional filters **WHEN** decomposed **THEN** query building is extracted into a `ViewQueryBuilder` helper with chainable filter methods: `applyDateFilter()`, `applyStatusFilter()`, `applySearchFilter()`, `applySorting()`.
+- GIVEN `ViewService` has methods that build complex queries with multiple optional filters
+- WHEN decomposed
+- THEN query building MUST be extracted into a `lib/Service/ViewQueryBuilder.php` helper
+- AND it MUST expose chainable filter methods: `applyDateFilter()`, `applyStatusFilter()`, `applySearchFilter()`, `applySorting()`
 
-2. **GIVEN** SymfonyEmailService composes emails with conditional template selection, attachment handling, and recipient resolution **WHEN** decomposed **THEN** email building is split into `resolveRecipients()`, `renderTemplate()`, `attachFiles()`, and `sendEmail()` methods.
+#### Scenario: SymfonyEmailService split into composition phases
 
-3. **GIVEN** both services have CyclomaticComplexity and NPathComplexity suppressions **WHEN** decomposed with early returns and guard clauses **THEN** each method has CC<10 and NPath<200 without needing suppressions.
+- GIVEN `SymfonyEmailService` composes emails with conditional template selection, attachment handling, and recipient resolution
+- WHEN decomposed
+- THEN email building MUST be split into `resolveRecipients()`, `renderTemplate()`, `attachFiles()`, and `sendEmail()` private methods
+
+#### Scenario: All methods pass CC and NPath thresholds after decomposition
+
+- GIVEN both services have `CyclomaticComplexity` and `NPathComplexity` suppressions
+- WHEN decomposed with early returns and guard clauses
+- THEN each method MUST have CC<10 and NPath<200
+- AND no `@SuppressWarnings(PHPMD.*)` annotations MUST remain in either file
 
 ### REQ-DECOMP-011: Priority 2 File Decomposition
 
-The 8 files with 3-4 suppressions each (OrganizationHandler, ModuleComplianceService, AanbodService, UserProfileUpdatedEventListener, HierarchyHandler, ModuleRegistrationService, GebruikSyncService, OpenRegisterEventsDebugListener) MUST be decomposed to reduce their complexity below PHPMD thresholds.
+The 8 files with 3–4 suppressions each MUST be decomposed to reduce complexity
+below PHPMD thresholds.
 
-**Scenarios:**
+#### Scenario: ModuleComplianceService rules split into evaluators
 
-1. **GIVEN** ModuleComplianceService has 4 suppressions (class complexity, CC, NPath, method length) **WHEN** decomposed **THEN** compliance check logic is split into individual rule evaluators: `checkLicenseCompliance()`, `checkSecurityCompliance()`, `checkDocumentationCompliance()`, each returning a compliance result object.
+- GIVEN `ModuleComplianceService` has 4 suppressions (class complexity, CC, NPath, method length)
+- WHEN decomposed
+- THEN compliance check logic MUST be split into individual rule evaluators: `checkLicenseCompliance()`, `checkSecurityCompliance()`, `checkDocumentationCompliance()`
+- AND each evaluator MUST return a compliance result object
 
-2. **GIVEN** UserProfileUpdatedEventListener has 4 suppressions across 2 methods **WHEN** decomposed **THEN** profile field mapping is extracted into a `ProfileFieldMapper` helper, and the event handling methods delegate to it.
+#### Scenario: UserProfileUpdatedEventListener delegates to ProfileFieldMapper
 
-3. **GIVEN** HierarchyHandler has 3 suppressions for tree traversal complexity **WHEN** decomposed **THEN** tree operations are extracted into `buildHierarchyTree()`, `resolveParent()`, and `updateChildReferences()` methods.
+- GIVEN `UserProfileUpdatedEventListener` has 4 suppressions across 2 methods
+- WHEN decomposed
+- THEN profile field mapping MUST be extracted into a `lib/Service/ProfileFieldMapper.php` helper
+- AND the event handling methods MUST delegate to it
 
-4. **GIVEN** all 8 files are decomposed **WHEN** the combined suppression count is checked **THEN** the total is reduced from approximately 28 to 0, contributing to the overall 145-suppression elimination goal.
+#### Scenario: HierarchyHandler tree operations extracted
+
+- GIVEN `HierarchyHandler` has 3 suppressions for tree traversal complexity
+- WHEN decomposed
+- THEN tree operations MUST be extracted into `buildHierarchyTree()`, `resolveParent()`, and `updateChildReferences()` private methods
+
+#### Scenario: All 8 Priority 2 files clean
+
+- GIVEN all 8 Priority 2 files are decomposed
+- WHEN the combined suppression count is checked
+- THEN the total MUST be reduced from approximately 28 to 0
+- AND no new PHPMD violations MUST be introduced
 
 ### REQ-DECOMP-012: Priority 3 File Cleanup
 
-The 6 files with 1-2 suppressions each (ModuleComplianceSubscriber, GebruikController, Application, GroupHandler, ModuleVersionService, ViewController) MUST be decomposed or refactored to remove remaining suppressions.
+The 6 files with 1–2 suppressions each MUST be decomposed or refactored to
+remove remaining suppressions.
 
-**Scenarios:**
+#### Scenario: Application.php boot method reduced
 
-1. **GIVEN** Application.php has CouplingBetweenObjects + ExcessiveMethodLength **WHEN** decomposed **THEN** event listener registration is extracted into a `EventRegistrar` helper, and service registration into `ServiceRegistrar`, reducing the boot method size.
+- GIVEN `Application.php` has `CouplingBetweenObjects` + `ExcessiveMethodLength`
+- WHEN decomposed
+- THEN event listener registration MUST be extracted into a `lib/Service/EventRegistrar.php` helper
+- AND service registration MUST be extracted into `lib/Service/ServiceRegistrar.php`
+- AND the boot method size MUST drop below 100 lines
 
-2. **GIVEN** ModuleVersionService has a single ExcessiveMethodLength **WHEN** decomposed **THEN** the long method is split into `fetchVersionData()`, `compareVersions()`, and `updateVersionRecord()` phases.
+#### Scenario: ModuleVersionService long method split
 
-3. **GIVEN** all 6 files are cleaned up **WHEN** `composer check:strict` runs **THEN** zero PHPMD violations remain across the entire codebase for the targeted suppression categories.
+- GIVEN `ModuleVersionService` has a single `ExcessiveMethodLength` suppression
+- WHEN decomposed
+- THEN the long method MUST be split into `fetchVersionData()`, `compareVersions()`, and `updateVersionRecord()` phases
 
-## Decomposition Strategy
+#### Scenario: Final check:strict passes with zero violations
 
-### For CyclomaticComplexity (>10 branches)
-Extract conditional branches into private helper methods:
-- Guard clauses: Extract early-return validation into `validate{Thing}()` methods
-- Switch-like logic: Extract case handlers into `handle{Case}()` methods
-- Nested conditions: Flatten by extracting inner blocks into descriptive methods
+- GIVEN all 6 Priority 3 files are cleaned up
+- WHEN `composer check:strict` runs
+- THEN zero PHPMD violations MUST remain across the entire codebase for the targeted suppression categories
+- AND total `@SuppressWarnings(PHPMD.*)` annotations in `lib/` MUST be reduced by at least 145
 
-### For NPathComplexity (>200 paths)
-Reduce execution paths by:
-- Breaking method into pipeline stages (each stage = private method)
-- Extracting independent conditional blocks into separate methods
-- Using early returns to eliminate nested paths
+## Non-functional Requirements
 
-### For ExcessiveMethodLength (>100 lines)
-Split long methods into logical phases:
-- Validation phase -> `validate{Input}()`
-- Preparation phase -> `prepare{Data}()`
-- Processing phase -> `process{Thing}()`
-- Response phase -> `build{Response}()`
+### REQ-DECOMP-NFR-001: No behavioral changes
 
-### For ExcessiveClassComplexity / ExcessiveClassLength
-Extract method groups into Handler classes (existing pattern in codebase):
-- Create `{ClassName}/{HandlerName}Handler.php`
-- Move related methods to the handler
-- Inject handler via constructor
-- Delegate from original methods (keep public API stable)
+- GIVEN any decomposed method or class
+- WHEN tests run before and after the decomposition
+- THEN test outcomes MUST be identical
+- AND no observable behavior (API response shape, database writes, event dispatching) MUST change
 
-### For CouplingBetweenObjects (>13 dependencies)
-Reduce constructor parameters by:
-- Grouping related dependencies into a single service
-- Using lazy loading for rarely-used dependencies (ContainerInterface->get())
-- Moving methods that use specific deps to handler classes
+### REQ-DECOMP-NFR-002: @spec traceability
 
-## Files Requiring Decomposition
+- GIVEN any new class or public method introduced by this change
+- WHEN its PHPDoc block is read
+- THEN it MUST include at least one `@spec openspec/changes/method-decomposition/tasks.md#task-N` tag per ADR-003
 
-### Priority 1 -- Highest complexity (files with 5+ suppressions)
+### REQ-DECOMP-NFR-003: SPDX headers on new files
 
-**lib/Controller/SettingsController.php** (23 suppressions)
-Admin settings controller managing synchronization settings, module registration, and catalogue configuration. Class-level suppressions for class length, TooManyMethods, class complexity, and coupling. Method-level suppressions on `syncSoftwareCatalogue`, `registerModules`, `syncOrganizations`, and `configureArchiMate`.
+- GIVEN any new PHP file created by this change
+- WHEN its contents are read
+- THEN the second line (after `<?php`) MUST be `// SPDX-License-Identifier: EUPL-1.2` per ADR-015
 
-**lib/Service/SettingsService.php** (23 suppressions)
-Settings persistence service managing application configuration across multiple domains.
+### REQ-DECOMP-NFR-004: Container invocation for tests
 
-**lib/Service/SoftwareCatalogueService.php** (20 suppressions)
-Core service for synchronizing with the VNG Software Catalogus API.
-
-**lib/Service/ArchiMateService.php** (18 suppressions)
-ArchiMate enterprise architecture model import/export orchestrator.
-
-**lib/Service/ArchiMateImportService.php** (16 suppressions)
-ArchiMate XML import service parsing Open Exchange Format files.
-
-**lib/Service/ArchiMateExportService.php** (16 suppressions)
-ArchiMate XML export service generating Open Exchange Format files.
-
-**lib/EventListener/SoftwareCatalogEventListener.php** (11 suppressions)
-Event listener handling OpenRegister object events for software catalog synchronization.
-
-**lib/Controller/ContactpersonenController.php** (11 suppressions)
-Contact persons CRUD controller with complex create/update logic.
-
-**lib/Service/SoftwareCatalogue/ContactPersonHandler.php** (7 suppressions)
-Handler for contact person synchronization with the Software Catalogus.
-
-**lib/Service/OrganizationSyncService.php** (7 suppressions)
-Organisation synchronization service pulling data from external sources.
-
-**lib/Service/ContactpersoonService.php** (6 suppressions)
-Contact person business logic service.
-
-**lib/Controller/AangebodenGebruikController.php** (6 suppressions)
-"Offered usage" (software deployments) controller.
-
-**lib/Service/ViewService.php** (5 suppressions)
-View/dashboard service managing configurable data views.
-
-**lib/Service/SymfonyEmailService.php** (5 suppressions)
-Email sending service using Symfony Mailer.
-
-**lib/Service/AangebodenGebruikService.php** (5 suppressions)
-Software usage/deployment business logic.
-
-### Priority 2 -- Medium complexity (files with 3-4 suppressions)
-
-- `lib/Service/SoftwareCatalogue/OrganizationHandler.php` (4)
-- `lib/Service/ModuleComplianceService.php` (4)
-- `lib/Service/AanbodService.php` (4)
-- `lib/EventListener/UserProfileUpdatedEventListener.php` (4)
-- `lib/Service/SoftwareCatalogue/HierarchyHandler.php` (3)
-- `lib/Service/ModuleRegistrationService.php` (3)
-- `lib/Service/GebruikSyncService.php` (3)
-- `lib/EventListener/OpenRegisterEventsDebugListener.php` (3)
-
-### Priority 3 -- Single or double suppressions
-
-- `lib/EventListener/ModuleComplianceSubscriber.php` (2)
-- `lib/Controller/GebruikController.php` (2)
-- `lib/AppInfo/Application.php` (2)
-- `lib/Service/SoftwareCatalogue/GroupHandler.php` (1)
-- `lib/Service/ModuleVersionService.php` (1)
-- `lib/Controller/ViewController.php` (1)
-
-## Testing Strategy
-
-### Before decomposition
-1. Run existing unit tests: `docker exec -w /var/www/html/custom_apps/softwarecatalog nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
-2. Note any pre-existing failures
-3. Run PHPMD to record current suppression count: `./vendor/bin/phpmd lib/ text phpmd.xml 2>&1 | wc -l`
-
-### During decomposition (per method)
-1. Verify `php -l` passes on all changed files
-2. Run unit tests for the specific class: `--filter ClassName`
-3. Run PHPMD on the specific file to confirm suppression can be removed
-
-### After decomposition
-1. Full unit test suite passes
-2. PHPMD reports 0 violations (no new warnings)
-3. Total suppression count reduced by expected amount
-4. `composer check:strict` passes
-5. Manual smoke test in browser (http://localhost:3000)
-
-## Acceptance Criteria
-- [ ] All CyclomaticComplexity suppressions eliminated or reduced to <=5
-- [ ] All NPathComplexity suppressions eliminated or reduced to <=5
-- [ ] All ExcessiveMethodLength suppressions eliminated or reduced to <=5
-- [ ] ExcessiveClassComplexity reduced by extracting handler classes
-- [ ] CouplingBetweenObjects reduced by dependency grouping and handler extraction
-- [ ] TooManyMethods reduced by handler extraction
-- [ ] No new PHPMD violations introduced
-- [ ] All existing tests continue to pass
-- [ ] No behavioral changes (pure refactoring)
-- [ ] `composer check:strict` passes with zero violations
+- GIVEN a developer wants to verify a decomposed class
+- WHEN they run unit tests
+- THEN they MUST invoke PHPUnit via:
+  `docker exec -w /var/www/html/custom_apps/softwarecatalog nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- AND class-scoped filtering MUST be available via `--filter ClassName` per ADR-008
