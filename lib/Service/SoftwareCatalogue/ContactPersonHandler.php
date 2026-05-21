@@ -2350,17 +2350,17 @@ class ContactPersonHandler
                             );
 
                     return true;
-                } else {
-                    $this->_logger->debug(
-                            'ContactPersonHandler: Contactpersoon already in organization',
-                            [
-                                'username'         => $username,
-                                'organizationUuid' => $organizationUuid,
-                            ]
-                            );
-                    return true;
-                    // Already there, consider it successful.
                 }//end if
+
+                $this->_logger->debug(
+                        'ContactPersonHandler: Contactpersoon already in organization',
+                        [
+                            'username'         => $username,
+                            'organizationUuid' => $organizationUuid,
+                        ]
+                        );
+                // Already there, consider it successful.
+                return true;
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                 $this->_logger->error(
                         'ContactPersonHandler: Organization not found for contactpersoon',
@@ -2404,33 +2404,35 @@ class ContactPersonHandler
                     );
 
             // Check if user should be added to organization.
-            if ($this->shouldAddContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject) === true) {
-                // Add user to organization.
-                $result = $this->addContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject);
-
-                if ($result === true) {
-                    $this->_logger->info(
-                            'ContactPersonHandler: Successfully ensured contactpersoon in organization',
-                            [
-                                'objectId' => $contactpersoonObject->getId(),
-                            ]
-                            );
-                } else {
-                    $this->_logger->warning(
-                            'ContactPersonHandler: Failed to add contactpersoon to organization',
-                            [
-                                'objectId' => $contactpersoonObject->getId(),
-                            ]
-                            );
-                }
-            } else {
+            if ($this->shouldAddContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject) === false) {
                 $this->_logger->debug(
                         'ContactPersonHandler: Contactpersoon already in organization or no action needed',
                         [
                             'objectId' => $contactpersoonObject->getId(),
                         ]
                         );
-            }//end if
+                return;
+            }
+
+            // Add user to organization.
+            $result = $this->addContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject);
+
+            if ($result === true) {
+                $this->_logger->info(
+                        'ContactPersonHandler: Successfully ensured contactpersoon in organization',
+                        [
+                            'objectId' => $contactpersoonObject->getId(),
+                        ]
+                        );
+                return;
+            }
+
+            $this->_logger->warning(
+                    'ContactPersonHandler: Failed to add contactpersoon to organization',
+                    [
+                        'objectId' => $contactpersoonObject->getId(),
+                    ]
+                    );
         } catch (\Exception $e) {
             $this->_logger->error(
                 'ContactPersonHandler: Failed to ensure contactpersoon in organization: '.$e->getMessage(),
@@ -2527,21 +2529,7 @@ class ContactPersonHandler
 
                 // Add user to the organisation entity.
                 $currentUsers = $organisation->getUsers() ?? [];
-                if (in_array($username, $currentUsers) === false) {
-                    $currentUsers[] = $username;
-                    $organisation->setUsers($currentUsers);
-                    $organisationMapper->update($organisation);
-
-                    $this->_logger->info(
-                            'ContactPersonHandler: Successfully added user to organization entity',
-                            [
-                                'objectId'         => $contactpersoonObject->getId(),
-                                'username'         => $username,
-                                'organizationUuid' => $organizationUuid,
-                                'totalUsers'       => count($currentUsers),
-                            ]
-                            );
-                } else {
+                if (in_array($username, $currentUsers) === true) {
                     $this->_logger->info(
                             'ContactPersonHandler: User already in organization entity',
                             [
@@ -2550,7 +2538,22 @@ class ContactPersonHandler
                                 'organizationUuid' => $organizationUuid,
                             ]
                             );
-                }//end if
+                    return;
+                }
+
+                $currentUsers[] = $username;
+                $organisation->setUsers($currentUsers);
+                $organisationMapper->update($organisation);
+
+                $this->_logger->info(
+                        'ContactPersonHandler: Successfully added user to organization entity',
+                        [
+                            'objectId'         => $contactpersoonObject->getId(),
+                            'username'         => $username,
+                            'organizationUuid' => $organizationUuid,
+                            'totalUsers'       => count($currentUsers),
+                        ]
+                        );
             } catch (\Exception $e) {
                 $this->_logger->error(
                         'ContactPersonHandler: Failed to add user to organization entity',

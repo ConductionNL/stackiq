@@ -369,11 +369,12 @@ class ProgressTracker
         }
 
         $overallProgress = $completedWeight + $currentPhaseProgress;
-            $percentage  = 0;
+        $percentage      = 0;
         if ($totalWeight > 0) {
+            $percentage = ($overallProgress / $totalWeight) * 100;
         }
 
-        return min(100, max(0, $percentage));
+        return min(100, max(0, (int) $percentage));
     }//end calculateOverallPercentage()
 
     /**
