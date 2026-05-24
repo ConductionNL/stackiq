@@ -11,6 +11,8 @@
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-3
  */
 
 declare(strict_types=1);
@@ -144,6 +146,8 @@ class SoftwareCatalogueService
      * @throws \Exception If processing fails
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-3
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
@@ -359,6 +363,8 @@ class SoftwareCatalogueService
      * @throws \Exception If processing fails.
      *
      * @deprecated This method is disabled to prevent organization duplication.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-3
      */
     public function processOrganization(object $organizationObject): bool
     {

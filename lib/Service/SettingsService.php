@@ -9,6 +9,8 @@
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: 1.0.0
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -199,6 +201,8 @@ class SettingsService
      * @return array The current settings configuration
      *
      * @throws \RuntimeException If settings retrieval fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
      */
     public function getSettings(): array
     {
@@ -419,6 +423,8 @@ class SettingsService
      * @return array The updated settings configuration
      *
      * @throws \RuntimeException If settings update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
      */
     public function updateSettings(array $data): array
     {
@@ -483,6 +489,8 @@ class SettingsService
      * @throws \RuntimeException If auto-configuration fails
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $force is a simple re-import toggle
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
      */
     public function autoConfigure(bool $force=false): array
     {

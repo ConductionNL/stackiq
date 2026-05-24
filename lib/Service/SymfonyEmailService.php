@@ -10,6 +10,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
  */
 
 declare(strict_types=1);
@@ -488,6 +490,8 @@ class SymfonyEmailService
      * @return bool True if email was sent successfully, false otherwise.
      *
      * @throws \Exception If email sending fails.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
      */
     public function sendOrganizationRegistrationEmail(array $organization): bool
     {
@@ -1049,6 +1053,8 @@ class SymfonyEmailService
      * @return bool True if email was sent successfully, false otherwise.
      *
      * @throws \Exception If email sending fails.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
      */
     private function sendTemplatedEmail(
         string $recipientEmail,

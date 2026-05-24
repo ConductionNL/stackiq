@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Conduction B.V.
 
+/**
+ * SoftwareCatalog frontend bootstrap.
+ *
+ * Mounts CnAppRoot with the bundled manifest, registers icons/translations,
+ * and primes the router from the manifest pages.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-11
+ */
+
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import { PiniaVuePlugin } from 'pinia'

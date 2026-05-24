@@ -7,6 +7,8 @@
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
 
 /**
@@ -354,6 +356,8 @@ class ArchiMateExportService
      * @param array $modelMetadata Model metadata from the database.
      *
      * @return \SimpleXMLElement Root XML element ready for population.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function createCleanArchiMateXml(array $modelMetadata): \SimpleXMLElement
     {
@@ -422,6 +426,8 @@ XML;
      * @param array             $elements The elements to add.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function addElementsToXml(\SimpleXMLElement $xml, array $elements): void
     {

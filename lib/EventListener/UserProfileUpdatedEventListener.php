@@ -11,6 +11,8 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -58,6 +60,8 @@ class UserProfileUpdatedEventListener implements IEventListener
      * @param Event $event The dispatched event.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function handle(Event $event): void
     {
@@ -120,6 +124,8 @@ class UserProfileUpdatedEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     private function syncToContactpersoon(UserProfileUpdatedEvent $event, LoggerInterface $logger): void
     {

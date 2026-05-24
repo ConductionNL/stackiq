@@ -17,6 +17,8 @@
  * @version GIT: <git_id>
  *
  * @link https://SoftwareCatalog.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -100,6 +102,8 @@ class OpenRegisterEventsDebugListener implements IEventListener
      * @return void
      *
      * @phpstan-param T $event
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function handle(Event $event): void
     {

@@ -9,6 +9,8 @@
  * @author Ruben Linde
  * @copyright 2024
  * @license AGPL-3.0-or-later
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-13
  */
 
 import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'

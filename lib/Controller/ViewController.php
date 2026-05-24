@@ -12,6 +12,8 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://github.com/nextcloud/softwarecatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
 
 namespace OCA\SoftwareCatalog\Controller;
@@ -70,6 +72,8 @@ class ViewController extends Controller
      * @PublicPage
      *
      * @return JSONResponse JSON response with views array
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function getAllViews(): JSONResponse
     {
@@ -144,6 +148,8 @@ class ViewController extends Controller
      * @PublicPage
      *
      * @return JSONResponse JSON response with view object
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function getView(string $viewId): JSONResponse
     {

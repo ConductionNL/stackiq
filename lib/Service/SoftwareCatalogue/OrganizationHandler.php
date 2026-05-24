@@ -12,6 +12,8 @@
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -93,6 +95,8 @@ class OrganizationHandler
      * @return bool True if processing was successful
      *
      * @throws \Exception If processing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function processOrganization(object $organizationObject): bool
     {
@@ -307,6 +311,8 @@ class OrganizationHandler
      * @param object $organizationObject The organization object
      *
      * @return array Array of created or updated contactgegevens objects
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function processContactpersonen(object $organizationObject): array
     {
