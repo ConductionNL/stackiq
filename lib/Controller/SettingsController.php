@@ -142,6 +142,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function index(): JSONResponse
     {
@@ -177,6 +179,8 @@ class SettingsController extends Controller
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function create(): JSONResponse
     {
@@ -285,6 +289,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse General configuration
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function getGeneralConfig(): JSONResponse
     {
@@ -322,6 +328,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function updateGeneralConfig(): JSONResponse
     {
@@ -365,6 +373,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Sync configuration
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function getSyncConfig(): JSONResponse
     {
@@ -402,6 +412,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function updateSyncConfig(): JSONResponse
     {
@@ -445,6 +457,8 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing the settings.
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-2
      */
     public function load(): JSONResponse
     {
@@ -463,6 +477,8 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing the initialization results
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-2
      */
     public function initialize(): JSONResponse
     {
@@ -487,6 +503,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-2
      */
     public function status(): JSONResponse
     {
@@ -582,6 +600,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
      */
     public function stats(): JSONResponse
     {
@@ -617,6 +637,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
      */
     public function debug(): JSONResponse
     {
@@ -688,6 +710,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-3
      */
     public function getSyncStatus(int $minutesBack=10): JSONResponse
     {
@@ -703,6 +727,8 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing sync results
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-3
      */
     public function performSync(int $minutesBack=0): JSONResponse
     {
@@ -763,6 +789,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
      */
     public function heartbeat(): JSONResponse
     {
@@ -811,6 +839,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-2
      */
     public function getVersionInfo(): JSONResponse
     {
@@ -884,6 +914,8 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing cache clear results.
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
      */
     public function clearCache(): JSONResponse
     {
@@ -1101,6 +1133,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-5
      */
     public function getProgress(string $operationId): JSONResponse
     {
@@ -1156,6 +1190,8 @@ class SettingsController extends Controller
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-5
      */
     public function streamProgress(string $operationId): Response
     {
