@@ -12,6 +12,8 @@
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
 
 declare(strict_types=1);
@@ -227,6 +229,8 @@ class GroupHandler
      * @param string $username             The username to update groups for
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {

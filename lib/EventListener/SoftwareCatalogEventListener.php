@@ -12,6 +12,8 @@
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/OpenConnector
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -68,6 +70,8 @@ class SoftwareCatalogEventListener implements IEventListener
      * @param Event $event The event to handle
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
      */
     public function handle(Event $event): void
     {
@@ -148,6 +152,8 @@ class SoftwareCatalogEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
      */
     private function handleObjectCreated(
         ObjectCreatedEvent $event,
@@ -323,6 +329,8 @@ class SoftwareCatalogEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
      */
     private function handleObjectUpdated(
         ObjectUpdatedEvent $event,
@@ -641,6 +649,8 @@ class SoftwareCatalogEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
      */
     private function handleObjectDeleted(
         ObjectDeletedEvent $event,

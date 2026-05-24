@@ -12,6 +12,8 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://github.com/nextcloud/softwarecatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
 
 namespace OCA\SoftwareCatalog\Controller;
@@ -76,6 +78,8 @@ class GebruikController extends Controller
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function getGebruiken(): JSONResponse
     {
@@ -137,6 +141,8 @@ class GebruikController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function getGebruikenForDeelnemer(): JSONResponse
     {

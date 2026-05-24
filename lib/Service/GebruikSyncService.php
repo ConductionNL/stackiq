@@ -15,6 +15,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl
  * @version   GIT: <git_id>
  * @link      https://github.com/conduction/nextcloud-software-catalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -88,6 +90,8 @@ class GebruikSyncService
      * @param ObjectEntity $gebruikObject The gebruik object to process
      *
      * @return array Processing statistics.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function processSpecificGebruik(ObjectEntity $gebruikObject): array
     {

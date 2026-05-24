@@ -11,6 +11,8 @@
  * @author   SoftwareCatalog Team <info@conduction.nl>
  * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
  * @link     https://github.com/nextcloud/softwarecatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -435,6 +437,8 @@ class ArchiMateImportService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function importArchiMateFileFromPath(array $options=[]): array
     {
@@ -590,6 +594,8 @@ class ArchiMateImportService
      * @param string $filePath Path to XML file
      *
      * @return array Parsed XML data
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     private function parseArchiMateXml(string $filePath): array
     {

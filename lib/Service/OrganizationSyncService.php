@@ -11,6 +11,8 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
  */
 
 declare(strict_types=1);
@@ -203,6 +205,8 @@ class OrganizationSyncService
      * @param int $maxExecutionSeconds The maximum execution time in seconds.
      *
      * @return array The sync statistics.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
      */
     public function performOrganizationsSync(int $batchSize=50, int $maxExecutionSeconds=45): array
     {
@@ -533,6 +537,8 @@ class OrganizationSyncService
      * @param int $minutesBack Number of minutes to look back for changes (0 = all objects)
      *
      * @return array Synchronization results and statistics
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
      */
     public function performFullSync(int $minutesBack=10): array
     {
@@ -735,6 +741,8 @@ class OrganizationSyncService
      * @param array  $stats             Statistics array (passed by reference)
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
      */
     private function processOrganisatieObject(
         object $organisatieObject,

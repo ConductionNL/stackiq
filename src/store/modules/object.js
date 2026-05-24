@@ -14,6 +14,8 @@
  * @license AGPL-3.0-or-later
  * @version 2.0.0
  * @see {@link https://github.com/opencatalogi/softwarecatalog}
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-12
  */
 import { createObjectStore, filesPlugin, auditTrailsPlugin, relationsPlugin } from '@conduction/nextcloud-vue'
 import { softwarecatalogPlugin } from '../plugins/softwarecatalogPlugin.js'

@@ -14,6 +14,8 @@
  * @version GIT: <git_id>
  *
  * @link https://www.OpenCatalogi.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-1
  */
 
 namespace OCA\SoftwareCatalog\Controller;
@@ -3116,6 +3118,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse The sync results
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-1
      */
     public function syncOrganisations(): JSONResponse
     {

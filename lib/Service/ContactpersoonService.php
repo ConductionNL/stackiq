@@ -12,6 +12,8 @@
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
  */
 
 declare(strict_types=1);
@@ -105,6 +107,8 @@ class ContactpersoonService
      * @throws \Exception If processing fails.
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
@@ -510,6 +514,8 @@ class ContactpersoonService
      * @param object|null $oldContactpersoonObject The previous contactpersoon object
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
      */
     public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject=null): void
     {

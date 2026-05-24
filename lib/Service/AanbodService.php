@@ -14,6 +14,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -91,6 +93,8 @@ class AanbodService
      * @return array Array with success status, aanbod objects data, and metadata
      *
      * @throws Exception When OpenRegister service is not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function getAanbod(array $options=[]): array
     {
@@ -278,6 +282,8 @@ class AanbodService
      * @return array Result with success status and updated object data
      *
      * @throws Exception When OpenRegister service is not available or operation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function acceptAanbod(string $aanbodId, array $options=[]): array
     {
@@ -439,6 +445,8 @@ class AanbodService
      * @param array  $options  Additional options for the operation
      *
      * @return array Result array with success status and details
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function denyAanbod(string $aanbodId, array $options=[]): array
     {
