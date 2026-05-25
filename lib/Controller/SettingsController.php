@@ -103,6 +103,7 @@ class SettingsController extends Controller
      *
      * @return ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws RuntimeException If the service is not available.
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-1
      */
     public function getObjectService(): ?ObjectService
     {
@@ -120,6 +121,7 @@ class SettingsController extends Controller
      *
      * @return ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws RuntimeException If the service is not available.
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-1
      */
     public function getConfigurationService(): ?ConfigurationService
     {
@@ -561,6 +563,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing the auto-configuration results
      *
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function autoConfigure(): JSONResponse
     {
@@ -662,6 +665,7 @@ class SettingsController extends Controller
      * @return JSONResponse
      *
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function sendTestEmail(): JSONResponse
     {
@@ -883,6 +887,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing reset results.
      *
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function resetAutoConfig(): JSONResponse
     {
@@ -955,6 +960,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing import results.
      *
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function manualImport(): JSONResponse
     {
@@ -1012,6 +1018,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing force update results.
      *
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function forceUpdate(): JSONResponse
     {
@@ -1084,6 +1091,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing consolidated results
      *
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function consolidatedAutoConfigure(): JSONResponse
     {
@@ -1221,6 +1229,8 @@ class SettingsController extends Controller
              * Render the SSE stream.
              *
              * @return string Empty string (output is streamed directly).
+             *
+             * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
              */
             public function render(): string
             {
@@ -1309,6 +1319,7 @@ class SettingsController extends Controller
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.Superglobals)
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function importArchiMate(): JSONResponse
     {
@@ -1488,6 +1499,7 @@ class SettingsController extends Controller
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function exportArchiMate(): Response
     {
@@ -1549,6 +1561,8 @@ class SettingsController extends Controller
                  * Render the response content.
                  *
                  * @return string The response content.
+                 *
+                 * @spec exclude framework passthrough — inline DataDownloadResponse subclass returning prebuilt content unchanged
                  */
                 public function render(): string
                 {
@@ -1604,6 +1618,7 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function exportOrgArchiMate(string $organizationUuid): Response
     {
@@ -1660,6 +1675,8 @@ class SettingsController extends Controller
                  * Render the response content.
                  *
                  * @return string The response content.
+                 *
+                 * @spec exclude framework passthrough — inline DataDownloadResponse subclass returning prebuilt content unchanged
                  */
                 public function render(): string
                 {
@@ -1705,6 +1722,7 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function downloadArchiMate(string $fileName): Response
     {
@@ -1799,6 +1817,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Test connection result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function testEmailConnection(): JSONResponse
     {
@@ -1860,6 +1879,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Current email settings
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailSettings(): JSONResponse
     {
@@ -1896,6 +1916,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function updateEmailSettings(): JSONResponse
     {
@@ -1941,6 +1962,7 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailTemplates(): JSONResponse
     {
@@ -1980,6 +2002,7 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailTemplate(string $templateName): JSONResponse
     {
@@ -2019,6 +2042,7 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function updateEmailTemplate(string $templateName): JSONResponse
     {
@@ -2078,6 +2102,7 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailTemplateDefault(string $templateName): JSONResponse
     {
@@ -2117,6 +2142,7 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailTemplateVariables(string $templateName): JSONResponse
     {
@@ -2158,6 +2184,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Generic user groups
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getGenericUserGroups(): JSONResponse
     {
@@ -2194,6 +2221,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function setGenericUserGroups(): JSONResponse
     {
@@ -2236,6 +2264,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Organization admin groups
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getOrganizationAdminGroups(): JSONResponse
     {
@@ -2272,6 +2301,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function setOrganizationAdminGroups(): JSONResponse
     {
@@ -2314,6 +2344,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Super user groups
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getSuperUserGroups(): JSONResponse
     {
@@ -2350,6 +2381,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function setSuperUserGroups(): JSONResponse
     {
@@ -2392,6 +2424,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse All user groups
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getAllGroups(): JSONResponse
     {
@@ -2432,6 +2465,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Clear result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function clearArchiMateImportStatus(): JSONResponse
     {
@@ -2471,6 +2505,7 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function killArchiMateImport(): JSONResponse
     {
@@ -2509,6 +2544,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Cancellation result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function cancelArchiMateImport(): JSONResponse
     {
@@ -2550,6 +2586,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Clear result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function clearArchiMateExportStatus(): JSONResponse
     {
@@ -2590,6 +2627,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Round-trip test result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function testArchiMateRoundTrip(): JSONResponse
     {
@@ -2640,6 +2678,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse ArchiMate settings and status
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getArchiMateSettings(): JSONResponse
     {
@@ -2677,6 +2716,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Object counts for all registers
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-3
      */
     public function getObjectCounts(): JSONResponse
     {
@@ -2717,6 +2757,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse ArchiMate configuration
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getArchiMateConfig(): JSONResponse
     {
@@ -2747,6 +2788,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function updateArchiMateConfig(): JSONResponse
     {
@@ -2779,6 +2821,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Email configuration
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailConfig(): JSONResponse
     {
@@ -2809,6 +2852,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function updateEmailConfig(): JSONResponse
     {
@@ -2841,6 +2885,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse AMEF configuration
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getAmefConfig(): JSONResponse
     {
@@ -2871,6 +2916,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function updateAmefConfig(): JSONResponse
     {
@@ -2903,6 +2949,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Voorzieningen configuration
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-1
      */
     public function getVoorzieningenConfig(): JSONResponse
     {
@@ -2933,6 +2980,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-1
      */
     public function updateVoorzieningenConfig(): JSONResponse
     {
@@ -2965,6 +3013,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Object counts
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-3
      */
     public function getObjectsCounts(): JSONResponse
     {
@@ -2996,6 +3045,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Object statistics
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-3
      */
     public function getObjectsStatistics(): JSONResponse
     {
@@ -3027,6 +3077,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse User groups configuration
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getUserGroupsConfig(): JSONResponse
     {
@@ -3057,6 +3108,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function updateUserGroupsConfig(): JSONResponse
     {
@@ -3213,6 +3265,7 @@ class SettingsController extends Controller
      * @return JSONResponse Response containing sync results.
      *
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-3
      */
     public function bulkSyncStandards(): JSONResponse
     {
@@ -3274,6 +3327,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Cronjob configurations
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getCronjobConfig(): JSONResponse
     {
@@ -3305,6 +3359,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function updateCronjobConfig(): JSONResponse
     {
@@ -3344,6 +3399,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse List of available users
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getCronjobUsers(): JSONResponse
     {
@@ -3377,6 +3433,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse List of available organisations
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getCronjobOrganisations(): JSONResponse
     {

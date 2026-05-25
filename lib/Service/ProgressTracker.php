@@ -431,6 +431,7 @@ class ProgressTracker
      * @param int $maxAge Maximum age in seconds (default: 1 hour)
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-progress-tracking-2/tasks.md#task-1
      */
     public function cleanupOldProgress(int $maxAge=3600): void
     {

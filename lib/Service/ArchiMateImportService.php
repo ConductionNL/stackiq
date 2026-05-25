@@ -191,6 +191,7 @@ class ArchiMateImportService
      * @param \SimpleXMLElement $xml The XML element to convert.
      *
      * @return array The normalized associative array.
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function xmlToArray(\SimpleXMLElement $xml): array
     {
@@ -303,6 +304,7 @@ class ArchiMateImportService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
     {
@@ -1917,6 +1919,7 @@ class ArchiMateImportService
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function getAmefConfig(): array
     {
@@ -2191,6 +2194,7 @@ class ArchiMateImportService
      * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function getPropertyNameMapping(array $propDefMap): array
     {
