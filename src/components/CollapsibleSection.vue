@@ -279,6 +279,7 @@ export default {
 	methods: {
 		/**
 		 * Toggle section expanded state
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-4
 		 */
 		toggleExpanded() {
 			this.isExpanded = !this.isExpanded
@@ -286,6 +287,7 @@ export default {
 
 		/**
 		 * Handle save button click
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-4
 		 */
 		handleSave() {
 			this.$emit('save')
@@ -293,6 +295,7 @@ export default {
 
 		/**
 		 * Handle refresh button click
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-4
 		 */
 		handleRefresh() {
 			this.$emit('refresh')

@@ -162,12 +162,18 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 */
 		listingItem() {
 			return directoryStore.listingItem
 		},
 	},
 	watch: {
 		checkedMetadata: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 */
 			handler(newValue, oldValue) {
 				const metadataUrl = Object.entries(newValue)[0][0]
 				const shouldCopyMetadata = Object.entries(newValue)[0][1]
@@ -180,6 +186,9 @@ export default {
 			deep: true,
 		},
 		listingItem: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 */
 			handler(newValue, oldValue) {
 				if (newValue !== false && metadataStore?.metaDataList) {
 					this.loading = true
@@ -190,14 +199,23 @@ export default {
 			immediate: true, // Run the handler immediately on initialization
 		},
 	},
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+	 */
 	created() {
 		metadataStore.refreshMetaDataList()
 		this.checkMetadataSwitches()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 */
 		openLink(url, type = '') {
 			window.open(url, type)
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 */
 		getMetadataId(metadataUrl) {
 			let metadataId
 			metadataStore.metaDataList.forEach((metadataItem) => {
@@ -207,6 +225,9 @@ export default {
 			})
 			return metadataId
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 */
 		checkMetadataSwitches() {
 			if (Array.isArray(directoryStore?.listingItem?.metadata)) {
 				directoryStore.listingItem.metadata.forEach((metadataUrl) => {
@@ -218,6 +239,9 @@ export default {
 			}
 			this.loading = false
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 */
 		copyMetadata(metadataUrl) {
 			this.loading = true
 			fetch(
@@ -239,6 +263,9 @@ export default {
 					this.loading = false
 				})
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 */
 		createMetadata(data) {
 			this.loading = true
 			data.title = 'KOPIE: ' + data.title
@@ -268,6 +295,9 @@ export default {
 					this.loading = false
 				})
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 */
 		deleteMetadata(metadataUrl) {
 			this.loading = true
 			const metadataId = this.getMetadataId(metadataUrl)
@@ -289,6 +319,9 @@ export default {
 					this.loading = false
 				})
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 */
 		synDirectroy() {
 			this.syncLoading = true
 			fetch(

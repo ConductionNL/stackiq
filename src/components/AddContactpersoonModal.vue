@@ -117,6 +117,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 */
 		isFormValid() {
 			return this.formData.voornaam.trim()
 				   && this.formData.achternaam.trim()
@@ -126,11 +129,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 */
 		closeModal() {
 			this.resetForm()
 			this.$emit('close')
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 */
 		resetForm() {
 			this.formData = {
 				voornaam: '',
@@ -140,11 +149,17 @@ export default {
 			this.loading = false
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 */
 		isValidEmail(email) {
 			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 			return emailRegex.test(email)
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 */
 		async saveContactpersoon() {
 			if (!this.isFormValid) {
 				showError(this.t('softwarecatalog', 'Please fill in all required fields with valid data'))
@@ -197,6 +212,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 */
 		generateUuid() {
 			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 				const r = Math.random() * 16 | 0

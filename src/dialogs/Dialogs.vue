@@ -38,6 +38,9 @@ export default {
 		MassUnlockObjects,
 		MassValidateObjects,
 	},
+	/**
+	 * @spec exclude Pinia store wiring in setup() — bootstrap plumbing
+	 */
 	setup() {
 		return {
 			navigationStore,

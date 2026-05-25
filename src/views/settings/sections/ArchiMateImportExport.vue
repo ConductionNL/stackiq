@@ -459,6 +459,9 @@ export default {
 		Close,
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
+	 */
 	setup() {
 		return {
 			store: settingsStore,
@@ -497,6 +500,7 @@ export default {
 		 *
 		 * @param {Event} event - File input change event
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		handleFileSelect(event) {
 			const file = event.target.files[0]
@@ -513,6 +517,7 @@ export default {
 		 *
 		 * @param {number} bytes - File size in bytes
 		 * @return {string} Formatted file size string
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		formatFileSize(bytes) {
 			if (bytes === 0) return '0 Bytes'
@@ -527,6 +532,7 @@ export default {
 		 *
 		 * @param {number} seconds - Time in seconds
 		 * @return {string} Formatted time string
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		formatTime(seconds) {
 			if (seconds < 1) {
@@ -545,6 +551,7 @@ export default {
 		 *
 		 * @param {number} megabytes - Memory size in megabytes
 		 * @return {string} Formatted memory string
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		formatMemory(megabytes) {
 			if (megabytes < 1024) {
@@ -559,6 +566,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		async importArchiMateFile() {
 			if (!this.selectedFile) {
@@ -626,6 +634,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		async exportArchiMateFile() {
 			this.exporting = true
@@ -702,6 +711,7 @@ export default {
 
 		/**
 		 * Export organization-specific ArchiMate file with enriched views
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		async exportOrgArchiMateFile() {
 			if (!this.selectedOrganization) return
@@ -776,6 +786,7 @@ export default {
 		 * Clear import results and errors
 		 *
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		clearResults() {
 			this.importResult = null
@@ -786,6 +797,7 @@ export default {
 		 * Reset import state and show upload interface again
 		 *
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		resetImport() {
 			// Clear all import state
@@ -805,6 +817,7 @@ export default {
 		 * Show detailed error information
 		 *
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		showErrorDetails() {
 			if (this.importResult?.statistics?.summary?.total_errors > 0) {
@@ -816,6 +829,7 @@ export default {
 		 * Hide detailed error information
 		 *
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		hideErrorDetails() {
 			this.showErrors = false
@@ -826,6 +840,7 @@ export default {
 		 *
 		 * @param {string} errorType - The error type to format
 		 * @return {string} Formatted error type
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		formatErrorType(errorType) {
 			const typeMap = {
@@ -847,6 +862,7 @@ export default {
 		 *
 		 * @param {string} errorMessage - Error message to check
 		 * @return {boolean} True if it's a configuration error
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		isConfigurationError(errorMessage) {
 			return errorMessage && (
@@ -861,6 +877,7 @@ export default {
 		 *
 		 * @param {string} errorMessage - Full error message
 		 * @return {string} Clean description of the error
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		getConfigurationErrorDescription(errorMessage) {
 			if (!errorMessage) return ''
@@ -889,6 +906,7 @@ export default {
 		 *
 		 * @param {string} errorMessage - Full error message
 		 * @return {Array} Array of missing configuration items
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		getMissingConfigItems(errorMessage) {
 			if (!errorMessage) return []
@@ -937,6 +955,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-7
 		 */
 		async loadOrganizations() {
 			try {

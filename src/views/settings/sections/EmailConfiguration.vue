@@ -447,6 +447,9 @@ export default {
 		StandardTabs,
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
+	 */
 	setup() {
 		return {
 			store: settingsStore,
@@ -521,11 +524,23 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
+		 */
 		loading() { return this.store.loading },
 		emailSettings: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
+			 */
 			get() { return this.store.emailSettings },
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
+			 */
 			set(value) { this.store.emailSettings = value },
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
+		 */
 		canSave() {
 			// Always allow saving for email settings
 			return true
@@ -539,6 +554,7 @@ export default {
 	methods: {
 		/**
 		 * Save email settings using the settings store
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async saveEmailSettings() {
 			this.saving = true
@@ -553,6 +569,7 @@ export default {
 
 		/**
 		 * Test email connection using the settings store
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async testEmailConnection() {
 			this.testingConnection = true
@@ -574,6 +591,7 @@ export default {
 
 		/**
 		 * Send test email using the settings store
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async sendTestEmail() {
 			this.testingEmail = true
@@ -596,6 +614,7 @@ export default {
 		/**
 		 * Load email templates from settings store
 		 * Templates are loaded as part of the consolidated configuration
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async loadTemplates() {
 			try {
@@ -610,6 +629,7 @@ export default {
 
 		/**
 		 * Get active template name
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		getActiveTemplateName() {
 			const template = this.availableTemplates.find(t => t.key === this.activeTemplate)
@@ -618,6 +638,7 @@ export default {
 
 		/**
 		 * Get active template description
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		getActiveTemplateDescription() {
 			const template = this.availableTemplates.find(t => t.key === this.activeTemplate)
@@ -626,6 +647,7 @@ export default {
 
 		/**
 		 * Get active template variables
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		getActiveTemplateVariables() {
 			const template = this.availableTemplates.find(t => t.key === this.activeTemplate)
@@ -644,6 +666,7 @@ export default {
 		 *
 		 * @param {string} content Description: New template content to save for the currently active template
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		updateTemplateContent(content) {
 			this.templates[this.activeTemplate] = content
@@ -654,6 +677,7 @@ export default {
 		 *
 		 * @param {string} variable Description: Variable key (e.g., 'user.email') to format as a template placeholder
 		 * @return {string}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		formatTemplateVariable(variable) {
 			return `{{ ${variable} }}`
@@ -664,6 +688,7 @@ export default {
 		 *
 		 * @param {string} variable Description: Variable key to insert (e.g., 'organization.name')
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		insertVariable(variable) {
 			const formattedVariable = this.formatTemplateVariable(variable)
@@ -674,6 +699,7 @@ export default {
 		/**
 		 * Reset template to default
 		 * TODO: Implement template reset functionality when backend supports it
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async resetTemplate() {
 			try {
@@ -689,6 +715,7 @@ export default {
 		/**
 		 * Save template
 		 * TODO: Implement template save functionality when backend supports it
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async saveTemplate() {
 			this.savingTemplate = true

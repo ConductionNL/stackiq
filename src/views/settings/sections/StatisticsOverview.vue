@@ -266,6 +266,9 @@ export default defineComponent({
 		SyncIcon,
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+	 */
 	setup() {
 		const settingsStore = useSettingsStore()
 
@@ -300,29 +303,47 @@ export default defineComponent({
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		statistics() {
 			return this.settingsStore.statistics
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		formattedStatistics() {
 			return this.settingsStore.formattedStatistics
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		loadingStats() {
 			return this.settingsStore.loadingStatistics
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		error() {
 			return this.settingsStore.error
 		},
 
 		// Get compliance count for the dialog
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		complianceCount() {
 			const complianceStat = this.formattedStatistics.find(stat => stat.type === 'Compliancy')
 			return complianceStat ? complianceStat.count : 0
 		},
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+	 */
 	async mounted() {
 		// Load statistics when component mounts
 		await this.refreshStatistics()
@@ -331,6 +352,7 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Refresh statistics data
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		async refreshStatistics() {
 			await this.settingsStore.loadStatistics()
@@ -340,6 +362,7 @@ export default defineComponent({
 		 * Format number with thousand separators
 		 * @param {number} num - Number to format
 		 * @return {string} Formatted number
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		formatNumber(num) {
 			if (num === 0) return '0'
@@ -350,6 +373,7 @@ export default defineComponent({
 		 * Format timestamp for display
 		 * @param {number} timestamp - Unix timestamp
 		 * @return {string} Formatted date/time
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		formatTimestamp(timestamp) {
 			if (!timestamp) return 'Unknown'
@@ -359,6 +383,7 @@ export default defineComponent({
 
 		/**
 		 * Show the bulk sync dialog
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		showBulkSyncDialog() {
 			this.showSyncDialog = true
@@ -368,6 +393,7 @@ export default defineComponent({
 
 		/**
 		 * Close the bulk sync dialog
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		closeBulkSyncDialog() {
 			this.showSyncDialog = false
@@ -378,6 +404,7 @@ export default defineComponent({
 
 		/**
 		 * Reset sync state
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		resetSyncState() {
 			this.syncProgress = {
@@ -396,6 +423,7 @@ export default defineComponent({
 
 		/**
 		 * Start the bulk sync process
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		async startBulkSync() {
 			this.bulkSyncLoading = true
@@ -424,6 +452,7 @@ export default defineComponent({
 		/**
 		 * Perform the bulk sync API call
 		 * @return {Promise} API response
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		async performBulkSync() {
 			const response = await fetch('/index.php/apps/softwarecatalog/api/bulk-sync-standards', {

@@ -64,6 +64,9 @@ export default {
 		Dialogs,
 	},
 
+	/**
+	 * @spec exclude Vue dependency-injection provider — framework plumbing
+	 */
 	provide() {
 		return {
 			// Channel for CnDetailPage → host-rendered CnObjectSidebar.
@@ -132,11 +135,17 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec exclude pure passthrough getter of injected permissions — DI getter
+		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
 	},
 
+	/**
+	 * @spec exclude Vue lifecycle hook — SPA shell bootstrap
+	 */
 	async created() {
 		// SoftwareCatalog stores still need to come up so legacy custom
 		// components (OrganisatieIndexView, SoftwareCatalogSettingsPage)
@@ -159,6 +168,7 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
+		  * @spec exclude i18n wrapper around @nextcloud/l10n translate
 		 */
 		translateForApp(key) {
 			return ncT('softwarecatalog', key)

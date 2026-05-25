@@ -194,6 +194,7 @@ export default defineComponent({
 		 * Generates options for register selection dropdown
 		 *
 		 * @return {Array<object>} Array of register options with label and value
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		registerOptions() {
 			return this.settings.availableRegisters.map(register => ({
@@ -206,6 +207,7 @@ export default defineComponent({
 		 * Determines if the selected register has schemas
 		 *
 		 * @return {boolean} True if the selected register has schemas, false otherwise
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		hasSchemas() {
 			if (!this.selectedRegister) return false
@@ -220,6 +222,7 @@ export default defineComponent({
 		 * Returns filtered schema options, excluding those that are already used
 		 *
 		 * @return {Array<object>} Array of available schema options
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		computedSchemaOptions() {
 			const usedSchemaIds = Object.values(this.configuration)
@@ -233,6 +236,7 @@ export default defineComponent({
 		 * Check if catalog location has changed
 		 *
 		 * @return {boolean} True if catalog location has changed
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		catalogLocationChanged() {
 			return this.catalogLocation !== this.originalCatalogLocation
@@ -252,6 +256,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async loadSettings() {
 			try {
@@ -277,6 +282,7 @@ export default defineComponent({
 
 		/**
 		 * Initializes the configuration object based on existing settings
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		initializeConfiguration() {
 			// Create empty configuration for each object type
@@ -329,6 +335,7 @@ export default defineComponent({
 
 		/**
 		 * Automatically selects the opencatalogi register if it exists
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		autoSelectOpenCatalogiRegister() {
 			// Look for a register with "opencatalogi" in the name
@@ -367,6 +374,7 @@ export default defineComponent({
 		 * Auto-selects schemas that match object type names
 		 *
 		 * @param {object} register - The selected register object
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		autoSelectMatchingSchemas(register) {
 			// Only proceed if register has schemas array
@@ -399,6 +407,7 @@ export default defineComponent({
 		 * Updates schema options based on the selected register
 		 *
 		 * @param {string} registerId - The ID of the selected register
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		updateSchemaOptions(registerId) {
 			const register = this.settings.availableRegisters.find(r => r.id.toString() === registerId)
@@ -417,6 +426,7 @@ export default defineComponent({
 		 *
 		 * @param {string} objectType - The object type to format
 		 * @return {string} The formatted title
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		formatTitle(objectType) {
 			return objectType.charAt(0).toUpperCase() + objectType.slice(1)
@@ -424,6 +434,7 @@ export default defineComponent({
 
 		/**
 		 * Handles register change event
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		handleRegisterChange() {
 			if (this.selectedRegister) {
@@ -456,6 +467,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async saveAll() {
 			if (!this.selectedRegister || !this.hasSchemas) {
@@ -498,6 +510,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async loadConfiguration() {
 			this.loadingConfiguration = true
@@ -526,6 +539,7 @@ export default defineComponent({
 		 *
 		 * @param {string} value - New catalog location value
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		onCatalogLocationChange(value) {
 			this.catalogLocation = value
@@ -536,6 +550,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async saveCatalogLocation() {
 			if (!this.catalogLocationChanged) {
