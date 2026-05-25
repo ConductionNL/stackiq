@@ -70,6 +70,14 @@
 			"order": 90
 		},
 		{
+			"id": "FeaturesRoadmapMenu",
+			"label": "Features & roadmap",
+			"icon": "icon-toggle",
+			"route": "FeaturesRoadmap",
+			"section": "footer",
+			"order": 95
+		},
+		{
 			"id": "SettingsMenu",
 			"label": "Settings",
 			"icon": "icon-settings",
@@ -499,6 +507,15 @@
 						}
 					]
 				}
+			}
+		},
+		{
+			"id": "FeaturesRoadmap",
+			"route": "/features-roadmap",
+			"type": "roadmap",
+			"title": "Features & roadmap",
+			"config": {
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
