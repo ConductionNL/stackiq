@@ -20,6 +20,10 @@ return [
         // Dashboard route
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
 
+        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
+        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+
         // Core Settings API routes (minimal, for basic app functionality)
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
