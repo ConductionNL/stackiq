@@ -1535,6 +1535,21 @@
       "kwetsbaarheid": {
         "uri": null,
         "slug": "kwetsbaarheid",
+        "x-openregister-notifications": {
+          "vulnerability-reported": {
+            "trigger": {"type": "created"},
+            "enabled": true,
+            "channels": ["nc-notification", "email"],
+            "recipients": [
+              {"kind": "groups", "groups": ["softwarecatalog-admins"]},
+              {"kind": "object-acl", "permission": "manage"}
+            ],
+            "subject": {
+              "nl": "Kwetsbaarheid gemeld: {{naam}} ({{cveCode}}, CVSS {{cvssScore}})",
+              "en": "Vulnerability reported: {{naam}} ({{cveCode}}, CVSS {{cvssScore}})"
+            }
+          }
+        },
         "title": "Kwetsbaarheid",
         "description": "Schema voor kwetsbaarheden. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "1.0.19",
@@ -3119,6 +3134,21 @@
       "contract": {
         "uri": null,
         "slug": "contract",
+        "x-openregister-notifications": {
+          "contract-expiry": {
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"status": {"op": "equals", "value": "Actief"}}},
+            "enabled": false,
+            "channels": ["nc-notification", "email"],
+            "recipients": [
+              {"kind": "groups", "groups": ["softwarecatalog-admins"]},
+              {"kind": "object-acl", "permission": "manage"}
+            ],
+            "subject": {
+              "nl": "Contract verloopt: {{contractNummer}} (einddatum {{eindDatum}})",
+              "en": "Contract expiring: {{contractNummer}} (end date {{eindDatum}})"
+            }
+          }
+        },
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "0.1.0",
@@ -3751,6 +3781,21 @@
       "beoordeeling": {
         "uri": null,
         "slug": "beoordeeling",
+        "x-openregister-notifications": {
+          "review-submitted": {
+            "trigger": {"type": "created"},
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              {"kind": "object-acl", "permission": "manage"},
+              {"kind": "groups", "groups": ["softwarecatalog-admins"]}
+            ],
+            "subject": {
+              "nl": "Nieuwe beoordeling: {{naam}} (waardering {{waardering}})",
+              "en": "New review: {{naam}} (rating {{waardering}})"
+            }
+          }
+        },
         "title": "Beoordeeling",
         "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "0.1.2",
@@ -7227,6 +7272,21 @@
       "moduleVersie": {
         "uri": null,
         "slug": "moduleVersie",
+        "x-openregister-notifications": {
+          "module-version-published": {
+            "trigger": {"type": "created"},
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              {"kind": "object-acl", "permission": "manage"},
+              {"kind": "groups", "groups": ["softwarecatalog-admins"]}
+            ],
+            "subject": {
+              "nl": "Nieuwe moduleversie: {{versie}}",
+              "en": "New module version: {{versie}}"
+            }
+          }
+        },
         "title": "Applicatieversie",
         "description": "Schema voor applicatieversies",
         "version": "0.1.0",

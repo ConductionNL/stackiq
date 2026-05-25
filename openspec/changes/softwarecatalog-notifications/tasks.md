@@ -1,11 +1,11 @@
 # Tasks — softwarecatalog notifications
 
-- [ ] Add `x-openregister-notifications` (rule `vulnerability-reported`, created, urgent) to `kwetsbaarheid` in lib/Settings/softwarecatalogus_register.json
-- [ ] Add `x-openregister-notifications` (rule `contract-expiry`, scheduled, enabled:false) to `contract` in lib/Settings/softwarecatalogus_register.json
-- [ ] Add `x-openregister-notifications` (rule `module-version-published`, created) to `moduleVersie` in lib/Settings/softwarecatalogus_register.json
-- [ ] Add `x-openregister-notifications` (rule `review-submitted`, created) to `beoordeeling` in lib/Settings/softwarecatalogus_register.json
-- [ ] Add nl + en `subject` strings to every rule (already specified in proposal.md)
-- [ ] Validate the register JSON still parses (e.g. `python3 -c "import json;json.load(open('lib/Settings/softwarecatalogus_register.json'))"`)
+- [x] Add `x-openregister-notifications` (rule `vulnerability-reported`, created, urgent) to `kwetsbaarheid` in lib/Settings/softwarecatalogus_register.json
+- [x] Add `x-openregister-notifications` (rule `contract-expiry`, scheduled, enabled:false) to `contract` in lib/Settings/softwarecatalogus_register.json
+- [x] Add `x-openregister-notifications` (rule `module-version-published`, created) to `moduleVersie` in lib/Settings/softwarecatalogus_register.json
+- [x] Add `x-openregister-notifications` (rule `review-submitted`, created) to `beoordeeling` in lib/Settings/softwarecatalogus_register.json
+- [x] Add nl + en `subject` strings to every rule (already specified in proposal.md)
+- [x] Validate the register JSON still parses (e.g. `python3 -c "import json;json.load(open('lib/Settings/softwarecatalogus_register.json'))"`)
 - [ ] Confirm the `softwarecatalog-admins` group exists or remap `groups` recipients to a real NC group before enabling
 - [ ] Confirm engine support for a `scheduled` date-window filter on `eindDatum` before enabling `contract-expiry`
 - [ ] Decide whether supplier delivery requires a relation-traversal recipient resolver or a structured supplier-uid field (file follow-up issue if so)
