@@ -82,6 +82,8 @@ class AanbodController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-1
      */
     public function getAanbod(): JSONResponse
     {
@@ -157,6 +159,8 @@ class AanbodController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-2
      */
     public function acceptAanbod(string $uuid): JSONResponse
     {
@@ -256,6 +260,8 @@ class AanbodController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-3
      */
     public function denyAanbod(string $uuid): JSONResponse
     {
@@ -344,6 +350,8 @@ class AanbodController extends Controller
      * Parse query parameters into options array.
      *
      * @return array Parsed options array
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-1
      */
     private function parseQueryOptions(): array
     {
