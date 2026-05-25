@@ -85,6 +85,7 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
@@ -160,6 +161,7 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse
     {
@@ -250,6 +252,7 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getAllGebruiksForAmbtenaar(): JSONResponse
     {
@@ -357,6 +360,7 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse
     {
@@ -529,6 +533,7 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getGebruiksWhereDeelnemers(): JSONResponse
     {
@@ -607,6 +612,7 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
     {
@@ -714,6 +720,7 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
     {
@@ -814,6 +821,7 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-3
      */
     public function getApiDocumentation(): JSONResponse
     {

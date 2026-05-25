@@ -98,18 +98,27 @@ export default {
 	watch: {
 		search: 'debouncedSearch',
 		metadata: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 */
 			handler() {
 				this.debouncedSearch()
 			},
 			deep: true,
 		},
 		catalogi: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 */
 			handler() {
 				this.debouncedSearch()
 			},
 			deep: true,
 		},
 	},
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+	 */
 	mounted() {
 		metadataStore.refreshMetaDataList()
 		catalogiStore.refreshCatalogiList()

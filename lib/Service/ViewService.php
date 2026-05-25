@@ -161,6 +161,7 @@ class ViewService
      * @param array  $options Query options including enrichment flags.
      *
      * @return array View object with optional enrichments or error response.
+     * @spec openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-2
      */
     public function getView(string $viewId, array $options=[]): array
     {

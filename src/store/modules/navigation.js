@@ -17,18 +17,30 @@ export const useNavigationStore = defineStore('ui', {
 		transferData: null,
 	}),
 	actions: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-3
+		 */
 		setSelected(selected) {
 			this.selected = selected
 			console.log('Active menu item set to ' + selected)
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-3
+		 */
 		setSelectedOrganisatie(selectedOrganisatie) {
 			this.selectedOrganisatie = selectedOrganisatie
 			console.log('Active organisatie menu set to ' + selectedOrganisatie)
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-3
+		 */
 		setModal(modal) {
 			this.modal = modal
 			console.log('Active modal set to ' + modal)
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-3
+		 */
 		setDialog(dialog, properties) {
 			this.dialog = dialog
 			this.dialogProperties = properties || null
@@ -37,6 +49,9 @@ export const useNavigationStore = defineStore('ui', {
 		setTransferData(transferData) {
 			this.transferData = transferData
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-3
+		 */
 		getTransferData() {
 			const tempData = this.transferData
 			this.transferData = null

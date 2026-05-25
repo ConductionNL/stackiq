@@ -73,6 +73,7 @@ function separateResults(results) {
  * Softwarecatalog plugin factory.
  *
  * @return {object} Plugin definition for createObjectStore
+  * @spec exclude Pinia plugin installer factory — store bootstrap plumbing
  */
 export function softwarecatalogPlugin() {
 	return {
@@ -237,6 +238,7 @@ export function softwarecatalogPlugin() {
 			 * Fetch app settings from the softwarecatalog API.
 			 *
 			 * @return {Promise<void>}
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async fetchSettings() {
 				try {
@@ -276,6 +278,7 @@ export function softwarecatalogPlugin() {
 			 * Registers each schema from the voorzieningen register.
 			 *
 			 * @return {Promise<void>}
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async initializeVoorzieningenObjectTypes() {
 				try {
@@ -305,6 +308,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {string} objectType Type of object
 			 * @return {{source: string, schema: string, register: string}} Schema config
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			getSchemaConfig(objectType) {
 				// Check registered types first
@@ -357,6 +361,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string} type Object type
 			 * @param {object} object Object to set as active
 			 * @return {Promise<void>}
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async setActiveObject(type, object) {
 				this.activeObjects = { ...this.activeObjects, [type]: object }
@@ -392,6 +397,7 @@ export function softwarecatalogPlugin() {
 			 * Clear active object for type.
 			 *
 			 * @param {string} type Object type
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			clearActiveObject(type) {
 				this.activeObjects = { ...this.activeObjects, [type]: null }
@@ -415,6 +421,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object with @self metadata
 			 * @return {Promise<{ok: boolean}>} Response-like object for backward compat
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async downloadObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -448,6 +455,7 @@ export function softwarecatalogPlugin() {
 			 * @param {object} params Query parameters
 			 * @param {object|null} organisatieData Optional org-specific config
 			 * @return {Promise<void>}
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async fetchRelatedData(type, id, dataType, params = {}, organisatieData = null) {
 				const loadingKey = `${type}_${id}_${dataType}`
@@ -527,6 +535,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string|object} typeOrObject Type slug or object item
 			 * @param {object} dataOrConfig Object data or { register, schema } config
 			 * @return {Promise<object>} Saved object
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async saveObject(typeOrObject, dataOrConfig) {
 				if (typeof typeOrObject === 'string') {
@@ -601,6 +610,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string|object} typeOrObject Type slug or full object
 			 * @param {string} [id] Object ID (only for new signature)
 			 * @return {Promise<boolean>} Success
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async deleteObject(typeOrObject, id) {
 				if (typeof typeOrObject === 'string' && id) {
@@ -656,6 +666,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string} id Object ID
 			 * @param {object} changes Object with changed properties
 			 * @return {Promise<object>} Updated object
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async patchObject(type, id, changes) {
 				this.loading = { ...this.loading, [`${type}_${id}`]: true }
@@ -705,6 +716,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string} type Object type
 			 * @param {string} id Object ID to copy
 			 * @return {Promise<object>} The newly created copy
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async copyObject(type, id) {
 				const originalObject = this.objects?.[type]?.[id]
@@ -726,6 +738,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object to publish
 			 * @return {Promise<object>} Updated object
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async publishObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -753,6 +766,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object to depublish
 			 * @return {Promise<object>} Updated object
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async depublishObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -782,6 +796,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string} [process] Process name. Defaults to null.
 			 * @param {number} [duration] Duration in seconds. Defaults to null.
 			 * @return {Promise<object>} Updated object
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async lockObject(objectItem, process = null, duration = null) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -815,6 +830,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object to unlock
 			 * @return {Promise<object>} Updated object
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async unlockObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -842,6 +858,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object to validate
 			 * @return {Promise<object>} Validated object
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async validateObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -873,6 +890,7 @@ export function softwarecatalogPlugin() {
 			 * @param {Function} operation Per-object operation function
 			 * @param {Function} [onProgress] Progress callback. Defaults to null.
 			 * @return {Promise<{successful: Array, failed: Array}>} Results
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async _runMassOperation(objects, operation, onProgress = null) {
 				this.clearAllObjectErrors()
@@ -908,26 +926,44 @@ export function softwarecatalogPlugin() {
 				return { successful, failed }
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massPublishObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.publishObject(obj), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massDepublishObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.depublishObject(obj), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massDeleteObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.deleteObject(obj), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massLockObjects(objects, process = null, duration = null, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.lockObject(obj, process, duration), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massUnlockObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.unlockObject(obj), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massValidateObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.validateObject(obj), onProgress)
 			},
@@ -940,6 +976,9 @@ export function softwarecatalogPlugin() {
 				this.selectedObjects = objects
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			toggleSelectAllObjects() {
 				const organisatieCollection = this.collections?.organisatie
 				const results = Array.isArray(organisatieCollection) ? organisatieCollection : organisatieCollection?.results
@@ -960,11 +999,17 @@ export function softwarecatalogPlugin() {
 				this.objectErrors = { ...this.objectErrors, [objectId]: error }
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			clearObjectError(objectId) {
 				const { [objectId]: _, ...rest } = this.objectErrors
 				this.objectErrors = rest
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			clearAllObjectErrors() {
 				this.objectErrors = {}
 			},
@@ -977,6 +1022,9 @@ export function softwarecatalogPlugin() {
 			// Column Management
 			// ==========================================
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			updateColumnFilter(id, enabled) {
 				this.columnFilters = { ...this.columnFilters, [id]: enabled }
 
@@ -993,6 +1041,9 @@ export function softwarecatalogPlugin() {
 				}
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			initializeProperties(schema) {
 				if (!schema?.properties) {
 					this.properties = {}
@@ -1011,6 +1062,9 @@ export function softwarecatalogPlugin() {
 				this.properties = properties
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			initializeColumnFilters() {
 				const filters = {}
 				Object.keys(this.metadata).forEach((key) => {
@@ -1038,6 +1092,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string} params.fileAction What to do with files
 			 * @param {string} params.relationAction What to do with relations
 			 * @return {Promise<object>} Merge result
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async mergeObjects({ register, schema, sourceObjectId, target, object, fileAction, relationAction }) {
 				const response = await fetch(
@@ -1057,6 +1112,7 @@ export function softwarecatalogPlugin() {
 			 * Fetch available mappings from the OpenRegister API.
 			 *
 			 * @return {Promise<{data: Array}>} Mappings result
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async getMappings() {
 				const response = await fetch(
@@ -1069,6 +1125,7 @@ export function softwarecatalogPlugin() {
 
 			/**
 			 * Refresh the current object list by refetching all registered types.
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			refreshObjectList() {
 				const registeredTypes = Object.keys(this.objectTypeRegistry || {})
@@ -1081,6 +1138,9 @@ export function softwarecatalogPlugin() {
 			// State Management
 			// ==========================================
 
+			/**
+			 * @spec exclude generic Pinia $patch passthrough — store bootstrap plumbing
+			 */
 			setState(type, { success, error }) {
 				if (success !== undefined) {
 					this.success = { ...this.success, [type]: success }
@@ -1092,6 +1152,7 @@ export function softwarecatalogPlugin() {
 
 			/**
 			 * Clear the softwarecatalog sub-resources (called by base clearAllSubResources).
+			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			clearSoftwarecatalog() {
 				this.objectItem = null

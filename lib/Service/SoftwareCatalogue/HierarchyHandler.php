@@ -69,6 +69,7 @@ class HierarchyHandler
      * @param string $username              The username being processed
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
      */
     public function ensureOrganizationBeheerder(object $contactgegevensObject, string $username): void
     {
@@ -120,6 +121,7 @@ class HierarchyHandler
      * @param string $organizationUuid       The organization UUID
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
      */
     public function setupManagerRelationships(
         string $username,

@@ -310,6 +310,7 @@ class ViewController extends Controller
      * @return JSONResponse JSON response with API documentation
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-2
      */
     public function getApiDocumentation(): JSONResponse
     {

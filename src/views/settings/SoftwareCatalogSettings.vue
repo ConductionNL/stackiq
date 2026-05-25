@@ -135,6 +135,9 @@ export default defineComponent({
 		Web,
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+	 */
 	setup() {
 		// Use the settings store
 		return {
@@ -160,6 +163,7 @@ export default defineComponent({
 		 * Check if catalog location has changed
 		 *
 		 * @return {boolean} True if catalog location has changed
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		catalogLocationChanged() {
 			return this.catalogLocation !== (this.store.settings.catalogLocation || '')
@@ -171,6 +175,9 @@ export default defineComponent({
 	 */
 	watch: {
 		'store.settings.catalogLocation': {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+			 */
 			handler(newValue) {
 				if (newValue !== undefined && newValue !== null) {
 					this.catalogLocation = newValue
@@ -179,6 +186,9 @@ export default defineComponent({
 			immediate: true,
 		},
 		'store.loadingGeneralSettings': {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+			 */
 			handler(newValue, oldValue) {
 				// When loading finishes, update the catalog location
 				if (oldValue === true && newValue === false) {
@@ -190,6 +200,7 @@ export default defineComponent({
 
 	/**
 	 * Load settings data when component is created
+	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 	 */
 	async created() {
 		await this.store.loadSettings()
@@ -203,6 +214,7 @@ export default defineComponent({
 		 *
 		 * @param {string} value - New catalog location value
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		onCatalogLocationChange(value) {
 			this.catalogLocation = value
@@ -213,6 +225,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async saveGeneralSettings() {
 			this.savingCatalogLocation = true
@@ -234,6 +247,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async refreshGeneralSettings() {
 			try {

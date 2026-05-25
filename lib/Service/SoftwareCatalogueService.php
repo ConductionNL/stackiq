@@ -388,6 +388,7 @@ class SoftwareCatalogueService
      * @param string $username             The username to update groups for
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
@@ -408,6 +409,7 @@ class SoftwareCatalogueService
      * @param string $username             The username being processed
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void
     {
@@ -421,6 +423,7 @@ class SoftwareCatalogueService
      * @param string $username The username
      *
      * @return string|null The manager's username or null if not set
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function getUserManager(string $username): ?string
     {
@@ -434,6 +437,7 @@ class SoftwareCatalogueService
      * @param object $organizationObject The new organization object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function handleNewOrganization(object $organizationObject): void
     {
@@ -621,6 +625,7 @@ class SoftwareCatalogueService
      * @param object $oldOrganizationObject The previous organization object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function handleOrganizationUpdate(object $organizationObject, object $oldOrganizationObject): void
     {
@@ -790,6 +795,7 @@ class SoftwareCatalogueService
      * @return void
      *
      * @deprecated This method is disabled to prevent organization duplication.
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function sendOrganizationWelcomeEmail(object $organizationObject): void
     {
@@ -812,6 +818,7 @@ class SoftwareCatalogueService
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function handleNewContact(object $contactObject): void
     {
@@ -825,6 +832,7 @@ class SoftwareCatalogueService
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function createUserForContactIfNotExists(object $contactObject): void
     {
@@ -843,6 +851,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function handleNewGebruiker(object $gebruikerObject): void
     {
@@ -861,6 +870,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function sendGebruikerWelcomeEmail(object $gebruikerObject): void
     {
@@ -879,6 +889,7 @@ class SoftwareCatalogueService
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function handleContactUpdate(object $contactObject): void
     {
@@ -893,6 +904,7 @@ class SoftwareCatalogueService
      * @param object $oldGebruikerObject The old gebruiker object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function handleGebruikerUpdate(object $gebruikerObject, object $oldGebruikerObject): void
     {
@@ -911,6 +923,7 @@ class SoftwareCatalogueService
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function handleContactDeletion(object $contactObject): void
     {
@@ -924,6 +937,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function blockUserForGebruiker(object $gebruikerObject): void
     {
@@ -942,6 +956,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function temporarilyBlockUserForGebruiker(object $gebruikerObject): void
     {
@@ -960,6 +975,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function restoreUserAccessForGebruiker(object $gebruikerObject): void
     {
@@ -979,6 +995,7 @@ class SoftwareCatalogueService
      * @param mixed  $revertPoint   The revert point
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function syncUserWithRevertedContact(object $contactObject, mixed $revertPoint): void
     {
@@ -998,6 +1015,7 @@ class SoftwareCatalogueService
      * @param mixed  $revertPoint     The revert point
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function updateUserFromRevertedGebruiker(object $gebruikerObject, mixed $revertPoint): void
     {
@@ -1036,6 +1054,7 @@ class SoftwareCatalogueService
      * Ensures all generic user groups exist
      *
      * @return array Array of created/existing groups
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-4
      */
     public function ensureGenericUserGroupsExist(): array
     {
@@ -1073,6 +1092,7 @@ class SoftwareCatalogueService
      * @param object $oldContactpersoonObject The previous contactpersoon object (optional)
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject=null): void
     {
@@ -1240,6 +1260,7 @@ class SoftwareCatalogueService
      * @param object $organizationObject The organization object being deleted
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function handleOrganizationDeletion(object $organizationObject): void
     {
@@ -1284,6 +1305,7 @@ class SoftwareCatalogueService
      * @param object $organizationObject The organization object to sync
      *
      * @return bool True if sync was successful
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function syncOrganizationWithOpenRegister(object $organizationObject): bool
     {
@@ -1429,6 +1451,7 @@ class SoftwareCatalogueService
      * @param array $objectData The organization object data
      *
      * @return object|null The created organisation entity or null on failure
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function createOrganisationInOpenRegister(array $objectData): ?object
     {
@@ -2705,6 +2728,7 @@ class SoftwareCatalogueService
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return bool True if the user should be added to the organization
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool
     {
@@ -2780,6 +2804,7 @@ class SoftwareCatalogueService
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return bool True if the user was successfully added
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function addContactpersoonToOrganization(object $contactpersoonObject): bool
     {
@@ -3150,6 +3175,7 @@ class SoftwareCatalogueService
      * @param string $organizationUuid The UUID of the organization
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function syncContactPersonUsernamesWithOrganization(string $organizationUuid): void
     {
@@ -3291,6 +3317,7 @@ class SoftwareCatalogueService
      * @param object $contactPersonObject The contact person object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function ensureContactPersonInOrganization(object $contactPersonObject): void
     {

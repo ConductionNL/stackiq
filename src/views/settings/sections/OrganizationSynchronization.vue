@@ -381,6 +381,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
+	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 	 */
 	setup() {
 		return {
@@ -426,7 +427,13 @@ export default {
 
 	computed: {
 		// Store-connected computed properties
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
+		 */
 		loading() { return this.store.loadingSyncSettings },
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
+		 */
 		settings() { return this.store.settings },
 
 		/**
@@ -444,6 +451,9 @@ export default {
 	 */
 	watch: {
 		'settings.syncTimeWindow': {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
+			 */
 			handler(newValue) {
 				if (newValue !== undefined) {
 					this.loadSavedConfiguration()
@@ -452,6 +462,9 @@ export default {
 			immediate: true,
 		},
 		'store.loadingSyncSettings': {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
+			 */
 			handler(newValue, oldValue) {
 				// When loading finishes, reload the configuration
 				if (oldValue === true && newValue === false) {
@@ -466,6 +479,7 @@ export default {
 	 * Load sync status when component is created
 	 *
 	 * @return {Promise<void>}
+	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 	 */
 	async created() {
 		await this.loadSavedConfiguration()
@@ -477,6 +491,7 @@ export default {
 		 * Load saved time window configuration
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		async loadSavedConfiguration() {
 			try {
@@ -507,6 +522,7 @@ export default {
 		 * Load synchronization status
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		async loadSyncStatus() {
 			this.loadingSyncStatus = true
@@ -532,6 +548,7 @@ export default {
 		 * Perform manual synchronization
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		async performManualSync() {
 			this.performingSync = true
@@ -583,6 +600,7 @@ export default {
 		 * Handle time window change
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		async handleTimeWindowChange() {
 			await this.loadSyncStatus()
@@ -593,6 +611,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		async saveConfiguration() {
 			this.savingConfig = true
@@ -617,6 +636,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		async refreshConfiguration() {
 			try {
@@ -631,6 +651,7 @@ export default {
 		 * Get time window description
 		 *
 		 * @return {string} Description of the current time window
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		getTimeWindowDescription() {
 			if (!this.selectedTimeWindow) return ''
@@ -647,6 +668,7 @@ export default {
 		 *
 		 * @param {number} minutes Time window in minutes
 		 * @return {string} Formatted time window
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		formatTimeWindow(minutes) {
 			if (!minutes || minutes === 0) return 'Full sync'
@@ -660,6 +682,7 @@ export default {
 		 *
 		 * @param {number} num Number to format
 		 * @return {string} Formatted number
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		formatNumber(num) {
 			if (!num) return '0'
@@ -671,6 +694,7 @@ export default {
 		 *
 		 * @param {string} timestamp Last sync timestamp
 		 * @return {string} Formatted time
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		formatLastSyncTime(timestamp) {
 			if (!timestamp) return 'Never'
@@ -687,6 +711,7 @@ export default {
 		 *
 		 * @param {number} count Processing count
 		 * @return {string} CSS class name
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		getProcessingClass(count) {
 			if (!count || count === 0) return 'processing-none'
@@ -699,6 +724,7 @@ export default {
 		 * Perform organisation sync to voorzieningen register
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		async performOrganisationSync() {
 			this.performingOrgSync = true

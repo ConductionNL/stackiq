@@ -56,6 +56,9 @@ export default {
 		MigrationObject,
 		MergeObject,
 	},
+	/**
+	 * @spec exclude Pinia store wiring in setup() — bootstrap plumbing
+	 */
 	setup() {
 		return {
 			navigationStore,
@@ -67,6 +70,7 @@ export default {
 		 * or null if the modal is not a generic object edit modal.
 		 *
 		 * @return {string|null} The object type key, or null
+		  * @spec exclude computed passthrough of navigation store modal type — DI getter
 		 */
 		genericObjectModalType() {
 			const modal = navigationStore.modal
