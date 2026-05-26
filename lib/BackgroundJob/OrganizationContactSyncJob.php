@@ -20,8 +20,10 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\BackgroundJob;
 
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
+use Psr\Log\LoggerInterface;
 
 /**
  * Background job for comprehensive organization and contact person synchronization
@@ -55,10 +57,14 @@ class OrganizationContactSyncJob extends TimedJob
      *
      * @param ITimeFactory            $timeFactory    The time factory for job scheduling
      * @param OrganizationSyncService $orgSyncService The sync service
+     * @param IAppManager             $appManager     The Nextcloud app manager
+     * @param LoggerInterface         $logger         The logger
      */
     public function __construct(
         ITimeFactory $timeFactory,
-        OrganizationSyncService $orgSyncService
+        OrganizationSyncService $orgSyncService,
+        private readonly IAppManager $appManager,
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct(time: $timeFactory);
         $this->setInterval(seconds: 300);
@@ -82,6 +88,12 @@ class OrganizationContactSyncJob extends TimedJob
      */
     protected function run($argument): void
     {
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+            $this->logger->info('[OrganizationContactSyncJob] OpenRegister not installed, skipping sync');
+            return;
+        }
+
+        $this->logger->info('[OrganizationContactSyncJob] Starting scheduled organization sync');
         $this->orgSyncService->performScheduledSync();
     }//end run()
 }//end class
