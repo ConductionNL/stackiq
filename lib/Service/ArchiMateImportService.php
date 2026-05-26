@@ -6,12 +6,12 @@
  * Handles the business logic for importing ArchiMate XML files with round-trip fidelity.
  * This service contains all the import-specific logic that was previously in ArchiMateService.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    SoftwareCatalog Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
@@ -41,12 +41,12 @@ use SimpleXMLElement;
  * 4. Convert to OpenRegister objects with proper @self structure
  * 5. Save objects using ObjectService::saveObjects
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    SoftwareCatalog Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -196,7 +196,7 @@ class ArchiMateImportService
      * @param \SimpleXMLElement $xml The XML element to convert.
      *
      * @return array The normalized associative array.
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function xmlToArray(\SimpleXMLElement $xml): array
     {
@@ -309,7 +309,7 @@ class ArchiMateImportService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
     {
@@ -1924,7 +1924,7 @@ class ArchiMateImportService
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function getAmefConfig(): array
     {
@@ -2199,7 +2199,7 @@ class ArchiMateImportService
      * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function getPropertyNameMapping(array $propDefMap): array
     {

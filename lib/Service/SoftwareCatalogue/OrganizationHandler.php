@@ -6,13 +6,13 @@
  * This handler manages organization-specific operations including group creation,
  * organization processing, and hierarchy management.
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
@@ -32,13 +32,13 @@ use Psr\Log\LoggerInterface;
 /**
  * Handler for organization-related operations.
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -162,7 +162,7 @@ class OrganizationHandler
      * @param array  $objectData         The organization data
      *
      * @return string|null The group ID or null if failed
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function ensureOrganizationGroup(object $organizationObject, array &$objectData): ?string
     {
@@ -256,7 +256,7 @@ class OrganizationHandler
      * @param string $groupName The group name to create
      *
      * @return IGroup|null The created or existing group
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function createGroupIfNotExists(string $groupName): ?IGroup
     {
@@ -292,7 +292,7 @@ class OrganizationHandler
      * @param string $name The name to sanitize
      *
      * @return string The sanitized group name
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function sanitizeGroupName(string $name): string
     {
@@ -621,7 +621,7 @@ class OrganizationHandler
      * @param object $organizationObject The organization object
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function handleNewOrganization(object $organizationObject): void
     {
@@ -670,7 +670,7 @@ class OrganizationHandler
      * @param string $organizationUuid The organization UUID
      *
      * @return array Array of usernames who are beheerders in this organization
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function getOrganizationBeheerders(string $organizationUuid): array
     {
@@ -746,7 +746,7 @@ class OrganizationHandler
      * @param string $organizationUuid The organization UUID
      *
      * @return bool True if user belongs to organization
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function userBelongsToOrganization(IUser $user, string $organizationUuid): bool
     {

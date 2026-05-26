@@ -5,13 +5,13 @@
  * Tracks and reports progress for long-running operations like ArchiMate import/export.
  * Supports real-time streaming via Server-Sent Events.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: 1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: 1.0.0
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -25,13 +25,13 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for tracking and reporting progress of long-running operations
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: 1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: 1.0.0
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 class ProgressTracker
 {
@@ -433,7 +433,7 @@ class ProgressTracker
      * @param int $maxAge Maximum age in seconds (default: 1 hour)
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-progress-tracking-2/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-progress-tracking-2/tasks.md#task-1
      */
     public function cleanupOldProgress(int $maxAge=3600): void
     {

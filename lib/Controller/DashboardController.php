@@ -43,7 +43,7 @@ class DashboardController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @spec openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-1
+     * @spec                                          openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-1
      */
     public function page(?string $getParameter): TemplateResponse
     {
@@ -76,7 +76,7 @@ class DashboardController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse The JSON response with empty results
-     * @spec openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-1
      */
     public function index(): JSONResponse
     {

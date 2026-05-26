@@ -6,12 +6,12 @@
  * This handler manages contact person-specific operations including user creation,
  * contact processing, and organizational hierarchy management.
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -33,12 +33,12 @@ use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 /**
  * Handler for contact person-related operations.
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -107,7 +107,7 @@ class ContactPersonHandler
      * @param array $contactData The contact data array
      *
      * @return string Generated username
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function generateUsernameFromContactData(array $contactData): string
     {
@@ -203,7 +203,7 @@ class ContactPersonHandler
      * @param string $email The email address to sanitize.
      *
      * @return string The sanitized email suitable for use as a username.
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function sanitizeEmailForUsername(string $email): string
     {
@@ -234,7 +234,7 @@ class ContactPersonHandler
      * @param string $email The email address to validate.
      *
      * @return string|null Null if valid, error message if invalid.
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function validateEmailForUsername(string $email): ?string
     {
@@ -306,7 +306,7 @@ class ContactPersonHandler
      * @return \OCP\IUser|null The created user or null if failed.
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isFirstContact is a simple role-assignment toggle
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec                                        openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function createUserAccount(object $contactpersoonObject, bool $isFirstContact=false): ?\OCP\IUser
     {
@@ -927,7 +927,7 @@ class ContactPersonHandler
      * @param array      $contactData The updated contact person data
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function updateUserGroupsFromContactData(\OCP\IUser $user, array $contactData): void
     {
@@ -1009,7 +1009,7 @@ class ContactPersonHandler
      *
      * @return     void
      * @deprecated Use updateUserGroupsFromContactData instead
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec       openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function updateUserGroupsFromRoles(\OCP\IUser $user, array $newRoles, array $oldRoles=[]): void
     {
@@ -1152,7 +1152,7 @@ class ContactPersonHandler
      * @param array  $objectData    The contact data
      *
      * @return bool True if this is the first contact for the organization
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function isFirstContactForOrganization(object $contactObject, array $objectData): bool
     {
@@ -1276,7 +1276,7 @@ class ContactPersonHandler
      * @param array      $contactData The contact data containing name fields
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function storeContactNameFields(\OCP\IUser $user, array $contactData): void
     {
@@ -1380,7 +1380,7 @@ class ContactPersonHandler
      * @param object $contactObject The contact object
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function handleNewContact(object $contactObject): void
     {
@@ -1411,7 +1411,7 @@ class ContactPersonHandler
      * @param object $contactObject The contact object
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function handleContactUpdate(object $contactObject): void
     {
@@ -1442,7 +1442,7 @@ class ContactPersonHandler
      * @param object $contactObject The contact object
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function handleContactDeletion(object $contactObject): void
     {
@@ -1497,7 +1497,7 @@ class ContactPersonHandler
      * @param string $organizationUuid     The organization UUID
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function assignBeheerderRole(object $contactpersoonObject, string $username, string $organizationUuid): void
     {
@@ -1570,7 +1570,7 @@ class ContactPersonHandler
      * @param string $managerUsername The manager's username
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function setUserManager(string $username, string $managerUsername): void
     {
@@ -1625,7 +1625,7 @@ class ContactPersonHandler
      * @param string $username The username
      *
      * @return string|null The manager's username or null if not set
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function getUserManager(string $username): ?string
     {
@@ -1874,7 +1874,7 @@ class ContactPersonHandler
      * @throws \Exception If processing fails
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec                                        openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
@@ -2016,7 +2016,7 @@ class ContactPersonHandler
      * @param string $username The username to set as inactive
      *
      * @return bool True if successful
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function setUserInactive(string $username): bool
     {
@@ -2063,7 +2063,7 @@ class ContactPersonHandler
      * @param string $username The username to set as active
      *
      * @return bool True if successful
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function setUserActive(string $username): bool
     {
@@ -2111,7 +2111,7 @@ class ContactPersonHandler
      * @param object $oldContactpersoonObject The previous contactpersoon object
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject): void
     {
@@ -2227,7 +2227,7 @@ class ContactPersonHandler
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return bool True if the user should be added to the organization
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool
     {
@@ -2303,7 +2303,7 @@ class ContactPersonHandler
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return bool True if the user was successfully added
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function addContactpersoonToOrganization(object $contactpersoonObject): bool
     {
@@ -2414,7 +2414,7 @@ class ContactPersonHandler
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function ensureContactpersoonInOrganization(object $contactpersoonObject): void
     {
@@ -2483,7 +2483,7 @@ class ContactPersonHandler
      *                                              (useful when organisatie field was removed from object data)
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function addUserToOrganizationEntity(
         object $contactpersoonObject,

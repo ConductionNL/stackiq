@@ -266,8 +266,7 @@ class OrganisatieService
      * @param string                                        $organizationUuid    The organization UUID
      *
      * @return \OCA\OpenRegister\Db\Organisation The created organisation entity
-     */
-    /**
+     *
      * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-1
      */
     private function createOrganisationEntityInternal(

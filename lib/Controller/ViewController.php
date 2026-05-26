@@ -6,13 +6,13 @@
  * Handles HTTP requests for view-related operations including querying views
  * with enrichment options for products and usage data.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
@@ -31,13 +31,13 @@ use Psr\Log\LoggerInterface;
  * This controller provides REST API endpoints for querying and managing ArchiMate views
  * with optional enrichment capabilities for products, usage data (gebruik), and related information.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/nextcloud/softwarecatalog
  */
 class ViewController extends Controller
 {
@@ -312,7 +312,7 @@ class ViewController extends Controller
      * @return JSONResponse JSON response with API documentation
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @spec openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-2
+     * @spec                                          openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-2
      */
     public function getApiDocumentation(): JSONResponse
     {

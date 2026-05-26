@@ -1,0 +1,8 @@
+[
+  {
+    "slug": "org-archimate-export",
+    "title": "Organization-Specific ArchiMate Export",
+    "summary": "Defines how the softwarecatalog app exports an organization-enriched ArchiMate (AMEFF) XML file that includes the base GEMMA model plus the organization's applications plotted on referentiecomponenten, with proper folder structure, naming, and metadata. Supports toggling data layers (modules, deelnames, gebruik) via query parameters and organises output into typed folders. The exported file is designed to import cleanly into Archi (the open-source ArchiMate modelling tool) and other AMEFF-compatible tools.",
+    "docsUrl": "openspec/specs/org-archimate-export/spec.md"
+  }
+]

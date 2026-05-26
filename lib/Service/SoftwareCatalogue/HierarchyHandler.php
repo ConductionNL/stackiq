@@ -6,13 +6,13 @@
  * This handler manages organizational hierarchy, beheerder assignments,
  * and manager relationships within organizations.
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
@@ -30,13 +30,13 @@ use Psr\Log\LoggerInterface;
 /**
  * Handler for organizational hierarchy management
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
@@ -77,7 +77,7 @@ class HierarchyHandler
      * @param string $username              The username being processed
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
      */
     public function ensureOrganizationBeheerder(object $contactgegevensObject, string $username): void
     {
@@ -129,7 +129,7 @@ class HierarchyHandler
      * @param string $organizationUuid       The organization UUID
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
      */
     public function setupManagerRelationships(
         string $username,

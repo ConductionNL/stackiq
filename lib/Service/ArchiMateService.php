@@ -7,12 +7,12 @@
  * Stores complete XML data as JSON blobs in the database and reconstructs
  * exact XML output during export.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    SoftwareCatalog Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
@@ -39,12 +39,12 @@ use SimpleXMLElement;
  * 2. Storage: Use ObjectService::saveObjects with proper @self structure
  * 3. Export: Reconstruct exact XML from stored JSON blobs
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    SoftwareCatalog Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -194,7 +194,7 @@ class ArchiMateService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
     {
@@ -302,7 +302,7 @@ class ArchiMateService
      * @param array  $options          Optional export options.
      *
      * @return array Export results with 'success', 'xml', 'file_name'
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function exportOrgArchiMate(string $organizationUuid, array $options=[]): array
     {
@@ -1485,7 +1485,7 @@ class ArchiMateService
      * Test round-trip functionality
      *
      * @return array Test results
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function testRoundTrip(): array
     {
@@ -1589,7 +1589,7 @@ class ArchiMateService
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function getAmefConfig(): array
     {
@@ -1692,7 +1692,7 @@ class ArchiMateService
      * Get the current status of ArchiMate operations
      *
      * @return array Status information including import/export status and object counts
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function getArchiMateStatus(): array
     {
@@ -2013,7 +2013,7 @@ class ArchiMateService
      * Check if import is in progress
      *
      * @return bool True if import is in progress
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function isImportInProgress(): bool
     {
@@ -2025,7 +2025,7 @@ class ArchiMateService
      * Check if export is in progress
      *
      * @return bool True if export is in progress
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function isExportInProgress(): bool
     {
@@ -2767,7 +2767,7 @@ class ArchiMateService
      * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
-     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function getPropertyNameMapping(array $propDefMap): array
     {

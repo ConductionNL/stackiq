@@ -73,7 +73,7 @@ trait CronjobContextTrait
      * @param string $jobId The identifier of the cronjob (e.g., 'organization_contact_sync')
      *
      * @return bool True if context was successfully set, false otherwise
-     * @spec openspec/changes/retrofit-2026-05-26-cronjob-context/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-cronjob-context/tasks.md#task-1
      */
     protected function setCronjobContext(string $jobId): bool
     {
@@ -184,7 +184,7 @@ trait CronjobContextTrait
      * @param string $jobId The identifier of the cronjob
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-cronjob-context/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-cronjob-context/tasks.md#task-1
      */
     protected function clearCronjobContext(string $jobId): void
     {
