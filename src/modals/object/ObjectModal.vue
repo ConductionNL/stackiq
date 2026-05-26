@@ -38,6 +38,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									v-model="selectedCatalogus"
 									:options="catalogOptions"
 									label-outside
+									:aria-label-combobox="t('softwarecatalog', 'Select a catalogus')"
 									:disabled="objectStore.isLoading('object')"
 									required
 									:loading="loading" />
@@ -60,6 +61,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									v-model="selectedRegister"
 									:options="registerOptions"
 									label-outside
+									:aria-label-combobox="t('softwarecatalog', 'Select a register')"
 									:disabled="objectStore.isLoading('object') || !selectedCatalogus"
 									required
 									:loading="loading" />
@@ -81,6 +83,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									v-model="selectedSchema"
 									:options="schemaOptions"
 									label-outside
+									:aria-label-combobox="t('softwarecatalog', 'Select a schema')"
 									:disabled="objectStore.isLoading('object') || !selectedRegister"
 									required
 									:loading="loading" />
