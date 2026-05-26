@@ -168,7 +168,9 @@ class Application extends App implements IBootstrap
                     return new HierarchyHandler(
                     _organizationHandler: $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler'),
                     _contactPersonHandler: $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
-                    _logger: $c->get(LoggerInterface::class)
+                    _logger: $c->get(LoggerInterface::class),
+                    _userManager: $c->get(IUserManager::class),
+                    _groupManager: $c->get(IGroupManager::class)
                     );
                 }
                 );
@@ -258,7 +260,8 @@ class Application extends App implements IBootstrap
                     request: $container->get('OCP\IRequest'),
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
-                    logger: $container->get('Psr\Log\LoggerInterface')
+                    logger: $container->get('Psr\Log\LoggerInterface'),
+                    groupManager: $container->get(IGroupManager::class)
                     );
                 }
                 );
@@ -340,7 +343,8 @@ class Application extends App implements IBootstrap
                     container: $container,
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class),
-                    organisationService: $container->get(OpenRegisterOrganisationService::class)
+                    organisationService: $container->get(OpenRegisterOrganisationService::class),
+                    dbConnection: $container->get(IDBConnection::class)
                     );
                 }
                 );

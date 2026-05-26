@@ -28,6 +28,9 @@ use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 use Psr\Log\LoggerInterface;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
+use OCP\IGroupManager;
+use OCP\IUserManager;
+use OCP\IUserSession;
 
 /**
  * Service for handling software catalog operations.
@@ -83,6 +86,9 @@ class SoftwareCatalogueService
      * @param LoggerInterface      $_logger               Logger interface.
      * @param ContainerInterface   $_container            Container interface.
      * @param IAppManager          $_appManager           App manager interface.
+     * @param IUserSession         $_userSession          User session interface.
+     * @param IUserManager         $_userManager          User manager interface.
+     * @param IGroupManager        $_groupManager         Group manager interface.
      */
     public function __construct(
         private readonly OrganizationHandler $_organizationHandler,
@@ -93,6 +99,9 @@ class SoftwareCatalogueService
         private readonly LoggerInterface $_logger,
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
+        private readonly IUserSession $_userSession,
+        private readonly IUserManager $_userManager,
+        private readonly IGroupManager $_groupManager,
     ) {
         $this->appName = 'softwarecatalog';
     }//end __construct()
@@ -1538,7 +1547,7 @@ class SoftwareCatalogueService
                 );
 
         // Check if we're in an anonymous context (no logged-in user).
-        $userSession = \OC::$server->getUserSession();
+        $userSession = $this->_userSession;
         $currentUser = $userSession->getUser();
 
             $currentUserValue = 'null';
@@ -2253,7 +2262,7 @@ class SoftwareCatalogueService
                     );
 
             // Get the user manager.
-            $userManager    = \OC::$server->getUserManager();
+            $userManager    = $this->_userManager;
             $activatedUsers = [];
             $failedUsers    = [];
 
@@ -2362,7 +2371,7 @@ class SoftwareCatalogueService
                     );
 
             // Get the user manager.
-            $userManager      = \OC::$server->getUserManager();
+            $userManager      = $this->_userManager;
             $deactivatedUsers = [];
             $failedUsers      = [];
 
@@ -2526,7 +2535,7 @@ class SoftwareCatalogueService
     private function getAdminGroupUsernames(): array
     {
         try {
-            $groupManager = \OC::$server->getGroupManager();
+            $groupManager = $this->_groupManager;
             $adminGroup   = $groupManager->get('admin');
 
             if ($adminGroup === null) {
@@ -2579,7 +2588,7 @@ class SoftwareCatalogueService
                     );
 
             // Get the group manager to access admin group users.
-            $groupManager = \OC::$server->getGroupManager();
+            $groupManager = $this->_groupManager;
             $adminGroup   = $groupManager->get('admin');
 
             if ($adminGroup === null) {

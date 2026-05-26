@@ -1593,7 +1593,7 @@ class ContactPersonHandler
 
             // In Nextcloud, we can set this as a user preference or custom attribute.
             // Since there's no built-in manager field, we'll use preferences.
-            \OC::$server->getConfig()->setUserValue(
+            $this->config->setUserValue(
                 $username,
                 'softwarecatalog',
                 'manager',
@@ -1630,7 +1630,7 @@ class ContactPersonHandler
     public function getUserManager(string $username): ?string
     {
         try {
-            $manager = \OC::$server->getConfig()->getUserValue(
+            $manager = $this->config->getUserValue(
                 $username,
                 'softwarecatalog',
                 'manager',
