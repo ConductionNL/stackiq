@@ -66,7 +66,7 @@ class InitializeSettings implements IRepairStep
      * @param IOutput $output The output interface for progress reporting
      *
      * @return void
-     * @spec openspec/changes/retrofit-2026-05-26-repair-init/tasks.md#task-1
+     * @spec   openspec/changes/retrofit-2026-05-26-repair-init/tasks.md#task-1
      */
     public function run(IOutput $output): void
     {

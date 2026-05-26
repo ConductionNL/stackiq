@@ -22,6 +22,7 @@ namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
@@ -50,18 +51,20 @@ class AangebodenGebruikController extends Controller
     /**
      * Constructor for AangebodenGebruikController.
      *
-     * @param string                   $appName     The name of the app
-     * @param IRequest                 $request     The HTTP request object
-     * @param IUserSession             $userSession The user session service for getting the current user
-     * @param AangebodenGebruikService $gebruikSvc  The business logic service
-     * @param LoggerInterface          $logger      The logger service for debugging and error reporting
+     * @param string                   $appName      The name of the app
+     * @param IRequest                 $request      The HTTP request object
+     * @param IUserSession             $userSession  The user session service for getting the current user
+     * @param AangebodenGebruikService $gebruikSvc   The business logic service
+     * @param LoggerInterface          $logger       The logger service for debugging and error reporting
+     * @param IGroupManager            $groupManager The group manager for group membership checks
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly IUserSession $userSession,
         private readonly AangebodenGebruikService $gebruikSvc,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IGroupManager $groupManager
     ) {
         parent::__construct(appName: $appName, request: $request);
     }//end __construct()
@@ -85,7 +88,7 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
-     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
@@ -161,7 +164,7 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse
     {
@@ -252,7 +255,7 @@ class AangebodenGebruikController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getAllGebruiksForAmbtenaar(): JSONResponse
     {
@@ -360,7 +363,7 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
+     * @spec                                          openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse
     {
@@ -481,8 +484,7 @@ class AangebodenGebruikController extends Controller
                 return false;
             }
 
-            $userId       = $user->getUID();
-            $groupManager = \OC::$server->getGroupManager();
+            $userId = $user->getUID();
 
             $group = $groupManager->get($groupName);
             if ($group === null) {
@@ -533,7 +535,7 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
-     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getGebruiksWhereDeelnemers(): JSONResponse
     {
@@ -612,7 +614,7 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
-     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
     {
@@ -720,7 +722,7 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @PublicPage
-     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
     {
@@ -821,7 +823,7 @@ class AangebodenGebruikController extends Controller
      * @PublicPage
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-3
+     * @spec                                          openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-3
      */
     public function getApiDocumentation(): JSONResponse
     {

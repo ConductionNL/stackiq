@@ -78,7 +78,7 @@ class OrganizationContactSyncJob extends TimedJob
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @spec openspec/changes/retrofit-2026-05-26-cronjob-context/tasks.md#task-2
+     * @spec                                          openspec/changes/retrofit-2026-05-26-cronjob-context/tasks.md#task-2
      */
     protected function run($argument): void
     {

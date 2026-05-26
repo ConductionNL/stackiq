@@ -62,7 +62,7 @@ class PreferencesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @spec openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-3
+     * @spec            openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-3
      */
     public function getPreference(string $key): JSONResponse
     {
@@ -102,7 +102,7 @@ class PreferencesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @spec openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-3
+     * @spec            openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-3
      */
     public function setPreference(string $key, string $value=''): JSONResponse
     {

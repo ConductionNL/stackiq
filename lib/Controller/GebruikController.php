@@ -6,13 +6,13 @@
  * Handles HTTP requests for view-related operations including querying views
  * with enrichment options for products and usage data.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
@@ -35,13 +35,13 @@ use OCP\IUserSession;
  * This controller provides REST API endpoints for querying and managing gebruik objects
  * with role-based access for gebruik-beheerder and aanbod-beheerder users.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/nextcloud/softwarecatalog
  */
 class GebruikController extends Controller
 {
