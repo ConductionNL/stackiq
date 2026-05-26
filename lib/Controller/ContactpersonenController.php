@@ -23,6 +23,7 @@ use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserManager;
@@ -173,6 +174,10 @@ class ContactpersonenController extends Controller
      */
     public function getContactpersonen(string $organisationId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Get object service.
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
@@ -269,6 +274,10 @@ class ContactpersonenController extends Controller
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Get object service.
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
@@ -495,6 +504,10 @@ class ContactpersonenController extends Controller
      */
     public function changePassword(string $username, string $newPassword): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $user = $this->userManager->get($username);
 
@@ -584,6 +597,10 @@ class ContactpersonenController extends Controller
      */
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $user = $this->userManager->get($username);
 
@@ -708,6 +725,10 @@ class ContactpersonenController extends Controller
      */
     public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->info(
                     'ContactpersonenController: Getting contact persons with user details for organization',
@@ -800,6 +821,10 @@ class ContactpersonenController extends Controller
      */
     public function getUserInfo(string $contactpersoonId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->info(
                     'ContactpersonenController: Getting user info for contactpersoon',
@@ -927,6 +952,10 @@ class ContactpersonenController extends Controller
      */
     public function getAvailableGroups(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $availableGroups = [
                 [
@@ -992,6 +1021,10 @@ class ContactpersonenController extends Controller
      */
     public function disableUser(string $contactpersoonId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Delegate to service.
             $this->contactSvc->disableUserForContactpersoon($contactpersoonId);
@@ -1000,7 +1033,7 @@ class ContactpersonenController extends Controller
                     'User account disabled',
                     [
                         'contactpersoonId' => $contactpersoonId,
-                        'disabled_by'      => $this->userSession->getUser()?->getUID(),
+                        'disabled_by'      => $this->userSession->getUser()->getUID(),
                     ]
                     );
             return new JSONResponse(
@@ -1040,6 +1073,10 @@ class ContactpersonenController extends Controller
      */
     public function enableUser(string $contactpersoonId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Delegate to service.
             $this->contactSvc->enableUserForContactpersoon($contactpersoonId);
@@ -1048,7 +1085,7 @@ class ContactpersonenController extends Controller
                     'User account enabled',
                     [
                         'contactpersoonId' => $contactpersoonId,
-                        'enabled_by'       => $this->userSession->getUser()?->getUID(),
+                        'enabled_by'       => $this->userSession->getUser()->getUID(),
                     ]
                     );
             return new JSONResponse(
@@ -1086,6 +1123,10 @@ class ContactpersonenController extends Controller
      */
     public function testBulkUserInfo(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
                 $objectServiceAvail = 'null';
             if ($this->contactSvc !== null) {
@@ -1147,6 +1188,10 @@ class ContactpersonenController extends Controller
      */
     public function getBulkUserInfo(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $input = json_decode(file_get_contents('php://input'), true);
             $contactpersoonIds = $input['contactpersoonIds'] ?? [];
@@ -1213,18 +1258,13 @@ class ContactpersonenController extends Controller
      */
     public function getMe(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Get current user from session.
             $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'Not authenticated',
-                        ],
-                        401
-                        );
-            }
 
             $userId    = $user->getUID();
             $userEmail = $user->getEMailAddress() ?? $userId;

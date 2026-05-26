@@ -79,7 +79,6 @@ class AanbodController extends Controller
      *
      * @return JSONResponse JSON response with aanbod objects array
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      *
@@ -156,7 +155,6 @@ class AanbodController extends Controller
      *
      * @return JSONResponse JSON response with success status and updated object
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      *
@@ -257,7 +255,6 @@ class AanbodController extends Controller
      *
      * @return JSONResponse JSON response with success status and deletion details
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      *

@@ -3322,15 +3322,16 @@ class SoftwareCatalogueService
     }//end syncContactPersonUsernamesWithOrganization()
 
     /**
-     * Ensures a contact person's username is in their organization's users array
-     * This method is called when a contact person is created or updated
+     * Ensures a contact person's username is in their organization's users array.
+     * NOTE: Dead method — retained only as implementation reference until the sync
+     * pipeline invocation point is wired; not called from any live code path.
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      *
      * @param object $contactPersonObject The contact person object
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
-    public function ensureContactPersonInOrganization(object $contactPersonObject): void
+    private function ensureContactPersonInOrganization(object $contactPersonObject): void
     {
         $contactData = $contactPersonObject->getObject();
         $email       = $contactData['email'] ?? null;

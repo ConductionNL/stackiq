@@ -17,8 +17,9 @@ declare(strict_types=1);
 
 return [
     'routes' => [
-        // Dashboard route
+        // Dashboard routes
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
+        ['name' => 'dashboard#index', 'url' => '/api/dashboard', 'verb' => 'GET'],
 
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
@@ -30,7 +31,9 @@ return [
         ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'GET'],
         ['name' => 'settings#initialize', 'url' => '/api/settings/initialize', 'verb' => 'POST'],
         ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
-        ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
+        ['name' => 'settings#stats', 'url' => '/api/settings/stats', 'verb' => 'GET'],
+        ['name' => 'settings#autoConfigure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
+        ['name' => 'settings#consolidatedAutoConfigure', 'url' => '/api/settings/consolidated-auto-configure', 'verb' => 'POST'],
         ['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
 
         // Separate endpoints for performance optimization
@@ -51,26 +54,22 @@ return [
         ['name' => 'settings#resetAutoConfig', 'url' => '/api/settings/reset-auto-config', 'verb' => 'POST'],
 
         // Email management routes
-        ['name' => 'settings#send_test_email', 'url' => '/api/email/test', 'verb' => 'POST'],
-        ['name' => 'settings#test_email_connection', 'url' => '/api/email/test-connection', 'verb' => 'POST'],
-        ['name' => 'settings#get_email_settings', 'url' => '/api/settings/email', 'verb' => 'GET'],
-        ['name' => 'settings#update_email_settings', 'url' => '/api/settings/email', 'verb' => 'POST'],
+        ['name' => 'settings#sendTestEmail', 'url' => '/api/email/test', 'verb' => 'POST'],
+        ['name' => 'settings#testEmailConnection', 'url' => '/api/email/test-connection', 'verb' => 'POST'],
+        ['name' => 'settings#getEmailSettings', 'url' => '/api/settings/email', 'verb' => 'GET'],
+        ['name' => 'settings#updateEmailSettings', 'url' => '/api/settings/email', 'verb' => 'POST'],
 
         // Email template management routes
-        ['name' => 'settings#get_email_templates', 'url' => '/api/email/templates', 'verb' => 'GET'],
-        ['name' => 'settings#get_email_template', 'url' => '/api/email/templates/{templateName}', 'verb' => 'GET'],
-        ['name' => 'settings#update_email_template', 'url' => '/api/email/templates/{templateName}', 'verb' => 'POST'],
-        ['name' => 'settings#get_email_template_default', 'url' => '/api/email/templates/{templateName}/default', 'verb' => 'GET'],
-        ['name' => 'settings#get_email_template_variables', 'url' => '/api/email/templates/{templateName}/variables', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplates', 'url' => '/api/email/templates', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplate', 'url' => '/api/email/templates/{templateName}', 'verb' => 'GET'],
+        ['name' => 'settings#updateEmailTemplate', 'url' => '/api/email/templates/{templateName}', 'verb' => 'POST'],
+        ['name' => 'settings#getEmailTemplateDefault', 'url' => '/api/email/templates/{templateName}/default', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplateVariables', 'url' => '/api/email/templates/{templateName}/variables', 'verb' => 'GET'],
 
-        // Health check endpoint
-        ['name' => 'settings#health_check', 'url' => '/api/health', 'verb' => 'GET'],
+        // Note: /api/health is served by settings#status above
 
         // Configuration cache management
-        ['name' => 'settings#clear_cache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
-
-        // Force re-initialization endpoint
-        ['name' => 'settings#force_reinit', 'url' => '/api/settings/force-reinit', 'verb' => 'POST'],
+        ['name' => 'settings#clearCache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
 
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
@@ -84,16 +83,16 @@ return [
         ['name' => 'settings#killArchiMateImport', 'url' => '/api/archimate/import/kill', 'verb' => 'POST'], // deprecated
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
 
-        ['name' => 'settings#test_archimate_round_trip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
+        ['name' => 'settings#testArchiMateRoundTrip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
 
         // User Groups management routes
-        ['name' => 'settings#get_generic_user_groups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
-        ['name' => 'settings#set_generic_user_groups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'POST'],
-        ['name' => 'settings#get_organization_admin_groups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'GET'],
-        ['name' => 'settings#set_organization_admin_groups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'POST'],
-        ['name' => 'settings#get_super_user_groups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'GET'],
-        ['name' => 'settings#set_super_user_groups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'POST'],
-        ['name' => 'settings#get_all_groups', 'url' => '/api/settings/user-groups/all', 'verb' => 'GET'],
+        ['name' => 'settings#getGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
+        ['name' => 'settings#setGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'POST'],
+        ['name' => 'settings#getOrganizationAdminGroups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'GET'],
+        ['name' => 'settings#setOrganizationAdminGroups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'POST'],
+        ['name' => 'settings#getSuperUserGroups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'GET'],
+        ['name' => 'settings#setSuperUserGroups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'POST'],
+        ['name' => 'settings#getAllGroups', 'url' => '/api/settings/user-groups/all', 'verb' => 'GET'],
 
         // Progress streaming routes
         ['name' => 'settings#getProgress', 'url' => '/api/progress/{operationId}', 'verb' => 'GET'],
@@ -177,6 +176,8 @@ return [
 
         // AangebodenGebruik API endpoints for filtering gebruiks by organization involvement
         ['name' => 'aangebodenGebruik#getGebruiksWhereAfnemer', 'url' => '/api/aangeboden-gebruik/afnemer', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getAllGebruiksForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getSingleGebruikForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#getGebruiksWhereDeelnemers', 'url' => '/api/aangeboden-gebruik/deelnemers', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#setGebruikSelfToActiveOrg', 'url' => '/api/aangeboden-gebruik/{gebruikId}/set-self', 'verb' => 'PUT'],
         ['name' => 'aangebodenGebruik#deleteGebruikAsAfnemer', 'url' => '/api/aangeboden-gebruik/{gebruikId}/deny', 'verb' => 'DELETE'],

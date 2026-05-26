@@ -22,6 +22,7 @@ namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\IAppConfig;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
@@ -149,6 +150,10 @@ class SettingsController extends Controller
      */
     public function index(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $user    = $this->userSession->getUser();
             $isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
@@ -510,6 +515,10 @@ class SettingsController extends Controller
      */
     public function status(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->debug('SettingsController: Getting configuration status');
 
@@ -608,6 +617,10 @@ class SettingsController extends Controller
      */
     public function stats(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $statistics = $this->settingsService->getObjectCountsStatistics();
             return new JSONResponse(
@@ -645,6 +658,10 @@ class SettingsController extends Controller
      */
     public function debug(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $debugInfo = $this->settingsService->getDebugInfo();
             return new JSONResponse($debugInfo);
@@ -719,6 +736,10 @@ class SettingsController extends Controller
      */
     public function getSyncStatus(int $minutesBack=10): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $status = $this->orgSyncSvc->getSyncStatusWithErrorHandling($minutesBack);
         return new JSONResponse($status);
     }//end getSyncStatus()
@@ -798,6 +819,10 @@ class SettingsController extends Controller
      */
     public function heartbeat(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $timestamp = $this->request->getParam('timestamp', time() * 1000);
 
@@ -848,6 +873,10 @@ class SettingsController extends Controller
      */
     public function getVersionInfo(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->info('SettingsController: Getting version information');
             $data = $this->settingsService->getVersionInfo();
@@ -1146,6 +1175,10 @@ class SettingsController extends Controller
      */
     public function getProgress(string $operationId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $progress = $this->progressTracker->getProgress($operationId);
 
@@ -1323,6 +1356,10 @@ class SettingsController extends Controller
      */
     public function importArchiMate(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Increase memory limit for large imports.
             ini_set('memory_limit', '4096M');
@@ -1503,6 +1540,10 @@ class SettingsController extends Controller
      */
     public function exportArchiMate(): Response
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Get JSON data from request parameters or body.
             $rawInput = file_get_contents('php://input');
@@ -1622,6 +1663,10 @@ class SettingsController extends Controller
      */
     public function exportOrgArchiMate(string $organizationUuid): Response
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Read boolean query parameters.
             $modules   = $this->request->getParam('modules', 'true') === 'true';
@@ -1726,6 +1771,10 @@ class SettingsController extends Controller
      */
     public function downloadArchiMate(string $fileName): Response
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Security: validate filename to prevent path traversal.
             if (strpos(haystack: $fileName, needle: '..') !== false
@@ -1821,6 +1870,10 @@ class SettingsController extends Controller
      */
     public function testEmailConnection(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info('SoftwareCatalog: Email connection test endpoint called');
 
         try {
@@ -1883,6 +1936,10 @@ class SettingsController extends Controller
      */
     public function getEmailSettings(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $emailSettings = $this->settingsService->getEmailSettings();
 
@@ -1920,6 +1977,10 @@ class SettingsController extends Controller
      */
     public function updateEmailSettings(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data          = $this->request->getParams();
             $emailSettings = $data['emailSettings'] ?? $data;
@@ -1966,6 +2027,10 @@ class SettingsController extends Controller
      */
     public function getEmailTemplates(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Delegate all business logic to service.
             $templates = $this->settingsService->getAllEmailTemplates();
@@ -2006,6 +2071,10 @@ class SettingsController extends Controller
      */
     public function getEmailTemplate(string $templateName): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $template = $this->settingsService->getEmailTemplate($templateName);
 
@@ -2046,6 +2115,10 @@ class SettingsController extends Controller
      */
     public function updateEmailTemplate(string $templateName): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data            = $this->request->getParams();
             $templateContent = $data['template'] ?? $data['content'] ?? '';
@@ -2106,6 +2179,10 @@ class SettingsController extends Controller
      */
     public function getEmailTemplateDefault(string $templateName): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $defaultTemplate = $this->settingsService->getDefaultEmailTemplate($templateName);
 
@@ -2146,6 +2223,10 @@ class SettingsController extends Controller
      */
     public function getEmailTemplateVariables(string $templateName): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $variables = $this->settingsService->getEmailTemplateVariables($templateName);
 
@@ -2188,6 +2269,10 @@ class SettingsController extends Controller
      */
     public function getGenericUserGroups(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $groups = $this->settingsService->getGenericUserGroups();
 
@@ -2225,6 +2310,10 @@ class SettingsController extends Controller
      */
     public function setGenericUserGroups(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
@@ -2268,6 +2357,10 @@ class SettingsController extends Controller
      */
     public function getOrganizationAdminGroups(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $groups = $this->settingsService->getOrganizationAdminGroups();
 
@@ -2305,6 +2398,10 @@ class SettingsController extends Controller
      */
     public function setOrganizationAdminGroups(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
@@ -2348,6 +2445,10 @@ class SettingsController extends Controller
      */
     public function getSuperUserGroups(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $groups = $this->settingsService->getSuperUserGroups();
 
@@ -2385,6 +2486,10 @@ class SettingsController extends Controller
      */
     public function setSuperUserGroups(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
@@ -2428,6 +2533,10 @@ class SettingsController extends Controller
      */
     public function getAllGroups(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $allGroups = $this->settingsService->getAllGroups();
 
@@ -2469,6 +2578,10 @@ class SettingsController extends Controller
      */
     public function clearArchiMateImportStatus(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $result = $this->settingsService->clearArchiMateImportStatus();
 
@@ -2509,6 +2622,10 @@ class SettingsController extends Controller
      */
     public function killArchiMateImport(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $result = $this->settingsService->killArchiMateImport();
 
@@ -2548,6 +2665,10 @@ class SettingsController extends Controller
      */
     public function cancelArchiMateImport(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $result = $this->settingsService->cancelArchiMateImport();
 
@@ -2590,6 +2711,10 @@ class SettingsController extends Controller
      */
     public function clearArchiMateExportStatus(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->settingsService->clearArchiMateExportStatus();
 
@@ -2631,6 +2756,10 @@ class SettingsController extends Controller
      */
     public function testArchiMateRoundTrip(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->info('SoftwareCatalog: ArchiMate round-trip test started');
 
@@ -2682,6 +2811,10 @@ class SettingsController extends Controller
      */
     public function getArchiMateSettings(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $archimateStatus = $this->settingsService->getArchiMateStatus();
 
@@ -2720,6 +2853,10 @@ class SettingsController extends Controller
      */
     public function getObjectCounts(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $objectCounts = $this->settingsService->getObjectCountsStatistics();
 
@@ -2761,6 +2898,10 @@ class SettingsController extends Controller
      */
     public function getArchiMateConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getArchiMateConfig();
 
@@ -2825,6 +2966,10 @@ class SettingsController extends Controller
      */
     public function getEmailConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getEmailConfigFocused();
 
@@ -2889,6 +3034,10 @@ class SettingsController extends Controller
      */
     public function getAmefConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getAmefConfigFocused();
 
@@ -2953,6 +3102,10 @@ class SettingsController extends Controller
      */
     public function getVoorzieningenConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getVoorzieningenConfigFocused();
 
@@ -3017,6 +3170,10 @@ class SettingsController extends Controller
      */
     public function getObjectsCounts(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $counts = $this->settingsService->getObjectsCounts();
 
@@ -3049,6 +3206,10 @@ class SettingsController extends Controller
      */
     public function getObjectsStatistics(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $statistics = $this->settingsService->getObjectsStatistics();
 
@@ -3081,6 +3242,10 @@ class SettingsController extends Controller
      */
     public function getUserGroupsConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getUserGroupsConfig();
 
@@ -3211,6 +3376,10 @@ class SettingsController extends Controller
      */
     public function syncOrganisations(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->info('SettingsController: Starting organisation sync via API');
 
@@ -3331,6 +3500,10 @@ class SettingsController extends Controller
      */
     public function getCronjobConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getCronjobConfig();
             return new JSONResponse($config);
@@ -3403,6 +3576,10 @@ class SettingsController extends Controller
      */
     public function getCronjobUsers(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $result = $this->settingsService->getAvailableUsersForCronjobs();
             return new JSONResponse($result);
@@ -3437,6 +3614,10 @@ class SettingsController extends Controller
      */
     public function getCronjobOrganisations(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $result = $this->settingsService->getAvailableOrganisationsForCronjobs();
             return new JSONResponse($result);
