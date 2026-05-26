@@ -23,6 +23,7 @@ use Exception;
 use OCA\SoftwareCatalog\Service\GebruikService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http;
 use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -72,7 +73,6 @@ class GebruikController extends Controller
      * For a gebruik-beheerder, returns all gebruiken.
      * For an aanbod-beheerder, returns gebruiken of applications of the user's organization.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      *
@@ -150,9 +150,8 @@ class GebruikController extends Controller
     {
         $user = $this->userSession->getUser();
 
-        // Return empty results for non-logged-in users to prevent unnecessary errors.
         if ($user === null) {
-            return new JSONResponse($this->getEmptyResult());
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
         $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');

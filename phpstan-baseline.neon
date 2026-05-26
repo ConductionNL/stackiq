@@ -42,6 +42,16 @@ parameters:
 			path: lib/Controller/AangebodenGebruikController.php
 
 		-
+			message: "#^Property OCA\\\\SoftwareCatalog\\\\Controller\\\\AangebodenGebruikController\\:\\:\\$groupManager is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/AangebodenGebruikController.php
+
+		-
+			message: "#^Undefined variable: \\$groupManager$#"
+			count: 1
+			path: lib/Controller/AangebodenGebruikController.php
+
+		-
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Controller\\\\ContactpersonenController\\:\\:\\$secureRandom is never read, only written\\.$#"
 			count: 1
 			path: lib/Controller/ContactpersonenController.php
@@ -372,6 +382,11 @@ parameters:
 			path: lib/Service/ArchiMateService.php
 
 		-
+			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:isOperationInProgress\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
 			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:getAmefRegisterId\\(\\) never returns int so it can be removed from the return type\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
@@ -582,6 +597,16 @@ parameters:
 			path: lib/Service/OrganizationSyncService.php
 
 		-
+			message: "#^Offset 'organisatie' on array\\{username: string\\} on left side of \\?\\? does not exist\\.$#"
+			count: 1
+			path: lib/Service/OrganizationSyncService.php
+
+		-
+			message: "#^Cannot unset offset 'organisatie' on array\\{username: string\\}\\.$#"
+			count: 1
+			path: lib/Service/OrganizationSyncService.php
+
+		-
 			message: "#^Comparison operation \"\\>\" between 105 and 0 is always true\\.$#"
 			count: 1
 			path: lib/Service/ProgressTracker.php
@@ -742,6 +767,11 @@ parameters:
 			path: lib/Service/SoftwareCatalogueService.php
 
 		-
+			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogueService\\:\\:ensureContactPersonInOrganization\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/SoftwareCatalogueService.php
+
+		-
 			message: "#^Offset 'roles' on array\\{\\} on left side of \\?\\? does not exist\\.$#"
 			count: 1
 			path: lib/Service/SoftwareCatalogueService.php
@@ -773,5 +803,10 @@ parameters:
 
 		-
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$l10n is never read, only written\\.$#"
+			count: 1
+			path: lib/Settings/SoftwareCatalogAdmin.php
+
+		-
+			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Settings/SoftwareCatalogAdmin.php

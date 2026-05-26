@@ -84,9 +84,7 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with gebruiks array where org is afnemer
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @PublicPage
      * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
@@ -161,7 +159,6 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse Koppelingen and gebruiks objects for the specified UUID
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
@@ -252,7 +249,6 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse All gebruiks objects in standard searchObjectsPaginated format
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
      * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
@@ -357,9 +353,7 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse Single gebruik object in standard searchObjectsPaginated format
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @PublicPage
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -531,9 +525,7 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with gebruiks array where org is in deelnemers
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @PublicPage
      * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
@@ -610,9 +602,7 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with success status and updated object
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @PublicPage
      * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
@@ -718,9 +708,7 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with success status and deletion details
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @PublicPage
      * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
@@ -817,9 +805,7 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with API documentation
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @PublicPage
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)

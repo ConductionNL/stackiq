@@ -2038,7 +2038,7 @@ class ArchiMateService
      *
      * @return bool True if any operation is in progress
      */
-    public function isOperationInProgress(): bool
+    private function isOperationInProgress(): bool
     {
         return $this->isImportInProgress() || $this->isExportInProgress();
     }//end isOperationInProgress()

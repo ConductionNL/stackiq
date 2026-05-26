@@ -14,9 +14,11 @@
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 
 class DashboardController extends Controller
@@ -24,11 +26,15 @@ class DashboardController extends Controller
     /**
      * Constructor for DashboardController.
      *
-     * @param string   $appName The app name
-     * @param IRequest $request The request object
+     * @param string       $appName     The app name
+     * @param IRequest     $request     The request object
+     * @param IUserSession $userSession The user session
      */
-    public function __construct($appName, IRequest $request)
-    {
+    public function __construct(
+        $appName,
+        IRequest $request,
+        private readonly IUserSession $userSession,
+    ) {
         parent::__construct(appName: $appName, request: $request);
     }//end __construct()
 
@@ -80,6 +86,10 @@ class DashboardController extends Controller
      */
     public function index(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $results = ['results' => []];
             return new JSONResponse($results);
