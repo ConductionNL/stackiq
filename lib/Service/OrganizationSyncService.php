@@ -2494,6 +2494,7 @@ class OrganizationSyncService
                 ]
             );
 
+            /** @var array<string, mixed> $contactEntityObject */
             $contactEntityObject = $contactObject->getObject();
 
             // Skip if no organization reference.

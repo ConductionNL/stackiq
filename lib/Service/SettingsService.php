@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -104,18 +105,20 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig         $config     App configuration interface
-     * @param IRequest           $request    Request interface
-     * @param ContainerInterface $container  Container for dependency injection
-     * @param IAppManager        $appManager App manager interface
-     * @param LoggerInterface    $logger     Logger interface
+     * @param IAppConfig         $config       App configuration interface
+     * @param IRequest           $request      Request interface
+     * @param ContainerInterface $container    Container for dependency injection
+     * @param IAppManager        $appManager   App manager interface
+     * @param LoggerInterface    $logger       Logger interface
+     * @param IGroupManager      $groupManager Group manager interface
      */
     public function __construct(
         private readonly IAppConfig $config,
         private readonly IRequest $request,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IGroupManager $groupManager
     ) {
         $this->appName = 'softwarecatalog';
     }//end __construct()
@@ -1629,7 +1632,7 @@ class SettingsService
             ];
 
             // Get the group manager.
-            $groupManager = \OC::$server->getGroupManager();
+            $groupManager = $this->groupManager;
 
             // Define the required groups (matching role-based system).
             $requiredGroups = [
@@ -1664,7 +1667,7 @@ class SettingsService
 
                 // Create the group.
                 $group = $groupManager->createGroup($groupId);
-                if ($group !== false) {
+                if ($group !== null) {
                     $result['created'][] = $groupId;
                     $this->logger->info("SettingsService: Created user group: {$groupId}");
                 } else {
@@ -1750,7 +1753,7 @@ class SettingsService
             $this->logger->info('Starting creation of required user groups');
 
             // Get the group manager.
-            $groupManager = \OC::$server->getGroupManager();
+            $groupManager = $this->groupManager;
 
             // Define the required groups (matching role-based system).
             $requiredGroups = [
@@ -1788,7 +1791,7 @@ class SettingsService
 
                 // Create the group.
                 $group = $groupManager->createGroup($groupId);
-                if ($group !== false) {
+                if ($group !== null) {
                     $createdGroups[] = $groupId;
                     $this->logger->info("Created user group: {$groupId}");
                 } else {
@@ -1847,7 +1850,7 @@ class SettingsService
         // Get group manager if possible.
         if ($this->appManager->isInstalled('user_management') === true) {
             try {
-                $groupManager = \OC::$server->getGroupManager();
+                $groupManager = $this->groupManager;
                 $allGroups    = $groupManager->search('');
 
                 foreach ($allGroups as $group) {

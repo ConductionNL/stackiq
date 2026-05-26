@@ -23,6 +23,7 @@ namespace OCA\SoftwareCatalog\Service;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCP\App\IAppManager;
+use OCP\IDBConnection;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use OCP\Files\IRootFolder;
@@ -165,6 +166,7 @@ class ArchiMateImportService
      * @param LoggerInterface     $logger              Logger service
      * @param SettingsService     $settingsService     Settings service for AMEF configuration.
      * @param OrganisationService $organisationService Organisation service.
+     * @param IDBConnection       $dbConnection        Database connection interface.
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -174,7 +176,8 @@ class ArchiMateImportService
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
         private readonly SettingsService $settingsService,
-        private readonly OrganisationService $organisationService
+        private readonly OrganisationService $organisationService,
+        private readonly IDBConnection $dbConnection
     ) {
     }//end __construct()
 
@@ -1462,7 +1465,7 @@ class ArchiMateImportService
             }
 
             // Get database connection.
-            $connection = \OC::$server->getDatabaseConnection();
+            $connection = $this->dbConnection;
             $tableName  = 'oc_openregister_table_'.$registerId.'_'.$elementSchemaId;
 
             // Step 1: Build a mapping from ArchiMate identifier to database UUID for Standaarden.
