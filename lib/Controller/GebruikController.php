@@ -9,6 +9,7 @@
  * @category Controller
  * @package  OCA\SoftwareCatalog\Controller
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://github.com/nextcloud/softwarecatalog
@@ -37,6 +38,7 @@ use OCP\IUserSession;
  * @category Controller
  * @package  OCA\SoftwareCatalog\Controller
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://github.com/nextcloud/softwarecatalog

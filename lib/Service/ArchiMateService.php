@@ -10,6 +10,7 @@
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
  * @link     https://github.com/nextcloud/softwarecatalog
  *
@@ -41,6 +42,7 @@ use SimpleXMLElement;
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
  * @link     https://github.com/nextcloud/softwarecatalog
  *

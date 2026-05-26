@@ -93,6 +93,7 @@
 
 <script>
 import { defineComponent } from 'vue'
+import { loadState } from '@nextcloud/initial-state'
 import {
 	NcSettingsSection,
 	NcTextField,
@@ -152,7 +153,7 @@ export default defineComponent({
 	 */
 	data() {
 		return {
-			appVersion: document.getElementById('settings')?.dataset?.version || 'Unknown',
+			appVersion: loadState('softwarecatalog', 'version', 'Unknown'),
 			savingCatalogLocation: false,
 			catalogLocation: '',
 		}

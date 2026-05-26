@@ -107,6 +107,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 					:options="availableRegisters"
 					label="title"
 					track-by="id"
+					:input-label="t('softwarecatalog', 'Target register')"
 					placeholder="Select a register..."
 					@update:model-value="onRegisterChange" />
 			</div>
@@ -119,6 +120,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 					:options="availableSchemas"
 					label="title"
 					track-by="id"
+					:input-label="t('softwarecatalog', 'Target schema')"
 					placeholder="Select a schema..."
 					@update:model-value="onSchemaChange" />
 			</div>
@@ -166,6 +168,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 								:options="targetPropertyOptions"
 								label="label"
 								track-by="value"
+								:input-label="t('softwarecatalog', 'Map {property} to target property', { property: sourceProperty.name })"
 								:placeholder="'Map to target property...'"
 								:clearable="true"
 								@update:model-value="updateMappingFromUI(sourceProperty.name)" />

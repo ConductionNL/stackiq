@@ -9,6 +9,7 @@
  * @category Handler
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
@@ -34,6 +35,7 @@ use Psr\Log\LoggerInterface;
  * @category Handler
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
