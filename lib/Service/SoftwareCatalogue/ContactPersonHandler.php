@@ -9,6 +9,7 @@
  * @category Handler
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
@@ -35,6 +36,7 @@ use OCA\SoftwareCatalog\Service\SymfonyEmailService;
  * @category Handler
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  *
@@ -105,6 +107,7 @@ class ContactPersonHandler
      * @param array $contactData The contact data array
      *
      * @return string Generated username
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function generateUsernameFromContactData(array $contactData): string
     {
@@ -200,6 +203,7 @@ class ContactPersonHandler
      * @param string $email The email address to sanitize.
      *
      * @return string The sanitized email suitable for use as a username.
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function sanitizeEmailForUsername(string $email): string
     {
@@ -230,6 +234,7 @@ class ContactPersonHandler
      * @param string $email The email address to validate.
      *
      * @return string|null Null if valid, error message if invalid.
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function validateEmailForUsername(string $email): ?string
     {
@@ -301,6 +306,7 @@ class ContactPersonHandler
      * @return \OCP\IUser|null The created user or null if failed.
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isFirstContact is a simple role-assignment toggle
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function createUserAccount(object $contactpersoonObject, bool $isFirstContact=false): ?\OCP\IUser
     {
@@ -921,6 +927,7 @@ class ContactPersonHandler
      * @param array      $contactData The updated contact person data
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function updateUserGroupsFromContactData(\OCP\IUser $user, array $contactData): void
     {
@@ -1002,6 +1009,7 @@ class ContactPersonHandler
      *
      * @return     void
      * @deprecated Use updateUserGroupsFromContactData instead
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function updateUserGroupsFromRoles(\OCP\IUser $user, array $newRoles, array $oldRoles=[]): void
     {
@@ -1144,6 +1152,7 @@ class ContactPersonHandler
      * @param array  $objectData    The contact data
      *
      * @return bool True if this is the first contact for the organization
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function isFirstContactForOrganization(object $contactObject, array $objectData): bool
     {
@@ -1267,6 +1276,7 @@ class ContactPersonHandler
      * @param array      $contactData The contact data containing name fields
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function storeContactNameFields(\OCP\IUser $user, array $contactData): void
     {
@@ -1370,6 +1380,7 @@ class ContactPersonHandler
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function handleNewContact(object $contactObject): void
     {
@@ -1400,6 +1411,7 @@ class ContactPersonHandler
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function handleContactUpdate(object $contactObject): void
     {
@@ -1430,6 +1442,7 @@ class ContactPersonHandler
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function handleContactDeletion(object $contactObject): void
     {
@@ -1484,6 +1497,7 @@ class ContactPersonHandler
      * @param string $organizationUuid     The organization UUID
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function assignBeheerderRole(object $contactpersoonObject, string $username, string $organizationUuid): void
     {
@@ -1556,6 +1570,7 @@ class ContactPersonHandler
      * @param string $managerUsername The manager's username
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function setUserManager(string $username, string $managerUsername): void
     {
@@ -1578,7 +1593,7 @@ class ContactPersonHandler
 
             // In Nextcloud, we can set this as a user preference or custom attribute.
             // Since there's no built-in manager field, we'll use preferences.
-            \OC::$server->getConfig()->setUserValue(
+            $this->config->setUserValue(
                 $username,
                 'softwarecatalog',
                 'manager',
@@ -1610,11 +1625,12 @@ class ContactPersonHandler
      * @param string $username The username
      *
      * @return string|null The manager's username or null if not set
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function getUserManager(string $username): ?string
     {
         try {
-            $manager = \OC::$server->getConfig()->getUserValue(
+            $manager = $this->config->getUserValue(
                 $username,
                 'softwarecatalog',
                 'manager',
@@ -1858,6 +1874,7 @@ class ContactPersonHandler
      * @throws \Exception If processing fails
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
@@ -1999,6 +2016,7 @@ class ContactPersonHandler
      * @param string $username The username to set as inactive
      *
      * @return bool True if successful
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function setUserInactive(string $username): bool
     {
@@ -2045,6 +2063,7 @@ class ContactPersonHandler
      * @param string $username The username to set as active
      *
      * @return bool True if successful
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function setUserActive(string $username): bool
     {
@@ -2092,6 +2111,7 @@ class ContactPersonHandler
      * @param object $oldContactpersoonObject The previous contactpersoon object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject): void
     {
@@ -2207,6 +2227,7 @@ class ContactPersonHandler
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return bool True if the user should be added to the organization
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool
     {
@@ -2282,6 +2303,7 @@ class ContactPersonHandler
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return bool True if the user was successfully added
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function addContactpersoonToOrganization(object $contactpersoonObject): bool
     {
@@ -2350,17 +2372,17 @@ class ContactPersonHandler
                             );
 
                     return true;
-                } else {
-                    $this->_logger->debug(
-                            'ContactPersonHandler: Contactpersoon already in organization',
-                            [
-                                'username'         => $username,
-                                'organizationUuid' => $organizationUuid,
-                            ]
-                            );
-                    return true;
-                    // Already there, consider it successful.
                 }//end if
+
+                $this->_logger->debug(
+                        'ContactPersonHandler: Contactpersoon already in organization',
+                        [
+                            'username'         => $username,
+                            'organizationUuid' => $organizationUuid,
+                        ]
+                        );
+                // Already there, consider it successful.
+                return true;
             } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                 $this->_logger->error(
                         'ContactPersonHandler: Organization not found for contactpersoon',
@@ -2392,6 +2414,7 @@ class ContactPersonHandler
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function ensureContactpersoonInOrganization(object $contactpersoonObject): void
     {
@@ -2404,33 +2427,35 @@ class ContactPersonHandler
                     );
 
             // Check if user should be added to organization.
-            if ($this->shouldAddContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject) === true) {
-                // Add user to organization.
-                $result = $this->addContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject);
-
-                if ($result === true) {
-                    $this->_logger->info(
-                            'ContactPersonHandler: Successfully ensured contactpersoon in organization',
-                            [
-                                'objectId' => $contactpersoonObject->getId(),
-                            ]
-                            );
-                } else {
-                    $this->_logger->warning(
-                            'ContactPersonHandler: Failed to add contactpersoon to organization',
-                            [
-                                'objectId' => $contactpersoonObject->getId(),
-                            ]
-                            );
-                }
-            } else {
+            if ($this->shouldAddContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject) === false) {
                 $this->_logger->debug(
                         'ContactPersonHandler: Contactpersoon already in organization or no action needed',
                         [
                             'objectId' => $contactpersoonObject->getId(),
                         ]
                         );
-            }//end if
+                return;
+            }
+
+            // Add user to organization.
+            $result = $this->addContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject);
+
+            if ($result === true) {
+                $this->_logger->info(
+                        'ContactPersonHandler: Successfully ensured contactpersoon in organization',
+                        [
+                            'objectId' => $contactpersoonObject->getId(),
+                        ]
+                        );
+                return;
+            }
+
+            $this->_logger->warning(
+                    'ContactPersonHandler: Failed to add contactpersoon to organization',
+                    [
+                        'objectId' => $contactpersoonObject->getId(),
+                    ]
+                    );
         } catch (\Exception $e) {
             $this->_logger->error(
                 'ContactPersonHandler: Failed to ensure contactpersoon in organization: '.$e->getMessage(),
@@ -2458,6 +2483,7 @@ class ContactPersonHandler
      *                                              (useful when organisatie field was removed from object data)
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-1
      */
     public function addUserToOrganizationEntity(
         object $contactpersoonObject,
@@ -2527,21 +2553,7 @@ class ContactPersonHandler
 
                 // Add user to the organisation entity.
                 $currentUsers = $organisation->getUsers() ?? [];
-                if (in_array($username, $currentUsers) === false) {
-                    $currentUsers[] = $username;
-                    $organisation->setUsers($currentUsers);
-                    $organisationMapper->update($organisation);
-
-                    $this->_logger->info(
-                            'ContactPersonHandler: Successfully added user to organization entity',
-                            [
-                                'objectId'         => $contactpersoonObject->getId(),
-                                'username'         => $username,
-                                'organizationUuid' => $organizationUuid,
-                                'totalUsers'       => count($currentUsers),
-                            ]
-                            );
-                } else {
+                if (in_array($username, $currentUsers) === true) {
                     $this->_logger->info(
                             'ContactPersonHandler: User already in organization entity',
                             [
@@ -2550,7 +2562,22 @@ class ContactPersonHandler
                                 'organizationUuid' => $organizationUuid,
                             ]
                             );
-                }//end if
+                    return;
+                }
+
+                $currentUsers[] = $username;
+                $organisation->setUsers($currentUsers);
+                $organisationMapper->update($organisation);
+
+                $this->_logger->info(
+                        'ContactPersonHandler: Successfully added user to organization entity',
+                        [
+                            'objectId'         => $contactpersoonObject->getId(),
+                            'username'         => $username,
+                            'organizationUuid' => $organizationUuid,
+                            'totalUsers'       => count($currentUsers),
+                        ]
+                        );
             } catch (\Exception $e) {
                 $this->_logger->error(
                         'ContactPersonHandler: Failed to add user to organization entity',

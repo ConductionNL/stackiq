@@ -5,8 +5,11 @@
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
 
 /**
@@ -15,6 +18,7 @@
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link     https://github.com/ConductionNL/SoftwareCatalog
  */
@@ -76,6 +80,7 @@ class ArchiMateExportService
      * @param \SimpleXMLElement $xml  The XML element to populate.
      *
      * @return \SimpleXMLElement The populated XML element.
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function arrayToXml(array $data, \SimpleXMLElement $xml): \SimpleXMLElement
     {
@@ -354,6 +359,8 @@ class ArchiMateExportService
      * @param array $modelMetadata Model metadata from the database.
      *
      * @return \SimpleXMLElement Root XML element ready for population.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function createCleanArchiMateXml(array $modelMetadata): \SimpleXMLElement
     {
@@ -392,6 +399,7 @@ XML;
      * @param string            $childTagName Tag name for child elements.
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addObjectsToXml(
         \SimpleXMLElement $xml,
@@ -422,6 +430,8 @@ XML;
      * @param array             $elements The elements to add.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function addElementsToXml(\SimpleXMLElement $xml, array $elements): void
     {
@@ -442,6 +452,7 @@ XML;
      * @param array             $relationships The relationships to add.
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addRelationshipsToXml(\SimpleXMLElement $xml, array $relationships): void
     {
@@ -462,6 +473,7 @@ XML;
      * @param array             $views The views to add.
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addViewsToXml(\SimpleXMLElement $xml, array $views): void
     {
@@ -495,6 +507,7 @@ XML;
      * @param array             $organizations The organizations to add.
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addOrganizationsToXml(\SimpleXMLElement $xml, array $organizations): void
     {
@@ -759,6 +772,7 @@ XML;
      * @return array Array of objects from all schemas in the register.
      *
      * @throws \RuntimeException If retrieval fails.
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function getObjectsFromDatabase(
         \OCA\OpenRegister\Service\ObjectService $objectService,
@@ -873,6 +887,7 @@ XML;
      * @param array             $propertyDefinitions The property definitions.
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addPropertyDefinitionsToXml(\SimpleXMLElement $xml, array $propertyDefinitions): void
     {
@@ -901,6 +916,7 @@ XML;
      * @param string|null                             $organization  Organization filter.
      *
      * @return string Generated XML.
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function exportArchiMateXml(
         \OCA\OpenRegister\Service\ObjectService $objectService,
@@ -1942,6 +1958,7 @@ XML;
      * @param array $schemaIdMap Mapping of schema IDs to schema types.
      *
      * @return array ArchiMate data structure.
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function convertFromOpenRegisterObjects(array $objects, array $schemaIdMap): array
     {
@@ -2372,6 +2389,7 @@ XML;
      * @param array                                   $options       Export options.
      *
      * @return string Generated XML.
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-2
      */
     public function exportOrganizationArchiMateXml(
         \OCA\OpenRegister\Service\ObjectService $objectService,

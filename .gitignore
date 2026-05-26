@@ -1,36 +1,52 @@
+# IDE
 /.idea/
 /*.iml
 *.Identifier
 
+# Dependencies
 /vendor/
 /vendor-bin/*/vendor/
+/node_modules/
 
+# Build artifacts
+/js/
+
+# Documentation
+/docs/node_modules/
+/docs/build/
+/docs/.docusaurus/
+/website/node_modules/
+/website/.docusaurus/
+.docusaurus
+
+# Testing & Quality
 /.php-cs-fixer.cache
 /tests/.phpunit.cache
+/.phpunit.cache/
+.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+/coverage-frontend/
+/phpmetrics/
+/quality-reports/
+/phpqa/
 
-/node_modules/
-/js/
-/docs/node_modules/
-/docs/.docusaurus/
+# Nextcloud
 /custom_apps/
 /config/
 
-/coverage/
-/coverage-frontend/
+# OS
+.DS_Store
+Thumbs.db
 
-# Data files
+# Claude Code
+.claude/worktrees/
+
+# Repo-specific
 /data/
 *.csv
-
-# Test artifacts (generated per run — only .md results are committed)
 /test-results/**/*.json
 /test-results/**/*.html
 /test-results/**/*.png
 /reacties/screenshots/
-
-# Sync timestamp (local only)
 .last-update
-
-# Test/build artifacts
-.docusaurus
-.phpunit.result.cache

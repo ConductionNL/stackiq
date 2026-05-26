@@ -2,6 +2,7 @@
  * Get the current theme from Nextcloud
  *
  * @return {string} The current theme name
+  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-6
  */
 export function getTheme() {
 	// Try to get theme from Nextcloud's OCA.Theming
@@ -22,6 +23,7 @@ export function getTheme() {
  * Check if the current theme is dark
  *
  * @return {boolean} True if dark theme is active
+  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-6
  */
 export function isDarkTheme() {
 	return getTheme() === 'dark'
@@ -31,6 +33,7 @@ export function isDarkTheme() {
  * Get theme-specific CSS variables
  *
  * @return {object} Theme CSS variables
+  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-6
  */
 export function getThemeVariables() {
 	const root = document.documentElement

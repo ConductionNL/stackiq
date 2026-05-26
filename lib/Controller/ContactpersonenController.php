@@ -169,6 +169,7 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-1
      */
     public function getContactpersonen(string $organisationId): JSONResponse
     {
@@ -264,6 +265,7 @@ class ContactpersonenController extends Controller
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-2
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
@@ -489,6 +491,7 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
     public function changePassword(string $username, string $newPassword): JSONResponse
     {
@@ -577,6 +580,7 @@ class ContactpersonenController extends Controller
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
@@ -700,6 +704,7 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-1
      */
     public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): JSONResponse
     {
@@ -791,6 +796,7 @@ class ContactpersonenController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-1
      */
     public function getUserInfo(string $contactpersoonId): JSONResponse
     {
@@ -917,6 +923,7 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
     public function getAvailableGroups(): JSONResponse
     {
@@ -981,6 +988,7 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
     public function disableUser(string $contactpersoonId): JSONResponse
     {
@@ -1028,6 +1036,7 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
     public function enableUser(string $contactpersoonId): JSONResponse
     {
@@ -1073,6 +1082,7 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-1
      */
     public function testBulkUserInfo(): JSONResponse
     {
@@ -1133,6 +1143,7 @@ class ContactpersonenController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-1
      */
     public function getBulkUserInfo(): JSONResponse
     {
@@ -1198,6 +1209,7 @@ class ContactpersonenController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-1
      */
     public function getMe(): JSONResponse
     {

@@ -90,6 +90,8 @@ class ConceptOrganisatiesWidget implements IWidget
      * @return void
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-concept-organizations-widget/tasks.md#task-1
      */
     public function load(): void
     {

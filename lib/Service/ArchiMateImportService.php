@@ -9,8 +9,11 @@
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
  * @link     https://github.com/nextcloud/softwarecatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -20,6 +23,7 @@ namespace OCA\SoftwareCatalog\Service;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCP\App\IAppManager;
+use OCP\IDBConnection;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use OCP\Files\IRootFolder;
@@ -40,6 +44,7 @@ use SimpleXMLElement;
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  * @author   SoftwareCatalog Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
  * @link     https://github.com/nextcloud/softwarecatalog
  *
@@ -161,6 +166,7 @@ class ArchiMateImportService
      * @param LoggerInterface     $logger              Logger service
      * @param SettingsService     $settingsService     Settings service for AMEF configuration.
      * @param OrganisationService $organisationService Organisation service.
+     * @param IDBConnection       $dbConnection        Database connection interface.
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -170,7 +176,8 @@ class ArchiMateImportService
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
         private readonly SettingsService $settingsService,
-        private readonly OrganisationService $organisationService
+        private readonly OrganisationService $organisationService,
+        private readonly IDBConnection $dbConnection
     ) {
     }//end __construct()
 
@@ -189,6 +196,7 @@ class ArchiMateImportService
      * @param \SimpleXMLElement $xml The XML element to convert.
      *
      * @return array The normalized associative array.
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function xmlToArray(\SimpleXMLElement $xml): array
     {
@@ -301,6 +309,7 @@ class ArchiMateImportService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
     {
@@ -435,6 +444,8 @@ class ArchiMateImportService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function importArchiMateFileFromPath(array $options=[]): array
     {
@@ -590,6 +601,8 @@ class ArchiMateImportService
      * @param string $filePath Path to XML file
      *
      * @return array Parsed XML data
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     private function parseArchiMateXml(string $filePath): array
     {
@@ -1452,7 +1465,7 @@ class ArchiMateImportService
             }
 
             // Get database connection.
-            $connection = \OC::$server->getDatabaseConnection();
+            $connection = $this->dbConnection;
             $tableName  = 'oc_openregister_table_'.$registerId.'_'.$elementSchemaId;
 
             // Step 1: Build a mapping from ArchiMate identifier to database UUID for Standaarden.
@@ -1911,6 +1924,7 @@ class ArchiMateImportService
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function getAmefConfig(): array
     {
@@ -2185,6 +2199,7 @@ class ArchiMateImportService
      * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
+     * @spec openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function getPropertyNameMapping(array $propDefMap): array
     {

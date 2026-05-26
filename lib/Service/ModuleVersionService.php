@@ -13,6 +13,8 @@
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
 
 declare(strict_types=1);
@@ -57,6 +59,8 @@ class ModuleVersionService
      * @param object $moduleObject The module object entity
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function ensureDefaultVersion(object $moduleObject): void
     {

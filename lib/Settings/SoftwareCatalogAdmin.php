@@ -15,6 +15,7 @@ namespace OCA\SoftwareCatalog\Settings;
 
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\Settings\ISettings;
@@ -44,17 +45,26 @@ class SoftwareCatalogAdmin implements ISettings
     private IAppManager $appManager;
 
     /**
+     * The initial state service.
+     *
+     * @var IInitialState
+     */
+    private IInitialState $initialState;
+
+    /**
      * Constructor for SoftwareCatalogAdmin settings.
      *
-     * @param IAppConfig  $config     The application configuration service
-     * @param IL10N       $l10n       The localization service
-     * @param IAppManager $appManager The app manager service
+     * @param IAppConfig    $config       The application configuration service
+     * @param IL10N         $l10n         The localization service
+     * @param IAppManager   $appManager   The app manager service
+     * @param IInitialState $initialState The initial state service
      */
-    public function __construct(IAppConfig $config, IL10N $l10n, IAppManager $appManager)
+    public function __construct(IAppConfig $config, IL10N $l10n, IAppManager $appManager, IInitialState $initialState)
     {
-        $this->config     = $config;
-        $this->l10n       = $l10n;
-        $this->appManager = $appManager;
+        $this->config       = $config;
+        $this->l10n         = $l10n;
+        $this->appManager   = $appManager;
+        $this->initialState = $initialState;
     }//end __construct()
 
     /**
@@ -64,12 +74,9 @@ class SoftwareCatalogAdmin implements ISettings
      */
     public function getForm(): TemplateResponse
     {
-        $parameters = [
-            'mySetting' => $this->config->getValueString('softwarecatalog', 'software_catalog_setting', 'true') === 'true',
-            'version'   => $this->appManager->getAppVersion('softwarecatalog'),
-        ];
+        $this->initialState->provideInitialState('version', $this->appManager->getAppVersion('softwarecatalog'));
 
-        return new TemplateResponse('softwarecatalog', 'settings/admin', $parameters);
+        return new TemplateResponse('softwarecatalog', 'settings/admin', []);
     }//end getForm()
 
     /**

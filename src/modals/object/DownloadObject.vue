@@ -75,6 +75,9 @@ export default {
 			closeModalTimeout: null,
 		}
 	},
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+	 */
 	mounted() {
 		if (objectStore.objectItem?.id) {
 			this.downloadObject()
@@ -84,6 +87,9 @@ export default {
 		json,
 		jsonParseLinter,
 		getTheme,
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 */
 		closeModal() {
 			navigationStore.setModal(false)
 			clearTimeout(this.closeModalTimeout)
@@ -91,6 +97,9 @@ export default {
 			this.loading = false
 			this.error = false
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 */
 		async downloadObject() {
 			this.loading = true
 
@@ -114,7 +123,7 @@ export default {
 
 <style scoped>
 .json-editor {
-    position: relative;
+	position: relative;
 	margin-bottom: 2.5rem;
 }
 
@@ -133,12 +142,15 @@ export default {
 	border-radius: 0 !important;
 	border: none !important;
 }
+
 .codeMirrorContainer :deep(.cm-editor) {
 	outline: none !important;
 }
+
 .codeMirrorContainer.light > .vue-codemirror {
 	border: 1px dotted silver;
 }
+
 .codeMirrorContainer.dark > .vue-codemirror {
 	border: 1px dotted grey;
 }
@@ -148,6 +160,7 @@ export default {
 .codeMirrorContainer.light :deep(.ͼe) {
 	color: #448c27;
 }
+
 .codeMirrorContainer.dark :deep(.ͼe) {
 	color: #88c379;
 }
@@ -156,6 +169,7 @@ export default {
 .codeMirrorContainer.light :deep(.ͼc) {
 	color: #221199;
 }
+
 .codeMirrorContainer.dark :deep(.ͼc) {
 	color: #8d64f7;
 }
@@ -164,6 +178,7 @@ export default {
 .codeMirrorContainer.light :deep(.ͼb) {
 	color: #770088;
 }
+
 .codeMirrorContainer.dark :deep(.ͼb) {
 	color: #be55cd;
 }
@@ -172,6 +187,7 @@ export default {
 .codeMirrorContainer.light :deep(.ͼd) {
 	color: #d19a66;
 }
+
 .codeMirrorContainer.dark :deep(.ͼd) {
 	color: #9d6c3a;
 }
@@ -185,26 +201,29 @@ export default {
 .codeMirrorContainer.light :deep(.cm-line)::selection,
 .codeMirrorContainer.light :deep(.cm-line) ::selection {
 	background-color: #d7eaff !important;
-    color: black;
+	color: black;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line)::selection,
 .codeMirrorContainer.dark :deep(.cm-line) ::selection {
 	background-color: #8fb3e6 !important;
-    color: black;
+	color: black;
 }
 
 /* string */
 .codeMirrorContainer.light :deep(.cm-line .ͼe)::selection {
-    color: #2d770f;
+	color: #2d770f;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line .ͼe)::selection {
-    color: #104e0c;
+	color: #104e0c;
 }
 
 /* boolean */
 .codeMirrorContainer.light :deep(.cm-line .ͼc)::selection {
 	color: #221199;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line .ͼc)::selection {
 	color: #4026af;
 }
@@ -213,6 +232,7 @@ export default {
 .codeMirrorContainer.light :deep(.cm-line .ͼb)::selection {
 	color: #770088;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line .ͼb)::selection {
 	color: #770088;
 }
@@ -221,6 +241,7 @@ export default {
 .codeMirrorContainer.light :deep(.cm-line .ͼd)::selection {
 	color: #8c5c2c;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line .ͼd)::selection {
 	color: #623907;
 }

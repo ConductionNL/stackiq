@@ -100,6 +100,7 @@ export default {
 		/**
 		 * Get the objects to operate on from selected objects
 		 * @return {Array<object>} Array of objects to unlock
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
 		 */
 		objectsToUnlock() {
 			return objectStore.selectedObjects || []
@@ -108,6 +109,7 @@ export default {
 		/**
 		 * Get the dialog title based on number of objects
 		 * @return {string} Dialog title
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
 		 */
 		dialogTitle() {
 			const count = this.objectsToUnlock.length
@@ -121,10 +123,16 @@ export default {
 		this.initializeSelection()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		initializeSelection() {
 			// Store the original count for success message
 			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		closeDialog() {
 			// Clear any pending timeout that might reopen the dialog
 			if (this.closeModalTimeout) {
@@ -133,11 +141,17 @@ export default {
 			}
 			navigationStore.setDialog(false)
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {
 				this.closeDialog()
 			}
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		async unlockObjects() {
 			this.loading = true
 

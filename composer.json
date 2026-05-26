@@ -14,11 +14,6 @@
 			"OCA\\SoftwareCatalog\\": "lib/"
 		}
 	},
-	"autoload-dev": {
-		"psr-4": {
-			"OCA\\OpenRegister\\": "tests/Stubs/"
-		}
-	},
 	"scripts": {
 		"post-install-cmd": [
 			"@composer bin all install --ansi"
@@ -69,7 +64,7 @@
 		]
 	},
 	"require": {
-		"php": "^8.1",
+		"php": "^8.3",
 		"adbario/php-dot-notation": "^3.3.0",
 		"bamarni/composer-bin-plugin": "^1.8",
 		"react/event-loop": "^1.5",
@@ -104,7 +99,7 @@
 		"optimize-autoloader": true,
 		"sort-packages": true,
 		"platform": {
-			"php": "8.1"
+			"php": "8.3"
 		}
 	}
 }

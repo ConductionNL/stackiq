@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Conduction B.V.
 
+/**
+ * SoftwareCatalog frontend bootstrap.
+ *
+ * Mounts CnAppRoot with the bundled manifest, registers icons/translations,
+ * and primes the router from the manifest pages.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-11
+ */
+
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import { PiniaVuePlugin } from 'pinia'
@@ -17,6 +26,7 @@ import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
 import customComponents from './customComponents.js'
+import registry from './registry.js'
 import { routesFromManifest } from './router.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
@@ -77,6 +87,7 @@ tryLoadTranslations()
 // the values the lib resolves at render time.
 const pageTypesProp = { ...defaultPageTypes }
 const customComponentsProp = { ...customComponents }
+const registryProp = { ...registry }
 
 // Resolve `@resolve:<key>` IAppConfig sentinels in `manifest.pages[].config`
 // (e.g. `@resolve:voorzieningen_register`) via the lib's
@@ -106,6 +117,7 @@ new Vue({
 				manifest: manifestRef.value,
 				customComponents: customComponentsProp,
 				pageTypes: pageTypesProp,
+				registry: registryProp,
 			},
 		})
 	},

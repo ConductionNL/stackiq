@@ -268,6 +268,9 @@ export default {
 	},
 	methods: {
 		// We use the catalogi in the menu so lets fetch those
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-10
+		 */
 		fetchData(newPage) {
 			this.loading = true
 
@@ -286,6 +289,9 @@ export default {
 					console.error(err)
 				})
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-10
+		 */
 		saveConfig() {
 			 // Simple POST request with a JSON body using fetch
 			const requestOptions = {

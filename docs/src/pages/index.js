@@ -294,7 +294,7 @@ const WIDGETS = [
 export default function Home() {
   return (
     <Layout
-      title="SoftwareCatalog"
+      title="SoftwareCatalog, IT-asset and licence register for Nextcloud"
       description="IT-asset management on Nextcloud. Software inventory, licences, contracts, dependencies. One register, every install."
     >
       <main className="marketing-page">

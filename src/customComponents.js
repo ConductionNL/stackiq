@@ -17,23 +17,10 @@
 //   - openspec/changes/softwarecatalog-manifest-v1/design.md
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
-import OrganisatieIndexView from './views/organisaties/OrganisatieIndex.vue'
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'
 
 export default {
-	// --- Lib gap: bespoke OrganisatieCard + AddContactpersoonModal flow. ---
-	// `cardComponent` on type='index' landed (CnIndexPage resolves a
-	// registered card by name), but Organisaties also owns a bespoke flow
-	// the manifest can't express yet: OrganisationModal CRUD + the
-	// AddContactpersoonModal, the activate/deactivate status dialogs,
-	// `_extend: contactpersonen` on the collection fetch, URL-hash deep
-	// links (search/filters/page) and the cross-component `organisation*`
-	// store subscriptions. So it stays type='custom' for now — but it does
-	// drive a CnIndexPage internally; the residual custom surface is the
-	// modal/dialog/deep-link wiring around it.
-	OrganisatieIndexView,
-
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
 	// widget rendering but not the multi-tab navigation pattern + ArchiMate

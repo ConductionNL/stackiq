@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const webpack = require('webpack')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 const { VueLoaderPlugin } = require('vue-loader')
 
@@ -65,6 +66,8 @@ webpackConfig.module = {
 
 webpackConfig.plugins = [
 	new VueLoaderPlugin(),
+	new webpack.DefinePlugin({ appName: JSON.stringify(appId) }),
+	new webpack.DefinePlugin({ appVersion: JSON.stringify(process.env.npm_package_version) }),
 ]
 
 // Force @nextcloud/dialogs to resolve from this app's node_modules,

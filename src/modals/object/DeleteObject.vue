@@ -71,6 +71,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-6
+		 */
 		closeDialog() {
 			navigationStore.setDialog(false)
 			clearTimeout(this.closeModalTimeout)
@@ -78,6 +81,9 @@ export default {
 			this.loading = false
 			this.error = false
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-6
+		 */
 		async deleteObject() {
 			this.loading = true
 

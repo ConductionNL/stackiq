@@ -48,6 +48,8 @@ class GebruikService
      * @return array The resulting configuration parameters.
      *
      * @throws Exception When configuration cannot be retrieved.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-gebruik-services/tasks.md#task-1
      */
     private function getGebruiksConfiguration(): array
     {
@@ -125,6 +127,8 @@ class GebruikService
      * @return array The result set of gebruiken.
      *
      * @throws \OCP\DB\Exception When database query fails.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-gebruik-services/tasks.md#task-1
      */
     public function getGebruiken(array $options): array
     {
@@ -174,6 +178,8 @@ class GebruikService
      * @return array The resulting ids.
      *
      * @throws \OCP\DB\Exception When database query fails.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-gebruik-services/tasks.md#task-2
      */
     public function getApplicationIds(array $options): array
     {

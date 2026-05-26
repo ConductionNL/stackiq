@@ -91,6 +91,7 @@ class AangebodenGebruikService
      * @return array Array with success status, objects data, and metadata.
      *
      * @throws Exception When OpenRegister service is not available.
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getGebruiksWhereAfnemer(array $options=[]): array
     {
@@ -321,6 +322,7 @@ class AangebodenGebruikService
      * @throws Exception When OpenRegister service is not available.
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isAmbtenaar is a simple privilege toggle
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getKoppelingenGebruikByUuid(string $uuid, array $options=[], bool $isAmbtenaar=false): array
     {
@@ -538,6 +540,7 @@ class AangebodenGebruikService
      * @return array searchObjectsPaginated result with all gebruiks.
      *
      * @throws Exception When OpenRegister service is not available.
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getAllGebruiksForAmbtenaar(array $options=[]): array
     {
@@ -638,6 +641,7 @@ class AangebodenGebruikService
      * @return array searchObjectsPaginated result with all gebruiks for the suite
      *
      * @throws Exception When OpenRegister service is not available
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getSingleGebruikForAmbtenaar(string $suiteId, array $options=[]): array
     {
@@ -756,6 +760,7 @@ class AangebodenGebruikService
      * @return array Array with success status, gebruiks data, and metadata
      *
      * @throws Exception When OpenRegister service is not available
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getGebruiksWhereDeelnemers(array $options=[]): array
     {
@@ -878,6 +883,7 @@ class AangebodenGebruikService
      * @return array Result with success status and updated object data
      *
      * @throws Exception When OpenRegister service is not available or operation fails
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId, array $options=[]): array
     {
@@ -1669,6 +1675,7 @@ class AangebodenGebruikService
      * @param array  $options   Additional options for the operation
      *
      * @return array Result array with success status and details
+     * @spec openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function deleteGebruikAsAfnemer(string $gebruikId, array $options=[]): array
     {

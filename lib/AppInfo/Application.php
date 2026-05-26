@@ -11,6 +11,8 @@
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
 
 declare(strict_types=1);
@@ -166,7 +168,9 @@ class Application extends App implements IBootstrap
                     return new HierarchyHandler(
                     _organizationHandler: $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler'),
                     _contactPersonHandler: $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
-                    _logger: $c->get(LoggerInterface::class)
+                    _logger: $c->get(LoggerInterface::class),
+                    _userManager: $c->get(IUserManager::class),
+                    _groupManager: $c->get(IGroupManager::class)
                     );
                 }
                 );
@@ -256,7 +260,8 @@ class Application extends App implements IBootstrap
                     request: $container->get('OCP\IRequest'),
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
-                    logger: $container->get('Psr\Log\LoggerInterface')
+                    logger: $container->get('Psr\Log\LoggerInterface'),
+                    groupManager: $container->get(IGroupManager::class)
                     );
                 }
                 );
@@ -338,7 +343,8 @@ class Application extends App implements IBootstrap
                     container: $container,
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class),
-                    organisationService: $container->get(OpenRegisterOrganisationService::class)
+                    organisationService: $container->get(OpenRegisterOrganisationService::class),
+                    dbConnection: $container->get(IDBConnection::class)
                     );
                 }
                 );
@@ -443,6 +449,8 @@ class Application extends App implements IBootstrap
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function boot(IBootContext $context): void
     {

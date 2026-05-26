@@ -9,9 +9,12 @@
  * @category Handler
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -20,6 +23,8 @@ namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
 
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCP\IGroupManager;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -28,6 +33,7 @@ use Psr\Log\LoggerInterface;
  * @category Handler
  * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author   Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/SoftwareCatalog
@@ -52,11 +58,15 @@ class HierarchyHandler
      * @param OrganizationHandler  $_organizationHandler  Organization handler
      * @param ContactPersonHandler $_contactPersonHandler Contact person handler
      * @param LoggerInterface      $_logger               Logger interface
+     * @param IUserManager         $_userManager          User manager interface
+     * @param IGroupManager        $_groupManager         Group manager interface
      */
     public function __construct(
         private readonly OrganizationHandler $_organizationHandler,
         private readonly ContactPersonHandler $_contactPersonHandler,
         private readonly LoggerInterface $_logger,
+        private readonly IUserManager $_userManager,
+        private readonly IGroupManager $_groupManager,
     ) {
     }//end __construct()
 
@@ -67,6 +77,7 @@ class HierarchyHandler
      * @param string $username              The username being processed
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
      */
     public function ensureOrganizationBeheerder(object $contactgegevensObject, string $username): void
     {
@@ -118,6 +129,7 @@ class HierarchyHandler
      * @param string $organizationUuid       The organization UUID
      *
      * @return void
+     * @spec openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
      */
     public function setupManagerRelationships(
         string $username,
@@ -173,6 +185,8 @@ class HierarchyHandler
      * @param string $username The username to get hierarchy for
      *
      * @return array Array containing hierarchy information
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function getUserHierarchy(string $username): array
     {
@@ -229,7 +243,7 @@ class HierarchyHandler
 
         try {
             // Get all users and check their managers.
-            $userManager = \OC::$server->getUserManager();
+            $userManager = $this->_userManager;
             $users       = $userManager->search('');
 
             foreach ($users as $user) {
@@ -263,14 +277,14 @@ class HierarchyHandler
     private function isUserBeheerder(string $username): bool
     {
         try {
-            $groupManager   = \OC::$server->getGroupManager();
+            $groupManager   = $this->_groupManager;
             $beheerderGroup = $groupManager->get('beheerder');
 
             if ($beheerderGroup === null) {
                 return false;
             }
 
-            $userManager = \OC::$server->getUserManager();
+            $userManager = $this->_userManager;
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -296,6 +310,8 @@ class HierarchyHandler
      * @param string $organizationUuid The organization UUID
      *
      * @return array Array containing organizational structure
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function getOrganizationStructure(string $organizationUuid): array
     {

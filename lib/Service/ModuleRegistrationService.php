@@ -12,6 +12,8 @@
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -66,6 +68,8 @@ class ModuleRegistrationService
      * @param object $moduleObject The module object to process
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function handleModuleRegistration(object $moduleObject): void
     {
