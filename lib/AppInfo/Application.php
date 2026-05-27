@@ -279,6 +279,7 @@ class Application extends App implements IBootstrap
                     settingsService: $container->get(SettingsService::class),
                     db: $container->get(IDBConnection::class),
                     contactpersonHandler: $container->get(ContactPersonHandler::class),
+                    container: $container,
                     );
                 }
                 );
@@ -289,7 +290,8 @@ class Application extends App implements IBootstrap
                 function ($container) {
                     return new GebruikSyncService(
                     logger: $container->get('Psr\Log\LoggerInterface'),
-                    settingsService: $container->get(SettingsService::class)
+                    settingsService: $container->get(SettingsService::class),
+                    container: $container
                     );
                 }
                 );

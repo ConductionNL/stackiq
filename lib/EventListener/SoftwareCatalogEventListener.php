@@ -31,6 +31,7 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -55,10 +56,12 @@ class SoftwareCatalogEventListener implements IEventListener
 {
     /**
      * Constructor for SoftwareCatalogEventListener
+     *
+     * @param ContainerInterface $container DI container for lazy service resolution.
      */
-    public function __construct()
-    {
-        // Empty constructor - we'll get services from the server container.
+    public function __construct(
+        private readonly ContainerInterface $container
+    ) {
     }//end __construct()
 
     /**
@@ -76,9 +79,9 @@ class SoftwareCatalogEventListener implements IEventListener
     public function handle(Event $event): void
     {
         try {
-            $logger          = \OC::$server->get(LoggerInterface::class);
-            $contactSvc      = \OC::$server->get(ContactpersoonService::class);
-            $settingsService = \OC::$server->get(SettingsService::class);
+            $logger          = $this->container->get(LoggerInterface::class);
+            $contactSvc      = $this->container->get(ContactpersoonService::class);
+            $settingsService = $this->container->get(SettingsService::class);
 
             $logger->info(
                     'SoftwareCatalog: Processing event',
@@ -122,7 +125,7 @@ class SoftwareCatalogEventListener implements IEventListener
             }//end if
         } catch (\Exception $e) {
             try {
-                $logger = \OC::$server->get(LoggerInterface::class);
+                $logger = $this->container->get(LoggerInterface::class);
                 $logger->error(
                         'SoftwareCatalog: Error in event handler',
                         [
@@ -229,7 +232,7 @@ class SoftwareCatalogEventListener implements IEventListener
 
             try {
                 // Process organization with OrganizationSyncService.
-                $orgSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+                $orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
                 $result         = $orgSyncService->processSpecificOrganization($object);
 
                 $logger->info(
@@ -274,7 +277,7 @@ class SoftwareCatalogEventListener implements IEventListener
 
             try {
                 // Process gebruik object with GebruikSyncService.
-                $gebruikSyncService = \OC::$server->get(GebruikSyncService::class);
+                $gebruikSyncService = $this->container->get(GebruikSyncService::class);
                 $result = $gebruikSyncService->processSpecificGebruik($object);
 
                 $logger->info(
@@ -428,7 +431,7 @@ class SoftwareCatalogEventListener implements IEventListener
                     $register            = $voorzieningenConfig['register'] ?? '';
                     $organizationSchema  = $voorzieningenConfig['organisatie_schema'] ?? '';
 
-                    $objectService   = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                    $objectService   = $this->container->get('OCA\OpenRegister\Service\ObjectService');
                     $orgWithContacts = $objectService->find(
                         id: $objectId,
                         register: $register,
@@ -450,7 +453,7 @@ class SoftwareCatalogEventListener implements IEventListener
                             );
 
                     // Process organization with OrganizationSyncService.
-                    $orgSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+                    $orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
                     $result         = $orgSyncService->processSpecificOrganization($orgWithContacts);
 
                     $logger->info(
@@ -590,7 +593,7 @@ class SoftwareCatalogEventListener implements IEventListener
 
             try {
                 // Process gebruik object with GebruikSyncService.
-                $gebruikSyncService = \OC::$server->get(GebruikSyncService::class);
+                $gebruikSyncService = $this->container->get(GebruikSyncService::class);
                 $result = $gebruikSyncService->processSpecificGebruik($object);
 
                 $logger->info(
@@ -689,7 +692,7 @@ class SoftwareCatalogEventListener implements IEventListener
             try {
                 // For deletions, we may need to handle cleanup regardless of status.
                 // The OrganizationSyncService can determine what cleanup is needed.
-                $orgSyncService = \OC::$server->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+                $orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
 
                 // Note: processSpecificOrganization may handle cleanup for deleted organizations.
                 // The service can check if the organization exists and handle accordingly.
