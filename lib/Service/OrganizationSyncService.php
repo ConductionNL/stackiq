@@ -246,9 +246,20 @@ class OrganizationSyncService
             return $stats;
         }
 
+        // Cast config values to integers before using in a table name to prevent injection.
+        $registerIdOrg = (int) $register;
+        $schemaIdOrg   = (int) $organizationSchema;
+        if ($registerIdOrg <= 0 || $schemaIdOrg <= 0) {
+            $this->logger->warning('OrganizationSync: register or organisatie_schema is not a valid positive integer', [
+                'register'          => $register,
+                'organizationSchema' => $organizationSchema,
+            ]);
+            return $stats;
+        }
+
         // Build table name dynamically from config (environment-agnostic).
         // Objects live in per-schema MagicMapper tables, NOT in openregister_objects.
-        $magicTableName = 'openregister_table_'.$register.'_'.$organizationSchema;
+        $magicTableName = 'openregister_table_'.$registerIdOrg.'_'.$schemaIdOrg;
 
         // Count total remaining orgs without entities for progress logging.
         $countQb        = $this->db->getQueryBuilder();
@@ -382,8 +393,19 @@ class OrganizationSyncService
             return $stats;
         }
 
+        // Cast config values to integers before using in a table name to prevent injection.
+        $registerIdContact = (int) $register;
+        $schemaIdContact   = (int) $contactSchema;
+        if ($registerIdContact <= 0 || $schemaIdContact <= 0) {
+            $this->logger->warning('ContactSync: register or contactpersoon_schema is not a valid positive integer', [
+                'register'      => $register,
+                'contactSchema' => $contactSchema,
+            ]);
+            return $stats;
+        }
+
         // Query per-schema magic table directly (NOT the empty openregister_objects blob table).
-        $contactTableName = 'openregister_table_'.$register.'_'.$contactSchema;
+        $contactTableName = 'openregister_table_'.$registerIdContact.'_'.$schemaIdContact;
 
         // Find contacts without a username that DO have a matching Nextcloud account (by email).
         $qb = $this->db->getQueryBuilder();
@@ -486,8 +508,19 @@ class OrganizationSyncService
             return [];
         }
 
+        // Cast to int and validate before using in a table name to prevent injection.
+        $registerId = (int) $register;
+        $schemaId   = (int) $contactSchema;
+        if ($registerId <= 0 || $schemaId <= 0) {
+            $this->logger->warning('UserSync: register or contactpersoon_schema is not a valid positive integer', [
+                'register'      => $register,
+                'contactSchema' => $contactSchema,
+            ]);
+            return [];
+        }
+
         // Query per-schema magic table directly (NOT the empty openregister_objects blob table).
-        $contactTableName = 'openregister_table_'.$register.'_'.$contactSchema;
+        $contactTableName = 'openregister_table_'.$registerId.'_'.$schemaId;
 
         // Build JSON contains check - platform-specific.
         $platform   = $this->db->getDatabasePlatform();
@@ -2784,10 +2817,8 @@ class OrganizationSyncService
 
             $allResults['totalRounds'] = $round;
 
-            // Small pause between rounds to prevent resource exhaustion.
-            if ($round < $maxRounds) {
-                sleep(1);
-            }
+            // No sleep between rounds — this runs in an HTTP worker;
+            // blocking the worker for up to 10 s degrades concurrency.
         }//end for
 
         // Final user sync.
