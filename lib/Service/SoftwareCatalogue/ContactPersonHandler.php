@@ -463,7 +463,11 @@ class ContactPersonHandler
                     ]
                     );
 
-            $randomPw = $this->_secureRandom->generate(length: 12);
+            // Build a password that satisfies NC default policy (≥10 chars, upper+lower+digit+special).
+            $randomPw = $this->_secureRandom->generate(length: 4, characters: ISecureRandom::CHAR_UPPER)
+                . $this->_secureRandom->generate(length: 4, characters: ISecureRandom::CHAR_LOWER)
+                . $this->_secureRandom->generate(length: 2, characters: ISecureRandom::CHAR_DIGITS)
+                . $this->_secureRandom->generate(length: 2, characters: '!@#$%^&*()-_=+[]');
             $user     = $this->_userManager->createUser(uid: $username, password: $randomPw);
 
             if (empty($user) === false) {
@@ -478,42 +482,11 @@ class ContactPersonHandler
                         ]
                         );
 
-                // Fire-and-forget filesystem pre-warm in a background process.
-                // This replicates Session::prepareUserLogin() (setupFS, copySkeleton,.
-                // updateLastLoginTimestamp) so the user's first login is instant.
-                // Uses exec('... &') for true async — returns immediately, the forked.
-                // process does the ~5s work without blocking the admin's request.
-                try {
-                    $phpBin = PHP_BINARY;
-                    if (empty($phpBin) === true) {
-                        $phpBin = 'php';
-                    }
-
-                    $serverRoot   = \OC::$SERVERROOT;
-                    $safeUser     = escapeshellarg($username);
-                    $exportedUser = var_export($username, true);
-                    $requirePart  = 'require "'.$serverRoot.'/lib/base.php";';
-                    $setupPart    = ' \OC_Util::setupFS('.$exportedUser.');';
-                    $folderPart   = ' $f = \OC::$server->getUserFolder('.$exportedUser.');';
-                    $skelPart     = ' \OC_Util::copySkeleton('.$exportedUser.', $f);';
-                    // phpcs:ignore Generic.Files.LineLength.TooLong
-                    $loginPart = ' \OC::$server->get(\OCP\IUserManager::class)->get('.$exportedUser.')->updateLastLoginTimestamp();';
-                    $script    = $requirePart.$setupPart.$folderPart.$skelPart.$loginPart;
-                    $cmd       = sprintf(
-                        '%s -r %s > /dev/null 2>&1 &',
-                        escapeshellarg($phpBin),
-                        escapeshellarg($script)
-                    );
-                    exec($cmd);
-                } catch (\Exception $e) {
-                    $this->_logger->warning(
-                            'Filesystem pre-warm exec failed for '.$username,
-                            [
-                                'app'   => 'softwarecatalog',
-                                'error' => $e->getMessage(),
-                            ]
-                            );
-                }//end try
+                // Note: filesystem pre-warming via exec() has been removed.
+                // The exec() spawned a raw PHP process that used \OC::$server (fatal on NC 34)
+                // and created a fork-bomb risk when user creation is triggered from an
+                // unauthenticated path. NC performs setupFS/copySkeleton automatically on
+                // first login without any pre-warming.
 
                 // Set user details.
                 $this->_logger->info(

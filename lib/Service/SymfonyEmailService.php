@@ -329,8 +329,8 @@ class SymfonyEmailService
 
         $dsn = sprintf(
             'smtp://%s:%s@%s:%d',
-            urlencode($username),
-            urlencode($password),
+            rawrawurlencode($username),
+            rawrawurlencode($password),
             $host,
             $port
         );
@@ -339,7 +339,17 @@ class SymfonyEmailService
             $dsn = str_replace('smtp://', 'smtps://', $dsn);
         }
 
-        return Transport::fromDsn($dsn);
+        try {
+            return Transport::fromDsn($dsn);
+        } catch (\Exception $e) {
+            // Strip credentials from exception message before logging.
+            $safeMessage = preg_replace(
+                '~(smtp[s]?://)[^:]+:[^@]+@~i',
+                '$1***:***@',
+                $e->getMessage()
+            ) ?? $e->getMessage();
+            throw new \RuntimeException('Failed to create SMTP transport: '.$safeMessage, 0, $e);
+        }
     }//end createSmtpTransport()
 
     /**
@@ -356,7 +366,7 @@ class SymfonyEmailService
             throw new \InvalidArgumentException('SendGrid API key is required');
         }
 
-        return Transport::fromDsn('sendgrid+api://'.urlencode($apiKey).'@default');
+        return Transport::fromDsn('sendgrid+api://'.rawrawurlencode($apiKey).'@default');
     }//end createSendGridTransport()
 
     /**
@@ -378,8 +388,8 @@ class SymfonyEmailService
         return Transport::fromDsn(
                 sprintf(
             'mailgun+api://%s:%s@default',
-            urlencode($apiKey),
-            urlencode($domain)
+            rawurlencode($apiKey),
+            rawurlencode($domain)
         )
                 );
     }//end createMailgunTransport()
@@ -398,7 +408,7 @@ class SymfonyEmailService
             throw new \InvalidArgumentException('Postmark API key is required');
         }
 
-        return Transport::fromDsn('postmark+api://'.urlencode($apiKey).'@default');
+        return Transport::fromDsn('postmark+api://'.rawurlencode($apiKey).'@default');
     }//end createPostmarkTransport()
 
     /**
@@ -421,9 +431,9 @@ class SymfonyEmailService
         return Transport::fromDsn(
                 sprintf(
             'ses+api://%s:%s@default?region=%s',
-            urlencode($accessKey),
-            urlencode($secretKey),
-            urlencode($region)
+            rawurlencode($accessKey),
+            rawurlencode($secretKey),
+            rawurlencode($region)
         )
                 );
     }//end createSesTransport()
@@ -447,8 +457,8 @@ class SymfonyEmailService
         return Transport::fromDsn(
                 sprintf(
             'mailjet+api://%s:%s@default',
-            urlencode($apiKey),
-            urlencode($secretKey)
+            rawurlencode($apiKey),
+            rawurlencode($secretKey)
         )
                 );
     }//end createMailjetTransport()

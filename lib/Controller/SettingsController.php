@@ -139,6 +139,38 @@ class SettingsController extends Controller
     }//end getConfigurationService()
 
     /**
+     * Return request params with known credential fields redacted.
+     *
+     * Prevents SMTP passwords, API keys and similar secrets from appearing
+     * in application logs when an error occurs during a settings-update request.
+     *
+     * @return array<string,mixed> Sanitised copy of the request parameters.
+     */
+    private function getRedactedParams(): array
+    {
+        $sensitiveKeys = [
+            'smtpPassword',
+            'sendgridApiKey',
+            'mailgunApiKey',
+            'postmarkApiKey',
+            'sesSecretKey',
+            'mailjetSecretKey',
+            'apiKey',
+            'password',
+            'secret',
+        ];
+
+        $params = $this->request->getParams();
+        foreach ($sensitiveKeys as $key) {
+            if (isset($params[$key]) === true) {
+                $params[$key] = '***';
+            }
+        }
+
+        return $params;
+    }//end getRedactedParams()
+
+    /**
      * Retrieve the current settings.
      *
      * @return JSONResponse JSON response containing the current settings.
@@ -282,7 +314,7 @@ class SettingsController extends Controller
                     'Failed to update settings',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -361,7 +393,7 @@ class SettingsController extends Controller
                     'Failed to update general config',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -445,7 +477,7 @@ class SettingsController extends Controller
                     'Failed to update sync config',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -647,11 +679,10 @@ class SettingsController extends Controller
     }//end stats()
 
     /**
-     * Get debug information for settings
+     * Get debug information for settings (admin-only)
      *
      * @return JSONResponse JSON response containing debug information
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
@@ -660,6 +691,10 @@ class SettingsController extends Controller
     {
         if ($this->userSession->getUser() === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($this->userSession->getUser()->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -709,7 +744,7 @@ class SettingsController extends Controller
                     [
                         'exception_class'   => get_class($e),
                         'exception_message' => $e->getMessage(),
-                        'requestData'       => $this->request->getParams(),
+                        'requestData'       => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -780,10 +815,7 @@ class SettingsController extends Controller
             // For incremental sync, use the original method.
             $result = $this->orgSyncSvc->performManualSync($minutesBack);
 
-            if ($result['success'] === true) {
-            }
-
-            return new JSONResponse($result, 500);
+            return new JSONResponse($result, $result['success'] === true ? 200 : 500);
         } catch (\Exception $e) {
             $this->logger->error(
                     'Manual sync failed',
@@ -926,10 +958,7 @@ class SettingsController extends Controller
 
             $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
 
-            if ($result['success'] === true) {
-            }
-
-                return new JSONResponse($result, 400);
+            return new JSONResponse($result, $result['success'] === true ? 200 : 400);
         } catch (\Exception $e) {
             return new JSONResponse(
                     [
@@ -1017,10 +1046,7 @@ class SettingsController extends Controller
             // Add timestamp for cache busting.
             $result['timestamp'] = time();
 
-            if ($result['success'] === true) {
-            }
-
-                return new JSONResponse($result, 400);
+            return new JSONResponse($result, $result['success'] === true ? 200 : 400);
         } catch (\Exception $e) {
             $this->logger->error(
                     'SettingsController: Manual import failed',
@@ -1894,7 +1920,7 @@ class SettingsController extends Controller
                     [
                         'exception_class'   => get_class($e),
                         'exception_message' => $e->getMessage(),
-                        'requestData'       => $this->request->getParams(),
+                        'requestData'       => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2002,7 +2028,7 @@ class SettingsController extends Controller
                     'Failed to update email settings',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2156,7 +2182,7 @@ class SettingsController extends Controller
                     "Failed to update email template {$templateName}",
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2340,7 +2366,7 @@ class SettingsController extends Controller
                     'Failed to set generic user groups',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2432,7 +2458,7 @@ class SettingsController extends Controller
                     'Failed to set organization admin groups',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2524,7 +2550,7 @@ class SettingsController extends Controller
                     'Failed to set super user groups',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -3565,7 +3591,7 @@ class SettingsController extends Controller
                     'Failed to update cronjob config',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
