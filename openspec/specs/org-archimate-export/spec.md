@@ -398,7 +398,6 @@ The GET endpoint MUST accept boolean query parameters that control which data is
 - AND the API MUST treat `1`, `yes`, `true`, `TRUE` as truthy values
 
 ### Requirement: Frontend MUST provide organization export with data layer toggles
-@e2e exclude SPA does not mount: webpack runtime chunk not loaded in templates (GH issue #322)
 The ArchiMate settings section MUST include checkboxes for selecting which data layers to include, and trigger the export via the GET endpoint.
 
 #### Scenario: User triggers organization export with toggles
