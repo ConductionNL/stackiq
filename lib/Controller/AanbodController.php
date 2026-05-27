@@ -155,8 +155,8 @@ class AanbodController extends Controller
      *
      * @return JSONResponse JSON response with success status and updated object
      *
+     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      *
      * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-2
      */
@@ -255,8 +255,8 @@ class AanbodController extends Controller
      *
      * @return JSONResponse JSON response with success status and deletion details
      *
+     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      *
      * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-3
      */

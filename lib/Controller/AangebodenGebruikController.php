@@ -480,7 +480,7 @@ class AangebodenGebruikController extends Controller
 
             $userId = $user->getUID();
 
-            $group = $groupManager->get($groupName);
+            $group = $this->groupManager->get($groupName);
             if ($group === null) {
                 $this->logger->warning('Group does not exist', ['group' => $groupName]);
                 return false;
@@ -602,8 +602,8 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with success status and updated object
      *
+     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @spec           openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
@@ -708,8 +708,8 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with success status and deletion details
      *
+     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @spec           openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
