@@ -671,7 +671,7 @@ class ContactpersonenController extends Controller
             $curCatalogGroups = [];
 
             foreach ($currentGroups as $group) {
-                if (in_array(needle: $group->getGID() === true, haystack: $allowedGroups) === true) {
+                if (in_array(needle: $group->getGID(), haystack: $allowedGroups) === true) {
                     $curCatalogGroups[] = $group->getGID();
                 }
             }

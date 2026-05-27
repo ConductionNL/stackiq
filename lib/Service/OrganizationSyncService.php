@@ -426,11 +426,9 @@ class OrganizationSyncService
                 $contactEntityObject = $contactEntity->getObject();
                 $contactEntityObject['username'] = $contact['uid'];
 
-                // Temporarily remove organisatie field to avoid validation error.
-                // (schema expects object type but field stores a UUID string).
-                $savedOrganisatie = $contactEntityObject['organisatie'] ?? null;
-                unset($contactEntityObject['organisatie']);
-
+                // Keep organisatie in the object so it is never temporarily absent from the
+                // persisted record. The schema validation warning for a UUID-string value is
+                // benign compared to a data-corruption window where the field is missing.
                 $contactEntity->setObject($contactEntityObject);
                 $objectService->saveObject(
                     object: $contactEntity,
@@ -439,15 +437,6 @@ class OrganizationSyncService
                     _rbac: false,
                     _multitenancy: false
                 );
-
-                // Restore the organisatie field so the link is preserved.
-                if ($savedOrganisatie !== null) {
-                    $restoredData = $contactEntity->getObject();
-                    $restoredData['organisatie'] = $savedOrganisatie;
-                    $contactEntity->setObject($restoredData);
-                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
-                    $objectMapper->update($contactEntity);
-                }
 
                 $stats['contactPersonsProcessed']++;
             } catch (\Exception $e) {
@@ -493,8 +482,10 @@ class OrganizationSyncService
         $platform   = $this->db->getDatabasePlatform();
         $isPostgres = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
-            $jsonContainsCheck = "JSON_CONTAINS(oo.users, CONCAT('\"', o.username, '\"')) = 0";
         if ($isPostgres === true) {
+            $jsonContainsCheck = "NOT (oo.users::jsonb @> to_jsonb(o.username::text))";
+        } else {
+            $jsonContainsCheck = "JSON_CONTAINS(oo.users, CONCAT('\"', o.username, '\"')) = 0";
         }
 
         // Find contacts with a username whose username is NOT in their org's users array.
@@ -503,7 +494,7 @@ class OrganizationSyncService
             ->from($contactTableName, 'o')
             ->leftJoin('o', 'openregister_organisations', 'oo', 'oo.uuid = o.organisatie')
             ->where($qb->createFunction('o.username IS NOT NULL'))
-            ->andWhere($qb->createFunction('o.username !== '.$qb->createNamedParameter('')))
+            ->andWhere($qb->createFunction('o.username <> '.$qb->createNamedParameter('')))
             ->andWhere($qb->createFunction('o.organisatie IS NOT NULL'))
             ->andWhere($qb->createFunction($jsonContainsCheck));
 
@@ -2815,8 +2806,10 @@ class OrganizationSyncService
      */
     public function performScheduledSync(int $minutesBack=0): array
     {
-            $syncModeValue = 'incremental';
         if ($minutesBack === 0) {
+            $syncModeValue = 'full';
+        } else {
+            $syncModeValue = 'incremental';
         }
 
         $this->logger->info(
