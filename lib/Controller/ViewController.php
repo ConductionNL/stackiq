@@ -69,8 +69,8 @@ class ViewController extends Controller
      * - include_gebruik (bool): Include usage data in view nodes
      * - include_deelnames_gebruik (bool): Include participation usage data in view nodes
      *
+     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      *
      * @return JSONResponse JSON response with views array
      *
@@ -144,8 +144,8 @@ class ViewController extends Controller
      *
      * @param string $viewId The view identifier
      *
+     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      *
      * @return JSONResponse JSON response with view object
      *
@@ -303,8 +303,8 @@ class ViewController extends Controller
      *
      * API Endpoint: GET /api/views/docs
      *
+     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      *
      * @return JSONResponse JSON response with API documentation
      *

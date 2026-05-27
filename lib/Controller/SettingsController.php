@@ -1236,6 +1236,10 @@ class SettingsController extends Controller
      */
     public function streamProgress(string $operationId): Response
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         // Set headers for Server-Sent Events.
         $response = new class($operationId, $this->progressTracker, $this->logger) extends Response {
             /**
@@ -1254,7 +1258,6 @@ class SettingsController extends Controller
                 $this->addHeader(name: 'Content-Type', value: 'text/event-stream');
                 $this->addHeader(name: 'Cache-Control', value: 'no-cache');
                 $this->addHeader(name: 'Connection', value: 'keep-alive');
-                $this->addHeader(name: 'Access-Control-Allow-Origin', value: '*');
                 $this->addHeader(name: 'Access-Control-Allow-Headers', value: 'Cache-Control');
             }//end __construct()
 
