@@ -410,7 +410,9 @@ class Application extends App implements IBootstrap
                 function ($container) {
                     return new OrganizationContactSyncJob(
                     timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-                    orgSyncService: $container->get(OrganizationSyncService::class)
+                    orgSyncService: $container->get(OrganizationSyncService::class),
+                    appManager: $container->get(IAppManager::class),
+                    logger: $container->get(LoggerInterface::class)
                     );
                 }
                 );
