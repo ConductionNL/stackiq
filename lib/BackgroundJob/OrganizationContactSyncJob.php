@@ -94,6 +94,17 @@ class OrganizationContactSyncJob extends TimedJob
         }
 
         $this->logger->info('[OrganizationContactSyncJob] Starting scheduled organization sync');
-        $this->orgSyncService->performScheduledSync();
+        try {
+            $this->orgSyncService->performScheduledSync();
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                '[OrganizationContactSyncJob] Fatal error during sync — cron pass protected',
+                [
+                    'error' => $e->getMessage(),
+                    'file'  => $e->getFile(),
+                    'line'  => $e->getLine(),
+                ]
+            );
+        }//end try
     }//end run()
 }//end class
