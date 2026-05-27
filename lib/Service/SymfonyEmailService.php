@@ -152,35 +152,6 @@ class SymfonyEmailService
     ';
 
     /**
-     * Email template for user password emails
-     *
-     * @var string User password email template
-     */
-    private const USER_PASSWORD_TEMPLATE = '
-        <html>
-        <head>
-            <title>Inloggegevens - Software Catalogus</title>
-            <meta charset="UTF-8">
-        </head>
-        <body>
-            <h1>Uw inloggegevens voor de Software Catalogus</h1>
-            <p>Beste {{ user.name }},</p>
-            <p>Hierbij ontvangt u uw inloggegevens voor de Software Catalogus.</p>
-            <p><strong>Login gegevens:</strong></p>
-            <ul>
-                <li>E-mailadres: {{ user.email }}</li>
-                <li>Tijdelijk wachtwoord: <code>{{ user.password }}</code></li>
-            </ul>
-            <p><strong>Belangrijk:</strong> We raden u aan om dit tijdelijke wachtwoord te wijzigen na uw eerste inlog.</p>
-            <p>U kunt inloggen op het platform en direct aan de slag met het beheren
-            van software voor {{ organization.name }}.</p>
-            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>
-            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-        </body>
-        </html>
-    ';
-
-    /**
      * Email template for contact welcome emails (backward compatibility)
      *
      * @var string Contact welcome email template
@@ -929,123 +900,6 @@ class SymfonyEmailService
     }//end sendUserUpdateEmail()
 
     /**
-     * Sends a user password email.
-     *
-     * @param array  $user         The user data.
-     * @param string $password     The generated password.
-     * @param array  $organization The organization data (optional).
-     *
-     * @return bool True if email was sent successfully, false otherwise.
-     *
-     * @throws \Exception If email sending fails.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-1
-     */
-    public function sendUserPasswordEmail(array $user, string $password, array $organization=[]): bool
-    {
-        // Check if email system is fully configured.
-        $configStatus = $this->isEmailSystemConfigured();
-        if ($configStatus['configured'] === false) {
-            $this->logger->info(
-                    'UserPasswordEmail: Email system not configured, skipping',
-                    [
-                        'reason'         => $configStatus['reason'],
-                        'hasCredentials' => $configStatus['hasCredentials'],
-                        'hasTemplates'   => $configStatus['hasTemplates'],
-                        'userEmail'      => $user['email'] ?? 'Unknown',
-                    ]
-                    );
-            return false;
-        }
-
-        $emailSettings = $this->settingsService->getEmailSettings();
-
-        // Check if user password emails are enabled.
-        if ($emailSettings['userPasswordEnabled'] === false) {
-            $this->logger->info(
-                    'UserPasswordEmail: User password emails disabled',
-                    [
-                        'userEmail' => $user['email'] ?? 'Unknown',
-                    ]
-                    );
-            return false;
-        }
-
-        $userEmail = $user['email'] ?? '';
-        $userName  = $user['naam'] ?? $user['name'] ?? ($user['voornaam'] ?? '').' '.($user['achternaam'] ?? '');
-        $userName  = trim($userName);
-
-        if (empty($userEmail) === true) {
-            $this->logger->warning(
-                    'UserPasswordEmail: Cannot send without email address',
-                    [
-                        'user'     => $user,
-                        'userName' => $userName,
-                    ]
-                    );
-            return false;
-        }
-
-        $this->logger->info(
-                'UserPasswordEmail: Sending user password email',
-                [
-                    'userName'         => $userName,
-                    'userEmail'        => $userEmail,
-                    'organizationName' => $organization['naam'] ?? $organization['name'] ?? 'Software Catalogus',
-                    'transportType'    => $configStatus['transportType'],
-                ]
-                );
-
-        // Prepare template data.
-            $displayName = 'Gebruiker';
-        if (empty($userName) === false) {
-        }
-
-        $templateData = [
-            'user'         => [
-                'name'     => $displayName,
-                'email'    => $userEmail,
-                'password' => $password,
-                'functie'  => ($user['functie'] ?? ''),
-            ],
-            'organization' => [
-                'name' => ($organization['naam'] ?? $organization['name'] ?? 'Software Catalogus'),
-            ],
-        ];
-
-        try {
-            $success = $this->sendTemplatedEmail(
-                recipientEmail: $userEmail,
-                recipientName: $displayName,
-                subject: 'Software Catalogus - Inloggegevens',
-                templateName: 'user_password',
-                templateData: $templateData
-            );
-
-            if ($success === true) {
-                $this->logger->info(
-                        'UserPasswordEmail: Successfully sent user password email',
-                        [
-                            'userName'  => $userName,
-                            'userEmail' => $userEmail,
-                        ]
-                        );
-            }
-
-            return $success;
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'UserPasswordEmail: Failed to send user password email',
-                    [
-                        'userName'  => $userName,
-                        'userEmail' => $userEmail,
-                        'error'     => $e->getMessage(),
-                    ]
-                    );
-            return false;
-        }//end try
-    }//end sendUserPasswordEmail()
-
-    /**
      * Sends a templated email using the configured templates.
      *
      * @param string $recipientEmail The recipient email address.
@@ -1112,7 +966,6 @@ class SymfonyEmailService
             'organization_registration' => self::ORGANIZATION_WELCOME_TEMPLATE,
             'organization_activation' => self::ORGANIZATION_ACTIVATION_TEMPLATE,
             'user_creation' => self::GEBRUIKER_WELCOME_TEMPLATE,
-            'user_password' => self::USER_PASSWORD_TEMPLATE,
             'user_organisation' => self::CONTACT_ADDED_TEMPLATE,
             default => self::ORGANIZATION_WELCOME_TEMPLATE,
         };
@@ -1530,18 +1383,6 @@ class SymfonyEmailService
     }//end setUserCreationEnabled()
 
     /**
-     * Sets whether user password emails are enabled.
-     *
-     * @param bool $enabled True to enable user password emails, false to disable.
-     *
-     * @return void
-     */
-    public function setUserPasswordEnabled(bool $enabled): void
-    {
-        $this->settingsService->updateEmailSettings(['userPasswordEnabled' => $enabled]);
-    }//end setUserPasswordEnabled()
-
-    /**
      * Checks if the email system is fully configured with credentials and templates.
      *
      * @return array Configuration status with details.
@@ -1631,7 +1472,7 @@ class SymfonyEmailService
     private function hasValidTemplates(array $emailSettings): bool
     {
         $templates         = ($emailSettings['templates'] ?? []);
-        $requiredTemplates = ['organization_registration', 'organization_activation', 'user_creation', 'user_password'];
+        $requiredTemplates = ['organization_registration', 'organization_activation', 'user_creation'];
 
         foreach ($requiredTemplates as $templateName) {
             $template = ($templates[$templateName] ?? '');

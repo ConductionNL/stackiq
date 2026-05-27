@@ -1344,9 +1344,13 @@ class SettingsController extends Controller
     /**
      * Import ArchiMate file.
      *
+     * Only accepts multipart file uploads — the `file_path` JSON body parameter is
+     * rejected to prevent local filesystem read (path traversal / SSRF).
+     * The `ini_set('memory_limit')` call has been removed; configure PHP memory via
+     * php.ini / pool config instead.
+     *
      * @return JSONResponse Result of the import operation with progress tracking.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -1356,20 +1360,16 @@ class SettingsController extends Controller
      */
     public function importArchiMate(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
-            // Increase memory limit for large imports.
-            ini_set('memory_limit', '4096M');
-            $this->logger->info(
-                    'Memory limit increased for import',
-                    [
-                        'old_limit' => ini_get('memory_limit'),
-                        'new_limit' => '4096M',
-                    ]
-                    );
             // Get JSON data from request body.
             $rawInput = file_get_contents('php://input');
             $data     = json_decode($rawInput, true);
@@ -1377,13 +1377,21 @@ class SettingsController extends Controller
             $contentType = $this->request->getHeader('Content-Type');
             $isMultipart = strpos(haystack: $contentType, needle: 'multipart/form-data') !== false;
 
-            // Enhanced debug logging.
+            // Reject file_path from JSON body — only uploaded files are accepted.
+            if ($data !== null && isset($data['file_path']) === true) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'The file_path parameter is not accepted. Please upload a file via multipart/form-data.',
+                            'error'   => 'FILE_PATH_NOT_ALLOWED',
+                        ],
+                        400
+                        );
+            }
+
             $this->logger->info(
                     'ArchiMate import request received',
                     [
-                        'rawInput'       => $rawInput,
-                        'decodedData'    => $data,
-                        'jsonError'      => json_last_error_msg(),
                         'contentType'    => $contentType,
                         'isMultipart'    => $isMultipart,
                         'requestMethod'  => $this->request->getMethod(),
@@ -1407,8 +1415,6 @@ class SettingsController extends Controller
             $this->logger->info(
                     'File upload detection detailed',
                     [
-                        'uploadedFiles'     => $uploadedFiles,
-                        'filesArray'        => $filesArray,
                         'requestMethod'     => $this->request->getMethod(),
                         'contentType'       => $contentType,
                         'hasUploadedFiles'  => $hasUploadedFiles,
@@ -1438,42 +1444,15 @@ class SettingsController extends Controller
                 ];
 
                 $this->logger->info('File upload detected.', ['options' => $options]);
-            } else if ($data !== null && isset($data['file_path']) === true) {
-                // Handle file path from JSON payload.
-                    $fileSize = 0;
-                if (file_exists($data['file_path']) === true) {
-                }
-
-                $options = [
-                    'updateExisting' => $data['updateExisting'] ?? true,
-                    'deleteOrphaned' => $data['deleteOrphaned'] ?? false,
-                    'preserveIds'    => $data['preserveIds'] ?? true,
-                    'processingMode' => $data['processingMode'] ?? 'speed',
-                    'filePath'       => $data['file_path'],
-                    'fileName'       => $data['fileName'] ?? basename($data['file_path']),
-                    'fileSize'       => $data['fileSize'] ?? $fileSize,
-                    'mimeType'       => $data['mimeType'] ?? 'text/xml',
-                ];
-
-                $this->logger->info('JSON payload detected.', ['options' => $options]);
             }//end if
 
             if (isset($options) === false) {
                 $this->logger->error(
-                        'No file uploaded or file path provided — DETAILED DEBUG',
+                        'No ArchiMate file uploaded',
                         [
-                            'uploadedFiles'  => $uploadedFiles,
-                            'filesArray'     => $filesArray,
-                            'data'           => $data,
-                            'rawInput'       => $rawInput,
-                            'contentType'    => $contentType,
-                            'isMultipart'    => $isMultipart,
-                            'requestMethod'  => $this->request->getMethod(),
-                            '_FILES_DEBUG'   => $_FILES,
-                            '_POST_DEBUG'    => $_POST,
-                            'requestParams'  => $this->request->getParams(),
-                            'userAgent'      => $this->request->getHeader('User-Agent'),
-                            'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
+                            'contentType'   => $contentType,
+                            'isMultipart'   => $isMultipart,
+                            'requestMethod' => $this->request->getMethod(),
                         ]
                         );
 
@@ -1928,20 +1907,37 @@ class SettingsController extends Controller
     /**
      * Get email settings
      *
-     * @NoAdminRequired
+     * Secret fields (passwords / API keys) are redacted in the response; only
+     * a boolean presence indicator is returned for each secret.
+     *
      * @NoCSRFRequired
      *
-     * @return JSONResponse Current email settings
+     * @return JSONResponse Current email settings (secrets redacted)
      * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailSettings(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
             $emailSettings = $this->settingsService->getEmailSettings();
+
+            // Redact secret values — return only a masked placeholder when set.
+            $secretFields = ['smtpPassword', 'sendgridApiKey', 'mailgunApiKey', 'postmarkApiKey', 'sesSecretKey', 'mailjetSecretKey'];
+            foreach ($secretFields as $field) {
+                if (empty($emailSettings[$field]) === false) {
+                    $emailSettings[$field] = '••••••••';
+                } else {
+                    $emailSettings[$field] = '';
+                }//end if
+            }
 
             return new JSONResponse(
                     [
@@ -1969,7 +1965,6 @@ class SettingsController extends Controller
     /**
      * Update email settings
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
@@ -1977,8 +1972,13 @@ class SettingsController extends Controller
      */
     public function updateEmailSettings(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2302,7 +2302,6 @@ class SettingsController extends Controller
     /**
      * Set generic user groups
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
@@ -2310,8 +2309,13 @@ class SettingsController extends Controller
      */
     public function setGenericUserGroups(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2390,7 +2394,6 @@ class SettingsController extends Controller
     /**
      * Set organization admin groups
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
@@ -2398,8 +2401,13 @@ class SettingsController extends Controller
      */
     public function setOrganizationAdminGroups(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2478,7 +2486,6 @@ class SettingsController extends Controller
     /**
      * Set super user groups
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
@@ -2486,8 +2493,13 @@ class SettingsController extends Controller
      */
     public function setSuperUserGroups(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
