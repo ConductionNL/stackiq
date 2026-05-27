@@ -264,7 +264,6 @@ class ContactpersonenController extends Controller
      *
      * @return JSONResponse Result of user creation.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -274,21 +273,30 @@ class ContactpersonenController extends Controller
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        // Only admins and org-admins may create user accounts.
+        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
+        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
         try {
             // Get object service.
             $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
 
-            // Find the contactpersoon object.
+            // Find the contactpersoon object — bind to current tenant.
             $contactpersoonObject = $objectService->find(
                 id: $contactpersoonId,
                 register: 'voorzieningen',
                 schema: 'contactpersoon',
-                _rbac: false,
-                _multitenancy: false
+                _rbac: true,
+                _multitenancy: true
             );
 
             if ($contactpersoonObject === null) {
@@ -493,8 +501,12 @@ class ContactpersonenController extends Controller
     /**
      * Change user password.
      *
-     * @param string $username    The username.
-     * @param string $newPassword The new password.
+     * Admins may change any user's password. Regular users may only change their
+     * own password, and must supply the current password for confirmation.
+     *
+     * @param string $username        The username.
+     * @param string $newPassword     The new password.
+     * @param string $currentPassword The current password (required for self-service resets).
      *
      * @return JSONResponse Result of password change.
      *
@@ -502,11 +514,45 @@ class ContactpersonenController extends Controller
      * @NoCSRFRequired
      * @spec            openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
-    public function changePassword(string $username, string $newPassword): JSONResponse
+    public function changePassword(string $username, string $newPassword, string $currentPassword=''): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
+
+        $isAdmin     = $this->groupManager->isAdmin($currentUser->getUID());
+        $isSelfReset = $currentUser->getUID() === $username;
+
+        // Non-admins may only change their own password.
+        if ($isAdmin === false && $isSelfReset === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+        }
+
+        // Self-service resets require current-password confirmation.
+        if ($isSelfReset === true && $isAdmin === false) {
+            if (empty($currentPassword) === true) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Current password is required for self-service password reset',
+                        ],
+                        400
+                        );
+            }
+
+            // Verify current password by checking the user's backend.
+            $authUser = $this->userManager->checkPassword($username, $currentPassword);
+            if ($authUser === false) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Current password is incorrect',
+                        ],
+                        403
+                        );
+            }
+        }//end if
 
         try {
             $user = $this->userManager->get($username);
@@ -1011,18 +1057,27 @@ class ContactpersonenController extends Controller
     /**
      * Disable a user account.
      *
+     * Requires admin or organisation-admin (gebruik-beheerder / aanbod-beheerder) role.
+     *
      * @param string $contactpersoonId The contactpersoon ID.
      *
      * @return JSONResponse Result of the disable operation.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @spec            openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
+     * @spec           openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
     public function disableUser(string $contactpersoonId): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
+        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -1063,18 +1118,27 @@ class ContactpersonenController extends Controller
     /**
      * Enable a user account.
      *
+     * Requires admin or organisation-admin (gebruik-beheerder / aanbod-beheerder) role.
+     *
      * @param string $contactpersoonId The contactpersoon ID.
      *
      * @return JSONResponse Result of the enable operation.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @spec            openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
+     * @spec           openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
     public function enableUser(string $contactpersoonId): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
+        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
         try {

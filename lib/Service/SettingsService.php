@@ -1916,11 +1916,6 @@ class SettingsService
                     'email_user_creation_enabled',
                     'true'
             ) === 'true',
-            'userPasswordEnabled'             => $this->config->getValueString(
-                $app,
-                    'email_user_password_enabled',
-                    'true'
-            ) === 'true',
             'userOrganisationEnabled'         => $this->config->getValueString(
                 $app,
                     'email_user_organisation_enabled',
@@ -2021,7 +2016,6 @@ class SettingsService
                 'organization_registration' => $this->getEmailTemplate(templateName: 'organization_registration'),
                 'organization_activation'   => $this->getEmailTemplate(templateName: 'organization_activation'),
                 'user_creation'             => $this->getEmailTemplate(templateName: 'user_creation'),
-                'user_password'             => $this->getEmailTemplate(templateName: 'user_password'),
             ],
         ];
 
@@ -2060,7 +2054,6 @@ class SettingsService
             'organizationRegistrationEnabled' => 'email_org_registration_enabled',
             'organizationActivationEnabled'   => 'email_org_activation_enabled',
             'userCreationEnabled'             => 'email_user_creation_enabled',
-            'userPasswordEnabled'             => 'email_user_password_enabled',
             'userOrganisationEnabled'         => 'email_user_organisation_enabled',
 
             // Symfony Mailer transport configuration.
@@ -2223,20 +2216,6 @@ class SettingsService
 <p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>
 <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
             ',
-            'user_password'             => '
-<h1>Uw wachtwoord voor de Software Catalogus</h1>
-<p>Beste {{ user.name }},</p>
-<p>Uw wachtwoord voor de Software Catalogus is aangepast.</p>
-<p>Uw logingegevens:</p>
-<ul>
-    <li>E-mailadres: {{ user.email }}</li>
-    <li>Gebruikersnaam: {{ user.username }}</li>
-    <li>Nieuw wachtwoord: {{ user.password }}</li>
-</ul>
-<p>U kunt nu inloggen met uw nieuwe wachtwoord.</p>
-<p>We raden u aan om uw wachtwoord te wijzigen na het eerste inloggen.</p>
-<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-            ',
         ];
 
         return $templates[$templateName] ?? '';
@@ -2269,13 +2248,6 @@ class SettingsService
                 'user.name'              => 'User display name',
                 'user.email'             => 'User email address',
                 'user.username'          => 'Username',
-                'user.organization.name' => 'Organization name (if applicable)',
-            ],
-            'user_password'             => [
-                'user.name'              => 'User display name',
-                'user.email'             => 'User email address',
-                'user.username'          => 'Username',
-                'user.password'          => 'Auto-generated password',
                 'user.organization.name' => 'Organization name (if applicable)',
             ],
         ];
@@ -3926,7 +3898,6 @@ class SettingsService
             'organization_registration' => $this->getEmailTemplate(templateName: 'organization_registration'),
             'organization_activation'   => $this->getEmailTemplate(templateName: 'organization_activation'),
             'user_creation'             => $this->getEmailTemplate(templateName: 'user_creation'),
-            'user_password'             => $this->getEmailTemplate(templateName: 'user_password'),
         ];
 
         // Get Voorzieningen and AMEF configs (without object counts for performance).
@@ -4888,11 +4859,6 @@ class SettingsService
                         'email_user_creation_enabled',
                         'true'
                 ) === 'true',
-                'user_password_enabled'    => $this->config->getValueString(
-                    $an,
-                        'email_user_password_enabled',
-                        'true'
-                ) === 'true',
                 'test_receiver_override'   => $this->config->getValueString(
                     $an,
                         'test_receiver_override',
@@ -5015,7 +4981,6 @@ class SettingsService
                 'email_org_registration_enabled',
                 'email_org_activation_enabled',
                 'email_user_creation_enabled',
-                'email_user_password_enabled',
                 'test_receiver_override',
             ];
 
@@ -5218,7 +5183,6 @@ class SettingsService
             'organization_registration',
             'organization_activation',
             'user_creation',
-            'user_password',
             'user_organisation',
         ];
         $templates     = [];
