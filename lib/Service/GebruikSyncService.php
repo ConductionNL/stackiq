@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -69,17 +70,27 @@ class GebruikSyncService
     private SettingsService $settingsService;
 
     /**
+     * Container for lazy service resolution.
+     *
+     * @var ContainerInterface
+     */
+    private ContainerInterface $container;
+
+    /**
      * Constructor for GebruikSyncService.
      *
-     * @param LoggerInterface $logger          Logger for debugging and error reporting
-     * @param SettingsService $settingsService Service for retrieving configuration settings
+     * @param LoggerInterface    $logger          Logger for debugging and error reporting
+     * @param SettingsService    $settingsService Service for retrieving configuration settings
+     * @param ContainerInterface $container       DI container for lazy service resolution
      */
     public function __construct(
         LoggerInterface $logger,
-        SettingsService $settingsService
+        SettingsService $settingsService,
+        ContainerInterface $container
     ) {
         $this->logger          = $logger;
         $this->settingsService = $settingsService;
+        $this->container       = $container;
     }//end __construct()
 
     /**
@@ -317,7 +328,7 @@ class GebruikSyncService
      */
     private function searchAmefElementsByIds(array $ids, string $register, string $schema): array
     {
-        $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+        $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
         $foundElements = [];
 
         foreach ($ids as $id) {
@@ -496,7 +507,7 @@ class GebruikSyncService
     private function updateGebruikObject(ObjectEntity $gebruikObject, array $updatedData): void
     {
         try {
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             // Get voorzieningenConfig to find the correct register and schema.
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();

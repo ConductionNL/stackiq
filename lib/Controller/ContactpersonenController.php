@@ -180,7 +180,7 @@ class ContactpersonenController extends Controller
 
         try {
             // Get object service.
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             // Search for contactpersonen belonging to this organisation.
             // Use a more generic search that doesn't require specific register/schema.
@@ -288,7 +288,7 @@ class ContactpersonenController extends Controller
 
         try {
             // Get object service.
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             // Find the contactpersoon object — bind to current tenant.
             $contactpersoonObject = $objectService->find(
@@ -880,7 +880,7 @@ class ContactpersonenController extends Controller
                     );
 
             // Get contactpersoon from OpenRegister.
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             // First try to find the object by UUID.
             $contactObject = $objectService->find(
@@ -1356,7 +1356,7 @@ class ContactpersonenController extends Controller
 
             // Try to get contactpersoon data for additional profile info.
             try {
-                $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
                 // Search for contactpersoon by username (which is the email).
                 $searchParams = [

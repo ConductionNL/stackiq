@@ -23,6 +23,7 @@ use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -49,9 +50,12 @@ class UserProfileUpdatedEventListener implements IEventListener
 
     /**
      * Constructor for UserProfileUpdatedEventListener.
+     *
+     * @param ContainerInterface $container DI container for lazy service resolution.
      */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly ContainerInterface $container
+    ) {
     }//end __construct()
 
     /**
@@ -70,7 +74,7 @@ class UserProfileUpdatedEventListener implements IEventListener
         }
 
         try {
-            $logger  = \OC::$server->get(LoggerInterface::class);
+            $logger  = $this->container->get(LoggerInterface::class);
             $changes = $event->getChanges();
 
             // Check if any of the mapped fields were changed.
@@ -97,7 +101,7 @@ class UserProfileUpdatedEventListener implements IEventListener
             $this->syncToContactpersoon(event: $event, logger: $logger);
         } catch (\Exception $e) {
             try {
-                $logger = \OC::$server->get(LoggerInterface::class);
+                $logger = $this->container->get(LoggerInterface::class);
                 $logger->error(
                         '[UserProfileUpdatedEventListener] Error syncing profile to contactpersoon',
                         [
@@ -129,8 +133,8 @@ class UserProfileUpdatedEventListener implements IEventListener
      */
     private function syncToContactpersoon(UserProfileUpdatedEvent $event, LoggerInterface $logger): void
     {
-        $objectService   = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-        $settingsService = \OC::$server->get(SettingsService::class);
+        $objectService   = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        $settingsService = $this->container->get(SettingsService::class);
 
         // Get the voorzieningen config for register and schema.
         $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
@@ -224,9 +228,9 @@ class UserProfileUpdatedEventListener implements IEventListener
         // Regenerate _name metadata from the schema's objectNameField template.
         // (e.g. "{{ voornaam }} {{ tussenvoegsel }} {{ achternaam }}").
         // Without this, _name stays stale after field updates because we bypass the full saveObject flow.
-        $schemaMapper         = \OC::$server->get('OCA\OpenRegister\Db\SchemaMapper');
-        $registerMapper       = \OC::$server->get('OCA\OpenRegister\Db\RegisterMapper');
-        $metaHydrationHandler = \OC::$server->get('OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler');
+        $schemaMapper         = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+        $registerMapper       = $this->container->get('OCA\OpenRegister\Db\RegisterMapper');
+        $metaHydrationHandler = $this->container->get('OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler');
 
         $schemaEntity   = null;
         $registerEntity = null;
@@ -262,7 +266,7 @@ class UserProfileUpdatedEventListener implements IEventListener
 
         // Pass register and schema so the magic mapper route is triggered and the.
         // Per-schema magic table is updated (not just the blob table).
-        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+        $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
         $objectMapper->update(entity: $contactpersoon, register: $registerEntity, schema: $schemaEntity);
 
         $logger->info(

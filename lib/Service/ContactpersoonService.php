@@ -166,7 +166,7 @@ class ContactpersoonService
             $username = $email;
 
             // Check if user already exists.
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager = $this->container->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -177,7 +177,7 @@ class ContactpersoonService
                     // Look up organization entity, creating backup if missing.
                     $organisationEntity = null;
                     try {
-                        $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+                        $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
                     } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                         // Org entity missing — try backup creation from org object.
@@ -189,8 +189,8 @@ class ContactpersoonService
                             ]
                         );
                         try {
-                            $objectService       = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-                            $settingsService     = \OC::$server->get('OCA\SoftwareCatalog\Service\SettingsService');
+                            $objectService       = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+                            $settingsService     = $this->container->get('OCA\SoftwareCatalog\Service\SettingsService');
                             $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
                             $orgObject           = $objectService->find(
                                 id: $organizationUuid,
@@ -204,7 +204,7 @@ class ContactpersoonService
                                 $orgStatus = strtolower(($orgData['status'] ?? ''));
                                 if (in_array(needle: $orgStatus, haystack: ['actief', 'active']) === true) {
                                     $syncServiceClass        = 'OCA\SoftwareCatalog\Service\OrganizationSyncService';
-                                    $organizationSyncService = \OC::$server->get($syncServiceClass);
+                                    $organizationSyncService = $this->container->get($syncServiceClass);
                                     $backupStats        = [
                                         'entitiesCreated' => 0,
                                         'entitiesUpdated' => 0,
@@ -391,7 +391,7 @@ class ContactpersoonService
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
         // Use the new organization type-based logic instead of old role-based logic.
-        $userManager = \OC::$server->get('OCP\IUserManager');
+        $userManager = $this->container->get('OCP\IUserManager');
         $user        = $userManager->get($username);
         if ($user === null) {
             $this->logger->warning('User not found for group update', ['username' => $username]);
@@ -486,7 +486,7 @@ class ContactpersoonService
             // To avoid validation errors on the organisatie field (stored as UUID string but.
             // Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
             // That could interfere with the ongoing org activation process.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactpersoonObject);
 
             $this->logger->info(
@@ -612,7 +612,7 @@ class ContactpersoonService
             return;
         }
 
-        $userManager = \OC::$server->get('OCP\IUserManager');
+        $userManager = $this->container->get('OCP\IUserManager');
         $user        = $userManager->get($username);
 
         if ($user === null) {
@@ -735,7 +735,7 @@ class ContactpersoonService
             );
 
             // Get user manager to disable the user.
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager = $this->container->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -868,7 +868,7 @@ class ContactpersoonService
             );
 
             // Get user manager to fetch user details.
-            $userManager            = \OC::$server->get('OCP\IUserManager');
+            $userManager            = $this->container->get('OCP\IUserManager');
             $enhancedContactPersons = [];
 
             // Loop through each contact person and fetch user details.
@@ -1007,7 +1007,7 @@ class ContactpersoonService
             );
 
             $bulkUserInfo = [];
-            $userManager  = \OC::$server->get('OCP\IUserManager');
+            $userManager  = $this->container->get('OCP\IUserManager');
 
             // Get contact person register and schema from settings.
             $contactRegister = null;
@@ -1086,7 +1086,7 @@ class ContactpersoonService
                         }
 
                         if ($user !== null) {
-                            $groupManager        = \OC::$server->get('OCP\IGroupManager');
+                            $groupManager        = $this->container->get('OCP\IGroupManager');
                             $userGroups          = $groupManager->getUserGroups($user);
                             $userInfo['groups']  = array_keys($userGroups);
                             $userInfo['enabled'] = $user->isEnabled();
@@ -1233,7 +1233,7 @@ class ContactpersoonService
             // FIX #434: Use MagicMapper directly instead of ObjectService::saveObject().
             // To avoid validation errors on the organisatie field (stored as UUID string but.
             // Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactObject);
 
             $this->logger->info(
@@ -1301,7 +1301,7 @@ class ContactpersoonService
                 throw new \Exception('No username found for contactpersoon');
             }
 
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager = $this->container->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -1373,7 +1373,7 @@ class ContactpersoonService
                 throw new \Exception('No username found for contactpersoon');
             }
 
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager = $this->container->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
             if ($user === null) {
