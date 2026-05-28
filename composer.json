@@ -72,7 +72,7 @@
 		"symfony/http-client": "^6.4",
 		"symfony/mailer": "^6.4",
 		"symfony/mailjet-mailer": "^6.4",
-		"twig/twig": "^3.8"
+		"twig/twig": "^3.27.0"
 	},
 	"require-dev": {
 		"cyclonedx/cyclonedx-php-composer": "^6.2",
