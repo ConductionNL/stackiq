@@ -2014,13 +2014,13 @@ class SettingsController extends Controller
             $data          = $this->request->getParams();
             $emailSettings = $data['emailSettings'] ?? $data;
 
-            $result = $this->settingsService->updateEmailSettings($emailSettings);
+            $updatedSettings = $this->settingsService->updateEmailSettings($emailSettings);
 
             return new JSONResponse(
                     [
-                        'success'       => $result['success'],
-                        'message'       => $result['message'] ?? 'Email settings updated successfully',
-                        'emailSettings' => $result['emailSettings'] ?? null,
+                        'success'       => true,
+                        'message'       => 'Email settings updated successfully',
+                        'emailSettings' => $updatedSettings,
                     ]
                     );
         } catch (\Exception $e) {

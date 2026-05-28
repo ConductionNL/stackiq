@@ -329,8 +329,8 @@ class SymfonyEmailService
 
         $dsn = sprintf(
             'smtp://%s:%s@%s:%d',
-            rawrawurlencode($username),
-            rawrawurlencode($password),
+            rawurlencode($username),
+            rawurlencode($password),
             $host,
             $port
         );
@@ -998,44 +998,27 @@ class SymfonyEmailService
             $org       = $templateData['organization'];
             $processed = str_replace(
                 search: '{{ organization.name }}',
-                replace: ($org['name'] ?? ''),
+                replace: htmlspecialchars((string) ($org['name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
                 subject: $processed
             );
         }
 
-        // Replace user variables.
+        // Replace user variables — never include passwords in email output.
         if (isset($templateData['user']) === true) {
             $user      = $templateData['user'];
             $processed = str_replace(
                 search: '{{ user.name }}',
-                replace: ($user['name'] ?? ''),
+                replace: htmlspecialchars((string) ($user['name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
                 subject: $processed
             );
             $processed = str_replace(
                 search: '{{ user.email }}',
-                replace: ($user['email'] ?? ''),
+                replace: htmlspecialchars((string) ($user['email'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
                 subject: $processed
             );
-            $processed = str_replace(
-                search: '{{ user.password }}',
-                replace: ($user['password'] ?? ''),
-                subject: $processed
-            );
-        }
-
-        // Replace contact variables (backward compatibility).
-        if (isset($templateData['user']) === true) {
-            $user      = $templateData['user'];
-            $processed = str_replace(
-                search: '{{ user.name }}',
-                replace: ($user['name'] ?? ''),
-                subject: $processed
-            );
-            $processed = str_replace(
-                search: '{{ user.email }}',
-                replace: ($user['email'] ?? ''),
-                subject: $processed
-            );
+            // Remove any {{ user.password }} placeholder that may appear in custom templates
+            // to prevent accidental credential exposure.
+            $processed = str_replace(search: '{{ user.password }}', replace: '', subject: $processed);
         }
 
         return $processed;
