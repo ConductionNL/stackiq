@@ -174,8 +174,10 @@ class OrganizationSyncService
         }
 
         // MySQL/MariaDB: Use json_unquote(json_extract()).
-            $jsonPath = '$.'.$path;
         if (str_starts_with($path, '$.') === true) {
+            $jsonPath = $path;
+        } else {
+            $jsonPath = '$.'.$path;
         }
 
         return "json_unquote(json_extract({$column}, '{$jsonPath}'))";
@@ -588,8 +590,10 @@ class OrganizationSyncService
      */
     public function performFullSync(int $minutesBack=10): array
     {
-            $syncModeValue = 'incremental';
         if ($minutesBack === 0) {
+            $syncModeValue = 'full';
+        } else {
+            $syncModeValue = 'incremental';
         }
 
         $this->logger->info(
@@ -1492,8 +1496,10 @@ class OrganizationSyncService
                 $efficiencyImprovement = round(((1 - $ratio) * 100), 1);
             }
 
-                $syncModeValue = 'incremental';
             if ($minutesBack === 0) {
+                $syncModeValue = 'full';
+            } else {
+                $syncModeValue = 'incremental';
             }
 
             $messageValue = 'No organizations to process in the current time window';
@@ -1504,8 +1510,10 @@ class OrganizationSyncService
                 $messageValue = "Ready to process {$orgCount} organizations and {$contactCount} contact persons";
             }
 
-                $nextScheduledSyncValue = 'Will process all organizations (full sync)';
             if ($minutesBack > 0) {
+                $nextScheduledSyncValue = "Will process organizations modified in the last {$minutesBack} minutes (incremental sync)";
+            } else {
+                $nextScheduledSyncValue = 'Will process all organizations (full sync)';
             }
 
             return [
@@ -1827,6 +1835,7 @@ class OrganizationSyncService
                         // Get the object data as array.
                         $contactData = [];
                         if (is_array($contactObject) === true) {
+                            $contactData = $contactObject;
                         }
 
                         if ($contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
@@ -1988,6 +1997,7 @@ class OrganizationSyncService
 
                         $rawOrgData = [];
                     if ($rawOrgObject !== null) {
+                        $rawOrgData = $rawOrgObject->getObject();
                     }
 
                     $contactUuids = ($rawOrgData['contactpersonen'] ?? []);
@@ -2463,8 +2473,10 @@ class OrganizationSyncService
                         }//end if
 
                         if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
-                                $organizationActiveValue = false;
                             if ($organisationEntity !== null) {
+                                $organizationActiveValue = $organisationEntity->getActive();
+                            } else {
+                                $organizationActiveValue = false;
                             }
 
                             $this->logger->info(
@@ -2691,8 +2703,10 @@ class OrganizationSyncService
                     }//end if
 
                     if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
-                            $organizationActiveValue = false;
                         if ($organisationEntity !== null) {
+                            $organizationActiveValue = $organisationEntity->getActive();
+                        } else {
+                            $organizationActiveValue = false;
                         }
 
                         $skipEmail = ($contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown');
@@ -2960,8 +2974,10 @@ class OrganizationSyncService
      */
     public function performManualSync(int $minutesBack=0): array
     {
-            $syncModeValue = 'incremental';
         if ($minutesBack === 0) {
+            $syncModeValue = 'full';
+        } else {
+            $syncModeValue = 'incremental';
         }
 
         $this->logger->info(
@@ -3042,8 +3058,10 @@ class OrganizationSyncService
                 ]
             );
 
-                $syncModeValue = 'incremental';
             if ($minutesBack === 0) {
+                $syncModeValue = 'full';
+            } else {
+                $syncModeValue = 'incremental';
             }
 
             return [
@@ -3200,18 +3218,10 @@ class OrganizationSyncService
             $organizationUuid = ($organizationUuidOverride ?? $orgUuid);
             if (empty($organizationUuid) === false) {
                 $selfMetadata['organisation'] = $organizationUuid;
-                    $sourceValue = 'object';
-                if (empty($organizationUuidOverride) === true) {
-                    $this->logger->warning(
-                    'OrganizationSyncService: No organization UUID found for contact person',
-                    [
-                        'contactId'   => $contactId,
-                        'contactData' => $currentObject,
-                    ]
-                    );
-                }
-
                 if (empty($organizationUuidOverride) === false) {
+                    $sourceValue = 'override';
+                } else {
+                    $sourceValue = 'object';
                 }
 
                 $this->logger->info(

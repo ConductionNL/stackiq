@@ -1045,9 +1045,7 @@ class ContactpersoonService
                         _extend: [],
                         files: false,
                         register: $contactRegister,
-                        schema: $contactSchema,
-                        _rbac: false,
-                        _multitenancy: false
+                        schema: $contactSchema
                     );
 
                     if ($contactObject === null) {

@@ -877,8 +877,16 @@ class ContactpersonenController extends Controller
      */
     public function getUserInfo(string $contactpersoonId): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
+        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -896,9 +904,7 @@ class ContactpersonenController extends Controller
             $contactObject = $objectService->find(
                 id: $contactpersoonId,
                 register: 'voorzieningen',
-                schema: 'contactpersoon',
-                _rbac: false,
-                _multitenancy: false
+                schema: 'contactpersoon'
             );
 
             if ($contactObject === null) {
@@ -1197,8 +1203,16 @@ class ContactpersonenController extends Controller
      */
     public function getBulkUserInfo(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
+        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -1218,6 +1232,16 @@ class ContactpersonenController extends Controller
                         [
                             'success' => false,
                             'message' => 'No contactpersoon IDs provided',
+                        ],
+                        400
+                        );
+            }
+
+            if (count($contactpersoonIds) > 100) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Too many contactpersoon IDs: maximum 100 allowed per request',
                         ],
                         400
                         );
