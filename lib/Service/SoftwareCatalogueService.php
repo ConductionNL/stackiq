@@ -3325,9 +3325,10 @@ class SoftwareCatalogueService
      * Ensures a contact person's username is in their organization's users array.
      * NOTE: Dead method — retained only as implementation reference until the sync
      * pipeline invocation point is wired; not called from any live code path.
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      *
      * @param object $contactPersonObject The contact person object
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      *
      * @return void
      */

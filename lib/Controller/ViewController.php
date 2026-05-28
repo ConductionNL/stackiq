@@ -20,8 +20,10 @@
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use OCA\SoftwareCatalog\Service\ViewService;
 use Psr\Log\LoggerInterface;
 
@@ -48,12 +50,14 @@ class ViewController extends Controller
      * @param IRequest        $request     The request object
      * @param ViewService     $viewService The view service for business logic
      * @param LoggerInterface $logger      The logger service
+     * @param IUserSession    $userSession The user session service
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly ViewService $viewService,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
     }//end __construct()
@@ -78,6 +82,10 @@ class ViewController extends Controller
      */
     public function getAllViews(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Getting all views',
                 [
@@ -153,6 +161,10 @@ class ViewController extends Controller
      */
     public function getView(string $viewId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Getting specific view',
                 [
@@ -313,6 +325,10 @@ class ViewController extends Controller
      */
     public function getApiDocumentation(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $documentation = [
             'api_version'               => '1.0.0',
             'description'               => 'SoftwareCatalog View API - Query and enrich ArchiMate views',

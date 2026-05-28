@@ -2102,13 +2102,17 @@ class SettingsService
 
                 // Convert boolean values to strings.
                 if (is_bool($value) === true) {
-                    $value = ($value === true) ? 'true' : 'false';
+                    if ($value === true) {
+                        $value = 'true';
+                    } else {
+                        $value = 'false';
+                    }
                 }
 
                 $this->config->setValueString($this->appName, $configKey, (string) $value);
                 $updatedSettings[$settingKey] = $this->config->getValueString($this->appName, $configKey);
             }
-        }
+        }//end foreach
 
         $this->logger->info(
             'Email settings updated successfully',
@@ -2638,7 +2642,11 @@ class SettingsService
 
         switch ($transportType) {
             case 'smtp':
-                $usernameValue = (empty($emailSettings['smtpUsername']) === false) ? 'configured' : 'none';
+                if (empty($emailSettings['smtpUsername']) === false) {
+                    $usernameValue = 'configured';
+                } else {
+                    $usernameValue = 'none';
+                }
                 return [
                     'type'       => 'SMTP',
                     'host'       => $emailSettings['smtpHost'] ?? '',
@@ -2823,7 +2831,11 @@ class SettingsService
             $dsn .= '?encryption='.$encryption;
         }
 
-        $encSuffix = (empty($encryption) === false && $encryption !== 'none') ? '?encryption='.$encryption : '';
+        if (empty($encryption) === false && $encryption !== 'none') {
+            $encSuffix = '?encryption='.$encryption;
+        } else {
+            $encSuffix = '';
+        }
 
         $dsnPattern = sprintf('smtp://***:***@%s:%d%s', $host, $port, $encSuffix);
 
@@ -2974,7 +2986,11 @@ class SettingsService
             $openRegisterInstalled = $this->isOpenRegisterInstalled();
             $openRegisterEnabled   = $openRegisterInstalled && $this->isOpenRegisterEnabled();
 
-            $versionComparisonValue = ($storedConfigVersion !== null) ? version_compare($currentAppVersion, $storedConfigVersion) : null;
+            if ($storedConfigVersion !== null) {
+                $versionComparisonValue = version_compare($currentAppVersion, $storedConfigVersion);
+            } else {
+                $versionComparisonValue = null;
+            }
 
             $versionInfo = [
                 'appName'               => 'SoftwareCatalog',
@@ -3056,7 +3072,11 @@ class SettingsService
                     );
 
             // Return concise response to avoid serialization issues with large nested structures.
-            $messageValue = ($success === true) ? 'Force update completed successfully' : 'Force update completed but configuration needs attention';
+            if ($success === true) {
+                $messageValue = 'Force update completed successfully';
+            } else {
+                $messageValue = 'Force update completed but configuration needs attention';
+            }
 
             return [
                 'success'           => $success,
@@ -3206,7 +3226,11 @@ class SettingsService
             // If force import is requested or auto-config not completed, reset auto-configuration flag.
             if ($forceImport === true || $versionInfo['autoConfigCompleted'] === false) {
                 $this->config->setValueString($this->appName, 'auto_config_completed', 'false');
-                $reasonValue = ($forceImport === true) ? 'force_import_requested' : 'auto_config_not_completed';
+                if ($forceImport === true) {
+                    $reasonValue = 'force_import_requested';
+                } else {
+                    $reasonValue = 'auto_config_not_completed';
+                }
 
                 $this->logger->info(
                         'SettingsService: Reset auto-configuration flag',

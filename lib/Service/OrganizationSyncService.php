@@ -250,10 +250,13 @@ class OrganizationSyncService
         $registerIdOrg = (int) $register;
         $schemaIdOrg   = (int) $organizationSchema;
         if ($registerIdOrg <= 0 || $schemaIdOrg <= 0) {
-            $this->logger->warning('OrganizationSync: register or organisatie_schema is not a valid positive integer', [
-                'register'          => $register,
-                'organizationSchema' => $organizationSchema,
-            ]);
+            $this->logger->warning(
+                    'OrganizationSync: register or organisatie_schema is not a valid positive integer',
+                    [
+                        'register'           => $register,
+                        'organizationSchema' => $organizationSchema,
+                    ]
+                    );
             return $stats;
         }
 
@@ -397,10 +400,13 @@ class OrganizationSyncService
         $registerIdContact = (int) $register;
         $schemaIdContact   = (int) $contactSchema;
         if ($registerIdContact <= 0 || $schemaIdContact <= 0) {
-            $this->logger->warning('ContactSync: register or contactpersoon_schema is not a valid positive integer', [
-                'register'      => $register,
-                'contactSchema' => $contactSchema,
-            ]);
+            $this->logger->warning(
+                    'ContactSync: register or contactpersoon_schema is not a valid positive integer',
+                    [
+                        'register'      => $register,
+                        'contactSchema' => $contactSchema,
+                    ]
+                    );
             return $stats;
         }
 
@@ -512,10 +518,13 @@ class OrganizationSyncService
         $registerId = (int) $register;
         $schemaId   = (int) $contactSchema;
         if ($registerId <= 0 || $schemaId <= 0) {
-            $this->logger->warning('UserSync: register or contactpersoon_schema is not a valid positive integer', [
-                'register'      => $register,
-                'contactSchema' => $contactSchema,
-            ]);
+            $this->logger->warning(
+                    'UserSync: register or contactpersoon_schema is not a valid positive integer',
+                    [
+                        'register'      => $register,
+                        'contactSchema' => $contactSchema,
+                    ]
+                    );
             return [];
         }
 
@@ -1242,7 +1251,11 @@ class OrganizationSyncService
             // Check if user already exists.
             $userManager = $this->container->get('OCP\IUserManager');
             // Use the stored username when available, otherwise fall back to email as username.
-            $username = (empty($existingUsername) === false) ? $existingUsername : $email;
+            if (empty($existingUsername) === false) {
+                $username = $existingUsername;
+            } else {
+                $username = $email;
+            }
 
             $user = $userManager->get($username);
 

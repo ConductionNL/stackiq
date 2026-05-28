@@ -321,17 +321,26 @@ class ArchiMateService
             }
 
             // Look up the organization from Voorzieningen register.
-            $voorzConfig   = $this->settingsService->getVoorzieningenConfig();
-            $orgRegisterId = (empty($voorzConfig['register']) === false) ? $voorzConfig['register'] : null;
-            $orgSchemaId   = (empty($voorzConfig['organisatie_schema']) === false) ? $voorzConfig['organisatie_schema'] : null;
+            $voorzConfig = $this->settingsService->getVoorzieningenConfig();
+            if (empty($voorzConfig['register']) === false) {
+                $orgRegisterId = $voorzConfig['register'];
+            } else {
+                $orgRegisterId = null;
+            }
 
-            if ($orgRegisterId === null || $orgSchemaId === false) {
+            if (empty($voorzConfig['organisatie_schema']) === false) {
+                $orgSchemaId = $voorzConfig['organisatie_schema'];
+            } else {
+                $orgSchemaId = null;
+            }
+
+            if (empty($orgRegisterId) === true || empty($orgSchemaId) === true) {
                 // Fallback to generic lookup.
                 $orgRegisterId = $this->settingsService->getVoorzieningenRegisterId();
                 $orgSchemaId   = $this->settingsService->getSchemaIdForObjectType('organisatie');
             }
 
-            if ($orgRegisterId === null || $orgSchemaId === false) {
+            if ($orgRegisterId === null || $orgSchemaId === null) {
                 throw new \RuntimeException('Organization register/schema not configured');
             }
 
@@ -367,7 +376,11 @@ class ArchiMateService
             $schemaIdMap = $this->createSchemaIdMap();
 
             // Query organization's gebruik and modules from Voorzieningen register.
-            $gebruikSchemaId = (empty($voorzConfig['gebruik_schema']) === false) ? $voorzConfig['gebruik_schema'] : null;
+            if (empty($voorzConfig['gebruik_schema']) === false) {
+                $gebruikSchemaId = $voorzConfig['gebruik_schema'];
+            } else {
+                $gebruikSchemaId = null;
+            }
 
             $gebruikData = [];
             if (empty($gebruikSchemaId) === false) {
@@ -382,7 +395,11 @@ class ArchiMateService
                 $gebruikData  = $objectService->searchObjects(query: $gebruikQuery, _rbac: false, _multitenancy: false);
             }
 
-            $moduleSchemaId = (empty($voorzConfig['module_schema']) === false) ? $voorzConfig['module_schema'] : null;
+            if (empty($voorzConfig['module_schema']) === false) {
+                $moduleSchemaId = $voorzConfig['module_schema'];
+            } else {
+                $moduleSchemaId = null;
+            }
 
             $modulesData = [];
             if (empty($moduleSchemaId) === false) {
@@ -440,7 +457,11 @@ class ArchiMateService
                         // Merge into modulesData, deduplicating by ID.
                         $existingIds = [];
                         foreach ($modulesData as $m) {
-                            $mid = is_array($m) === true ? ($m['id'] ?? $m['@self']['id'] ?? null) : null;
+                            if (is_array($m) === true) {
+                                $mid = $m['id'] ?? $m['@self']['id'] ?? null;
+                            } else {
+                                $mid = null;
+                            }
 
                             if (empty($mid) === false) {
                                 $existingIds[$mid] = true;
@@ -448,9 +469,11 @@ class ArchiMateService
                         }
 
                         foreach ($allModules as $mod) {
-                            $modArr = (is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true)
-                                ? $mod->jsonSerialize()
-                                : $mod;
+                            if (is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true) {
+                                $modArr = $mod->jsonSerialize();
+                            } else {
+                                $modArr = $mod;
+                            }
 
                             $modId = $modArr['id'] ?? $modArr['@self']['id'] ?? null;
                             if ($modId !== false && isset($existingIds[$modId]) === false) {
@@ -1096,7 +1119,11 @@ class ArchiMateService
         foreach ($chunks as $chunkIndex => $chunk) {
             // OPTIMIZATION: Removed debug logging from chunk processing loop.
             try {
-                $rbacValue = (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) ? false : true;
+                if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
+                    $rbacValue = false;
+                } else {
+                    $rbacValue = true;
+                }
 
                 $saveResult = $objectService->saveObjects(
                     objects: $chunk,
@@ -1186,7 +1213,11 @@ class ArchiMateService
                 ]
                 );
 
-        $rbacValue = (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) ? false : true;
+        if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
+            $rbacValue = false;
+        } else {
+            $rbacValue = true;
+        }
 
         $saveResult = $objectService->saveObjects(
             objects: $objects,
@@ -1903,12 +1934,12 @@ class ArchiMateService
             // Use AMEF register ID for AMEF types, otherwise use per-type register ID.
             $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
             if ($isAmefType === true) {
-                $registerId = $this->settingsService->getAmefRegisterId();
+                $registerId = $this->getAmefRegisterId();
             }
 
             $schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
 
-            if ($registerId === null || $schemaId === false) {
+            if ($registerId === null || $schemaId === null) {
                 $errorMessage = "ArchiMateService: Register or {$schemaType} schema not configured";
                 if ($isAmefType === true) {
                     $errorMessage = "ArchiMateService: AMEF register or {$schemaType} schema not configured";
