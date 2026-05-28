@@ -1233,9 +1233,10 @@ class ContactPersonHandler
 
         $fullName = implode(' ', $parts);
         if (empty($fullName) === false) {
+            return $fullName;
         }
 
-            return ($contactData['email'] ?? $contactData['e-mailadres'] ?? 'Unknown User');
+        return ($contactData['email'] ?? $contactData['e-mailadres'] ?? 'Unknown User');
     }//end getDisplayNameFromContactData()
 
     /**
@@ -1611,9 +1612,10 @@ class ContactPersonHandler
             );
 
             if (empty($manager) === false) {
+                return $manager;
             }
 
-                return null;
+            return null;
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to get user manager: '.$e->getMessage(),

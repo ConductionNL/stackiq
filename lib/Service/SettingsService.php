@@ -1467,9 +1467,10 @@ class SettingsService
 
         $groups = json_decode($groupsJson, true);
         if (is_array($groups) === true) {
+            return $groups;
         }
 
-            return [];
+        return [];
     }//end getGenericUserGroups()
 
     /**
@@ -1548,9 +1549,10 @@ class SettingsService
 
         $groups = json_decode($groupsJson, true);
         if (is_array($groups) === true) {
+            return $groups;
         }
 
-            return [];
+        return [];
     }//end getSuperUserGroups()
 
     /**
@@ -6176,9 +6178,11 @@ class SettingsService
         $name = strtolower($organisation->getName());
 
         if (strpos($name, 'gemeente') !== false) {
+            return 'Gemeente';
         }
 
         if (strpos($name, 'provincie') !== false) {
+            return 'Provincie';
         }
 
         if (strpos($name, 'ministerie') !== false) {

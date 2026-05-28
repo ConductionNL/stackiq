@@ -366,7 +366,7 @@ class SymfonyEmailService
             throw new \InvalidArgumentException('SendGrid API key is required');
         }
 
-        return Transport::fromDsn('sendgrid+api://'.rawrawurlencode($apiKey).'@default');
+        return Transport::fromDsn('sendgrid+api://'.rawurlencode($apiKey).'@default');
     }//end createSendGridTransport()
 
     /**

@@ -364,10 +364,12 @@ class OrganizationHandler
 
                         $logMessage = 'Creating new contactgegevens object';
                     if ($existingContactgegevens !== null) {
+                        $logMessage = 'Updating existing contactgegevens object';
                     }
 
                         $existingId = null;
                     if ($existingContactgegevens !== null) {
+                        $existingId = $existingContactgegevens->getId();
                     }
 
                     $this->_logger->info(
@@ -392,6 +394,7 @@ class OrganizationHandler
 
                         $title = $contactpersoon['email'] ?? 'Contact Person';
                     if (empty($titleParts) === false) {
+                        $title = implode(' ', $titleParts);
                     }
 
                     // Create contactgegevens object with proper schema.
@@ -423,13 +426,6 @@ class OrganizationHandler
                     }
 
                     // Create or update the contactgegevens object via ObjectService.
-                    // Create new contactgegevens object.
-                    $contactgegevensObject = $objectService->saveObject(
-                        object: $contactgegevensData,
-                        extend: [],
-                        register: $registerId,
-                        schema: $contactgegevensSchemaId
-                    );
                     if ($existingContactgegevens !== null) {
                         // Update existing contactgegevens object.
                         $contactgegevensObject = $objectService->saveObject(
@@ -438,6 +434,14 @@ class OrganizationHandler
                             register: $registerId,
                             schema: $contactgegevensSchemaId,
                             uuid: $existingContactgegevens->getUuid()
+                        );
+                    } else {
+                        // Create new contactgegevens object.
+                        $contactgegevensObject = $objectService->saveObject(
+                            object: $contactgegevensData,
+                            extend: [],
+                            register: $registerId,
+                            schema: $contactgegevensSchemaId
                         );
                     }
 
