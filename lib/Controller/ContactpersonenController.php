@@ -23,6 +23,7 @@ use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserManager;
@@ -569,6 +570,19 @@ class ContactpersonenController extends Controller
      */
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        // Only admins and org-admins may modify group assignments.
+        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
+        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $user = $this->userManager->get($username);
 

@@ -5797,7 +5797,7 @@ class SettingsService
      */
     private function determineOrganisationType(\OCA\OpenRegister\Db\Organisation $organisation): string
     {
-        $name = strtolower($organisation->getName() === true);
+        $name = strtolower($organisation->getName());
 
         if (strpos($name, 'gemeente') !== false) {
             return 'Gemeente';
