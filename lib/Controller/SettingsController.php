@@ -2167,9 +2167,7 @@ class SettingsController extends Controller
                 templateContent: $templateContent
             );
 
-                $updateMsg = "Failed to update template {$templateName}";
-            if ($success === true) {
-            }
+            $updateMsg = ($success === true) ? "Template {$templateName} updated successfully" : "Failed to update template {$templateName}";
 
             return new JSONResponse(
                     [
@@ -2713,9 +2711,7 @@ class SettingsController extends Controller
         try {
             $result = $this->settingsService->cancelArchiMateImport();
 
-                $message = 'ArchiMate import cancellation failed';
-            if ($result['cancelled'] === true) {
-            }
+            $message = ($result['cancelled'] === true) ? 'ArchiMate import cancellation succeeded' : 'ArchiMate import cancellation failed';
 
             return new JSONResponse(
                     [
@@ -3436,9 +3432,7 @@ class SettingsController extends Controller
             // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
-                $statusCode = 500;
-            if ($result['success'] === true) {
-            }
+            $statusCode = ($result['success'] === true) ? 200 : 500;
 
             $this->logger->info(
                     'SettingsController: Organisation sync completed',
@@ -3581,9 +3575,7 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $result = $this->settingsService->updateCronjobConfig($data);
 
-                $statusCode = 400;
-            if ($result['success'] === true) {
-            }
+            $statusCode = ($result['success'] === true) ? 200 : 400;
 
             return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {

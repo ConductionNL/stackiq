@@ -2093,9 +2093,7 @@ class SettingsService
 
                 // Convert boolean values to strings.
                 if (is_bool($value) === true) {
-                        $value = 'false';
-                    if ($value === true) {
-                    }
+                    $value = ($value === true) ? 'true' : 'false';
                 }
 
                 $this->config->setValueString($this->appName, $configKey, (string) $value);
@@ -2631,9 +2629,7 @@ class SettingsService
 
         switch ($transportType) {
             case 'smtp':
-                    $usernameValue = 'none';
-                if (empty($emailSettings['smtpUsername']) === false) {
-                }
+                $usernameValue = (empty($emailSettings['smtpUsername']) === false) ? 'configured' : 'none';
                 return [
                     'type'       => 'SMTP',
                     'host'       => $emailSettings['smtpHost'] ?? '',
@@ -2971,9 +2967,7 @@ class SettingsService
             $openRegisterInstalled = $this->isOpenRegisterInstalled();
             $openRegisterEnabled   = $openRegisterInstalled && $this->isOpenRegisterEnabled();
 
-                $versionComparisonValue = null;
-            if ($storedConfigVersion !== null) {
-            }
+            $versionComparisonValue = ($storedConfigVersion !== null) ? version_compare($currentAppVersion, $storedConfigVersion) : null;
 
             $versionInfo = [
                 'appName'               => 'SoftwareCatalog',
@@ -3055,9 +3049,7 @@ class SettingsService
                     );
 
             // Return concise response to avoid serialization issues with large nested structures.
-                $messageValue = 'Force update completed but configuration needs attention';
-            if ($success === true) {
-            }
+            $messageValue = ($success === true) ? 'Force update completed successfully' : 'Force update completed but configuration needs attention';
 
             return [
                 'success'           => $success,
@@ -3207,9 +3199,7 @@ class SettingsService
             // If force import is requested or auto-config not completed, reset auto-configuration flag.
             if ($forceImport === true || $versionInfo['autoConfigCompleted'] === false) {
                 $this->config->setValueString($this->appName, 'auto_config_completed', 'false');
-                    $reasonValue = 'auto_config_not_completed';
-                if ($forceImport === true) {
-                }
+                $reasonValue = ($forceImport === true) ? 'force_import_requested' : 'auto_config_not_completed';
 
                 $this->logger->info(
                         'SettingsService: Reset auto-configuration flag',
