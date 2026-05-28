@@ -1201,7 +1201,8 @@ class SettingsController extends Controller
      */
     public function getProgress(string $operationId): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
@@ -1209,6 +1210,18 @@ class SettingsController extends Controller
             $progress = $this->progressTracker->getProgress($operationId);
 
             if ($progress === null) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Operation not found',
+                            'error'   => 'OPERATION_NOT_FOUND',
+                        ],
+                        404
+                        );
+            }
+
+            // Verify the caller owns this operation.
+            if (isset($progress['owner_uid']) === true && $progress['owner_uid'] !== $currentUser->getUID()) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -1262,8 +1275,15 @@ class SettingsController extends Controller
      */
     public function streamProgress(string $operationId): Response
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        // Verify the caller owns this operation before streaming.
+        $progress = $this->progressTracker->getProgress($operationId);
+        if ($progress !== null && isset($progress['owner_uid']) === true && $progress['owner_uid'] !== $currentUser->getUID()) {
+            return new JSONResponse(['message' => 'Operation not found', 'error' => 'OPERATION_NOT_FOUND'], 404);
         }
 
         // Set headers for Server-Sent Events.
@@ -1671,8 +1691,26 @@ class SettingsController extends Controller
      */
     public function exportOrgArchiMate(string $organizationUuid): Response
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        // Require admin or organisation-admin group membership.
+        $isAdmin = $this->groupManager->isAdmin($currentUser->getUID());
+        if ($isAdmin === false) {
+            $orgAdminGroups = $this->settingsService->getOrganizationAdminGroups();
+            $isOrgAdmin     = false;
+            foreach ($orgAdminGroups as $groupName) {
+                if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
+                    $isOrgAdmin = true;
+                    break;
+                }
+            }
+
+            if ($isOrgAdmin === false) {
+                return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+            }
         }
 
         try {
@@ -1739,7 +1777,10 @@ class SettingsController extends Controller
 
             $response->setStatus(200);
             $response->addHeader('Content-Type', 'application/xml');
-            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
+            $response->addHeader(
+                'Content-Disposition',
+                'attachment; filename="'.addslashes($fileName).'"; filename*=UTF-8\'\''.rawurlencode($fileName)
+            );
             $response->addHeader('Content-Length', (string) strlen($xmlContent));
             $response->addHeader('Cache-Control', 'no-cache');
 
@@ -1839,7 +1880,10 @@ class SettingsController extends Controller
             // Create download response.
             $response = new StreamResponse($file->fopen('r'));
             $response->addHeader('Content-Type', $contentType);
-            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
+            $response->addHeader(
+                'Content-Disposition',
+                'attachment; filename="'.addslashes($fileName).'"; filename*=UTF-8\'\''.rawurlencode($fileName)
+            );
             $response->addHeader('Content-Length', (string) $file->getSize());
 
             return $response;
@@ -2298,8 +2342,13 @@ class SettingsController extends Controller
      */
     public function getGenericUserGroups(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2390,8 +2439,13 @@ class SettingsController extends Controller
      */
     public function getOrganizationAdminGroups(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2482,8 +2536,13 @@ class SettingsController extends Controller
      */
     public function getSuperUserGroups(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2574,8 +2633,13 @@ class SettingsController extends Controller
      */
     public function getAllGroups(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2619,8 +2683,13 @@ class SettingsController extends Controller
      */
     public function clearArchiMateImportStatus(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2663,8 +2732,13 @@ class SettingsController extends Controller
      */
     public function killArchiMateImport(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2706,16 +2780,18 @@ class SettingsController extends Controller
      */
     public function cancelArchiMateImport(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
-        try {
-            $result = $this->settingsService->cancelArchiMateImport();
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
 
-                $message = 'ArchiMate import cancellation failed';
-            if ($result['cancelled'] === true) {
-            }
+        try {
+            $result  = $this->settingsService->cancelArchiMateImport();
+            $message = ($result['cancelled'] === true) ? 'ArchiMate import cancellation succeeded' : 'ArchiMate import cancellation failed';
 
             return new JSONResponse(
                     [
@@ -2752,8 +2828,13 @@ class SettingsController extends Controller
      */
     public function clearArchiMateExportStatus(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -3479,6 +3560,15 @@ class SettingsController extends Controller
      */
     public function bulkSyncStandards(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $this->logger->info('SettingsController: Starting bulk sync of module standards.');
 
@@ -3617,66 +3707,34 @@ class SettingsController extends Controller
      */
     public function getCronjobUsers(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-        }
-
-        try {
-            $result = $this->settingsService->getAvailableUsersForCronjobs();
-            return new JSONResponse($result);
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to get cronjob users',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to get cronjob users: '.$e->getMessage(),
-                        'users'   => [],
-                    ],
-                    500
-                    );
-        }
+        return new JSONResponse(
+            [
+                'success' => false,
+                'message' => 'This endpoint is deprecated and has been removed. Cronjob user context is no longer required.',
+            ],
+            Http::STATUS_GONE
+        );
     }//end getCronjobUsers()
 
     /**
      * Get available organisations for cronjob configuration
      *
-     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
+     * @deprecated Removed — cronjob context is no longer needed.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @return JSONResponse List of available organisations
+     * @return JSONResponse 410 Gone
      * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getCronjobOrganisations(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-        }
-
-        try {
-            $result = $this->settingsService->getAvailableOrganisationsForCronjobs();
-            return new JSONResponse($result);
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to get cronjob organisations',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success'       => false,
-                        'message'       => 'Failed to get cronjob organisations: '.$e->getMessage(),
-                        'organisations' => [],
-                    ],
-                    500
-                    );
-        }
+        return new JSONResponse(
+            [
+                'success' => false,
+                'message' => 'This endpoint is deprecated and has been removed. Cronjob organisation context is no longer required.',
+            ],
+            Http::STATUS_GONE
+        );
     }//end getCronjobOrganisations()
 }//end class

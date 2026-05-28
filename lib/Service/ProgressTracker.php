@@ -89,20 +89,22 @@ class ProgressTracker
     /**
      * Start tracking a new operation
      *
-     * @param string $operationType Type of operation (import, export)
-     * @param array  $options       Operation options and metadata
+     * @param string      $operationType Type of operation (import, export)
+     * @param array       $options       Operation options and metadata
+     * @param string|null $ownerUid      UID of the user who owns this operation
      *
      * @return string Unique operation ID
      *
      * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-1
      */
-    public function startOperation(string $operationType, array $options=[]): string
+    public function startOperation(string $operationType, array $options=[], ?string $ownerUid=null): string
     {
         $operationId = uniqid(prefix: $operationType.'_', more_entropy: true);
 
         $this->progress = [
             'operation_id'         => $operationId,
             'operation_type'       => $operationType,
+            'owner_uid'            => $ownerUid,
             'phase'                => 'initializing',
             'phase_description'    => self::PHASES['initializing']['description'],
             'total_items'          => $options['total_items'] ?? 0,
