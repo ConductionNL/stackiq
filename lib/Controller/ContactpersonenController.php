@@ -525,7 +525,8 @@ class ContactpersonenController extends Controller
         $isSelfReset = $currentUser->getUID() === $username;
 
         // Non-admins may only change their own password.
-        if ($isAdmin === false && $isSelfReset === false) {
+        $hasPasswordChangePermission = ($isAdmin === true || $isSelfReset === true);
+        if ($hasPasswordChangePermission === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 

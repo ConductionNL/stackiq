@@ -815,7 +815,13 @@ class SettingsController extends Controller
             // For incremental sync, use the original method.
             $result = $this->orgSyncSvc->performManualSync($minutesBack);
 
-            return new JSONResponse($result, $result['success'] === true ? 200 : 500);
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 500;
+            }
+
+            return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
             $this->logger->error(
                     'Manual sync failed',
@@ -958,7 +964,13 @@ class SettingsController extends Controller
 
             $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
 
-            return new JSONResponse($result, $result['success'] === true ? 200 : 400);
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 400;
+            }
+
+            return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
             return new JSONResponse(
                     [
@@ -1046,7 +1058,13 @@ class SettingsController extends Controller
             // Add timestamp for cache busting.
             $result['timestamp'] = time();
 
-            return new JSONResponse($result, $result['success'] === true ? 200 : 400);
+            if ($result['success'] === true) {
+                $importStatusCode = 200;
+            } else {
+                $importStatusCode = 400;
+            }
+
+            return new JSONResponse($result, $importStatusCode);
         } catch (\Exception $e) {
             $this->logger->error(
                     'SettingsController: Manual import failed',
@@ -1697,20 +1715,19 @@ class SettingsController extends Controller
         }
 
         // Require admin or organisation-admin group membership.
-        $isAdmin = $this->groupManager->isAdmin($currentUser->getUID());
-        if ($isAdmin === false) {
-            $orgAdminGroups = $this->settingsService->getOrganizationAdminGroups();
-            $isOrgAdmin     = false;
-            foreach ($orgAdminGroups as $groupName) {
-                if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
-                    $isOrgAdmin = true;
-                    break;
-                }
+        $isAdmin        = $this->groupManager->isAdmin($currentUser->getUID());
+        $orgAdminGroups = $this->settingsService->getOrganizationAdminGroups();
+        $isOrgAdmin     = false;
+        foreach ($orgAdminGroups as $groupName) {
+            if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
+                $isOrgAdmin = true;
+                break;
             }
+        }
 
-            if ($isOrgAdmin === false) {
-                return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
-            }
+        $hasExportPermission = ($isAdmin === true || $isOrgAdmin === true);
+        if ($hasExportPermission === false) {
+            return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -2211,7 +2228,11 @@ class SettingsController extends Controller
                 templateContent: $templateContent
             );
 
-            $updateMsg = ($success === true) ? "Template {$templateName} updated successfully" : "Failed to update template {$templateName}";
+            if ($success === true) {
+                $updateMsg = "Template {$templateName} updated successfully";
+            } else {
+                $updateMsg = "Failed to update template {$templateName}";
+            }
 
             return new JSONResponse(
                     [
@@ -2788,8 +2809,12 @@ class SettingsController extends Controller
         }
 
         try {
-            $result  = $this->settingsService->cancelArchiMateImport();
-            $message = ($result['cancelled'] === true) ? 'ArchiMate import cancellation succeeded' : 'ArchiMate import cancellation failed';
+            $result = $this->settingsService->cancelArchiMateImport();
+            if ($result['cancelled'] === true) {
+                $message = 'ArchiMate import cancellation succeeded';
+            } else {
+                $message = 'ArchiMate import cancellation failed';
+            }
 
             return new JSONResponse(
                     [
@@ -3515,7 +3540,11 @@ class SettingsController extends Controller
             // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
-            $statusCode = ($result['success'] === true) ? 200 : 500;
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 500;
+            }
 
             $this->logger->info(
                     'SettingsController: Organisation sync completed',
@@ -3667,7 +3696,11 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $result = $this->settingsService->updateCronjobConfig($data);
 
-            $statusCode = ($result['success'] === true) ? 200 : 400;
+            if ($result['success'] === true) {
+                $statusCode = 200;
+            } else {
+                $statusCode = 400;
+            }
 
             return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
@@ -3701,6 +3734,10 @@ class SettingsController extends Controller
      */
     public function getCronjobUsers(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         return new JSONResponse(
             [
                 'success' => false,
@@ -3723,6 +3760,10 @@ class SettingsController extends Controller
      */
     public function getCronjobOrganisations(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         return new JSONResponse(
             [
                 'success' => false,

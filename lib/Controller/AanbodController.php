@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -162,6 +163,10 @@ class AanbodController extends Controller
      */
     public function acceptAanbod(string $uuid): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Accepting aanbod object',
                 [
@@ -262,6 +267,10 @@ class AanbodController extends Controller
      */
     public function denyAanbod(string $uuid): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Denying aanbod object',
                 [

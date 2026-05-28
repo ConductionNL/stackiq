@@ -94,10 +94,21 @@
 			"title": "Dashboard",
 			"config": {
 				"widgets": [
-					{ "id": "dashboardHome", "title": "Dashboard", "type": "custom" }
+					{
+						"id": "dashboardHome",
+						"title": "Dashboard",
+						"type": "custom"
+					}
 				],
 				"layout": [
-					{ "id": 1, "widgetId": "dashboardHome", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 12 }
+					{
+						"id": "1",
+						"widgetId": "dashboardHome",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12
+					}
 				]
 			},
 			"slots": {

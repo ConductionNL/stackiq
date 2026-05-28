@@ -347,7 +347,11 @@ class ArchiMateExportService
         }
 
         $docNamespaces = $xml->getDocNamespaces(true);
-        $namespaces    = ($docNamespaces !== false) ? $docNamespaces : [];
+        if ($docNamespaces !== false) {
+            $namespaces = $docNamespaces;
+        } else {
+            $namespaces = [];
+        }
 
         return $namespaces[$prefix] ?? '';
     }//end getNamespaceUri()

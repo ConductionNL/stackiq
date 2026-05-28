@@ -465,9 +465,9 @@ class ContactPersonHandler
 
             // Build a password that satisfies NC default policy (≥10 chars, upper+lower+digit+special).
             $randomPw = $this->_secureRandom->generate(length: 4, characters: ISecureRandom::CHAR_UPPER)
-                . $this->_secureRandom->generate(length: 4, characters: ISecureRandom::CHAR_LOWER)
-                . $this->_secureRandom->generate(length: 2, characters: ISecureRandom::CHAR_DIGITS)
-                . $this->_secureRandom->generate(length: 2, characters: '!@#$%^&*()-_=+[]');
+                .$this->_secureRandom->generate(length: 4, characters: ISecureRandom::CHAR_LOWER)
+                .$this->_secureRandom->generate(length: 2, characters: ISecureRandom::CHAR_DIGITS)
+                .$this->_secureRandom->generate(length: 2, characters: '!@#$%^&*()-_=+[]');
             $user     = $this->_userManager->createUser(uid: $username, password: $randomPw);
 
             if (empty($user) === false) {
@@ -487,7 +487,6 @@ class ContactPersonHandler
                 // and created a fork-bomb risk when user creation is triggered from an
                 // unauthenticated path. NC performs setupFS/copySkeleton automatically on
                 // first login without any pre-warming.
-
                 // Set user details.
                 $this->_logger->info(
                         '[USER] Step 4: Setting user details',

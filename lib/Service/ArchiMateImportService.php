@@ -211,9 +211,11 @@ class ArchiMateImportService
                 $name  = (string) $attrName;
                 $value = (string) $attrValue;
                 // OPTIMIZATION: Only apply str_replace for namespaced names (e.g. xsi:type -> _xsi_type).
-                $underscoredKey = (strpos($name, ':') !== false)
-                    ? '_'.str_replace(':', '_', $name)
-                    : '_'.$name;
+                if (strpos($name, ':') !== false) {
+                    $underscoredKey = '_'.str_replace(':', '_', $name);
+                } else {
+                    $underscoredKey = '_'.$name;
+                }
 
                 $result[$underscoredKey] = $value;
                 $attrBag[$name]          = $value;
@@ -512,10 +514,14 @@ class ArchiMateImportService
             $statistics = $this->calculateObjectStatistics(normalizedData: $normalizedData, savedObjects: $savedObjects);
 
             // Calculate performance metrics.
-            $created            = $statistics['summary']['total_objects_created'];
-            $updated            = $statistics['summary']['total_objects_updated'];
-            $totalObjects       = $created + $updated;
-            $itemsPerSecond = ($totalObjects > 0) ? round($totalObjects / max($totalTime, 0.001), 2) : 0;
+            $created      = $statistics['summary']['total_objects_created'];
+            $updated      = $statistics['summary']['total_objects_updated'];
+            $totalObjects = $created + $updated;
+            if ($totalObjects > 0) {
+                $itemsPerSecond = round($totalObjects / max($totalTime, 0.001), 2);
+            } else {
+                $itemsPerSecond = 0;
+            }
 
             // Extract detailed error information from statistics.
             $detailedErrors = $this->extractDetailedErrors(statistics: $statistics);
@@ -1277,7 +1283,7 @@ class ArchiMateImportService
 
         // DEBUG: Log basic object info before sending to ObjectService.
         // Find first element with gemmaType for debugging.
-        $gemmaElements       = array_filter(
+        $gemmaElements = array_filter(
             $objects,
             fn($o) => ($o['section'] ?? '') === 'element' && empty($o['gemmaType']) === false
         );
@@ -1344,7 +1350,11 @@ class ArchiMateImportService
             try {
                 // Save this schema group with the specific schema ID.
                 // PERFORMANCE: Disabled validation and events for bulk import (like CSV import pattern).
-                $schemaValue = ($schemaId !== 'unknown') ? $schemaId : null;
+                if ($schemaId !== 'unknown') {
+                    $schemaValue = $schemaId;
+                } else {
+                    $schemaValue = null;
+                }
 
                 $saveResult = $objectService->saveObjects(
                     objects: $schemaObjects,
@@ -1415,11 +1425,15 @@ class ArchiMateImportService
         // Database save completed.
         // Store timing breakdown for performance metrics.
         // FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations.
-        $savedCount            = count($aggregatedStats['saved'] ?? []);
-        $updatedCount          = count($aggregatedStats['updated'] ?? []);
-        $unchangedCount        = count($aggregatedStats['unchanged'] ?? []);
-        $totalSavedCount       = $savedCount + $updatedCount + $unchangedCount;
-        $objectsSavedValue = ($totalSavedCount > 0) ? $totalSavedCount : count($objects);
+        $savedCount      = count($aggregatedStats['saved'] ?? []);
+        $updatedCount    = count($aggregatedStats['updated'] ?? []);
+        $unchangedCount  = count($aggregatedStats['unchanged'] ?? []);
+        $totalSavedCount = $savedCount + $updatedCount + $unchangedCount;
+        if ($totalSavedCount > 0) {
+            $objectsSavedValue = $totalSavedCount;
+        } else {
+            $objectsSavedValue = count($objects);
+        }
 
         $this->lastSaveTiming = [
             'total_save_seconds'           => round($totalSaveTime, 3),
@@ -1556,7 +1570,11 @@ class ArchiMateImportService
             $allInvalid   = [];
 
             foreach ($schemaGroups as $schemaId => $schemaObjects) {
-                $schemaValue = ($schemaId !== 'unknown') ? $schemaId : null;
+                if ($schemaId !== 'unknown') {
+                    $schemaValue = $schemaId;
+                } else {
+                    $schemaValue = null;
+                }
 
                 $saveResult = $objectService->saveObjects(
                     objects: $schemaObjects,
@@ -1661,7 +1679,11 @@ class ArchiMateImportService
 
             try {
                 // Disable RBAC for bulk import when the performance optimisation flag is set.
-                $_rbacValue = (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) ? false : true;
+                if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
+                    $_rbacValue = false;
+                } else {
+                    $_rbacValue = true;
+                }
 
                 $saveResult = $objectService->saveObjects(
                     objects: $chunk,
@@ -1750,7 +1772,11 @@ class ArchiMateImportService
     {
         // Using single batch processing.
         // Disable RBAC for bulk import when the performance optimisation flag is set.
-        $_rbacValue = (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) ? false : true;
+        if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
+            $_rbacValue = false;
+        } else {
+            $_rbacValue = true;
+        }
 
         $saveResult = $objectService->saveObjects(
             objects: $objects,
@@ -3078,10 +3104,25 @@ class ArchiMateImportService
 
         foreach ($nodeData as $node) {
             if (isset($node['_attributes']) === true) {
-                $xValue = isset($node['_attributes']['x']) === true ? (int) $node['_attributes']['x'] : null;
-                $yValue = isset($node['_attributes']['y']) === true ? (int) $node['_attributes']['y'] : null;
-                $wValue = isset($node['_attributes']['w']) === true ? (int) $node['_attributes']['w'] : null;
-                $hValue = isset($node['_attributes']['h']) === true ? (int) $node['_attributes']['h'] : null;
+                $xValue = null;
+                $yValue = null;
+                $wValue = null;
+                $hValue = null;
+                if (isset($node['_attributes']['x']) === true) {
+                    $xValue = (int) $node['_attributes']['x'];
+                }
+
+                if (isset($node['_attributes']['y']) === true) {
+                    $yValue = (int) $node['_attributes']['y'];
+                }
+
+                if (isset($node['_attributes']['w']) === true) {
+                    $wValue = (int) $node['_attributes']['w'];
+                }
+
+                if (isset($node['_attributes']['h']) === true) {
+                    $hValue = (int) $node['_attributes']['h'];
+                }
 
                 $processedNode = [
                     'identifier' => $node['_attributes']['identifier'] ?? null,
@@ -3309,10 +3350,10 @@ class ArchiMateImportService
             }
 
             if (isset($style['font']['color']['_attributes']) === true) {
-                $fontColor     = $style['font']['color']['_attributes'];
-                $r             = (int) ($fontColor['r'] ?? 0);
-                $g             = (int) ($fontColor['g'] ?? 0);
-                $b             = (int) ($fontColor['b'] ?? 0);
+                $fontColor = $style['font']['color']['_attributes'];
+                $r         = (int) ($fontColor['r'] ?? 0);
+                $g         = (int) ($fontColor['g'] ?? 0);
+                $b         = (int) ($fontColor['b'] ?? 0);
                 $font['color'] = "rgb($r, $g, $b)";
             }//end if
 
@@ -3377,7 +3418,11 @@ class ArchiMateImportService
             // Extract bend points if present.
             if (isset($connection['bendpoint']) === true) {
                 // Normalise to indexed array: single bendpoint is a plain assoc array.
-                $bendpoints = (isset($connection['bendpoint'][0]) === true) ? $connection['bendpoint'] : [$connection['bendpoint']];
+                if (isset($connection['bendpoint'][0]) === true) {
+                    $bendpoints = $connection['bendpoint'];
+                } else {
+                    $bendpoints = [$connection['bendpoint']];
+                }
 
                 foreach ($bendpoints as $bendpoint) {
                     if (isset($bendpoint['_attributes']) === true) {
@@ -3485,7 +3530,7 @@ class ArchiMateImportService
 
             if (str_contains($xsiType, ':') === true) {
                 // Handle namespaced types like "archimate:BusinessService".
-                return strtolower(substr($xsiType, (int)strpos($xsiType, ':') + 1));
+                return strtolower(substr($xsiType, (int) strpos($xsiType, ':') + 1));
             }
 
             return strtolower($xsiType);
@@ -3526,16 +3571,16 @@ class ArchiMateImportService
                 // Remove namespace.
                 $type = preg_replace('/relationship$/i', '', $type);
                 // Remove "Relationship" suffix.
-                return strtolower((string)$type);
+                return strtolower((string) $type);
             }
 
             if (str_contains($xsiType, ':') === true) {
                 // Handle other namespaced types.
-                return strtolower(substr($xsiType, (int)strpos($xsiType, ':') + 1));
+                return strtolower(substr($xsiType, (int) strpos($xsiType, ':') + 1));
             }
 
             return strtolower($xsiType);
-        }
+        }//end if
 
         // Priority 2: Check if this has a relationshipRef (use that to determine type if possible).
         if (isset($connection['_attributes']['relationshipRef']) === true) {

@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -604,10 +605,14 @@ class AangebodenGebruikController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @spec           openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Setting gebruik @self property to active org',
                 [
@@ -710,10 +715,14 @@ class AangebodenGebruikController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @spec           openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Deleting gebruik object as afnemer',
                 [
