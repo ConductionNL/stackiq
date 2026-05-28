@@ -1240,10 +1240,9 @@ class OrganizationSyncService
             }
 
             // Check if user already exists.
-            $userManager  = $this->container->get('OCP\IUserManager');
-                $username = $email;
-            if (empty($existingUsername) === false) {
-            }
+            $userManager = $this->container->get('OCP\IUserManager');
+            // Use the stored username when available, otherwise fall back to email as username.
+            $username = (empty($existingUsername) === false) ? $existingUsername : $email;
 
             $user = $userManager->get($username);
 
@@ -1268,8 +1267,7 @@ class OrganizationSyncService
                             'username'  => $username,
                         ]
                     );
-                }
-
+                } else {
                     $this->logger->error(
                         'OrganizationSyncService: Failed to create user account',
                         [
@@ -1277,9 +1275,10 @@ class OrganizationSyncService
                             'username'  => $username,
                         ]
                     );
+                }
             }//end if
 
-                // User exists, update username in contact if needed.
+            // Contact exists without a stored username — record the resolved username for future syncs.
             if (empty($existingUsername) === true) {
                 $this->logger->debug(
                     'OrganizationSyncService: Updating contact person with username',
@@ -1291,7 +1290,7 @@ class OrganizationSyncService
                 $stats['usersUpdated']++;
             }
 
-                return $username;
+            return $username;
         } catch (\Exception $e) {
             $this->logger->error(
                 'OrganizationSyncService: Failed to process contact person',
