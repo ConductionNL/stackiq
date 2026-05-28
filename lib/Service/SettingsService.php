@@ -2085,17 +2085,22 @@ class SettingsService
             'mailjetApiKey'                   => 'email_mailjet_api_key',
             'mailjetSecretKey'                => 'email_mailjet_secret_key',
         ];
+        // Secret fields that are masked in GET responses — skip any value that is the mask placeholder.
+        $secretFields    = ['smtpPassword', 'sendgridApiKey', 'mailgunApiKey', 'postmarkApiKey', 'sesSecretKey', 'mailjetSecretKey'];
         $updatedSettings = [];
 
         foreach ($allowedSettings as $settingKey => $configKey) {
             if (array_key_exists($settingKey, $emailSettings) === true) {
                 $value = $emailSettings[$settingKey];
 
+                // Skip masked placeholder — the client is echoing back the redacted value; preserve the real stored secret.
+                if (in_array($settingKey, $secretFields, true) === true && $value === '••••••••') {
+                    continue;
+                }
+
                 // Convert boolean values to strings.
                 if (is_bool($value) === true) {
-                        $value = 'false';
-                    if ($value === true) {
-                    }
+                    $value = ($value === true) ? 'true' : 'false';
                 }
 
                 $this->config->setValueString($this->appName, $configKey, (string) $value);
@@ -2631,9 +2636,7 @@ class SettingsService
 
         switch ($transportType) {
             case 'smtp':
-                    $usernameValue = 'none';
-                if (empty($emailSettings['smtpUsername']) === false) {
-                }
+                $usernameValue = (empty($emailSettings['smtpUsername']) === false) ? 'configured' : 'none';
                 return [
                     'type'       => 'SMTP',
                     'host'       => $emailSettings['smtpHost'] ?? '',
@@ -2808,8 +2811,8 @@ class SettingsService
 
         $dsn = sprintf(
             'smtp://%s:%s@%s:%d',
-            urlencode($username),
-            urlencode($password),
+            rawurlencode($username),
+            rawurlencode($password),
             $host,
             $port
         );
@@ -2818,9 +2821,7 @@ class SettingsService
             $dsn .= '?encryption='.$encryption;
         }
 
-            $encSuffix = '';
-        if (empty($encryption) === false && $encryption !== 'none') {
-        }
+        $encSuffix = (empty($encryption) === false && $encryption !== 'none') ? '?encryption='.$encryption : '';
 
         $dsnPattern = sprintf('smtp://***:***@%s:%d%s', $host, $port, $encSuffix);
 
@@ -2971,9 +2972,7 @@ class SettingsService
             $openRegisterInstalled = $this->isOpenRegisterInstalled();
             $openRegisterEnabled   = $openRegisterInstalled && $this->isOpenRegisterEnabled();
 
-                $versionComparisonValue = null;
-            if ($storedConfigVersion !== null) {
-            }
+            $versionComparisonValue = ($storedConfigVersion !== null) ? version_compare($currentAppVersion, $storedConfigVersion) : null;
 
             $versionInfo = [
                 'appName'               => 'SoftwareCatalog',
@@ -3055,9 +3054,7 @@ class SettingsService
                     );
 
             // Return concise response to avoid serialization issues with large nested structures.
-                $messageValue = 'Force update completed but configuration needs attention';
-            if ($success === true) {
-            }
+            $messageValue = ($success === true) ? 'Force update completed successfully' : 'Force update completed but configuration needs attention';
 
             return [
                 'success'           => $success,
@@ -3207,9 +3204,7 @@ class SettingsService
             // If force import is requested or auto-config not completed, reset auto-configuration flag.
             if ($forceImport === true || $versionInfo['autoConfigCompleted'] === false) {
                 $this->config->setValueString($this->appName, 'auto_config_completed', 'false');
-                    $reasonValue = 'auto_config_not_completed';
-                if ($forceImport === true) {
-                }
+                $reasonValue = ($forceImport === true) ? 'force_import_requested' : 'auto_config_not_completed';
 
                 $this->logger->info(
                         'SettingsService: Reset auto-configuration flag',

@@ -2058,13 +2058,13 @@ class SettingsController extends Controller
             $data          = $this->request->getParams();
             $emailSettings = $data['emailSettings'] ?? $data;
 
-            $result = $this->settingsService->updateEmailSettings($emailSettings);
+            $updatedSettings = $this->settingsService->updateEmailSettings($emailSettings);
 
             return new JSONResponse(
                     [
-                        'success'       => $result['success'],
-                        'message'       => $result['message'] ?? 'Email settings updated successfully',
-                        'emailSettings' => $result['emailSettings'] ?? null,
+                        'success'       => true,
+                        'message'       => 'Email settings updated successfully',
+                        'emailSettings' => $updatedSettings,
                     ]
                     );
         } catch (\Exception $e) {
@@ -2211,9 +2211,7 @@ class SettingsController extends Controller
                 templateContent: $templateContent
             );
 
-                $updateMsg = "Failed to update template {$templateName}";
-            if ($success === true) {
-            }
+            $updateMsg = ($success === true) ? "Template {$templateName} updated successfully" : "Failed to update template {$templateName}";
 
             return new JSONResponse(
                     [
@@ -3517,9 +3515,7 @@ class SettingsController extends Controller
             // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
-                $statusCode = 500;
-            if ($result['success'] === true) {
-            }
+            $statusCode = ($result['success'] === true) ? 200 : 500;
 
             $this->logger->info(
                     'SettingsController: Organisation sync completed',
@@ -3671,9 +3667,7 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $result = $this->settingsService->updateCronjobConfig($data);
 
-                $statusCode = 400;
-            if ($result['success'] === true) {
-            }
+            $statusCode = ($result['success'] === true) ? 200 : 400;
 
             return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
