@@ -2085,17 +2085,22 @@ class SettingsService
             'mailjetApiKey'                   => 'email_mailjet_api_key',
             'mailjetSecretKey'                => 'email_mailjet_secret_key',
         ];
+        // Secret fields that are masked in GET responses — skip any value that is the mask placeholder.
+        $secretFields    = ['smtpPassword', 'sendgridApiKey', 'mailgunApiKey', 'postmarkApiKey', 'sesSecretKey', 'mailjetSecretKey'];
         $updatedSettings = [];
 
         foreach ($allowedSettings as $settingKey => $configKey) {
             if (array_key_exists($settingKey, $emailSettings) === true) {
                 $value = $emailSettings[$settingKey];
 
+                // Skip masked placeholder — the client is echoing back the redacted value; preserve the real stored secret.
+                if (in_array($settingKey, $secretFields, true) === true && $value === '••••••••') {
+                    continue;
+                }
+
                 // Convert boolean values to strings.
                 if (is_bool($value) === true) {
-                        $value = 'false';
-                    if ($value === true) {
-                    }
+                    $value = ($value === true) ? 'true' : 'false';
                 }
 
                 $this->config->setValueString($this->appName, $configKey, (string) $value);
@@ -2808,8 +2813,8 @@ class SettingsService
 
         $dsn = sprintf(
             'smtp://%s:%s@%s:%d',
-            urlencode($username),
-            urlencode($password),
+            rawurlencode($username),
+            rawurlencode($password),
             $host,
             $port
         );
@@ -2818,9 +2823,7 @@ class SettingsService
             $dsn .= '?encryption='.$encryption;
         }
 
-            $encSuffix = '';
-        if (empty($encryption) === false && $encryption !== 'none') {
-        }
+        $encSuffix = (empty($encryption) === false && $encryption !== 'none') ? '?encryption='.$encryption : '';
 
         $dsnPattern = sprintf('smtp://***:***@%s:%d%s', $host, $port, $encSuffix);
 
