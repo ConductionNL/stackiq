@@ -346,9 +346,8 @@ class ArchiMateExportService
             return $wellKnown[$prefix];
         }
 
-            $namespaces = [];
-        if ($xml->getDocNamespaces(true) !== false) {
-        }
+        $docNamespaces = $xml->getDocNamespaces(true);
+        $namespaces    = ($docNamespaces !== false) ? $docNamespaces : [];
 
         return $namespaces[$prefix] ?? '';
     }//end getNamespaceUri()
@@ -550,12 +549,14 @@ XML;
         // DEBUG: Check if this is our target view with nodes.
         $targetId = 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af';
         if (isset($viewData['_identifier']) === true && $viewData['_identifier'] === $targetId) {
-                $nodeCountValue = 0;
+            $nodeCountValue = 0;
             if (is_array($viewData['node'] ?? null) === true) {
+                $nodeCountValue = count($viewData['node']);
             }
 
-                $nodeSampleValue = 'NO FIRST NODE';
+            $nodeSampleValue = 'NO FIRST NODE';
             if (isset($viewData['node'][0]) === true) {
+                $nodeSampleValue = $viewData['node'][0];
             }
 
             $this->logger->debug(
@@ -573,12 +574,14 @@ XML;
                     );
         }//end if
 
-            $nodeCountValue = 0;
+        $nodeCountValue = 0;
         if (is_array($viewData['node'] ?? null) === true) {
+            $nodeCountValue = count($viewData['node']);
         }
 
-            $connectionCountValue = 0;
+        $connectionCountValue = 0;
         if (is_array($viewData['connection'] ?? null) === true) {
+            $connectionCountValue = count($viewData['connection']);
         }
 
         $this->logger->debug(
@@ -616,26 +619,30 @@ XML;
     {
         // Format 1: OpenRegister object format with properties.xml_data.
         if (isset($view['properties']['xml_data']) === true) {
-                $xmlData = $view['properties']['xml_data'];
+            $xmlData = $view['properties']['xml_data'];
             if (is_string($view['properties']['xml_data']) === true) {
+                $xmlData = json_decode($view['properties']['xml_data'], true) ?? [];
             }
 
             if (is_array($xmlData) === true) {
+                return $xmlData;
             }
 
-                return null;
+            return null;
         }
 
         // Format 2: Object with xml_data field (from database).
         if (isset($view['xml_data']) === true) {
-                $xmlData = $view['xml_data'];
+            $xmlData = $view['xml_data'];
             if (is_string($view['xml_data']) === true) {
+                $xmlData = json_decode($view['xml_data'], true) ?? [];
             }
 
             if (is_array($xmlData) === true) {
+                return $xmlData;
             }
 
-                return null;
+            return null;
         }
 
         // Format 3: Direct XML data (from convertFromOpenRegisterObjects).
@@ -735,8 +742,9 @@ XML;
         // 3. Raw object data as fallback.
         if (isset($object['properties']['xml_data']) === true) {
             // Format 1: OpenRegister object format.
-                $xmlData = $object['properties']['xml_data'];
+            $xmlData = $object['properties']['xml_data'];
             if (is_string($object['properties']['xml_data']) === true) {
+                $xmlData = json_decode($object['properties']['xml_data'], true) ?? [];
             }
 
             if (is_array($xmlData) === true) {
@@ -744,8 +752,9 @@ XML;
             }
         } else if (isset($object['xml_data']) === true) {
             // Format 2: Object with xml_data field (from database).
-                $xmlData = $object['xml_data'];
+            $xmlData = $object['xml_data'];
             if (is_string($object['xml_data']) === true) {
+                $xmlData = json_decode($object['xml_data'], true) ?? [];
             }
 
             if (is_array($xmlData) === true) {
@@ -2561,8 +2570,9 @@ XML;
             }
 
             foreach ($refComps as $refComp) {
-                    $refCompUuid = ($refComp['id'] ?? $refComp['uuid'] ?? null);
+                $refCompUuid = ($refComp['id'] ?? $refComp['uuid'] ?? null);
                 if (is_string($refComp) === true) {
+                    $refCompUuid = $refComp;
                 }
 
                 if ($refCompUuid === null) {
@@ -2644,9 +2654,10 @@ XML;
         string $bronPropDefId,
         string $prefix=''
     ): array {
-        $elements     = [];
-            $idPrefix = 'id-swc-app-';
+        $elements = [];
+        $idPrefix = 'id-swc-app-';
         if ($prefix !== '') {
+            $idPrefix = $prefix.'-app-';
         }
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
@@ -2680,13 +2691,15 @@ XML;
         string $bronPropDefId,
         string $prefix=''
     ): array {
-        $relationships   = [];
-            $appIdPrefix = 'id-swc-app-';
+        $relationships = [];
+        $appIdPrefix   = 'id-swc-app-';
         if ($prefix !== '') {
+            $appIdPrefix = $prefix.'-app-';
         }
 
-            $relIdPrefix = 'id-swc-rel-';
+        $relIdPrefix = 'id-swc-rel-';
         if ($prefix !== '') {
+            $relIdPrefix = $prefix.'-rel-';
         }
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
@@ -2841,9 +2854,10 @@ XML;
             $propName = $prop['_name'] ?? $prop['name'] ?? '';
             if (is_string($propName) === true && stripos($propName, 'Titel view SWC') !== false && $value !== null) {
                 if (is_string($value) === true) {
+                    return $value;
                 }
 
-                    return null;
+                return null;
             }
         }
 

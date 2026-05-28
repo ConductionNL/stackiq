@@ -321,14 +321,9 @@ class ArchiMateService
             }
 
             // Look up the organization from Voorzieningen register.
-            $voorzConfig       = $this->settingsService->getVoorzieningenConfig();
-                $orgRegisterId = null;
-            if (empty($voorzConfig['register']) === false) {
-            }
-
-                $orgSchemaId = null;
-            if (empty($voorzConfig['organisatie_schema']) === false) {
-            }
+            $voorzConfig   = $this->settingsService->getVoorzieningenConfig();
+            $orgRegisterId = (empty($voorzConfig['register']) === false) ? $voorzConfig['register'] : null;
+            $orgSchemaId   = (empty($voorzConfig['organisatie_schema']) === false) ? $voorzConfig['organisatie_schema'] : null;
 
             if ($orgRegisterId === null || $orgSchemaId === false) {
                 // Fallback to generic lookup.
@@ -372,9 +367,7 @@ class ArchiMateService
             $schemaIdMap = $this->createSchemaIdMap();
 
             // Query organization's gebruik and modules from Voorzieningen register.
-                $gebruikSchemaId = null;
-            if (empty($voorzConfig['gebruik_schema']) === false) {
-            }
+            $gebruikSchemaId = (empty($voorzConfig['gebruik_schema']) === false) ? $voorzConfig['gebruik_schema'] : null;
 
             $gebruikData = [];
             if (empty($gebruikSchemaId) === false) {
@@ -389,9 +382,7 @@ class ArchiMateService
                 $gebruikData  = $objectService->searchObjects(query: $gebruikQuery, _rbac: false, _multitenancy: false);
             }
 
-                $moduleSchemaId = null;
-            if (empty($voorzConfig['module_schema']) === false) {
-            }
+            $moduleSchemaId = (empty($voorzConfig['module_schema']) === false) ? $voorzConfig['module_schema'] : null;
 
             $modulesData = [];
             if (empty($moduleSchemaId) === false) {
@@ -449,9 +440,7 @@ class ArchiMateService
                         // Merge into modulesData, deduplicating by ID.
                         $existingIds = [];
                         foreach ($modulesData as $m) {
-                                $mid = null;
-                            if (is_array($m) === true) {
-                            }
+                            $mid = is_array($m) === true ? ($m['id'] ?? $m['@self']['id'] ?? null) : null;
 
                             if (empty($mid) === false) {
                                 $existingIds[$mid] = true;
@@ -459,9 +448,9 @@ class ArchiMateService
                         }
 
                         foreach ($allModules as $mod) {
-                                $modArr = $mod;
-                            if ((is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true)) {
-                            }
+                            $modArr = (is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true)
+                                ? $mod->jsonSerialize()
+                                : $mod;
 
                             $modId = $modArr['id'] ?? $modArr['@self']['id'] ?? null;
                             if ($modId !== false && isset($existingIds[$modId]) === false) {
@@ -769,11 +758,13 @@ class ArchiMateService
         switch ($type) {
             case 'direct':
                 if (is_string($current) === true) {
+                    return $current;
                 }
                 return null;
 
             case 'value':
                 if (is_array($current) === true && isset($current['_value']) === true) {
+                    return $current['_value'];
                 }
                 return null;
 
@@ -1105,9 +1096,7 @@ class ArchiMateService
         foreach ($chunks as $chunkIndex => $chunk) {
             // OPTIMIZATION: Removed debug logging from chunk processing loop.
             try {
-                    $rbacValue = true;
-                if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
-                }
+                $rbacValue = (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) ? false : true;
 
                 $saveResult = $objectService->saveObjects(
                     objects: $chunk,
@@ -1197,9 +1186,7 @@ class ArchiMateService
                 ]
                 );
 
-            $rbacValue = true;
-        if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
-        }
+        $rbacValue = (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) ? false : true;
 
         $saveResult = $objectService->saveObjects(
             objects: $objects,
@@ -1765,8 +1752,10 @@ class ArchiMateService
 
         // Fallback to legacy individual app config keys if not present in JSON.
         if ($rawRegisterId === null || $rawRegisterId === '') {
-                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
+            $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
             if ($this->config->getValueString('softwarecatalog', 'amef_register', '') !== '') {
+                // If only the plain register key is configured, use it as the ID.
+                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '');
             }
         }
 
@@ -1774,9 +1763,8 @@ class ArchiMateService
         if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string) $rawRegisterId) === true) {
             $registerId = (int) $rawRegisterId;
             if ($registerId > 0) {
+                return $registerId;
             }
-
-                return null;
         }
 
         return null;
@@ -1913,15 +1901,17 @@ class ArchiMateService
             $isAmefType      = in_array($schemaType, $amefObjectTypes, true) === true;
 
             // Use AMEF register ID for AMEF types, otherwise use per-type register ID.
-                $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
+            $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
             if ($isAmefType === true) {
+                $registerId = $this->settingsService->getAmefRegisterId();
             }
 
             $schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
 
             if ($registerId === null || $schemaId === false) {
-                    $errorMessage = "ArchiMateService: Register or {$schemaType} schema not configured";
+                $errorMessage = "ArchiMateService: Register or {$schemaType} schema not configured";
                 if ($isAmefType === true) {
+                    $errorMessage = "ArchiMateService: AMEF register or {$schemaType} schema not configured";
                 }
 
                 $this->logger->error(
@@ -1964,8 +1954,9 @@ class ArchiMateService
                 ];
             }
 
-                $paginationValue = 'disabled';
+            $paginationValue = 'disabled';
             if ($usePagination === true) {
+                $paginationValue = 'enabled';
             }
 
             $this->logger->debug(
@@ -1981,8 +1972,9 @@ class ArchiMateService
             // Use searchObjects method for filtering.
             $objects = $objectService->searchObjects($finalQuery);
 
-                $paginationValue = 'disabled';
+            $paginationValue = 'disabled';
             if ($usePagination === true) {
+                $paginationValue = 'enabled';
             }
 
             $this->logger->debug(
@@ -2629,9 +2621,10 @@ class ArchiMateService
         if ($sectionType === 'view' && isset($sectionData['diagrams']['view']) === true) {
             $viewData = $sectionData['diagrams']['view'];
             if (isset($viewData[0]) === true) {
+                return $viewData;
             }
 
-                return [$viewData];
+            return [$viewData];
         }
 
         // Try common patterns.
@@ -2650,9 +2643,10 @@ class ArchiMateService
             if (isset($sectionData[$pattern]) === true) {
                 $data = $sectionData[$pattern];
                 if (is_array($data) === true && isset($data[0]) === true) {
+                    return $data;
                 }
 
-                    return [$data];
+                return [$data];
             }
         }
 
@@ -2671,8 +2665,9 @@ class ArchiMateService
      */
     private function flattenPropertiesBatch(array &$object, array $properties, array $propDefMap): void
     {
-            $props = [$properties];
+        $props = [$properties];
         if (isset($properties[0]) === true) {
+            $props = $properties;
         }
 
         $processedProperties = [];
@@ -3112,11 +3107,13 @@ class ArchiMateService
 
             // Handle different XML structures.
             if (is_string($endpointData) === true) {
+                return $endpointData;
             }
 
             if (is_array($endpointData) === true) {
                 // Try _attributes.href or _value.
                 if (isset($endpointData['_attributes']['href']) === true) {
+                    return $endpointData['_attributes']['href'];
                 }
 
                 if (isset($endpointData['_value']) === true) {
@@ -3129,6 +3126,7 @@ class ArchiMateService
         if (isset($relationship['xml']['_attributes']) === true) {
             $attr = $relationship['xml']['_attributes'];
             if ($endpoint === 'source' && isset($attr['source']) === true) {
+                return $attr['source'];
             }
 
             if ($endpoint === 'target' && isset($attr['target']) === true) {
