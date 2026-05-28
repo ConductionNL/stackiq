@@ -1704,12 +1704,10 @@
         "slug": "contactpersoon",
         "title": "Contactpersoon",
         "description": "Contactgegevens van een persoon",
-        "version": "0.0.26",
+        "version": "0.0.27",
         "summary": "",
         "icon": "AccountMultiple",
-        "required": [
-          "e-mailadres"
-        ],
+        "required": [],
         "properties": {
           "voornaam": {
             "type": "string",
@@ -1884,7 +1882,7 @@
             "title": "E-mailadres",
             "type": "string",
             "format": "email",
-            "required": true,
+            "required": false,
             "visible": true,
             "facetable": false,
             "order": 6,
