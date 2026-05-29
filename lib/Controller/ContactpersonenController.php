@@ -532,7 +532,8 @@ class ContactpersonenController extends Controller
         }
 
         // Self-service resets require current-password confirmation.
-        if ($isSelfReset === true && $isAdmin === false) {
+        $needsCurrentPwd = ($isSelfReset === true && $isAdmin !== true);
+        if ($needsCurrentPwd === true) {
             if (empty($currentPassword) === true) {
                 return new JSONResponse(
                         [
@@ -654,7 +655,9 @@ class ContactpersonenController extends Controller
         $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
         $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
             || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($isAdmin === false && $isOrgAdmin === false) {
+
+        $canManageGroups = ($isAdmin || $isOrgAdmin);
+        if ($canManageGroups === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
@@ -673,7 +676,8 @@ class ContactpersonenController extends Controller
 
             // SB1: Cross-tenant scope check — org-admins may only modify users in their own tenant.
             // Full admins bypass this restriction.
-            if ($isAdmin === false && $isOrgAdmin === true) {
+            $isOrgAdminOnly = ($isAdmin !== true && $isOrgAdmin === true);
+            if ($isOrgAdminOnly === true) {
                 try {
                     $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
@@ -960,7 +964,9 @@ class ContactpersonenController extends Controller
         $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
         $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
             || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($isAdmin === false && $isOrgAdmin === false) {
+
+        $canViewUserInfo = ($isAdmin || $isOrgAdmin);
+        if ($canViewUserInfo === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
@@ -1286,7 +1292,9 @@ class ContactpersonenController extends Controller
         $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
         $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
             || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($isAdmin === false && $isOrgAdmin === false) {
+
+        $canViewBulkInfo = ($isAdmin || $isOrgAdmin);
+        if ($canViewBulkInfo === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
