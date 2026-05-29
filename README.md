@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://codeberg.org/Conduction/softwarecatalog/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/softwarecatalog" alt="Latest release"></a>
+  <a href="https://codeberg.org/Conduction/softwarecatalog/releases"><img src="https://img.shields.io/gitea/v/release/Conduction/softwarecatalog?gitea_url=https%3A%2F%2Fcodeberg.org" alt="Latest release"></a>
   <a href="https://codeberg.org/Conduction/softwarecatalog/src/branch/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
-  <a href="https://codeberg.org/Conduction/softwarecatalog/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/softwarecatalog/code-quality.yml?label=quality" alt="Code quality"></a>
+  <a href="https://ci.codeberg.org/repos/Conduction/softwarecatalog"><img src="https://ci.codeberg.org/api/badges/Conduction/softwarecatalog/status.svg" alt="Code quality"></a>
   <a href="https://softwarecatalog.app"><img src="https://img.shields.io/badge/docs-softwarecatalog.app-green" alt="Documentation"></a>
 </p>
 
