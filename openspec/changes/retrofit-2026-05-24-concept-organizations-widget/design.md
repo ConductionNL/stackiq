@@ -15,7 +15,7 @@ The dashboard widget already exists and is registered via `Application::register
 ## Out of scope
 
 - Refactoring the widget to a single-bundle / dynamic-import shape — open a separate issue.
-- Removing the `softwarecatalog-` prefix or aligning with the openbuilt widget naming — out of scope.
+- Removing the `softwarecatalog-` prefix or aligning with the openbuild widget naming — out of scope.
 
 ## References
 
