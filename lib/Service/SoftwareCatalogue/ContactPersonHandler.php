@@ -714,8 +714,9 @@ class ContactPersonHandler
 
             // Users are now tied to organisation entities in OpenRegister.
             // No need to add to organization-specific groups.
-                $organizationAdminGroupsValue = [];
+            $organizationAdminGroupsValue = [];
             if ($isFirstContact === true) {
+                $organizationAdminGroupsValue = ['gebruik-beheerder'];
             }
 
             $this->_logger->info(

@@ -1181,6 +1181,7 @@ class SettingsController extends Controller
                 // Multi-status or Server Error.
                 $httpStatus = 500;
                 if (empty($results['errors']) === false) {
+                    $httpStatus = Http::STATUS_MULTI_STATUS;
                 }
             }
 
@@ -1494,8 +1495,9 @@ class SettingsController extends Controller
 
             if ($hasUploadedFiles === true || $hasFilesArray === true) {
                 // Use $_FILES as fallback if getUploadedFile doesn't work.
-                    $fileData = $filesArray;
+                $fileData = $filesArray;
                 if ($uploadedFiles !== null) {
+                    $fileData = $uploadedFiles;
                 }
 
                 // Handle file upload.

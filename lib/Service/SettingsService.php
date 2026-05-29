@@ -272,9 +272,10 @@ class SettingsService
                     $rawRegisters = array_map(
                             function ($register) {
                                 if (is_object($register) === true && method_exists($register, 'jsonSerialize') === true) {
+                                    return $register->jsonSerialize();
                                 }
 
-                                    return (array) $register;
+                                return (array) $register;
                             },
                             $rawRegisters
                             );
@@ -960,8 +961,9 @@ class SettingsService
         // Fallback to legacy per-object-type register config.
         if ($result === null) {
             $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
-                $result = null;
+            $result     = null;
             if (empty($registerId) === false) {
+                $result = $registerId;
             }
         }
 
@@ -3734,9 +3736,10 @@ class SettingsService
             $registers = array_map(
                     function ($register) {
                         if (($register instanceof \OCA\OpenRegister\Db\Register)) {
+                            return $register->jsonSerialize();
                         }
 
-                            return (array) $register;
+                        return (array) $register;
                     },
                     $registers
                     );
@@ -3801,8 +3804,9 @@ class SettingsService
                 }
             }//end foreach
 
-                $targetRegister = $candidate;
+            $targetRegister = $candidate;
             if (isset($best) === true) {
+                $targetRegister = $best;
             }
 
             if ($targetRegister === null) {
@@ -3828,8 +3832,9 @@ class SettingsService
                 $allowed = ['organization','element','relation','view','model','property-definition'];
                 if (in_array($slug, $allowed, true) === true) {
                     // Handle property-definition schema with underscore in config key.
-                        $configKey = $slug.'_schema';
+                    $configKey = $slug.'_schema';
                     if ($slug === 'property-definition') {
+                        $configKey = 'property_definition_schema';
                     }
 
                     $config[$configKey] = (string) $schema['id'];
@@ -5539,8 +5544,9 @@ class SettingsService
             if (isset($config['register']) === true) {
                 $targetRegisterId = (string) $config['register'];
             } else {
-                    $targetRegisterId = '';
+                $targetRegisterId = '';
                 if (isset($existing['register']) === true) {
+                    $targetRegisterId = (string) $existing['register'];
                 }
             }
 
@@ -6023,8 +6029,9 @@ class SettingsService
                 }
 
                 // Prepare organisatie data with forced UUID.
-                    $statusValue = 'Inactief';
+                $statusValue = 'Inactief';
                 if ($organisation->getActive() === true) {
+                    $statusValue = 'Actief';
                 }
 
                 $organisationsToCreate[] = [
@@ -6148,13 +6155,15 @@ class SettingsService
                 }//end try
             }//end foreach
 
-            $totalTime = microtime(true) - $startTime;
-                $overallPerformance = 0;
+            $totalTime          = microtime(true) - $startTime;
+            $overallPerformance = 0;
             if ($results['created_count'] > 0) {
+                $overallPerformance = (int) round($results['created_count'] / max($totalTime, 0.001));
             }
 
-                $estimatedImprovementValue = 'baseline';
+            $estimatedImprovementValue = 'baseline';
             if ($overallPerformance > 10) {
+                $estimatedImprovementValue = 'high';
             }
 
             $createdCount  = $results['created_count'];

@@ -271,9 +271,10 @@ class AangebodenGebruikController extends Controller
             $isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
             if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
-                $user       = $this->userSession->getUser();
-                    $userId = 'null';
+                $user   = $this->userSession->getUser();
+                $userId = 'null';
                 if ($user !== null) {
+                    $userId = $user->getUID();
                 }
 
                 $this->logger->info(
@@ -306,8 +307,9 @@ class AangebodenGebruikController extends Controller
             $result = $this->gebruikSvc->getAllGebruiksForAmbtenaar($options);
 
             // Determine HTTP status code based on whether there's an error.
-                $statusCode = 200;
+            $statusCode = 200;
             if (isset($result['error']) === true) {
+                $statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
             }
 
             $this->logger->info(
@@ -378,9 +380,10 @@ class AangebodenGebruikController extends Controller
             $isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
             if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
-                $user       = $this->userSession->getUser();
-                    $userId = 'null';
+                $user   = $this->userSession->getUser();
+                $userId = 'null';
                 if ($user !== null) {
+                    $userId = $user->getUID();
                 }
 
                 $this->logger->info(
@@ -417,8 +420,9 @@ class AangebodenGebruikController extends Controller
             );
 
             // Determine HTTP status code based on whether there's an error.
-                $statusCode = 200;
+            $statusCode = 200;
             if (isset($result['error']) === true) {
+                $statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
             }
 
             $this->logger->info(

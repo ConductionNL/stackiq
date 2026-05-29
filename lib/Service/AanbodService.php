@@ -229,15 +229,17 @@ class AanbodService
             $requestedLimit = $options['_limit'] ?? $options['limit'] ?? 20;
             $requestedPage  = $options['_page'] ?? 1;
 
-                $requestedOffset = (($requestedPage - 1) * $requestedLimit);
+            $requestedOffset = (($requestedPage - 1) * $requestedLimit);
             if (isset($options['_offset']) === true) {
+                $requestedOffset = (int) $options['_offset'];
             }
 
             $totalFiltered    = count($allResults);
             $paginatedResults = array_slice($allResults, $requestedOffset, $requestedLimit);
 
-                $totalPages = 1;
+            $totalPages = 1;
             if ($requestedLimit > 0) {
+                $totalPages = (int) ceil($totalFiltered / $requestedLimit);
             }
 
             return [

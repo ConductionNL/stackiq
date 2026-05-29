@@ -1,25 +1,9 @@
-# PHPStan baseline — tracked debt
-#
-# 206 errors baselined during the Phase 2 canonical-config sync. These were
-# previously masked by per-app suppressions including the now-dropped
-# `scanDirectories: ../openregister/lib`. Categories: defensive-coding
-# (always-true / unreachable / never-read), SimpleXMLElement nullability,
-# and OCA\OpenRegister\ symbol-resolution residue.
-#
-# Tracking issue: https://github.com/ConductionNL/softwarecatalog/issues/279
-# Target: empty / removed file once source refactors land.
-
 parameters:
 	ignoreErrors:
 		-
 			message: "#^Parameter \\#2 \\$listener of method OCP\\\\AppFramework\\\\Bootstrap\\\\IRegistrationContext\\:\\:registerEventListener\\(\\) expects class\\-string\\<OCP\\\\EventDispatcher\\\\IEventListener\\<OCP\\\\EventDispatcher\\\\Event\\>\\>, 'OCA\\\\\\\\SoftwareCatalog\\\\\\\\EventListener\\\\\\\\UserProfileUpdatedEventListener' given\\.$#"
 			count: 1
 			path: lib/AppInfo/Application.php
-
-		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Controller\\\\AanbodController\\:\\:\\$userSession is never read, only written\\.$#"
-			count: 1
-			path: lib/Controller/AanbodController.php
 
 		-
 			message: "#^Expression in empty\\(\\) is always falsy\\.$#"
@@ -42,27 +26,12 @@ parameters:
 			path: lib/Controller/AangebodenGebruikController.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Controller\\\\AangebodenGebruikController\\:\\:\\$groupManager is never read, only written\\.$#"
-			count: 1
-			path: lib/Controller/AangebodenGebruikController.php
-
-		-
-			message: "#^Undefined variable: \\$groupManager$#"
-			count: 1
-			path: lib/Controller/AangebodenGebruikController.php
-
-		-
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Controller\\\\ContactpersonenController\\:\\:\\$secureRandom is never read, only written\\.$#"
 			count: 1
 			path: lib/Controller/ContactpersonenController.php
 
 		-
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Controller\\\\ContactpersonenController\\:\\:\\$settingsService is never read, only written\\.$#"
-			count: 1
-			path: lib/Controller/ContactpersonenController.php
-
-		-
-			message: "#^Strict comparison using \\=\\=\\= between string and true will always evaluate to false\\.$#"
 			count: 1
 			path: lib/Controller/ContactpersonenController.php
 
@@ -80,11 +49,6 @@ parameters:
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Dashboard\\\\ConceptOrganisatiesWidget\\:\\:\\$url is never read, only written\\.$#"
 			count: 1
 			path: lib/Dashboard/ConceptOrganisatiesWidget.php
-
-		-
-			message: "#^Strict comparison using \\=\\=\\= between 'actief'\\|'active' and '' will always evaluate to false\\.$#"
-			count: 1
-			path: lib/EventListener/SoftwareCatalogEventListener.php
 
 		-
 			message: "#^Strict comparison using \\=\\=\\= between false and true will always evaluate to false\\.$#"
@@ -107,7 +71,7 @@ parameters:
 			path: lib/Service/AanbodService.php
 
 		-
-			message: "#^Cannot unset offset 'next' on array\\{results\\: array\\<int\\<0, max\\>, mixed\\>, total\\: int\\<0, max\\>, pages\\: 1, page\\: mixed, limit\\: mixed, offset\\: mixed\\}\\.$#"
+			message: "#^Cannot unset offset 'next' on array\\{results\\: array\\<int\\<0, max\\>, mixed\\>, total\\: int\\<0, max\\>, pages\\: int, page\\: mixed, limit\\: mixed, offset\\: mixed\\}\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
 
@@ -162,16 +126,6 @@ parameters:
 			path: lib/Service/ArchiMateExportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateExportService\\:\\:getViewSwcTitle\\(\\) never returns string so it can be removed from the return type\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateExportService.php
-
-		-
-			message: "#^Offset string on array\\{\\} on left side of \\?\\? does not exist\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateExportService.php
-
-		-
 			message: "#^Result of && is always false\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateExportService.php
@@ -197,11 +151,6 @@ parameters:
 			path: lib/Service/ArchiMateExportService.php
 
 		-
-			message: "#^Comparison operation \"\\<\" between 100 and 100 is always false\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
 			message: "#^Comparison operation \"\\>\" between \\(array\\|float\\|int\\) and 0 results in an error\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
@@ -223,11 +172,6 @@ parameters:
 
 		-
 			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:extractNodesRecursively\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:getAmefRegisterId\\(\\) never returns int so it can be removed from the return type\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
@@ -347,17 +291,7 @@ parameters:
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Variable \\$prop on left side of \\?\\? always exists and is not nullable\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
 			message: "#^Constant OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:CONFIG_KEYS is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Empty array passed to foreach\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
@@ -382,16 +316,6 @@ parameters:
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:isOperationInProgress\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:getAmefRegisterId\\(\\) never returns int so it can be removed from the return type\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
 			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:getAmefSchemaIdForType\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
@@ -403,6 +327,11 @@ parameters:
 
 		-
 			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:initializeCache\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:isOperationInProgress\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
@@ -448,32 +377,12 @@ parameters:
 
 		-
 			message: "#^Result of && is always false\\.$#"
-			count: 2
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Result of \\|\\| is always true\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
 			message: "#^Strict comparison using \\=\\=\\= between false and true will always evaluate to false\\.$#"
 			count: 3
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Strict comparison using \\=\\=\\= between int\\|null and false will always evaluate to false\\.$#"
-			count: 2
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Strict comparison using \\=\\=\\= between null and false will always evaluate to false\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Strict comparison using \\=\\=\\= between null and true will always evaluate to false\\.$#"
-			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
@@ -488,28 +397,8 @@ parameters:
 
 		-
 			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
-			count: 6
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Variable \\$gebruikSchemaId in empty\\(\\) always exists and is always falsy\\.$#"
 			count: 2
 			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Variable \\$mid in empty\\(\\) always exists and is always falsy\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Variable \\$moduleSchemaId in empty\\(\\) always exists and is always falsy\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Offset 'achternaam'\\|'e\\-mailadres'\\|'functie'\\|'tussenvoegsel'\\|'voornaam' on array\\{\\} on left side of \\?\\? does not exist\\.$#"
-			count: 1
-			path: lib/Service/ContactpersoonService.php
 
 		-
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\ContactpersoonService\\:\\:\\$config is never read, only written\\.$#"
@@ -557,7 +446,7 @@ parameters:
 			path: lib/Service/OrganisatieService.php
 
 		-
-			message: "#^Empty array passed to foreach\\.$#"
+			message: "#^Cannot unset offset 'organisatie' on array\\{username\\: string\\}\\.$#"
 			count: 1
 			path: lib/Service/OrganizationSyncService.php
 
@@ -572,7 +461,7 @@ parameters:
 			path: lib/Service/OrganizationSyncService.php
 
 		-
-			message: "#^Offset 'contactpersonen' on array\\{\\} on left side of \\?\\? does not exist\\.$#"
+			message: "#^Offset 'organisatie' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
 			count: 1
 			path: lib/Service/OrganizationSyncService.php
 
@@ -582,44 +471,9 @@ parameters:
 			path: lib/Service/OrganizationSyncService.php
 
 		-
-			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
-			count: 2
-			path: lib/Service/OrganizationSyncService.php
-
-		-
-			message: "#^Variable \\$contactUuid in empty\\(\\) is never defined\\.$#"
-			count: 1
-			path: lib/Service/OrganizationSyncService.php
-
-		-
-			message: "#^Variable \\$contactUuids in empty\\(\\) always exists and is always falsy\\.$#"
-			count: 1
-			path: lib/Service/OrganizationSyncService.php
-
-		-
-			message: "#^Offset 'organisatie' on array\\{username: string\\} on left side of \\?\\? does not exist\\.$#"
-			count: 1
-			path: lib/Service/OrganizationSyncService.php
-
-		-
-			message: "#^Cannot unset offset 'organisatie' on array\\{username: string\\}\\.$#"
-			count: 1
-			path: lib/Service/OrganizationSyncService.php
-
-		-
 			message: "#^Comparison operation \"\\>\" between 105 and 0 is always true\\.$#"
 			count: 1
 			path: lib/Service/ProgressTracker.php
-
-		-
-			message: "#^Comparison operation \"\\>\" between 0 and 10 is always false\\.$#"
-			count: 1
-			path: lib/Service/SettingsService.php
-
-		-
-			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
-			count: 1
-			path: lib/Service/SettingsService.php
 
 		-
 			message: "#^Offset 'id' does not exist on array\\{schemas\\: array\\<int\\<0, max\\>, mixed\\>\\}\\.$#"
@@ -628,17 +482,12 @@ parameters:
 
 		-
 			message: "#^Offset 'id' on array\\{schemas\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? does not exist\\.$#"
-			count: 1
-			path: lib/Service/SettingsService.php
-
-		-
-			message: "#^Offset 'schemas' on array\\{schemas\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
 			count: 2
 			path: lib/Service/SettingsService.php
 
 		-
-			message: "#^Offset 'schemas' on non\\-empty\\-array on left side of \\?\\? always exists and is not nullable\\.$#"
-			count: 1
+			message: "#^Offset 'schemas' on array\\{schemas\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 3
 			path: lib/Service/SettingsService.php
 
 		-
@@ -649,11 +498,6 @@ parameters:
 		-
 			message: "#^Result of && is always false\\.$#"
 			count: 2
-			path: lib/Service/SettingsService.php
-
-		-
-			message: "#^Strict comparison using \\=\\=\\= between 'false' and true will always evaluate to false\\.$#"
-			count: 1
 			path: lib/Service/SettingsService.php
 
 		-
@@ -670,11 +514,6 @@ parameters:
 			message: "#^Variable \\$config in isset\\(\\) always exists and is not nullable\\.$#"
 			count: 1
 			path: lib/Service/SettingsService.php
-
-		-
-			message: "#^Access to static property \\$SERVERROOT on an unknown class OC\\.$#"
-			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
 
 		-
 			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogue\\\\ContactPersonHandler\\:\\:addUserToGroup\\(\\) is unused\\.$#"
@@ -727,22 +566,12 @@ parameters:
 			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
 
 		-
-			message: "#^Strict comparison using \\=\\=\\= between false and true will always evaluate to false\\.$#"
-			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
-
-		-
 			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
 			count: 1
 			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
 
 		-
 			message: "#^Variable \\$currentRollen in empty\\(\\) always exists and is always falsy\\.$#"
-			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
-
-		-
-			message: "#^Variable \\$phpBin in empty\\(\\) always exists and is not falsy\\.$#"
 			count: 1
 			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
 
@@ -772,22 +601,12 @@ parameters:
 			path: lib/Service/SoftwareCatalogueService.php
 
 		-
-			message: "#^Offset 'roles' on array\\{\\} on left side of \\?\\? does not exist\\.$#"
-			count: 1
-			path: lib/Service/SoftwareCatalogueService.php
-
-		-
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogueService\\:\\:\\$_organizationHandler is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/SoftwareCatalogueService.php
 
 		-
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogueService\\:\\:\\$appName is never read, only written\\.$#"
-			count: 1
-			path: lib/Service/SoftwareCatalogueService.php
-
-		-
-			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
 			count: 1
 			path: lib/Service/SoftwareCatalogueService.php
 
@@ -802,11 +621,11 @@ parameters:
 			path: lib/Service/ViewService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$l10n is never read, only written\\.$#"
+			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Settings/SoftwareCatalogAdmin.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$l10n is never read, only written\\.$#"
 			count: 1
 			path: lib/Settings/SoftwareCatalogAdmin.php

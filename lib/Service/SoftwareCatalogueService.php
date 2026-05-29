@@ -682,8 +682,9 @@ class SoftwareCatalogueService
             if ($newBeoordeling === 'actief') {
                 $becameActive = ($oldBeoordeling !== 'actief');
 
-                    $activeMessage = 'Organization is active';
+                $activeMessage = 'Organization is active';
                 if ($becameActive === true) {
+                    $activeMessage = 'Organization became active';
                 }
 
                 $this->_logger->info(
@@ -740,8 +741,9 @@ class SoftwareCatalogueService
             if ($newBeoordeling === 'inactief' || $newBeoordeling === 'deactief') {
                 $becameInactive = ($oldBeoordeling === 'actief');
 
-                    $inactiveMessage = 'Organization is inactive';
+                $inactiveMessage = 'Organization is inactive';
                 if ($becameInactive === true) {
+                    $inactiveMessage = 'Organization became inactive';
                 }
 
                 $this->_logger->info(
@@ -1121,9 +1123,10 @@ class SoftwareCatalogueService
                     );
 
             // Get current and old data for comparison.
-            $newData     = $contactpersoonObject->getObject();
-                $oldData = [];
+            $newData = $contactpersoonObject->getObject();
+            $oldData = [];
             if ($oldContactpersoonObject !== null) {
+                $oldData = $oldContactpersoonObject->getObject();
             }
 
             $newRoles = $newData['roles'] ?? [];
@@ -1550,8 +1553,9 @@ class SoftwareCatalogueService
         $userSession = $this->_userSession;
         $currentUser = $userSession->getUser();
 
-            $currentUserValue = 'null';
+        $currentUserValue = 'null';
         if ($currentUser !== null) {
+            $currentUserValue = $currentUser->getUID();
         }
 
         $this->_logger->info(

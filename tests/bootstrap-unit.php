@@ -29,6 +29,9 @@ spl_autoload_register(function (string $class): void {
     $prefixMap = [
         'OCP\\' => __DIR__ . '/../vendor/nextcloud/ocp/OCP/',
         'NCU\\' => __DIR__ . '/../vendor/nextcloud/ocp/NCU/',
+        // OpenRegister stubs — Db entities and Services used by tests.
+        'OCA\\OpenRegister\\Db\\'      => __DIR__ . '/Stubs/Db/',
+        'OCA\\OpenRegister\\Service\\' => __DIR__ . '/Stubs/Service/',
     ];
 
     foreach ($prefixMap as $prefix => $dir) {

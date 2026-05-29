@@ -210,8 +210,9 @@ class OpenRegisterEventsDebugListener implements IEventListener
             $newObject = $event->getNewObject();
             $oldObject = $event->getOldObject();
 
-                $oldObjectData = null;
+            $oldObjectData = null;
             if ($oldObject !== null) {
+                $oldObjectData = $oldObject->getObject();
             }
 
             $data = array_merge(

@@ -708,6 +708,7 @@ class OrganizationHandler
                         if ($userA !== null) {
                             $lastLoginA = $userA->getLastLogin();
                             if ($lastLoginA !== 0 && $lastLoginA !== null && $lastLoginA !== false) {
+                                $timeA = (int) $lastLoginA;
                             }
                         }
 
@@ -715,6 +716,7 @@ class OrganizationHandler
                         if ($userB !== null) {
                             $lastLoginB = $userB->getLastLogin();
                             if ($lastLoginB !== 0 && $lastLoginB !== null && $lastLoginB !== false) {
+                                $timeB = (int) $lastLoginB;
                             }
                         }
 

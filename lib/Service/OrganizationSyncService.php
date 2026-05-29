@@ -637,8 +637,9 @@ class OrganizationSyncService
                 organizationSchema: $organizationSchema,
                 minutesBack: $minutesBack
             );
-                $syncModeValue  = 'incremental';
+            $syncModeValue = 'incremental';
             if ($minutesBack === 0) {
+                $syncModeValue = 'full';
             }
 
             $this->logger->info(

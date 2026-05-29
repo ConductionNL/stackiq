@@ -450,7 +450,7 @@ class GebruikSyncService
                 );
                 $stats['statusUpdated'] = true;
 
-                    $basedOnDate = null;
+                $basedOnDate = null;
                 if ($targetDate === null) {
                     $this->logger->info(
                         'No status update needed',
@@ -464,6 +464,7 @@ class GebruikSyncService
                 }
 
                 if ($targetDate !== null) {
+                    $basedOnDate = $targetDate->format('Y-m-d');
                 }
 
                 $this->logger->critical(

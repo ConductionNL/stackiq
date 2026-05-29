@@ -396,8 +396,10 @@ class SoftwareCatalogEventListener implements IEventListener
             $objectData = $object->getObject();
             $status     = strtolower($objectData['status'] ?? '');
 
-                $oldStatus = '';
+            $oldStatus = '';
             if ($oldObject !== null) {
+                $oldData   = $oldObject->getObject();
+                $oldStatus = strtolower($oldData['status'] ?? '');
             }
 
             $logger->debug(

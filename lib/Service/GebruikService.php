@@ -200,10 +200,9 @@ class GebruikService
                         // Use jsonSerialize to get full object with @self metadata.
                         if (method_exists($object, 'jsonSerialize') === true) {
                             $object = $object->jsonSerialize();
-                        } else if (method_exists($object, 'getId') === true) {
-                        }
-
+                        } else if (method_exists($object, 'getObject') === true) {
                             $object = $object->getObject();
+                        }
                     }
 
                     return $object['@self']['id'] ?? $object['id'] ?? null;

@@ -420,9 +420,10 @@ class ContactpersonenController extends Controller
             $contactpersoonObject->setObject($contactData);
 
             // Debug logging to understand data types before save.
-            $achternaamValue    = $contactData['achternaam'] ?? 'not set';
-                $achternaamType = 'not set';
+            $achternaamValue = $contactData['achternaam'] ?? 'not set';
+            $achternaamType  = 'not set';
             if (isset($contactData['achternaam']) === true) {
+                $achternaamType = gettype($contactData['achternaam']);
             }
 
             $this->logger->info(
@@ -635,8 +636,6 @@ class ContactpersonenController extends Controller
      *
      * @return JSONResponse Result of group update.
      *
-     * @spec exclude no openspec change for user-management exists yet; gate-9 semantic-auth fix only
-     *
      * @NoAdminRequired
      * @NoCSRFRequired
      *
@@ -651,13 +650,11 @@ class ContactpersonenController extends Controller
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
-        // Only NC-admins and org-admins (gebruik-beheerder / aanbod-beheerder) may
-        // modify group assignments. @NoAdminRequired is intentional: the org-admin
-        // path allows non-NC-admin users to manage their organisation's members.
-        $hasRequiredPermission = $this->groupManager->isAdmin($currentUser->getUID())
-            || $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+        // Only admins and org-admins may modify group assignments.
+        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
+        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
             || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($hasRequiredPermission === false) {
+        if ($isAdmin === false && $isOrgAdmin === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
@@ -673,6 +670,80 @@ class ContactpersonenController extends Controller
                         404
                         );
             }
+
+            // SB1: Cross-tenant scope check — org-admins may only modify users in their own tenant.
+            // Full admins bypass this restriction.
+            if ($isAdmin === false && $isOrgAdmin === true) {
+                try {
+                    $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+
+                    // Look up target user's contactpersoon to determine their organisation.
+                    $targetContactpersonen = $objectService->searchObjectsPaginated(
+                        [
+                            'username' => $username,
+                            '_limit'   => 1,
+                            '_schema'  => 'contactpersoon',
+                        ]
+                    );
+
+                    $targetOrgUuid = null;
+                    if (empty($targetContactpersonen['results']) === false) {
+                        $targetData    = $targetContactpersonen['results'][0]->getObject();
+                        $targetOrgUuid = $targetData['organisation'] ?? $targetData['organisatie'] ?? null;
+                    }
+
+                    // Look up caller's contactpersoon to determine their organisation.
+                    $callerContactpersonen = $objectService->searchObjectsPaginated(
+                        [
+                            'username' => $currentUser->getUID(),
+                            '_limit'   => 1,
+                            '_schema'  => 'contactpersoon',
+                        ]
+                    );
+
+                    $callerOrgUuid = null;
+                    if (empty($callerContactpersonen['results']) === false) {
+                        $callerData    = $callerContactpersonen['results'][0]->getObject();
+                        $callerOrgUuid = $callerData['organisation'] ?? $callerData['organisatie'] ?? null;
+                    }
+
+                    // Deny if we can determine tenants and they differ.
+                    if ($targetOrgUuid !== null && $callerOrgUuid !== null && $targetOrgUuid !== $callerOrgUuid) {
+                        $this->logger->warning(
+                            'ContactpersonenController: Cross-tenant group update denied',
+                            [
+                                'callerUid'      => $currentUser->getUID(),
+                                'callerOrg'      => $callerOrgUuid,
+                                'targetUsername' => $username,
+                                'targetOrg'      => $targetOrgUuid,
+                            ]
+                        );
+                        return new JSONResponse(
+                            [
+                                'success' => false,
+                                'message' => 'Forbidden: target user belongs to a different organisation',
+                            ],
+                            Http::STATUS_FORBIDDEN
+                        );
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->warning(
+                        'ContactpersonenController: Could not verify cross-tenant scope, denying update',
+                        [
+                            'callerUid' => $currentUser->getUID(),
+                            'target'    => $username,
+                            'error'     => $e->getMessage(),
+                        ]
+                    );
+                    return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Forbidden: organisation scope could not be verified',
+                        ],
+                        Http::STATUS_FORBIDDEN
+                    );
+                }//end try
+            }//end if
 
             // Get allowed software catalog groups.
             $allowedGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];

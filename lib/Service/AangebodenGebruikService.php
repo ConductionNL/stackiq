@@ -228,12 +228,14 @@ class AangebodenGebruikService
             $paginatedResults = array_slice(array: $filteredResults, offset: $requestedOffset, length: $requestedLimit);
 
             // Calculate pagination metadata.
-                $totalPages = 1;
+            $totalPages = 1;
             if ($requestedLimit > 0) {
+                $totalPages = (int) ceil($totalFiltered / $requestedLimit);
             }
 
-                $currentPage = $requestedPage;
+            $currentPage = $requestedPage;
             if ($requestedOffset > 0) {
+                $currentPage = (int) floor($requestedOffset / max($requestedLimit, 1)) + 1;
             }
 
             // Build next/previous links.

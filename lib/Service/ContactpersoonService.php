@@ -285,8 +285,9 @@ class ContactpersoonService
                         }//end if
 
                         if ($organisationEntity === null || $organisationEntity->getActive() !== true) {
-                                $orgActive = false;
+                            $orgActive = false;
                             if ($organisationEntity !== null) {
+                                $orgActive = $organisationEntity->getActive() === true;
                             }
 
                             $this->logger->info(
@@ -580,9 +581,10 @@ class ContactpersoonService
      */
     private function syncNameFieldsToUser(object $contactpersoonObject, ?object $oldContactpersoonObject): void
     {
-        $newData     = $contactpersoonObject->getObject();
-            $oldData = [];
+        $newData = $contactpersoonObject->getObject();
+        $oldData = [];
         if ($oldContactpersoonObject !== null) {
+            $oldData = $oldContactpersoonObject->getObject();
         }
 
         // Check if any name/functie fields have changed.
