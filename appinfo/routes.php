@@ -12,7 +12,7 @@ declare(strict_types=1);
  * @version  1.0.0
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 return [

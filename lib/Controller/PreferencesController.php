@@ -17,7 +17,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://github.com/ConductionNL/softwarecatalog
+ * @link https://codeberg.org/Conduction/softwarecatalog
  */
 
 declare(strict_types=1);

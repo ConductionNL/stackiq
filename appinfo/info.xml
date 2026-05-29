@@ -47,19 +47,19 @@ Vrij en open source onder de EUPL-licentie.
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>SoftwareCatalog</namespace>
     <documentation>
-        <user>https://github.com/ConductionNL/SoftwareCatalogus</user>
-        <admin>https://github.com/ConductionNL/SoftwareCatalogus</admin>
-        <developer>https://github.com/ConductionNL/SoftwareCatalogus</developer>
+        <user>https://codeberg.org/Conduction/SoftwareCatalogus</user>
+        <admin>https://codeberg.org/Conduction/SoftwareCatalogus</admin>
+        <developer>https://codeberg.org/Conduction/SoftwareCatalogus</developer>
     </documentation>
     <category>organization</category>
     <category>tools</category>
     <category>integration</category>
-    <website>https://github.com/ConductionNL/SoftwareCatalogus</website>
-    <discussion>https://github.com/ConductionNL/SoftwareCatalogus/discussions</discussion>
-    <bugs>https://github.com/ConductionNL/SoftwareCatalogus/issues</bugs>
-    <repository>https://github.com/ConductionNL/SoftwareCatalogus</repository>
+    <website>https://codeberg.org/Conduction/SoftwareCatalogus</website>
+    <discussion>https://codeberg.org/Conduction/SoftwareCatalogus/discussions</discussion>
+    <bugs>https://codeberg.org/Conduction/SoftwareCatalogus/issues</bugs>
+    <repository>https://codeberg.org/Conduction/SoftwareCatalogus</repository>
 
-    <screenshot>https://raw.githubusercontent.com/ConductionNL/SoftwareCatalogus/main/img/app-store.svg</screenshot>
+    <screenshot>https://codeberg.org/Conduction/SoftwareCatalogus/raw/branch/main/img/app-store.svg</screenshot>
 
     <dependencies>
         <nextcloud min-version="28" max-version="34"/>

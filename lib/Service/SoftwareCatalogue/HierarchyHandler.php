@@ -12,7 +12,7 @@
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)

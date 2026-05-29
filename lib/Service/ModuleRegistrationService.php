@@ -11,7 +11,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */

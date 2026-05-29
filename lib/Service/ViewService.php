@@ -12,7 +12,7 @@
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
  */
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)

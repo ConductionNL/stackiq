@@ -13,7 +13,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
@@ -43,7 +43,7 @@ use Exception;
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)

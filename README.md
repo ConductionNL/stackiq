@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ConductionNL/softwarecatalog/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/softwarecatalog" alt="Latest release"></a>
-  <a href="https://github.com/ConductionNL/softwarecatalog/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
-  <a href="https://github.com/ConductionNL/softwarecatalog/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/softwarecatalog/code-quality.yml?label=quality" alt="Code quality"></a>
+  <a href="https://codeberg.org/Conduction/softwarecatalog/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/softwarecatalog" alt="Latest release"></a>
+  <a href="https://codeberg.org/Conduction/softwarecatalog/src/branch/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
+  <a href="https://codeberg.org/Conduction/softwarecatalog/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/softwarecatalog/code-quality.yml?label=quality" alt="Code quality"></a>
   <a href="https://softwarecatalog.app"><img src="https://img.shields.io/badge/docs-softwarecatalog.app-green" alt="Documentation"></a>
 </p>
 
@@ -19,9 +19,9 @@
 
 Software Catalogus brings structured software portfolio management to Nextcloud. Register the applications, modules, and connections (koppelingen) that make up your organization's IT landscape, manage contacts and organizations, and synchronize catalog data across a federated open data network — all aligned with Dutch GEMMA standards.
 
-It integrates with [OpenRegister](https://github.com/ConductionNL/openregister) for data storage and automatic user provisioning, turning register contacts into Nextcloud accounts with role-based group membership.
+It integrates with [OpenRegister](https://codeberg.org/Conduction/openregister) for data storage and automatic user provisioning, turning register contacts into Nextcloud accounts with role-based group membership.
 
-> **Requires:** [OpenRegister](https://github.com/ConductionNL/openregister) — all data is stored as OpenRegister objects (no own database tables).
+> **Requires:** [OpenRegister](https://codeberg.org/Conduction/openregister) — all data is stored as OpenRegister objects (no own database tables).
 
 ## Screenshots
 
@@ -113,7 +113,7 @@ softwarecatalog/
 |-----------|---------|
 | Nextcloud | 28 -- 33 |
 | PHP | 8.0+ |
-| [OpenRegister](https://github.com/ConductionNL/openregister) | latest |
+| [OpenRegister](https://codeberg.org/Conduction/openregister) | latest |
 
 ## Installation
 
@@ -129,7 +129,7 @@ softwarecatalog/
 
 ```bash
 cd /var/www/html/custom_apps
-git clone https://github.com/ConductionNL/softwarecatalog.git
+git clone https://codeberg.org/Conduction/softwarecatalog.git
 cd softwarecatalog
 npm install
 npm run build
@@ -195,7 +195,7 @@ Software Catalogus is tested through three complementary layers that together pr
 
 ### Code Quality (Conduction Quality Workflow)
 
-Every commit runs through the [Conduction quality workflow](https://github.com/ConductionNL/softwarecatalog/actions) — a strict CI/CD pipeline that enforces:
+Every commit runs through the [Conduction quality workflow](https://codeberg.org/Conduction/softwarecatalog/actions) — a strict CI/CD pipeline that enforces:
 
 - **PHP Lint** — syntax validation
 - **PHPCS** — coding standards (PEAR + PSR-12 + custom Conduction rules, including forbidden functions and named parameter enforcement)
@@ -267,11 +267,11 @@ The Softwarecatalogus is not a standalone application — it runs as a Nextcloud
 
 | Repository | Role | Required |
 |-----------|------|----------|
-| [OpenRegister](https://github.com/ConductionNL/openregister) | Data storage layer — all objects (applications, modules, organizations, contacts) are stored as JSON objects in OpenRegister. Also provides the Docker environment (`docker-compose.yml`). | Yes |
-| [OpenCatalogi](https://github.com/ConductionNL/opencatalogi) | Publication and catalog management — handles public search, faceted filtering, and federated publishing of catalog data. | Yes |
-| [NL Design](https://github.com/ConductionNL/nldesign) | Design token theming — applies Dutch government (NL Design System) styling via CSS custom properties. | Yes |
-| [Tilburg WOO UI](https://github.com/ConductionNL/tilburg-woo-ui) | **Separate public frontend** — a React/Preact SPA that serves as the citizen-facing interface at `localhost:3000`. Provides public search, detail pages, and registration forms (product, usage, integration, organization). This is **not** a Nextcloud app but a standalone web application that communicates with Nextcloud via the OpenRegister and OpenCatalogi APIs. | Yes |
-| [MyDash](https://github.com/ConductionNL/mydash) | Dashboard widgets for the Nextcloud dashboard page. | Recommended |
+| [OpenRegister](https://codeberg.org/Conduction/openregister) | Data storage layer — all objects (applications, modules, organizations, contacts) are stored as JSON objects in OpenRegister. Also provides the Docker environment (`docker-compose.yml`). | Yes |
+| [OpenCatalogi](https://codeberg.org/Conduction/opencatalogi) | Publication and catalog management — handles public search, faceted filtering, and federated publishing of catalog data. | Yes |
+| [NL Design](https://codeberg.org/Conduction/nldesign) | Design token theming — applies Dutch government (NL Design System) styling via CSS custom properties. | Yes |
+| [Tilburg WOO UI](https://codeberg.org/Conduction/tilburg-woo-ui) | **Separate public frontend** — a React/Preact SPA that serves as the citizen-facing interface at `localhost:3000`. Provides public search, detail pages, and registration forms (product, usage, integration, organization). This is **not** a Nextcloud app but a standalone web application that communicates with Nextcloud via the OpenRegister and OpenCatalogi APIs. | Yes |
+| [MyDash](https://codeberg.org/Conduction/mydash) | Dashboard widgets for the Nextcloud dashboard page. | Recommended |
 
 ## Installation
 
