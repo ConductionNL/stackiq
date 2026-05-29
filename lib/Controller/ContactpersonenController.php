@@ -635,6 +635,8 @@ class ContactpersonenController extends Controller
      *
      * @return JSONResponse Result of group update.
      *
+     * @spec exclude no openspec change for user-management exists yet; gate-9 semantic-auth fix only
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      *
@@ -649,11 +651,13 @@ class ContactpersonenController extends Controller
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
-        // Only admins and org-admins may modify group assignments.
-        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
-        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+        // Only NC-admins and org-admins (gebruik-beheerder / aanbod-beheerder) may
+        // modify group assignments. @NoAdminRequired is intentional: the org-admin
+        // path allows non-NC-admin users to manage their organisation's members.
+        $hasRequiredPermission = $this->groupManager->isAdmin($currentUser->getUID())
+            || $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
             || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($isAdmin === false && $isOrgAdmin === false) {
+        if ($hasRequiredPermission === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
