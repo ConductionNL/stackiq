@@ -21,7 +21,7 @@ import {
   AppMock,
 } from '@conduction/docusaurus-preset/components';
 
-/* Catalog-grid icon. Identical shape to the mydash icon by design:
+/* Catalog-grid icon. Identical shape to the launchpad icon by design:
    the tile-grid motif reads as "rows in a register" for both apps
    (catalog of items vs. catalog of widgets) and ties the two product
    surfaces together visually. Cited from the connext detail page at

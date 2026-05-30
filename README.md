@@ -271,7 +271,7 @@ The Softwarecatalogus is not a standalone application — it runs as a Nextcloud
 | [OpenCatalogi](https://codeberg.org/Conduction/opencatalogi) | Publication and catalog management — handles public search, faceted filtering, and federated publishing of catalog data. | Yes |
 | [NL Design](https://codeberg.org/Conduction/nldesign) | Design token theming — applies Dutch government (NL Design System) styling via CSS custom properties. | Yes |
 | [Tilburg WOO UI](https://codeberg.org/Conduction/tilburg-woo-ui) | **Separate public frontend** — a React/Preact SPA that serves as the citizen-facing interface at `localhost:3000`. Provides public search, detail pages, and registration forms (product, usage, integration, organization). This is **not** a Nextcloud app but a standalone web application that communicates with Nextcloud via the OpenRegister and OpenCatalogi APIs. | Yes |
-| [MyDash](https://codeberg.org/Conduction/mydash) | Dashboard widgets for the Nextcloud dashboard page. | Recommended |
+| [LaunchPad](https://codeberg.org/Conduction/launchpad) | Dashboard widgets for the Nextcloud dashboard page. | Recommended |
 
 ## Installation
 
@@ -308,8 +308,8 @@ docker exec -u www-data nextcloud php occ app:enable nldesign
 # 4. Software Catalogus — depends on OpenRegister and OpenCatalogi
 docker exec -u www-data nextcloud php occ app:enable softwarecatalog
 
-# 5. MyDash — optional, for dashboard widgets
-docker exec -u www-data nextcloud php occ app:enable mydash
+# 5. LaunchPad — optional, for dashboard widgets
+docker exec -u www-data nextcloud php occ app:enable launchpad
 ```
 
 ### 3. Import data

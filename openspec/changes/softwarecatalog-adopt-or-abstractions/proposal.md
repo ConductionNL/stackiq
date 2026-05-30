@@ -11,7 +11,7 @@ LarpingApp:
    (`hydra/openspec/architecture/`) and the migration order in
    `hydra/openspec/changes/adopt-app-manifest/`, SoftwareCatalog is
    in the second-wave cohort (small, schema-driven) — adopt after
-   MyDash (the pilot).
+   LaunchPad (the pilot).
 2. **`getValueString(...register/schema...)` consolidation** — five
    service classes (`ModuleComplianceService`, `GebruikSyncService`,
    `OrganizationSyncService`, `ViewService`, plus the
