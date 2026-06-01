@@ -1,8 +1,16 @@
-# email-delivery Specification
+---
+status: draft
+retrofit: true
+---
+
+# Email Delivery Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-email-delivery. Update Purpose after archive.
-## Requirements
+
+Captures observed behavior of SymfonyEmailService — composing and sending the app's transactional notifications (organisation registration/activation, user creation/update) over a configurable Symfony Mailer transport, plus the transport-configuration getters/setters and test-send.
+
+## ADDED Requirements
+
 ### Requirement: The system SHALL send the app's transactional notification emails (REQ-001)
 
 `sendOrganizationRegistrationEmail`, `sendOrganizationActivationEmail`, `sendUserCreationEmail`, `sendUserUpdateEmail`, and `sendTestEmail` MUST render the corresponding template and dispatch the message via the configured transport, returning whether the send succeeded. Sends are skipped when the corresponding notification type is disabled.
@@ -26,4 +34,3 @@ TBD - created by archiving change retrofit-2026-05-26-email-delivery. Update Pur
 #### Scenario: REQ-002 case 2
 - WHEN `isEmailSystemConfigured()` is called with a sender and transport set
 - THEN it MUST report configured
-
