@@ -199,9 +199,9 @@ Every commit runs through the [Conduction quality workflow](https://github.com/C
 
 - **PHP Lint** — syntax validation
 - **PHPCS** — coding standards (PEAR + PSR-12 + custom Conduction rules, including forbidden functions and named parameter enforcement)
-- **PHPMD** — mess detection (clean code, code size, design, naming, and unused code rules)
+- **PHPMD** — mess detection (clean code, code size, design, naming, and unused code rules). Legacy violations are captured in `phpmd.baseline.xml` and burned down incrementally; new code must stay clean.
 - **Psalm** — static analysis (level 4, with unused code detection)
-- **PHPStan** — static analysis (level 5)
+- **PHPStan** — static analysis (level 5). Legacy findings are captured in `phpstan-baseline.neon` and burned down incrementally; new code must stay clean.
 - **PHPUnit** — unit and integration tests (strict mode: `failOnRisky`, output detection, execution order by dependency)
 - **ESLint** — JavaScript/Vue linting
 - **Stylelint** — CSS linting
