@@ -1,0 +1,48 @@
+{
+  "spec": "openspec/changes/softwarecatalog-manifest-v1",
+  "verified": [
+    {
+      "task": "2.1",
+      "file": "src/manifest.json",
+      "ok": true,
+      "size": 8307
+    },
+    {
+      "task": "2.4",
+      "file": "src/manifest.json",
+      "ok": true,
+      "size": 8307
+    },
+    {
+      "task": "2.6",
+      "file": "src/manifest.json",
+      "ok": true,
+      "size": 8307
+    },
+    {
+      "task": "4.5",
+      "file": "src/customComponents.js",
+      "ok": true,
+      "size": 2170
+    },
+    {
+      "task": "4.5b",
+      "file": "src/views/organisaties/OrganisatieIndex.vue",
+      "ok": true,
+      "size": 5387
+    }
+  ],
+  "stubs": [],
+  "missing_routes": [],
+  "manifest_checks": {
+    "version": "1.0.0",
+    "custom_pages": [
+      "Dashboard",
+      "Organisaties"
+    ],
+    "index_count": 6,
+    "detail_count": 6,
+    "all_resolve_sentinels": true,
+    "all_sidebarTabs_toplevel": true
+  }
+}
