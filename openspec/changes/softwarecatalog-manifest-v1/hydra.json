@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "softwarecatalog-manifest-v1",
+  "repo": "https://codeberg.org/Conduction/softwarecatalog",
+  "issue": 14,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-02T00:21:10Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
