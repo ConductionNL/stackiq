@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "deelnames-gebruik",
+  "repo": "https://codeberg.org/Conduction/softwarecatalog",
+  "issue": 6,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-03T22:44:56Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
