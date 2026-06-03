@@ -1,0 +1,49 @@
+{
+  "spec": "openspec/changes/deelnames-gebruik",
+  "verified": [
+    {
+      "task": "2",
+      "file": "lib/Service/ViewService.php",
+      "ok": true,
+      "notes": "getGebruikData() uses getVoorzieningenConfig(); getDeelnamesGebruikData() uses _rbac: false, _multitenancy: false; getCurrentOrganisation() uses OrganisationService"
+    },
+    {
+      "task": "3",
+      "file": "lib/Service/ViewService.php",
+      "ok": true,
+      "notes": "processGebruikItems() attaches _sourceOrganizationId and _sourceOrganization from afnemer field for deelnames type"
+    },
+    {
+      "task": "4",
+      "file": "lib/Service/ViewService.php",
+      "ok": true,
+      "notes": "enrichViewNodes() applies array_diff_key deduplication; double assignment bugs fixed in enrichViews() and enrichViewNodes()"
+    },
+    {
+      "task": "5",
+      "file": "src/store/modules/view.js",
+      "ok": true,
+      "notes": "Pinia store with includeGebruik, includeDeelnamesGebruik state; fetchViews passes flags to /api/views"
+    },
+    {
+      "task": "5",
+      "file": "src/views/gemmaviews/GemmaViewIndex.vue",
+      "ok": true,
+      "notes": "Independent NcCheckboxRadioSwitch toggles for gebruik and deelnames; deelnames disabled by default"
+    },
+    {
+      "task": "6",
+      "file": "lib/Settings/softwarecatalogus_register.json",
+      "ok": true,
+      "notes": "3 seed objects: one with 2 deelnemers, one with 1 deelnemer, one with empty deelnemers"
+    },
+    {
+      "task": "7",
+      "file": "tests/Unit/Service/ViewServiceTest.php",
+      "ok": true,
+      "notes": "17 tests, all passing; covers enrichment flags, source org metadata, deduplication"
+    }
+  ],
+  "stubs": [],
+  "missing_routes": []
+}
