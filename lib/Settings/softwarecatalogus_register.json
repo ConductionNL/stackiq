@@ -7197,6 +7197,78 @@
         }
       }
     },
-    "objects": []
+    "objects": [
+      {
+        "@self": {
+          "register": "voorzieningen",
+          "schema": "gebruik",
+          "slug": "gebruik-topdesk-gem-leiden-deelnemers",
+          "version": "0.0.1"
+        },
+        "naam": "Topdesk bij Servicecenter Rijnland (SSC)",
+        "status": "in-gebruik",
+        "elementRef": "topdesk-ssc-rijnland",
+        "afnemer": {
+          "naam": "Servicecenter Rijnland",
+          "oin": "00000001001234567890",
+          "slug": "servicecenter-rijnland"
+        },
+        "module": "topdesk-itsm",
+        "deelnemers": [
+          {
+            "naam": "Gemeente Leiden",
+            "oin": "00000001001234567891",
+            "slug": "gemeente-leiden"
+          },
+          {
+            "naam": "Gemeente Leiderdorp",
+            "oin": "00000001001234567892",
+            "slug": "gemeente-leiderdorp"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "voorzieningen",
+          "schema": "gebruik",
+          "slug": "gebruik-key2-gem-leiden-deelnemer",
+          "version": "0.0.1"
+        },
+        "naam": "KEY2 Burgerzaken gedeeld via GBLT",
+        "status": "in-gebruik",
+        "elementRef": "key2-burgerzaken-gblt",
+        "afnemer": {
+          "naam": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
+          "oin": "00000001001234567893",
+          "slug": "gblt"
+        },
+        "module": "key2-burgerzaken",
+        "deelnemers": [
+          {
+            "naam": "Gemeente Leiden",
+            "oin": "00000001001234567891",
+            "slug": "gemeente-leiden"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "voorzieningen",
+          "schema": "gebruik",
+          "slug": "gebruik-suite4-gem-delft-eigenaar",
+          "version": "0.0.1"
+        },
+        "naam": "Suite4 Schuldhulpverlening - eigenaar Gemeente Delft",
+        "status": "in-gebruik",
+        "elementRef": "suite4-schuldhulp-delft",
+        "afnemer": {
+          "naam": "Gemeente Delft",
+          "oin": "00000001001234567894",
+          "slug": "gemeente-delft"
+        },
+        "module": "suite4-schuldhulpverlening",
+        "deelnemers": []
+      }
+    ]
   }
 }

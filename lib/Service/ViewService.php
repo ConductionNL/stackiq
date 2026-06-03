@@ -355,7 +355,7 @@ class ViewService
         $enrichedViews = [];
 
         foreach ($views as $view) {
-            $enrichedViews[] = $enrichedViews[] = $this->enrichView(view: $view, options: $options);
+            $enrichedViews[] = $this->enrichView(view: $view, options: $options);
         }
 
         return $enrichedViews;
@@ -419,6 +419,11 @@ class ViewService
             $deelnamesGebruikData = $this->getDeelnamesGebruikData();
         }
 
+        // Deduplicate: owned gebruik takes precedence over deelnames for the same elementRef.
+        if (empty($gebruikData) === false && empty($deelnamesGebruikData) === false) {
+            $deelnamesGebruikData = array_diff_key($deelnamesGebruikData, $gebruikData);
+        }
+
         foreach ($viewNodes as $node) {
             $enrichedNode = $node;
 
@@ -448,7 +453,7 @@ class ViewService
                 }
 
                 if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
-                    $enrichedNode['deelnamesGebruik'] = $enrichedNode['deelnamesGebruik'] = $this->getNodeDeelnamesGebruik(
+                    $enrichedNode['deelnamesGebruik'] = $this->getNodeDeelnamesGebruik(
                         modelNodeId: $modelNodeId,
                         deelnamesGebruikData: $deelnamesGebruikData
                     );
@@ -552,9 +557,11 @@ class ViewService
     }//end getProductsData()
 
     /**
-     * Get current active organisation for filtering.
+     * Get current active organisation UUID for filtering.
      *
-     * @return string|null Current organisation identifier.
+     * Uses the OpenRegister OrganisationService to retrieve the active organisation.
+     *
+     * @return string|null Current organisation UUID or null if not available.
      */
     private function getCurrentOrganisation(): ?string
     {
@@ -563,20 +570,21 @@ class ViewService
             return null;
         }
 
-        // TODO: Implement proper organisation determination logic.
-        // This could be based on user groups, settings, or other mechanisms.
-        // For now, return a placeholder that would need actual implementation.
-        $userId = $user->getUID();
-        $this->logger->debug(
-                'Getting current organisation for user',
-                [
-                    'user_id' => $userId,
-                ]
-                );
+        try {
+            $organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
+            $activeOrg           = $organisationService->getActiveOrganisation();
+            if ($activeOrg !== null) {
+                return $activeOrg->getUuid();
+            }
 
-        // Placeholder - needs actual implementation based on your organisation structure.
-        // Replace with actual organisation logic.
-        return 'default';
+            return null;
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                message: 'Failed to get current organisation from OpenRegister',
+                context: ['error' => $e->getMessage()]
+            );
+            return null;
+        }
     }//end getCurrentOrganisation()
 
     /**
@@ -688,19 +696,20 @@ class ViewService
     }//end getModulesData()
 
     /**
-     * Get gebruik data for enrichment based on elementRef linkage.
+     * Get regular owned gebruik data for enrichment based on elementRef linkage.
      *
-     * Usage data is linked to nodes based on their elementRef.
-     * This method retrieves usage statistics from OpenRegister, filtered by organisation.
-     * Also handles deelnames logic when enabled.
+     * Retrieves only organisation-owned gebruik via standard RBAC filtering.
+     * Deelnames gebruik is retrieved separately via getDeelnamesGebruikData().
      *
-     * @param array $options Query options for deelnames handling.
+     * @param array $options Query options (unused, kept for signature compatibility).
      *
-     * @return array Gebruik data indexed by elementRef with extended modules.
+     * @return array Gebruik data indexed by elementRef.
+     *
+     * @spec openspec/changes/deelnames-gebruik/tasks.md#task-2
      */
     private function getGebruikData(array $options=[]): array
     {
-        $this->logger->debug('Getting gebruik data for enrichment with options', ['options' => array_keys($options)]);
+        $this->logger->debug(message: 'Getting regular gebruik data for view enrichment');
 
         try {
             $objectService = $this->getObjectService();
@@ -708,154 +717,93 @@ class ViewService
                 return [];
             }
 
-            // Get current organisation for filtering.
             $currentOrg = $this->getCurrentOrganisation();
 
-            // Get configuration for usage register/schema.
-            $amefConfig = $this->settingsService->getAmefConfig();
-            $registerId = $amefConfig['register_id'] ?? null;
+            // Use voorzieningen config for the correct gebruik register and schema.
+            $voorzConfig     = $this->settingsService->getVoorzieningenConfig();
+            $registerId      = $voorzConfig['register'] ?? null;
+            $gebruikSchemaId = $voorzConfig['gebruik_schema'] ?? null;
 
-            // Usage data could be in various schemas.
-            $gebruikSchemas = [
-                $amefConfig['gebruik_schema'] ?? null,
-                $amefConfig['usage_schema'] ?? null,
-                $amefConfig['statistics_schema'] ?? null,
-            ];
+            if ($registerId === null || $gebruikSchemaId === null) {
+                $this->logger->warning(message: 'Voorzieningen register or gebruik schema not configured');
+                return [];
+            }
 
             $allGebruik = [];
 
-            // STEP 1: Get regular gebruik data filtered by current organisation.
-            foreach ($gebruikSchemas as $schemaId) {
-                if ($schemaId === null) {
-                    continue;
+            try {
+                $query = [
+                    '@self' => [
+                        'register' => $registerId,
+                        'schema'   => $gebruikSchemaId,
+                    ],
+                ];
+
+                // Filter by organisation so only owned gebruik is returned.
+                if ($currentOrg !== null) {
+                    $query['@self']['organisation'] = $currentOrg;
                 }
 
-                try {
-                    $query = [
-                        '@self' => [
-                            'register' => $registerId,
-                            'schema'   => $schemaId,
-                        ],
-                    ];
+                $gebruikItems = $objectService->searchObjects($query);
+                $this->processGebruikItems(
+                    gebruikItems: $gebruikItems,
+                    allGebruik: $allGebruik,
+                    currentOrg: $currentOrg ?? '',
+                    type: 'regular'
+                );
 
-                    // Add organisation filter for regular gebruik.
-                    if ($currentOrg !== null) {
-                        $query['@self']['organisation'] = $currentOrg;
-                    }
+                $this->logger->debug(
+                    message: 'Retrieved regular gebruik from voorzieningen register',
+                    context: [
+                        'schema_id'     => $gebruikSchemaId,
+                        'gebruik_count' => count(value: $gebruikItems),
+                        'organisation'  => $currentOrg,
+                    ]
+                );
+            } catch (\Exception $e) {
+                $this->logger->warning(
+                    message: 'Failed to get regular gebruik',
+                    context: [
+                        'schema_id' => $gebruikSchemaId,
+                        'error'     => $e->getMessage(),
+                    ]
+                );
+            }//end try
 
-                    $gebruikItems = $objectService->searchObjects($query);
-                    $this->processGebruikItems(
-                        gebruikItems: $gebruikItems,
-                        allGebruik: $allGebruik,
-                        currentOrg: $currentOrg,
-                        type: 'regular'
-                    );
-
-                    $this->logger->debug(
-                            'Retrieved regular gebruik from schema',
-                            [
-                                'schema_id'     => $schemaId,
-                                'gebruik_count' => count($gebruikItems),
-                                'organisation'  => $currentOrg,
-                            ]
-                            );
-                } catch (\Exception $e) {
-                    $this->logger->warning(
-                            'Failed to get regular gebruik from schema',
-                            [
-                                'schema_id' => $schemaId,
-                                'error'     => $e->getMessage(),
-                            ]
-                            );
-                }//end try
-            }//end foreach
-
-            // STEP 2: If deelnames is enabled, get additional gebruik with RBAC off.
-            $includeDeelnames = isset($options['include_deelnames_gebruik']) === true
-                && $options['include_deelnames_gebruik'] === true;
-            if ($includeDeelnames === true && $currentOrg !== null) {
-                $this->logger->debug('Processing deelnames gebruik with RBAC disabled');
-
-                foreach ($gebruikSchemas as $schemaId) {
-                    if ($schemaId === null) {
-                        continue;
-                    }
-
-                    try {
-                        // Search with RBAC disabled to find gebruik where current org is in deelnemers.
-                        $query = [
-                            '@self'      => [
-                                'register' => $registerId,
-                                'schema'   => $schemaId,
-                            ],
-                            // Current org in deelnemers field.
-                            'deelnemers' => $currentOrg,
-                        ];
-
-                        // Call with RBAC disabled.
-                        $deelnamesGebruikItems = $objectService->searchObjects($query, _rbac: false);
-                                                $this->processGebruikItems(
-                            gebruikItems: $deelnamesGebruikItems,
-                            allGebruik: $allGebruik,
-                            currentOrg: $currentOrg,
-                            type: 'deelnames'
-                        );
-
-                        $this->logger->debug(
-                                'Retrieved deelnames gebruik from schema',
-                                [
-                                    'schema_id'                  => $schemaId,
-                                    'deelnames_gebruik_count'    => count($deelnamesGebruikItems),
-                                    'organisation_in_deelnemers' => $currentOrg,
-                                ]
-                                );
-                    } catch (\Exception $e) {
-                        $this->logger->warning(
-                                'Failed to get deelnames gebruik from schema',
-                                [
-                                    'schema_id' => $schemaId,
-                                    'error'     => $e->getMessage(),
-                                ]
-                                );
-                    }//end try
-                }//end foreach
-            }//end if
-
-            // STEP 3: Extend gebruik with modules data.
             $allGebruik = $this->extendGebruikWithModules(allGebruik: $allGebruik);
 
-            $deelnamesEnabled = isset($options['include_deelnames_gebruik']) === true
-                && $options['include_deelnames_gebruik'] === true;
             $this->logger->debug(
-                    'Total gebruik retrieved and processed',
-                    [
-                        'total_element_refs_with_gebruik' => count($allGebruik),
-                        'current_organisation'            => $currentOrg,
-                        'deelnames_enabled'               => $deelnamesEnabled,
-                    ]
-                    );
+                message: 'Total regular gebruik retrieved',
+                context: [
+                    'total_element_refs' => count(value: $allGebruik),
+                    'current_org'        => $currentOrg,
+                ]
+            );
 
             return $allGebruik;
         } catch (\Exception $e) {
             $this->logger->error(
-                    'Failed to get gebruik data',
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                    );
+                message: 'Failed to get gebruik data',
+                context: ['error' => $e->getMessage()]
+            );
             return [];
         }//end try
     }//end getGebruikData()
 
     /**
-     * Process gebruik items and group them by elementRef.
+     * Process gebruik items, group them by elementRef, and attach type metadata.
      *
-     * @param array  $gebruikItems Array of gebruik objects.
-     * @param array  $allGebruik   Array to add items to (by reference).
-     * @param string $currentOrg   Current organisation identifier.
-     * @param string $type         Type identifier ('regular' or 'deelnames').
+     * For deelnames type, also attaches source organisation metadata from the afnemer field
+     * so the UI can display which organisation owns the shared gebruik.
+     *
+     * @param array  $gebruikItems Array of gebruik objects from ObjectService.
+     * @param array  $allGebruik   Result array indexed by elementRef (passed by reference).
+     * @param string $currentOrg   Current organisation UUID.
+     * @param string $type         Either 'regular' (owned) or 'deelnames' (shared via deelnemers).
      *
      * @return void
+     *
+     * @spec openspec/changes/deelnames-gebruik/tasks.md#task-3
      */
     private function processGebruikItems(array $gebruikItems, array &$allGebruik, string $currentOrg, string $type): void
     {
@@ -868,13 +816,19 @@ class ViewService
                     $allGebruik[$elementRef] = [];
                 }
 
-                // Add type indicator and processing info.
                 $gebruik['_type'] = $type;
                 $gebruik['_processed_for_org'] = $currentOrg;
 
+                // Attach source org metadata for deelnames so the UI can attribute the shared gebruik.
+                if ($type === 'deelnames') {
+                    $afnemer = $gebruik['afnemer'] ?? [];
+                    $gebruik['_sourceOrganizationId'] = $afnemer['@self']['id'] ?? ($afnemer['id'] ?? ($gebruik['@self']['organisation'] ?? null));
+                    $gebruik['_sourceOrganization']   = $afnemer['naam'] ?? ($afnemer['name'] ?? null);
+                }
+
                 $allGebruik[$elementRef][] = $gebruik;
-            }
-        }
+            }//end if
+        }//end foreach
     }//end processGebruikItems()
 
     /**
@@ -1124,13 +1078,18 @@ class ViewService
 
     /**
      * Get deelnames gebruik data for enrichment.
-     * Queries gebruik objects where the current organisation is in the deelnemers field (RBAC off).
      *
-     * @return array Deelnames gebruik data indexed by elementRef
+     * Queries gebruiksobjecten where the current organisation appears in the deelnemers field.
+     * RBAC and multitenancy are both disabled so objects owned by other organisations are visible.
+     * Source organisation metadata is attached to each result via processGebruikItems().
+     *
+     * @return array Deelnames gebruik data indexed by elementRef.
+     *
+     * @spec openspec/changes/deelnames-gebruik/tasks.md#task-2
      */
     private function getDeelnamesGebruikData(): array
     {
-        $this->logger->debug('Getting deelnames gebruik data for enrichment');
+        $this->logger->debug(message: 'Getting deelnames gebruik data for view enrichment');
 
         try {
             $objectService = $this->getObjectService();
@@ -1143,74 +1102,68 @@ class ViewService
                 return [];
             }
 
-            $amefConfig = $this->settingsService->getAmefConfig();
-            $registerId = $amefConfig['register_id'] ?? null;
+            // Use voorzieningen config for the correct gebruik register and schema.
+            $voorzConfig     = $this->settingsService->getVoorzieningenConfig();
+            $registerId      = $voorzConfig['register'] ?? null;
+            $gebruikSchemaId = $voorzConfig['gebruik_schema'] ?? null;
 
-            $gebruikSchemas = [
-                $amefConfig['gebruik_schema'] ?? null,
-                $amefConfig['usage_schema'] ?? null,
-                $amefConfig['statistics_schema'] ?? null,
-            ];
+            if ($registerId === null || $gebruikSchemaId === null) {
+                $this->logger->warning(message: 'Voorzieningen register or gebruik schema not configured for deelnames');
+                return [];
+            }
 
             $allDeelnames = [];
 
-            foreach ($gebruikSchemas as $schemaId) {
-                if ($schemaId === null) {
-                    continue;
-                }
+            try {
+                $query = [
+                    '@self'      => [
+                        'register' => $registerId,
+                        'schema'   => $gebruikSchemaId,
+                    ],
+                    // Match objects where this org appears as a deelnemer.
+                    'deelnemers' => $currentOrg,
+                ];
 
-                try {
-                    $query = [
-                        '@self'      => [
-                            'register' => $registerId,
-                            'schema'   => $schemaId,
-                        ],
-                        'deelnemers' => $currentOrg,
-                    ];
+                // Both _rbac and _multitenancy must be false to find objects owned by other organisations.
+                $deelnamesItems = $objectService->searchObjects($query, _rbac: false, _multitenancy: false);
+                $this->processGebruikItems(
+                    gebruikItems: $deelnamesItems,
+                    allGebruik: $allDeelnames,
+                    currentOrg: $currentOrg,
+                    type: 'deelnames'
+                );
 
-                    $deelnamesItems = $objectService->searchObjects($query, _rbac: false);
-                    $this->processGebruikItems(
-                        gebruikItems: $deelnamesItems,
-                        allGebruik: $allDeelnames,
-                        currentOrg: $currentOrg,
-                        type: 'deelnames'
-                    );
-
-                    $this->logger->debug(
-                            'Retrieved deelnames gebruik data',
-                            [
-                                'schema_id'       => $schemaId,
-                                'deelnames_count' => count($deelnamesItems),
-                            ]
-                            );
-                } catch (\Exception $e) {
-                    $this->logger->warning(
-                            'Failed to get deelnames gebruik data',
-                            [
-                                'schema_id' => $schemaId,
-                                'error'     => $e->getMessage(),
-                            ]
-                            );
-                }//end try
-            }//end foreach
+                $this->logger->debug(
+                    message: 'Retrieved deelnames gebruik data',
+                    context: [
+                        'schema_id'                  => $gebruikSchemaId,
+                        'deelnames_count'            => count(value: $deelnamesItems),
+                        'organisation_in_deelnemers' => $currentOrg,
+                    ]
+                );
+            } catch (\Exception $e) {
+                $this->logger->warning(
+                    message: 'Failed to get deelnames gebruik data; view will render without deelnames',
+                    context: [
+                        'schema_id' => $gebruikSchemaId,
+                        'error'     => $e->getMessage(),
+                    ]
+                );
+            }//end try
 
             $allDeelnames = $this->extendGebruikWithModules(allGebruik: $allDeelnames);
 
             $this->logger->debug(
-                    'Total deelnames gebruik retrieved',
-                    [
-                        'total_element_refs' => count($allDeelnames),
-                    ]
-                    );
+                message: 'Total deelnames gebruik retrieved',
+                context: ['total_element_refs' => count(value: $allDeelnames)]
+            );
 
             return $allDeelnames;
         } catch (\Exception $e) {
             $this->logger->error(
-                    'Failed to get deelnames gebruik data',
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                    );
+                message: 'Failed to get deelnames gebruik data',
+                context: ['error' => $e->getMessage()]
+            );
             return [];
         }//end try
     }//end getDeelnamesGebruikData()
