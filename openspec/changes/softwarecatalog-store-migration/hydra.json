@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "softwarecatalog-store-migration",
+  "repo": "https://codeberg.org/Conduction/softwarecatalog",
+  "issue": 16,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-04T19:34:52Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
