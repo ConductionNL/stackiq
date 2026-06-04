@@ -15,6 +15,8 @@
 
 import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'
 
+import { withLanguageParam, buildWriteHeaders } from '../../composables/orClient.js'
+
 /**
  * Extract an ID from a value that can be either a primitive or an object.
  *
@@ -30,11 +32,17 @@ function extractId(value) {
 /**
  * Build an API URL for an object using its @self metadata.
  *
+ * Read-side callers (GET) pass `withLang: true` so the user's preferred
+ * language variant is served (ADR-025 i18n negotiation). Write/action callers
+ * leave it false because the language target is communicated via the
+ * `X-Translation-Target-Language` header instead.
+ *
  * @param {object} objectItem Object with @self metadata
  * @param {string} [action] Optional action endpoint (publish, lock, etc.). Defaults to null.
+ * @param {boolean} [withLang] Whether to append the `_lang` query param. Defaults false.
  * @return {string} The constructed URL
  */
-function buildObjectUrl(objectItem, action = null) {
+function buildObjectUrl(objectItem, action = null, withLang = false) {
 	const objectId = objectItem.id || objectItem['@self']?.id
 	const register = objectItem['@self']?.register || objectItem.register
 	const schema = objectItem['@self']?.schema || objectItem.schema
@@ -50,7 +58,7 @@ function buildObjectUrl(objectItem, action = null) {
 	if (action) {
 		url += action === 'logs' ? '/audit-trails' : `/${action}`
 	}
-	return url
+	return withLang ? withLanguageParam(url) : url
 }
 
 /**
@@ -427,7 +435,7 @@ export function softwarecatalogPlugin() {
 				const objectId = objectItem.id || objectItem['@self']?.id
 				if (!objectId) throw new Error('Object ID is required for download')
 
-				const endpoint = buildObjectUrl(objectItem)
+				const endpoint = buildObjectUrl(objectItem, null, true)
 				const response = await fetch(endpoint, {
 					headers: buildHeaders(),
 				})
@@ -481,7 +489,7 @@ export function softwarecatalogPlugin() {
 						queryParams._extend = params._extend || '@self.schema'
 					}
 
-					const url = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}/${actionPath}${buildQueryString(queryParams)}`
+					const url = withLanguageParam(`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}/${actionPath}${buildQueryString(queryParams)}`)
 
 					const response = await fetch(url, { headers: buildHeaders() })
 					if (!response.ok) throw new Error(`Failed to fetch ${dataType} for ${type}`)
@@ -662,13 +670,19 @@ export function softwarecatalogPlugin() {
 			/**
 			 * Patch existing object (partial update).
 			 *
+			 * When the caller is editing a specific (non-default) language
+			 * variant of a translatable property, it passes `targetLang` so the
+			 * request carries `X-Translation-Target-Language` and OpenRegister
+			 * writes into the correct language slot (ADR-025).
+			 *
 			 * @param {string} type Object type
 			 * @param {string} id Object ID
 			 * @param {object} changes Object with changed properties
+			 * @param {string|null} [targetLang] Target translation language. Defaults to null.
 			 * @return {Promise<object>} Updated object
 			  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
-			async patchObject(type, id, changes) {
+			async patchObject(type, id, changes, targetLang = null) {
 				this.loading = { ...this.loading, [`${type}_${id}`]: true }
 
 				try {
@@ -682,7 +696,7 @@ export function softwarecatalogPlugin() {
 						`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}`,
 						{
 							method: 'PATCH',
-							headers: buildHeaders(),
+							headers: buildWriteHeaders(buildHeaders(), { targetLang }),
 							body: JSON.stringify(changes),
 						},
 					)
