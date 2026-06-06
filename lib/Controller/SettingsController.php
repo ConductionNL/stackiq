@@ -52,6 +52,8 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.LongVariable)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ *
+ * @spec openspec/changes/method-decomposition/tasks.md#task-3
  */
 class SettingsController extends Controller
 {
@@ -215,112 +217,131 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     *
      * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function create(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
-
-            // Handle different types of settings updates.
+            $data   = $this->request->getParams();
             $result = [];
 
-            // Update schema/register configuration.
-            if (isset($data['configuration']) === true || isset($data['selectedRegister']) === true) {
-                $configData = array_filter(
-                        $data,
-                        function ($key) {
-                            return in_array(needle: $key, haystack: ['userGroups', 'emailSettings']) === false;
-                        },
-                        ARRAY_FILTER_USE_KEY
-                        );
-
-                if (empty($configData) === false) {
-                    $result['configuration'] = $this->settingsService->updateSettings($configData);
-                }
+            $configError = $this->updateConfigSettings(data: $data, result: $result);
+            if ($configError !== null) {
+                return $configError;
             }
 
-            // Update user groups.
-            if (isset($data['userGroups']) === true) {
-                $userGroups = $data['userGroups'];
-
-                if (isset($userGroups['generic']) === true) {
-                    $validation = $this->settingsService->validateGroups($userGroups['generic']);
-                    if (empty($validation['invalid']) === false) {
-                        return new JSONResponse(
-                                [
-                                    'error'      => 'Invalid generic group names provided',
-                                    'validation' => $validation,
-                                ],
-                                400
-                                );
-                    }
-
-                    $this->settingsService->setGenericUserGroups($validation['valid']);
-                    $result['userGroups']['generic'] = $validation['valid'];
-                }
-
-                if (isset($userGroups['organizationAdmin']) === true) {
-                    $validation = $this->settingsService->validateGroups($userGroups['organizationAdmin']);
-                    if (empty($validation['invalid']) === false) {
-                        return new JSONResponse(
-                                [
-                                    'error'      => 'Invalid organization admin group names provided',
-                                    'validation' => $validation,
-                                ],
-                                400
-                                );
-                    }
-
-                    $this->settingsService->setOrganizationAdminGroups($validation['valid']);
-                    $result['userGroups']['organizationAdmin'] = $validation['valid'];
-                }
-
-                if (isset($userGroups['superUser']) === true) {
-                    $validation = $this->settingsService->validateGroups($userGroups['superUser']);
-                    if (empty($validation['invalid']) === false) {
-                        return new JSONResponse(
-                                [
-                                    'error'      => 'Invalid super user group names provided',
-                                    'validation' => $validation,
-                                ],
-                                400
-                                );
-                    }
-
-                    $this->settingsService->setSuperUserGroups($validation['valid']);
-                    $result['userGroups']['superUser'] = $validation['valid'];
-                }
-            }//end if
-
-            // Update email settings.
-            if (isset($data['emailSettings']) === true) {
-                $result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+            $groupError = $this->updateUserGroupSettings(data: $data, result: $result);
+            if ($groupError !== null) {
+                return $groupError;
             }
 
-            return new JSONResponse(
-                    [
-                        'success' => true,
-                        'data'    => $result,
-                        'message' => 'Settings updated successfully',
-                    ]
-                    );
+            $this->applyEmailSettingsUpdate(data: $data, result: $result);
+
+            return new JSONResponse(['success' => true, 'data' => $result, 'message' => 'Settings updated successfully']);
         } catch (\Exception $e) {
             $this->logger->error(
-                    'Failed to update settings',
-                    [
-                        'exception'   => $e->getMessage(),
-                        'requestData' => $this->getRedactedParams(),
-                    ]
-                    );
+                'Failed to update settings',
+                ['exception' => $e->getMessage(), 'requestData' => $this->getRedactedParams()]
+            );
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }//end try
 
     }//end create()
+
+    /**
+     * Update schema/register configuration settings from request data.
+     *
+     * @param array<string,mixed> $data   The raw request params.
+     * @param array<string,mixed> $result The result accumulator (passed by reference).
+     *
+     * @return JSONResponse|null Error response, or null when successful.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function updateConfigSettings(array $data, array &$result): ?JSONResponse
+    {
+        if (isset($data['configuration']) === false && isset($data['selectedRegister']) === false) {
+            return null;
+        }
+
+        $configData = array_filter(
+            $data,
+            static fn ($key) => in_array(needle: $key, haystack: ['userGroups', 'emailSettings']) === false,
+            ARRAY_FILTER_USE_KEY
+        );
+
+        if (empty($configData) === false) {
+            $result['configuration'] = $this->settingsService->updateSettings($configData);
+        }
+
+        return null;
+
+    }//end updateConfigSettings()
+
+    /**
+     * Update user group settings from request data.
+     *
+     * @param array<string,mixed> $data   The raw request params.
+     * @param array<string,mixed> $result The result accumulator (passed by reference).
+     *
+     * @return JSONResponse|null Validation error response, or null when successful.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function updateUserGroupSettings(array $data, array &$result): ?JSONResponse
+    {
+        if (isset($data['userGroups']) === false) {
+            return null;
+        }
+
+        $userGroups = $data['userGroups'];
+
+        $groupConfigs = [
+            'generic'           => ['setter' => 'setGenericUserGroups', 'label' => 'generic'],
+            'organizationAdmin' => ['setter' => 'setOrganizationAdminGroups', 'label' => 'organization admin'],
+            'superUser'         => ['setter' => 'setSuperUserGroups', 'label' => 'super user'],
+        ];
+
+        foreach ($groupConfigs as $key => $cfg) {
+            if (isset($userGroups[$key]) === false) {
+                continue;
+            }
+
+            $validation = $this->settingsService->validateGroups($userGroups[$key]);
+            if (empty($validation['invalid']) === false) {
+                return new JSONResponse(
+                    ['error' => 'Invalid '.$cfg['label'].' group names provided', 'validation' => $validation],
+                    400
+                );
+            }
+
+            $this->settingsService->{$cfg['setter']}($validation['valid']);
+            $result['userGroups'][$key] = $validation['valid'];
+        }
+
+        return null;
+
+    }//end updateUserGroupSettings()
+
+    /**
+     * Apply email-settings update from request data into the result accumulator.
+     *
+     * @param array<string,mixed> $data   The raw request params.
+     * @param array<string,mixed> $result The result accumulator (passed by reference).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function applyEmailSettingsUpdate(array $data, array &$result): void
+    {
+        if (isset($data['emailSettings']) === false) {
+            return;
+        }
+
+        $result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+
+    }//end applyEmailSettingsUpdate()
 
     /**
      * Get general configuration settings
@@ -815,10 +836,9 @@ class SettingsController extends Controller
             // For incremental sync, use the original method.
             $result = $this->orgSyncSvc->performManualSync($minutesBack);
 
+            $statusCode = 500;
             if ($result['success'] === true) {
                 $statusCode = 200;
-            } else {
-                $statusCode = 500;
             }
 
             return new JSONResponse($result, $statusCode);
@@ -962,12 +982,10 @@ class SettingsController extends Controller
             $params = $this->request->getParams();
             $resetConfiguration = isset($params['resetConfiguration']) === true && $params['resetConfiguration'] === true;
 
-            $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
-
+            $result     = $this->settingsService->resetAutoConfiguration($resetConfiguration);
+            $statusCode = 400;
             if ($result['success'] === true) {
                 $statusCode = 200;
-            } else {
-                $statusCode = 400;
             }
 
             return new JSONResponse($result, $statusCode);
@@ -1058,10 +1076,9 @@ class SettingsController extends Controller
             // Add timestamp for cache busting.
             $result['timestamp'] = time();
 
+            $importStatusCode = 400;
             if ($result['success'] === true) {
                 $importStatusCode = 200;
-            } else {
-                $importStatusCode = 400;
             }
 
             return new JSONResponse($result, $importStatusCode);
@@ -1287,10 +1304,8 @@ class SettingsController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-5
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) framework-required: SSE loop in anonymous Response subclass
+     * @spec                                          openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-5
      */
     public function streamProgress(string $operationId): Response
     {
@@ -1421,10 +1436,8 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.Superglobals)
-     * @spec                                          openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
+     * @spec                                 openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function importArchiMate(): JSONResponse
     {
@@ -1438,141 +1451,110 @@ class SettingsController extends Controller
         }
 
         try {
-            // Get JSON data from request body.
             $rawInput = file_get_contents('php://input');
             $data     = json_decode($rawInput, true);
 
-            $contentType = $this->request->getHeader('Content-Type');
-            $isMultipart = strpos(haystack: $contentType, needle: 'multipart/form-data') !== false;
-
-            // Reject file_path from JSON body — only uploaded files are accepted.
             if ($data !== null && isset($data['file_path']) === true) {
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'The file_path parameter is not accepted. Please upload a file via multipart/form-data.',
-                            'error'   => 'FILE_PATH_NOT_ALLOWED',
-                        ],
-                        400
-                        );
+                    [
+                        'success' => false,
+                        'message' => 'The file_path parameter is not accepted. Please upload a file via multipart/form-data.',
+                        'error'   => 'FILE_PATH_NOT_ALLOWED',
+                    ],
+                    400
+                );
             }
 
-            $this->logger->info(
-                    'ArchiMate import request received',
-                    [
-                        'contentType'    => $contentType,
-                        'isMultipart'    => $isMultipart,
-                        'requestMethod'  => $this->request->getMethod(),
-                        'userAgent'      => $this->request->getHeader('User-Agent'),
-                        'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
-                        '_FILES'         => $_FILES,
-                        '_POST'          => $_POST,
-                        'requestParams'  => $this->request->getParams(),
-                    ]
-                    );
-
-            // Check if a file was uploaded (traditional file upload).
-            $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
-
-            // Also check $_FILES directly as fallback.
-            $filesArray = $_FILES['archiMateFile'] ?? null;
-
-            $hasUploadedFiles = empty($uploadedFiles) === false;
-            $hasFilesArray    = empty($filesArray) === false;
-
-            $this->logger->info(
-                    'File upload detection detailed',
-                    [
-                        'requestMethod'     => $this->request->getMethod(),
-                        'contentType'       => $contentType,
-                        'hasUploadedFiles'  => $hasUploadedFiles,
-                        'hasFilesArray'     => $hasFilesArray,
-                        'uploadedFilesType' => gettype($uploadedFiles),
-                        'filesArrayType'    => gettype($filesArray),
-                        'allFilesKeys'      => array_keys($_FILES ?? []),
-                    ]
-                    );
-
-            if ($hasUploadedFiles === true || $hasFilesArray === true) {
-                // Use $_FILES as fallback if getUploadedFile doesn't work.
-                $fileData = $filesArray;
-                if ($uploadedFiles !== null) {
-                    $fileData = $uploadedFiles;
-                }
-
-                // Handle file upload.
-                $options = [
-                    'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
-                    'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
-                    'preserveIds'    => $this->request->getParam('preserveIds', 'true') === 'true',
-                    'processingMode' => $this->request->getParam('processingMode', 'speed'),
-                    'filePath'       => $fileData['tmp_name'],
-                    'fileName'       => $fileData['name'],
-                    'fileSize'       => $fileData['size'] ?? filesize($fileData['tmp_name']),
-                    'mimeType'       => $fileData['type'] ?? 'text/xml',
-                ];
-
-                $this->logger->info('File upload detected.', ['options' => $options]);
-            }//end if
-
-            if (isset($options) === false) {
-                $this->logger->error(
-                        'No ArchiMate file uploaded',
-                        [
-                            'contentType'   => $contentType,
-                            'isMultipart'   => $isMultipart,
-                            'requestMethod' => $this->request->getMethod(),
-                        ]
-                        );
-
+            $options = $this->parseArchiMateFileUpload();
+            if ($options === null) {
+                $contentType = $this->request->getHeader('Content-Type');
+                $isMultipart = strpos(haystack: $contentType, needle: 'multipart/form-data') !== false;
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'No ArchiMate file uploaded or file path provided',
-                            'error'   => 'NO_FILE_UPLOADED_OR_PATH',
-                            'debug'   => [
-                                'contentType' => $contentType,
-                                'isMultipart' => $isMultipart,
-                                'filesKeys'   => array_keys($_FILES ?? []),
-                            ],
+                    [
+                        'success' => false,
+                        'message' => 'No ArchiMate file uploaded or file path provided',
+                        'error'   => 'NO_FILE_UPLOADED_OR_PATH',
+                        'debug'   => [
+                            'contentType' => $contentType,
+                            'isMultipart' => $isMultipart,
+                            'filesKeys'   => array_keys($_FILES ?? []),
                         ],
-                        400
-                        );
-            }//end if
-
-            // OPTIMIZATION: Use optimized method if available or if explicitly requested.
-            $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
-            $hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
-            $this->logger->info('Using STANDARD ArchiMate import method.');
-            $result = $this->archiMateService->importArchiMateFileFromPath($options);
-            if ($useOptimized === true && $hasOptimized === true) {
-                $this->logger->info('Using OPTIMIZED ArchiMate import method.');
-                $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
+                    ],
+                    400
+                );
             }
+
+            $result = $this->resolveArchiMateMethod(options: $options);
 
             return new JSONResponse($result);
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'ArchiMate import failed',
-                    [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]
-                    );
-
-            // Determine appropriate HTTP status code based on error type.
+            $this->logger->error('ArchiMate import failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $statusCode = $this->getHttpStatusForException(e: $e);
-
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Import failed: '.$e->getMessage(),
-                        'error'   => $e->getMessage(),
-                    ],
-                    $statusCode
-                    );
+            return new JSONResponse(['success' => false, 'message' => 'Import failed: '.$e->getMessage(), 'error' => $e->getMessage()], $statusCode);
         }//end try
     }//end importArchiMate()
+
+    /**
+     * Parse the uploaded ArchiMate file from the multipart request.
+     *
+     * Inspects both the NC request wrapper and $_FILES superglobal as a fallback.
+     * Returns null when no file was uploaded.
+     *
+     * @return array<string,mixed>|null Import options array, or null when no file present.
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @spec                                 openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function parseArchiMateFileUpload(): ?array
+    {
+        $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
+        $filesArray    = $_FILES['archiMateFile'] ?? null;
+
+        if (empty($uploadedFiles) === true && empty($filesArray) === true) {
+            return null;
+        }
+
+        $fileData = $filesArray;
+        if ($uploadedFiles !== null) {
+            $fileData = $uploadedFiles;
+        }
+
+        return [
+            'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
+            'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
+            'preserveIds'    => $this->request->getParam('preserveIds', 'true') === 'true',
+            'processingMode' => $this->request->getParam('processingMode', 'speed'),
+            'filePath'       => $fileData['tmp_name'],
+            'fileName'       => $fileData['name'],
+            'fileSize'       => $fileData['size'] ?? filesize($fileData['tmp_name']),
+            'mimeType'       => $fileData['type'] ?? 'text/xml',
+        ];
+
+    }//end parseArchiMateFileUpload()
+
+    /**
+     * Call the appropriate ArchiMate import service method (optimised when available).
+     *
+     * @param array<string,mixed> $options Import options.
+     *
+     * @return array<string,mixed> Import result.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function resolveArchiMateMethod(array $options): array
+    {
+        $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
+        $hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
+
+        if ($useOptimized === true && $hasOptimized === true) {
+            $this->logger->info('Using OPTIMIZED ArchiMate import method.');
+            return $this->archiMateService->importArchiMateFileFromPathOptimized($options);
+        }
+
+        $this->logger->info('Using STANDARD ArchiMate import method.');
+        return $this->archiMateService->importArchiMateFileFromPath($options);
+
+    }//end resolveArchiMateMethod()
 
     /**
      * Export to ArchiMate format - returns file directly for download.
@@ -1582,9 +1564,7 @@ class SettingsController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @spec                                          openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function exportArchiMate(): Response
     {
@@ -1593,108 +1573,44 @@ class SettingsController extends Controller
         }
 
         try {
-            // Get JSON data from request parameters or body.
             $rawInput = file_get_contents('php://input');
             $data     = json_decode($rawInput, true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                // Fallback to request parameters if JSON decode fails.
-                $data = [
-                    'organization' => $this->request->getParam('organization', null),
-                ];
+            $organization = $this->request->getParam('organization', null);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $organization = $data['organization'] ?? null;
             }
 
-            // Simple organization filter - only parameter we support.
-            $organization = $data['organization'] ?? null;
-
-            // Call export service with simplified parameters.
             $result = $this->archiMateService->exportToArchiMate($organization);
 
-            // Check if export was successful.
             if ($result['success'] === false) {
-                // Determine appropriate status code based on error message.
                 $statusCode = $this->getHttpStatusForErrorMessage(message: $result['error'] ?? 'Export failed');
-
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => $result['error'] ?? 'Export failed',
-                            'error'   => $result['error'] ?? 'EXPORT_FAILED',
-                        ],
-                        $statusCode
-                        );
+                    ['success' => false, 'message' => $result['error'] ?? 'Export failed', 'error' => $result['error'] ?? 'EXPORT_FAILED'],
+                    $statusCode
+                );
             }
 
-            // Return the XML file directly for download.
             $fileName   = $result['file_name'] ?? 'archimate_export_'.date('Y-m-d_H-i-s').'.xml';
             $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
-            // Always return XML format.
-            $contentType = 'application/xml';
-
-            // Create direct download response.
-            $response = new class($xmlContent) extends Response {
-                /**
-                 * Constructor for the download response.
-                 *
-                 * @param string $content The XML content to return.
-                 *
-                 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-                 */
-                public function __construct(private string $content)
-                {
-                                        parent::__construct();
-                }//end __construct()
-
-                /**
-                 * Render the response content.
-                 *
-                 * @return string The response content.
-                 *
-                 * @spec exclude framework passthrough — inline DataDownloadResponse subclass returning prebuilt content unchanged
-                 */
-                public function render(): string
-                {
-                    return $this->content;
-                }//end render()
-            };
-
-            $response->setStatus(200);
-            $response->addHeader('Content-Type', $contentType);
-            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
-            $response->addHeader('Content-Length', (string) strlen($xmlContent));
-            $response->addHeader('Cache-Control', 'no-cache');
-
             $this->logger->info(
-                    'ArchiMate export completed',
-                    [
-                        'fileName'         => $fileName,
-                        'size'             => strlen($xmlContent),
-                        'objects_exported' => $result['statistics']['objects_exported'] ?? 0,
-                    ]
-                    );
+                'ArchiMate export completed',
+                [
+                    'fileName'         => $fileName,
+                    'size'             => strlen($xmlContent),
+                    'objects_exported' => $result['statistics']['objects_exported'] ?? 0,
+                ]
+            );
 
-            return $response;
+            return $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'ArchiMate export failed',
-                    [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]
-                    );
-
-            // Determine appropriate HTTP status code based on error type.
+            $this->logger->error('ArchiMate export failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $statusCode = $this->getHttpStatusForException(e: $e);
-
             return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Export failed: '.$e->getMessage(),
-                        'error'   => $e->getMessage(),
-                    ],
-                    $statusCode
-                    );
+                ['success' => false, 'message' => 'Export failed: '.$e->getMessage(), 'error' => $e->getMessage()],
+                $statusCode
+            );
         }//end try
     }//end exportArchiMate()
 
@@ -1716,38 +1632,19 @@ class SettingsController extends Controller
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
-        // Require admin or organisation-admin group membership.
-        $isAdmin        = $this->groupManager->isAdmin($currentUser->getUID());
-        $orgAdminGroups = $this->settingsService->getOrganizationAdminGroups();
-        $isOrgAdmin     = false;
-        foreach ($orgAdminGroups as $groupName) {
-            if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
-                $isOrgAdmin = true;
-                break;
-            }
-        }
-
-        $hasExportPermission = ($isAdmin === true || $isOrgAdmin === true);
-        if ($hasExportPermission === false) {
-            return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+        $permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
+        if ($permissionError !== null) {
+            return $permissionError;
         }
 
         try {
-            // Read boolean query parameters.
-            $modules   = $this->request->getParam('modules', 'true') === 'true';
-            $deelnames = $this->request->getParam('deelnames', 'false') === 'true';
-            $gebruik   = $this->request->getParam('gebruik', 'false') === 'true';
-
             $options = [
-                'modules'   => $modules,
-                'deelnames' => $deelnames,
-                'gebruik'   => $gebruik,
+                'modules'   => $this->request->getParam('modules', 'true') === 'true',
+                'deelnames' => $this->request->getParam('deelnames', 'false') === 'true',
+                'gebruik'   => $this->request->getParam('gebruik', 'false') === 'true',
             ];
 
-            $result = $this->archiMateService->exportOrgArchiMate(
-                organizationUuid: $organizationUuid,
-                options: $options
-            );
+            $result = $this->archiMateService->exportOrgArchiMate(organizationUuid: $organizationUuid, options: $options);
 
             if ($result['success'] === false) {
                 $statusCode = 500;
@@ -1756,75 +1653,96 @@ class SettingsController extends Controller
                 }
 
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => $result['error'] ?? 'Export failed',
-                            'error'   => $result['error'] ?? 'EXPORT_FAILED',
-                        ],
-                        $statusCode
-                        );
+                    ['success' => false, 'message' => $result['error'] ?? 'Export failed', 'error' => $result['error'] ?? 'EXPORT_FAILED'],
+                    $statusCode
+                );
             }
 
             $fileName   = $result['file_name'] ?? 'archimate_org_export_'.date('Y-m-d_H-i-s').'.xml';
             $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
-            $response = new class($xmlContent) extends Response {
-                /**
-                 * Constructor for the org download response.
-                 *
-                 * @param string $content The XML content to return.
-                 *
-                 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-                 */
-                public function __construct(private string $content)
-                {
-                                        parent::__construct();
-                }//end __construct()
-
-                /**
-                 * Render the response content.
-                 *
-                 * @return string The response content.
-                 *
-                 * @spec exclude framework passthrough — inline DataDownloadResponse subclass returning prebuilt content unchanged
-                 */
-                public function render(): string
-                {
-                    return $this->content;
-                }//end render()
-            };
-
-            $response->setStatus(200);
-            $response->addHeader('Content-Type', 'application/xml');
-            $response->addHeader(
-                'Content-Disposition',
-                'attachment; filename="'.addslashes($fileName).'"; filename*=UTF-8\'\''.rawurlencode($fileName)
-            );
-            $response->addHeader('Content-Length', (string) strlen($xmlContent));
-            $response->addHeader('Cache-Control', 'no-cache');
-
-            return $response;
+            return $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'Organization ArchiMate export failed',
-                    [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]
-                    );
-
+            $this->logger->error('Organization ArchiMate export failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $statusCode = $this->getHttpStatusForException(e: $e);
-
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Export failed: '.$e->getMessage(),
-                        'error'   => $e->getMessage(),
-                    ],
-                    $statusCode
-                    );
+            return new JSONResponse(['success' => false, 'message' => 'Export failed: '.$e->getMessage(), 'error' => $e->getMessage()], $statusCode);
         }//end try
     }//end exportOrgArchiMate()
+
+    /**
+     * Verify that the current user has permission to export organisation ArchiMate files.
+     *
+     * @param \OCP\IUser $currentUser The currently authenticated user.
+     *
+     * @return JSONResponse|null Forbidden response, or null when permitted.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function verifyOrgExportPermission(\OCP\IUser $currentUser): ?JSONResponse
+    {
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
+            return null;
+        }
+
+        $orgAdminGroups = $this->settingsService->getOrganizationAdminGroups();
+        foreach ($orgAdminGroups as $groupName) {
+            if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
+                return null;
+            }
+        }
+
+        return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+
+    }//end verifyOrgExportPermission()
+
+    /**
+     * Build an XML file download Response from content and filename.
+     *
+     * @param string $xmlContent The XML string to serve.
+     * @param string $fileName   The attachment filename for the Content-Disposition header.
+     *
+     * @return Response The download response.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function buildXmlDownloadResponse(string $xmlContent, string $fileName): Response
+    {
+        $response = new class($xmlContent) extends Response {
+            /**
+             * XML content download response constructor.
+             *
+             * @param string $content The XML content to return.
+             */
+            public function __construct(private string $content)
+            {
+                parent::__construct();
+            }//end __construct()
+
+            /**
+             * Render the XML content for download.
+             *
+             * @return string
+             *
+             * @spec exclude framework passthrough — inline DataDownloadResponse subclass returning prebuilt content unchanged
+             */
+            public function render(): string
+            {
+                return $this->content;
+            }//end render()
+        };
+
+        $response->setStatus(200);
+        $response->addHeader('Content-Type', 'application/xml');
+        $response->addHeader(
+            'Content-Disposition',
+            'attachment; filename="'.addslashes($fileName).'"; filename*=UTF-8\'\''.rawurlencode($fileName)
+        );
+        $response->addHeader('Content-Length', (string) strlen($xmlContent));
+        $response->addHeader('Cache-Control', 'no-cache');
+
+        return $response;
+
+    }//end buildXmlDownloadResponse()
 
     /**
      * Download ArchiMate file.
@@ -2024,11 +1942,12 @@ class SettingsController extends Controller
             // Redact secret values — return only a masked placeholder when set.
             $secretFields = ['smtpPassword', 'sendgridApiKey', 'mailgunApiKey', 'postmarkApiKey', 'sesSecretKey', 'mailjetSecretKey'];
             foreach ($secretFields as $field) {
+                $maskedValue = '';
                 if (empty($emailSettings[$field]) === false) {
-                    $emailSettings[$field] = '••••••••';
-                } else {
-                    $emailSettings[$field] = '';
-                }//end if
+                    $maskedValue = '••••••••';
+                }
+
+                $emailSettings[$field] = $maskedValue;
             }
 
             return new JSONResponse(
@@ -2230,18 +2149,12 @@ class SettingsController extends Controller
                 templateContent: $templateContent
             );
 
+            $updateMsg = "Failed to update template {$templateName}";
             if ($success === true) {
                 $updateMsg = "Template {$templateName} updated successfully";
-            } else {
-                $updateMsg = "Failed to update template {$templateName}";
             }
 
-            return new JSONResponse(
-                    [
-                        'success' => $success,
-                        'message' => $updateMsg,
-                    ]
-                    );
+            return new JSONResponse(['success' => $success, 'message' => $updateMsg]);
         } catch (\Exception $e) {
             $this->logger->error(
                     "Failed to update email template {$templateName}",
@@ -2811,20 +2724,13 @@ class SettingsController extends Controller
         }
 
         try {
-            $result = $this->settingsService->cancelArchiMateImport();
+            $result  = $this->settingsService->cancelArchiMateImport();
+            $message = 'ArchiMate import cancellation failed';
             if ($result['cancelled'] === true) {
                 $message = 'ArchiMate import cancellation succeeded';
-            } else {
-                $message = 'ArchiMate import cancellation failed';
             }
 
-            return new JSONResponse(
-                    [
-                        'success' => $result['cancelled'],
-                        'message' => $message,
-                        'details' => $result,
-                    ]
-                    );
+            return new JSONResponse(['success' => $result['cancelled'], 'message' => $message, 'details' => $result]);
         } catch (\Exception $e) {
             $this->logger->error(
                     'Failed to cancel ArchiMate import',
@@ -3542,10 +3448,9 @@ class SettingsController extends Controller
             // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
+            $statusCode = 500;
             if ($result['success'] === true) {
                 $statusCode = 200;
-            } else {
-                $statusCode = 500;
             }
 
             $this->logger->info(
@@ -3695,13 +3600,11 @@ class SettingsController extends Controller
     public function updateCronjobConfig(): JSONResponse
     {
         try {
-            $data   = $this->request->getParams();
-            $result = $this->settingsService->updateCronjobConfig($data);
-
+            $data       = $this->request->getParams();
+            $result     = $this->settingsService->updateCronjobConfig($data);
+            $statusCode = 400;
             if ($result['success'] === true) {
                 $statusCode = 200;
-            } else {
-                $statusCode = 400;
             }
 
             return new JSONResponse($result, $statusCode);
