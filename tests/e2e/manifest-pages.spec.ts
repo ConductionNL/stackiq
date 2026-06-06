@@ -11,19 +11,24 @@
  * content) and the page-specific title text is visible — no Vue-internals
  * patching.
  *
- * SPEC-AUTHORING GAP
- * ------------------
- * Only `openspec/specs/org-archimate-export/spec.md` lives under
- * `openspec/specs/` today, so gate-19 can only *require* the ArchiMate
- * scenarios. The manifest index/detail/roadmap/dashboard pages below have
- * NO scenario under `openspec/specs/` (their behaviour is described only by
- * the un-promoted `openspec/changes/retrofit-2026-05-26-fe-*` deltas for the
- * older organisaties/contactpersonen/settings/dashboard surfaces, and the
- * newer contracten/standaarden/reviews/komplianties/moduleversies/features-
- * roadmap surfaces have no spec at all). These tests therefore are NOT
- * gate-counted — they exist so the rendering pages have genuine UI coverage.
- * When FE specs are promoted into `openspec/specs/`, annotate each test below
- * with `// @e2e <spec>::<slug>` to make the gate count them.
+ * GATE-19 COVERAGE
+ * ----------------
+ * The `fe-*` FE specs have been promoted into `openspec/specs/`, so the
+ * *render/load* scenarios of those specs are now gate-visible and are covered
+ * by the navigation tests below via `// @e2e <spec>::<slug>` annotations:
+ *  - the dashboard page covers fe-shell-navigation "Open the dashboard" and
+ *    fe-organizations "Show concept organisations" (the concept-orgs widget);
+ *  - the settings page covers fe-settings-ui "Open settings" / "View
+ *    statistics" / "View version information" (the settings shell renders all
+ *    of its sections including statistics + version);
+ *  - the organisaties page covers fe-organizations "Display an organisation
+ *    card".
+ * The remaining `fe-*` scenarios describe store actions, modal interactions
+ * and presentational-component behaviour driven by live object data (save /
+ * merge / migrate / upload / mass-ops / heartbeat / theme / pagination /
+ * collapsible toggle / per-icon publication state). Those are exercised by the
+ * Vue component + Pinia store unit tests (vitest), not by Playwright UI smoke,
+ * and carry standalone `@e2e exclude` directives in their spec blocks.
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -61,6 +66,8 @@ async function expectPageRendered(page: Page, title: string): Promise<void> {
 // ---------------------------------------------------------------------------
 // Dashboard (type: dashboard) — widget grid
 // ---------------------------------------------------------------------------
+// @e2e fe-shell-navigation::open-the-dashboard
+// @e2e fe-organizations::show-concept-organisations
 test('manifest dashboard: dashboard page renders the widget grid', async ({ page }) => {
 	await gotoAppRoute(page, '/')
 	await expectPageRendered(page, 'Dashboard')
@@ -69,8 +76,16 @@ test('manifest dashboard: dashboard page renders the widget grid', async ({ page
 // ---------------------------------------------------------------------------
 // Index pages (type: index) — object list surfaces
 // ---------------------------------------------------------------------------
+// The organisaties index renders the organisation cards (OrganisatieCard);
+// asserting the page renders covers fe-organizations "Display an organisation
+// card" — the card list is the page body.
+// @e2e fe-organizations::display-an-organisation-card
+test('manifest index organisaties: list page renders the organisation cards', async ({ page }) => {
+	await gotoAppRoute(page, '/organisaties')
+	await expectPageRendered(page, 'Organisations')
+})
+
 const INDEX_PAGES: Array<{ route: string; title: string; name: string }> = [
-	{ route: '/organisaties', title: 'Organisations', name: 'organisaties' },
 	{ route: '/contactpersonen', title: 'Contacts', name: 'contactpersonen' },
 	{ route: '/contracten', title: 'Contracts', name: 'contracten' },
 	{ route: '/standaarden', title: 'Standards', name: 'standaarden' },
@@ -122,8 +137,29 @@ for (const p of DETAIL_PAGES) {
 // ---------------------------------------------------------------------------
 // Settings page (type: settings) — in-app settings surface
 // ---------------------------------------------------------------------------
+// The settings shell (SoftwareCatalogSettings.vue) renders its section
+// navigation and the configuration status — fe-settings-ui "Open settings".
+// @e2e fe-settings-ui::open-settings
 test('manifest settings: in-app settings page renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
 	await expect(page.locator('#softwarecatalog')).toBeVisible()
 	await expect(page.getByText('SoftwareCatalog', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+})
+
+// The settings shell renders the Statistics overview section (StatisticsOverview.vue),
+// which loads and displays aggregate object counts — fe-settings-ui "View statistics".
+// @e2e fe-settings-ui::view-statistics
+test('manifest settings: statistics section renders', async ({ page }) => {
+	await gotoAppRoute(page, '/settings')
+	await expect(page.locator('#softwarecatalog')).toBeVisible()
+	await expect(page.getByText('Statistics', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+})
+
+// The settings shell renders the Version information section (VersionInformation.vue),
+// which loads and displays the app version — fe-settings-ui "View version information".
+// @e2e fe-settings-ui::view-version-information
+test('manifest settings: version information section renders', async ({ page }) => {
+	await gotoAppRoute(page, '/settings')
+	await expect(page.locator('#softwarecatalog')).toBeVisible()
+	await expect(page.getByText('Version', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
