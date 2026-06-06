@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-settings-service. Update Purpose after archive.
+
+@e2e exclude PHP SettingsService backend (config persistence, validation, OpenRegister/email/group resolution) — no UI surface; covered by PHPUnit service tests and Newman REST collections.
+
 ## Requirements
 ### Requirement: The system SHALL detect and resolve OpenRegister availability and services (REQ-001)
 

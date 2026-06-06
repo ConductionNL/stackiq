@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-24-method-decomposition. Update Purpose after archive.
+
+@e2e exclude PHP internal refactor (controller/service method decomposition into helpers) — pure backend structure with no observable UI behaviour; covered by PHPUnit unit tests.
+
 ## Requirements
 ### Requirement: SettingsController Settings CRUD endpoints (REQ-DECOMP-013)
 

@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-24-progress-tracking. Update Purpose after archive.
+
+@e2e exclude PHP sync/import progress-tracking backend (job progress state, percentage/counter updates) — no UI surface; covered by PHPUnit service tests.
+
 ## Requirements
 ### Requirement: The system SHALL start a tracked operation and return a unique operation id (REQ-001)
 
