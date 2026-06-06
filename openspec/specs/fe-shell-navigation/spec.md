@@ -19,6 +19,8 @@ The directory and search sidebars SHALL let the user browse/filter the catalog a
 
 `DirectorySideBar.vue` renders the directory tree/filters and applies selection; `SearchSideBar.vue` collects search criteria and dispatches the search to update results.
 
+@e2e exclude Vue sidebar components — filter/search is an interaction over live object data that mutates the store-backed list; tested by vitest component tests with a mocked store. Not a navigable manifest-page render.
+
 #### Scenario: Apply a directory filter
 - WHEN the user selects a directory entry or applies a search
 - THEN the sidebar MUST update the active object list accordingly
@@ -29,6 +31,8 @@ The pagination control SHALL expose page navigation and emit page-change events 
 
 `PaginationComponent.vue` computes page state and emits navigation events to the parent.
 
+@e2e exclude Vue pagination presentational component — computes page state and emits a page-change event to its parent; pure component logic tested by vitest. No standalone UI surface.
+
 #### Scenario: Change page
 - WHEN the user navigates to another page
 - THEN the control MUST emit the page change so the parent reloads that page
@@ -38,6 +42,8 @@ The pagination control SHALL expose page navigation and emit page-change events 
 The reusable section and icon components SHALL render their content/state consistently: collapsible/always-visible sections SHALL toggle and render their slot content, and the published-status icon SHALL render the correct icon and tooltip for an object's publication state.
 
 `CollapsibleSection.vue` toggles open/closed and renders its content; `AlwaysVisibleSection.vue` renders a permanently-visible section; `PublishedIcon.vue` derives the icon/tooltip from the object's publication status.
+
+@e2e exclude Reusable presentational Vue components (collapsible/always-visible section toggle, published-status icon/tooltip derivation) — pure prop-driven rendering logic tested by vitest component tests. No standalone navigable surface.
 
 #### Scenario: Toggle a collapsible section
 - WHEN the user toggles a collapsible section
