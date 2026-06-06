@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": "oc_sessionPassphrase",
-      "value": "ZYGakg32P%2FVPJz8T7PJ8s%2B4Gn%2BsiUWRXovSAp4eZW5xMeJmRi%2FaPzfkGWPNXYmGNl0x4UdlcoqNOG2NKqHL8tJGCVKeLEelX19z7pnSKoOXV67MO1OsaBGlT0EAJPHeM",
+      "value": "4qFDVEhBQGZguTnXHrk3jjpyV%2FWVtptPUcNGWlZ3DazphdFooBVJRV9uuaPFknFtXmg0nSkV4l2t4f%2FSH4tQGzwFJmoTDMAa32UkjGLcUSr0JIQ30%2F0byeiaA4Ku%2BwuH",
       "domain": "localhost",
       "path": "/",
       "expires": -1,
@@ -15,7 +15,7 @@
       "value": "true",
       "domain": "localhost",
       "path": "/",
-      "expires": 1815304181.896313,
+      "expires": 1815304207.482795,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
@@ -25,14 +25,14 @@
       "value": "true",
       "domain": "localhost",
       "path": "/",
-      "expires": 1815304181.896411,
+      "expires": 1815304207.482835,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Strict"
     },
     {
       "name": "ocy2k459bs75",
-      "value": "254a3dbb9ed813d0d70c8dc7129fc715",
+      "value": "6f44e0b67a18599864d1df55b3c265c6",
       "domain": "localhost",
       "path": "/",
       "expires": -1,
@@ -45,27 +45,27 @@
       "value": "admin",
       "domain": "localhost",
       "path": "/",
-      "expires": 1782040184.232501,
+      "expires": 1782040209.810746,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "nc_token",
-      "value": "vE3e0XUJbDe5VH7jUvDvih9Vwr3jU0ys",
+      "value": "ersiMx4DXIKQSkIixyWSi%2FBOdYLFifea",
       "domain": "localhost",
       "path": "/",
-      "expires": 1782040184.232521,
+      "expires": 1782040209.810766,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "nc_session_id",
-      "value": "254a3dbb9ed813d0d70c8dc7129fc715",
+      "value": "6f44e0b67a18599864d1df55b3c265c6",
       "domain": "localhost",
       "path": "/",
-      "expires": 1782040184.23254,
+      "expires": 1782040209.810792,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"

@@ -64,7 +64,11 @@ async function gotoAppRoute(page: Page, route: string): Promise<void> {
 	// because the bare `/` page route does not match a trailing slash. So for the
 	// root route navigate to APP_BASE directly; deep routes keep their path.
 	const url = route === '/' ? APP_BASE : `${APP_BASE}${route}`
-	await page.goto(url, { waitUntil: 'networkidle' })
+	// Use `domcontentloaded`, not `networkidle`: the app fires a periodic
+	// heartbeat / keep-alive poll, so the network never goes idle and a
+	// `networkidle` wait times out at 60s. The explicit shell/main waits below
+	// are the real readiness signal.
+	await page.goto(url, { waitUntil: 'domcontentloaded' })
 	// App.vue shell mounted (replaces #content) — the wrapper has no geometry,
 	// so check it is attached, then wait for the visible main content region.
 	await page.locator(APP_SHELL).first().waitFor({ state: 'attached', timeout: 30000 })
@@ -160,8 +164,11 @@ for (const p of DETAIL_PAGES) {
 // @e2e fe-settings-ui::open-settings
 test('manifest settings: in-app settings page renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator(APP_MAIN).first()).toBeVisible()
-	await expect(page.getByText('SoftwareCatalog', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible()
+	// Scope to main so the assertion can't match a transient notification toast
+	// elsewhere in the DOM (which also contains app/section words but is hidden).
+	await expect(main.getByText('SoftwareCatalog', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
 
 // The settings shell renders the Statistics overview section (StatisticsOverview.vue),
@@ -169,8 +176,9 @@ test('manifest settings: in-app settings page renders', async ({ page }) => {
 // @e2e fe-settings-ui::view-statistics
 test('manifest settings: statistics section renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator(APP_MAIN).first()).toBeVisible()
-	await expect(page.getByText('Statistics', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible()
+	await expect(main.getByText('Statistics', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
 
 // The settings shell renders the Version information section (VersionInformation.vue),
@@ -178,6 +186,9 @@ test('manifest settings: statistics section renders', async ({ page }) => {
 // @e2e fe-settings-ui::view-version-information
 test('manifest settings: version information section renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator(APP_MAIN).first()).toBeVisible()
-	await expect(page.getByText('Version', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible()
+	// Match the "Version Information" section heading inside main, not a hidden
+	// "Application Version was updated" notification toast in the DOM.
+	await expect(main.getByText('Version Information', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
