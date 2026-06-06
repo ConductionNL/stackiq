@@ -41,29 +41,43 @@ const APP_BASE = '/apps/softwarecatalog'
 // element is `<div class="softwarecatalog-app-root">` wrapping CnAppRoot. The
 // vestigial `<div id="softwarecatalog">` in templates/index.php is never used
 // as the mount target, so the shell is identified by its root class instead.
+//
+// The `.softwarecatalog-app-root` wrapper itself carries no geometry (the
+// CnAppRoot/NcContent layout positions its children), so Playwright reports
+// the wrapper as "hidden" even when the page is fully rendered. We therefore
+// wait for the wrapper to be *attached* (Vue mounted) and assert visibility on
+// the real content region — the NcAppContent `<main>` — and on page text.
 const APP_SHELL = '.softwarecatalog-app-root'
+const APP_MAIN = 'main'
 
 /**
  * Navigate to an in-app SPA route and wait for the Vue shell to mount.
- * Returns once the app-root shell has rendered. We wait for the *shell*
- * (the CnAppRoot container), not data-populated rows — index/dashboard
- * surfaces render their container + empty-state against an empty dev
- * dataset, so asserting the shell keeps the smoke test data-independent.
+ * Returns once the app-root shell has mounted and the main content region is
+ * visible. We wait for the *shell* (the CnAppRoot container + its NcAppContent
+ * main), not data-populated rows — index/dashboard surfaces render their
+ * container + empty-state against an empty dev dataset, so asserting the shell
+ * keeps the smoke test data-independent.
  */
 async function gotoAppRoute(page: Page, route: string): Promise<void> {
-	await page.goto(`${APP_BASE}${route}`, { waitUntil: 'networkidle' })
-	// Wait for the App.vue shell that replaces #content on mount.
-	await page.locator(APP_SHELL).first().waitFor({ state: 'visible', timeout: 30000 })
+	// The dashboard lives at the app root. NC serves it at `/apps/softwarecatalog`
+	// (no trailing slash) — the trailing-slash form `/apps/softwarecatalog/` 404s
+	// because the bare `/` page route does not match a trailing slash. So for the
+	// root route navigate to APP_BASE directly; deep routes keep their path.
+	const url = route === '/' ? APP_BASE : `${APP_BASE}${route}`
+	await page.goto(url, { waitUntil: 'networkidle' })
+	// App.vue shell mounted (replaces #content) — the wrapper has no geometry,
+	// so check it is attached, then wait for the visible main content region.
+	await page.locator(APP_SHELL).first().waitFor({ state: 'attached', timeout: 30000 })
+	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })
 }
 
 /**
- * Assert the app shell rendered (CnAppRoot container present) and the given
- * title text is visible somewhere in the rendered page. Uses .first() because
- * the manifest title can appear both in the nav and the page header.
+ * Assert the app shell rendered (NcAppContent main region present) and the
+ * given title text is visible somewhere in the rendered page. Uses .first()
+ * because the manifest title can appear both in the nav and the page header.
  */
 async function expectPageRendered(page: Page, title: string): Promise<void> {
-	const root = page.locator(APP_SHELL).first()
-	await expect(root).toBeVisible()
+	await expect(page.locator(APP_MAIN).first()).toBeVisible()
 	await expect(page.getByText(title, { exact: false }).first()).toBeVisible({ timeout: 30000 })
 }
 
@@ -134,7 +148,7 @@ for (const p of DETAIL_PAGES) {
 		await gotoAppRoute(page, p.route)
 		// Shell mounted; the app-content container is rendered regardless of
 		// whether the synthetic id resolves to an object.
-		await expect(page.locator(APP_SHELL).first()).toBeVisible()
+		await expect(page.locator(APP_MAIN).first()).toBeVisible()
 	})
 }
 
@@ -146,7 +160,7 @@ for (const p of DETAIL_PAGES) {
 // @e2e fe-settings-ui::open-settings
 test('manifest settings: in-app settings page renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator(APP_SHELL).first()).toBeVisible()
+	await expect(page.locator(APP_MAIN).first()).toBeVisible()
 	await expect(page.getByText('SoftwareCatalog', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
 
@@ -155,7 +169,7 @@ test('manifest settings: in-app settings page renders', async ({ page }) => {
 // @e2e fe-settings-ui::view-statistics
 test('manifest settings: statistics section renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator(APP_SHELL).first()).toBeVisible()
+	await expect(page.locator(APP_MAIN).first()).toBeVisible()
 	await expect(page.getByText('Statistics', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
 
@@ -164,6 +178,6 @@ test('manifest settings: statistics section renders', async ({ page }) => {
 // @e2e fe-settings-ui::view-version-information
 test('manifest settings: version information section renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator(APP_SHELL).first()).toBeVisible()
+	await expect(page.locator(APP_MAIN).first()).toBeVisible()
 	await expect(page.getByText('Version', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
