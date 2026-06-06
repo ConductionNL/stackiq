@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-aangeboden-gebruik-api. Update Purpose after archive.
+
+@e2e exclude PHP aangeboden-gebruik (offered-usage) REST endpoints — HTTP contract; covered by Newman REST collections and PHPUnit controller tests.
+
 ## Requirements
 ### Requirement: The system SHALL list offered-usage records scoped to the caller's role (REQ-001)
 
