@@ -520,8 +520,7 @@ curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/setti
 
 # Manual sync trigger
 curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
-```
-
+``` 
 ## OpenRegister Abstraction Adoption
 
 SoftwareCatalog is an OpenRegister-backed app (ADR-001: all data in OR).
@@ -579,4 +578,3 @@ The write-header helper already supports stamping
 switch, navigate-back on detail) trails the nc-vue `useTenantContext()`
 release and is tracked in the `softwarecatalog-adopt-or-abstractions`
 change (Phase 4).
-``` 
