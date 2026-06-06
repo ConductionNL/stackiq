@@ -225,10 +225,7 @@ class SettingsController extends Controller
             $data   = $this->request->getParams();
             $result = [];
 
-            $configError = $this->updateConfigSettings(data: $data, result: $result);
-            if ($configError !== null) {
-                return $configError;
-            }
+            $this->updateConfigSettings(data: $data, result: $result);
 
             $groupError = $this->updateUserGroupSettings(data: $data, result: $result);
             if ($groupError !== null) {
@@ -254,14 +251,14 @@ class SettingsController extends Controller
      * @param array<string,mixed> $data   The raw request params.
      * @param array<string,mixed> $result The result accumulator (passed by reference).
      *
-     * @return JSONResponse|null Error response, or null when successful.
+     * @return void
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-3
      */
-    private function updateConfigSettings(array $data, array &$result): ?JSONResponse
+    private function updateConfigSettings(array $data, array &$result): void
     {
         if (isset($data['configuration']) === false && isset($data['selectedRegister']) === false) {
-            return null;
+            return;
         }
 
         $configData = array_filter(
@@ -273,8 +270,6 @@ class SettingsController extends Controller
         if (empty($configData) === false) {
             $result['configuration'] = $this->settingsService->updateSettings($configData);
         }
-
-        return null;
 
     }//end updateConfigSettings()
 

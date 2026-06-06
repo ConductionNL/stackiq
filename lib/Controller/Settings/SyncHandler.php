@@ -21,7 +21,6 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Controller\Settings;
 
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
-use OCA\SoftwareCatalog\Service\SettingsService;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,15 +37,13 @@ class SyncHandler
     /**
      * Constructor.
      *
-     * @param OrganizationSyncService $orgSyncService  The organisation sync service.
-     * @param SettingsService         $settingsService The settings service.
-     * @param LoggerInterface         $logger          Logger instance.
+     * @param OrganizationSyncService $orgSyncService The organisation sync service.
+     * @param LoggerInterface         $logger         Logger instance.
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-3
      */
     public function __construct(
         private readonly OrganizationSyncService $orgSyncService,
-        private readonly SettingsService $settingsService,
         private readonly LoggerInterface $logger
     ) {
     }//end __construct()

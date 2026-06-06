@@ -22,7 +22,6 @@ namespace OCA\SoftwareCatalog\Service\Settings;
 
 use InvalidArgumentException;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -46,15 +45,13 @@ class OrganizationSettingsHandler
     /**
      * Constructor.
      *
-     * @param IAppConfig      $config       The application configuration service.
-     * @param IGroupManager   $groupManager The Nextcloud group manager.
-     * @param LoggerInterface $logger       Logger instance.
+     * @param IAppConfig      $config The application configuration service.
+     * @param LoggerInterface $logger Logger instance.
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-1
      */
     public function __construct(
         private readonly IAppConfig $config,
-        private readonly IGroupManager $groupManager,
         private readonly LoggerInterface $logger
     ) {
     }//end __construct()
@@ -180,9 +177,9 @@ class OrganizationSettingsHandler
     /**
      * Validate group-name arrays.
      *
-     * Guard clause: throws when any group name contains illegal characters.
+     * Guard clause: throws when any group name is empty or contains illegal characters.
      *
-     * @param string[] $groups Group names to validate.
+     * @param mixed[] $groups Group names to validate (each element is expected to be string).
      *
      * @return void
      *

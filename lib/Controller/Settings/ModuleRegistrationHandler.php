@@ -20,7 +20,6 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Controller\Settings;
 
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
 use Psr\Log\LoggerInterface;
 
@@ -37,14 +36,12 @@ class ModuleRegistrationHandler
     /**
      * Constructor.
      *
-     * @param ObjectService             $objectService   The OpenRegister object service.
      * @param ModuleRegistrationService $registrationSvc The module registration service.
      * @param LoggerInterface           $logger          Logger instance.
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-3
      */
     public function __construct(
-        private readonly ObjectService $objectService,
         private readonly ModuleRegistrationService $registrationSvc,
         private readonly LoggerInterface $logger
     ) {
