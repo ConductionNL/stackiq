@@ -12,10 +12,16 @@
  * The 4 frontend scenarios (Requirement 14: "Frontend MUST provide organization
  * export with data layer toggles") are covered below by driving the REAL DOM
  * (NcSelect combobox, NcCheckboxRadioSwitch toggles, NcButton clicks) — no Vue
- * `$data` patching / `__vue__` walking. On an empty dev dataset the OR org
- * endpoint yields only the built-in "Generic" option (value null); selecting it
- * still makes `selectedOrganization` truthy, so the checkbox group renders and
- * we assert on the rendered controls.
+ * `$data` patching / `__vue__` walking.
+ *
+ * The toggle-reveal + "Organization Export" enablement require a REAL
+ * organisation (truthy `value`) to be selected — the built-in "Generic" option
+ * has `value: null` (falsy), so selecting it leaves `selectedOrganization`
+ * falsy and the checkbox group never renders. The
+ * `user-triggers-organization-export-with-toggles` scenario therefore SEEDS a
+ * real organisation via the OpenRegister API in `beforeAll` (fixture SETUP only;
+ * all ASSERTIONS remain on the rendered DOM) and selects that real org through
+ * the combobox.
  *
  * Excluded scenarios (backend – 49 total):
  * @e2e org-archimate-export::organization-with-mapped-applications-exports-successfully
@@ -69,7 +75,76 @@
  * @e2e org-archimate-export::boolean-parameters-accept-various-truthy-values
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, request as playwrightRequest, type Page } from '@playwright/test'
+
+// ---------------------------------------------------------------------------
+// Fixture setup
+// ---------------------------------------------------------------------------
+
+const BASE_URL = process.env.BASE_URL ?? process.env.NEXTCLOUD_URL ?? 'http://localhost:8080'
+const NC_ADMIN_USER = process.env.NC_ADMIN_USER ?? 'admin'
+const NC_ADMIN_PASS = process.env.NC_ADMIN_PASS ?? 'admin'
+
+// Deterministic name for the organisation seeded for the toggle-reveal scenario.
+const SEEDED_ORG_NAME = 'E2E Export Test Org'
+
+/**
+ * Seed a real organisation in OpenRegister so the component's
+ * `loadOrganizations()` yields an option with a truthy `value`. This is fixture
+ * SETUP only (per the gate-19 program, setup may use the API; only ASSERTIONS
+ * must be driven through the UI). Idempotent: re-creating with the same name is
+ * harmless for this test (it selects by visible label).
+ *
+ * Resolves the voorzieningen register + organisatie schema from the app's own
+ * config endpoint, then POSTs an organisation object via basic auth (which
+ * bypasses the CSRF requesttoken that cookie-based writes need).
+ */
+async function seedOrganization(): Promise<void> {
+	const ctx = await playwrightRequest.newContext({
+		baseURL: BASE_URL,
+		httpCredentials: { username: NC_ADMIN_USER, password: NC_ADMIN_PASS },
+		extraHTTPHeaders: { 'OCS-APIREQUEST': 'true' },
+	})
+	try {
+		const configRes = await ctx.get(
+			'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+		)
+		if (!configRes.ok()) {
+			throw new Error(`config endpoint returned ${configRes.status()}`)
+		}
+		const config = (await configRes.json())?.config ?? {}
+		const register = config.register
+		const schema = config.organisatie_schema
+		if (!register || !schema) {
+			throw new Error('voorzieningen register/organisatie schema not configured')
+		}
+
+		// Skip seeding if an organisation with this name already exists.
+		const existing = await ctx.get(
+			`/index.php/apps/openregister/api/objects/${register}/${schema}?_limit=5000&_fields=id,naam`,
+		)
+		if (existing.ok()) {
+			const data = await existing.json()
+			const list = data?.results ?? data ?? []
+			if (Array.isArray(list) && list.some(o => (o.naam || o.name) === SEEDED_ORG_NAME)) {
+				return
+			}
+		}
+
+		// `type` is a required (not-null) field on the organisatie schema.
+		const createRes = await ctx.post(
+			`/index.php/apps/openregister/api/objects/${register}/${schema}`,
+			{ data: { naam: SEEDED_ORG_NAME, type: 'Leverancier', status: 'Actief' } },
+		)
+		if (!createRes.ok()) {
+			throw new Error(
+				`failed to seed organisation (${createRes.status()}): ${await createRes.text()}`,
+			)
+		}
+	} finally {
+		await ctx.dispose()
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -180,14 +255,22 @@ test(
 // Drives the real combobox + real checkbox toggles + real button click; asserts
 // the rendered control state and the outgoing API request shape. No $data patch.
 // ---------------------------------------------------------------------------
-test(
-	'swc-fix user-triggers-organization-export-with-toggles: selecting an org reveals toggles and org-export fires the request',
-	async ({ page }) => {
-		await goToArchiMateSettings(page)
+test.describe('organization export with toggles', () => {
+	test.beforeAll(async () => {
+		// Fixture SETUP: ensure a real organisation (truthy value) exists so the
+		// combobox offers a selectable option that flips `selectedOrganization`
+		// truthy and reveals the toggle group.
+		await seedOrganization()
+	})
 
-		// Select the always-present built-in "Generic" option through the real
-		// combobox. This makes selectedOrganization truthy → checkbox group shows.
-		await selectOrganization(page, 'Generic')
+	test(
+		'swc-fix user-triggers-organization-export-with-toggles: selecting an org reveals toggles and org-export fires the request',
+		async ({ page }) => {
+			await goToArchiMateSettings(page)
+
+			// Select the seeded REAL organisation (truthy value) through the real
+			// combobox. This makes selectedOrganization truthy → checkbox group shows.
+			await selectOrganization(page, SEEDED_ORG_NAME)
 
 		// After an org is selected, the checkbox group renders in the export section.
 		const exportSection = page.locator('.export-section')
@@ -227,7 +310,8 @@ test(
 			expect(url.searchParams.get('deelnames')).toBe('true')
 		}
 	},
-)
+	)
+})
 
 // ---------------------------------------------------------------------------
 // Scenario: Export button shows loading state during download
