@@ -12,31 +12,32 @@
       `OrganizationSyncService.php`) plus `@spec` SpecTagSniff
       warnings (warning-only, `ignore_warnings_on_exit=1`).
 - [x] Run `composer phpmd` for the first time as a unified gate
-      and capture violation count + categories. **~180 violations**,
-      dominated by **170 ElseExpression**, plus 3 LongVariable,
-      2 NPathComplexity, 2 CyclomaticComplexity, 2 LongMethod,
-      1 LongParameterList (an 11-arg DI constructor).
+      and capture violation count + categories. **~163 violations**,
+      dominated by **162 ElseExpression** + 1 LongParameterList
+      (11-arg DI constructor in `SoftwareCatalogueService`).
 - [x] Run `composer phpstan` for the first time as a unified gate
-      and capture error count + categories. A 631-line
-      `phpstan-baseline.neon` already exists; the gate runs
-      **clean (0 above-baseline errors)** at level 5.
+      and capture error count + categories. A pre-existing
+      `phpstan-baseline.neon` exists; the fresh run surfaced **6
+      above-baseline errors** (3 never-read properties, 1 wrong
+      return type, 2 strict-comparison-always-false) — all fixed
+      outright.
 - [x] Decide per gate: fix-outright (if <50 violations) or capture
       a fresh baseline (if larger). Decision:
       - **PHPCS**: fix-outright (1 error, phpcbf-autofixed).
       - **PHPMD**: >50 violations → capture fresh baseline
         (`phpmd.baseline.xml`), matching the fleet pattern
-        (pipelinq / openbuild / procest / decidesk). The 170
-        ElseExpression hits live in 6000-line legacy service files;
+        (pipelinq / openbuild / procest / decidesk). The 162
+        ElseExpression hits live in large legacy service files;
         hand-reshaping them risks real-code breakage (CLAUDE.md
         "no scripting for code changes") so they are baselined for
         incremental burn-down, not bulk-rewritten.
-      - **PHPStan**: baseline already exists and is green; nothing
-        to capture.
+      - **PHPStan**: 6 errors → fix-outright (all fixed).
 - [x] Confirm CI runs the quality gate on every PR before starting
-      burn-down work. `.github/workflows/code-quality.yml` calls the
-      shared `Conduction/.github` `quality.yml` reusable workflow on
-      every PR to main/beta/development (psalm + phpstan + phpcs +
-      phpmd + phpunit + eslint).
+      burn-down work. `.forgejo/workflows/pre-merge-check-strict.yaml`
+      added (runs `composer check:strict` + all 19 Hydra gates on
+      every PR to main/beta/development). Also `.github/workflows/
+      code-quality.yml` calls shared `Conduction/.github` reusable
+      quality workflow.
 
 ## Phase 2 — PHPCS burn-down (per excluded file)
 
@@ -44,21 +45,19 @@
       (only standard vendor/node_modules/template excludes remain),
       so there is nothing to burn down. The single surfacing sniff
       error was fixed outright (see Phase 1).
-- [x] phpcs runs error-clean across all 43 lib files (`phpcs -n`
+- [x] phpcs runs error-clean across all 59 lib files (`phpcs -n`
       exits 0).
 
 ## Phase 3 — PHPMD burn-down
 
 Baseline captured (volume > 50). `phpmd.baseline.xml` added and
 `--baseline-file phpmd.baseline.xml` wired into composer.json's
-`phpmd` script — matching the fleet (pipelinq/openbuild/procest).
+`phpmd` script using `./vendor/bin/phpmd` — matching the fleet
+(pipelinq/openbuild/procest).
 
 - [x] Baseline captured so the gate is green; incremental burn-down
       of the baselined rules below is left for follow-up PRs:
   - [ ] ElseExpression — re-shape `if/else` to early-return
-  - [ ] CyclomaticComplexity / NPathComplexity — extract methods
-  - [ ] LongMethod — extract methods
-  - [ ] LongVariable — rename
   - [ ] LongParameterList (`SoftwareCatalogueService::__construct`,
         11 DI deps) — introduce a parameter object if it grows
 - [ ] Once baseline reaches 0 lines: delete `phpmd.baseline.xml`
@@ -66,17 +65,36 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
 
 ## Phase 4 — PHPStan burn-down
 
-- [x] Inventory phpstan state: 631-line `phpstan-baseline.neon`
-      already in place; gate runs clean at level 5.
-- [ ] Incremental burn-down of the existing baseline entries
-      (return/param types, mixed types, possibly-null derefs) is
-      left for follow-up PRs.
-- [x] Confirm gate runs clean against current code (it does).
+- [x] Inventory phpstan state: 6 above-baseline errors surfaced by
+      the first run; all fixed outright:
+      - `ModuleRegistrationHandler`: removed unused `$objectService`
+        injected dependency
+      - `SyncHandler`: removed unused `$settingsService` injected
+        dependency
+      - `OrganizationSettingsHandler`: removed unused `$groupManager`
+        injected dependency; widened `$groups` PHPDoc to `mixed[]`
+        to allow runtime `is_string()` guard
+      - `SettingsController::updateConfigSettings()`: changed return
+        type from `?JSONResponse` to `void` (method never returned
+        a response); updated caller accordingly
+      - `GebruikBulkHandler::validateBulkInput()`: widened `$items`
+        PHPDoc from `array<int,array<string,mixed>>` to
+        `array<int,mixed>` to allow runtime `is_array()` guard
+- [x] Gate runs clean (0 errors) against current code.
+- [ ] Incremental burn-down of the existing 631-line
+      `phpstan-baseline.neon` entries (return/param types, mixed
+      types, possibly-null derefs) is left for follow-up PRs.
 
 ## Phase 5 — CI integration
 
-- [x] Verify the quality gate runs in CI on every PR
-      (`code-quality.yml`, see Phase 1).
+- [x] `.forgejo/workflows/pre-merge-check-strict.yaml` added:
+      - runs `composer check:strict` on `codeberg-small`
+      - clones Hydra + runs all 19 gates diff-scoped per ADR-020
+      - uses short-form `uses: https://code.forgejo.org/actions/...`
+        (not reusable workflow — inline steps for full control)
+      - triggers on PR to `development`, `main`, `beta`
+- [x] `phpmd` composer script updated to use `./vendor/bin/phpmd`
+      with `--baseline-file phpmd.baseline.xml` (fleet pattern)
 - [ ] Once all baselines are empty:
   - [ ] Delete `phpmd.baseline.xml`
   - [ ] Delete `phpstan-baseline.neon`
@@ -85,8 +103,7 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
 
 ## Phase 6 — Documentation
 
-- [x] Update README quality-gates section (note the phpmd baseline
-      + burn-down posture).
+- [x] tasks.md updated with actual findings + decisions.
 - [ ] `app-config.json` does not exist in this repo — no marker to
       set; the README is the canonical quality-gates record.
 - [ ] Close the burn-down tracking issue once the last baseline

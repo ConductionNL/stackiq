@@ -180,9 +180,9 @@ class OrganizationSettingsHandler
     /**
      * Validate group-name arrays.
      *
-     * Guard clause: throws when any group name contains illegal characters.
+     * Guard clause: throws when any group name is empty or contains illegal characters.
      *
-     * @param string[] $groups Group names to validate.
+     * @param mixed[] $groups Group names to validate (each element is expected to be string).
      *
      * @return void
      *

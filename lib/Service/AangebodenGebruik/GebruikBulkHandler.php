@@ -85,7 +85,7 @@ class GebruikBulkHandler
     /**
      * Validate the bulk-create input array.
      *
-     * @param array<int,mixed> $items Items to validate.
+     * @param array<int,mixed> $items Items to validate (runtime check enforces each is array).
      *
      * @return string[] Validation error messages (empty on success).
      */
