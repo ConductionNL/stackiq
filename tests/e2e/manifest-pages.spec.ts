@@ -7,8 +7,9 @@
  * roadmap / settings). The app shell (CnAppRoot) uses vue-router in *history*
  * mode with base `/apps/softwarecatalog`, so every page is a real deep-linkable
  * path. Each test drives the real UI by navigating to the page route and
- * asserting the Vue shell mounted (the `#softwarecatalog` mount node renders
- * content) and the page-specific title text is visible — no Vue-internals
+ * asserting the Vue shell mounted (the `.softwarecatalog-app-root` shell that
+ * replaces `#content` on mount renders) and the page-specific title text is
+ * visible — no Vue-internals
  * patching.
  *
  * GATE-19 COVERAGE
@@ -35,30 +36,33 @@ import { test, expect, type Page } from '@playwright/test'
 
 const APP_BASE = '/apps/softwarecatalog'
 
+// The Vue app bootstraps with `.$mount('#content')` (src/main.js), replacing
+// Nextcloud's standard `#content` node with the App.vue root, whose outermost
+// element is `<div class="softwarecatalog-app-root">` wrapping CnAppRoot. The
+// vestigial `<div id="softwarecatalog">` in templates/index.php is never used
+// as the mount target, so the shell is identified by its root class instead.
+const APP_SHELL = '.softwarecatalog-app-root'
+
 /**
  * Navigate to an in-app SPA route and wait for the Vue shell to mount.
- * Returns once the `#softwarecatalog` mount node has rendered child content.
+ * Returns once the app-root shell has rendered. We wait for the *shell*
+ * (the CnAppRoot container), not data-populated rows — index/dashboard
+ * surfaces render their container + empty-state against an empty dev
+ * dataset, so asserting the shell keeps the smoke test data-independent.
  */
 async function gotoAppRoute(page: Page, route: string): Promise<void> {
 	await page.goto(`${APP_BASE}${route}`, { waitUntil: 'networkidle' })
-	// The Vue app mounts into <div id="softwarecatalog"></div>; once mounted it
-	// contains the rendered NcAppContent tree. Wait for non-empty content.
-	await page.waitForFunction(
-		() => {
-			const root = document.getElementById('softwarecatalog')
-			return !!root && root.children.length > 0
-		},
-		{ timeout: 30000 },
-	)
+	// Wait for the App.vue shell that replaces #content on mount.
+	await page.locator(APP_SHELL).first().waitFor({ state: 'visible', timeout: 30000 })
 }
 
 /**
- * Assert the app shell rendered (app-content present) and the given title text
- * is visible somewhere in the rendered page. Uses .first() because the manifest
- * title can appear both in the nav and the page header.
+ * Assert the app shell rendered (CnAppRoot container present) and the given
+ * title text is visible somewhere in the rendered page. Uses .first() because
+ * the manifest title can appear both in the nav and the page header.
  */
 async function expectPageRendered(page: Page, title: string): Promise<void> {
-	const root = page.locator('#softwarecatalog')
+	const root = page.locator(APP_SHELL).first()
 	await expect(root).toBeVisible()
 	await expect(page.getByText(title, { exact: false }).first()).toBeVisible({ timeout: 30000 })
 }
@@ -130,7 +134,7 @@ for (const p of DETAIL_PAGES) {
 		await gotoAppRoute(page, p.route)
 		// Shell mounted; the app-content container is rendered regardless of
 		// whether the synthetic id resolves to an object.
-		await expect(page.locator('#softwarecatalog')).toBeVisible()
+		await expect(page.locator(APP_SHELL).first()).toBeVisible()
 	})
 }
 
@@ -142,7 +146,7 @@ for (const p of DETAIL_PAGES) {
 // @e2e fe-settings-ui::open-settings
 test('manifest settings: in-app settings page renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator('#softwarecatalog')).toBeVisible()
+	await expect(page.locator(APP_SHELL).first()).toBeVisible()
 	await expect(page.getByText('SoftwareCatalog', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
 
@@ -151,7 +155,7 @@ test('manifest settings: in-app settings page renders', async ({ page }) => {
 // @e2e fe-settings-ui::view-statistics
 test('manifest settings: statistics section renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator('#softwarecatalog')).toBeVisible()
+	await expect(page.locator(APP_SHELL).first()).toBeVisible()
 	await expect(page.getByText('Statistics', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
 
@@ -160,6 +164,6 @@ test('manifest settings: statistics section renders', async ({ page }) => {
 // @e2e fe-settings-ui::view-version-information
 test('manifest settings: version information section renders', async ({ page }) => {
 	await gotoAppRoute(page, '/settings')
-	await expect(page.locator('#softwarecatalog')).toBeVisible()
+	await expect(page.locator(APP_SHELL).first()).toBeVisible()
 	await expect(page.getByText('Version', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
