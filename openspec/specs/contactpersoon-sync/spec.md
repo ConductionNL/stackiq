@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-contactpersoon-sync. Update Purpose after archive.
+
+@e2e exclude PHP contactpersoon (contact-person) synchronisation backend (Nextcloud-user linking, mapping, upsert) — no UI surface; covered by PHPUnit service tests.
+
 ## Requirements
 ### Requirement: The system SHALL process a contact person into a managed Nextcloud user (REQ-001)
 

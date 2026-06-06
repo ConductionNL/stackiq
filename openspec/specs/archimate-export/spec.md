@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-archimate-export. Update Purpose after archive.
+
+@e2e exclude PHP ArchiMate export backend (Open Group Exchange XML generation, element/relationship serialisation) — XML-generation logic with no UI surface; covered by PHPUnit service tests and Newman. The export-trigger UI is covered by org-archimate-export and the fe-settings-ui settings page.
+
 ## Requirements
 ### Requirement: The system SHALL build an ArchiMate AMEF XML document from catalog objects (REQ-001)
 

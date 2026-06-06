@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-repair-init. Update Purpose after archive.
+
+@e2e exclude PHP repair-step backend (InitializeRegister: register/schema import on app enable) — install-time plumbing with no UI surface; covered by PHPUnit repair-step tests.
+
 ## Requirements
 ### Requirement: The system SHALL initialise default settings during a repair step (REQ-001)
 

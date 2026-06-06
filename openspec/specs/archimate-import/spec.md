@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-archimate-import. Update Purpose after archive.
+
+@e2e exclude PHP ArchiMate import backend (XML parse, element mapping, upsert into OpenRegister) — XML-processing logic with no UI surface; covered by PHPUnit service tests and Newman. The import-trigger UI is covered under fe-settings-ui's settings page.
+
 ## Requirements
 ### Requirement: The system SHALL parse an ArchiMate AMEF file into catalog objects (REQ-001)
 

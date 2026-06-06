@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-email-delivery. Update Purpose after archive.
+
+@e2e exclude PHP email-delivery backend (IMailer message build/send, template rendering, connection test) — no UI surface; covered by PHPUnit service tests. The email-config UI is covered under fe-settings-ui's settings page.
+
 ## Requirements
 ### Requirement: The system SHALL send the app's transactional notification emails (REQ-001)
 

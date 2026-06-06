@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-24-concept-organizations-widget. Update Purpose after archive.
+
+@e2e exclude PHP ConceptOrganisatiesWidget::load() asset-registration backend (Util::addScript/addStyle ordering with Application::APP_ID namespace) — server-side dashboard-widget registration with no driveable UI surface; asserted by PHPUnit (mocked Util). The rendered widget's data behaviour is specified under fe-organizations REQ-FE-206 and covered by the manifest dashboard-page test.
+
 ## Requirements
 ### Requirement: The widget SHALL load runtime, vendor, nc-vue, widget, and stylesheet assets in dependency order (REQ-001)
 
