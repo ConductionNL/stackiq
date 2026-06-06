@@ -63,7 +63,7 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Clear error
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-4
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-4
 		 */
 		clearError() {
 			this.error = null
@@ -71,7 +71,7 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Reset store state
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-4
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-4
 		 */
 		reset() {
 			this.catalogs = []
