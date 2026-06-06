@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-softwarecatalogue-orchestration. Update Purpose after archive.
+
+@e2e exclude PHP orchestration service backend (cross-service coordination of sync/import/export flows) — no UI surface; covered by PHPUnit service tests.
+
 ## Requirements
 ### Requirement: The system SHALL react to contact-person create/update/delete events (REQ-001)
 

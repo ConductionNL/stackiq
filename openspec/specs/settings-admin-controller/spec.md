@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-settings-admin-controller. Update Purpose after archive.
+
+@e2e exclude PHP SettingsController REST endpoints (load/save/test config, auto-configure) — HTTP contract; covered by Newman REST collections and PHPUnit controller tests. The settings UI render is covered by the manifest settings-page test under fe-settings-ui.
+
 ## Requirements
 ### Requirement: The system SHALL expose read/write endpoints for app configuration (REQ-001)
 

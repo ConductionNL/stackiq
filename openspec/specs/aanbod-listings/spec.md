@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-24-aanbod-listings. Update Purpose after archive.
+
+@e2e exclude PHP aanbod (offering) listing service/REST backend — HTTP contract and data assembly; covered by Newman REST collections and PHPUnit service tests.
+
 ## Requirements
 ### Requirement: The system SHALL list aanbod objects for the active organisation (REQ-001)
 

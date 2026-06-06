@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-contactpersonen-api. Update Purpose after archive.
+
+@e2e exclude PHP contactpersonen (contact-persons) REST endpoints incl. linked-user management — HTTP contract; covered by Newman REST collections and PHPUnit controller tests. The contacts list UI is covered by the manifest contactpersonen-page test.
+
 ## Requirements
 ### Requirement: The system SHALL list an organisation's contact persons with their linked user details (REQ-001)
 

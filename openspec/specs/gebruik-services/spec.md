@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-24-gebruik-services. Update Purpose after archive.
+
+@e2e exclude PHP gebruik (usage) service backend (usage record assembly/mapping into OpenRegister) — no UI surface; covered by PHPUnit service tests.
+
 ## Requirements
 ### Requirement: The system SHALL return paginated gebruik records for the active register/schema configuration (REQ-001)
 

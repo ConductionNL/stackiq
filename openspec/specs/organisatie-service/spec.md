@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-24-organisatie-service. Update Purpose after archive.
+
+@e2e exclude PHP OrganisatieService backend (OpenRegister entity create/update/map/sync) — no UI surface; covered by PHPUnit service tests and Newman REST collections.
+
 ## Requirements
 ### Requirement: The system SHALL create an OpenRegister organisation entity from SoftwareCatalog object data (REQ-001)
 

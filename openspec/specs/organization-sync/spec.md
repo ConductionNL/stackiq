@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-organization-sync. Update Purpose after archive.
+
+@e2e exclude PHP organisation synchronisation backend (external source fetch, mapping, upsert into OpenRegister) — no UI surface; covered by PHPUnit service tests. The sync trigger UI is covered under fe-settings-ui's settings page.
+
 ## Requirements
 ### Requirement: The system SHALL run batched organisation/contact/user synchronisation in multiple modes (REQ-001)
 

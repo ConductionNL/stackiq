@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-sc-handlers. Update Purpose after archive.
+
+@e2e exclude PHP object-lifecycle handlers (OpenRegister save/update/delete event handlers) — backend event plumbing with no UI surface; covered by PHPUnit handler tests.
+
 ## Requirements
 ### Requirement: The system SHALL provision and maintain a contact person's Nextcloud user account (REQ-001)
 

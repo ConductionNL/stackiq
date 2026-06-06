@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-dashboard-views-api. Update Purpose after archive.
+
+@e2e exclude PHP dashboard-views REST endpoints (aggregate counts/recent-items data feed) — HTTP contract; covered by Newman REST collections and PHPUnit controller tests. The dashboard render that consumes this feed is covered by the manifest dashboard-page test.
+
 ## Requirements
 ### Requirement: The system SHALL render the app page and expose dashboard data (REQ-001)
 

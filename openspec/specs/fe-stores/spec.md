@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-fe-stores. Update Purpose after archive.
+
+@e2e exclude Pinia stores and FE services (settings/organisatie/navigation/catalog stores, object-operations plugin, theme service, heartbeat client) — every scenario asserts store-action / service behaviour (load/save/fetch/reset/saveObject/massOp/setModal/isDarkTheme/start-stop heartbeat). These are pure JS state/logic units tested by vitest with mocked fetch; they have no navigable UI surface of their own. The UI that consumes these stores is covered by the manifest dashboard/settings/index render tests.
+
 ## Requirements
 ### Requirement: Settings store (REQ-FE-501)
 
