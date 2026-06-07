@@ -1058,7 +1058,9 @@ class ContactpersonenController extends Controller
         if (empty($username) === false) {
             $user = $this->userManager->get($username);
             if ($user !== null) {
-                $userInfo['groups']   = $this->resolveCatalogGroupNames(user: $user);
+                $catalogGroups        = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
+                $allGroups            = $this->resolveCatalogGroupNames(user: $user);
+                $userInfo['groups']   = array_values(array_filter($allGroups, static fn ($g) => in_array($g, $catalogGroups, true)));
                 $userInfo['disabled'] = ($user->isEnabled() === false);
             }
         }
