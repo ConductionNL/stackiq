@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -52,6 +55,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
+ * @spec openspec/changes/method-decomposition/tasks.md#task-5
  */
 class ContactpersonenController extends Controller
 {
@@ -522,112 +527,152 @@ class ContactpersonenController extends Controller
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
+        $permissionError = $this->validatePasswordChangePermission(
+            currentUser: $currentUser,
+            username: $username,
+            currentPassword: $currentPassword
+        );
+        if ($permissionError !== null) {
+            return $permissionError;
+        }
+
+        return $this->performPasswordChange(username: $username, newPassword: $newPassword);
+
+    }//end changePassword()
+
+    /**
+     * Validate permission to change the target user's password.
+     *
+     * @param \OCP\IUser $currentUser     The currently authenticated user.
+     * @param string     $username        The target username.
+     * @param string     $currentPassword The current password supplied (for self-service).
+     *
+     * @return JSONResponse|null Error response if not permitted, null if allowed.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function validatePasswordChangePermission(
+        \OCP\IUser $currentUser,
+        string $username,
+        string $currentPassword
+    ): ?JSONResponse {
         $isAdmin     = $this->groupManager->isAdmin($currentUser->getUID());
         $isSelfReset = $currentUser->getUID() === $username;
 
-        // Non-admins may only change their own password.
-        $hasPasswordChangePermission = ($isAdmin === true || $isSelfReset === true);
-        if ($hasPasswordChangePermission === false) {
+        if ($isAdmin === false && $isSelfReset === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
-        // Self-service resets require current-password confirmation.
-        $needsCurrentPwd = ($isSelfReset === true && $isAdmin !== true);
-        if ($needsCurrentPwd === true) {
-            if (empty($currentPassword) === true) {
-                return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'Current password is required for self-service password reset',
-                        ],
-                        400
-                        );
-            }
+        return $this->validateCurrentPasswordIfRequired(
+            isAdmin: $isAdmin,
+            isSelfReset: $isSelfReset,
+            username: $username,
+            currentPassword: $currentPassword
+        );
 
-            // Verify current password by checking the user's backend.
-            $authUser = $this->userManager->checkPassword($username, $currentPassword);
-            if ($authUser === false) {
-                return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'Current password is incorrect',
-                        ],
-                        403
-                        );
-            }
-        }//end if
+    }//end validatePasswordChangePermission()
 
+    /**
+     * Validate the current password when a non-admin performs a self-service reset.
+     *
+     * @param bool   $isAdmin         Whether the current user is an administrator.
+     * @param bool   $isSelfReset     Whether the target is the current user themselves.
+     * @param string $username        The target username.
+     * @param string $currentPassword The current password supplied by the user.
+     *
+     * @return JSONResponse|null Error response if validation fails, null if passed.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function validateCurrentPasswordIfRequired(
+        bool $isAdmin,
+        bool $isSelfReset,
+        string $username,
+        string $currentPassword
+    ): ?JSONResponse {
+        if ($isSelfReset === false || $isAdmin === true) {
+            return null;
+        }
+
+        if (empty($currentPassword) === true) {
+            return new JSONResponse(
+                [
+                    'success' => false,
+                    'message' => 'Current password is required for self-service password reset',
+                ],
+                400
+            );
+        }
+
+        $authUser = $this->userManager->checkPassword($username, $currentPassword);
+        if ($authUser === false) {
+            return new JSONResponse(
+                [
+                    'success' => false,
+                    'message' => 'Current password is incorrect',
+                ],
+                403
+            );
+        }
+
+        return null;
+
+    }//end validateCurrentPasswordIfRequired()
+
+    /**
+     * Perform the actual password change after permission validation.
+     *
+     * @param string $username    The target username.
+     * @param string $newPassword The new password to set.
+     *
+     * @return JSONResponse Success or error response.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function performPasswordChange(string $username, string $newPassword): JSONResponse
+    {
         try {
             $user = $this->userManager->get($username);
 
             if ($user === null) {
-                return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'User not found',
-                        ],
-                        404
-                        );
+                return new JSONResponse(['success' => false, 'message' => 'User not found'], 404);
             }
 
-            // Validate password (basic validation).
             if (strlen($newPassword) < 10) {
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'Password must be at least 10 characters long',
-                        ],
-                        400
-                        );
+                    ['success' => false, 'message' => 'Password must be at least 10 characters long'],
+                    400
+                );
             }
 
-            // Set new password — setPassword() returns false if the password.
-            // Is rejected (e.g., compromised password list, policy violation).
             $result = $user->setPassword($newPassword);
 
             if ($result === false) {
-                // Password rejected — too common or violates the configured policy.
-                $msg = 'Password was rejected: may be too common or violate the policy. Please choose another.';
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => $msg,
-                        ],
-                        400
-                        );
-            }
-
-            $this->logger->info(
-                    'Password changed for user',
-                    [
-                        'username' => $username,
-                    ]
-                    );
-
-            return new JSONResponse(
-                    [
-                        'success' => true,
-                        'message' => 'Password changed successfully',
-                    ]
-                    );
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to change password: '.$e->getMessage(),
-                    [
-                        'username'  => $username,
-                        'exception' => $e,
-                    ]
-                    );
-
-            return new JSONResponse(
                     [
                         'success' => false,
-                        'message' => 'Failed to change password: '.$e->getMessage(),
+                        'message' => 'Password was rejected: may be too common or violate the policy. Please choose another.',
                     ],
-                    500
-                    );
+                    400
+                );
+            }
+
+            $this->logger->info('Password changed for user', ['username' => $username]);
+
+            return new JSONResponse(['success' => true, 'message' => 'Password changed successfully']);
+        } catch (\Exception $e) {
+            $this->logger->error(
+                'Failed to change password: '.$e->getMessage(),
+                ['username' => $username, 'exception' => $e]
+            );
+
+            return new JSONResponse(
+                ['success' => false, 'message' => 'Failed to change password: '.$e->getMessage()],
+                500
+            );
         }//end try
-    }//end changePassword()
+
+    }//end performPasswordChange()
 
     /**
      * Update user groups.
@@ -640,209 +685,204 @@ class ContactpersonenController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @spec                                          openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-3
      */
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
         $currentUser = $this->userSession->getUser();
+
         if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
 
-        // Only admins and org-admins may modify group assignments.
-        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
-        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-
-        $canManageGroups = ($isAdmin || $isOrgAdmin);
-        if ($canManageGroups === false) {
-            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+        $authError = $this->checkGroupUpdatePermission(currentUser: $currentUser, username: $username);
+        if ($authError !== null) {
+            return $authError;
         }
 
         try {
             $user = $this->userManager->get($username);
-
             if ($user === null) {
-                return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'User not found',
-                        ],
-                        404
-                        );
+                return new JSONResponse(['success' => false, 'message' => 'User not found'], 404);
             }
 
-            // SB1: Cross-tenant scope check — org-admins may only modify users in their own tenant.
-            // Full admins bypass this restriction.
-            $isOrgAdminOnly = ($isAdmin !== true && $isOrgAdmin === true);
-            if ($isOrgAdminOnly === true) {
-                try {
-                    $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-                    // Look up target user's contactpersoon to determine their organisation.
-                    $targetContactpersonen = $objectService->searchObjectsPaginated(
-                        [
-                            'username' => $username,
-                            '_limit'   => 1,
-                            '_schema'  => 'contactpersoon',
-                        ]
-                    );
-
-                    $targetOrgUuid = null;
-                    if (empty($targetContactpersonen['results']) === false) {
-                        $targetData    = $targetContactpersonen['results'][0]->getObject();
-                        $targetOrgUuid = $targetData['organisation'] ?? $targetData['organisatie'] ?? null;
-                    }
-
-                    // Look up caller's contactpersoon to determine their organisation.
-                    $callerContactpersonen = $objectService->searchObjectsPaginated(
-                        [
-                            'username' => $currentUser->getUID(),
-                            '_limit'   => 1,
-                            '_schema'  => 'contactpersoon',
-                        ]
-                    );
-
-                    $callerOrgUuid = null;
-                    if (empty($callerContactpersonen['results']) === false) {
-                        $callerData    = $callerContactpersonen['results'][0]->getObject();
-                        $callerOrgUuid = $callerData['organisation'] ?? $callerData['organisatie'] ?? null;
-                    }
-
-                    // Deny if we can determine tenants and they differ.
-                    if ($targetOrgUuid !== null && $callerOrgUuid !== null && $targetOrgUuid !== $callerOrgUuid) {
-                        $this->logger->warning(
-                            'ContactpersonenController: Cross-tenant group update denied',
-                            [
-                                'callerUid'      => $currentUser->getUID(),
-                                'callerOrg'      => $callerOrgUuid,
-                                'targetUsername' => $username,
-                                'targetOrg'      => $targetOrgUuid,
-                            ]
-                        );
-                        return new JSONResponse(
-                            [
-                                'success' => false,
-                                'message' => 'Forbidden: target user belongs to a different organisation',
-                            ],
-                            Http::STATUS_FORBIDDEN
-                        );
-                    }
-                } catch (\Exception $e) {
-                    $this->logger->warning(
-                        'ContactpersonenController: Could not verify cross-tenant scope, denying update',
-                        [
-                            'callerUid' => $currentUser->getUID(),
-                            'target'    => $username,
-                            'error'     => $e->getMessage(),
-                        ]
-                    );
-                    return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'Forbidden: organisation scope could not be verified',
-                        ],
-                        Http::STATUS_FORBIDDEN
-                    );
-                }//end try
-            }//end if
-
-            // Get allowed software catalog groups.
-            $allowedGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
-
-            // Filter to only allowed groups.
-            $validGroups = array_intersect($groups, $allowedGroups);
-
-            // Get current user groups (only software catalog groups).
-            $currentGroups    = $this->groupManager->getUserGroups($user);
-            $curCatalogGroups = [];
-
-            foreach ($currentGroups as $group) {
-                if (in_array(needle: $group->getGID(), haystack: $allowedGroups) === true) {
-                    $curCatalogGroups[] = $group->getGID();
-                }
-            }
-
-            // Remove user from groups they should no longer be in.
-            $groupsToRemove = array_diff($curCatalogGroups, $validGroups);
-            foreach ($groupsToRemove as $groupName) {
-                $group = $this->groupManager->get($groupName);
-                if ($group !== null && $group->inGroup($user) === true) {
-                    $group->removeUser($user);
-                    $this->logger->info(
-                            'Removed user from group',
-                            [
-                                'username' => $username,
-                                'group'    => $groupName,
-                            ]
-                            );
-                }
-            }
-
-            // Add user to new groups (only if they exist).
-            $groupsToAdd = array_diff($validGroups, $curCatalogGroups);
-            foreach ($groupsToAdd as $groupName) {
-                $group = $this->groupManager->get($groupName);
-                if ($group === null) {
-                    $this->logger->warning(
-                            'Group does not exist, skipping',
-                            [
-                                'username' => $username,
-                                'group'    => $groupName,
-                            ]
-                            );
-                    continue;
-                }
-
-                if ($group->inGroup($user) === false) {
-                    $group->addUser($user);
-                    $this->logger->info(
-                            'Added user to group',
-                            [
-                                'username' => $username,
-                                'group'    => $groupName,
-                            ]
-                            );
-                }
-            }//end foreach
-
-            // Get updated groups.
-            $updatedGroups     = $this->groupManager->getUserGroups($user);
-            $updatedGroupNames = array_map(
-                    function ($group) {
-                        return $group->getGID();
-                    },
-                    $updatedGroups
-                    );
+            $this->syncUserCatalogGroups(user: $user, username: $username, requestedGroups: $groups);
 
             return new JSONResponse(
-                    [
-                        'success' => true,
-                        'message' => 'User groups updated successfully',
-                        'groups'  => $updatedGroupNames,
-                    ]
-                    );
+                ['success' => true, 'message' => 'User groups updated successfully', 'groups' => $this->resolveCatalogGroupNames(user: $user)]
+            );
         } catch (\Exception $e) {
             $this->logger->error(
-                    'Failed to update user groups: '.$e->getMessage(),
-                    [
-                        'username'  => $username,
-                        'groups'    => $groups,
-                        'exception' => $e,
-                    ]
-                    );
-
+                'Failed to update user groups: '.$e->getMessage(),
+                ['username' => $username, 'groups' => $groups, 'exception' => $e]
+            );
             return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to update user groups: '.$e->getMessage(),
-                    ],
-                    500
-                    );
+                ['success' => false, 'message' => 'Failed to update user groups: '.$e->getMessage()],
+                500
+            );
         }//end try
     }//end updateUserGroups()
+
+    /**
+     * Check whether the current user may update group assignments for the given username.
+     *
+     * Returns a Forbidden/Unauthorized response when the check fails, or null when allowed.
+     *
+     * @param \OCP\IUser $currentUser The currently authenticated caller.
+     * @param string     $username    The target username.
+     *
+     * @return JSONResponse|null Error response, or null when permitted.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function checkGroupUpdatePermission(\OCP\IUser $currentUser, string $username): ?JSONResponse
+    {
+        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
+        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
+
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+        }
+
+        if ($isAdmin === false && $isOrgAdmin === true) {
+            return $this->verifyCrossTenantScope(currentUser: $currentUser, username: $username);
+        }
+
+        return null;
+
+    }//end checkGroupUpdatePermission()
+
+    /**
+     * Verify that an org-admin may modify groups for the target username.
+     *
+     * @param \OCP\IUser $currentUser The currently authenticated user.
+     * @param string     $username    The target username.
+     *
+     * @return JSONResponse|null Forbidden response when tenants differ, null when allowed.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function verifyCrossTenantScope(\OCP\IUser $currentUser, string $username): ?JSONResponse
+    {
+        try {
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+
+            $targetOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $username);
+            $callerOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $currentUser->getUID());
+
+            if ($targetOrgUuid !== null && $callerOrgUuid !== null && $targetOrgUuid !== $callerOrgUuid) {
+                $this->logger->warning(
+                    'ContactpersonenController: Cross-tenant group update denied',
+                    ['callerUid' => $currentUser->getUID(), 'callerOrg' => $callerOrgUuid, 'targetOrg' => $targetOrgUuid]
+                );
+                return new JSONResponse(
+                    ['success' => false, 'message' => 'Forbidden: target user belongs to a different organisation'],
+                    Http::STATUS_FORBIDDEN
+                );
+            }
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                'ContactpersonenController: Could not verify cross-tenant scope, denying update',
+                ['callerUid' => $currentUser->getUID(), 'target' => $username, 'error' => $e->getMessage()]
+            );
+            return new JSONResponse(
+                ['success' => false, 'message' => 'Forbidden: organisation scope could not be verified'],
+                Http::STATUS_FORBIDDEN
+            );
+        }//end try
+
+        return null;
+
+    }//end verifyCrossTenantScope()
+
+    /**
+     * Resolve the organisation UUID for a user's contactpersoon.
+     *
+     * @param object $objectService The OpenRegister ObjectService.
+     * @param string $username      The username to look up.
+     *
+     * @return string|null The organisation UUID or null when not found.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function resolveContactOrganisation(object $objectService, string $username): ?string
+    {
+        $results = $objectService->searchObjectsPaginated(
+            ['username' => $username, '_limit' => 1, '_schema' => 'contactpersoon']
+        );
+
+        if (empty($results['results']) === true) {
+            return null;
+        }
+
+        $data = $results['results'][0]->getObject();
+        return $data['organisation'] ?? $data['organisatie'] ?? null;
+
+    }//end resolveContactOrganisation()
+
+    /**
+     * Sync a user's software-catalog group memberships to the requested list.
+     *
+     * @param \OCP\IUser $user            The Nextcloud user object.
+     * @param string     $username        The username (for logging).
+     * @param string[]   $requestedGroups The desired software-catalog group IDs.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function syncUserCatalogGroups(\OCP\IUser $user, string $username, array $requestedGroups): void
+    {
+        $allowedGroups   = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
+        $validGroups     = array_intersect($requestedGroups, $allowedGroups);
+        $currentGroups   = $this->groupManager->getUserGroups($user);
+        $curCatalogNames = [];
+
+        foreach ($currentGroups as $group) {
+            if (in_array(needle: $group->getGID(), haystack: $allowedGroups) === true) {
+                $curCatalogNames[] = $group->getGID();
+            }
+        }
+
+        foreach (array_diff($curCatalogNames, $validGroups) as $groupName) {
+            $group = $this->groupManager->get($groupName);
+            if ($group !== null && $group->inGroup($user) === true) {
+                $group->removeUser($user);
+                $this->logger->info('Removed user from group', ['username' => $username, 'group' => $groupName]);
+            }
+        }
+
+        foreach (array_diff($validGroups, $curCatalogNames) as $groupName) {
+            $group = $this->groupManager->get($groupName);
+            if ($group === null) {
+                $this->logger->warning('Group does not exist, skipping', ['username' => $username, 'group' => $groupName]);
+                continue;
+            }
+
+            if ($group->inGroup($user) === false) {
+                $group->addUser($user);
+                $this->logger->info('Added user to group', ['username' => $username, 'group' => $groupName]);
+            }
+        }
+
+    }//end syncUserCatalogGroups()
+
+    /**
+     * Return the IDs of the user's current software-catalog group memberships.
+     *
+     * @param \OCP\IUser $user The Nextcloud user object.
+     *
+     * @return string[] The group IDs.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function resolveCatalogGroupNames(\OCP\IUser $user): array
+    {
+        $updatedGroups = $this->groupManager->getUserGroups($user);
+        return array_map(static fn ($group) => $group->getGID(), $updatedGroups);
+
+    }//end resolveCatalogGroupNames()
 
     /**
      * Get contact persons for an organization with user details.
@@ -951,8 +991,7 @@ class ContactpersonenController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @spec                                          openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-1
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-1
      */
     public function getUserInfo(string $contactpersoonId): JSONResponse
     {
@@ -971,17 +1010,7 @@ class ContactpersonenController extends Controller
         }
 
         try {
-            $this->logger->info(
-                    'ContactpersonenController: Getting user info for contactpersoon',
-                    [
-                        'contactpersoonId' => $contactpersoonId,
-                    ]
-                    );
-
-            // Get contactpersoon from OpenRegister.
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-            // First try to find the object by UUID.
             $contactObject = $objectService->find(
                 id: $contactpersoonId,
                 register: 'voorzieningen',
@@ -989,100 +1018,77 @@ class ContactpersonenController extends Controller
             );
 
             if ($contactObject === null) {
-                return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'Contactpersoon not found',
-                        ],
-                        404
-                        );
+                return new JSONResponse(['success' => false, 'message' => 'Contactpersoon not found'], 404);
             }
 
-            $contactData = $contactObject->getObject();
-            $username    = $contactData['username'] ?? null;
-
-            $hasUser  = empty($username) === false;
-            $userInfo = [
-                'hasUser'  => $hasUser,
-                'username' => $username,
-                'groups'   => [],
-                'disabled' => false,
-            ];
-
-            // If user exists, get their current groups and disabled status.
-            if (empty($username) === false) {
-                $user = $this->userManager->get($username);
-                if ($user !== null) {
-                    $userGroups    = $this->groupManager->getUserGroups($user);
-                    $catalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
-
-                    foreach ($userGroups as $group) {
-                        $groupId = $group->getGID();
-                        if (in_array(needle: $groupId, haystack: $catalogGroups) === true) {
-                            $userInfo['groups'][] = $groupId;
-                        }
-                    }
-
-                    // Get the disabled status from Nextcloud.
-                    $userInfo['disabled'] = ($user->isEnabled() === false);
-                }
-            }
-
-            // Available groups (same as getAvailableGroups but inline for consistency).
-            $availableGroups = [
-                [
-                    'id'          => 'gebruik-beheerder',
-                    'name'        => 'Gebruik Beheerder',
-                    'description' => 'Manages software usage and procurement',
-                ],
-                [
-                    'id'          => 'aanbod-beheerder',
-                    'name'        => 'Aanbod Beheerder',
-                    'description' => 'Manages software offerings and catalog content',
-                ],
-                [
-                    'id'          => 'gebruik-raadpleger',
-                    'name'        => 'Gebruik Raadpleger',
-                    'description' => 'Views software usage and procurement data',
-                ],
-            ];
-
-            // Check which groups actually exist.
-            $existingGroups = [];
-            foreach ($availableGroups as $groupInfo) {
-                $group = $this->groupManager->get($groupInfo['id']);
-                if ($group !== null) {
-                    $existingGroups[] = $groupInfo;
-                }
-            }
+            $userInfo = $this->buildUserInfoData(contactData: $contactObject->getObject());
 
             return new JSONResponse(
-                    [
-                        'success'         => true,
-                        'userInfo'        => $userInfo,
-                        'availableGroups' => $existingGroups,
-                    ]
-                    );
+                ['success' => true, 'userInfo' => $userInfo, 'availableGroups' => $this->resolveExistingCatalogGroups()]
+            );
         } catch (\Exception $e) {
             $this->logger->error(
-                    'ContactpersonenController: Failed to get user info',
-                    [
-                        'contactpersoonId' => $contactpersoonId,
-                        'exception'        => $e->getMessage(),
-                        'file'             => $e->getFile(),
-                        'line'             => $e->getLine(),
-                    ]
-                    );
+                'ContactpersonenController: Failed to get user info',
+                ['contactpersoonId' => $contactpersoonId, 'exception' => $e->getMessage()]
+            );
 
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to get user info: '.$e->getMessage(),
-                    ],
-                    500
-                    );
+            return new JSONResponse(['success' => false, 'message' => 'Failed to get user info: '.$e->getMessage()], 500);
         }//end try
     }//end getUserInfo()
+
+    /**
+     * Build user info array from a contactpersoon data record.
+     *
+     * @param array<string,mixed> $contactData The contactpersoon object data.
+     *
+     * @return array<string,mixed> User info with hasUser, username, groups, disabled keys.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function buildUserInfoData(array $contactData): array
+    {
+        $username = $contactData['username'] ?? null;
+        $userInfo = [
+            'hasUser'  => empty($username) === false,
+            'username' => $username,
+            'groups'   => [],
+            'disabled' => false,
+        ];
+
+        if (empty($username) === false) {
+            $user = $this->userManager->get($username);
+            if ($user !== null) {
+                $catalogGroups        = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
+                $allGroups            = $this->resolveCatalogGroupNames(user: $user);
+                $userInfo['groups']   = array_values(array_filter($allGroups, static fn ($g) => in_array($g, $catalogGroups, true)));
+                $userInfo['disabled'] = ($user->isEnabled() === false);
+            }
+        }
+
+        return $userInfo;
+
+    }//end buildUserInfoData()
+
+    /**
+     * Return the set of software-catalog groups that actually exist in Nextcloud.
+     *
+     * @return array<int,array<string,string>> List of group descriptor arrays with id/name/description.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function resolveExistingCatalogGroups(): array
+    {
+        $candidates = [
+            ['id' => 'gebruik-beheerder', 'name' => 'Gebruik Beheerder', 'description' => 'Manages software usage and procurement'],
+            ['id' => 'aanbod-beheerder', 'name' => 'Aanbod Beheerder', 'description' => 'Manages software offerings and catalog content'],
+            ['id' => 'gebruik-raadpleger', 'name' => 'Gebruik Raadpleger', 'description' => 'Views software usage and procurement data'],
+        ];
+
+        return array_values(
+            array_filter($candidates, fn ($grp) => $this->groupManager->get($grp['id']) !== null)
+        );
+
+    }//end resolveExistingCatalogGroups()
 
     /**
      * Get available software catalog groups.

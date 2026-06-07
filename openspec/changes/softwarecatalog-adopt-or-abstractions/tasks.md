@@ -2,7 +2,7 @@
 
 > Spec-only change. No PR / merge / archive tasks here.
 
-> **Build note (hydra-build 2026-06-04):** The app already shipped its
+> **Build note (hydra-build 2026-06-07):** The app already shipped its
 > manifest (Phase 1) and already has its own consolidated register/schema
 > resolver on `SettingsService` (`getSchemaIdForObjectType` /
 > `getRegisterIdForObjectType` with caching). The OpenRegister
@@ -96,7 +96,7 @@
 
 ## Phase 6 — Documentation
 
-- [x] 6.1 `docs/architecture.md` updated with an OR-abstractions adoption
+- [x] 6.1 `docs/ARCHITECTURE.md` updated with an OR-abstractions adoption
   section (manifest status, resolver finding, i18n flow, tenant readiness).
 - [ ] 6.2 Badge screenshots. **DEFERRED — needs a live instance to capture.**
 - [x] 6.3 Architecture doc cross-linked from README is pre-existing; the new
