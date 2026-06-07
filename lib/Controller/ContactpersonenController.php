@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/SoftwareCatalog
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -687,9 +690,10 @@ class ContactpersonenController extends Controller
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
         $currentUser = $this->userSession->getUser();
-        if ($currentUser === null) {
-            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-        }
+
+    if ($currentUser === null) {
+        return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+    }
 
         $authError = $this->checkGroupUpdatePermission(currentUser: $currentUser, username: $username);
         if ($authError !== null) {
@@ -1516,4 +1520,4 @@ class ContactpersonenController extends Controller
         $slug = trim($slug, '-');
         return $slug;
     }//end createSlug()
-}//end class
+    }//end class
