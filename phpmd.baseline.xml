@@ -1,14 +1,6 @@
 <?xml version="1.0"?>
 <phpmd-baseline>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Controller/ContactpersonenController.php" method="changePassword"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Controller/ContactpersonenController.php" method="changePassword"/>
-  <violation rule="PHPMD\Rule\Naming\LongVariable" file="lib/Controller/ContactpersonenController.php"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Controller/ContactpersonenController.php" method="updateUserGroups"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Controller/ContactpersonenController.php" method="getUserInfo"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Controller/PreferencesController.php"/>
-  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Controller/SettingsController.php"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Controller/SettingsController.php" method="importArchiMate"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Controller/SettingsController.php" method="exportOrgArchiMate"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateExportService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateImportService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateService.php"/>
