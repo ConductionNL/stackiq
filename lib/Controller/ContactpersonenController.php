@@ -691,9 +691,9 @@ class ContactpersonenController extends Controller
     {
         $currentUser = $this->userSession->getUser();
 
-    if ($currentUser === null) {
-        return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-    }
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
 
         $authError = $this->checkGroupUpdatePermission(currentUser: $currentUser, username: $username);
         if ($authError !== null) {
@@ -1520,4 +1520,4 @@ class ContactpersonenController extends Controller
         $slug = trim($slug, '-');
         return $slug;
     }//end createSlug()
-    }//end class
+}//end class

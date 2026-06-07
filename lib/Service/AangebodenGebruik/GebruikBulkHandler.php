@@ -14,6 +14,9 @@
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-7
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -82,7 +85,7 @@ class GebruikBulkHandler
     /**
      * Validate the bulk-create input array.
      *
-     * @param array<int,array<string,mixed>> $items Items to validate.
+     * @param array<int,mixed> $items Items to validate.
      *
      * @return string[] Validation error messages (empty on success).
      */

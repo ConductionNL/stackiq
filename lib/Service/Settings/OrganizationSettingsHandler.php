@@ -14,6 +14,9 @@
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -22,7 +25,6 @@ namespace OCA\SoftwareCatalog\Service\Settings;
 
 use InvalidArgumentException;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -46,15 +48,13 @@ class OrganizationSettingsHandler
     /**
      * Constructor.
      *
-     * @param IAppConfig      $config       The application configuration service.
-     * @param IGroupManager   $groupManager The Nextcloud group manager.
-     * @param LoggerInterface $logger       Logger instance.
+     * @param IAppConfig      $config The application configuration service.
+     * @param LoggerInterface $logger Logger instance.
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-1
      */
     public function __construct(
         private readonly IAppConfig $config,
-        private readonly IGroupManager $groupManager,
         private readonly LoggerInterface $logger
     ) {
     }//end __construct()
@@ -193,7 +193,7 @@ class OrganizationSettingsHandler
     private function validateOrganizationConfig(array $groups): void
     {
         foreach ($groups as $groupName) {
-            if (is_string($groupName) === false || $groupName === '') {
+            if ($groupName === '') {
                 throw new InvalidArgumentException('Group names must be non-empty strings.');
             }
 
