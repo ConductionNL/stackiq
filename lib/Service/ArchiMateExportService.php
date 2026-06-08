@@ -956,10 +956,10 @@ XML;
         $dbTime  = microtime(true) - $startTime;
 
         // Step 2: Process and generate XML in single optimized pass (no schema mapping needed).
-        $xml = $this->generateXmlDirectly(objects: $objects, schemaIdMap: []);
+        $xml = $this->generateXmlDirectly(objects: $objects);
 
         // Step 3: Run Quality Assurance checks on generated XML.
-        $this->runQualityAssuranceChecks(xmlString: $xml, sourceData: $objects);
+        $this->runQualityAssuranceChecks(xmlString: $xml);
 
         $totalTime = microtime(true) - $startTime;
 
@@ -985,12 +985,11 @@ XML;
      * - Direct XML generation per section
      * - No unnecessary loops or checks
      *
-     * @param array $objects     Raw objects from database.
-     * @param array $schemaIdMap Schema ID to type mapping.
+     * @param array $objects Raw objects from database.
      *
      * @return string Generated XML.
      */
-    private function generateXmlDirectly(array $objects, array $schemaIdMap): string
+    private function generateXmlDirectly(array $objects): string
     {
         $this->logger->info(
                 'Starting section-based XML generation from objects',
@@ -2134,14 +2133,13 @@ XML;
     /**
      * Run comprehensive Quality Assurance checks on exported XML
      *
-     * @param string $xmlString  The generated XML string.
-     * @param array  $sourceData The original source data for reference.
+     * @param string $xmlString The generated XML string.
      *
      * @return void
      *
      * @throws \InvalidArgumentException If any QA check fails.
      */
-    private function runQualityAssuranceChecks(string $xmlString, array $sourceData): void
+    private function runQualityAssuranceChecks(string $xmlString): void
     {
         $this->logger->info('Running Quality Assurance checks on exported XML');
 

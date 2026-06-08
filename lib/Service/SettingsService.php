@@ -963,7 +963,7 @@ class SettingsService
             $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
             $result     = null;
             if (empty($registerId) === false) {
-                $result = $registerId;
+                $result = (int) $registerId;
             }
         }
 
@@ -4106,9 +4106,10 @@ class SettingsService
             $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
 
             // Use reflection to access the private getAmefConfig method.
+            // setAccessible() is unnecessary on PHP 8.1+ — private methods are
+            // already invokable via reflection without it.
             $reflection = new \ReflectionClass($archiMateService);
             $method     = $reflection->getMethod('getAmefConfig');
-            $method->setAccessible(true);
 
             return $method->invoke($archiMateService);
         } catch (\Exception $e) {

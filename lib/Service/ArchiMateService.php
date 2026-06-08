@@ -884,8 +884,7 @@ class ArchiMateService
                     $objects[] = $this->createSectionObject(
                         section: $section,
                         identifier: $identifier,
-                        data: $data,
-                        modelIdentifier: $modelIdentifier
+                        data: $data
                     );
                 }
             } else {
@@ -942,14 +941,13 @@ class ArchiMateService
     /**
      * Create section object with @self structure and flattened XML data
      *
-     * @param string $section         Section name
-     * @param string $identifier      Item identifier
-     * @param array  $data            Item data (already contains XML data at root level)
-     * @param string $modelIdentifier Model identifier for linking
+     * @param string $section    Section name
+     * @param string $identifier Item identifier
+     * @param array  $data       Item data (already contains XML data at root level)
      *
      * @return array Section object with @self structure
      */
-    private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
+    private function createSectionObject(string $section, string $identifier, array $data): array
     {
         // OPTIMIZATION: Use cached configuration values.
         $registerId = $this->cachedConfig['registerId'];
@@ -2241,11 +2239,10 @@ class ArchiMateService
      * Calculate detailed object statistics for import operations
      *
      * @param array $normalizedData Normalized ArchiMate data
-     * @param array $savedObjects   Objects that were saved to database
      *
      * @return array Comprehensive statistics
      */
-    private function calculateObjectStatistics(array $normalizedData, array $savedObjects): array
+    private function calculateObjectStatistics(array $normalizedData): array
     {
         // Initialize statistics structure.
         $statistics = [
@@ -2342,8 +2339,13 @@ class ArchiMateService
                             );
 
                     if (empty($errorInfo) === false) {
-                        $statistics[$sectionKey]['errors'][]
-                            = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                        $firstError   = array_values($errorInfo)[0];
+                        $errorMessage = 'Unknown validation error';
+                        if (is_array($firstError) === true && isset($firstError['error']) === true) {
+                            $errorMessage = $firstError['error'];
+                        }
+
+                        $statistics[$sectionKey]['errors'][] = $errorMessage;
                     }
                 } else {
                     // This shouldn't happen, but leave as fallback.
@@ -2809,11 +2811,11 @@ class ArchiMateService
     /**
      * Calculate optimized statistics for performance reporting
      *
-     * @param array $savedObjects Saved objects from ObjectService::saveObjects
+     * Reads the persisted save outcome from {@see self::$lastSaveResult}.
      *
      * @return array Statistics array
      */
-    private function calculateOptimizedStatistics(array $savedObjects): array
+    private function calculateOptimizedStatistics(): array
     {
         $statistics = [
             'summary' => [
