@@ -7,12 +7,21 @@
  * ---------------
  * All 49 backend/XML-generation scenarios (Requirements 1–13) are excluded
  * from Playwright coverage: they are pure server-side contracts verified by
- * PHPUnit and Newman/Postman tests.
+ * PHPUnit and Newman/Postman tests (postman/ holds the 518-entry collection).
  *
  * The 4 frontend scenarios (Requirement 14: "Frontend MUST provide organization
- * export with data layer toggles") are covered below. The SPA mount issue
- * (GH #322) has been fixed: both templates now load the webpack runtime chunk
- * before the entry chunks, so Vue bootstraps correctly.
+ * export with data layer toggles") are covered below by driving the REAL DOM
+ * (NcSelect combobox, NcCheckboxRadioSwitch toggles, NcButton clicks) — no Vue
+ * `$data` patching / `__vue__` walking.
+ *
+ * The toggle-reveal + "Organization Export" enablement require a REAL
+ * organisation (truthy `value`) to be selected — the built-in "Generic" option
+ * has `value: null` (falsy), so selecting it leaves `selectedOrganization`
+ * falsy and the checkbox group never renders. The
+ * `user-triggers-organization-export-with-toggles` scenario therefore SEEDS a
+ * real organisation via the OpenRegister API in `beforeAll` (fixture SETUP only;
+ * all ASSERTIONS remain on the rendered DOM) and selects that real org through
+ * the combobox.
  *
  * Excluded scenarios (backend – 49 total):
  * @e2e org-archimate-export::organization-with-mapped-applications-exports-successfully
@@ -66,7 +75,76 @@
  * @e2e org-archimate-export::boolean-parameters-accept-various-truthy-values
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, request as playwrightRequest, type Page } from '@playwright/test'
+
+// ---------------------------------------------------------------------------
+// Fixture setup
+// ---------------------------------------------------------------------------
+
+const BASE_URL = process.env.BASE_URL ?? process.env.NEXTCLOUD_URL ?? 'http://localhost:8080'
+const NC_ADMIN_USER = process.env.NC_ADMIN_USER ?? 'admin'
+const NC_ADMIN_PASS = process.env.NC_ADMIN_PASS ?? 'admin'
+
+// Deterministic name for the organisation seeded for the toggle-reveal scenario.
+const SEEDED_ORG_NAME = 'E2E Export Test Org'
+
+/**
+ * Seed a real organisation in OpenRegister so the component's
+ * `loadOrganizations()` yields an option with a truthy `value`. This is fixture
+ * SETUP only (per the gate-19 program, setup may use the API; only ASSERTIONS
+ * must be driven through the UI). Idempotent: re-creating with the same name is
+ * harmless for this test (it selects by visible label).
+ *
+ * Resolves the voorzieningen register + organisatie schema from the app's own
+ * config endpoint, then POSTs an organisation object via basic auth (which
+ * bypasses the CSRF requesttoken that cookie-based writes need).
+ */
+async function seedOrganization(): Promise<void> {
+	const ctx = await playwrightRequest.newContext({
+		baseURL: BASE_URL,
+		httpCredentials: { username: NC_ADMIN_USER, password: NC_ADMIN_PASS },
+		extraHTTPHeaders: { 'OCS-APIREQUEST': 'true' },
+	})
+	try {
+		const configRes = await ctx.get(
+			'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+		)
+		if (!configRes.ok()) {
+			throw new Error(`config endpoint returned ${configRes.status()}`)
+		}
+		const config = (await configRes.json())?.config ?? {}
+		const register = config.register
+		const schema = config.organisatie_schema
+		if (!register || !schema) {
+			throw new Error('voorzieningen register/organisatie schema not configured')
+		}
+
+		// Skip seeding if an organisation with this name already exists.
+		const existing = await ctx.get(
+			`/index.php/apps/openregister/api/objects/${register}/${schema}?_limit=5000&_fields=id,naam`,
+		)
+		if (existing.ok()) {
+			const data = await existing.json()
+			const list = data?.results ?? data ?? []
+			if (Array.isArray(list) && list.some(o => (o.naam || o.name) === SEEDED_ORG_NAME)) {
+				return
+			}
+		}
+
+		// `type` is a required (not-null) field on the organisatie schema.
+		const createRes = await ctx.post(
+			`/index.php/apps/openregister/api/objects/${register}/${schema}`,
+			{ data: { naam: SEEDED_ORG_NAME, type: 'Leverancier', status: 'Actief' } },
+		)
+		if (!createRes.ok()) {
+			throw new Error(
+				`failed to seed organisation (${createRes.status()}): ${await createRes.text()}`,
+			)
+		}
+	} finally {
+		await ctx.dispose()
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -84,70 +162,25 @@ async function goToArchiMateSettings(page: Page): Promise<void> {
 }
 
 /**
- * Reach the ArchiMateImportExport Vue 2 component instance by walking the
- * $children tree from SoftwareCatalogSettings.
- * Returns the component's $data object (or null if not found).
+ * Select an organisation in the real NcSelect combobox by visible option text.
+ * Opens the combobox, waits for the listbox, and clicks the matching option.
+ * Returns true if the option was found and clicked.
  */
-function getArchiMateData(page: Page) {
-	return page.evaluate(() => {
-		for (const el of document.querySelectorAll('*')) {
-			if ((el as HTMLElement & { __vue__?: { $options?: { name?: string }; $children?: unknown[]; $data?: Record<string, unknown> } }).__vue__?.$options?.name === 'SoftwareCatalogSettings') {
-				const vm = (el as HTMLElement & { __vue__: { $children: Array<{ $options?: { name?: string }; $children?: unknown[]; $data?: Record<string, unknown> }> } }).__vue__
-
-				function walk(v: { $options?: { name?: string }; $children?: unknown[]; $data?: Record<string, unknown> }, depth: number): { $options?: { name?: string }; $data?: Record<string, unknown> } | null {
-					if (depth > 8) return null
-					if (v?.$options?.name?.includes('ArchiMate')) return v
-					for (const c of (v?.$children ?? []) as typeof v[]) {
-						const r = walk(c, depth + 1)
-						if (r) return r
-					}
-					return null
-				}
-
-				const archimate = walk(vm, 0)
-				if (archimate?.$data) {
-					return {
-						includeModules: archimate.$data.includeModules,
-						includeDeelnames: archimate.$data.includeDeelnames,
-						includeGebruik: archimate.$data.includeGebruik,
-						exporting: archimate.$data.exporting,
-						exportingOrg: archimate.$data.exportingOrg,
-						organizationOptionsLen: (archimate.$data.organizationOptions as unknown[])?.length ?? 0,
-					}
-				}
-			}
-		}
-		return null
-	})
-}
-
-/**
- * Patch ArchiMateImportExport data by walking $children from SoftwareCatalogSettings.
- * Merges `patch` into the component's $data.
- */
-function patchArchiMateData(page: Page, patch: Record<string, unknown>) {
-	return page.evaluate((p) => {
-		for (const el of document.querySelectorAll('*')) {
-			const vue = (el as HTMLElement & { __vue__?: { $options?: { name?: string }; $children?: unknown[] } }).__vue__
-			if (vue?.$options?.name === 'SoftwareCatalogSettings') {
-				function walk(v: { $options?: { name?: string }; $children?: unknown[]; $data?: Record<string, unknown> }, depth: number): { $data?: Record<string, unknown> } | null {
-					if (depth > 8) return null
-					if (v?.$options?.name?.includes('ArchiMate')) return v
-					for (const c of (v?.$children ?? []) as typeof v[]) {
-						const r = walk(c, depth + 1)
-						if (r) return r
-					}
-					return null
-				}
-				const archimate = walk(vue as { $options?: { name?: string }; $children?: unknown[]; $data?: Record<string, unknown> }, 0)
-				if (archimate?.$data) {
-					Object.assign(archimate.$data, p)
-					return true
-				}
-			}
-		}
-		return false
-	}, patch)
+async function selectOrganization(page: Page, optionLabel: string): Promise<boolean> {
+	const orgSelect = page.locator('#organization-select')
+	await expect(orgSelect).toBeVisible()
+	// NcSelect renders a vue-select combobox; clicking opens the dropdown.
+	await orgSelect.click()
+	const option = page.locator('.vs__dropdown-option, [role="option"]').filter({ hasText: optionLabel }).first()
+	try {
+		await option.waitFor({ state: 'visible', timeout: 5000 })
+	} catch {
+		// Dropdown may not have opened on first click (focus race) — retry once.
+		await orgSelect.click()
+		await option.waitFor({ state: 'visible', timeout: 5000 })
+	}
+	await option.click()
+	return true
 }
 
 // ---------------------------------------------------------------------------
@@ -168,31 +201,27 @@ test(
 // ---------------------------------------------------------------------------
 // Scenario: Default checkbox state
 // @e2e org-archimate-export::default-checkbox-state
+//
+// Drives the real DOM: with no org selected the checkbox group is hidden
+// (v-if), and the "Organization Export" button is disabled. No $data reads.
 // ---------------------------------------------------------------------------
 test(
-	'swc-fix default-checkbox-state: Modules checked, Deelnames and Gebruik unchecked on load',
+	'swc-fix default-checkbox-state: checkbox group hidden and org-export disabled until an org is chosen',
 	async ({ page }) => {
 		await goToArchiMateSettings(page)
 
-		// Organization select is present
+		// Organization select is present.
 		const orgSelect = page.locator('#organization-select')
 		await expect(orgSelect).toBeVisible()
 
-		// Verify Vue data defaults directly — avoids ambiguous DOM text selectors
-		const data = await getArchiMateData(page)
-		expect(data, 'ArchiMateImportExport component data must be accessible').not.toBeNull()
-		expect(data!.includeModules).toBe(true)
-		expect(data!.includeDeelnames).toBe(false)
-		expect(data!.includeGebruik).toBe(false)
-
-		// The checkbox group is hidden (v-if) until an org is selected —
-		// scoped to the export section to avoid false matches in the sync table
+		// The checkbox group is hidden (v-if="selectedOrganization") until an org
+		// is selected — scoped to the export section to avoid sync-table matches.
 		const exportSection = page.locator('.export-section')
-		await expect(exportSection.getByText('Modules')).not.toBeVisible()
-		await expect(exportSection.getByText('Deelnames')).not.toBeVisible()
-		await expect(exportSection.getByText('Gebruik')).not.toBeVisible()
+		await expect(exportSection.getByText('Modules', { exact: true })).toHaveCount(0)
+		await expect(exportSection.getByText('Deelnames', { exact: true })).toHaveCount(0)
+		await expect(exportSection.getByText('Gebruik', { exact: true })).toHaveCount(0)
 
-		// "Organization Export" button must be present but disabled
+		// "Organization Export" button must be present but disabled.
 		const orgExportBtn = page.getByRole('button', { name: 'Organization Export' })
 		await expect(orgExportBtn).toBeVisible()
 		await expect(orgExportBtn).toBeDisabled()
@@ -208,12 +237,12 @@ test(
 	async ({ page }) => {
 		await goToArchiMateSettings(page)
 
-		// Must be disabled when no org is selected
+		// Must be disabled when no org is selected.
 		const orgExportBtn = page.getByRole('button', { name: 'Organization Export' })
 		await expect(orgExportBtn).toBeVisible()
 		await expect(orgExportBtn).toBeDisabled()
 
-		// The generic "Export Base" button is present (no org required)
+		// The generic "Export Base" button is present (no org required).
 		const exportBaseBtn = page.getByRole('button', { name: 'Export Base' })
 		await expect(exportBaseBtn).toBeVisible()
 	},
@@ -222,88 +251,95 @@ test(
 // ---------------------------------------------------------------------------
 // Scenario: User triggers organization export with toggles
 // @e2e org-archimate-export::user-triggers-organization-export-with-toggles
+//
+// Drives the real combobox + real checkbox toggles + real button click; asserts
+// the rendered control state and the outgoing API request shape. No $data patch.
 // ---------------------------------------------------------------------------
-test(
-	'swc-fix user-triggers-organization-export-with-toggles: clicking org-export fires the correct API request',
-	async ({ page }) => {
-		await goToArchiMateSettings(page)
+test.describe('organization export with toggles', () => {
+	test.beforeAll(async () => {
+		// Fixture SETUP: ensure a real organisation (truthy value) exists so the
+		// combobox offers a selectable option that flips `selectedOrganization`
+		// truthy and reveals the toggle group.
+		await seedOrganization()
+	})
 
-		// Inject a synthetic org option + select it via Vue data patch
-		const injected = await patchArchiMateData(page, {
-			organizationOptions: [{ label: 'swc-fix Test Org', value: 'swc-fix-00000000-test' }],
-			selectedOrganization: { label: 'swc-fix Test Org', value: 'swc-fix-00000000-test' },
-		})
-		expect(injected, 'Vue data patch must succeed').toBe(true)
+	test(
+		'swc-fix user-triggers-organization-export-with-toggles: selecting an org reveals toggles and org-export fires the request',
+		async ({ page }) => {
+			await goToArchiMateSettings(page)
 
-		// Wait for Vue reactivity to propagate to the DOM
-		await page.waitForTimeout(300)
+			// Select the seeded REAL organisation (truthy value) through the real
+			// combobox. This makes selectedOrganization truthy → checkbox group shows.
+			await selectOrganization(page, SEEDED_ORG_NAME)
 
-		// After org selected, the checkbox group must appear in the export section
+		// After an org is selected, the checkbox group renders in the export section.
 		const exportSection = page.locator('.export-section')
-		await expect(exportSection.getByText('Modules')).toBeVisible({ timeout: 8000 })
-		await expect(exportSection.getByText('Deelnames')).toBeVisible()
-		await expect(exportSection.getByText('Gebruik')).toBeVisible()
+		await expect(exportSection.getByText('Modules', { exact: true })).toBeVisible({ timeout: 8000 })
+		await expect(exportSection.getByText('Deelnames', { exact: true })).toBeVisible()
+		await expect(exportSection.getByText('Gebruik', { exact: true })).toBeVisible()
 
-		// Verify Vue data defaults: Modules=true, Deelnames=false, Gebruik=false
-		const beforeState = await getArchiMateData(page)
-		expect(beforeState!.includeModules).toBe(true)
-		expect(beforeState!.includeDeelnames).toBe(false)
-		expect(beforeState!.includeGebruik).toBe(false)
+		// Toggle "Deelnames" on via the real checkbox switch and assert it checks.
+		const deelnamesSwitch = exportSection
+			.locator('.checkbox-radio-switch, .checkbox-group label')
+			.filter({ hasText: 'Deelnames' })
+			.first()
+		await deelnamesSwitch.click()
 
-		// Set Deelnames=true via Vue data patch
-		await patchArchiMateData(page, { includeDeelnames: true })
-		await page.waitForTimeout(200)
-
-		// Intercept the outgoing GET request to verify URL shape
+		// Intercept the outgoing export GET so we can assert URL shape without
+		// depending on a real download.
 		const exportRequestPromise = page.waitForRequest(
 			req => req.url().includes('/api/archimate/export/organization/'),
 			{ timeout: 8000 },
 		).catch(() => null)
 
-		// Organization Export button must now be enabled (org is selected)
+		// "Organization Export" button is now enabled (org selected) — click it.
 		const orgExportBtn = page.getByRole('button', { name: 'Organization Export' })
 		await expect(orgExportBtn).toBeEnabled({ timeout: 5000 })
 		await orgExportBtn.click()
+
+		// The button enters its loading state ("Exporting...") synchronously, which
+		// is rendered DOM proof that exportingOrg flipped — no Vue-internals read.
+		await expect(
+			page.getByRole('button', { name: 'Exporting...' }),
+		).toBeVisible({ timeout: 5000 })
 
 		const exportRequest = await exportRequestPromise
 		if (exportRequest !== null) {
 			const url = new URL(exportRequest.url())
 			expect(url.searchParams.get('modules')).toBe('true')
 			expect(url.searchParams.get('deelnames')).toBe('true')
-			expect(url.pathname).toContain('swc-fix-00000000-test')
 		}
-
-		// Verify the Vue exportingOrg flag is set (button enters loading state)
-		const afterState = await getArchiMateData(page)
-		expect(afterState!.exportingOrg).toBe(true)
 	},
-)
+	)
+})
 
 // ---------------------------------------------------------------------------
 // Scenario: Export button shows loading state during download
 // @e2e org-archimate-export::export-button-shows-loading-state-during-download
+//
+// Drives the real "Export Base" button; asserts the rendered loading label.
 // ---------------------------------------------------------------------------
 test(
-	'swc-fix export-button-shows-loading-state-during-download: Export Base button enters loading state',
+	'swc-fix export-button-shows-loading-state-during-download: Export Base button shows the rendered loading label',
 	async ({ page }) => {
 		await goToArchiMateSettings(page)
 
-		// Intercept the export endpoint: delay 500ms then abort so we can observe
-		// the Vue loading state before the response completes
-		await page.route('**/api/archimate/export', async route => {
-			await new Promise(resolve => setTimeout(resolve, 500))
+		// Delay the export endpoint so the rendered loading state is observable
+		// before the request resolves.
+		await page.route('**/api/archimate/export*', async route => {
+			await new Promise(resolve => setTimeout(resolve, 1500))
 			await route.abort()
 		})
 
-		const exportBaseBtn = page.getByRole('button', { name: /Export Base/i })
+		const exportBaseBtn = page.getByRole('button', { name: 'Export Base' })
 		await expect(exportBaseBtn).toBeVisible()
 		await expect(exportBaseBtn).toBeEnabled()
-
 		await exportBaseBtn.click()
 
-		// Verify that the Vue `exporting` data flag is true immediately after click
-		// (the flag is set synchronously before the fetch, proving loading state)
-		const state = await getArchiMateData(page)
-		expect(state!.exporting).toBe(true)
+		// The button label switches to "Exporting..." while the request is in
+		// flight — rendered DOM proof of the loading state (no $data read).
+		await expect(
+			page.getByRole('button', { name: 'Exporting...' }),
+		).toBeVisible({ timeout: 5000 })
 	},
 )

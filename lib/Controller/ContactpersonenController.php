@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -687,6 +690,7 @@ class ContactpersonenController extends Controller
     public function updateUserGroups(string $username, array $groups=[]): JSONResponse
     {
         $currentUser = $this->userSession->getUser();
+
         if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
@@ -999,7 +1003,9 @@ class ContactpersonenController extends Controller
         $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
         $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
             || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($isAdmin === false && $isOrgAdmin === false) {
+
+        $canViewUserInfo = ($isAdmin || $isOrgAdmin);
+        if ($canViewUserInfo === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 
@@ -1052,7 +1058,9 @@ class ContactpersonenController extends Controller
         if (empty($username) === false) {
             $user = $this->userManager->get($username);
             if ($user !== null) {
-                $userInfo['groups']   = $this->resolveCatalogGroupNames(user: $user);
+                $catalogGroups        = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
+                $allGroups            = $this->resolveCatalogGroupNames(user: $user);
+                $userInfo['groups']   = array_values(array_filter($allGroups, static fn ($groupName) => in_array($groupName, $catalogGroups, true)));
                 $userInfo['disabled'] = ($user->isEnabled() === false);
             }
         }
@@ -1290,7 +1298,9 @@ class ContactpersonenController extends Controller
         $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
         $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
             || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($isAdmin === false && $isOrgAdmin === false) {
+
+        $canViewBulkInfo = ($isAdmin || $isOrgAdmin);
+        if ($canViewBulkInfo === false) {
             return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
         }
 

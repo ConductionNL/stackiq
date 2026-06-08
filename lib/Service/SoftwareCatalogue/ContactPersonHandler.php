@@ -1449,7 +1449,7 @@ class ContactPersonHandler
                     );
 
                     // Send account suspension notification email.
-                    $this->sendAccountSuspensionEmail(user: $user, objectData: $objectData);
+                    $this->sendAccountSuspensionEmail(user: $user);
                 }
             }//end if
         } catch (\Exception $e) {
@@ -2157,12 +2157,11 @@ class ContactPersonHandler
     /**
      * Sends account suspension notification email
      *
-     * @param \OCP\IUser $user       The suspended user
-     * @param array      $objectData The contact person data
+     * @param \OCP\IUser $user The suspended user
      *
      * @return void
      */
-    private function sendAccountSuspensionEmail(\OCP\IUser $user, array $objectData): void
+    private function sendAccountSuspensionEmail(\OCP\IUser $user): void
     {
         try {
             $this->_logger->info(

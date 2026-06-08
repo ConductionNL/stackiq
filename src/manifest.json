@@ -1,6 +1,6 @@
 {
-	"$schema": "https://codeberg.org/Conduction/nextcloud-vue/raw/branch/main/src/schemas/app-manifest-v2.schema.json",
-	"version": "2.0.0",
+	"$schema": "https://codeberg.org/Conduction/nextcloud-vue/raw/branch/main/src/schemas/app-manifest.schema.json",
+	"version": "1.0.0",
 	"dependencies": [
 		"openregister"
 	],
@@ -90,51 +90,16 @@
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Dashboard",
-			"config": {
-				"widgets": [
-					{
-						"id": "dashboardHome",
-						"title": "Dashboard",
-						"type": "custom"
-					}
-				],
-				"layout": [
-					{
-						"id": "1",
-						"widgetId": "dashboardHome",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 12
-					}
-				]
-			},
-			"slots": {
-				"widget-dashboardHome": "DashboardCustomView"
-			}
+			"component": "DashboardCustomView"
 		},
 		{
 			"id": "Organisaties",
 			"route": "/organisaties",
-			"type": "index",
+			"type": "custom",
 			"title": "Organisations",
-			"config": {
-				"register": "@resolve:voorzieningen_register",
-				"schema": "organisatie",
-				"columns": [
-					"naam",
-					"type",
-					"status",
-					"contactpersonen"
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			},
-			"_note": "Bespoke modals (OrganisationModal create/edit/copy, AddContactpersoonModal, activate/deactivate) and URL-hash deep-link wiring still happen via cross-store subscriptions in the consumer — flipped to type:\"index\" so the page uses CnIndexPage's standard table/cards/sidebar; the bespoke modal/dialog UX is opened through the registry instead of replacing the page shell"
+			"component": "OrganisatieIndexView"
 		},
 		{
 			"id": "Contactpersonen",
@@ -165,33 +130,25 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "contactpersoon",
-				"sidebarProps": {
-					"tabs": [
-						{
-							"id": "overview",
-							"label": "Overview",
-							"icon": "icon-info",
-							"widgets": [
-								{
-									"type": "data"
-								},
-								{
-									"type": "metadata"
-								}
-							]
-						},
-						{
-							"id": "audit",
-							"label": "Audit trail",
-							"icon": "icon-history",
-							"widgets": [
-								{
-									"type": "audit-trail"
-								}
-							]
-						}
-					]
-				}
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				]
 			}
 		},
 		{
@@ -205,21 +162,9 @@
 				"columns": [
 					"naam",
 					"leverancier",
-					{
-						"key": "ingangsdatum",
-						"label": "Start",
-						"formatter": "date"
-					},
-					{
-						"key": "einddatum",
-						"label": "End",
-						"formatter": "date"
-					},
-					{
-						"key": "status",
-						"label": "Status",
-						"widget": "badge"
-					}
+					"ingangsdatum",
+					"einddatum",
+					"status"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -235,33 +180,25 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "contract",
-				"sidebarProps": {
-					"tabs": [
-						{
-							"id": "overview",
-							"label": "Overview",
-							"icon": "icon-info",
-							"widgets": [
-								{
-									"type": "data"
-								},
-								{
-									"type": "metadata"
-								}
-							]
-						},
-						{
-							"id": "audit",
-							"label": "Audit trail",
-							"icon": "icon-history",
-							"widgets": [
-								{
-									"type": "audit-trail"
-								}
-							]
-						}
-					]
-				}
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				]
 			}
 		},
 		{
@@ -275,16 +212,8 @@
 				"columns": [
 					"naam",
 					"versie",
-					{
-						"key": "categorie",
-						"label": "Category",
-						"widget": "badge"
-					},
-					{
-						"key": "status",
-						"label": "Status",
-						"widget": "badge"
-					}
+					"categorie",
+					"status"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -300,33 +229,25 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "standaard",
-				"sidebarProps": {
-					"tabs": [
-						{
-							"id": "overview",
-							"label": "Overview",
-							"icon": "icon-info",
-							"widgets": [
-								{
-									"type": "data"
-								},
-								{
-									"type": "metadata"
-								}
-							]
-						},
-						{
-							"id": "audit",
-							"label": "Audit trail",
-							"icon": "icon-history",
-							"widgets": [
-								{
-									"type": "audit-trail"
-								}
-							]
-						}
-					]
-				}
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				]
 			}
 		},
 		{
@@ -341,11 +262,7 @@
 					"titel",
 					"auteur",
 					"score",
-					{
-						"key": "datum",
-						"label": "Date",
-						"formatter": "date"
-					}
+					"datum"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -361,33 +278,25 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "beoordeeling",
-				"sidebarProps": {
-					"tabs": [
-						{
-							"id": "overview",
-							"label": "Overview",
-							"icon": "icon-info",
-							"widgets": [
-								{
-									"type": "data"
-								},
-								{
-									"type": "metadata"
-								}
-							]
-						},
-						{
-							"id": "audit",
-							"label": "Audit trail",
-							"icon": "icon-history",
-							"widgets": [
-								{
-									"type": "audit-trail"
-								}
-							]
-						}
-					]
-				}
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				]
 			}
 		},
 		{
@@ -401,16 +310,8 @@
 				"columns": [
 					"naam",
 					"standaard",
-					{
-						"key": "status",
-						"label": "Status",
-						"widget": "badge"
-					},
-					{
-						"key": "datum",
-						"label": "Date",
-						"formatter": "date"
-					}
+					"status",
+					"datum"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -426,33 +327,25 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "compliancy",
-				"sidebarProps": {
-					"tabs": [
-						{
-							"id": "overview",
-							"label": "Overview",
-							"icon": "icon-info",
-							"widgets": [
-								{
-									"type": "data"
-								},
-								{
-									"type": "metadata"
-								}
-							]
-						},
-						{
-							"id": "audit",
-							"label": "Audit trail",
-							"icon": "icon-history",
-							"widgets": [
-								{
-									"type": "audit-trail"
-								}
-							]
-						}
-					]
-				}
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				]
 			}
 		},
 		{
@@ -466,16 +359,8 @@
 				"columns": [
 					"versie",
 					"module",
-					{
-						"key": "releaseDatum",
-						"label": "Released",
-						"formatter": "date"
-					},
-					{
-						"key": "status",
-						"label": "Status",
-						"widget": "badge"
-					}
+					"releaseDatum",
+					"status"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -491,33 +376,25 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "moduleVersie",
-				"sidebarProps": {
-					"tabs": [
-						{
-							"id": "overview",
-							"label": "Overview",
-							"icon": "icon-info",
-							"widgets": [
-								{
-									"type": "data"
-								},
-								{
-									"type": "metadata"
-								}
-							]
-						},
-						{
-							"id": "audit",
-							"label": "Audit trail",
-							"icon": "icon-history",
-							"widgets": [
-								{
-									"type": "audit-trail"
-								}
-							]
-						}
-					]
-				}
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				]
 			}
 		},
 		{
@@ -538,12 +415,16 @@
 				"saveEndpoint": "/index.php/apps/softwarecatalog/api/settings",
 				"sections": [
 					{
-						"title": "SoftwareCatalog",
-						"component": "SoftwareCatalogSettingsPage"
+						"title": "Algemeen",
+						"widgets": [
+							{
+								"type": "custom",
+								"component": "SoftwareCatalogSettingsPage"
+							}
+						]
 					}
 				]
-			},
-			"widgets": []
+			}
 		}
 	]
 }

@@ -33,7 +33,9 @@ use Psr\Log\LoggerInterface;
  * the matching contactpersoon (by username field) and updates the relevant
  * fields: voornaam, tussenvoegsel, achternaam, functie, e-mailadres.
  *
- * @implements IEventListener<UserProfileUpdatedEvent>
+ * @template T of Event
+ *
+ * @implements IEventListener<T>
  */
 class UserProfileUpdatedEventListener implements IEventListener
 {

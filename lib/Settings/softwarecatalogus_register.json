@@ -1541,7 +1541,7 @@
             "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
-              {"kind": "groups", "groups": ["softwarecatalog-admins"]},
+              {"kind": "groups", "groups": ["software-catalog-admins"]},
               {"kind": "object-acl", "permission": "manage"}
             ],
             "subject": {
@@ -3138,7 +3138,7 @@
             "enabled": false,
             "channels": ["nc-notification", "email"],
             "recipients": [
-              {"kind": "groups", "groups": ["softwarecatalog-admins"]},
+              {"kind": "groups", "groups": ["software-catalog-admins"]},
               {"kind": "object-acl", "permission": "manage"}
             ],
             "subject": {
@@ -3786,7 +3786,7 @@
             "channels": ["nc-notification"],
             "recipients": [
               {"kind": "object-acl", "permission": "manage"},
-              {"kind": "groups", "groups": ["softwarecatalog-admins"]}
+              {"kind": "groups", "groups": ["software-catalog-admins"]}
             ],
             "subject": {
               "nl": "Nieuwe beoordeling: {{naam}} (waardering {{waardering}})",
@@ -7277,7 +7277,7 @@
             "channels": ["nc-notification"],
             "recipients": [
               {"kind": "object-acl", "permission": "manage"},
-              {"kind": "groups", "groups": ["softwarecatalog-admins"]}
+              {"kind": "groups", "groups": ["software-catalog-admins"]}
             ],
             "subject": {
               "nl": "Nieuwe moduleversie: {{versie}}",
