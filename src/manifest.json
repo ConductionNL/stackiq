@@ -418,8 +418,8 @@
 						"title": "Algemeen",
 						"widgets": [
 							{
-								"type": "custom",
-								"component": "SoftwareCatalogSettingsPage"
+								"type": "component",
+								"componentName": "SoftwareCatalogSettingsPage"
 							}
 						]
 					}

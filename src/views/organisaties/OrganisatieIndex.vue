@@ -128,6 +128,33 @@ export default {
 				if (!objectStore.settings) {
 					await objectStore.fetchSettings?.()
 				}
+
+				// Ensure the 'organisatie' object type is registered in the shared
+				// store before fetching — `fetchCollection` resolves the register +
+				// schema from the store's objectTypeRegistry and throws "Object type
+				// ... is not registered" otherwise. `initializeVoorzieningenObjectTypes`
+				// only registers types when `availableRegisters` carries a register
+				// whose slug is exactly 'voorzieningen'; that is not guaranteed for
+				// every instance, so we register explicitly from the resolved
+				// voorzieningen config (schema + numeric register id) as a fallback.
+				if (typeof objectStore.registerObjectType === 'function'
+					&& !objectStore.objectTypeRegistry?.organisatie) {
+					let cfg = null
+					try {
+						cfg = objectStore.getSchemaConfig?.('organisatie')
+					} catch (cfgError) {
+						// getSchemaConfig throws when neither the voorzieningen blob
+						// nor the legacy keys resolve a schema/register. Fall through
+						// to fetchCollection, which surfaces its own clear error.
+					}
+					if (cfg?.register && cfg?.schema) {
+						objectStore.registerObjectType('organisatie', cfg.schema, cfg.register, {
+							registerSlug: 'voorzieningen',
+							schemaSlug: 'organisatie',
+						})
+					}
+				}
+
 				await objectStore.fetchCollection?.('organisatie', { _limit: 100, _page: 1 })
 			} catch (error) {
 				// eslint-disable-next-line no-console

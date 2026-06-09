@@ -14,11 +14,11 @@
  *   - the "No items found" empty-state renders for the empty dev dataset
  *     (proving the list body — not just the chrome — mounted).
  *
- * Data-fetch for these schemas currently returns the empty-state because the
- * manifest `@resolve:voorzieningen_register` register placeholder is forwarded
- * literally to the OpenRegister objects endpoint (HTTP 404 — see BUG LIST). The
- * render path under test is unaffected and those 404s are filtered as known
- * noise in collectAppErrors; we still assert no OTHER app-origin error / 5xx.
+ * The manifest `@resolve:voorzieningen_register` placeholder now resolves to the
+ * configured numeric register id (provisioned via initial-state in
+ * Application::boot), so the list object-fetch hits a real register and no
+ * longer 404s. collectAppErrors no longer filters that 404, so these suites
+ * assert it is genuinely absent alongside any other app-origin error / 5xx.
  */
 import { test, expect } from '@playwright/test'
 import { navClickTo, collectAppErrors, expectNoAppErrors, expectIndexSurface, APP_MAIN } from './_helpers'
@@ -32,8 +32,11 @@ interface IndexPage {
 	name: string
 }
 
+// True manifest `type: index` pages (CnIndexPage against a voorzieningen
+// schema). NOTE: "Organisations" is intentionally NOT here — it is a
+// `type: custom` page (component OrganisatieIndexView) with its own surface,
+// covered by a dedicated test below.
 const INDEX_PAGES: IndexPage[] = [
-	{ navLabel: 'Organisations', addLabel: 'Add Organisatie', name: 'organisaties' },
 	{ navLabel: 'Contacts', addLabel: 'Add Contactpersoon', name: 'contactpersonen' },
 	{ navLabel: 'Contracts', addLabel: 'Add Contract', name: 'contracten' },
 	{ navLabel: 'Standards', addLabel: 'Add Item', name: 'standaarden' },
@@ -43,13 +46,35 @@ const INDEX_PAGES: IndexPage[] = [
 ]
 
 for (const p of INDEX_PAGES) {
-	test(`index ${p.name}: nav entry reaches the CnIndexPage surface (toggle + add + empty-state)`, async ({ page }) => {
+	test(`index ${p.name}: nav entry reaches the CnIndexPage surface (toggle + add + list body)`, async ({ page }) => {
 		const bag = collectAppErrors(page)
 		await navClickTo(page, p.navLabel)
 		await expectIndexSurface(page, p.addLabel)
 		expectNoAppErrors(bag)
 	})
 }
+
+// ---------------------------------------------------------------------------
+// Organisations is a `type: custom` page (OrganisatieIndexView), not a
+// CnIndexPage. Its surface is the custom organisations view: the primary
+// "Add organisation" create action, reached by clicking the nav entry. We
+// assert that custom surface mounts WITHOUT an app-origin error (the register
+// sentinel now resolves, so no @resolve 404).
+// ---------------------------------------------------------------------------
+test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', async ({ page }) => {
+	const bag = collectAppErrors(page)
+	await navClickTo(page, 'Organisations')
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible({ timeout: 30000 })
+
+	// The custom view exposes a primary create action. Its empty-state button
+	// reads "Add organisation"; assert the create affordance is present.
+	await expect(
+		main.getByRole('button', { name: /Add organisation/i }).first(),
+	).toBeVisible({ timeout: 30000 })
+
+	expectNoAppErrors(bag)
+})
 
 // ---------------------------------------------------------------------------
 // View-mode toggle interaction (Cards <-> Table). Representative coverage on
@@ -67,12 +92,16 @@ test('index contactpersonen: Cards/Table view toggle switches the list mode', as
 	await expect(cardsToggle).toBeVisible({ timeout: 30000 })
 	await expect(tableToggle).toBeVisible()
 
-	// Switch to Table mode, then back to Cards — the empty-state persists (no
-	// data) but the toggle interaction must not throw an app error.
+	// Switch to Table mode, then back to Cards — the list body persists (the
+	// Contacts schema now resolves a real register and may return rows, so we
+	// assert empty-state OR a populated list) and the toggle interaction must
+	// not throw an app error.
+	const body = main.getByText('No items found', { exact: false }).first()
+		.or(main.getByText(/Showing\s+\d+\s+of\s+\d+/i).first())
 	await tableToggle.click()
-	await expect(main.getByText('No items found', { exact: false }).first()).toBeVisible({ timeout: 15000 })
+	await expect(body).toBeVisible({ timeout: 15000 })
 	await cardsToggle.click()
-	await expect(main.getByText('No items found', { exact: false }).first()).toBeVisible({ timeout: 15000 })
+	await expect(body).toBeVisible({ timeout: 15000 })
 
 	expectNoAppErrors(bag)
 })

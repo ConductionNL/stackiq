@@ -4,25 +4,27 @@
  * Behavioural UI coverage for the Features & roadmap page (manifest page
  * `FeaturesRoadmap`, route /features-roadmap).
  *
- * KNOWN SHELL LIMITATION (see BUG LIST): the deployed nextcloud-vue manifest
- * shell does not render a distinct surface for this page in this environment —
- * the /features-roadmap route mounts the SPA but the content area falls back to
- * the default (Dashboard) widget surface. We therefore assert the route is
- * wired and mounts a healthy app surface (no white-screen / app-origin error),
- * reached both by deep-link and by clicking the "Features & roadmap" nav entry.
- * Render parity for the roadmap page type is a nextcloud-vue concern tracked
- * separately; this spec pins the current, observable behaviour.
+ * The /features-roadmap route now renders its OWN roadmap surface. Previously
+ * the deep-link reset to the Dashboard fallback because the manifest sentinels
+ * were never resolved (the shell skipped resolution when the backend manifest
+ * endpoint returned HTML), leaving the router mounting an unresolved manifest.
+ * With app-side sentinel resolution + the in-memory manifest branch
+ * (src/main.js), the resolved manifest is what the router serves, so the
+ * roadmap page renders its real content.
  */
 import { test, expect } from '@playwright/test'
 import { gotoAppRoute, collectAppErrors, expectNoAppErrors, appNav, APP_MAIN } from './_helpers'
 
-test('features-roadmap: deep-link route mounts a healthy SPA surface', async ({ page }) => {
+test('features-roadmap: deep-link route mounts the roadmap surface', async ({ page }) => {
 	const bag = collectAppErrors(page)
 	await gotoAppRoute(page, '/features-roadmap')
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
-	// Healthy content rendered (the shell falls back to the dashboard surface).
-	await expect(main.getByText('Overzicht van uw softwarecatalogus', { exact: false }).first())
+	// The roadmap page renders its own surface: the "Features" heading and the
+	// "Suggest feature" primary action.
+	await expect(main.getByRole('heading', { name: 'Features', exact: true }).first())
+		.toBeVisible({ timeout: 30000 })
+	await expect(main.getByRole('button', { name: /Suggest feature/i }).first())
 		.toBeVisible({ timeout: 30000 })
 	expectNoAppErrors(bag)
 })

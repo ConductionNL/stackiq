@@ -13,9 +13,10 @@
  *   - the primary maintenance actions are present and in the right state
  *     (Force Update, Reset Auto-Config, Sync Standards, Save buttons).
  *
- * The User Groups section calls the deprecated /api/settings/cronjobs/users
- * endpoint, which returns 410 Gone by design and logs "Failed to load users";
- * that is filtered as known noise (see BUG LIST) — the section still renders.
+ * The User Groups section no longer calls the deprecated
+ * /api/settings/cronjobs/users endpoint (removed from CronjobConfiguration.vue),
+ * so opening Settings no longer logs "Failed to load users"; collectAppErrors no
+ * longer filters that message, so this suite asserts it is genuinely absent.
  */
 import { test, expect } from '@playwright/test'
 import { gotoAppRoute, collectAppErrors, expectNoAppErrors, APP_MAIN } from './_helpers'

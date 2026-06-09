@@ -473,17 +473,62 @@ class Application extends App implements IBootstrap
         // Keys must match every distinct `@resolve:<key>` sentinel in
         // src/manifest.json. Discover with:
         // grep -oE '@resolve:[a-z_]+' src/manifest.json | sort -u.
-        $resolveKeys = [
-            'voorzieningen_register',
-        ];
-        foreach ($resolveKeys as $key) {
-            $value       = $appConfig->getValueString(self::APP_ID, $key, '');
-            $provisioned = null;
-            if ($value !== '') {
-                $provisioned = $value;
-            }
-
-            $initialState->provideInitialState($key, $provisioned);
+        //
+        // The canonical home for the voorzieningen register id is the
+        // `voorzieningen_config` JSON blob (`{"register":"11", ...}`) written
+        // by the settings UI / auto-configure flow. The flat scalar key
+        // `voorzieningen_register` is a legacy fallback that is usually unset.
+        // We must provision the resolved numeric id from whichever source has
+        // it, otherwise the manifest sentinel resolves to null and every index
+        // page fires `GET .../objects/@resolve:voorzieningen_register/<schema>`
+        // (404). See node_modules/@conduction/nextcloud-vue/src/utils/resolveManifestSentinels.js.
+        $registerId  = $this->resolveVoorzieningenRegisterId(appConfig: $appConfig);
+        $provisioned = null;
+        if ($registerId !== '') {
+            $provisioned = $registerId;
         }
+
+        $initialState->provideInitialState('voorzieningen_register', $provisioned);
     }//end boot()
+
+    /**
+     * Resolve the numeric voorzieningen register id from the canonical config.
+     *
+     * Resolution order:
+     *  1. `voorzieningen_config` JSON blob's `register` field — the canonical
+     *     home written by the settings UI / auto-configure flow.
+     *  2. `voorzieningen` JSON blob's `configured.register` field — the legacy
+     *     auto-configure result envelope.
+     *  3. The flat `voorzieningen_register` scalar key — legacy fallback.
+     *
+     * @param IAppConfig $appConfig The app config service.
+     *
+     * @return string The numeric register id, or '' when none is configured.
+     */
+    private function resolveVoorzieningenRegisterId(IAppConfig $appConfig): string
+    {
+        $configJson = $appConfig->getValueString(self::APP_ID, 'voorzieningen_config', '');
+        if ($configJson !== '') {
+            $decoded = json_decode($configJson, true);
+            if (is_array($decoded) === true
+                && isset($decoded['register']) === true
+                && $decoded['register'] !== ''
+            ) {
+                return (string) $decoded['register'];
+            }
+        }
+
+        $envelopeJson = $appConfig->getValueString(self::APP_ID, 'voorzieningen', '');
+        if ($envelopeJson !== '') {
+            $decoded = json_decode($envelopeJson, true);
+            if (is_array($decoded) === true
+                && isset($decoded['configured']['register']) === true
+                && $decoded['configured']['register'] !== ''
+            ) {
+                return (string) $decoded['configured']['register'];
+            }
+        }
+
+        return $appConfig->getValueString(self::APP_ID, 'voorzieningen_register', '');
+    }//end resolveVoorzieningenRegisterId()
 }//end class

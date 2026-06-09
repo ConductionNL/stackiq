@@ -83,9 +83,11 @@ test('dashboard: "Organisations" nav entry reaches the organisaties index', asyn
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Organisations')
 	const main = page.locator(APP_MAIN).first()
-	await expect(main.getByRole('button', { name: 'Add Organisatie', exact: true }).first())
+	// Organisations is a `type: custom` page (OrganisatieIndexView), not a
+	// CnIndexPage — its create action reads "Add organisation" and it has no
+	// Cards/Table toggle. Assert the custom surface's primary create action.
+	await expect(main.getByRole('button', { name: /Add organisation/i }).first())
 		.toBeVisible({ timeout: 30000 })
-	await expect(main.getByText('Cards', { exact: true }).first()).toBeVisible()
 	expectNoAppErrors(bag)
 })
 

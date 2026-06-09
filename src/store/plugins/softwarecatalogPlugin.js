@@ -334,9 +334,13 @@ export function softwarecatalogPlugin() {
 					throw new Error('Settings not loaded')
 				}
 
-				// Check for voorzieningen-specific configuration
+				// Check for voorzieningen-specific configuration. The settings
+				// endpoint returns the blob under `voorzieningenConfig`; the
+				// secondary `/api/voorzieningen/config` fetch (when it resolves)
+				// stores it under `voorzieningen`. Accept either so the lookup
+				// works whichever populated first.
 				if (objectType === 'organisatie') {
-					const voorzieningenConfig = this.settings.voorzieningen || {}
+					const voorzieningenConfig = this.settings.voorzieningen || this.settings.voorzieningenConfig || {}
 					if (voorzieningenConfig.register && voorzieningenConfig.organisatie_schema) {
 						return {
 							source: 'openregister',
