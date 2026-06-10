@@ -7,8 +7,8 @@
 - [x] Add nl + en `subject` strings to every rule (already specified in proposal.md)
 - [x] Validate the register JSON still parses (e.g. `python3 -c "import json;json.load(open('lib/Settings/softwarecatalogus_register.json'))"`)
 - [x] Confirm the `softwarecatalog-admins` group exists or remap `groups` recipients to a real NC group before enabling — remapped to `software-catalog-admins` (the group used throughout the file's authorization sections)
-- [ ] Confirm engine support for a `scheduled` date-window filter on `eindDatum` before enabling `contract-expiry` — deferred; contract-expiry ships disabled; see Caveats in proposal.md
-- [ ] Decide whether supplier delivery requires a relation-traversal recipient resolver or a structured supplier-uid field (file follow-up issue if so) — deferred; see Caveats in proposal.md
+- [~] Confirm engine support for a `scheduled` date-window filter on `eindDatum` before enabling `contract-expiry` — deferred; contract-expiry ships disabled in this change so the absence does not regress prod; see Caveats in proposal.md. Re-enable via a follow-up flag flip once the engine ships scheduled date-window filters.
+- [~] Decide whether supplier delivery requires a relation-traversal recipient resolver or a structured supplier-uid field (file follow-up issue if so) — deferred; see Caveats in proposal.md. Not in scope for the 4 rules shipped here; the supplier-delivery rule is the proposed follow-up that depends on this decision.
 
 ## Acceptance criteria
 
