@@ -57,10 +57,10 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
 
 - [x] Baseline captured so the gate is green; incremental burn-down
       of the baselined rules below is left for follow-up PRs:
-  - [~] ElseExpression — re-shape `if/else` to early-return — deferred to downstream cycle (handoff)
-  - [~] LongParameterList (`SoftwareCatalogueService::__construct`, — deferred to downstream cycle (handoff)
+  - [ ] ElseExpression — re-shape `if/else` to early-return
+  - [ ] LongParameterList (`SoftwareCatalogueService::__construct`,
         11 DI deps) — introduce a parameter object if it grows
-- [~] Once baseline reaches 0 lines: delete `phpmd.baseline.xml` — deferred to downstream cycle (handoff)
+- [ ] Once baseline reaches 0 lines: delete `phpmd.baseline.xml`
       and drop `--baseline-file` from composer.json's phpmd script
 
 ## Phase 4 — PHPStan burn-down
@@ -81,7 +81,7 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
         PHPDoc from `array<int,array<string,mixed>>` to
         `array<int,mixed>` to allow runtime `is_array()` guard
 - [x] Gate runs clean (0 errors) against current code.
-- [~] Incremental burn-down of the existing 631-line — deferred to downstream cycle (handoff)
+- [ ] Incremental burn-down of the existing 631-line
       `phpstan-baseline.neon` entries (return/param types, mixed
       types, possibly-null derefs) is left for follow-up PRs.
 
@@ -95,16 +95,16 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
       - triggers on PR to `development`, `main`, `beta`
 - [x] `phpmd` composer script updated to use `./vendor/bin/phpmd`
       with `--baseline-file phpmd.baseline.xml` (fleet pattern)
-- [~] Once all baselines are empty: — deferred to downstream cycle (handoff)
-  - [~] Delete `phpmd.baseline.xml` — deferred to downstream cycle (handoff)
-  - [~] Delete `phpstan-baseline.neon` — deferred to downstream cycle (handoff)
-- [~] Add a smoke-test cron that runs the strict gate weekly on — deferred to downstream cycle (handoff)
+- [ ] Once all baselines are empty:
+  - [ ] Delete `phpmd.baseline.xml`
+  - [ ] Delete `phpstan-baseline.neon`
+- [ ] Add a smoke-test cron that runs the strict gate weekly on
       `development` (follow-up; the per-PR gate is the active guard).
 
 ## Phase 6 — Documentation
 
 - [x] tasks.md updated with actual findings + decisions.
-- [~] `app-config.json` does not exist in this repo — no marker to — deferred to downstream cycle (handoff)
+- [ ] `app-config.json` does not exist in this repo — no marker to
       set; the README is the canonical quality-gates record.
-- [~] Close the burn-down tracking issue once the last baseline — deferred to downstream cycle (handoff)
+- [ ] Close the burn-down tracking issue once the last baseline
       line is removed (follow-up).
