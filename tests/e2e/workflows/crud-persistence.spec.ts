@@ -313,7 +313,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 	// data-layer test above — so it is a FORM-VALIDATION defect, not a backend
 	// one.) Re-enable this UI leg once the validator treats `maxLength: null` as
 	// "no maximum".
-	test.fixme('UI create -> module-version row appears (blocked: maxLength:null form bug)', async ({ page }) => {
+	test('UI create -> module-version row appears', async ({ page }) => {
 		await navClickTo(page, 'Module versions')
 		const main = indexMain(page)
 		await dismissSupportDialog(page)
