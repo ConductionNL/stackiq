@@ -46,11 +46,11 @@
 
 ## 6. Out-of-scope follow-ups
 
-- [ ] 6.1 (FOLLOW-UP) Wire `liveUpdatesPlugin` once the backend
+- [~] 6.1 (FOLLOW-UP) Wire `liveUpdatesPlugin` once the backend — deferred to downstream cycle (handoff)
   SSE/WS endpoint is available. Owner: TBD.
-- [ ] 6.2 (FOLLOW-UP, lib) Land `manifest-resolve-sentinel` in
+- [~] 6.2 (FOLLOW-UP, lib) Land `manifest-resolve-sentinel` in — deferred to downstream cycle (handoff)
   `@conduction/nextcloud-vue` so manifest `@resolve:`
   values are substituted before validation. Owner: lib team.
-- [ ] 6.3 (FOLLOW-UP) Investigate fixing
+- [~] 6.3 (FOLLOW-UP) Investigate fixing — deferred to downstream cycle (handoff)
   `tests/validate-manifest.js` `ajv-formats` initialisation
   bug — pre-existing on `development`.
