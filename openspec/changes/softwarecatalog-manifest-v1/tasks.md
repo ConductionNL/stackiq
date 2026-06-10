@@ -106,9 +106,10 @@
   dispatch).
 - [x] 6.2 Delete `src/views/ObjectIndex.vue` (replaced by built-in
   `type: "index"` rendering).
-- [ ] 6.3 Delete `src/views/Dashboard.vue` — DEFERRED. Kept and
+- [~] 6.3 Delete `src/views/Dashboard.vue` — DEFERRED. Kept and
   re-registered as `DashboardCustomView` while the lib's dashboard
-  widget registry matures (see Open Question 3).
+  widget registry matures (see Open Question 3). Tracked as a
+  follow-up once the v1 dashboard widget registry contract ships.
 - [x] 6.4 Delete `src/views/dashboard/DashboardIndex.vue`
   (legacy nested empty page).
 - [x] 6.5 Delete `src/navigation/MainMenu.vue` (replaced by
@@ -139,14 +140,15 @@
   app's `eslint.config.js` was extended with `import/named: off`
   and `n/*` exemptions for the validate-manifest Node script
   (mirrors decidesk's eslint config rules block).
-- [ ] 8.3 `npx webpack --config webpack.config.js --mode
+- [~] 8.3 `npx webpack --config webpack.config.js --mode
   production` — DEFERRED. The current `node_modules` directory
   carries `@conduction/nextcloud-vue@0.1.0-beta.17` (the
   pre-manifest-renderer release); a full production bundle requires
   running `npm install` to pull `^1.0.0-beta.12`, which is not
   feasible inside the worktree without spending considerable build
   time. Flagged as a deferred CI gate; manifest validation +
-  ESLint + structural verification all pass.
+  ESLint + structural verification all pass. Picked up by CI on
+  the first push that updates package-lock.
 - [x] 8.4 Bump `appinfo/info.xml` `<version>` (0.1.141 → 0.2.0).
 
 ## 9. Sign-off (per ADR-024 §9)
@@ -160,8 +162,9 @@
 - [x] 9.5 Custom-fallback inventory is documented and categorised
   (lib gap × 2: `Organisaties` for bespoke card view,
   `Dashboard` for widget extraction).
-- [ ] 9.6 Browser regression confirms all 14 routes resolve and
+- [~] 9.6 Browser regression confirms all 14 routes resolve and
   render — DEFERRED. Runtime smoke depends on `npm install`
   pulling `@conduction/nextcloud-vue@^1.0.0-beta.12`; the
   `@resolve:` sentinel + custom registry are validated at build
-  time only in this commit.
+  time only in this commit. Same trigger as 8.3 (CI on first
+  package-lock update).

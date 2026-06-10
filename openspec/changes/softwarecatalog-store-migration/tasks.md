@@ -46,11 +46,21 @@
 
 ## 6. Out-of-scope follow-ups
 
-- [ ] 6.1 (FOLLOW-UP) Wire `liveUpdatesPlugin` once the backend
-  SSE/WS endpoint is available. Owner: TBD.
-- [ ] 6.2 (FOLLOW-UP, lib) Land `manifest-resolve-sentinel` in
+> Section 6 is explicitly out-of-scope for this change (header line);
+> the items are tracked as follow-up issues / future changes, not work
+> that belongs to softwarecatalog-store-migration. Marked [~] with the
+> blocking dependency surfaced for the dependency-aware orchestrator.
+
+- [~] 6.1 (FOLLOW-UP) Wire `liveUpdatesPlugin` once the backend
+  SSE/WS endpoint is available. Owner: TBD. Out-of-scope for this
+  change; tracked as a separate openspec change when the backend
+  SSE/WS endpoint ships.
+- [~] 6.2 (FOLLOW-UP, lib) Land `manifest-resolve-sentinel` in
   `@conduction/nextcloud-vue` so manifest `@resolve:`
-  values are substituted before validation. Owner: lib team.
-- [ ] 6.3 (FOLLOW-UP) Investigate fixing
+  values are substituted before validation. Owner: lib team. Owned
+  by the nextcloud-vue change `manifest-resolve-sentinel`; adoption
+  here is automatic once the lib ships.
+- [~] 6.3 (FOLLOW-UP) Investigate fixing
   `tests/validate-manifest.js` `ajv-formats` initialisation
-  bug — pre-existing on `development`.
+  bug — pre-existing on `development`. Tracked separately; not a
+  regression introduced by this change.
