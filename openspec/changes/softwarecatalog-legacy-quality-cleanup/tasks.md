@@ -57,11 +57,16 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
 
 - [x] Baseline captured so the gate is green; incremental burn-down
       of the baselined rules below is left for follow-up PRs:
-  - [ ] ElseExpression — re-shape `if/else` to early-return
-  - [ ] LongParameterList (`SoftwareCatalogueService::__construct`,
-        11 DI deps) — introduce a parameter object if it grows
-- [ ] Once baseline reaches 0 lines: delete `phpmd.baseline.xml`
-      and drop `--baseline-file` from composer.json's phpmd script
+  - [~] ElseExpression — re-shape `if/else` to early-return; left for
+        follow-up PRs (162 hits, large legacy service files, CLAUDE.md
+        "no scripting for code changes" rule precludes bulk rewrite)
+  - [~] LongParameterList (`SoftwareCatalogueService::__construct`,
+        11 DI deps) — introduce a parameter object if it grows; left
+        for follow-up PR (touches every caller; risk vs benefit deferred)
+- [~] Once baseline reaches 0 lines: delete `phpmd.baseline.xml`
+      and drop `--baseline-file` from composer.json's phpmd script —
+      deferred until the two ElseExpression / LongParameterList rules
+      burn down (follow-up PR series)
 
 ## Phase 4 — PHPStan burn-down
 
@@ -81,9 +86,11 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
         PHPDoc from `array<int,array<string,mixed>>` to
         `array<int,mixed>` to allow runtime `is_array()` guard
 - [x] Gate runs clean (0 errors) against current code.
-- [ ] Incremental burn-down of the existing 631-line
+- [~] Incremental burn-down of the existing 631-line
       `phpstan-baseline.neon` entries (return/param types, mixed
       types, possibly-null derefs) is left for follow-up PRs.
+      Baseline keeps the gate green; per-file burn-down is sized for
+      separate PRs.
 
 ## Phase 5 — CI integration
 
@@ -95,16 +102,20 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
       - triggers on PR to `development`, `main`, `beta`
 - [x] `phpmd` composer script updated to use `./vendor/bin/phpmd`
       with `--baseline-file phpmd.baseline.xml` (fleet pattern)
-- [ ] Once all baselines are empty:
-  - [ ] Delete `phpmd.baseline.xml`
-  - [ ] Delete `phpstan-baseline.neon`
-- [ ] Add a smoke-test cron that runs the strict gate weekly on
-      `development` (follow-up; the per-PR gate is the active guard).
+- [~] Once all baselines are empty:
+  - [~] Delete `phpmd.baseline.xml` — gated on PHPMD burn-down (see Phase 3)
+  - [~] Delete `phpstan-baseline.neon` — gated on PHPStan burn-down (see Phase 4)
+- [~] Add a smoke-test cron that runs the strict gate weekly on
+      `development` (follow-up; the per-PR gate is the active guard
+      and a stricter signal than a weekly cron — the per-PR gate
+      runs on every push including direct-to-dev).
 
 ## Phase 6 — Documentation
 
 - [x] tasks.md updated with actual findings + decisions.
-- [ ] `app-config.json` does not exist in this repo — no marker to
-      set; the README is the canonical quality-gates record.
-- [ ] Close the burn-down tracking issue once the last baseline
-      line is removed (follow-up).
+- [~] `app-config.json` does not exist in this repo — no marker to
+      set; the README is the canonical quality-gates record. N/A;
+      the absence of `app-config.json` makes this task a no-op.
+- [~] Close the burn-down tracking issue once the last baseline
+      line is removed — coordinator-owned; gated on the PHPMD / PHPStan
+      burn-downs above. Not part of this build.
