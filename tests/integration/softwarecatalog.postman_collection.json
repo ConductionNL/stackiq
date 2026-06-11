@@ -98,6 +98,60 @@
    "name": "0. Setup (seed via OpenRegister object API)",
    "item": [
     {
+     "name": "Preflight: resolve register by slug (CI-durable)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        { "key": "username", "value": "{{adminUser}}", "type": "string" },
+        { "key": "password", "value": "{{adminPass}}", "type": "string" }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       { "key": "OCS-APIRequest", "value": "true" },
+       { "key": "Accept", "value": "application/json" }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/registers?_limit=300",
+       "host": [ "{{baseUrl}}" ],
+       "path": [ "index.php", "apps", "openregister", "api", "registers" ],
+       "query": [ { "key": "_limit", "value": "300" } ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// SLUG-RESOLUTION PREFLIGHT (GAP-2): the numeric OpenRegister register id that",
+         "// holds softwarecatalog objects varies between environments (dev box = 11, a fresh",
+         "// CI boot re-imports the register by slug and gets a different id). The register is",
+         "// imported under the stable slug 'voorzieningen', so resolve the numeric id from the",
+         "// slug here and set {{register}}. The org/contact/module/contract/etc. schemas are",
+         "// addressed by their stable slugs (the OR object router resolves a slug against the",
+         "// register), so they survive a re-import too.",
+         "pm.test('registers list reachable (200)', () => pm.response.to.have.status(200));",
+         "const body = pm.response.json();",
+         "const registers = Array.isArray(body) ? body : (body.results || []);",
+         "pm.expect(registers.length, 'at least one register').to.be.above(0);",
+         "const reg = registers.find(r => r.slug === 'voorzieningen');",
+         "pm.test('voorzieningen register resolved by slug', () => pm.expect(reg, \"register with slug 'voorzieningen' exists\").to.be.an('object'));",
+         "if (reg) { pm.collectionVariables.set('register', String(reg.id)); console.log('Resolved register slug=voorzieningen -> id=' + reg.id); }",
+         "pm.collectionVariables.set('organisatieSchema', 'organisatie');",
+         "pm.collectionVariables.set('contactpersoonSchema', 'contactpersoon');",
+         "pm.collectionVariables.set('moduleSchema', 'module');",
+         "pm.collectionVariables.set('moduleVersieSchema', 'moduleVersie');",
+         "pm.collectionVariables.set('contractSchema', 'Contract');",
+         "pm.collectionVariables.set('dienstSchema', 'dienst');",
+         "pm.collectionVariables.set('gebruikSchema', 'gebruik');"
+        ]
+       }
+      }
+     ]
+    },
+    {
      "name": "Seed organisatie (Leverancier)",
      "request": {
       "auth": {
@@ -1644,7 +1698,7 @@
       },
       "body": {
        "mode": "raw",
-       "raw": "{\n  \"contractNummer\": \"NEWMAN-001\",\n  \"contractType\": \"Licentie\",\n  \"startDatum\": \"2026-01-01\",\n  \"status\": \"Actief\",\n  \"dienst\": \"{{dienstId}}\",\n  \"gebruik\": \"{{gebruikId}}\"\n}"
+       "raw": "{\n  \"contractNumber\": \"NEWMAN-001\",\n  \"customerId\": \"{{gebruikId}}\",\n  \"signedAt\": \"2026-01-01\",\n  \"startDate\": \"2026-01-01\",\n  \"fixedConsideration\": 1000,\n  \"currency\": \"EUR\",\n  \"lifecycleState\": \"signed\",\n  \"administrationId\": \"newman-admin\",\n  \"dienst\": \"{{dienstId}}\",\n  \"gebruik\": \"{{gebruikId}}\"\n}"
       }
      },
      "event": [
@@ -1656,7 +1710,7 @@
          "const b = pm.response.json();",
          "const id = b.id || (b['@self'] && b['@self'].id);",
          "pm.test('returns an id', () => pm.expect(id).to.be.a('string').and.not.empty);",
-         "pm.test('contractNummer persisted', () => pm.expect(b.contractNummer).to.eql('NEWMAN-001'));",
+         "pm.test('contractNumber persisted', () => pm.expect(b.contractNumber).to.eql('NEWMAN-001'));",
          "pm.collectionVariables.set('crudContractId', id);"
         ],
         "type": "text/javascript"
@@ -1717,7 +1771,7 @@
         "exec": [
          "pm.test('200 OK', () => pm.response.to.have.status(200));",
          "const b = pm.response.json();",
-         "pm.test('contractNummer persisted', () => pm.expect(b.contractNummer).to.eql('NEWMAN-001'));"
+         "pm.test('contractNumber persisted', () => pm.expect(b.contractNumber).to.eql('NEWMAN-001'));"
         ],
         "type": "text/javascript"
        }
@@ -1843,12 +1897,15 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// KNOWN ENV GAP (honest quarantine, not a fake pass): softwarecatalog has no",
-         "// 'standaard' schema provisioned in register 11 (voorzieningen_config has no",
-         "// standaard_schema key). OR therefore 404s the slug. When a standaard schema is",
-         "// added, this goes RED -> flip to a happy-path list assertion.",
+         "// DETERMINISTIC KNOWN GAP (documented, NOT a fake pass): there is no standalone",
+         "// 'standaard' schema in softwarecatalog. In softwarecatalogus_register.json 'standaard'",
+         "// appears only as a property that $refs the 'element' schema (a relation), never as a",
+         "// top-level schema, so no register carries a 'standaard' slug and OR deterministically",
+         "// 404s it. This is asserted as the contract (404, never a 5xx). It is intentionally",
+         "// NOT provisioned (unlike AMEF) because there is no schema definition to provision; if a",
+         "// real 'standaard' schema is ever added, flip this to a happy-path list assertion.",
          "pm.test('not a server error', () => pm.expect(pm.response.code).to.be.below(500));",
-         "pm.test('404 - standaard schema not provisioned (KNOWN GAP)', () => pm.response.to.have.status(404));"
+         "pm.test('404 - no standalone standaard schema (DETERMINISTIC KNOWN GAP)', () => pm.response.to.have.status(404));"
         ],
         "type": "text/javascript"
        }
@@ -1986,7 +2043,7 @@
    "name": "7. ArchiMate / AMEF export",
    "item": [
     {
-     "name": "export organisation ArchiMate (QUARANTINED: AMEF register not configured -> 500)",
+     "name": "export organisation ArchiMate (happy: 200, AMEF model XML)",
      "request": {
       "auth": {
        "type": "basic",
@@ -2036,14 +2093,13 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// KNOWN ENV GAP (honest quarantine): the AMEF register is not provisioned in this",
-         "// instance (app config amef = 'AMEF register not found'). exportOrgArchiMate raises",
-         "// and surfaces as HTTP 500 with 'AMEF register ID is not configured'. When AMEF is",
-         "// provisioned this goes RED -> flip to a happy 200 + body assertion.",
-         "const b = pm.response.json();",
-         "pm.test('500 AMEF-not-configured (KNOWN GAP)', () => pm.response.to.have.status(500));",
-         "pm.test('error names AMEF config (not a leaked stack trace)', () =>",
-         "    pm.expect((b.error || b.message || '')).to.include('AMEF register ID is not configured'));"
+         "// PROVISIONED (GAP-4, previously quarantined): the AMEF register is auto-configured",
+         "// by the InitializeSettings repair step -> SettingsService::initialize() ->",
+         "// configureAmef(), which detects the AMEF register by its core schemas (model/element/",
+         "// relation/view/organization/property) and writes amef_config.register. exportOrgArchiMate",
+         "// therefore resolves the register and returns the ArchiMate model XML with HTTP 200.",
+         "pm.test('200 OK (AMEF provisioned)', () => pm.response.to.have.status(200));",
+         "pm.test('returns an ArchiMate <model> document', () => pm.expect(pm.response.text()).to.include('<model'));"
         ],
         "type": "text/javascript"
        }
@@ -2051,7 +2107,7 @@
      ]
     },
     {
-     "name": "POST export ArchiMate (error: 400 graceful, AMEF not configured)",
+     "name": "POST export ArchiMate (happy: 200, AMEF model XML)",
      "request": {
       "auth": {
        "type": "basic",
@@ -2107,13 +2163,11 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// The bulk export endpoint degrades GRACEFULLY (400, not 500) when AMEF is missing -",
-         "// this is a real contract assertion, not a quarantine.",
-         "pm.test('400 Bad Request (graceful, not 500)', () => pm.response.to.have.status(400));",
-         "const b = pm.response.json();",
-         "pm.test('success false', () => pm.expect(b.success).to.eql(false));",
-         "pm.test('error names AMEF config', () =>",
-         "    pm.expect((b.error || b.message || '')).to.include('AMEF register'));"
+         "// PROVISIONED (GAP-4, previously asserted the AMEF-missing 400 path): with the AMEF",
+         "// register auto-configured by the repair step, the bulk export endpoint returns the",
+         "// ArchiMate model XML with HTTP 200.",
+         "pm.test('200 OK (AMEF provisioned)', () => pm.response.to.have.status(200));",
+         "pm.test('returns an ArchiMate <model> document', () => pm.expect(pm.response.text()).to.include('<model'));"
         ],
         "type": "text/javascript"
        }

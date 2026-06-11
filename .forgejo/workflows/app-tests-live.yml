@@ -10,7 +10,12 @@
 #
 # Gate status for softwarecatalog (see TESTING-CI-ROLLOUT.md for the evidence table):
 #   deep-e2e: true  — e2e RESOLVES register+schema at runtime from /api/voorzieningen/config — CI-portable
-#   newman:   false  — TODO: Newman collection pins register=11 (dev numeric); arm after slug-resolution preflight
+#   newman:   true   — ARMED: the collection "0. Setup / Preflight" request resolves the register
+#                     numeric id from the stable slug 'voorzieningen' (and addresses the org/contact/
+#                     module/contract/dienst/gebruik schemas by slug), so the suite survives a fresh
+#                     CI boot. AMEF ArchiMate export is un-quarantined (the InitializeSettings repair
+#                     step auto-configures the AMEF register -> exportOrgArchiMate returns 200 model
+#                     XML); the no-standalone-'standaard'-schema case stays a deterministic 404.
 
 name: app-tests-live
 
@@ -36,10 +41,5 @@ jobs:
       app-id: softwarecatalog
       is-openregister: false
       run-e2e: true
-      run-newman: false
-      # NON-GATING (GAP-5): runs the visual-regression project + uploads
-      # snapshots/diffs as an artifact. Committed baselines are dev-container
-      # native, so they won't byte-match the CI Linux runner until regenerated
-      # in-CI (see tests-live.yml run-visual caveat) — continue-on-error.
-      run-visual: true
+      run-newman: true
       newman-entrypoint: tests/integration/run-newman.sh
