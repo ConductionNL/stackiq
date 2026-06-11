@@ -17,6 +17,8 @@
 		"lint-fix": "npm run lint -- --fix",
 		"test": "jest --silent",
 		"test-coverage": "jest --silent --coverage",
+		"test:unit": "vitest run",
+		"test:unit:watch": "vitest",
 		"stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css",
 		"check:manifest": "node tests/validate-manifest.js"
 	},
@@ -122,6 +124,7 @@
 		"ts-jest": "^29.2.3",
 		"ts-loader": "^9.5.1",
 		"typescript": "^5.5.4",
+		"vitest": "^1.6.1",
 		"vue-eslint-parser": "^10.2.0",
 		"vue-jest": "^3.0.7"
 	}
