@@ -50,17 +50,17 @@
 Decompose first — downstream handlers (ArchiMateContext, SyncHandler) depend on
 its post-refactor facade.
 
-- [~] 1.1 Audit `lib/Service/SettingsService.php`:
+- [x] 1.1 Audit `lib/Service/SettingsService.php`:
   - List all public methods and group by domain: sync, modules, organisations, ArchiMate
   - Identify which methods have CC>10 or >100 lines
-- [~] 1.2 Create `lib/Service/Settings/SyncSettingsHandler.php`:
+- [x] 1.2 Create `lib/Service/Settings/SyncSettingsHandler.php`:
   - SPDX header: `// SPDX-License-Identifier: EUPL-1.2`
   - `@spec openspec/changes/method-decomposition/tasks.md#task-1`
   - Move sync-domain methods; extract `validateSyncConfig()` guard clauses
-- [~] 1.3 Create `lib/Service/Settings/ModuleSettingsHandler.php`:
+- [x] 1.3 Create `lib/Service/Settings/ModuleSettingsHandler.php`:
   - Same SPDX + `@spec` requirements
   - Move module-domain methods; extract `validateModuleConfig()`
-- [~] 1.4 Create `lib/Service/Settings/OrganizationSettingsHandler.php`:
+- [x] 1.4 Create `lib/Service/Settings/OrganizationSettingsHandler.php`:
   - Move organisation-domain methods; extract `validateOrganizationConfig()`
 - [~] 1.5 Refactor `SettingsService` to facade pattern:
   - Inject all three handlers via constructor
@@ -72,15 +72,15 @@ its post-refactor facade.
 
 ## Phase 2 — SoftwareCatalogueService decomposition (REQ-DECOMP-004)
 
-- [~] 2.1 Audit `lib/Service/SoftwareCatalogueService.php`:
+- [x] 2.1 Audit `lib/Service/SoftwareCatalogueService.php`:
   - Identify API communication, data mapping, and conflict resolution method groups
   - Map which methods call `ProgressTracker` — these must be isolated
-- [~] 2.2 Create `lib/Service/SoftwareCatalogue/ApiClient.php`:
+- [x] 2.2 Create `lib/Service/SoftwareCatalogue/ApiClient.php`:
   - SPDX header + `@spec openspec/changes/method-decomposition/tasks.md#task-2`
   - Move all API communication methods (HTTP calls, response parsing)
-- [~] 2.3 Create `lib/Service/SoftwareCatalogue/DataMapper.php`:
+- [x] 2.3 Create `lib/Service/SoftwareCatalogue/DataMapper.php`:
   - Move all data mapping / transformation methods
-- [~] 2.4 Create `lib/Service/SoftwareCatalogue/ConflictResolver.php`:
+- [x] 2.4 Create `lib/Service/SoftwareCatalogue/ConflictResolver.php`:
   - Move all conflict resolution / deduplication methods
 - [~] 2.5 Isolate progress tracking:
   - Remove all inline `ProgressTracker` calls from business methods
@@ -94,12 +94,12 @@ its post-refactor facade.
 
 Depends on Phase 1 (SettingsService facade must exist).
 
-- [~] 3.1 Create `lib/Controller/Settings/SyncHandler.php`:
+- [x] 3.1 Create `lib/Controller/Settings/SyncHandler.php`:
   - SPDX header + `@spec openspec/changes/method-decomposition/tasks.md#task-3`
   - Inject only `ObjectService` and `SoftwareCatalogueService`
   - Expose `handle(array $config): array` public method
   - Extract private: `validateSyncConfig()`, `prepareSyncData()`, `executeSyncBatch()`, `buildSyncResponse()`
-- [~] 3.2 Create `lib/Controller/Settings/ModuleRegistrationHandler.php`:
+- [x] 3.2 Create `lib/Controller/Settings/ModuleRegistrationHandler.php`:
   - Inject only `ObjectService` and `ModuleRegistrationService`
   - Extract private: `validateModuleInput()`, `resolveModuleDependencies()`, `persistModules()`
 - [~] 3.3 Refactor `SettingsController`:
@@ -115,7 +115,7 @@ Depends on Phase 1 (SettingsService facade must exist).
 
 Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 
-- [~] 4.1 Create `lib/Service/ArchiMate/ArchiMateContext.php`:
+- [x] 4.1 Create `lib/Service/ArchiMate/ArchiMateContext.php`:
   - SPDX header + `@spec openspec/changes/method-decomposition/tasks.md#task-4`
   - Constructor: `ObjectService $objectService`, `SettingsService $settingsService`, `LoggerInterface $logger`
   - Public readonly properties for each
