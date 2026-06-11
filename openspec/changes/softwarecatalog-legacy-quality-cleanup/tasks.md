@@ -113,7 +113,7 @@ Baseline captured (volume > 50). `phpmd.baseline.xml` added and
 ## Phase 6 — Documentation
 
 - [x] tasks.md updated with actual findings + decisions.
-- [~] `app-config.json` does not exist in this repo — no marker to
+- [x] `app-config.json` does not exist in this repo — no marker to
       set; the README is the canonical quality-gates record. N/A;
       the absence of `app-config.json` makes this task a no-op.
 - [~] Close the burn-down tracking issue once the last baseline
