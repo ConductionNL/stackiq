@@ -55,11 +55,13 @@
   SSE/WS endpoint is available. Owner: TBD. Out-of-scope for this
   change; tracked as a separate openspec change when the backend
   SSE/WS endpoint ships.
-- [~] 6.2 (FOLLOW-UP, lib) Land `manifest-resolve-sentinel` in
+- [x] 6.2 (FOLLOW-UP, lib) Land `manifest-resolve-sentinel` in
   `@conduction/nextcloud-vue` so manifest `@resolve:`
   values are substituted before validation. Owner: lib team. Owned
   by the nextcloud-vue change `manifest-resolve-sentinel`; adoption
-  here is automatic once the lib ships.
+  here is automatic once the lib ships. SHIPPED — `@conduction/nextcloud-vue@^1.0.0-beta.101`
+  pinned in package.json carries `src/utils/resolveManifestSentinels.js`;
+  `src/manifest.json` uses `@resolve:voorzieningen_register` sentinels.
 - [~] 6.3 (FOLLOW-UP) Investigate fixing
   `tests/validate-manifest.js` `ajv-formats` initialisation
   bug — pre-existing on `development`. Tracked separately; not a

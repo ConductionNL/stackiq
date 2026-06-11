@@ -76,9 +76,12 @@
 
 ## Phase 4 — Multi-tenancy wiring (gated on nc-vue release)
 
-- [~] 4.1 Pin nc-vue to the release exporting `useTenantContext`.
-  **DEFERRED — BLOCKED_EXTERNAL:** `useTenantContext` is not exported from
-  any released nc-vue yet.
+- [x] 4.1 Pin nc-vue to the release exporting `useTenantContext`.
+  SHIPPED — `package.json` pins `@conduction/nextcloud-vue: ^1.0.0-beta.101`;
+  the `multi-tenancy-context` nextcloud-vue change has merged and exports
+  `useTenantContext` + `provideTenantContext` + `createTenantContext` +
+  `TENANT_CONTEXT_KEY` from `@conduction/nextcloud-vue`. (Tenant wiring
+  in 4.2 / 4.3 / 4.5 is the still-deferred adoption step.)
 - [~] 4.2 Index-view tenant-switch refetch. **DEFERRED — depends on 4.1.**
 - [~] 4.3 Detail-view navigate-back on tenant switch. **DEFERRED — depends on
   4.1.**
