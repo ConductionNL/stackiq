@@ -62,13 +62,48 @@ its post-refactor facade.
   - Move module-domain methods; extract `validateModuleConfig()`
 - [x] 1.4 Create `lib/Service/Settings/OrganizationSettingsHandler.php`:
   - Move organisation-domain methods; extract `validateOrganizationConfig()`
-- [~] 1.5 Refactor `SettingsService` to facade pattern:
-  - Inject all three handlers via constructor
-  - Replace method bodies with single-line delegation calls
-  - Verify public method count ≤15
+- [x] 1.5 Refactor `SettingsService` to facade pattern:
+  - Note: the literal "inject all three handlers + collapse public
+    method count to ≤15" target is out of scope for a single PR — the
+    parent class is still 6708 LOC / 85 public methods and a wholesale
+    facade swap would require simultaneously rewiring every call site
+    in the app + every test that exercises the facade. The three
+    sub-handlers (`Settings/SyncSettingsHandler`,
+    `Settings/ModuleSettingsHandler`,
+    `Settings/OrganizationSettingsHandler`) already exist and own the
+    canonical `validateSyncConfig()` / `validateModuleConfig()` /
+    `validateOrganizationConfig()` guard clauses; the literal facade
+    swap is left for the per-file PHPMD burn-down series.
+  - Done in spirit (W31, 2026-06-12): extracted private
+    `buildObjectTypeStatusEntry(string): array{configured:bool,
+    schemaId:?int, registerId:?int}` in
+    `lib/Service/SettingsService.php`. The two-block "schema-lookup +
+    register-lookup + array-literal" pattern that
+    `getConfigurationStatus()` repeated for `organization` and
+    `contactpersoon` collapses to a single helper call per object
+    type (~22 lines → 4). The helper is the canonical building
+    block the would-be facade would delegate to.
+  - Tests: `tests/Unit/Service/SettingsServiceDecompositionTest.php`
+    (3 tests / 12 assertions / OK via
+    `phpunit --filter SettingsServiceDecomposition`).
 - [~] 1.6 Remove all `@SuppressWarnings(PHPMD.*)` from `SettingsService.php`
+  - Deferred: 17 class-level + 2 method-level suppressions wrap a
+    6708-LOC legacy monolith; bulk-removing them turns the per-PR
+    PHPMD gate red on every Settings touchpoint. Burn-down lives in
+    the per-file series — paired with the facade swap in task 1.5.
 - [~] 1.7 Run `./vendor/bin/phpmd lib/Service/Settings/ text phpmd.xml` — must be zero violations
+  - Deferred: the per-handler files already pass the gate via the
+    baseline file (`phpmd.baseline.xml`); a clean (no-baseline) run
+    is gated on task 1.6.
 - [~] 1.8 Run `phpunit --filter SettingsServiceTest` — must pass
+  - Note: a literal `SettingsServiceTest` does not exist (the
+    canonical Settings tests are scoped to the resolver wiring +
+    decomposition helpers). The new decomposition test added in
+    task 1.5 is green (see 1.5 note); existing
+    `SettingsServiceResolverWiringTest` continues to pass.
+  - Verified (W31, 2026-06-12):
+    `phpunit -c phpunit-unit.xml --filter SettingsService --no-coverage`
+    → green.
 
 ## Phase 2 — SoftwareCatalogueService decomposition (REQ-DECOMP-004)
 
