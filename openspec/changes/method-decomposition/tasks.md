@@ -226,9 +226,16 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     `tests/Unit/EventListener/UserProfileUpdatedEventListenerDecompositionTest.php`.
   - Method-level CyclomaticComplexity / NPathComplexity /
     ExcessiveMethodLength suppressions removed from `syncToContactpersoon`.
-- [~] 8.5 **SoftwareCatalogue/HierarchyHandler** (3 suppressions):
-  - Extract `buildHierarchyTree()`, `resolveParent()`, `updateChildReferences()`
-  - Remove suppressions; run PHPMD
+- [x] 8.5 **SoftwareCatalogue/HierarchyHandler** (3 suppressions):
+  - Note: the literal task names (`buildHierarchyTree`,
+    `resolveParent`, `updateChildReferences`) are misnamed for the
+    current code shape — there is no parent/child reference graph,
+    only a flat beheerder-list with a primary-manager pick.
+  - Done in spirit: `setupManagerRelationships()` decomposed into
+    `resolvePrimaryManager()`, `assignManagerForCurrentUser()`,
+    `assignManagerForOtherBeheerders()` in
+    `lib/Service/SoftwareCatalogue/HierarchyHandler.php`; tests in
+    `tests/Unit/Service/SoftwareCatalogue/HierarchyHandlerDecompositionTest.php`.
 - [x] 8.6 **ModuleRegistrationService** (3 suppressions):
   - `handleModuleRegistration()` decomposed into `resolveOrganisationType()`,
     `mapOrgTypeToRegisteredBy()`, `updateModuleRegisteredBy()` in

@@ -141,22 +141,9 @@ class HierarchyHandler
                 return;
             }
 
-            // The oldest beheerder becomes the manager.
-            $primaryManager = $organizationBeheerders[0];
-
-            // If current user is not a beheerder, set their manager.
-            if (in_array(needle: $username, haystack: $organizationBeheerders) === false) {
-                $this->_contactPersonHandler->setUserManager(username: $username, managerUsername: $primaryManager);
-            }
-
-            // If there are multiple beheerders, set the primary as manager for others.
-            if (count($organizationBeheerders) > 1) {
-                foreach ($organizationBeheerders as $beheerder) {
-                    if ($beheerder !== $primaryManager) {
-                        $this->_contactPersonHandler->setUserManager(username: $beheerder, managerUsername: $primaryManager);
-                    }
-                }
-            }
+            $primaryManager = $this->resolvePrimaryManager($organizationBeheerders);
+            $this->assignManagerForCurrentUser($username, $organizationBeheerders, $primaryManager);
+            $this->assignManagerForOtherBeheerders($organizationBeheerders, $primaryManager);
 
             $this->_logger->info(
                 'Set up manager relationships',
@@ -178,6 +165,68 @@ class HierarchyHandler
             );
         }//end try
     }//end setupManagerRelationships()
+
+
+    /**
+     * Pick the primary manager from the list of beheerders.
+     *
+     * The oldest beheerder (first element) becomes the manager.
+     *
+     * @param array<int,string> $organizationBeheerders Beheerder usernames
+     *
+     * @return string The primary manager's username
+     */
+    private function resolvePrimaryManager(array $organizationBeheerders): string
+    {
+        return $organizationBeheerders[0];
+
+    }//end resolvePrimaryManager()
+
+
+    /**
+     * Set the primary beheerder as the current user's manager when they
+     * are not themselves a beheerder.
+     *
+     * @param string            $username               The current username
+     * @param array<int,string> $organizationBeheerders Beheerder usernames
+     * @param string            $primaryManager         The primary manager
+     *
+     * @return void
+     */
+    private function assignManagerForCurrentUser(string $username, array $organizationBeheerders, string $primaryManager): void
+    {
+        if (in_array(needle: $username, haystack: $organizationBeheerders) === true) {
+            return;
+        }
+
+        $this->_contactPersonHandler->setUserManager(username: $username, managerUsername: $primaryManager);
+
+    }//end assignManagerForCurrentUser()
+
+
+    /**
+     * Point all secondary beheerders at the primary manager.
+     *
+     * @param array<int,string> $organizationBeheerders Beheerder usernames
+     * @param string            $primaryManager         The primary manager
+     *
+     * @return void
+     */
+    private function assignManagerForOtherBeheerders(array $organizationBeheerders, string $primaryManager): void
+    {
+        if (count($organizationBeheerders) <= 1) {
+            return;
+        }
+
+        foreach ($organizationBeheerders as $beheerder) {
+            if ($beheerder === $primaryManager) {
+                continue;
+            }
+
+            $this->_contactPersonHandler->setUserManager(username: $beheerder, managerUsername: $primaryManager);
+        }
+
+    }//end assignManagerForOtherBeheerders()
 
     /**
      * Gets organizational hierarchy information for a user
