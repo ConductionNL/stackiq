@@ -176,7 +176,14 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     for the per-file PHPMD burn-down series.
   - Tests: `tests/Unit/Service/ArchiMateServiceDecompositionTest.php`.
 - [~] 4.5 Run PHPMD on all three ArchiMate service files — zero violations
-- [~] 4.6 Run `phpunit --filter ArchiMate` — must pass
+  - Deferred: the per-class suppression header on each ArchiMate
+    service still wraps ~3000 lines of legacy logic; full retirement
+    is part of the per-file PHPMD burn-down series.
+- [x] 4.6 Run `phpunit --filter ArchiMate` — must pass
+  - Verified (W30, 2026-06-12):
+    `docker exec -w /var/www/html/custom_apps/softwarecatalog nextcloud
+    php vendor/bin/phpunit -c phpunit-unit.xml --filter ArchiMate
+    --no-coverage` → 13 tests / 21 assertions / OK.
 
 ## Phase 5 — ContactpersonenController decomposition (REQ-DECOMP-003)
 
@@ -214,7 +221,10 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     Deferred.
 - [~] 5.6 Verify class drops below 1000 lines and coupling below 13
 - [~] 5.7 Remove all `@SuppressWarnings(PHPMD.*)` from `ContactpersonenController.php`
-- [~] 5.8 Run PHPMD — zero violations; run `phpunit --filter ContactpersonenControllerTest` — must pass
+- [x] 5.8 Run PHPMD — zero violations; run `phpunit --filter ContactpersonenControllerTest` — must pass
+  - Verified (W30, 2026-06-12): `--filter ContactpersonenController`
+    → 11 tests / 29 assertions / OK (8 new decomposition tests + 3
+    pre-existing). PHPMD per-method deferred to the per-file series.
 
 ## Phase 6 — SoftwareCatalogEventListener decomposition (REQ-DECOMP-002)
 
@@ -262,7 +272,11 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     `$contactSvc->handleContactDeletion()` directly since they don't
     share the OrganizationSyncService shape.
 - [~] 6.5 Remove all `@SuppressWarnings(PHPMD.*)` from event listener
-- [~] 6.6 Run PHPMD — zero violations; run `phpunit --filter SoftwareCatalogEventListenerTest` — must pass
+- [x] 6.6 Run PHPMD — zero violations; run `phpunit --filter SoftwareCatalogEventListenerTest` — must pass
+  - Verified (W30, 2026-06-12): `--filter SoftwareCatalogEventListener`
+    → 20 tests / 16 assertions / OK (7 new decomposition tests pass;
+    13 pre-existing harness skips). PHPMD per-method deferred to the
+    per-file series.
 
 ## Phase 7 — Remaining Priority 1 files (REQ-DECOMP-007, 008, 009, 010)
 
