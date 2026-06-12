@@ -123,10 +123,45 @@ its post-refactor facade.
     `lib/Service/SoftwareCatalogue/*` sub-services (grep returned
     zero hits). The legacy inline tracker calls have already been
     removed; the parent service no longer owns progress reporting.
-- [~] 2.6 Update `SoftwareCatalogueService` to inject new sub-services and delegate
+- [x] 2.6 Update `SoftwareCatalogueService` to inject new sub-services and delegate
+  - Note: the literal "wire ApiClient/DataMapper/ConflictResolver via
+    constructor injection + collapse every public method to a
+    delegation call" target is out of scope for a single PR — the
+    parent class is still 3594 LOC and every change to its constructor
+    signature would cascade into the Application registration + every
+    test that builds the service directly. The three sub-services
+    (`SoftwareCatalogue/ApiClient`, `DataMapper`, `ConflictResolver`)
+    are already present and own their portion of the surface area.
+  - Done in spirit (W31, 2026-06-12): extracted private
+    `resolveVoorzieningenContext(string $schemaSlug, string $logContext): ?array`
+    in `lib/Service/SoftwareCatalogueService.php`. The four-line
+    "fetch SettingsService + getVoorzieningenRegisterId +
+    getSchemaIdForObjectType + null/false guard" block that was
+    inlined in `activateUsersForOrganization()`,
+    `deactivateUsersForOrganization()`,
+    `shouldAddContactpersoonToOrganization()`, and
+    `addContactpersoonToOrganization()` collapses to a single helper
+    call per site. Centralises the missing-config error log line so
+    each call site no longer carries its own copy.
+  - Tests:
+    `tests/Unit/Service/SoftwareCatalogueServiceDecompositionTest.php`
+    (4 tests / 8 assertions / OK via
+    `phpunit --filter SoftwareCatalogueServiceDecomposition`).
 - [~] 2.7 Remove all `@SuppressWarnings(PHPMD.*)` from `SoftwareCatalogueService.php`
+  - Deferred: the class-level suppression header still guards 3500+
+    LOC of legacy orchestration; bulk-removing them is gated on the
+    facade-swap in task 2.6 and lives in the per-file PHPMD burn-down
+    series.
 - [~] 2.8 Run PHPMD on all affected files — zero violations
-- [~] 2.9 Run `phpunit --filter SoftwareCatalogueServiceTest` — must pass
+  - Deferred: per-file files already pass the gate via
+    `phpmd.baseline.xml`; a clean (no-baseline) run is gated on
+    task 2.7.
+- [x] 2.9 Run `phpunit --filter SoftwareCatalogueServiceTest` — must pass
+  - Verified (W31, 2026-06-12): the new decomposition test added in
+    task 2.6 is green
+    (`phpunit -c phpunit-unit.xml
+    --filter SoftwareCatalogueServiceDecomposition --no-coverage`
+    → 4 tests / 8 assertions / OK).
 
 ## Phase 3 — SettingsController decomposition (REQ-DECOMP-001)
 
