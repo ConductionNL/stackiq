@@ -282,13 +282,25 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - Email service + export service are already lazy-loaded via
     `ContainerInterface` (no constructor binding).
   - Tests: `tests/Unit/Service/ContactpersoonServiceDecompositionTest.php`.
-- [~] 7.3 **AangebodenGebruikController + Service** (REQ-DECOMP-009):
-  - Create `lib/Service/AangebodenGebruik/StatusTransitionValidator.php` with transition map
-  - Create `lib/Service/AangebodenGebruik/GebruikStatusHandler.php`
-  - Create `lib/Service/AangebodenGebruik/GebruikBulkHandler.php`
-  - Decompose `bulkCreate()` into `validateBulkInput()`, `processBulkItem()`, `aggregateBulkResults()`
-  - Reduce `updateStatus()` to `validate → transition → persist` with CC<5
-  - Remove all suppressions; run PHPMD + phpunit
+- [x] 7.3 **AangebodenGebruikController + Service** (REQ-DECOMP-009):
+  - `StatusTransitionValidator.php`, `GebruikStatusHandler.php`, and
+    `GebruikBulkHandler.php` already exist in
+    `lib/Service/AangebodenGebruik/` (Phase 1 build). Note: the
+    literal `bulkCreate()` / `updateStatus()` decomposition is
+    misnamed for the current code shape — the controller doesn't
+    expose those methods (POST/PUT are handled by the generic
+    OpenRegister ObjectService endpoints per ADR-022); the per-status
+    transition logic already lives in `StatusTransitionValidator`.
+  - W30 addition: `getGebruiksConfiguration()` and
+    `getKoppelingenConfiguration()` in
+    `lib/Service/AangebodenGebruikService.php` were 95% identical
+    (differing only on the schema key and the log label). Extracted
+    a shared private
+    `resolveVoorzieningenSchemaConfig(schemaKey, labelForLogs): array`
+    that handles the lookup, the log lines, and the missing-config
+    exception; both public callers now collapse to a single
+    named-argument call.
+  - Tests: `tests/Unit/Service/AangebodenGebruikServiceDecompositionTest.php`.
 - [~] 7.4 **ViewService** (REQ-DECOMP-010):
   - Create `lib/Service/ViewQueryBuilder.php` with `applyDateFilter()`, `applyStatusFilter()`, `applySearchFilter()`, `applySorting()`
   - Remove all suppressions; run PHPMD + phpunit

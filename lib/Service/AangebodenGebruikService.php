@@ -1159,47 +1159,10 @@ class AangebodenGebruikService
      */
     private function getGebruiksConfiguration(): array
     {
-        // Try to get voorzieningen configuration from SettingsService.
-        try {
-            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-
-            $this->logger->debug(
-                    'Retrieved voorzieningen configuration',
-                    [
-                        'config' => $voorzieningenConfig,
-                    ]
-                    );
-
-            $registerId    = $voorzieningenConfig['register'] ?? null;
-            $gebruikSchema = $voorzieningenConfig['gebruik_schema'] ?? null;
-
-            // If configuration is available, use it.
-            if ($registerId !== null && $gebruikSchema !== null) {
-                return [
-                    'register_id' => $registerId,
-                    'schemas'     => [$gebruikSchema],
-                ];
-            }
-        } catch (Exception $e) {
-            $this->logger->warning(
-                    'Failed to get voorzieningen configuration from SettingsService',
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                    );
-        }//end try
-
-        // No hardcoded fallback - configuration must be properly set.
-        $this->logger->error(
-                'Failed to get voorzieningen configuration - no fallback provided',
-                [
-                    'registerId'          => $registerId ?? 'null',
-                    'gebruikSchema'       => $gebruikSchema ?? 'null',
-                    'voorzieningenConfig' => $voorzieningenConfig ?? 'null',
-                ]
-                );
-
-        throw new Exception('Voorzieningen configuration not found. Please configure the schemas in the admin panel.');
+        return $this->resolveVoorzieningenSchemaConfig(
+            schemaKey: 'gebruik_schema',
+            labelForLogs: 'voorzieningen'
+        );
     }//end getGebruiksConfiguration()
 
     /**
@@ -1210,48 +1173,72 @@ class AangebodenGebruikService
      */
     private function getKoppelingenConfiguration(): array
     {
-        // Try to get voorzieningen configuration from SettingsService.
+        return $this->resolveVoorzieningenSchemaConfig(
+            schemaKey: 'koppeling_schema',
+            labelForLogs: 'koppelingen'
+        );
+    }//end getKoppelingenConfiguration()
+
+    /**
+     * Resolves a `{register_id, schemas: [schemaId]}` tuple for the supplied
+     * voorzieningen-config schema key.
+     *
+     * Extracted from {@see getGebruiksConfiguration()} +
+     * {@see getKoppelingenConfiguration()} as part of task 7.3 — the two
+     * methods were 95% identical (differing only on the schema key and the
+     * log label). Throws when either the register id or the requested schema
+     * id is missing on the voorzieningen config.
+     *
+     * @param string $schemaKey    The voorzieningen-config schema key
+     *                             (e.g. "gebruik_schema").
+     * @param string $labelForLogs Human-readable label for the log lines
+     *                             (e.g. "voorzieningen" or "koppelingen").
+     *
+     * @return array{register_id: mixed, schemas: array<int, mixed>}
+     *
+     * @throws Exception When the configuration is missing.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function resolveVoorzieningenSchemaConfig(string $schemaKey, string $labelForLogs): array
+    {
+        $voorzieningenConfig = null;
+        $registerId          = null;
+        $schemaId            = null;
         try {
             $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-
             $this->logger->debug(
-                    'Retrieved voorzieningen configuration for koppelingen',
-                    [
-                        'config' => $voorzieningenConfig,
-                    ]
-                    );
+                'Retrieved voorzieningen configuration for '.$labelForLogs,
+                ['config' => $voorzieningenConfig]
+            );
 
-            $registerId       = $voorzieningenConfig['register'] ?? null;
-            $koppeligenSchema = $voorzieningenConfig['koppeling_schema'] ?? null;
+            $registerId = $voorzieningenConfig['register'] ?? null;
+            $schemaId   = $voorzieningenConfig[$schemaKey] ?? null;
 
-            // If configuration is available, use it.
-            if ($registerId !== null && $koppeligenSchema !== null) {
+            if ($registerId !== null && $schemaId !== null) {
                 return [
                     'register_id' => $registerId,
-                    'schemas'     => [$koppeligenSchema],
+                    'schemas'     => [$schemaId],
                 ];
             }
         } catch (Exception $e) {
             $this->logger->warning(
-                    'Failed to get koppelingen configuration from SettingsService',
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                    );
+                'Failed to get '.$labelForLogs.' configuration from SettingsService',
+                ['error' => $e->getMessage()]
+            );
         }//end try
 
-        // No hardcoded fallback - configuration must be properly set.
         $this->logger->error(
-                'Failed to get koppelingen configuration - no fallback provided',
-                [
-                    'registerId'          => $registerId ?? 'null',
-                    'koppeligenSchema'    => $koppeligenSchema ?? 'null',
-                    'voorzieningenConfig' => $voorzieningenConfig ?? 'null',
-                ]
-                );
+            'Failed to get '.$labelForLogs.' configuration - no fallback provided',
+            [
+                'registerId'          => $registerId ?? 'null',
+                $schemaKey            => $schemaId ?? 'null',
+                'voorzieningenConfig' => $voorzieningenConfig ?? 'null',
+            ]
+        );
 
-        throw new Exception('Koppelingen configuration not found. Please configure the schemas in the admin panel.');
-    }//end getKoppelingenConfiguration()
+        throw new Exception(ucfirst($labelForLogs).' configuration not found. Please configure the schemas in the admin panel.');
+    }//end resolveVoorzieningenSchemaConfig()
 
     /**
      * Get all objects for a specific schema using paginated search, optionally filtered by organization
