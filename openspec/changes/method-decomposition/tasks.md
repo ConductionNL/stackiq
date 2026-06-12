@@ -95,7 +95,7 @@ its post-refactor facade.
   - Deferred: the per-handler files already pass the gate via the
     baseline file (`phpmd.baseline.xml`); a clean (no-baseline) run
     is gated on task 1.6.
-- [~] 1.8 Run `phpunit --filter SettingsServiceTest` — must pass
+- [x] 1.8 Run `phpunit --filter SettingsServiceTest` — must pass
   - Note: a literal `SettingsServiceTest` does not exist (the
     canonical Settings tests are scoped to the resolver wiring +
     decomposition helpers). The new decomposition test added in
