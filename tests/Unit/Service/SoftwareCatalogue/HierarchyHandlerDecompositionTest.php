@@ -115,6 +115,7 @@ class HierarchyHandlerDecompositionTest extends TestCase
         $reflection->setAccessible(true);
 
         $reflection->invoke($handler, 'alice', ['alice', 'bob'], 'alice');
+        $this->addToAssertionCount(1);
 
     }//end testAssignManagerForCurrentUserNoopWhenBeheerder()
 
@@ -135,6 +136,7 @@ class HierarchyHandlerDecompositionTest extends TestCase
         $reflection->setAccessible(true);
 
         $reflection->invoke($handler, ['alice'], 'alice');
+        $this->addToAssertionCount(1);
 
     }//end testAssignManagerForOtherBeheerdersSingleNoop()
 

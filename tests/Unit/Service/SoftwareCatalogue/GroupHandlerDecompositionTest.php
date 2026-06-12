@@ -81,6 +81,7 @@ class GroupHandlerDecompositionTest extends TestCase
 
         $user = $this->createMock(IUser::class);
         $reflection->invoke($handler, $user, '', 'org-uuid');
+        $this->addToAssertionCount(1);
 
     }//end testAssignOrganizationGroupSkipsEmptyGroupId()
 
@@ -132,6 +133,7 @@ class GroupHandlerDecompositionTest extends TestCase
         $reflection->setAccessible(true);
 
         $reflection->invoke($handler, $user, 'org-group', 'org-uuid');
+        $this->addToAssertionCount(1);
 
     }//end testAssignOrganizationGroupSkipsExistingMember()
 
@@ -153,6 +155,7 @@ class GroupHandlerDecompositionTest extends TestCase
         $reflection->setAccessible(true);
 
         $reflection->invoke($handler, $user, 'missing', 'org-uuid');
+        $this->addToAssertionCount(1);
 
     }//end testAssignOrganizationGroupSkipsMissingGroup()
 
