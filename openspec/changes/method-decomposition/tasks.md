@@ -244,8 +244,12 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     extraction and boot-method shrink deferred to the per-file PHPMD
     burn-down series.
   - Remove suppressions; run PHPMD
-- [~] 9.2 **ModuleComplianceSubscriber** (2 suppressions):
-  - Private method extraction; remove suppressions; run PHPMD
+- [x] 9.2 **ModuleComplianceSubscriber** (2 suppressions):
+  - `handle()` decomposed into `extractObjectFromEvent()`, `isModuleObject()`,
+    `dispatchComplianceUpdate()`, `dispatchEnsureDefaultVersion()` in
+    `lib/EventListener/ModuleComplianceSubscriber.php`; tests in
+    `tests/Unit/EventListener/ModuleComplianceSubscriberDecompositionTest.php`.
+  - Method-level CyclomaticComplexity / NPathComplexity suppressions removed.
 - [x] 9.3 **GebruikController** (2 suppressions):
   - `getGebruiken()` decomposed via `resolveUserRoles()` + `applyAanbodScopeToOptions()` in
     `lib/Controller/GebruikController.php`; tests in
