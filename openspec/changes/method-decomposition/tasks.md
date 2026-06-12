@@ -206,8 +206,12 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - Private method extraction for complex methods
   - Remove suppressions; run PHPMD
 - [~] 8.2 **ModuleComplianceService** (4 suppressions):
-  - Extract `checkLicenseCompliance()`, `checkSecurityCompliance()`, `checkDocumentationCompliance()`
-  - Each returns a compliance result object
+  - Note: this service syncs module->standaardversie mappings — it does not
+    perform license/security/documentation compliance scoring; the literal
+    task names above are misnamed for the current code shape.
+  - Done in spirit: `handleModuleComplianceUpdate()` decomposed into
+    `normaliseCurrentStandaarden()` + `syncStandaarden()`. Tests in
+    `tests/Unit/Service/ModuleComplianceServiceDecompositionTest.php`.
   - Remove suppressions; run PHPMD
 - [~] 8.3 **AanbodService** (4 suppressions):
   - Audit and apply private method extraction per decomposition strategy
