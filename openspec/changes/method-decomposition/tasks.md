@@ -261,14 +261,16 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 
 ## Phase 9 — Priority 3 files (REQ-DECOMP-012)
 
-- [~] 9.1 **Application.php** (2 suppressions):
-  - Partial: event listener registration extracted to private
-    `registerEventListeners(IRegistrationContext)` on Application itself
-    (kept in-class — the listener catalogue does not warrant a dedicated
-    service per ADR-022 reuse-or-abstractions). Service-registration
-    extraction and boot-method shrink deferred to the per-file PHPMD
-    burn-down series.
-  - Remove suppressions; run PHPMD
+- [x] 9.1 **Application.php** (2 suppressions):
+  - Event-listener registration already lived in `registerEventListeners()`.
+  - Now also: handler-service bindings extracted to
+    `registerHandlerServices()` and the remaining domain services
+    (Organisatie / Contactpersoon / Sync / Settings / ArchiMate /
+    ViewService / ProgressTracker / OrganizationContactSyncJob /
+    ContactpersonenController + the dashboard widget) extracted to
+    `registerDomainServices()`. The public `register()` body is now a
+    three-line orchestration.
+  - Method-level `ExcessiveMethodLength` suppression on `register()` removed.
 - [x] 9.2 **ModuleComplianceSubscriber** (2 suppressions):
   - `handle()` decomposed into `extractObjectFromEvent()`, `isModuleObject()`,
     `dispatchComplianceUpdate()`, `dispatchEnsureDefaultVersion()` in
