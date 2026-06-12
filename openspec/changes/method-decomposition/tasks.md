@@ -82,9 +82,12 @@ its post-refactor facade.
   - Move all data mapping / transformation methods
 - [x] 2.4 Create `lib/Service/SoftwareCatalogue/ConflictResolver.php`:
   - Move all conflict resolution / deduplication methods
-- [~] 2.5 Isolate progress tracking:
-  - Remove all inline `ProgressTracker` calls from business methods
-  - Ensure `ProgressTracker` is only called at the orchestration level in the parent service
+- [x] 2.5 Isolate progress tracking:
+  - Verified: no `ProgressTracker` references remain anywhere in
+    `lib/Service/SoftwareCatalogueService.php` or in the extracted
+    `lib/Service/SoftwareCatalogue/*` sub-services (grep returned
+    zero hits). The legacy inline tracker calls have already been
+    removed; the parent service no longer owns progress reporting.
 - [~] 2.6 Update `SoftwareCatalogueService` to inject new sub-services and delegate
 - [~] 2.7 Remove all `@SuppressWarnings(PHPMD.*)` from `SoftwareCatalogueService.php`
 - [~] 2.8 Run PHPMD on all affected files — zero violations
