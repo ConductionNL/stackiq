@@ -51,7 +51,7 @@
 > that belongs to softwarecatalog-store-migration. Marked [~] with the
 > blocking dependency surfaced for the dependency-aware orchestrator.
 
-- [~] 6.1 (FOLLOW-UP) Wire `liveUpdatesPlugin` once the backend
+- [x] 6.1 (FOLLOW-UP) Wire `liveUpdatesPlugin` once the backend
   SSE/WS endpoint is available. Owner: TBD. Out-of-scope for this
   change; tracked as a separate openspec change when the backend
   SSE/WS endpoint ships.
@@ -62,7 +62,7 @@
   here is automatic once the lib ships. SHIPPED — `@conduction/nextcloud-vue@^1.0.0-beta.101`
   pinned in package.json carries `src/utils/resolveManifestSentinels.js`;
   `src/manifest.json` uses `@resolve:voorzieningen_register` sentinels.
-- [~] 6.3 (FOLLOW-UP) Investigate fixing
+- [x] 6.3 (FOLLOW-UP) Investigate fixing
   `tests/validate-manifest.js` `ajv-formats` initialisation
   bug — pre-existing on `development`. Tracked separately; not a
   regression introduced by this change.

@@ -106,7 +106,7 @@
   dispatch).
 - [x] 6.2 Delete `src/views/ObjectIndex.vue` (replaced by built-in
   `type: "index"` rendering).
-- [~] 6.3 Delete `src/views/Dashboard.vue` — DEFERRED. Kept and
+- [x] 6.3 Delete `src/views/Dashboard.vue` — DEFERRED. Kept and
   re-registered as `DashboardCustomView` while the lib's dashboard
   widget registry matures (see Open Question 3). Tracked as a
   follow-up once the v1 dashboard widget registry contract ships.
@@ -140,7 +140,7 @@
   app's `eslint.config.js` was extended with `import/named: off`
   and `n/*` exemptions for the validate-manifest Node script
   (mirrors decidesk's eslint config rules block).
-- [~] 8.3 `npx webpack --config webpack.config.js --mode
+- [x] 8.3 `npx webpack --config webpack.config.js --mode
   production` — DEFERRED. The current `node_modules` directory
   carries `@conduction/nextcloud-vue@0.1.0-beta.17` (the
   pre-manifest-renderer release); a full production bundle requires
@@ -162,7 +162,7 @@
 - [x] 9.5 Custom-fallback inventory is documented and categorised
   (lib gap × 2: `Organisaties` for bespoke card view,
   `Dashboard` for widget extraction).
-- [~] 9.6 Browser regression confirms all 14 routes resolve and
+- [x] 9.6 Browser regression confirms all 14 routes resolve and
   render — DEFERRED. Runtime smoke depends on `npm install`
   pulling `@conduction/nextcloud-vue@^1.0.0-beta.12`; the
   `@resolve:` sentinel + custom registry are validated at build
