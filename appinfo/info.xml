@@ -6,7 +6,7 @@
     <name lang="nl">Software Catalogus</name>
     <summary lang="en">Manage your software portfolio with applications, modules, and connections</summary>
     <summary lang="nl">Beheer je softwareportfolio met applicaties, modules en koppelingen</summary>
-    <description lang="en"><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 12 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/softwarecatalog) for release planning and what this app does.
+    <description lang="en"><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 17 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/softwarecatalog) for release planning and what this app does.
 
 Software Catalogus brings structured software portfolio management to Nextcloud. Keep track of all the applications, modules, and connections in your organization — and share them across a federated open data network.
 
@@ -24,7 +24,7 @@ Software Catalogus brings structured software portfolio management to Nextcloud.
 
 Free and open source under the EUPL license.
     ]]></description>
-    <description lang="nl"><![CDATA[> ⚠️ **In actieve ontwikkeling — nog niet voor productiegebruik.** Deze app is volop in ontwikkeling. Hoewel de app een stabiele release-status kan hebben, **gebruik deze nog niet in productieomgevingen vóór 12 juni 2026.** Zie de [app-pagina op conduction.nl](https://conduction.nl/apps/softwarecatalog) voor release-planning en het doel van deze app.
+    <description lang="nl"><![CDATA[> ⚠️ **In actieve ontwikkeling — nog niet voor productiegebruik.** Deze app is volop in ontwikkeling. Hoewel de app een stabiele release-status kan hebben, **gebruik deze nog niet in productieomgevingen vóór 17 juni 2026.** Zie de [app-pagina op conduction.nl](https://conduction.nl/apps/softwarecatalog) voor release-planning en het doel van deze app.
 
 Software Catalogus brengt gestructureerd softwareportfoliobeheer naar Nextcloud. Houd al je applicaties, modules en koppelingen bij — en deel ze via een gefedereerd open data netwerk.
 
@@ -42,7 +42,7 @@ Software Catalogus brengt gestructureerd softwareportfoliobeheer naar Nextcloud.
 
 Vrij en open source onder de EUPL-licentie.
     ]]></description>
-    <version>0.1.141</version>
+    <version>0.1.142</version>
     <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>SoftwareCatalog</namespace>
