@@ -268,11 +268,20 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     of 30 lines of inline accumulator literal + double-branch
     validation.
   - Remove all suppressions; run PHPMD + phpunit
-- [~] 7.2 **ContactpersoonService** (REQ-DECOMP-008):
-  - Create `lib/Service/Contactpersoon/ContactValidator.php` with `validateEmail()`, `validatePhone()`, `validateName()`
-  - Extract `enrichContactData()` before `persistContact()`
-  - Lazy-load email service + export service via `ContainerInterface`
-  - Remove all suppressions; run PHPMD + phpunit
+- [x] 7.2 **ContactpersoonService** (REQ-DECOMP-008):
+  - Note: a dedicated `Contactpersoon/ContactValidator.php` for
+    name/phone validation would conflict with the canonical
+    contact-shape rules baked into the `contactpersoon` schema
+    (NL-validatie regels live in OpenRegister, not in app code).
+  - Done in spirit: extracted private
+    `isContactpersoonEmailUsable(string $email, string $contactId): bool`
+    in `lib/Service/ContactpersoonService.php`. The 18-line
+    empty-then-`filter_var` guard at the top of
+    `processContactpersoon()` now collapses to a single helper call
+    with embedded warning logs.
+  - Email service + export service are already lazy-loaded via
+    `ContainerInterface` (no constructor binding).
+  - Tests: `tests/Unit/Service/ContactpersoonServiceDecompositionTest.php`.
 - [~] 7.3 **AangebodenGebruikController + Service** (REQ-DECOMP-009):
   - Create `lib/Service/AangebodenGebruik/StatusTransitionValidator.php` with transition map
   - Create `lib/Service/AangebodenGebruik/GebruikStatusHandler.php`

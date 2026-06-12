@@ -141,24 +141,7 @@ class ContactpersoonService
             // Check if contactpersoon has required data.
             // Schema uses 'e-mailadres' but some data may use 'email'.
             $email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-            if (empty($email) === true) {
-                $this->logger->warning(
-                    'ContactpersoonService: Contactpersoon has no email, skipping processing',
-                    ['contactId' => $contactId]
-                );
-                return false;
-            }
-
-            // Validate email format before attempting user creation.
-            // Imported contacts may have invalid emails that would cause Nextcloud user creation to fail.
-            if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-                $this->logger->warning(
-                    'ContactpersoonService: Contactpersoon has invalid email, skipping user creation',
-                    [
-                        'contactId' => $contactId,
-                        'email'     => $email,
-                    ]
-                );
+            if ($this->isContactpersoonEmailUsable(email: $email, contactId: (string) $contactId) === false) {
                 return false;
             }
 
@@ -1403,4 +1386,42 @@ class ContactpersoonService
         }//end try
 
     }//end disableUserForContactpersoon()
+
+    /**
+     * Returns true when the contactpersoon email is non-empty AND passes
+     * `filter_var(FILTER_VALIDATE_EMAIL)`. Emits a warning log + returns false
+     * otherwise so the caller can early-return.
+     *
+     * Extracted from {@see processContactpersoon()} as part of task 7.2.
+     *
+     * @param string $email     The candidate email address.
+     * @param string $contactId The contact id (for the log context).
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function isContactpersoonEmailUsable(string $email, string $contactId): bool
+    {
+        if (empty($email) === true) {
+            $this->logger->warning(
+                'ContactpersoonService: Contactpersoon has no email, skipping processing',
+                ['contactId' => $contactId]
+            );
+            return false;
+        }
+
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $this->logger->warning(
+                'ContactpersoonService: Contactpersoon has invalid email, skipping user creation',
+                [
+                    'contactId' => $contactId,
+                    'email'     => $email,
+                ]
+            );
+            return false;
+        }
+
+        return true;
+    }//end isContactpersoonEmailUsable()
 }//end class
