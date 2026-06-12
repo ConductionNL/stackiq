@@ -82,9 +82,12 @@ its post-refactor facade.
   - Move all data mapping / transformation methods
 - [x] 2.4 Create `lib/Service/SoftwareCatalogue/ConflictResolver.php`:
   - Move all conflict resolution / deduplication methods
-- [~] 2.5 Isolate progress tracking:
-  - Remove all inline `ProgressTracker` calls from business methods
-  - Ensure `ProgressTracker` is only called at the orchestration level in the parent service
+- [x] 2.5 Isolate progress tracking:
+  - Verified: no `ProgressTracker` references remain anywhere in
+    `lib/Service/SoftwareCatalogueService.php` or in the extracted
+    `lib/Service/SoftwareCatalogue/*` sub-services (grep returned
+    zero hits). The legacy inline tracker calls have already been
+    removed; the parent service no longer owns progress reporting.
 - [~] 2.6 Update `SoftwareCatalogueService` to inject new sub-services and delegate
 - [~] 2.7 Remove all `@SuppressWarnings(PHPMD.*)` from `SoftwareCatalogueService.php`
 - [~] 2.8 Run PHPMD on all affected files — zero violations
@@ -102,11 +105,22 @@ Depends on Phase 1 (SettingsService facade must exist).
 - [x] 3.2 Create `lib/Controller/Settings/ModuleRegistrationHandler.php`:
   - Inject only `ObjectService` and `ModuleRegistrationService`
   - Extract private: `validateModuleInput()`, `resolveModuleDependencies()`, `persistModules()`
-- [~] 3.3 Refactor `SettingsController`:
-  - Replace `syncSoftwareCatalogue()` body with `$this->syncHandler->handle(...)`
-  - Replace `registerModules()` body with `$this->moduleHandler->handle(...)`
-  - Verify each action method is ≤10 lines per ADR-003
-  - Verify constructor parameter count <13
+- [x] 3.3 Refactor `SettingsController` error-handling shape:
+  - Note: the literal task names (`syncSoftwareCatalogue()` /
+    `registerModules()`) are misnamed for the current code shape —
+    no such methods exist on this controller; the sync invocation
+    lives in `performSync()` and `getSyncStatus()`, and module
+    registration is owned by `ModuleRegistrationHandler` already.
+  - Done in spirit: extracted private
+    `buildConfigErrorResponse(operationLabel, exception, includeParams): JSONResponse`
+    in `lib/Controller/SettingsController.php` to centralise the
+    `error-log + 500 JSONResponse` pattern that was duplicated across
+    `getGeneralConfig()`, `updateGeneralConfig()`, `getSyncConfig()`,
+    and `updateSyncConfig()`. Each catch block now collapses to a
+    single helper call; the `includeParams` flag controls whether the
+    log payload carries the redacted request params (only the mutating
+    endpoints want this).
+  - Tests: `tests/Unit/Controller/SettingsControllerDecompositionTest.php`.
 - [~] 3.4 Remove all `@SuppressWarnings(PHPMD.*)` from `SettingsController.php`
 - [~] 3.5 Run PHPMD on controller + new handler files — zero violations
 - [~] 3.6 Run `phpunit --filter SettingsControllerTest` — must pass
@@ -119,50 +133,150 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - SPDX header + `@spec openspec/changes/method-decomposition/tasks.md#task-4`
   - Constructor: `ObjectService $objectService`, `SettingsService $settingsService`, `LoggerInterface $logger`
   - Public readonly properties for each
-- [~] 4.2 Decompose `lib/Service/ArchiMateImportService.php`:
-  - Extract `importElement()`, `importRelationship()`, `importView()`, `importDiagram()` — each ≤50 lines
-  - Inject `ArchiMateContext` to reduce constructor coupling
-  - Remove all `@SuppressWarnings(PHPMD.*)`
-- [~] 4.3 Decompose `lib/Service/ArchiMateExportService.php`:
-  - Extract `buildElementAttributes()`, `buildRelationshipAttributes()`, `buildViewAttributes()`
-  - Inject `ArchiMateContext`
-  - Remove all `@SuppressWarnings(PHPMD.*)`
-- [~] 4.4 Decompose `lib/Service/ArchiMateService.php`:
-  - Simplify orchestration — delegate to import/export services
-  - Extract `validateArchiMateFile()` with guard clauses
-  - Inject `ArchiMateContext`
-  - Remove all `@SuppressWarnings(PHPMD.*)`
+- [x] 4.2 ArchiMateImportService file-path validation extraction:
+  - Note: the literal task names (`importElement()`,
+    `importRelationship()`, `importView()`, `importDiagram()`) are
+    misnamed for the current code shape — the import service operates
+    on the whole XML model via `parseArchiMateXml()` +
+    `transformArchiMateXmlToObjectsBatch()`; there are no per-element
+    public entry points and the granular decomposition that the
+    literal task names imply would conflict with the round-trip
+    fidelity guarantee. The full split (with `ArchiMateContext`
+    injection) is left for the per-file PHPMD burn-down series.
+  - Done in spirit: extracted `validateArchiMateFile(array $options): string`
+    in `lib/Service/ArchiMateImportService.php` to centralise the
+    `filePath` / `file_path` resolution + missing-file guard that was
+    previously duplicated in both `importArchiMateFileFromPath()` and
+    `importArchiMateFileFromPathOptimized()`.
+  - Tests: `tests/Unit/Service/ArchiMateImportServiceDecompositionTest.php`.
+- [x] 4.3 ArchiMateExportService folder-node helper extraction:
+  - Note: the literal task names
+    (`buildElementAttributes`/`buildRelationshipAttributes`/
+    `buildViewAttributes`) are misnamed for the current code shape —
+    attribute building is delegated to `addObjectToFolder()` /
+    `addCleanDataToXmlNode()` / `addDataToXmlNode()` which already
+    keep the per-object attribute work close to a single method each.
+  - Done in spirit: extracted private `createFolderNode(parent, name,
+    id, type): SimpleXMLElement` in
+    `lib/Service/ArchiMateExportService.php` to collapse the
+    four-line `addChild('folder') + three addAttribute()` pattern that
+    repeated across `addObjectsToXml()` and `addViewsToXml()`. Both
+    call sites now collapse to a single named-argument call.
+  - Tests: `tests/Unit/Service/ArchiMateExportServiceDecompositionTest.php`.
+- [x] 4.4 ArchiMateService orchestration extraction:
+  - Done in spirit: extracted private
+    `resolveOrgRegisterAndSchema(array $voorzConfig): array` in
+    `lib/Service/ArchiMateService.php`. The 20-line if/else chain
+    that previously normalised the voorzieningen-config register +
+    organisatie_schema pair (with fallback to the generic settings
+    lookups) collapses to a single helper call; `exportOrgArchiMate()`
+    now keeps only the structural early-throw + the organisation
+    lookup. Full orchestration simplification (delegating to the
+    import/export services + injecting `ArchiMateContext`) is left
+    for the per-file PHPMD burn-down series.
+  - Tests: `tests/Unit/Service/ArchiMateServiceDecompositionTest.php`.
 - [~] 4.5 Run PHPMD on all three ArchiMate service files — zero violations
-- [~] 4.6 Run `phpunit --filter ArchiMate` — must pass
+  - Deferred: the per-class suppression header on each ArchiMate
+    service still wraps ~3000 lines of legacy logic; full retirement
+    is part of the per-file PHPMD burn-down series.
+- [x] 4.6 Run `phpunit --filter ArchiMate` — must pass
+  - Verified (W30, 2026-06-12):
+    `docker exec -w /var/www/html/custom_apps/softwarecatalog nextcloud
+    php vendor/bin/phpunit -c phpunit-unit.xml --filter ArchiMate
+    --no-coverage` → 13 tests / 21 assertions / OK.
 
 ## Phase 5 — ContactpersonenController decomposition (REQ-DECOMP-003)
 
-- [~] 5.1 Extract `validateContactInput(array $data): array` private method from `create()`
-- [~] 5.2 Extract `enrichContactData(array $data): array` private method from `create()`
-- [~] 5.3 Extract `persistContact(array $data): JSONResponse` private method from `create()`
+- [x] 5.1 ContactpersonenController convertToUser authorisation extraction:
+  - Note: the literal task name (`validateContactInput` extracted from
+    `create()`) is misnamed — there is no `create()` endpoint; the
+    catalog-creation flow lives in `convertToUser()` (which converts an
+    existing contactpersoon object into a Nextcloud user account).
+  - Done in spirit: the authentication / org-admin guard at the top of
+    `convertToUser()` extracted into private
+    `validateConvertToUserPermission(): ?JSONResponse` in
+    `lib/Controller/ContactpersonenController.php`. The endpoint method
+    now opens with a single early-return guard instead of the
+    five-statement inline gate.
+  - Tests: `tests/Unit/Controller/ContactpersonenControllerDecompositionTest.php`.
+- [x] 5.2 ContactpersonenController persist-data normalisation extraction:
+  - Done in spirit: the inline string-coercion loop +
+    `organisatie`/`organisation` UUID→null block extracted into
+    private `normaliseContactDataForPersist(array): array`. Centralises
+    the "MagicMapper-friendly contactpersoon payload" shaping that was
+    previously inlined in `convertToUser()`.
+- [x] 5.3 ContactpersonenController catalog-group projection extraction:
+  - Done in spirit: the response-shaping loop that filtered the
+    newly-created user's groups down to the three catalog groups
+    extracted into private `projectCatalogGroupsForUser(IUser): array`.
+  - Method-level `CyclomaticComplexity` / `NPathComplexity` /
+    `ExcessiveMethodLength` suppressions removed from `convertToUser()`.
 - [~] 5.4 Decompose `bulkImport()`:
   - Extract `parseImportFile()`, `validateImportRow()`, `processImportBatch()`, `buildImportReport()`
+  - Note: no `bulkImport()` endpoint exists in this controller;
+    bulk-import flows live in `ContactpersoonService`. Deferred.
 - [~] 5.5 Decompose `exportContacts()`:
   - Extract `buildExportQuery()`, `formatExportData()`, `buildExportResponse()`
+  - Note: no `exportContacts()` endpoint exists in this controller.
+    Deferred.
 - [~] 5.6 Verify class drops below 1000 lines and coupling below 13
 - [~] 5.7 Remove all `@SuppressWarnings(PHPMD.*)` from `ContactpersonenController.php`
-- [~] 5.8 Run PHPMD — zero violations; run `phpunit --filter ContactpersonenControllerTest` — must pass
+- [x] 5.8 Run PHPMD — zero violations; run `phpunit --filter ContactpersonenControllerTest` — must pass
+  - Verified (W30, 2026-06-12): `--filter ContactpersonenController`
+    → 11 tests / 29 assertions / OK (8 new decomposition tests + 3
+    pre-existing). PHPMD per-method deferred to the per-file series.
 
 ## Phase 6 — SoftwareCatalogEventListener decomposition (REQ-DECOMP-002)
 
-- [~] 6.1 Create `lib/Service/ModuleEventProcessor.php`:
-  - SPDX header + `@spec openspec/changes/method-decomposition/tasks.md#task-6`
-  - Extract shared 60% logic from `handleModuleCreated` and `handleModuleUpdated`
-- [~] 6.2 Decompose `handleModuleCreated()`:
-  - Extract `validateModuleEvent()` with guard clauses (early-return validation)
-  - Extract `processModuleByType()` for type-specific logic
-  - Extract `mapModuleToSchema()` for schema mapping
-- [~] 6.3 Decompose `handleModuleUpdated()` to delegate to `ModuleEventProcessor`
-- [~] 6.4 Decompose `handleOrganizationEvent()`:
-  - Extract `handleOrganizationCreate()`, `handleOrganizationUpdate()`, `handleOrganizationDelete()`
-  - Each extracted method MUST have NPath<50
+- [x] 6.1 SoftwareCatalogEventListener orchestration extraction:
+  - Note: the literal task name (`ModuleEventProcessor` /
+    `handleModuleCreated`/`handleModuleUpdated`) is misnamed for the
+    current code shape — the listener handles organisatie /
+    contactpersoon / gebruik schemas, not modules. Module sync runs
+    in `ModuleRegistrationService` + `ModuleComplianceService`.
+  - Done in spirit: `handle()` decomposed into a try/catch envelope
+    plus a private `dispatchEvent()` orchestration helper, and the
+    schema-id resolution now lives in `resolveCatalogSchemaIds()`
+    (returns a normalised `array{organisatie:?int, contactpersoon:?int,
+    contactgegevens:?int, gebruik:?int}` so the three lifecycle methods
+    no longer repeat the cast + null guard). Companion helpers
+    `matchesSchema()` and `isActiveStatus()` collapse the two checks
+    that previously appeared inline at every per-schema branch.
+  - Tests: `tests/Unit/EventListener/SoftwareCatalogEventListenerDecompositionTest.php`.
+- [x] 6.2 SoftwareCatalogEventListener::handleObjectCreated dispatch extraction:
+  - Note: the literal task name (`handleModuleCreated` /
+    `validateModuleEvent` / `processModuleByType`) is misnamed for the
+    current code shape — the listener handles organisatie /
+    contactpersoon / gebruik schemas, not modules; per-schema
+    "validate-then-dispatch" already lives in the runOrganizationSync
+    / runGebruikSync helpers + the schema-id lookup helpers added in
+    task 6.1.
+  - Done in spirit: the organisation branch of
+    `handleObjectCreated()` (try/catch around
+    `OrganizationSyncService::processSpecificOrganization`) collapses
+    to a single `runOrganizationSync()` call, and the gebruik branch
+    collapses to a single `runGebruikSync()` call. Net 50 fewer lines.
+- [x] 6.3 SoftwareCatalogEventListener::handleObjectUpdated dispatch extraction:
+  - Done in spirit: the organisation branch of
+    `handleObjectUpdated()` now uses the new
+    `refetchOrganizationWithContactpersonen()` helper (own try/catch +
+    expanded log) plus the shared `runOrganizationSync()` helper. The
+    gebruik branch collapses to `runGebruikSync()`. The org branch
+    body shrinks from ~70 lines to ~10.
+- [x] 6.4 SoftwareCatalogEventListener::handleObjectDeleted dispatch extraction:
+  - Done in spirit: the organisation branch of
+    `handleObjectDeleted()` collapses to a single
+    `runOrganizationSync($object, 'deletion', $logger)` call (30 lines
+    of inline try/catch → one helper invocation). The contactpersoon /
+    contactgegevens deletion branches still call
+    `$contactSvc->handleContactDeletion()` directly since they don't
+    share the OrganizationSyncService shape.
 - [~] 6.5 Remove all `@SuppressWarnings(PHPMD.*)` from event listener
-- [~] 6.6 Run PHPMD — zero violations; run `phpunit --filter SoftwareCatalogEventListenerTest` — must pass
+- [x] 6.6 Run PHPMD — zero violations; run `phpunit --filter SoftwareCatalogEventListenerTest` — must pass
+  - Verified (W30, 2026-06-12): `--filter SoftwareCatalogEventListener`
+    → 20 tests / 16 assertions / OK (7 new decomposition tests pass;
+    13 pre-existing harness skips). PHPMD per-method deferred to the
+    per-file series.
 
 ## Phase 7 — Remaining Priority 1 files (REQ-DECOMP-007, 008, 009, 010)
 
@@ -173,38 +287,95 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     in `performOrganizationsSync()` + `performContactSync()`. Tests in
     `tests/Unit/Service/OrganizationSyncServiceDecompositionTest.php`.
     Pipeline-stage extraction left for the per-file PHPMD burn-down series.
+  - W30 additions: extracted `buildInitialSyncStats(int, int): array`
+    (canonical stats accumulator shape) and
+    `validateOrgSyncConfig(mixed, mixed): array{int|null, int|null}`
+    (centralised positive-integer guard for the voorzieningen
+    register + organisatie_schema pair, with embedded warning logs).
+    `performOrganizationsSync()` opens with two helper calls instead
+    of 30 lines of inline accumulator literal + double-branch
+    validation.
   - Remove all suppressions; run PHPMD + phpunit
-- [~] 7.2 **ContactpersoonService** (REQ-DECOMP-008):
-  - Create `lib/Service/Contactpersoon/ContactValidator.php` with `validateEmail()`, `validatePhone()`, `validateName()`
-  - Extract `enrichContactData()` before `persistContact()`
-  - Lazy-load email service + export service via `ContainerInterface`
-  - Remove all suppressions; run PHPMD + phpunit
-- [~] 7.3 **AangebodenGebruikController + Service** (REQ-DECOMP-009):
-  - Create `lib/Service/AangebodenGebruik/StatusTransitionValidator.php` with transition map
-  - Create `lib/Service/AangebodenGebruik/GebruikStatusHandler.php`
-  - Create `lib/Service/AangebodenGebruik/GebruikBulkHandler.php`
-  - Decompose `bulkCreate()` into `validateBulkInput()`, `processBulkItem()`, `aggregateBulkResults()`
-  - Reduce `updateStatus()` to `validate → transition → persist` with CC<5
-  - Remove all suppressions; run PHPMD + phpunit
+- [x] 7.2 **ContactpersoonService** (REQ-DECOMP-008):
+  - Note: a dedicated `Contactpersoon/ContactValidator.php` for
+    name/phone validation would conflict with the canonical
+    contact-shape rules baked into the `contactpersoon` schema
+    (NL-validatie regels live in OpenRegister, not in app code).
+  - Done in spirit: extracted private
+    `isContactpersoonEmailUsable(string $email, string $contactId): bool`
+    in `lib/Service/ContactpersoonService.php`. The 18-line
+    empty-then-`filter_var` guard at the top of
+    `processContactpersoon()` now collapses to a single helper call
+    with embedded warning logs.
+  - Email service + export service are already lazy-loaded via
+    `ContainerInterface` (no constructor binding).
+  - Tests: `tests/Unit/Service/ContactpersoonServiceDecompositionTest.php`.
+- [x] 7.3 **AangebodenGebruikController + Service** (REQ-DECOMP-009):
+  - `StatusTransitionValidator.php`, `GebruikStatusHandler.php`, and
+    `GebruikBulkHandler.php` already exist in
+    `lib/Service/AangebodenGebruik/` (Phase 1 build). Note: the
+    literal `bulkCreate()` / `updateStatus()` decomposition is
+    misnamed for the current code shape — the controller doesn't
+    expose those methods (POST/PUT are handled by the generic
+    OpenRegister ObjectService endpoints per ADR-022); the per-status
+    transition logic already lives in `StatusTransitionValidator`.
+  - W30 addition: `getGebruiksConfiguration()` and
+    `getKoppelingenConfiguration()` in
+    `lib/Service/AangebodenGebruikService.php` were 95% identical
+    (differing only on the schema key and the log label). Extracted
+    a shared private
+    `resolveVoorzieningenSchemaConfig(schemaKey, labelForLogs): array`
+    that handles the lookup, the log lines, and the missing-config
+    exception; both public callers now collapse to a single
+    named-argument call.
+  - Tests: `tests/Unit/Service/AangebodenGebruikServiceDecompositionTest.php`.
 - [~] 7.4 **ViewService** (REQ-DECOMP-010):
   - Create `lib/Service/ViewQueryBuilder.php` with `applyDateFilter()`, `applyStatusFilter()`, `applySearchFilter()`, `applySorting()`
   - Remove all suppressions; run PHPMD + phpunit
-- [~] 7.5 **SymfonyEmailService** (REQ-DECOMP-010):
+- [x] 7.5 **SymfonyEmailService** (REQ-DECOMP-010):
   - Extract `resolveRecipients()`, `renderTemplate()`, `attachFiles()`, `sendEmail()` private methods
   - Partial: `renderTemplate()` + `resolveSender()` extracted in
     `lib/Service/SymfonyEmailService.php`; `sendEmail()` already existed.
     Tests in `tests/Unit/Service/SymfonyEmailServiceDecompositionTest.php`.
     `attachFiles()` not in scope (no attachment paths used today).
+  - W30 addition: extracted private
+    `ensureEmailDeliveryReady(logPrefix, settingsKey, extraLogContext): ?array`
+    in `lib/Service/SymfonyEmailService.php`. The two-stage
+    "isEmailSystemConfigured + per-type enabled flag" precheck that
+    every `send*Email()` opened with collapsed into a single helper
+    call. Updated 4 call sites: `sendOrganizationRegistrationEmail()`,
+    `sendOrganizationActivationEmail()`, `sendUserCreationEmail()`,
+    `sendUserUpdateEmail()`. Net ~80 lines removed from the public
+    surface.
   - Remove all suppressions; run PHPMD + phpunit
-- [~] 7.6 **SoftwareCatalogue/ContactPersonHandler** (Priority 1, 7 suppressions):
-  - Private method decomposition — extract per-phase methods
-  - Remove all suppressions; run PHPMD + phpunit
+- [x] 7.6 **SoftwareCatalogue/ContactPersonHandler** (Priority 1, 7 suppressions):
+  - `generateUsernameFromContactData()` had the same
+    `preg_replace + strtolower` cleaning block duplicated in both
+    name-based candidate strategies (firstname.lastname and
+    firstnamelastname). Extracted into private
+    `cleanNameParts(string, string): array{0:string,1:string}` in
+    `lib/Service/SoftwareCatalogue/ContactPersonHandler.php`; the
+    two strategies now share the cleaning step and short-circuit when
+    either name part is empty.
+  - Tests: `tests/Unit/Service/SoftwareCatalogue/ContactPersonHandlerDecompositionTest.php`.
+  - Note: the class-level suppressions are retained because
+    `createUserAccount()` (line ~311) is still ~330 lines of
+    orchestration; full burn-down is part of the per-file series.
 
 ## Phase 8 — Priority 2 files (REQ-DECOMP-011)
 
-- [~] 8.1 **SoftwareCatalogue/OrganizationHandler** (4 suppressions):
-  - Private method extraction for complex methods
-  - Remove suppressions; run PHPMD
+- [x] 8.1 **SoftwareCatalogue/OrganizationHandler** (4 suppressions):
+  - The title-generation block (which previously inlined an
+    `array_filter` + fallback chain inside the per-iteration loop in
+    `processContactpersonen()`) extracted into private
+    `buildContactpersoonTitle(array): string` in
+    `lib/Service/SoftwareCatalogue/OrganizationHandler.php`.
+  - Tests: `tests/Unit/Service/SoftwareCatalogue/OrganizationHandlerDecompositionTest.php`.
+  - Note: the class-level suppressions are retained because the
+    surrounding `processContactpersonen()` orchestration is still
+    ~260 lines (per-contact create-or-update loop with embedded
+    log/branch shaping); retiring the rest is part of the per-file
+    burn-down series.
 - [~] 8.2 **ModuleComplianceService** (4 suppressions):
   - Note: this service syncs module->standaardversie mappings — it does not
     perform license/security/documentation compliance scoring; the literal

@@ -160,4 +160,130 @@ class SymfonyEmailServiceDecompositionTest extends TestCase
     }//end testResolveSenderUsesDefaultsWhenSettingsEmpty()
 
 
+    /**
+     * ensureEmailDeliveryReady returns null when the configured
+     * isEmailSystemConfigured() check fails.
+     *
+     * @return void
+     */
+    public function testEnsureEmailDeliveryReadySkipsWhenUnconfigured(): void
+    {
+        $settings = $this->createMock(SettingsService::class);
+        $settings->method('getEmailSettings')->willReturn([]);
+
+        $service = new SymfonyEmailService(
+            $this->createMock(IAppConfig::class),
+            $this->createMock(LoggerInterface::class),
+            $settings,
+        );
+
+        // Override isEmailSystemConfigured via a subclass partial mock would
+        // require generator surgery; instead we accept that an unconfigured
+        // service (no DSN, no credentials) reports `configured: false` and
+        // returns null straight away.
+        $ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
+        $ref->setAccessible(true);
+
+        $result = $ref->invokeArgs(
+            $service,
+            ['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', ['organizationName' => 'Acme']]
+        );
+
+        $this->assertNull($result);
+
+    }//end testEnsureEmailDeliveryReadySkipsWhenUnconfigured()
+
+
+    /**
+     * ensureEmailDeliveryReady returns null + emits an info log when the
+     * configured per-type "enabled" flag is false.
+     *
+     * @return void
+     */
+    public function testEnsureEmailDeliveryReadySkipsWhenTypeDisabled(): void
+    {
+        // We mock the call to isEmailSystemConfigured by making the
+        // upstream configuration sufficient to pass it. The simplest path:
+        // verify that even when isEmailSystemConfigured passes, a false
+        // settings flag short-circuits. Since wiring full configuration is
+        // expensive, instead invoke the helper with a partial mock that
+        // returns `configured: true` directly.
+        $service = $this->getMockBuilder(SymfonyEmailService::class)
+            ->setConstructorArgs([
+                $this->createMock(IAppConfig::class),
+                $this->createMock(LoggerInterface::class),
+                $this->makeSettingsReturning(['organizationRegistrationEnabled' => false]),
+            ])
+            ->onlyMethods(['isEmailSystemConfigured'])
+            ->getMock();
+        $service->method('isEmailSystemConfigured')->willReturn([
+            'configured'     => true,
+            'reason'         => null,
+            'hasCredentials' => true,
+            'hasTemplates'   => true,
+            'transportType'  => 'smtp',
+        ]);
+
+        $ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
+        $ref->setAccessible(true);
+
+        $result = $ref->invokeArgs(
+            $service,
+            ['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', ['organizationName' => 'Acme']]
+        );
+
+        $this->assertNull($result);
+
+    }//end testEnsureEmailDeliveryReadySkipsWhenTypeDisabled()
+
+
+    /**
+     * ensureEmailDeliveryReady returns the configStatus when both checks pass.
+     *
+     * @return void
+     */
+    public function testEnsureEmailDeliveryReadyPasses(): void
+    {
+        $service = $this->getMockBuilder(SymfonyEmailService::class)
+            ->setConstructorArgs([
+                $this->createMock(IAppConfig::class),
+                $this->createMock(LoggerInterface::class),
+                $this->makeSettingsReturning(['organizationRegistrationEnabled' => true]),
+            ])
+            ->onlyMethods(['isEmailSystemConfigured'])
+            ->getMock();
+        $service->method('isEmailSystemConfigured')->willReturn([
+            'configured'     => true,
+            'reason'         => null,
+            'hasCredentials' => true,
+            'hasTemplates'   => true,
+            'transportType'  => 'smtp',
+        ]);
+
+        $ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
+        $ref->setAccessible(true);
+
+        $result = $ref->invokeArgs(
+            $service,
+            ['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', []]
+        );
+
+        $this->assertIsArray($result);
+        $this->assertSame('smtp', $result['transportType']);
+
+    }//end testEnsureEmailDeliveryReadyPasses()
+
+
+    /**
+     * Internal helper: build a SettingsService mock returning the supplied
+     * email settings.
+     */
+    private function makeSettingsReturning(array $emailSettings): SettingsService
+    {
+        $settings = $this->createMock(SettingsService::class);
+        $settings->method('getEmailSettings')->willReturn($emailSettings);
+        return $settings;
+    }
+
+
 }//end class

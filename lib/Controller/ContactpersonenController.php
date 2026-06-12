@@ -271,24 +271,14 @@ class ContactpersonenController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @spec                                          openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-2
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-2
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
-        $currentUser = $this->userSession->getUser();
-        if ($currentUser === null) {
-            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-        }
-
-        // Only admins and org-admins may create user accounts.
-        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
-        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($isAdmin === false && $isOrgAdmin === false) {
-            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+        $authError = $this->validateConvertToUserPermission();
+        if ($authError !== null) {
+            return $authError;
         }
 
         try {
@@ -398,29 +388,7 @@ class ContactpersonenController extends Controller
             // Update the contactpersoon object with the username.
             $contactData['username'] = $user->getUID();
 
-            // Ensure string fields are properly typed (fixes data stored with incorrect types).
-            $stringFields = ['voornaam', 'tussenvoegsel', 'achternaam', 'functie', 'telefoonnummer', 'email', 'e-mailadres'];
-            foreach ($stringFields as $field) {
-                if (isset($contactData[$field]) === true && is_string($contactData[$field]) === false) {
-                    $contactData[$field] = (string) $contactData[$field];
-                }
-            }
-
-            // Handle organisatie field — if it's a string UUID, convert to null to avoid validation errors.
-            // The relationship is maintained through the organisation entity's users array.
-            if (isset($contactData['organisatie']) === true && is_string($contactData['organisatie']) === true) {
-                $this->logger->info(
-                        'ContactpersonenController: Converting organisatie string to null for validation',
-                        [
-                            'originalValue' => $contactData['organisatie'],
-                        ]
-                        );
-                $contactData['organisatie'] = null;
-            }
-
-            if (isset($contactData['organisation']) === true && is_string($contactData['organisation']) === true) {
-                $contactData['organisation'] = null;
-            }
+            $contactData = $this->normaliseContactDataForPersist($contactData);
 
             $contactpersoonObject->setObject($contactData);
 
@@ -455,17 +423,7 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            // Get user groups to include in response.
-            $userGroups     = $this->groupManager->getUserGroups($user);
-            $catalogGroups  = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
-            $userGroupNames = [];
-
-            foreach ($userGroups as $group) {
-                $groupId = $group->getGID();
-                if (in_array(needle: $groupId, haystack: $catalogGroups) === true) {
-                    $userGroupNames[] = $groupId;
-                }
-            }
+            $userGroupNames = $this->projectCatalogGroupsForUser($user);
 
             // Add groups to the contactpersoon data for frontend.
             $updatedContactData           = $contactpersoonObject->getObject();
@@ -503,6 +461,114 @@ class ContactpersonenController extends Controller
                     );
         }//end try
     }//end convertToUser()
+
+    /**
+     * Authorises the convertToUser endpoint.
+     *
+     * Returns null when the current user is allowed to create user accounts, or
+     * a 401/403 JSONResponse otherwise. Extracted from {@see convertToUser()} as
+     * part of task 5.1.
+     *
+     * @return JSONResponse|null
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function validateConvertToUserPermission(): ?JSONResponse
+    {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $uid        = $currentUser->getUID();
+        $isAdmin    = $this->groupManager->isAdmin($uid);
+        $isOrgAdmin = $this->groupManager->isInGroup($uid, 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($uid, 'aanbod-beheerder');
+
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+        }
+
+        return null;
+    }//end validateConvertToUserPermission()
+
+    /**
+     * Normalises the contactpersoon payload for the MagicMapper persist call.
+     *
+     * Coerces the string-typed fields (`voornaam`, `achternaam`, …) to strings
+     * — guards against legacy rows where these fields were stored as `null`,
+     * `int`, or `bool` — and nulls out the `organisatie` / `organisation` keys
+     * when they hold a UUID string (the relationship is maintained via the
+     * organisation entity's users array). Extracted from {@see convertToUser()}
+     * as part of task 5.2.
+     *
+     * @param array<string, mixed> $contactData The raw contactpersoon payload.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function normaliseContactDataForPersist(array $contactData): array
+    {
+        $stringFields = [
+            'voornaam',
+            'tussenvoegsel',
+            'achternaam',
+            'functie',
+            'telefoonnummer',
+            'email',
+            'e-mailadres',
+        ];
+        foreach ($stringFields as $field) {
+            if (isset($contactData[$field]) === true && is_string($contactData[$field]) === false) {
+                $contactData[$field] = (string) $contactData[$field];
+            }
+        }
+
+        if (isset($contactData['organisatie']) === true && is_string($contactData['organisatie']) === true) {
+            $this->logger->info(
+                'ContactpersonenController: Converting organisatie string to null for validation',
+                [
+                    'originalValue' => $contactData['organisatie'],
+                ]
+            );
+            $contactData['organisatie'] = null;
+        }
+
+        if (isset($contactData['organisation']) === true && is_string($contactData['organisation']) === true) {
+            $contactData['organisation'] = null;
+        }
+
+        return $contactData;
+    }//end normaliseContactDataForPersist()
+
+    /**
+     * Projects the catalog-relevant groups (`gebruik-beheerder` /
+     * `aanbod-beheerder` / `gebruik-raadpleger`) for the supplied user.
+     *
+     * Extracted from {@see convertToUser()} as part of task 5.3 so the response
+     * shaper no longer iterates the user's group list inline.
+     *
+     * @param \OCP\IUser $user The newly-created user.
+     *
+     * @return string[]
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function projectCatalogGroupsForUser(\OCP\IUser $user): array
+    {
+        $catalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
+        $projected     = [];
+
+        foreach ($this->groupManager->getUserGroups($user) as $group) {
+            $groupId = $group->getGID();
+            if (in_array(needle: $groupId, haystack: $catalogGroups, strict: true) === true) {
+                $projected[] = $groupId;
+            }
+        }
+
+        return $projected;
+    }//end projectCatalogGroupsForUser()
 
     /**
      * Change user password.
@@ -1400,55 +1466,14 @@ class ContactpersonenController extends Controller
                     );
 
             // Initialize response with user data from Nextcloud.
-            $response = [
-                'email'         => $userEmail,
-                'firstName'     => '',
-                'middleName'    => '',
-                'lastName'      => '',
-                'functie'       => '',
-                'organisations' => [
-                    'active' => null,
-                    'all'    => [],
-                ],
-            ];
+            $response = $this->buildEmptyMeResponse(userEmail: $userEmail);
 
             // Try to get contactpersoon data for additional profile info.
-            try {
-                $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-                // Search for contactpersoon by username (which is the email).
-                $searchParams = [
-                    'username' => $userId,
-                    '_limit'   => 1,
-                    '_schema'  => 'contactpersoon',
-                ];
-
-                $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
-
-                if (empty($contactpersonen['results']) === false) {
-                    $contactpersoon = $contactpersonen['results'][0];
-                    $contactData    = $contactpersoon->getObject();
-
-                    // Extract name parts.
-                    $response['firstName']  = $contactData['voornaam'] ?? $contactData['firstName'] ?? '';
-                    $response['middleName'] = $contactData['tussenvoegsel'] ?? $contactData['middleName'] ?? '';
-                    $response['lastName']   = $contactData['achternaam'] ?? $contactData['lastName'] ?? '';
-                    $response['functie']    = $contactData['functie'] ?? '';
-
-                    // If email not set, try from contact data.
-                    if (empty($response['email']) === true) {
-                        $response['email'] = $contactData['e-mailadres'] ?? $contactData['email'] ?? $userEmail;
-                    }
-                }
-            } catch (\Exception $e) {
-                $this->logger->debug(
-                        'ContactpersonenController: Could not find contactpersoon for user',
-                        [
-                            'userId' => $userId,
-                            'error'  => $e->getMessage(),
-                        ]
-                        );
-            }//end try
+            $this->enrichMeWithContactpersoonData(
+                response: $response,
+                userId: $userId,
+                userEmail: $userEmail
+            );
 
             // Get organisation data from OpenRegister.
             try {
@@ -1522,4 +1547,89 @@ class ContactpersonenController extends Controller
         $slug = trim($slug, '-');
         return $slug;
     }//end createSlug()
+
+    /**
+     * Builds the empty /me response skeleton with the supplied email defaulted
+     * onto the `email` key.
+     *
+     * Extracted from {@see getMe()} as part of task 5.X so the per-section
+     * enrichments operate on a shared shape.
+     *
+     * @param string $userEmail The Nextcloud user's email address.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function buildEmptyMeResponse(string $userEmail): array
+    {
+        return [
+            'email'         => $userEmail,
+            'firstName'     => '',
+            'middleName'    => '',
+            'lastName'      => '',
+            'functie'       => '',
+            'organisations' => [
+                'active' => null,
+                'all'    => [],
+            ],
+        ];
+    }//end buildEmptyMeResponse()
+
+    /**
+     * Enriches the /me response with the contactpersoon profile fields
+     * (voornaam, tussenvoegsel, achternaam, functie) when a contactpersoon
+     * exists for the supplied Nextcloud user.
+     *
+     * Mutates the supplied response array in place. Silently logs (debug) any
+     * lookup failure — missing contact data is non-fatal. Extracted from
+     * {@see getMe()} as part of task 5.X.
+     *
+     * @param array<string, mixed> $response  The /me response, modified in place.
+     * @param string               $userId    The Nextcloud user id.
+     * @param string               $userEmail The user's email (fallback).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function enrichMeWithContactpersoonData(
+        array &$response,
+        string $userId,
+        string $userEmail
+    ): void {
+        try {
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+
+            $searchParams = [
+                'username' => $userId,
+                '_limit'   => 1,
+                '_schema'  => 'contactpersoon',
+            ];
+
+            $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
+
+            if (empty($contactpersonen['results']) === false) {
+                $contactpersoon = $contactpersonen['results'][0];
+                $contactData    = $contactpersoon->getObject();
+
+                $response['firstName']  = $contactData['voornaam'] ?? $contactData['firstName'] ?? '';
+                $response['middleName'] = $contactData['tussenvoegsel'] ?? $contactData['middleName'] ?? '';
+                $response['lastName']   = $contactData['achternaam'] ?? $contactData['lastName'] ?? '';
+                $response['functie']    = $contactData['functie'] ?? '';
+
+                if (empty($response['email']) === true) {
+                    $response['email'] = $contactData['e-mailadres'] ?? $contactData['email'] ?? $userEmail;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->debug(
+                'ContactpersonenController: Could not find contactpersoon for user',
+                [
+                    'userId' => $userId,
+                    'error'  => $e->getMessage(),
+                ]
+            );
+        }
+    }//end enrichMeWithContactpersoonData()
 }//end class

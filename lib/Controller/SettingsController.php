@@ -176,6 +176,45 @@ class SettingsController extends Controller
     }//end getRedactedParams()
 
     /**
+     * Builds the canonical "config endpoint failed" JSONResponse.
+     *
+     * Centralises the error-log emission + the
+     * `{success: false, message: "Failed to <op>: <exception>"}` shape that
+     * the per-section get/update endpoints repeat. Extracted from
+     * `updateGeneralConfig()`, `getSyncConfig()`, `updateSyncConfig()`, and
+     * `getGeneralConfig()` as part of task 3.X.
+     *
+     * @param string     $operationLabel "update sync config" / "get general config" / …
+     * @param \Exception $exception      The caught exception.
+     * @param bool       $includeParams  Attach the redacted request params to the
+     *                                   log payload (the "update" endpoints want this).
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function buildConfigErrorResponse(
+        string $operationLabel,
+        \Exception $exception,
+        bool $includeParams = false
+    ): JSONResponse {
+        $context = ['exception' => $exception->getMessage()];
+        if ($includeParams === true) {
+            $context['requestData'] = $this->getRedactedParams();
+        }
+
+        $this->logger->error('Failed to '.$operationLabel, $context);
+
+        return new JSONResponse(
+            [
+                'success' => false,
+                'message' => 'Failed to '.$operationLabel.': '.$exception->getMessage(),
+            ],
+            500
+        );
+    }//end buildConfigErrorResponse()
+
+    /**
      * Retrieve the current settings.
      *
      * @return JSONResponse JSON response containing the current settings.
@@ -364,19 +403,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to get general config',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to get general config: '.$e->getMessage(),
-                    ],
-                    500
-                    );
+            return $this->buildConfigErrorResponse('get general config', $e, false);
         }//end try
     }//end getGeneralConfig()
 
@@ -399,29 +426,16 @@ class SettingsController extends Controller
             }
 
             return new JSONResponse(
-                    [
-                        'success' => true,
-                        'message' => 'General configuration updated successfully',
-                        'config'  => [
-                            'catalogLocation' => $this->settingsService->getCatalogLocation(),
-                        ],
-                    ]
-                    );
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to update general config',
-                    [
-                        'exception'   => $e->getMessage(),
-                        'requestData' => $this->getRedactedParams(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to update general config: '.$e->getMessage(),
+                [
+                    'success' => true,
+                    'message' => 'General configuration updated successfully',
+                    'config'  => [
+                        'catalogLocation' => $this->settingsService->getCatalogLocation(),
                     ],
-                    500
-                    );
+                ]
+            );
+        } catch (\Exception $e) {
+            return $this->buildConfigErrorResponse('update general config', $e, true);
         }//end try
     }//end updateGeneralConfig()
 
@@ -448,19 +462,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to get sync config',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to get sync config: '.$e->getMessage(),
-                    ],
-                    500
-                    );
+            return $this->buildConfigErrorResponse('get sync config', $e, false);
         }//end try
     }//end getSyncConfig()
 
@@ -492,20 +494,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to update sync config',
-                    [
-                        'exception'   => $e->getMessage(),
-                        'requestData' => $this->getRedactedParams(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to update sync config: '.$e->getMessage(),
-                    ],
-                    500
-                    );
+            return $this->buildConfigErrorResponse('update sync config', $e, true);
         }//end try
     }//end updateSyncConfig()
 

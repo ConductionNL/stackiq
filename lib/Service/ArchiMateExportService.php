@@ -416,15 +416,47 @@ XML;
             return;
         }
 
-        $folder = $xml->addChild('folder');
-        $folder->addAttribute('name', $folderName);
-        $folder->addAttribute('id', $folderId);
-        $folder->addAttribute('type', $folderType);
+        $folder = $this->createFolderNode(
+            parent: $xml,
+            name: $folderName,
+            id: $folderId,
+            type: $folderType
+        );
 
         foreach ($objects as $object) {
             $this->addObjectToFolder(folder: $folder, object: $object, childTagName: $childTagName);
         }
     }//end addObjectsToXml()
+
+    /**
+     * Builds a `<folder>` child node with the standard ArchiMate attributes.
+     *
+     * Extracted as part of task 4.3 — the repeated four-line pattern
+     * (`addChild('folder')` + three `addAttribute` calls) appeared in both
+     * {@see addObjectsToXml()} and {@see addViewsToXml()}.
+     *
+     * @param \SimpleXMLElement $parent The parent XML element.
+     * @param string            $name   Folder name (e.g. "Application").
+     * @param string            $id     Folder id (e.g. "folder-elements").
+     * @param string            $type   Folder type (e.g. "application").
+     *
+     * @return \SimpleXMLElement The newly-added folder node.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-4
+     */
+    private function createFolderNode(
+        \SimpleXMLElement $parent,
+        string $name,
+        string $id,
+        string $type
+    ): \SimpleXMLElement {
+        $folder = $parent->addChild('folder');
+        $folder->addAttribute('name', $name);
+        $folder->addAttribute('id', $id);
+        $folder->addAttribute('type', $type);
+
+        return $folder;
+    }//end createFolderNode()
 
     /**
      * Convenience method for elements.
@@ -493,10 +525,12 @@ XML;
             return;
         }
 
-        $folder = $xml->addChild('folder');
-        $folder->addAttribute('name', 'Views');
-        $folder->addAttribute('id', 'folder-views');
-        $folder->addAttribute('type', 'diagrams');
+        $folder = $this->createFolderNode(
+            parent: $xml,
+            name: 'Views',
+            id: 'folder-views',
+            type: 'diagrams'
+        );
 
         foreach ($views as $view) {
             $this->addViewToFolder(folder: $folder, view: $view);

@@ -182,6 +182,40 @@ class ArchiMateImportService
     }//end __construct()
 
     /**
+     * Validates the import-options array and returns the resolved file path.
+     *
+     * Accepts both `filePath` (camelCase) and `file_path` (snake_case) keys so
+     * callers don't have to harmonise the convention. Throws an
+     * `InvalidArgumentException` when the key is missing/empty or when the
+     * resolved path does not point at an existing file.
+     *
+     * Extracted from {@see importArchiMateFileFromPath()} +
+     * {@see importArchiMateFileFromPathOptimized()} as part of task 4.2 so the
+     * two entry points share a single guard clause.
+     *
+     * @param array<string, mixed> $options Import options.
+     *
+     * @return string The validated file path.
+     *
+     * @throws \InvalidArgumentException When the file path is missing or invalid.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-4
+     */
+    private function validateArchiMateFile(array $options): string
+    {
+        $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
+        if (empty($filePath) === true) {
+            throw new \InvalidArgumentException('File path is required for import');
+        }
+
+        if (file_exists($filePath) === false) {
+            throw new \InvalidArgumentException("File not found: {$filePath}");
+        }
+
+        return (string) $filePath;
+    }//end validateArchiMateFile()
+
+    /**
      * Convert a SimpleXMLElement into a normalized associative array.
      *
      * Conventions:
@@ -330,10 +364,7 @@ class ArchiMateImportService
 
             // Cache initialization completed.
             // STEP 1: Parse XML to array (same as before).
-            $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
-            if (empty($filePath) === true || file_exists($filePath) === false) {
-                throw new \InvalidArgumentException("File not found: {$filePath}");
-            }
+            $filePath = $this->validateArchiMateFile($options);
 
             $parseStartTime = microtime(true);
             $xmlData        = $this->parseArchiMateXml(filePath: $filePath);
@@ -462,15 +493,7 @@ class ArchiMateImportService
         try {
             // STEP 1: Parse XML to array using the specialized import service.
             // This captures ALL possible XML values including attributes, text content, and nested elements.
-            $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
-
-            if (empty($filePath) === true) {
-                throw new \InvalidArgumentException('File path is required for import');
-            }
-
-            if (file_exists($filePath) === false) {
-                throw new \InvalidArgumentException("File not found: {$filePath}");
-            }
+            $filePath = $this->validateArchiMateFile($options);
 
             $this->logger->info('Step 1: Parsing XML to array for complete data capture', ['filePath' => $filePath]);
             $parseStartTime = microtime(true);

@@ -117,4 +117,91 @@ class OrganizationSyncServiceDecompositionTest extends TestCase
     }//end testHandleSyncErrorSurvivesMissingErrorsKey()
 
 
+    /**
+     * buildInitialSyncStats produces the canonical accumulator shape.
+     *
+     * @return void
+     */
+    public function testBuildInitialSyncStatsShape(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $service = $this->makeService($logger);
+        $ref = new \ReflectionMethod($service, 'buildInitialSyncStats');
+        $ref->setAccessible(true);
+
+        $stats = $ref->invokeArgs($service, [50, 45]);
+
+        $this->assertSame(0, $stats['organizationsProcessed']);
+        $this->assertSame(0, $stats['entitiesCreated']);
+        $this->assertSame(0, $stats['entitiesUpdated']);
+        $this->assertSame([], $stats['errors']);
+        $this->assertSame(50, $stats['batchSize']);
+        $this->assertSame(45, $stats['maxExecutionSeconds']);
+        $this->assertFalse($stats['timeoutReached']);
+        $this->assertSame(0, $stats['totalRemaining']);
+        $this->assertNull($stats['endTime']);
+        $this->assertNull($stats['duration']);
+
+    }//end testBuildInitialSyncStatsShape()
+
+
+    /**
+     * validateOrgSyncConfig returns the integer pair when both inputs are
+     * non-empty positive integers.
+     *
+     * @return void
+     */
+    public function testValidateOrgSyncConfigHappyPath(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())->method('warning');
+        $service = $this->makeService($logger);
+        $ref = new \ReflectionMethod($service, 'validateOrgSyncConfig');
+        $ref->setAccessible(true);
+
+        $this->assertSame([7, 12], $ref->invokeArgs($service, ['7', '12']));
+
+    }//end testValidateOrgSyncConfigHappyPath()
+
+
+    /**
+     * validateOrgSyncConfig returns [null, null] + warns when either side is empty.
+     *
+     * @return void
+     */
+    public function testValidateOrgSyncConfigEmptyInput(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())->method('warning')->with(
+            $this->stringContains('missing register or organisatie_schema')
+        );
+        $service = $this->makeService($logger);
+        $ref = new \ReflectionMethod($service, 'validateOrgSyncConfig');
+        $ref->setAccessible(true);
+
+        $this->assertSame([null, null], $ref->invokeArgs($service, ['', '7']));
+
+    }//end testValidateOrgSyncConfigEmptyInput()
+
+
+    /**
+     * validateOrgSyncConfig returns [null, null] + warns when input is non-positive.
+     *
+     * @return void
+     */
+    public function testValidateOrgSyncConfigNonPositive(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())->method('warning')->with(
+            $this->stringContains('not a valid positive integer')
+        );
+        $service = $this->makeService($logger);
+        $ref = new \ReflectionMethod($service, 'validateOrgSyncConfig');
+        $ref->setAccessible(true);
+
+        $this->assertSame([null, null], $ref->invokeArgs($service, ['abc', '7']));
+
+    }//end testValidateOrgSyncConfigNonPositive()
+
+
 }//end class
