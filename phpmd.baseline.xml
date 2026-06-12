@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <phpmd-baseline>
-  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Controller/PreferencesController.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateExportService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateImportService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateService.php"/>
