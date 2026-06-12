@@ -171,6 +171,20 @@ class ContactpersonenControllerDecompositionTest extends TestCase
         $this->assertNull($output['organisation']);
     }
 
+    public function testBuildEmptyMeResponseShape(): void
+    {
+        $controller = $this->makeController([]);
+        $result = $this->callPrivate($controller, 'buildEmptyMeResponse', ['admin@example.org']);
+
+        $this->assertSame('admin@example.org', $result['email']);
+        $this->assertSame('', $result['firstName']);
+        $this->assertSame('', $result['middleName']);
+        $this->assertSame('', $result['lastName']);
+        $this->assertSame('', $result['functie']);
+        $this->assertNull($result['organisations']['active']);
+        $this->assertSame([], $result['organisations']['all']);
+    }
+
     public function testProjectCatalogGroupsKeepsOnlyCatalogGroups(): void
     {
         $user = $this->createMock(IUser::class);

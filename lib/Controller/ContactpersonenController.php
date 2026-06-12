@@ -1466,55 +1466,14 @@ class ContactpersonenController extends Controller
                     );
 
             // Initialize response with user data from Nextcloud.
-            $response = [
-                'email'         => $userEmail,
-                'firstName'     => '',
-                'middleName'    => '',
-                'lastName'      => '',
-                'functie'       => '',
-                'organisations' => [
-                    'active' => null,
-                    'all'    => [],
-                ],
-            ];
+            $response = $this->buildEmptyMeResponse(userEmail: $userEmail);
 
             // Try to get contactpersoon data for additional profile info.
-            try {
-                $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-                // Search for contactpersoon by username (which is the email).
-                $searchParams = [
-                    'username' => $userId,
-                    '_limit'   => 1,
-                    '_schema'  => 'contactpersoon',
-                ];
-
-                $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
-
-                if (empty($contactpersonen['results']) === false) {
-                    $contactpersoon = $contactpersonen['results'][0];
-                    $contactData    = $contactpersoon->getObject();
-
-                    // Extract name parts.
-                    $response['firstName']  = $contactData['voornaam'] ?? $contactData['firstName'] ?? '';
-                    $response['middleName'] = $contactData['tussenvoegsel'] ?? $contactData['middleName'] ?? '';
-                    $response['lastName']   = $contactData['achternaam'] ?? $contactData['lastName'] ?? '';
-                    $response['functie']    = $contactData['functie'] ?? '';
-
-                    // If email not set, try from contact data.
-                    if (empty($response['email']) === true) {
-                        $response['email'] = $contactData['e-mailadres'] ?? $contactData['email'] ?? $userEmail;
-                    }
-                }
-            } catch (\Exception $e) {
-                $this->logger->debug(
-                        'ContactpersonenController: Could not find contactpersoon for user',
-                        [
-                            'userId' => $userId,
-                            'error'  => $e->getMessage(),
-                        ]
-                        );
-            }//end try
+            $this->enrichMeWithContactpersoonData(
+                response: $response,
+                userId: $userId,
+                userEmail: $userEmail
+            );
 
             // Get organisation data from OpenRegister.
             try {
@@ -1588,4 +1547,89 @@ class ContactpersonenController extends Controller
         $slug = trim($slug, '-');
         return $slug;
     }//end createSlug()
+
+    /**
+     * Builds the empty /me response skeleton with the supplied email defaulted
+     * onto the `email` key.
+     *
+     * Extracted from {@see getMe()} as part of task 5.X so the per-section
+     * enrichments operate on a shared shape.
+     *
+     * @param string $userEmail The Nextcloud user's email address.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function buildEmptyMeResponse(string $userEmail): array
+    {
+        return [
+            'email'         => $userEmail,
+            'firstName'     => '',
+            'middleName'    => '',
+            'lastName'      => '',
+            'functie'       => '',
+            'organisations' => [
+                'active' => null,
+                'all'    => [],
+            ],
+        ];
+    }//end buildEmptyMeResponse()
+
+    /**
+     * Enriches the /me response with the contactpersoon profile fields
+     * (voornaam, tussenvoegsel, achternaam, functie) when a contactpersoon
+     * exists for the supplied Nextcloud user.
+     *
+     * Mutates the supplied response array in place. Silently logs (debug) any
+     * lookup failure — missing contact data is non-fatal. Extracted from
+     * {@see getMe()} as part of task 5.X.
+     *
+     * @param array<string, mixed> $response  The /me response, modified in place.
+     * @param string               $userId    The Nextcloud user id.
+     * @param string               $userEmail The user's email (fallback).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function enrichMeWithContactpersoonData(
+        array &$response,
+        string $userId,
+        string $userEmail
+    ): void {
+        try {
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+
+            $searchParams = [
+                'username' => $userId,
+                '_limit'   => 1,
+                '_schema'  => 'contactpersoon',
+            ];
+
+            $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
+
+            if (empty($contactpersonen['results']) === false) {
+                $contactpersoon = $contactpersonen['results'][0];
+                $contactData    = $contactpersoon->getObject();
+
+                $response['firstName']  = $contactData['voornaam'] ?? $contactData['firstName'] ?? '';
+                $response['middleName'] = $contactData['tussenvoegsel'] ?? $contactData['middleName'] ?? '';
+                $response['lastName']   = $contactData['achternaam'] ?? $contactData['lastName'] ?? '';
+                $response['functie']    = $contactData['functie'] ?? '';
+
+                if (empty($response['email']) === true) {
+                    $response['email'] = $contactData['e-mailadres'] ?? $contactData['email'] ?? $userEmail;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->debug(
+                'ContactpersonenController: Could not find contactpersoon for user',
+                [
+                    'userId' => $userId,
+                    'error'  => $e->getMessage(),
+                ]
+            );
+        }
+    }//end enrichMeWithContactpersoonData()
 }//end class
