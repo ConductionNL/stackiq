@@ -1232,30 +1232,38 @@ class SettingsService
      */
     public function getConfigurationStatus(): array
     {
-        // Use the correct object type names that match the schema configuration.
-        $objectTypes = ['organization', 'organisatie', 'contact', 'contactpersoon'];
-        $status      = [];
-
-        // Check organization (can be in AMEF as 'organization' or Voorzieningen as 'organisatie').
-        $orgSchemaId            = $this->getSchemaIdForObjectType(objectType: 'organization');
-        $orgRegisterId          = $this->getRegisterIdForObjectType(objectType: 'organization');
-        $status['organization'] = [
-            'configured' => empty($orgSchemaId) === false && empty($orgRegisterId) === false,
-            'schemaId'   => $orgSchemaId,
-            'registerId' => $orgRegisterId,
+        return [
+            'organization' => $this->buildObjectTypeStatusEntry(objectType: 'organization'),
+            'contact'      => $this->buildObjectTypeStatusEntry(objectType: 'contactpersoon'),
         ];
-
-        // Check contact (stored as 'contactpersoon' in Voorzieningen).
-        $contactSchemaId   = $this->getSchemaIdForObjectType(objectType: 'contactpersoon');
-        $contactRegisterId = $this->getRegisterIdForObjectType(objectType: 'contactpersoon');
-        $status['contact'] = [
-            'configured' => empty($contactSchemaId) === false && empty($contactRegisterId) === false,
-            'schemaId'   => $contactSchemaId,
-            'registerId' => $contactRegisterId,
-        ];
-
-        return $status;
     }//end getConfigurationStatus()
+
+
+    /**
+     * Builds a single object-type status entry (configured/schemaId/registerId).
+     *
+     * Extracted from getConfigurationStatus() (W31 method-decomposition 1.5) —
+     * collapses the duplicated three-line "lookup + array literal" block that
+     * was repeated per object type.
+     *
+     * @param string $objectType Schema object type slug ('organization',
+     *                           'contactpersoon', etc.)
+     *
+     * @return array{configured: bool, schemaId: ?int, registerId: ?int}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-1-5
+     */
+    private function buildObjectTypeStatusEntry(string $objectType): array
+    {
+        $schemaId   = $this->getSchemaIdForObjectType(objectType: $objectType);
+        $registerId = $this->getRegisterIdForObjectType(objectType: $objectType);
+
+        return [
+            'configured' => (empty($schemaId) === false && empty($registerId) === false),
+            'schemaId'   => $schemaId,
+            'registerId' => $registerId,
+        ];
+    }//end buildObjectTypeStatusEntry()
 
     /**
      * Initializes the app with all required components
