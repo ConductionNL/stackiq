@@ -188,6 +188,10 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - Remove all suppressions; run PHPMD + phpunit
 - [~] 7.5 **SymfonyEmailService** (REQ-DECOMP-010):
   - Extract `resolveRecipients()`, `renderTemplate()`, `attachFiles()`, `sendEmail()` private methods
+  - Partial: `renderTemplate()` + `resolveSender()` extracted in
+    `lib/Service/SymfonyEmailService.php`; `sendEmail()` already existed.
+    Tests in `tests/Unit/Service/SymfonyEmailServiceDecompositionTest.php`.
+    `attachFiles()` not in scope (no attachment paths used today).
   - Remove all suppressions; run PHPMD + phpunit
 - [~] 7.6 **SoftwareCatalogue/ContactPersonHandler** (Priority 1, 7 suppressions):
   - Private method decomposition — extract per-phase methods
