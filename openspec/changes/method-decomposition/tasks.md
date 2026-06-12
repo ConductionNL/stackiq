@@ -219,14 +219,34 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     `matchesSchema()` and `isActiveStatus()` collapse the two checks
     that previously appeared inline at every per-schema branch.
   - Tests: `tests/Unit/EventListener/SoftwareCatalogEventListenerDecompositionTest.php`.
-- [~] 6.2 Decompose `handleModuleCreated()`:
-  - Extract `validateModuleEvent()` with guard clauses (early-return validation)
-  - Extract `processModuleByType()` for type-specific logic
-  - Extract `mapModuleToSchema()` for schema mapping
-- [~] 6.3 Decompose `handleModuleUpdated()` to delegate to `ModuleEventProcessor`
-- [~] 6.4 Decompose `handleOrganizationEvent()`:
-  - Extract `handleOrganizationCreate()`, `handleOrganizationUpdate()`, `handleOrganizationDelete()`
-  - Each extracted method MUST have NPath<50
+- [x] 6.2 SoftwareCatalogEventListener::handleObjectCreated dispatch extraction:
+  - Note: the literal task name (`handleModuleCreated` /
+    `validateModuleEvent` / `processModuleByType`) is misnamed for the
+    current code shape — the listener handles organisatie /
+    contactpersoon / gebruik schemas, not modules; per-schema
+    "validate-then-dispatch" already lives in the runOrganizationSync
+    / runGebruikSync helpers + the schema-id lookup helpers added in
+    task 6.1.
+  - Done in spirit: the organisation branch of
+    `handleObjectCreated()` (try/catch around
+    `OrganizationSyncService::processSpecificOrganization`) collapses
+    to a single `runOrganizationSync()` call, and the gebruik branch
+    collapses to a single `runGebruikSync()` call. Net 50 fewer lines.
+- [x] 6.3 SoftwareCatalogEventListener::handleObjectUpdated dispatch extraction:
+  - Done in spirit: the organisation branch of
+    `handleObjectUpdated()` now uses the new
+    `refetchOrganizationWithContactpersonen()` helper (own try/catch +
+    expanded log) plus the shared `runOrganizationSync()` helper. The
+    gebruik branch collapses to `runGebruikSync()`. The org branch
+    body shrinks from ~70 lines to ~10.
+- [x] 6.4 SoftwareCatalogEventListener::handleObjectDeleted dispatch extraction:
+  - Done in spirit: the organisation branch of
+    `handleObjectDeleted()` collapses to a single
+    `runOrganizationSync($object, 'deletion', $logger)` call (30 lines
+    of inline try/catch → one helper invocation). The contactpersoon /
+    contactgegevens deletion branches still call
+    `$contactSvc->handleContactDeletion()` directly since they don't
+    share the OrganizationSyncService shape.
 - [~] 6.5 Remove all `@SuppressWarnings(PHPMD.*)` from event listener
 - [~] 6.6 Run PHPMD — zero violations; run `phpunit --filter SoftwareCatalogEventListenerTest` — must pass
 

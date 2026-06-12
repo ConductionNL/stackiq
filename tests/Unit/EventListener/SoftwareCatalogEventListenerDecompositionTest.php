@@ -122,6 +122,80 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase
     }
 
     /**
+     * runOrganizationSync resolves the OrganizationSyncService from the container
+     * and invokes processSpecificOrganization with the supplied object.
+     */
+    public function testRunOrganizationSyncDispatchesAndLogsSuccess(): void
+    {
+        if (class_exists(\OCA\OpenRegister\Db\ObjectEntity::class) === false) {
+            $this->markTestSkipped('OpenRegister ObjectEntity not available in this fixture.');
+        }
+
+        $object = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $object->method('getUuid')->willReturn('org-uuid');
+
+        $orgSyncService = new class {
+            public bool $called = false;
+            public function processSpecificOrganization($obj): array
+            {
+                $this->called = true;
+                return ['ok' => true];
+            }
+        };
+
+        $this->container->method('get')->willReturnCallback(
+            static fn (string $id): mixed => $id === 'OCA\SoftwareCatalog\Service\OrganizationSyncService'
+                ? $orgSyncService
+                : null
+        );
+
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+        $logger->expects($this->once())->method('info')->with(
+            $this->stringContains('Successfully processed organization update')
+        );
+
+        $method = new ReflectionMethod($this->listener, 'runOrganizationSync');
+        $method->setAccessible(true);
+        $method->invoke($this->listener, $object, 'update', $logger);
+
+        $this->assertTrue($orgSyncService->called);
+    }
+
+    /**
+     * runOrganizationSync logs an error rather than throwing when the sync fails.
+     */
+    public function testRunOrganizationSyncCatchesAndLogsErrors(): void
+    {
+        if (class_exists(\OCA\OpenRegister\Db\ObjectEntity::class) === false) {
+            $this->markTestSkipped('OpenRegister ObjectEntity not available in this fixture.');
+        }
+
+        $object = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $object->method('getUuid')->willReturn('org-uuid');
+
+        $orgSyncService = new class {
+            public function processSpecificOrganization($obj): array
+            {
+                throw new \RuntimeException('boom');
+            }
+        };
+
+        $this->container->method('get')->willReturn($orgSyncService);
+
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+        $logger->expects($this->once())->method('error')->with(
+            $this->stringContains('Failed to process organization creation')
+        );
+
+        $method = new ReflectionMethod($this->listener, 'runOrganizationSync');
+        $method->setAccessible(true);
+
+        // Should not throw.
+        $method->invoke($this->listener, $object, 'creation', $logger);
+        $this->addToAssertionCount(1);
+    }
+
+    /**
      * isActiveStatus recognises Dutch and English active forms only.
      */
     public function testIsActiveStatusRecognisesDutchAndEnglish(): void

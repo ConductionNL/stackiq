@@ -243,6 +243,158 @@ class SoftwareCatalogEventListener implements IEventListener
     }//end matchesSchema()
 
     /**
+     * Runs OrganizationSyncService::processSpecificOrganization for the supplied
+     * object, capturing both the success log entry and the structured failure log.
+     *
+     * Extracted from the three lifecycle handlers as part of task 6.4 so the
+     * organisation-sync invocation no longer ships three near-identical try/catch
+     * blocks.
+     *
+     * @param \OCA\OpenRegister\Db\ObjectEntity $object   The organisation object.
+     * @param string                            $phase    "creation"/"update"/"deletion".
+     * @param LoggerInterface                   $logger   The logger.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-6
+     */
+    private function runOrganizationSync(
+        \OCA\OpenRegister\Db\ObjectEntity $object,
+        string $phase,
+        LoggerInterface $logger
+    ): void {
+        $objectId = $object->getUuid();
+        try {
+            $orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+            $result         = $orgSyncService->processSpecificOrganization($object);
+            $logger->info(
+                'SoftwareCatalog: Successfully processed organization '.$phase,
+                [
+                    'objectId'      => $objectId,
+                    'processResult' => $result,
+                ]
+            );
+        } catch (\Exception $e) {
+            $logger->error(
+                'SoftwareCatalog: Failed to process organization '.$phase,
+                [
+                    'objectId'  => $objectId,
+                    'exception' => $e->getMessage(),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                ]
+            );
+        }
+    }//end runOrganizationSync()
+
+    /**
+     * Runs GebruikSyncService::processSpecificGebruik for the supplied object,
+     * capturing success + failure logs.
+     *
+     * Extracted from the create/update lifecycle handlers as part of task 6.4
+     * so the gebruik-sync invocation no longer ships two near-identical
+     * try/catch blocks.
+     *
+     * @param \OCA\OpenRegister\Db\ObjectEntity $object The gebruik object.
+     * @param string                            $phase  "creation"/"update".
+     * @param LoggerInterface                   $logger The logger.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-6
+     */
+    private function runGebruikSync(
+        \OCA\OpenRegister\Db\ObjectEntity $object,
+        string $phase,
+        LoggerInterface $logger
+    ): void {
+        $objectId = $object->getUuid();
+        try {
+            $gebruikSyncService = $this->container->get(GebruikSyncService::class);
+            $result             = $gebruikSyncService->processSpecificGebruik($object);
+            $logger->info(
+                'SoftwareCatalog: Successfully processed gebruik '.$phase,
+                [
+                    'objectId'      => $objectId,
+                    'processResult' => $result,
+                ]
+            );
+        } catch (\Exception $e) {
+            $logger->error(
+                'SoftwareCatalog: Failed to process gebruik '.$phase,
+                [
+                    'objectId'  => $objectId,
+                    'exception' => $e->getMessage(),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                ]
+            );
+        }
+    }//end runGebruikSync()
+
+    /**
+     * Refetches an organisation by uuid, expanding contactpersonen so that
+     * the downstream OrganizationSyncService sees the full contact data.
+     *
+     * Returns null when the lookup fails so the caller can early-skip without
+     * tripping the sync helper. Extracted from {@see handleObjectUpdated()} as
+     * part of task 6.3 — the inline ObjectService::find + log block previously
+     * lived in the middle of the lifecycle handler.
+     *
+     * @param string          $objectId        The organisation uuid.
+     * @param SettingsService $settingsService Settings handle for the register/schema lookup.
+     * @param LoggerInterface $logger          The logger.
+     *
+     * @return \OCA\OpenRegister\Db\ObjectEntity|null
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-6
+     */
+    private function refetchOrganizationWithContactpersonen(
+        string $objectId,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): ?\OCA\OpenRegister\Db\ObjectEntity {
+        try {
+            $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+            $register            = $voorzieningenConfig['register'] ?? '';
+            $organizationSchema  = $voorzieningenConfig['organisatie_schema'] ?? '';
+
+            $objectService   = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $orgWithContacts = $objectService->find(
+                id: $objectId,
+                register: $register,
+                schema: $organizationSchema,
+                _extend: ['contactpersonen'],
+                _rbac: false,
+                _multitenancy: false
+            );
+
+            $logger->info(
+                'SoftwareCatalog: Refetched organization with contactpersonen',
+                [
+                    'objectId'             => $objectId,
+                    'contactpersonenCount' => count(
+                        $orgWithContacts->getObject()['contactpersonen'] ?? []
+                    ),
+                ]
+            );
+
+            return $orgWithContacts;
+        } catch (\Exception $e) {
+            $logger->error(
+                'SoftwareCatalog: Failed to refetch organization with contactpersonen',
+                [
+                    'objectId'  => $objectId,
+                    'exception' => $e->getMessage(),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                ]
+            );
+            return null;
+        }
+    }//end refetchOrganizationWithContactpersonen()
+
+    /**
      * Handles object creation events
      *
      * @param ObjectCreatedEvent    $event           The creation event
@@ -330,30 +482,7 @@ class SoftwareCatalogEventListener implements IEventListener
                     ]
                     );
 
-            try {
-                // Process organization with OrganizationSyncService.
-                $orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
-                $result         = $orgSyncService->processSpecificOrganization($object);
-
-                $logger->info(
-                        'SoftwareCatalog: Successfully processed organization creation',
-                        [
-                            'objectId'      => $objectId,
-                            'processResult' => $result,
-                        ]
-                        );
-            } catch (\Exception $e) {
-                $logger->error(
-                        'SoftwareCatalog: Failed to process organization creation',
-                        [
-                            'objectId'  => $objectId,
-                            'exception' => $e->getMessage(),
-                            'file'      => $e->getFile(),
-                            'line'      => $e->getLine(),
-                        ]
-                        );
-            }//end try
-
+            $this->runOrganizationSync($object, 'creation', $logger);
             return;
         }//end if
 
@@ -374,31 +503,7 @@ class SoftwareCatalogEventListener implements IEventListener
         // Check if this is a gebruik object.
         if ($gebruikSchemaId !== null && $objectSchemaIdInt === (int) $gebruikSchemaId) {
             $logger->info('SoftwareCatalog: Processing gebruik creation', ['objectId' => $objectId]);
-
-            try {
-                // Process gebruik object with GebruikSyncService.
-                $gebruikSyncService = $this->container->get(GebruikSyncService::class);
-                $result = $gebruikSyncService->processSpecificGebruik($object);
-
-                $logger->info(
-                        'SoftwareCatalog: Successfully processed gebruik creation',
-                        [
-                            'objectId'      => $objectId,
-                            'processResult' => $result,
-                        ]
-                        );
-            } catch (\Exception $e) {
-                $logger->error(
-                        'SoftwareCatalog: Failed to process gebruik creation',
-                        [
-                            'objectId'  => $objectId,
-                            'exception' => $e->getMessage(),
-                            'file'      => $e->getFile(),
-                            'line'      => $e->getLine(),
-                        ]
-                        );
-            }//end try
-
+            $this->runGebruikSync($object, 'creation', $logger);
             return;
         }//end if
 
@@ -527,55 +632,14 @@ class SoftwareCatalogEventListener implements IEventListener
                         ]
                         );
 
-                try {
-                    // Refetch organization WITH contactpersonen expanded to get full contact data.
-                    $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
-                    $register            = $voorzieningenConfig['register'] ?? '';
-                    $organizationSchema  = $voorzieningenConfig['organisatie_schema'] ?? '';
-
-                    $objectService   = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-                    $orgWithContacts = $objectService->find(
-                        id: $objectId,
-                        register: $register,
-                        schema: $organizationSchema,
-                        // This expands contactpersonen with full data!
-                        _extend: ['contactpersonen'],
-                        _rbac: false,
-                        _multitenancy: false
-                    );
-
-                    $logger->info(
-                            'SoftwareCatalog: Refetched organization with contactpersonen',
-                            [
-                                'objectId'             => $objectId,
-                                'contactpersonenCount' => count(
-                                    $orgWithContacts->getObject()['contactpersonen'] ?? []
-                                ),
-                            ]
-                            );
-
-                    // Process organization with OrganizationSyncService.
-                    $orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
-                    $result         = $orgSyncService->processSpecificOrganization($orgWithContacts);
-
-                    $logger->info(
-                            'SoftwareCatalog: Successfully processed organization update',
-                            [
-                                'objectId'      => $objectId,
-                                'processResult' => $result,
-                            ]
-                            );
-                } catch (\Exception $e) {
-                    $logger->error(
-                            'SoftwareCatalog: Failed to process organization update',
-                            [
-                                'objectId'  => $objectId,
-                                'exception' => $e->getMessage(),
-                                'file'      => $e->getFile(),
-                                'line'      => $e->getLine(),
-                            ]
-                            );
-                }//end try
+                $orgWithContacts = $this->refetchOrganizationWithContactpersonen(
+                    objectId: $objectId,
+                    settingsService: $settingsService,
+                    logger: $logger
+                );
+                if ($orgWithContacts !== null) {
+                    $this->runOrganizationSync($orgWithContacts, 'update', $logger);
+                }
             }//end if
 
             if (in_array(needle: $status, haystack: ['actief', 'active']) !== true || $status === $oldStatus) {
@@ -693,32 +757,7 @@ class SoftwareCatalogEventListener implements IEventListener
                 ]
             );
 
-            try {
-                // Process gebruik object with GebruikSyncService.
-                $gebruikSyncService = $this->container->get(GebruikSyncService::class);
-                $result = $gebruikSyncService->processSpecificGebruik($object);
-
-                $logger->info(
-                    'SoftwareCatalog: Successfully processed gebruik update',
-                    [
-                        'objectId'      => $objectId,
-                        'processResult' => $result,
-                        'timestamp'     => date('Y-m-d H:i:s'),
-                    ]
-                );
-            } catch (\Exception $e) {
-                $logger->error(
-                    'SoftwareCatalog: Failed to process gebruik update',
-                    [
-                        'objectId'  => $objectId,
-                        'exception' => $e->getMessage(),
-                        'file'      => $e->getFile(),
-                        'line'      => $e->getLine(),
-                        'trace'     => $e->getTraceAsString(),
-                    ]
-                );
-            }//end try
-
+            $this->runGebruikSync($object, 'update', $logger);
             return;
         }//end if
 
@@ -790,35 +829,7 @@ class SoftwareCatalogEventListener implements IEventListener
 
         if ($organisatieSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
             $logger->info('SoftwareCatalog: Processing organization deletion', ['objectId' => $objectId]);
-
-            try {
-                // For deletions, we may need to handle cleanup regardless of status.
-                // The OrganizationSyncService can determine what cleanup is needed.
-                $orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
-
-                // Note: processSpecificOrganization may handle cleanup for deleted organizations.
-                // The service can check if the organization exists and handle accordingly.
-                $result = $orgSyncService->processSpecificOrganization($object);
-
-                $logger->info(
-                        'SoftwareCatalog: Successfully processed organization deletion',
-                        [
-                            'objectId'      => $objectId,
-                            'processResult' => $result,
-                        ]
-                        );
-            } catch (\Exception $e) {
-                $logger->error(
-                        'SoftwareCatalog: Failed to process organization deletion',
-                        [
-                            'objectId'  => $objectId,
-                            'exception' => $e->getMessage(),
-                            'file'      => $e->getFile(),
-                            'line'      => $e->getLine(),
-                        ]
-                        );
-            }//end try
-
+            $this->runOrganizationSync($object, 'deletion', $logger);
             return;
         }//end if
 
