@@ -125,8 +125,24 @@
 ## Phase 5 — Manifest Tier 3 graduation (follow-up tracking)
 
 - [x] 5.1 Track Tier 3 prerequisites. **DEFERRED — follow-up tracking item.**
-- [x] 5.2 Open follow-up `softwarecatalog-manifest-tier-3` change.
-  **DEFERRED — follow-up.**
+  **W33 reconcile (2026-06-12)**: prerequisites tracked under the umbrella
+  `softwarecatalog-manifest-v1` change (see 5.2 below), which graduates
+  the app straight from Tier 2 to Tier 4 — superseding the intermediate
+  Tier 3 graduation step.
+- [x] 5.2 Open follow-up manifest graduation change.
+  **W33 reconcile (2026-06-12)**: the originally-planned
+  `softwarecatalog-manifest-tier-3` follow-up was never authored as a
+  separate change folder. Instead, the manifest graduation work is
+  carried by the existing `softwarecatalog-manifest-v1` change
+  (`openspec/changes/softwarecatalog-manifest-v1/`), which adopts the
+  full Tier-4 stack (`CnAppRoot` + `CnPageRenderer` + manifest renderer
+  + `@resolve:` sentinel) per the decidesk #160 reference pattern.
+  Tier 3 (manifest-driven nav without full Tier-4 renderer adoption)
+  is therefore an obsolete intermediate step — the app jumps directly
+  from Tier 2 to Tier 4 via `softwarecatalog-manifest-v1`. No
+  `softwarecatalog-manifest-tier-3` change folder will be opened; this
+  handoff is closed by reference to `softwarecatalog-manifest-v1`.
+  **DEFERRED — superseded by `softwarecatalog-manifest-v1`.**
 
 ## Phase 6 — Documentation
 
