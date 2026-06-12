@@ -205,6 +205,39 @@ class SettingsService
     }//end getConfigurationService()
 
     /**
+     * Attempts to retrieve the RegisterResolverService from the container.
+     *
+     * The resolver centralises `<context>_register` / `<context>_schema` / `<context>_property`
+     * config-key reads so per-install admin overrides (and request-scoped caching + tenant
+     * awareness) behave identically across consumer apps. Returns `null` when OpenRegister
+     * is not installed, or when the OR version pre-dates the resolver class (graceful
+     * fallback — callers must consult their existing `getValueString` path in that case).
+     *
+     * @return \OCA\OpenRegister\Service\RegisterResolverService|null The resolver or null.
+     *
+     * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+     */
+    public function getRegisterResolverService(): ?\OCA\OpenRegister\Service\RegisterResolverService
+    {
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
+            return null;
+        }
+
+        if (class_exists('\OCA\OpenRegister\Service\RegisterResolverService') === false) {
+            // OR is installed but pre-dates the resolver (shipped on OR development 2026-06-12,
+            // commit 50a6a0afc). Caller falls back to the legacy IAppConfig path.
+            return null;
+        }
+
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\RegisterResolverService');
+        } catch (\Throwable $e) {
+            // Container resolution may fail in test contexts where OR services are not wired.
+            return null;
+        }
+    }//end getRegisterResolverService()
+
+    /**
      * Retrieve the current settings
      *
      * @return array The current settings configuration
@@ -879,8 +912,32 @@ class SettingsService
         }
 
         // Fall back to generic configuration for backward compatibility.
+        // Prefer the OR RegisterResolverService when available so per-install admin
+        // overrides go through the same `<context>_schema` resolution pipeline used by
+        // every other Conduction app (request-scoped caching + tenant-aware). Falls back
+        // to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
+        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         if ($result === null) {
-            $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
+            $resolver = $this->getRegisterResolverService();
+            $schemaId = '';
+
+            if ($resolver !== null) {
+                try {
+                    $schemaId = $resolver->resolveSchemaId(
+                        appId: $this->appName,
+                        configKey: "{$objectType}_schema",
+                        default: '',
+                    );
+                } catch (\Throwable $e) {
+                    // MissingConfigException or transient resolver failure — fall through to legacy read.
+                    $schemaId = '';
+                }
+            }
+
+            if ($schemaId === '') {
+                $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
+            }
+
             if (empty($schemaId) === false) {
                 $result = (int) $schemaId;
             }
@@ -958,10 +1015,34 @@ class SettingsService
             }
         }
 
-        // Fallback to legacy per-object-type register config.
+        // Fallback to legacy per-object-type register config — route through the OR
+        // RegisterResolverService when available so per-install admin overrides flow
+        // through the same `<context>_register` resolution pipeline used by every
+        // other Conduction app (request-scoped caching + tenant-aware). Falls back
+        // to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
+        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         if ($result === null) {
-            $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
-            $result     = null;
+            $resolver   = $this->getRegisterResolverService();
+            $registerId = '';
+
+            if ($resolver !== null) {
+                try {
+                    $registerId = $resolver->resolveRegisterId(
+                        appId: $this->appName,
+                        configKey: "{$objectType}_register",
+                        default: '',
+                    );
+                } catch (\Throwable $e) {
+                    // MissingConfigException or transient resolver failure — fall through to legacy read.
+                    $registerId = '';
+                }
+            }
+
+            if ($registerId === '') {
+                $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
+            }
+
+            $result = null;
             if (empty($registerId) === false) {
                 $result = (int) $registerId;
             }
