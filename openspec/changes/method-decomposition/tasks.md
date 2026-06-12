@@ -259,6 +259,14 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     in `performOrganizationsSync()` + `performContactSync()`. Tests in
     `tests/Unit/Service/OrganizationSyncServiceDecompositionTest.php`.
     Pipeline-stage extraction left for the per-file PHPMD burn-down series.
+  - W30 additions: extracted `buildInitialSyncStats(int, int): array`
+    (canonical stats accumulator shape) and
+    `validateOrgSyncConfig(mixed, mixed): array{int|null, int|null}`
+    (centralised positive-integer guard for the voorzieningen
+    register + organisatie_schema pair, with embedded warning logs).
+    `performOrganizationsSync()` opens with two helper calls instead
+    of 30 lines of inline accumulator literal + double-branch
+    validation.
   - Remove all suppressions; run PHPMD + phpunit
 - [~] 7.2 **ContactpersoonService** (REQ-DECOMP-008):
   - Create `lib/Service/Contactpersoon/ContactValidator.php` with `validateEmail()`, `validatePhone()`, `validateName()`

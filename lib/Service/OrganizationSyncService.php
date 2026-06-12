@@ -187,6 +187,75 @@ class OrganizationSyncService
     }//end handleSyncError()
 
     /**
+     * Builds the per-run stats accumulator shared by the organisation /
+     * contactpersoon sync flows.
+     *
+     * Extracted from {@see performOrganizationsSync()} as part of task 7.1.
+     *
+     * @param int $batchSize           Configured batch size.
+     * @param int $maxExecutionSeconds Configured time budget.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function buildInitialSyncStats(int $batchSize, int $maxExecutionSeconds): array
+    {
+        return [
+            'organizationsProcessed' => 0,
+            'entitiesCreated'        => 0,
+            'entitiesUpdated'        => 0,
+            'errors'                 => [],
+            'batchSize'              => $batchSize,
+            'maxExecutionSeconds'    => $maxExecutionSeconds,
+            'timeoutReached'         => false,
+            'totalRemaining'         => 0,
+            'startTime'              => date('Y-m-d H:i:s'),
+            'endTime'                => null,
+            'duration'               => null,
+        ];
+    }//end buildInitialSyncStats()
+
+    /**
+     * Validates the voorzieningen register + organisatie_schema id pair as
+     * positive integers suitable for table-name interpolation.
+     *
+     * Returns a `[null, null]` pair (with the appropriate warning log) when
+     * either side is unset or non-positive — caller is expected to short-circuit
+     * the sync. Extracted from {@see performOrganizationsSync()} as part of
+     * task 7.1.
+     *
+     * @param mixed $register           Raw register id from voorzieningen config.
+     * @param mixed $organizationSchema Raw schema id from voorzieningen config.
+     *
+     * @return array{0: int|null, 1: int|null}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function validateOrgSyncConfig($register, $organizationSchema): array
+    {
+        if (empty($register) === true || empty($organizationSchema) === true) {
+            $this->logger->warning('OrganizationSync: voorzieningen config missing register or organisatie_schema');
+            return [null, null];
+        }
+
+        $registerIdOrg = (int) $register;
+        $schemaIdOrg   = (int) $organizationSchema;
+        if ($registerIdOrg <= 0 || $schemaIdOrg <= 0) {
+            $this->logger->warning(
+                'OrganizationSync: register or organisatie_schema is not a valid positive integer',
+                [
+                    'register'           => $register,
+                    'organizationSchema' => $organizationSchema,
+                ]
+            );
+            return [null, null];
+        }
+
+        return [$registerIdOrg, $schemaIdOrg];
+    }//end validateOrgSyncConfig()
+
+    /**
      * Create a database-agnostic JSON extraction expression
      *
      * Returns the appropriate SQL function for extracting a value from a JSON column
@@ -269,36 +338,13 @@ class OrganizationSyncService
         $organizationSchema  = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
         $startTime = time();
-        $stats     = [
-            'organizationsProcessed' => 0,
-            'entitiesCreated'        => 0,
-            'entitiesUpdated'        => 0,
-            'errors'                 => [],
-            'batchSize'              => $batchSize,
-            'maxExecutionSeconds'    => $maxExecutionSeconds,
-            'timeoutReached'         => false,
-            'totalRemaining'         => 0,
-            'startTime'              => date('Y-m-d H:i:s'),
-            'endTime'                => null,
-            'duration'               => null,
-        ];
+        $stats     = $this->buildInitialSyncStats($batchSize, $maxExecutionSeconds);
 
-        if (empty($register) === true || empty($organizationSchema) === true) {
-            $this->logger->warning('OrganizationSync: voorzieningen config missing register or organisatie_schema');
-            return $stats;
-        }
-
-        // Cast config values to integers before using in a table name to prevent injection.
-        $registerIdOrg = (int) $register;
-        $schemaIdOrg   = (int) $organizationSchema;
-        if ($registerIdOrg <= 0 || $schemaIdOrg <= 0) {
-            $this->logger->warning(
-                    'OrganizationSync: register or organisatie_schema is not a valid positive integer',
-                    [
-                        'register'           => $register,
-                        'organizationSchema' => $organizationSchema,
-                    ]
-                    );
+        [$registerIdOrg, $schemaIdOrg] = $this->validateOrgSyncConfig(
+            $register,
+            $organizationSchema
+        );
+        if ($registerIdOrg === null || $schemaIdOrg === null) {
             return $stats;
         }
 
