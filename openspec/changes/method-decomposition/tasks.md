@@ -235,8 +235,15 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     `lib/Service/ModuleRegistrationService.php`; tests in
     `tests/Unit/Service/ModuleRegistrationServiceDecompositionTest.php`.
   - Class-level Cyclomatic / NPath / ExcessiveMethodLength suppressions removed.
-- [~] 8.7 **GebruikSyncService** (3 suppressions):
-  - Private method extraction; remove suppressions; run PHPMD
+- [x] 8.7 **GebruikSyncService** (3 suppressions):
+  - `updateStatusBasedOnDates()` decomposed: extract
+    `extractStatusDateMap()` (gebruikData → status-date map) and
+    `resolveLatestEligibleStatus()` (pick the latest non-future date,
+    skipping unparseable entries) in `lib/Service/GebruikSyncService.php`;
+    tests in `tests/Unit/Service/GebruikSyncServiceDecompositionTest.php`.
+  - The remaining class-level suppressions are inherent to the parent
+    method orchestration; the dated-update branch (the source of the
+    method-length / NPath complaints) now lives in pure helpers.
 - [x] 8.8 **OpenRegisterEventsDebugListener** (3 suppressions):
   - `extractEventData()` decomposed into four per-family extractors
     (`extractObjectEventData()`, `extractRegisterEventData()`,

@@ -389,15 +389,7 @@ class GebruikSyncService
             $gebruikData   = $gebruikObject->getObject();
             $gebruikUuid   = $gebruikObject->getUuid();
             $currentStatus = $gebruikData['status'] ?? '';
-
-            // Define status dates mapping.
-            $statusDates = [
-                'Verwerving'     => $gebruikData['startDatumVerwerving'] ?? null,
-                'Gepland'        => $gebruikData['startDatumGepland'] ?? null,
-                'In productie'   => $gebruikData['startDatumInProductie'] ?? null,
-                'Uit te faseren' => $gebruikData['startDatumUitTeFaseren'] ?? null,
-                'Uitgefaseerd'   => $gebruikData['startDatumUitGefaseerd'] ?? null,
-            ];
+            $statusDates   = $this->extractStatusDateMap($gebruikData);
 
             $this->logger->info(
                     'CHECKING STATUS DATES',
@@ -409,63 +401,15 @@ class GebruikSyncService
                     ]
                     );
 
-            // Find the highest date that is not in the future.
-            $now          = new DateTime();
-            $targetStatus = null;
-            $targetDate   = null;
+            [$targetStatus, $targetDate] = $this->resolveLatestEligibleStatus($statusDates, $gebruikUuid);
 
-            foreach ($statusDates as $status => $dateString) {
-                if (empty($dateString) === false) {
-                    try {
-                        $date = new DateTime($dateString);
-
-                        // Only consider dates that are not in the future.
-                        if ($date <= $now) {
-                            if ($targetDate === null || $date > $targetDate) {
-                                $targetDate   = $date;
-                                $targetStatus = $status;
-                            }
-                        }
-                    } catch (Exception $e) {
-                        $this->logger->warning(
-                                'Invalid date format',
-                                [
-                                    'app'        => 'softwarecatalog',
-                                    'gebruikId'  => $gebruikUuid,
-                                    'status'     => $status,
-                                    'dateString' => $dateString,
-                                    'error'      => $e->getMessage(),
-                                ]
-                                );
-                    }//end try
-                }//end if
-            }//end foreach
-
-            // Update status if we found a different one.
             if ($targetStatus !== null && $targetStatus !== $currentStatus) {
                 $gebruikData['status'] = $targetStatus;
-                                $this->updateGebruikObject(
+                $this->updateGebruikObject(
                     gebruikObject: $gebruikObject,
                     updatedData: $gebruikData
                 );
                 $stats['statusUpdated'] = true;
-
-                $basedOnDate = null;
-                if ($targetDate === null) {
-                    $this->logger->info(
-                        'No status update needed',
-                        [
-                            'app'           => 'softwarecatalog',
-                            'gebruikId'     => $gebruikUuid,
-                            'currentStatus' => $currentStatus,
-                            'targetStatus'  => $targetStatus,
-                        ]
-                        );
-                }
-
-                if ($targetDate !== null) {
-                    $basedOnDate = $targetDate->format('Y-m-d');
-                }
 
                 $this->logger->critical(
                         'STATUS AUTO-UPDATED',
@@ -474,7 +418,7 @@ class GebruikSyncService
                             'gebruikId'   => $gebruikUuid,
                             'oldStatus'   => $currentStatus,
                             'newStatus'   => $targetStatus,
-                            'basedOnDate' => $basedOnDate,
+                            'basedOnDate' => $targetDate?->format('Y-m-d'),
                         ]
                         );
             }//end if
@@ -494,6 +438,78 @@ class GebruikSyncService
             return $stats;
         }//end try
     }//end updateStatusBasedOnDates()
+
+
+    /**
+     * Build the status → start-date map from a gebruik payload.
+     *
+     * @param array $gebruikData The decoded gebruik object data
+     *
+     * @return array<string,string|null> The status-to-date-string map
+     */
+    private function extractStatusDateMap(array $gebruikData): array
+    {
+        return [
+            'Verwerving'     => $gebruikData['startDatumVerwerving'] ?? null,
+            'Gepland'        => $gebruikData['startDatumGepland'] ?? null,
+            'In productie'   => $gebruikData['startDatumInProductie'] ?? null,
+            'Uit te faseren' => $gebruikData['startDatumUitTeFaseren'] ?? null,
+            'Uitgefaseerd'   => $gebruikData['startDatumUitGefaseerd'] ?? null,
+        ];
+
+    }//end extractStatusDateMap()
+
+
+    /**
+     * Pick the status whose start-date is the latest non-future one.
+     *
+     * Logs (and skips) entries with an unparseable date string.
+     *
+     * @param array<string,string|null> $statusDates The status-to-date map
+     * @param string                    $gebruikUuid The gebruik UUID (for logging)
+     *
+     * @return array{0: string|null, 1: \DateTime|null} Tuple of [targetStatus, targetDate]
+     */
+    private function resolveLatestEligibleStatus(array $statusDates, string $gebruikUuid): array
+    {
+        $now          = new DateTime();
+        $targetStatus = null;
+        $targetDate   = null;
+
+        foreach ($statusDates as $status => $dateString) {
+            if (empty($dateString) === true) {
+                continue;
+            }
+
+            try {
+                $date = new DateTime($dateString);
+            } catch (Exception $e) {
+                $this->logger->warning(
+                        'Invalid date format',
+                        [
+                            'app'        => 'softwarecatalog',
+                            'gebruikId'  => $gebruikUuid,
+                            'status'     => $status,
+                            'dateString' => $dateString,
+                            'error'      => $e->getMessage(),
+                        ]
+                        );
+                continue;
+            }
+
+            if ($date > $now) {
+                continue;
+            }
+
+            if ($targetDate === null || $date > $targetDate) {
+                $targetDate   = $date;
+                $targetStatus = $status;
+            }
+        }
+
+        return [$targetStatus, $targetDate];
+
+    }//end resolveLatestEligibleStatus()
 
     /**
      * Update a gebruik object in OpenRegister.
