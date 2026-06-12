@@ -43,7 +43,6 @@ use RuntimeException;
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class GroupHandler
@@ -352,65 +351,107 @@ class GroupHandler
     {
         $organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
-        if (empty($organizationUuid) === false) {
-            try {
-                // Get organization object.
-                $objectService = $objectService = $this->getObjectService();
+        if (empty($organizationUuid) === true) {
+            return;
+        }
 
-                // Get register and schema IDs dynamically from configuration.
-                $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-                $registerId          = $settingsService->getVoorzieningenRegisterId();
-                $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+        try {
+            $orgData = $this->resolveOrganisationData($organizationUuid);
+            if ($orgData === null) {
+                return;
+            }
 
-                if ($registerId === null || $organisatieSchemaId === null) {
-                    $this->_logger->warning('Register or schema ID not configured for organisatie.');
-                    return;
-                }
+            $actualUuid = $orgData['id'] ?? $organizationUuid;
+            $groupId    = $orgData['group'] ?? '';
 
-                $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+            $this->_logger->info(
+                'DEBUG: Organization group lookup for user',
+                [
+                    'username'               => $user->getUID(),
+                    'inputOrganizationUuid'  => $organizationUuid,
+                    'actualOrganizationUuid' => $actualUuid,
+                    'groupId'                => $groupId,
+                ]
+            );
 
-                if ($organizationObject !== null) {
-                    $orgData    = $organizationObject->getObject();
-                    $actualUuid = $orgData['id'] ?? $organizationUuid;
-                    $groupId    = $orgData['group'] ?? '';
-
-                    $this->_logger->info(
-                        'DEBUG: Organization group lookup for user',
-                        [
-                            'username'               => $user->getUID(),
-                            'inputOrganizationUuid'  => $organizationUuid,
-                            'actualOrganizationUuid' => $actualUuid,
-                            'groupId'                => $groupId,
-                        ]
-                    );
-
-                    if (empty($groupId) === false) {
-                        $group = $this->_groupManager->get($groupId);
-
-                        if ($group !== null && $group->inGroup($user) === false) {
-                            $group->addUser($user);
-                            $this->_logger->info(
-                                'Added user to organization group',
-                                [
-                                    'username'         => $user->getUID(),
-                                    'group'            => $groupId,
-                                    'organizationUuid' => $actualUuid,
-                                ]
-                            );
-                        }
-                    }
-                }//end if
-            } catch (\Exception $e) {
-                $this->_logger->error(
-                    'Failed to process organization group: '.$e->getMessage(),
-                    [
-                        'username'         => $user->getUID(),
-                        'organizationUuid' => $organizationUuid,
-                    ]
-                );
-            }//end try
-        }//end if
+            $this->assignOrganizationGroup($user, $groupId, $actualUuid);
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to process organization group: '.$e->getMessage(),
+                [
+                    'username'         => $user->getUID(),
+                    'organizationUuid' => $organizationUuid,
+                ]
+            );
+        }//end try
     }//end updateOrganizationGroups()
+
+
+    /**
+     * Resolves the organisation object data for a given organisation UUID.
+     *
+     * Returns null when the register/schema configuration is missing, the
+     * object service is unavailable, or the organisatie can't be found.
+     *
+     * @param string $organisationUuid The organisation UUID to resolve
+     *
+     * @return array|null The decoded organisatie object data, or null when
+     *                    not resolvable
+     */
+    private function resolveOrganisationData(string $organisationUuid): ?array
+    {
+        $objectService       = $this->getObjectService();
+        $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+        $registerId          = $settingsService->getVoorzieningenRegisterId();
+        $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+
+        if ($registerId === null || $organisatieSchemaId === null) {
+            $this->_logger->warning('Register or schema ID not configured for organisatie.');
+            return null;
+        }
+
+        $organizationObject = $objectService->find($organisationUuid, [], false, $registerId, $organisatieSchemaId);
+        if ($organizationObject === null) {
+            return null;
+        }
+
+        return $organizationObject->getObject();
+
+    }//end resolveOrganisationData()
+
+
+    /**
+     * Adds a user to the organisation's Nextcloud group when they are not
+     * already a member.
+     *
+     * @param IUser  $user       The user to add to the group
+     * @param string $groupId    The Nextcloud group ID, may be empty
+     * @param string $actualUuid The resolved organisation UUID (for logging)
+     *
+     * @return void
+     */
+    private function assignOrganizationGroup(IUser $user, string $groupId, string $actualUuid): void
+    {
+        if (empty($groupId) === true) {
+            return;
+        }
+
+        $group = $this->_groupManager->get($groupId);
+        if ($group === null || $group->inGroup($user) === true) {
+            return;
+        }
+
+        $group->addUser($user);
+        $this->_logger->info(
+            'Added user to organization group',
+            [
+                'username'         => $user->getUID(),
+                'group'            => $groupId,
+                'organizationUuid' => $actualUuid,
+            ]
+        );
+
+    }//end assignOrganizationGroup()
 
     /**
      * Updates gemeente-specific groups for a user
@@ -425,51 +466,40 @@ class GroupHandler
     {
         $organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
-        if (empty($organizationUuid) === false) {
-            try {
-                // Get organization object.
-                $objectService = $objectService = $this->getObjectService();
+        if (empty($organizationUuid) === true) {
+            return;
+        }
 
-                // Get register and schema IDs dynamically from configuration.
-                $settingsService     = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-                $registerId          = $settingsService->getVoorzieningenRegisterId();
-                $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+        try {
+            $orgData = $this->resolveOrganisationData($organizationUuid);
+            if ($orgData === null) {
+                return;
+            }
 
-                if ($registerId === null || $organisatieSchemaId === null) {
-                    $this->_logger->warning('Register or schema ID not configured for organisatie.');
-                    return;
-                }
+            $actualUuid = $orgData['id'] ?? $organizationUuid;
+            $orgType    = strtolower($orgData['type'] ?? $orgData['soort'] ?? '');
 
-                $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
-
-                if ($organizationObject !== null) {
-                    $orgData    = $organizationObject->getObject();
-                    $actualUuid = $orgData['id'] ?? $organizationUuid;
-                    $orgType    = strtolower($orgData['type'] ?? $orgData['soort'] ?? '');
-
-                    // Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations.
-                    // The 'ambtenaar' group can still be created if needed, but users are not automatically assigned.
-                    if ($orgType === 'gemeente') {
-                        $this->_logger->debug(
-                            'User from gemeente organization (no automatic ambtenaar group assignment)',
-                            [
-                                'username'         => $user->getUID(),
-                                'organizationUuid' => $actualUuid,
-                                'organizationType' => $orgType,
-                            ]
-                        );
-                    }
-                }
-            } catch (\Exception $e) {
-                $this->_logger->error(
-                    'Failed to process gemeente group: '.$e->getMessage(),
+            // Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations.
+            // The 'ambtenaar' group can still be created if needed, but users are not automatically assigned.
+            if ($orgType === 'gemeente') {
+                $this->_logger->debug(
+                    'User from gemeente organization (no automatic ambtenaar group assignment)',
                     [
                         'username'         => $user->getUID(),
-                        'organizationUuid' => $organizationUuid,
+                        'organizationUuid' => $actualUuid,
+                        'organizationType' => $orgType,
                     ]
                 );
-            }//end try
-        }//end if
+            }
+        } catch (\Exception $e) {
+            $this->_logger->error(
+                'Failed to process gemeente group: '.$e->getMessage(),
+                [
+                    'username'         => $user->getUID(),
+                    'organizationUuid' => $organizationUuid,
+                ]
+            );
+        }//end try
     }//end updateGemeenteGroups()
 
     /**

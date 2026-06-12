@@ -250,8 +250,12 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - `getGebruiken()` decomposed via `resolveUserRoles()` + `applyAanbodScopeToOptions()` in
     `lib/Controller/GebruikController.php`; tests in
     `tests/Unit/Controller/GebruikControllerDecompositionTest.php`
-- [~] 9.4 **SoftwareCatalogue/GroupHandler** (1 suppression):
-  - Extract the single oversized method; remove suppression
+- [x] 9.4 **SoftwareCatalogue/GroupHandler** (1 suppression):
+  - Duplicated organisation-resolution flow extracted into private
+    `resolveOrganisationData()` + `assignOrganizationGroup()` helpers in
+    `lib/Service/SoftwareCatalogue/GroupHandler.php`; tests in
+    `tests/Unit/Service/SoftwareCatalogue/GroupHandlerDecompositionTest.php`.
+  - Class-level `ExcessiveClassComplexity` suppression removed.
 - [x] 9.5 **ModuleVersionService** (1 suppression):
   - Split the long method into `fetchVersionData()`, `compareVersions()`, `updateVersionRecord()` — done
     in `lib/Service/ModuleVersionService.php`; unit test in
