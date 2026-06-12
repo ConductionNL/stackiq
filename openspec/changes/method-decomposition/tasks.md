@@ -237,8 +237,13 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - Class-level Cyclomatic / NPath / ExcessiveMethodLength suppressions removed.
 - [~] 8.7 **GebruikSyncService** (3 suppressions):
   - Private method extraction; remove suppressions; run PHPMD
-- [~] 8.8 **OpenRegisterEventsDebugListener** (3 suppressions):
-  - Private method extraction; remove suppressions; run PHPMD
+- [x] 8.8 **OpenRegisterEventsDebugListener** (3 suppressions):
+  - `extractEventData()` decomposed into four per-family extractors
+    (`extractObjectEventData()`, `extractRegisterEventData()`,
+    `extractSchemaEventData()`, `extractOrganisationEventData()`) in
+    `lib/EventListener/OpenRegisterEventsDebugListener.php`; tests in
+    `tests/Unit/EventListener/OpenRegisterEventsDebugListenerDecompositionTest.php`.
+  - Method-level CyclomaticComplexity / ExcessiveMethodLength suppressions removed.
 
 ## Phase 9 — Priority 3 files (REQ-DECOMP-012)
 
