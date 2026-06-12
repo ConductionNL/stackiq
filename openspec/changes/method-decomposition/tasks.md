@@ -229,9 +229,12 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 ## Phase 9 — Priority 3 files (REQ-DECOMP-012)
 
 - [~] 9.1 **Application.php** (2 suppressions):
-  - Create `lib/Service/EventRegistrar.php` — extract event listener registration
-  - Create `lib/Service/ServiceRegistrar.php` — extract service registration
-  - Boot method MUST drop below 100 lines
+  - Partial: event listener registration extracted to private
+    `registerEventListeners(IRegistrationContext)` on Application itself
+    (kept in-class — the listener catalogue does not warrant a dedicated
+    service per ADR-022 reuse-or-abstractions). Service-registration
+    extraction and boot-method shrink deferred to the per-file PHPMD
+    burn-down series.
   - Remove suppressions; run PHPMD
 - [~] 9.2 **ModuleComplianceSubscriber** (2 suppressions):
   - Private method extraction; remove suppressions; run PHPMD

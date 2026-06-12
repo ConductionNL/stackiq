@@ -175,27 +175,10 @@ class Application extends App implements IBootstrap
                 }
                 );
 
-        // Register TEST event listener for easily triggerable Nextcloud events.
-        $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
-
-        // Register event listeners for OpenRegister events.
-        $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectDeletedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
-
-        // Register module compliance subscriber for module updates.
-        $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
-        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
-
-        // Register module registration subscriber for auto-setting geregistreerdDoor.
-        $context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
-        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
-
-        // Register listener to sync user profile updates to contactpersoon objects.
-        $context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
+        // Wire up event-listener bindings — extracted to a single
+        // single-responsibility helper per
+        // `openspec/changes/method-decomposition/tasks.md` task 9.1.
+        $this->registerEventListeners($context);
 
         // Organization event listeners removed - now using cron job for organization synchronization.
         // Contact person event listeners are still active for real-time processing.
@@ -444,6 +427,47 @@ class Application extends App implements IBootstrap
         // Dashboard widgets — see lib/Dashboard/*.php and src/*Widget.js.
         $context->registerDashboardWidget(ConceptOrganisatiesWidget::class);
     }//end register()
+
+    /**
+     * Wire all OpenRegister event listeners.
+     *
+     * Single-responsibility helper extracted from `register()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.1. Keeps
+     * `register()` focused on service-binding wiring while this method
+     * owns the listener catalogue.
+     *
+     * @param IRegistrationContext $context Registration context.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-1
+     */
+    private function registerEventListeners(IRegistrationContext $context): void
+    {
+        // TEST event listener for easily triggerable Nextcloud events.
+        $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
+
+        // OpenRegister object lifecycle events — broadcast to the
+        // SoftwareCatalog cross-cutting listener.
+        $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectDeletedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
+
+        // Module-compliance subscriber — runs on create/update only.
+        $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
+
+        // Module registration — sets geregistreerdDoor on each save.
+        $context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
+
+        // Sync user profile updates into the contactpersoon mirror.
+        $context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
+
+    }//end registerEventListeners()
 
     /**
      * Boot the application
