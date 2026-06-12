@@ -292,12 +292,21 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 - [~] 7.4 **ViewService** (REQ-DECOMP-010):
   - Create `lib/Service/ViewQueryBuilder.php` with `applyDateFilter()`, `applyStatusFilter()`, `applySearchFilter()`, `applySorting()`
   - Remove all suppressions; run PHPMD + phpunit
-- [~] 7.5 **SymfonyEmailService** (REQ-DECOMP-010):
+- [x] 7.5 **SymfonyEmailService** (REQ-DECOMP-010):
   - Extract `resolveRecipients()`, `renderTemplate()`, `attachFiles()`, `sendEmail()` private methods
   - Partial: `renderTemplate()` + `resolveSender()` extracted in
     `lib/Service/SymfonyEmailService.php`; `sendEmail()` already existed.
     Tests in `tests/Unit/Service/SymfonyEmailServiceDecompositionTest.php`.
     `attachFiles()` not in scope (no attachment paths used today).
+  - W30 addition: extracted private
+    `ensureEmailDeliveryReady(logPrefix, settingsKey, extraLogContext): ?array`
+    in `lib/Service/SymfonyEmailService.php`. The two-stage
+    "isEmailSystemConfigured + per-type enabled flag" precheck that
+    every `send*Email()` opened with collapsed into a single helper
+    call. Updated 4 call sites: `sendOrganizationRegistrationEmail()`,
+    `sendOrganizationActivationEmail()`, `sendUserCreationEmail()`,
+    `sendUserUpdateEmail()`. Net ~80 lines removed from the public
+    surface.
   - Remove all suppressions; run PHPMD + phpunit
 - [x] 7.6 **SoftwareCatalogue/ContactPersonHandler** (Priority 1, 7 suppressions):
   - `generateUsernameFromContactData()` had the same
