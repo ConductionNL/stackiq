@@ -110,14 +110,36 @@ class Application extends App implements IBootstrap
      * @param IRegistrationContext $context Registration context
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function register(IRegistrationContext $context): void
     {
         include_once __DIR__.'/../../vendor/autoload.php';
 
-        // Register the handlers as services.
+        $this->registerHandlerServices($context);
+
+        // Wire up event-listener bindings — extracted to a single
+        // single-responsibility helper per
+        // `openspec/changes/method-decomposition/tasks.md` task 9.1.
+        $this->registerEventListeners($context);
+
+        $this->registerDomainServices($context);
+    }//end register()
+
+
+    /**
+     * Wire the four SoftwareCatalogue handler services as DI bindings.
+     *
+     * Single-responsibility helper extracted from `register()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.1.
+     *
+     * @param IRegistrationContext $context Registration context
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-1
+     */
+    private function registerHandlerServices(IRegistrationContext $context): void
+    {
         $context->registerService(
                 'OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler',
                 function (ContainerInterface $c) {
@@ -175,11 +197,23 @@ class Application extends App implements IBootstrap
                 }
                 );
 
-        // Wire up event-listener bindings — extracted to a single
-        // single-responsibility helper per
-        // `openspec/changes/method-decomposition/tasks.md` task 9.1.
-        $this->registerEventListeners($context);
+    }//end registerHandlerServices()
 
+
+    /**
+     * Wire all domain-level services (sync/email/settings/ArchiMate/etc.).
+     *
+     * Single-responsibility helper extracted from `register()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.1.
+     *
+     * @param IRegistrationContext $context Registration context
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-1
+     */
+    private function registerDomainServices(IRegistrationContext $context): void
+    {
         // Organization event listeners removed - now using cron job for organization synchronization.
         // Contact person event listeners are still active for real-time processing.
         // Register new focused services.
@@ -426,7 +460,7 @@ class Application extends App implements IBootstrap
 
         // Dashboard widgets — see lib/Dashboard/*.php and src/*Widget.js.
         $context->registerDashboardWidget(ConceptOrganisatiesWidget::class);
-    }//end register()
+    }//end registerDomainServices()
 
     /**
      * Wire all OpenRegister event listeners.
