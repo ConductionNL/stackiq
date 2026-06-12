@@ -213,9 +213,18 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     `normaliseCurrentStandaarden()` + `syncStandaarden()`. Tests in
     `tests/Unit/Service/ModuleComplianceServiceDecompositionTest.php`.
   - Remove suppressions; run PHPMD
-- [~] 8.3 **AanbodService** (4 suppressions):
-  - Audit and apply private method extraction per decomposition strategy
-  - Remove suppressions; run PHPMD
+- [x] 8.3 **AanbodService** (4 suppressions):
+  - The polymorphic afnemer/aanbieder ID resolver was duplicated inline
+    in both `acceptAanbod()` and `denyAanbod()` (each method had ~14 lines
+    of identical "is_array(['id'])-or-is_string" branching). Extracted
+    into private `resolvePartyId(mixed): ?string` in
+    `lib/Service/AanbodService.php`; tests in
+    `tests/Unit/Service/AanbodServiceDecompositionTest.php`.
+  - Both call sites now collapse to one line per party.
+  - Note: the class-level suppressions are retained because the
+    accept/deny orchestration is still ~150 lines each (try/catch +
+    debug-shape return); fully retiring those is part of the per-file
+    burn-down series.
 - [x] 8.4 **UserProfileUpdatedEventListener** (4 suppressions):
   - `lib/Service/ProfileFieldMapper.php` already exists (Phase 1 build).
   - `syncToContactpersoon()` decomposed: extract `buildContactPatch()`

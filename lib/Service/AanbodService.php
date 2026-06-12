@@ -338,26 +338,10 @@ class AanbodService
             $aanbodData    = $existingAanbod->getObject();
             $afnemerInfo   = $aanbodData['afnemer'] ?? null;
             $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-
-            // Check various ways the afnemer might be stored.
-            $afnemerId = null;
-            if (is_array($afnemerInfo) === true && isset($afnemerInfo['id']) === true) {
-                $afnemerId = $afnemerInfo['id'];
-            } else if (is_string($afnemerInfo) === true) {
-                $afnemerId = $afnemerInfo;
-            }
-
-            // Check various ways the aanbieder might be stored.
-            $aanbiederId = null;
-            if (is_array($aanbiederInfo) === true && isset($aanbiederInfo['id']) === true) {
-                $aanbiederId = $aanbiederInfo['id'];
-            } else if (is_string($aanbiederInfo) === true) {
-                $aanbiederId = $aanbiederInfo;
-            }
-
-            // Allow operation if current org is either afnemer or aanbieder.
-            $isAfnemer   = ($afnemerId !== null && $afnemerId === $currentOrg);
-            $isAanbieder = ($aanbiederId !== null && $aanbiederId === $currentOrg);
+            $afnemerId     = $this->resolvePartyId($afnemerInfo);
+            $aanbiederId   = $this->resolvePartyId($aanbiederInfo);
+            $isAfnemer     = ($afnemerId !== null && $afnemerId === $currentOrg);
+            $isAanbieder   = ($aanbiederId !== null && $aanbiederId === $currentOrg);
 
             if ($isAfnemer === false && $isAanbieder === false) {
                 return [
@@ -502,26 +486,10 @@ class AanbodService
             // SECURITY CHECK: Verify that the active organization is either afnemer or aanbieder.
             $afnemerInfo   = $aanbodData['afnemer'] ?? null;
             $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-
-            // Check various ways the afnemer might be stored.
-            $afnemerId = null;
-            if (is_array($afnemerInfo) === true && isset($afnemerInfo['id']) === true) {
-                $afnemerId = $afnemerInfo['id'];
-            } else if (is_string($afnemerInfo) === true) {
-                $afnemerId = $afnemerInfo;
-            }
-
-            // Check various ways the aanbieder might be stored.
-            $aanbiederId = null;
-            if (is_array($aanbiederInfo) === true && isset($aanbiederInfo['id']) === true) {
-                $aanbiederId = $aanbiederInfo['id'];
-            } else if (is_string($aanbiederInfo) === true) {
-                $aanbiederId = $aanbiederInfo;
-            }
-
-            // Allow operation if current org is either afnemer or aanbieder.
-            $isAfnemer   = ($afnemerId !== null && $afnemerId === $currentOrg);
-            $isAanbieder = ($aanbiederId !== null && $aanbiederId === $currentOrg);
+            $afnemerId     = $this->resolvePartyId($afnemerInfo);
+            $aanbiederId   = $this->resolvePartyId($aanbiederInfo);
+            $isAfnemer     = ($afnemerId !== null && $afnemerId === $currentOrg);
+            $isAanbieder   = ($aanbiederId !== null && $aanbiederId === $currentOrg);
 
             if ($isAfnemer === false && $isAanbieder === false) {
                 $this->logger->warning(
@@ -594,6 +562,32 @@ class AanbodService
             ];
         }//end try
     }//end denyAanbod()
+
+    /**
+     * Resolve an afnemer / aanbieder party id from its polymorphic shape.
+     *
+     * Aanbod payloads store party references either as a `['id' => '…']`
+     * tuple (relation expansion) or as the raw UUID string. Returns null
+     * for any other shape.
+     *
+     * @param mixed $partyInfo The raw party value from the aanbod payload
+     *
+     * @return string|null The resolved party id, or null when not present
+     */
+    private function resolvePartyId(mixed $partyInfo): ?string
+    {
+        if (is_array($partyInfo) === true && isset($partyInfo['id']) === true) {
+            return (string) $partyInfo['id'];
+        }
+
+        if (is_string($partyInfo) === true && $partyInfo !== '') {
+            return $partyInfo;
+        }
+
+        return null;
+
+    }//end resolvePartyId()
+
 
     /**
      * Find an aanbod object by UUID across all possible schemas.
