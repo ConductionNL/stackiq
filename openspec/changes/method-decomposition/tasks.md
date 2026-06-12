@@ -223,8 +223,12 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 - [~] 8.5 **SoftwareCatalogue/HierarchyHandler** (3 suppressions):
   - Extract `buildHierarchyTree()`, `resolveParent()`, `updateChildReferences()`
   - Remove suppressions; run PHPMD
-- [~] 8.6 **ModuleRegistrationService** (3 suppressions):
-  - Private method extraction; remove suppressions; run PHPMD
+- [x] 8.6 **ModuleRegistrationService** (3 suppressions):
+  - `handleModuleRegistration()` decomposed into `resolveOrganisationType()`,
+    `mapOrgTypeToRegisteredBy()`, `updateModuleRegisteredBy()` in
+    `lib/Service/ModuleRegistrationService.php`; tests in
+    `tests/Unit/Service/ModuleRegistrationServiceDecompositionTest.php`.
+  - Class-level Cyclomatic / NPath / ExcessiveMethodLength suppressions removed.
 - [~] 8.7 **GebruikSyncService** (3 suppressions):
   - Private method extraction; remove suppressions; run PHPMD
 - [~] 8.8 **OpenRegisterEventsDebugListener** (3 suppressions):
