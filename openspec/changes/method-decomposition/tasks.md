@@ -216,10 +216,16 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 - [~] 8.3 **AanbodService** (4 suppressions):
   - Audit and apply private method extraction per decomposition strategy
   - Remove suppressions; run PHPMD
-- [~] 8.4 **UserProfileUpdatedEventListener** (4 suppressions):
-  - Create `lib/Service/ProfileFieldMapper.php`
-  - Event handling methods delegate to `ProfileFieldMapper`
-  - Remove suppressions; run PHPMD
+- [x] 8.4 **UserProfileUpdatedEventListener** (4 suppressions):
+  - `lib/Service/ProfileFieldMapper.php` already exists (Phase 1 build).
+  - `syncToContactpersoon()` decomposed: extract `buildContactPatch()`
+    (changed-field projection + username backfill) and
+    `persistContactpersoonPatch()` (schema/register load + metadata
+    hydration + MagicMapper update) in
+    `lib/EventListener/UserProfileUpdatedEventListener.php`; tests in
+    `tests/Unit/EventListener/UserProfileUpdatedEventListenerDecompositionTest.php`.
+  - Method-level CyclomaticComplexity / NPathComplexity /
+    ExcessiveMethodLength suppressions removed from `syncToContactpersoon`.
 - [~] 8.5 **SoftwareCatalogue/HierarchyHandler** (3 suppressions):
   - Extract `buildHierarchyTree()`, `resolveParent()`, `updateChildReferences()`
   - Remove suppressions; run PHPMD
