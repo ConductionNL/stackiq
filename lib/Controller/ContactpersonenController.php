@@ -271,24 +271,14 @@ class ContactpersonenController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @spec                                          openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-2
+     * @spec openspec/changes/retrofit-2026-05-26-contactpersonen-api/tasks.md#task-2
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
-        $currentUser = $this->userSession->getUser();
-        if ($currentUser === null) {
-            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-        }
-
-        // Only admins and org-admins may create user accounts.
-        $isAdmin    = $this->groupManager->isAdmin($currentUser->getUID());
-        $isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-            || $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-        if ($isAdmin === false && $isOrgAdmin === false) {
-            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+        $authError = $this->validateConvertToUserPermission();
+        if ($authError !== null) {
+            return $authError;
         }
 
         try {
@@ -398,29 +388,7 @@ class ContactpersonenController extends Controller
             // Update the contactpersoon object with the username.
             $contactData['username'] = $user->getUID();
 
-            // Ensure string fields are properly typed (fixes data stored with incorrect types).
-            $stringFields = ['voornaam', 'tussenvoegsel', 'achternaam', 'functie', 'telefoonnummer', 'email', 'e-mailadres'];
-            foreach ($stringFields as $field) {
-                if (isset($contactData[$field]) === true && is_string($contactData[$field]) === false) {
-                    $contactData[$field] = (string) $contactData[$field];
-                }
-            }
-
-            // Handle organisatie field — if it's a string UUID, convert to null to avoid validation errors.
-            // The relationship is maintained through the organisation entity's users array.
-            if (isset($contactData['organisatie']) === true && is_string($contactData['organisatie']) === true) {
-                $this->logger->info(
-                        'ContactpersonenController: Converting organisatie string to null for validation',
-                        [
-                            'originalValue' => $contactData['organisatie'],
-                        ]
-                        );
-                $contactData['organisatie'] = null;
-            }
-
-            if (isset($contactData['organisation']) === true && is_string($contactData['organisation']) === true) {
-                $contactData['organisation'] = null;
-            }
+            $contactData = $this->normaliseContactDataForPersist($contactData);
 
             $contactpersoonObject->setObject($contactData);
 
@@ -455,17 +423,7 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            // Get user groups to include in response.
-            $userGroups     = $this->groupManager->getUserGroups($user);
-            $catalogGroups  = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
-            $userGroupNames = [];
-
-            foreach ($userGroups as $group) {
-                $groupId = $group->getGID();
-                if (in_array(needle: $groupId, haystack: $catalogGroups) === true) {
-                    $userGroupNames[] = $groupId;
-                }
-            }
+            $userGroupNames = $this->projectCatalogGroupsForUser($user);
 
             // Add groups to the contactpersoon data for frontend.
             $updatedContactData           = $contactpersoonObject->getObject();
@@ -503,6 +461,114 @@ class ContactpersonenController extends Controller
                     );
         }//end try
     }//end convertToUser()
+
+    /**
+     * Authorises the convertToUser endpoint.
+     *
+     * Returns null when the current user is allowed to create user accounts, or
+     * a 401/403 JSONResponse otherwise. Extracted from {@see convertToUser()} as
+     * part of task 5.1.
+     *
+     * @return JSONResponse|null
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function validateConvertToUserPermission(): ?JSONResponse
+    {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $uid        = $currentUser->getUID();
+        $isAdmin    = $this->groupManager->isAdmin($uid);
+        $isOrgAdmin = $this->groupManager->isInGroup($uid, 'gebruik-beheerder')
+            || $this->groupManager->isInGroup($uid, 'aanbod-beheerder');
+
+        if ($isAdmin === false && $isOrgAdmin === false) {
+            return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+        }
+
+        return null;
+    }//end validateConvertToUserPermission()
+
+    /**
+     * Normalises the contactpersoon payload for the MagicMapper persist call.
+     *
+     * Coerces the string-typed fields (`voornaam`, `achternaam`, …) to strings
+     * — guards against legacy rows where these fields were stored as `null`,
+     * `int`, or `bool` — and nulls out the `organisatie` / `organisation` keys
+     * when they hold a UUID string (the relationship is maintained via the
+     * organisation entity's users array). Extracted from {@see convertToUser()}
+     * as part of task 5.2.
+     *
+     * @param array<string, mixed> $contactData The raw contactpersoon payload.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function normaliseContactDataForPersist(array $contactData): array
+    {
+        $stringFields = [
+            'voornaam',
+            'tussenvoegsel',
+            'achternaam',
+            'functie',
+            'telefoonnummer',
+            'email',
+            'e-mailadres',
+        ];
+        foreach ($stringFields as $field) {
+            if (isset($contactData[$field]) === true && is_string($contactData[$field]) === false) {
+                $contactData[$field] = (string) $contactData[$field];
+            }
+        }
+
+        if (isset($contactData['organisatie']) === true && is_string($contactData['organisatie']) === true) {
+            $this->logger->info(
+                'ContactpersonenController: Converting organisatie string to null for validation',
+                [
+                    'originalValue' => $contactData['organisatie'],
+                ]
+            );
+            $contactData['organisatie'] = null;
+        }
+
+        if (isset($contactData['organisation']) === true && is_string($contactData['organisation']) === true) {
+            $contactData['organisation'] = null;
+        }
+
+        return $contactData;
+    }//end normaliseContactDataForPersist()
+
+    /**
+     * Projects the catalog-relevant groups (`gebruik-beheerder` /
+     * `aanbod-beheerder` / `gebruik-raadpleger`) for the supplied user.
+     *
+     * Extracted from {@see convertToUser()} as part of task 5.3 so the response
+     * shaper no longer iterates the user's group list inline.
+     *
+     * @param \OCP\IUser $user The newly-created user.
+     *
+     * @return string[]
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     */
+    private function projectCatalogGroupsForUser(\OCP\IUser $user): array
+    {
+        $catalogGroups = ['gebruik-beheerder', 'aanbod-beheerder', 'gebruik-raadpleger'];
+        $projected     = [];
+
+        foreach ($this->groupManager->getUserGroups($user) as $group) {
+            $groupId = $group->getGID();
+            if (in_array(needle: $groupId, haystack: $catalogGroups, strict: true) === true) {
+                $projected[] = $groupId;
+            }
+        }
+
+        return $projected;
+    }//end projectCatalogGroupsForUser()
 
     /**
      * Change user password.

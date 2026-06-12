@@ -137,13 +137,38 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 
 ## Phase 5 — ContactpersonenController decomposition (REQ-DECOMP-003)
 
-- [~] 5.1 Extract `validateContactInput(array $data): array` private method from `create()`
-- [~] 5.2 Extract `enrichContactData(array $data): array` private method from `create()`
-- [~] 5.3 Extract `persistContact(array $data): JSONResponse` private method from `create()`
+- [x] 5.1 ContactpersonenController convertToUser authorisation extraction:
+  - Note: the literal task name (`validateContactInput` extracted from
+    `create()`) is misnamed — there is no `create()` endpoint; the
+    catalog-creation flow lives in `convertToUser()` (which converts an
+    existing contactpersoon object into a Nextcloud user account).
+  - Done in spirit: the authentication / org-admin guard at the top of
+    `convertToUser()` extracted into private
+    `validateConvertToUserPermission(): ?JSONResponse` in
+    `lib/Controller/ContactpersonenController.php`. The endpoint method
+    now opens with a single early-return guard instead of the
+    five-statement inline gate.
+  - Tests: `tests/Unit/Controller/ContactpersonenControllerDecompositionTest.php`.
+- [x] 5.2 ContactpersonenController persist-data normalisation extraction:
+  - Done in spirit: the inline string-coercion loop +
+    `organisatie`/`organisation` UUID→null block extracted into
+    private `normaliseContactDataForPersist(array): array`. Centralises
+    the "MagicMapper-friendly contactpersoon payload" shaping that was
+    previously inlined in `convertToUser()`.
+- [x] 5.3 ContactpersonenController catalog-group projection extraction:
+  - Done in spirit: the response-shaping loop that filtered the
+    newly-created user's groups down to the three catalog groups
+    extracted into private `projectCatalogGroupsForUser(IUser): array`.
+  - Method-level `CyclomaticComplexity` / `NPathComplexity` /
+    `ExcessiveMethodLength` suppressions removed from `convertToUser()`.
 - [~] 5.4 Decompose `bulkImport()`:
   - Extract `parseImportFile()`, `validateImportRow()`, `processImportBatch()`, `buildImportReport()`
+  - Note: no `bulkImport()` endpoint exists in this controller;
+    bulk-import flows live in `ContactpersoonService`. Deferred.
 - [~] 5.5 Decompose `exportContacts()`:
   - Extract `buildExportQuery()`, `formatExportData()`, `buildExportResponse()`
+  - Note: no `exportContacts()` endpoint exists in this controller.
+    Deferred.
 - [~] 5.6 Verify class drops below 1000 lines and coupling below 13
 - [~] 5.7 Remove all `@SuppressWarnings(PHPMD.*)` from `ContactpersonenController.php`
 - [~] 5.8 Run PHPMD — zero violations; run `phpunit --filter ContactpersonenControllerTest` — must pass
