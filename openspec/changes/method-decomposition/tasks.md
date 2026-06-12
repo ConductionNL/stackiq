@@ -253,8 +253,11 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     in `lib/Service/ModuleVersionService.php`; unit test in
     `tests/Unit/Service/ModuleVersionServiceDecompositionTest.php`
   - Class-level `ExcessiveMethodLength` suppression removed
-- [~] 9.6 **ViewController** (1 suppression):
-  - Extract oversized method; remove suppression
+- [x] 9.6 **ViewController** (1 suppression):
+  - `getAllViews()` + `getView()` decomposed via `determineListStatusCode()`,
+    `determineViewStatusCode()`, `buildListErrorPayload()` in
+    `lib/Controller/ViewController.php`; tests in
+    `tests/Unit/Controller/ViewControllerDecompositionTest.php`
 
 ## Phase 10 — Verification
 
