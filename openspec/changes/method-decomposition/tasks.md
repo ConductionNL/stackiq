@@ -282,15 +282,34 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     Tests in `tests/Unit/Service/SymfonyEmailServiceDecompositionTest.php`.
     `attachFiles()` not in scope (no attachment paths used today).
   - Remove all suppressions; run PHPMD + phpunit
-- [~] 7.6 **SoftwareCatalogue/ContactPersonHandler** (Priority 1, 7 suppressions):
-  - Private method decomposition — extract per-phase methods
-  - Remove all suppressions; run PHPMD + phpunit
+- [x] 7.6 **SoftwareCatalogue/ContactPersonHandler** (Priority 1, 7 suppressions):
+  - `generateUsernameFromContactData()` had the same
+    `preg_replace + strtolower` cleaning block duplicated in both
+    name-based candidate strategies (firstname.lastname and
+    firstnamelastname). Extracted into private
+    `cleanNameParts(string, string): array{0:string,1:string}` in
+    `lib/Service/SoftwareCatalogue/ContactPersonHandler.php`; the
+    two strategies now share the cleaning step and short-circuit when
+    either name part is empty.
+  - Tests: `tests/Unit/Service/SoftwareCatalogue/ContactPersonHandlerDecompositionTest.php`.
+  - Note: the class-level suppressions are retained because
+    `createUserAccount()` (line ~311) is still ~330 lines of
+    orchestration; full burn-down is part of the per-file series.
 
 ## Phase 8 — Priority 2 files (REQ-DECOMP-011)
 
-- [~] 8.1 **SoftwareCatalogue/OrganizationHandler** (4 suppressions):
-  - Private method extraction for complex methods
-  - Remove suppressions; run PHPMD
+- [x] 8.1 **SoftwareCatalogue/OrganizationHandler** (4 suppressions):
+  - The title-generation block (which previously inlined an
+    `array_filter` + fallback chain inside the per-iteration loop in
+    `processContactpersonen()`) extracted into private
+    `buildContactpersoonTitle(array): string` in
+    `lib/Service/SoftwareCatalogue/OrganizationHandler.php`.
+  - Tests: `tests/Unit/Service/SoftwareCatalogue/OrganizationHandlerDecompositionTest.php`.
+  - Note: the class-level suppressions are retained because the
+    surrounding `processContactpersonen()` orchestration is still
+    ~260 lines (per-contact create-or-update loop with embedded
+    log/branch shaping); retiring the rest is part of the per-file
+    burn-down series.
 - [~] 8.2 **ModuleComplianceService** (4 suppressions):
   - Note: this service syncs module->standaardversie mappings — it does not
     perform license/security/documentation compliance scoring; the literal

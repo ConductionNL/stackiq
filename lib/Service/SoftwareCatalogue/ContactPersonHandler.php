@@ -126,28 +126,19 @@ class ContactPersonHandler
             }
         }
 
-        // Strategy 2: firstname.lastname (fallback).
-        if (empty($voornaam) === false && empty($achternaam) === false) {
-            // Strip spaces and non-alphanumeric chars from name parts.
-            $cleanVoornaam   = preg_replace('/[^a-z0-9]/', '', strtolower($voornaam));
-            $cleanAchternaam = preg_replace('/[^a-z0-9]/', '', strtolower($achternaam));
-            if (empty($cleanVoornaam) === false && empty($cleanAchternaam) === false) {
-                $username = $cleanVoornaam.'.'.$cleanAchternaam;
-                if ($this->isValidUsername(username: $username) === true) {
-                    return $username;
-                }
+        // Strategies 2 and 3: name-based candidates.
+        [$cleanVoornaam, $cleanAchternaam] = $this->cleanNameParts($voornaam, $achternaam);
+        if ($cleanVoornaam !== '' && $cleanAchternaam !== '') {
+            // Strategy 2: firstname.lastname.
+            $candidate = $cleanVoornaam.'.'.$cleanAchternaam;
+            if ($this->isValidUsername(username: $candidate) === true) {
+                return $candidate;
             }
-        }
 
-        // Strategy 3: firstnamelastname (fallback).
-        if (empty($voornaam) === false && empty($achternaam) === false) {
-            $cleanVoornaam   = preg_replace('/[^a-z0-9]/', '', strtolower($voornaam));
-            $cleanAchternaam = preg_replace('/[^a-z0-9]/', '', strtolower($achternaam));
-            if (empty($cleanVoornaam) === false && empty($cleanAchternaam) === false) {
-                $username = $cleanVoornaam.$cleanAchternaam;
-                if ($this->isValidUsername(username: $username) === true) {
-                    return $username;
-                }
+            // Strategy 3: firstnamelastname.
+            $candidate = $cleanVoornaam.$cleanAchternaam;
+            if ($this->isValidUsername(username: $candidate) === true) {
+                return $candidate;
             }
         }
 
@@ -2704,4 +2695,32 @@ class ContactPersonHandler
             return null;
         }//end try
     }//end ensureOrganizationEntity()
+
+    /**
+     * Strips spaces and non-alphanumeric characters from voornaam/achternaam
+     * and lowercases the result so they can be safely concatenated into a
+     * Nextcloud-compatible username candidate.
+     *
+     * Extracted from {@see generateUsernameFromContactData()} as part of task
+     * 7.6 so the two name-based candidate strategies share the cleaning step.
+     *
+     * @param string $voornaam   The raw first name.
+     * @param string $achternaam The raw last name.
+     *
+     * @return array{0: string, 1: string} The cleaned pair (empty strings when
+     *                                     no usable characters remain).
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function cleanNameParts(string $voornaam, string $achternaam): array
+    {
+        if ($voornaam === '' || $achternaam === '') {
+            return ['', ''];
+        }
+
+        $cleanVoornaam   = (string) preg_replace('/[^a-z0-9]/', '', strtolower($voornaam));
+        $cleanAchternaam = (string) preg_replace('/[^a-z0-9]/', '', strtolower($achternaam));
+
+        return [$cleanVoornaam, $cleanAchternaam];
+    }//end cleanNameParts()
 }//end class

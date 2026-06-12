@@ -383,19 +383,7 @@ class OrganizationHandler
                         ]
                     );
 
-                    // Generate title from name components.
-                    $titleParts = array_filter(
-                            [
-                                $contactpersoon['voornaam'] ?? '',
-                                $contactpersoon['tussenvoegsel'] ?? '',
-                                $contactpersoon['achternaam'] ?? '',
-                            ]
-                            );
-
-                        $title = $contactpersoon['email'] ?? 'Contact Person';
-                    if (empty($titleParts) === false) {
-                        $title = implode(' ', $titleParts);
-                    }
+                    $title = $this->buildContactpersoonTitle($contactpersoon);
 
                     // Create contactgegevens object with proper schema.
                     $contactFunctie      = $contactpersoon['functie'] ?? '';
@@ -786,4 +774,35 @@ class OrganizationHandler
             return false;
         }//end try
     }//end userBelongsToOrganization()
+
+    /**
+     * Builds a human-readable title for a contactpersoon row.
+     *
+     * Prefers `voornaam + tussenvoegsel + achternaam` (joined with single
+     * spaces); falls back to the email address; final fallback is the literal
+     * "Contact Person". Extracted from {@see processContactpersonen()} as part
+     * of task 8.1.
+     *
+     * @param array<string, mixed> $contactpersoon The raw contactpersoon payload.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-8
+     */
+    private function buildContactpersoonTitle(array $contactpersoon): string
+    {
+        $parts = array_filter(
+            [
+                $contactpersoon['voornaam'] ?? '',
+                $contactpersoon['tussenvoegsel'] ?? '',
+                $contactpersoon['achternaam'] ?? '',
+            ]
+        );
+
+        if (empty($parts) === false) {
+            return implode(' ', $parts);
+        }
+
+        return $contactpersoon['email'] ?? 'Contact Person';
+    }//end buildContactpersoonTitle()
 }//end class
