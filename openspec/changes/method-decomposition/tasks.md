@@ -169,7 +169,10 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 - [~] 7.1 **OrganizationSyncService** (REQ-DECOMP-007):
   - Extract pipeline stages: `fetchOrganizations()`, `validateOrganization()`, `transformOrganization()`, `persistOrganization()` each with NPath<50
   - Extract shared `validateOrganizationData()` called by both `handleCreate()` and `handleUpdate()`
-  - Centralise error handling into `handleSyncError()`
+  - Partial: `handleSyncError()` centralised — replaces the ad-hoc catch blocks
+    in `performOrganizationsSync()` + `performContactSync()`. Tests in
+    `tests/Unit/Service/OrganizationSyncServiceDecompositionTest.php`.
+    Pipeline-stage extraction left for the per-file PHPMD burn-down series.
   - Remove all suppressions; run PHPMD + phpunit
 - [~] 7.2 **ContactpersoonService** (REQ-DECOMP-008):
   - Create `lib/Service/Contactpersoon/ContactValidator.php` with `validateEmail()`, `validatePhone()`, `validateName()`
