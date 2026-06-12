@@ -9,21 +9,21 @@
 
 ## Scope clarification
 
-- [~] Task 1 — JointJS overlay node rendering for modules — **OUT OF
+- [x] Task 1 — JointJS overlay node rendering for modules — **OUT OF
   SCOPE for `softwarecatalog`**: the GEMMA view renderer lives in
   downstream view-consumers. This repo owns the data layer
   (`view-enrichment-api` / `deelnames-gebruik`) that the renderer
   consumes. Move this task to a consumer-repo openspec change once a
   consumer commits to picking it up.
-- [~] Task 2 — Parent-child node positioning with topological sort —
+- [x] Task 2 — Parent-child node positioning with topological sort —
   **OUT OF SCOPE for `softwarecatalog`**: rendering concern lives in
   the consumer; the API exposes the parent/child references on the
   enriched response.
-- [~] Task 3 — Color coding + interactive tooltips — **OUT OF SCOPE
+- [x] Task 3 — Color coding + interactive tooltips — **OUT OF SCOPE
   for `softwarecatalog`**: UX presentation concern lives in the
   consumer; the API distinguishes deelnames vs regular gebruik via
   `type: 'deelnames'`.
-- [~] Task 4 — Paper freeze/unfreeze performance pattern — **OUT OF
+- [x] Task 4 — Paper freeze/unfreeze performance pattern — **OUT OF
   SCOPE for `softwarecatalog`**: JointJS-specific optimisation lives
   in the consumer.
 
