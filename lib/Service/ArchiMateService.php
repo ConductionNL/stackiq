@@ -322,24 +322,7 @@ class ArchiMateService
 
             // Look up the organization from Voorzieningen register.
             $voorzConfig = $this->settingsService->getVoorzieningenConfig();
-            if (empty($voorzConfig['register']) === false) {
-                $orgRegisterId = $voorzConfig['register'];
-            } else {
-                $orgRegisterId = null;
-            }
-
-            if (empty($voorzConfig['organisatie_schema']) === false) {
-                $orgSchemaId = $voorzConfig['organisatie_schema'];
-            } else {
-                $orgSchemaId = null;
-            }
-
-            if (empty($orgRegisterId) === true || empty($orgSchemaId) === true) {
-                // Fallback to generic lookup.
-                $orgRegisterId = $this->settingsService->getVoorzieningenRegisterId();
-                $orgSchemaId   = $this->settingsService->getSchemaIdForObjectType('organisatie');
-            }
-
+            [$orgRegisterId, $orgSchemaId] = $this->resolveOrgRegisterAndSchema($voorzConfig);
             if ($orgRegisterId === null || $orgSchemaId === null) {
                 throw new \RuntimeException('Organization register/schema not configured');
             }
@@ -521,6 +504,38 @@ class ArchiMateService
             ];
         }//end try
     }//end exportOrgArchiMate()
+
+    /**
+     * Resolves the organisation register + schema id pair for an org-scoped export.
+     *
+     * First tries the dedicated keys on the voorzieningen config; falls back to
+     * the generic settings lookups when either key is empty. Returns a pair where
+     * either element can be null if no resolution succeeded — caller is expected
+     * to early-throw in that case.
+     *
+     * Extracted from {@see exportOrgArchiMate()} as part of task 4.4 to replace
+     * the 4-branch if/else block with a single helper.
+     *
+     * @param array<string, mixed> $voorzConfig Settings → voorzieningen block.
+     *
+     * @return array{0: int|string|null, 1: int|string|null}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-4
+     */
+    private function resolveOrgRegisterAndSchema(array $voorzConfig): array
+    {
+        $register = empty($voorzConfig['register']) === false ? $voorzConfig['register'] : null;
+        $schema   = empty($voorzConfig['organisatie_schema']) === false
+            ? $voorzConfig['organisatie_schema']
+            : null;
+
+        if (empty($register) === true || empty($schema) === true) {
+            $register = $this->settingsService->getVoorzieningenRegisterId();
+            $schema   = $this->settingsService->getSchemaIdForObjectType('organisatie');
+        }
+
+        return [$register, $schema];
+    }//end resolveOrgRegisterAndSchema()
 
     /**
      * Create schema ID mapping for export service

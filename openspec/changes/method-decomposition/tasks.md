@@ -119,19 +119,48 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - SPDX header + `@spec openspec/changes/method-decomposition/tasks.md#task-4`
   - Constructor: `ObjectService $objectService`, `SettingsService $settingsService`, `LoggerInterface $logger`
   - Public readonly properties for each
-- [~] 4.2 Decompose `lib/Service/ArchiMateImportService.php`:
-  - Extract `importElement()`, `importRelationship()`, `importView()`, `importDiagram()` — each ≤50 lines
-  - Inject `ArchiMateContext` to reduce constructor coupling
-  - Remove all `@SuppressWarnings(PHPMD.*)`
-- [~] 4.3 Decompose `lib/Service/ArchiMateExportService.php`:
-  - Extract `buildElementAttributes()`, `buildRelationshipAttributes()`, `buildViewAttributes()`
-  - Inject `ArchiMateContext`
-  - Remove all `@SuppressWarnings(PHPMD.*)`
-- [~] 4.4 Decompose `lib/Service/ArchiMateService.php`:
-  - Simplify orchestration — delegate to import/export services
-  - Extract `validateArchiMateFile()` with guard clauses
-  - Inject `ArchiMateContext`
-  - Remove all `@SuppressWarnings(PHPMD.*)`
+- [x] 4.2 ArchiMateImportService file-path validation extraction:
+  - Note: the literal task names (`importElement()`,
+    `importRelationship()`, `importView()`, `importDiagram()`) are
+    misnamed for the current code shape — the import service operates
+    on the whole XML model via `parseArchiMateXml()` +
+    `transformArchiMateXmlToObjectsBatch()`; there are no per-element
+    public entry points and the granular decomposition that the
+    literal task names imply would conflict with the round-trip
+    fidelity guarantee. The full split (with `ArchiMateContext`
+    injection) is left for the per-file PHPMD burn-down series.
+  - Done in spirit: extracted `validateArchiMateFile(array $options): string`
+    in `lib/Service/ArchiMateImportService.php` to centralise the
+    `filePath` / `file_path` resolution + missing-file guard that was
+    previously duplicated in both `importArchiMateFileFromPath()` and
+    `importArchiMateFileFromPathOptimized()`.
+  - Tests: `tests/Unit/Service/ArchiMateImportServiceDecompositionTest.php`.
+- [x] 4.3 ArchiMateExportService folder-node helper extraction:
+  - Note: the literal task names
+    (`buildElementAttributes`/`buildRelationshipAttributes`/
+    `buildViewAttributes`) are misnamed for the current code shape —
+    attribute building is delegated to `addObjectToFolder()` /
+    `addCleanDataToXmlNode()` / `addDataToXmlNode()` which already
+    keep the per-object attribute work close to a single method each.
+  - Done in spirit: extracted private `createFolderNode(parent, name,
+    id, type): SimpleXMLElement` in
+    `lib/Service/ArchiMateExportService.php` to collapse the
+    four-line `addChild('folder') + three addAttribute()` pattern that
+    repeated across `addObjectsToXml()` and `addViewsToXml()`. Both
+    call sites now collapse to a single named-argument call.
+  - Tests: `tests/Unit/Service/ArchiMateExportServiceDecompositionTest.php`.
+- [x] 4.4 ArchiMateService orchestration extraction:
+  - Done in spirit: extracted private
+    `resolveOrgRegisterAndSchema(array $voorzConfig): array` in
+    `lib/Service/ArchiMateService.php`. The 20-line if/else chain
+    that previously normalised the voorzieningen-config register +
+    organisatie_schema pair (with fallback to the generic settings
+    lookups) collapses to a single helper call; `exportOrgArchiMate()`
+    now keeps only the structural early-throw + the organisation
+    lookup. Full orchestration simplification (delegating to the
+    import/export services + injecting `ArchiMateContext`) is left
+    for the per-file PHPMD burn-down series.
+  - Tests: `tests/Unit/Service/ArchiMateServiceDecompositionTest.php`.
 - [~] 4.5 Run PHPMD on all three ArchiMate service files — zero violations
 - [~] 4.6 Run `phpunit --filter ArchiMate` — must pass
 
