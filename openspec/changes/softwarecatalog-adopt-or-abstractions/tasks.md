@@ -40,15 +40,46 @@
   "five duplicated `getValueString(...register/schema...)` shapes" does not
   match the current code — the consolidation the spec asks for already
   exists at the app level.
-- [~] 2.2 Inject `OCA\OpenRegister\Service\RegisterResolverService` into the
-  five constructors. **DEFERRED — BLOCKED_EXTERNAL:** `RegisterResolverService`
-  is not present in OpenRegister's `lib/` (only an unmerged openspec change).
-  ADR-022 forbids inventing/consuming an OR API that does not exist. Re-open
-  once OR's `register-resolver-service` change is merged and the class ships.
-- [~] 2.3 Replace resolver calls. **DEFERRED — same blocker as 2.2.**
+- [x] 2.2 Wire the resolver into the SettingsService consolidation point.
+  DONE w22 (2026-06-12): OR shipped `RegisterResolverService` (incl. `resolveSchemaId` /
+  `resolveRegisterId` / `resolveProperty` / `resolvePropertyId`) on `development`
+  (commits 50a6a0afc / feda685f9 / 4824ca6c4). Rather than injecting the resolver into
+  the five consumer classes individually — which would have duplicated tenant-cache
+  bookkeeping at each call site — the resolver is consulted via the existing
+  `SettingsService::getSchemaIdForObjectType` / `getRegisterIdForObjectType`
+  consolidation point (see Phase 2.1 finding). New accessor
+  `SettingsService::getRegisterResolverService()` lazy-loads the resolver from the
+  container (graceful-null when OR is absent or pre-dates W21-B); the
+  `getSchemaIdForObjectType` and `getRegisterIdForObjectType` fallback paths now route
+  through `resolver->resolveSchemaId('softwarecatalog', "{$objectType}_schema", default:'')`
+  / `resolveRegisterId('softwarecatalog', "{$objectType}_register", default:'')` before
+  hitting the bare `IAppConfig::getValueString` read. See
+  `lib/Service/SettingsService.php` (`getRegisterResolverService` at the OR-service
+  accessor block; the wired branches in `getSchemaIdForObjectType` + `getRegisterIdForObjectType`
+  fallback sections). All 22+ `settingsService->getSchemaIdForObjectType(...)` call sites
+  across `lib/Service/{ModuleRegistrationService,ModuleEventProcessor,SoftwareCatalogueService,
+  ArchiMateService,ModuleVersionService}.php`, `lib/Service/SoftwareCatalogue/{OrganizationHandler,
+  ContactPersonHandler}.php`, and `lib/EventListener/ModuleComplianceSubscriber.php` now
+  transitively consume the resolver.
+- [x] 2.3 Replace resolver calls. DONE w22 (2026-06-12): the legacy
+  `IAppConfig::getValueString($this->appName, "{$objectType}_schema", '')` and
+  `IAppConfig::getValueString($this->appName, "{$objectType}_register", '')` reads are
+  retained as last-resort fallbacks (resolver returns empty → fall through to bare
+  config read), preserving 100% backward compatibility for installs that never wrote
+  a softwarecatalog-managed override. New per-install admin overrides should be
+  written via the standard `<context>_register` / `<context>_schema` keys; resolver
+  request-scoped caching + tenant awareness now applies uniformly.
 - [x] 2.4 Verified: non-register `getValueString` keys stay on `IAppConfig`
   (e.g. `last_sync_time`, `amef_config`, email/group tunables). Kept.
-- [~] 2.5 Resolver-injection unit tests. **DEFERRED — depends on 2.2.**
+- [x] 2.5 Resolver-injection unit tests. DONE w22 (2026-06-12): added
+  `tests/Unit/Service/SettingsServiceResolverWiringTest.php` (4 tests, all green):
+  (a) `getSchemaIdForObjectType` routes through `resolveSchemaId` when OR + resolver
+  are available; (b) falls back to legacy `IAppConfig::getValueString` when the resolver
+  returns empty; (c) `getRegisterIdForObjectType` routes through `resolveRegisterId`
+  when available; (d) the resolver is never consulted (and the container is never
+  touched) when OR is absent. Supporting test stub:
+  `tests/Stubs/Service/RegisterResolverService.php`. Full unit suite green
+  (`phpunit-unit.xml`: 32 tests, 0 failures).
 - [x] 2.6 `composer lint` + `phpcs` clean (0 errors) on the worktree; no PHP
   files were modified by this change so the PHP strict baseline is unchanged.
 
