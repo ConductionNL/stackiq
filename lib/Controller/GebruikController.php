@@ -86,55 +86,116 @@ class GebruikController extends Controller
     public function getGebruiken(): JSONResponse
     {
         $user = $this->userSession->getUser();
-
-        // Return empty results for non-logged-in users to prevent unnecessary errors.
         if ($user === null) {
             return new JSONResponse($this->getEmptyResult());
         }
 
-        $groups     = $this->groupManager->getUserGroups(user: $user);
-        $groupNames = array_map(
-                function (IGroup $group) {
-                    return $group->getGID();
-                },
-                $groups
-                );
-
-        $orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');
-
-        $isAdmin     = in_array(needle: 'admin', haystack: $groupNames);
-        $isBeheerder = in_array(needle: 'gebruik-beheerder', haystack: $groupNames);
-        $isAanbod    = in_array(needle: 'aanbod-beheerder', haystack: $groupNames);
-
-        if ($isAdmin !== true && $isBeheerder !== true && $isAanbod !== true) {
+        $roles = $this->resolveUserRoles($user);
+        if ($roles['hasAccess'] === false) {
             return new JSONResponse($this->getEmptyResult());
         }
 
         $options = $this->request->getParams();
 
-        if ($isAanbod === true && $isAdmin !== true && $isBeheerder !== true) {
-            $appOptions    = ['aanbieder' => $orgUuid];
-            $applicatieIds = $this->gebruikService->getApplicationIds(options: $appOptions);
-
-            if ($applicatieIds === []) {
-                return new JSONResponse($this->getEmptyResult());
-            }
-
-            if (isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false) {
-                return new JSONResponse($this->getEmptyResult());
-            }
-
-            if (isset($options['module']) === false) {
-                $options['module'] = $applicatieIds;
-            }
+        $scoped = $this->applyAanbodScopeToOptions($roles, $options);
+        if ($scoped === null) {
+            return new JSONResponse($this->getEmptyResult());
         }
 
         try {
-            return new JSONResponse($this->gebruikService->getGebruiken(options: $options));
+            return new JSONResponse($this->gebruikService->getGebruiken(options: $scoped));
         } catch (Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
         }
     }//end getGebruiken()
+
+    /**
+     * Resolve the calling user's role flags + organisation UUID.
+     *
+     * Extracted from `getGebruiken()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.3 — collapses
+     * the group-membership lookup + role flag computation into one helper.
+     *
+     * @param \OCP\IUser $user The authenticated user.
+     *
+     * @return array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,hasAccess:bool,orgUuid:string}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-3
+     */
+    private function resolveUserRoles(\OCP\IUser $user): array
+    {
+        $groups     = $this->groupManager->getUserGroups(user: $user);
+        $groupNames = array_map(
+            function (IGroup $group) {
+                return $group->getGID();
+            },
+            $groups
+        );
+
+        $orgUuid = (string) $this->config->getUserValue(
+            userId: $user->getUID(),
+            appName: 'core',
+            key: 'organisation'
+        );
+
+        $isAdmin     = in_array(needle: 'admin', haystack: $groupNames);
+        $isBeheerder = in_array(needle: 'gebruik-beheerder', haystack: $groupNames);
+        $isAanbod    = in_array(needle: 'aanbod-beheerder', haystack: $groupNames);
+
+        return [
+            'isAdmin'     => $isAdmin,
+            'isBeheerder' => $isBeheerder,
+            'isAanbod'    => $isAanbod,
+            'hasAccess'   => ($isAdmin === true || $isBeheerder === true || $isAanbod === true),
+            'orgUuid'     => $orgUuid,
+        ];
+
+    }//end resolveUserRoles()
+
+    /**
+     * Apply aanbod-beheerder scoping to query options.
+     *
+     * For an aanbod-beheerder that is neither admin nor gebruik-beheerder,
+     * restrict the visible gebruiken to the organisation's applicaties.
+     * Returns the (possibly augmented) options array, or null when the user
+     * is asking for a module they cannot see — the caller treats null as
+     * "render empty result".
+     *
+     * Extracted from `getGebruiken()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.3.
+     *
+     * @param array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,orgUuid:string} $roles   Role flags.
+     * @param array<string,mixed>                                                $options Current request params.
+     *
+     * @return array<string,mixed>|null
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-3
+     */
+    private function applyAanbodScopeToOptions(array $roles, array $options): ?array
+    {
+        if ($roles['isAanbod'] !== true || $roles['isAdmin'] === true || $roles['isBeheerder'] === true) {
+            return $options;
+        }
+
+        $applicatieIds = $this->gebruikService->getApplicationIds(
+            options: ['aanbieder' => $roles['orgUuid']]
+        );
+
+        if ($applicatieIds === []) {
+            return null;
+        }
+
+        if (isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false) {
+            return null;
+        }
+
+        if (isset($options['module']) === false) {
+            $options['module'] = $applicatieIds;
+        }
+
+        return $options;
+
+    }//end applyAanbodScopeToOptions()
 
     /**
      * Fetch gebruiken for a deelnemer.

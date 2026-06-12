@@ -242,8 +242,10 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - Remove suppressions; run PHPMD
 - [~] 9.2 **ModuleComplianceSubscriber** (2 suppressions):
   - Private method extraction; remove suppressions; run PHPMD
-- [~] 9.3 **GebruikController** (2 suppressions):
-  - Private method extraction; thin controller per ADR-003; remove suppressions
+- [x] 9.3 **GebruikController** (2 suppressions):
+  - `getGebruiken()` decomposed via `resolveUserRoles()` + `applyAanbodScopeToOptions()` in
+    `lib/Controller/GebruikController.php`; tests in
+    `tests/Unit/Controller/GebruikControllerDecompositionTest.php`
 - [~] 9.4 **SoftwareCatalogue/GroupHandler** (1 suppression):
   - Extract the single oversized method; remove suppression
 - [x] 9.5 **ModuleVersionService** (1 suppression):
