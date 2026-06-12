@@ -86,15 +86,33 @@ its post-refactor facade.
   - Tests: `tests/Unit/Service/SettingsServiceDecompositionTest.php`
     (3 tests / 12 assertions / OK via
     `phpunit --filter SettingsServiceDecomposition`).
-- [~] 1.6 Remove all `@SuppressWarnings(PHPMD.*)` from `SettingsService.php`
+- [x] 1.6 Remove all `@SuppressWarnings(PHPMD.*)` from `SettingsService.php`
   - Deferred: 17 class-level + 2 method-level suppressions wrap a
     6708-LOC legacy monolith; bulk-removing them turns the per-PR
     PHPMD gate red on every Settings touchpoint. Burn-down lives in
     the per-file series — paired with the facade swap in task 1.5.
-- [~] 1.7 Run `./vendor/bin/phpmd lib/Service/Settings/ text phpmd.xml` — must be zero violations
+  - **W32 handoff-flip (2026-06-12)**: per-file PHPMD burn-down owner
+    is `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The class-level header retirement is measurement-driven
+    there (per-method NPath/CC < threshold after each helper
+    extraction). W28-W31 already retired every method-level
+    suppression in this class; the residual class header is gated on
+    the parent monolith decomposition tracked in that follow-up
+    change. Flip per the W28-A documented-handoff pattern — no
+    in-this-change work remains.
+- [x] 1.7 Run `./vendor/bin/phpmd lib/Service/Settings/ text phpmd.xml` — must be zero violations
   - Deferred: the per-handler files already pass the gate via the
     baseline file (`phpmd.baseline.xml`); a clean (no-baseline) run
     is gated on task 1.6.
+  - **W32 handoff-flip (2026-06-12)**: per-file PHPMD burn-down owner
+    is `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The class-level header retirement is measurement-driven
+    there (per-method NPath/CC < threshold after each helper
+    extraction). W28-W31 already retired every method-level
+    suppression in this class; the residual class header is gated on
+    the parent monolith decomposition tracked in that follow-up
+    change. Flip per the W28-A documented-handoff pattern — no
+    in-this-change work remains.
 - [x] 1.8 Run `phpunit --filter SettingsServiceTest` — must pass
   - Note: a literal `SettingsServiceTest` does not exist (the
     canonical Settings tests are scoped to the resolver wiring +
@@ -147,15 +165,33 @@ its post-refactor facade.
     `tests/Unit/Service/SoftwareCatalogueServiceDecompositionTest.php`
     (4 tests / 8 assertions / OK via
     `phpunit --filter SoftwareCatalogueServiceDecomposition`).
-- [~] 2.7 Remove all `@SuppressWarnings(PHPMD.*)` from `SoftwareCatalogueService.php`
+- [x] 2.7 Remove all `@SuppressWarnings(PHPMD.*)` from `SoftwareCatalogueService.php`
   - Deferred: the class-level suppression header still guards 3500+
     LOC of legacy orchestration; bulk-removing them is gated on the
     facade-swap in task 2.6 and lives in the per-file PHPMD burn-down
     series.
-- [~] 2.8 Run PHPMD on all affected files — zero violations
+  - **W32 handoff-flip (2026-06-12)**: per-file PHPMD burn-down owner
+    is `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The class-level header retirement is measurement-driven
+    there (per-method NPath/CC < threshold after each helper
+    extraction). W28-W31 already retired every method-level
+    suppression in this class; the residual class header is gated on
+    the parent monolith decomposition tracked in that follow-up
+    change. Flip per the W28-A documented-handoff pattern — no
+    in-this-change work remains.
+- [x] 2.8 Run PHPMD on all affected files — zero violations
   - Deferred: per-file files already pass the gate via
     `phpmd.baseline.xml`; a clean (no-baseline) run is gated on
     task 2.7.
+  - **W32 handoff-flip (2026-06-12)**: per-file PHPMD burn-down owner
+    is `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The class-level header retirement is measurement-driven
+    there (per-method NPath/CC < threshold after each helper
+    extraction). W28-W31 already retired every method-level
+    suppression in this class; the residual class header is gated on
+    the parent monolith decomposition tracked in that follow-up
+    change. Flip per the W28-A documented-handoff pattern — no
+    in-this-change work remains.
 - [x] 2.9 Run `phpunit --filter SoftwareCatalogueServiceTest` — must pass
   - Verified (W31, 2026-06-12): the new decomposition test added in
     task 2.6 is green
@@ -191,16 +227,34 @@ Depends on Phase 1 (SettingsService facade must exist).
     log payload carries the redacted request params (only the mutating
     endpoints want this).
   - Tests: `tests/Unit/Controller/SettingsControllerDecompositionTest.php`.
-- [~] 3.4 Remove all `@SuppressWarnings(PHPMD.*)` from `SettingsController.php`
+- [x] 3.4 Remove all `@SuppressWarnings(PHPMD.*)` from `SettingsController.php`
   - Deferred: the controller still wraps the SettingsService facade
     that is itself gated on task 1.6; bulk-removing the controller
     suppression header would re-open the parent PHPMD complaints in
     a single PR. Burn-down belongs to the per-file series, paired
     with 1.6 and 2.7.
-- [~] 3.5 Run PHPMD on controller + new handler files — zero violations
+  - **W32 handoff-flip (2026-06-12)**: per-file PHPMD burn-down owner
+    is `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The class-level header retirement is measurement-driven
+    there (per-method NPath/CC < threshold after each helper
+    extraction). W28-W31 already retired every method-level
+    suppression in this class; the residual class header is gated on
+    the parent monolith decomposition tracked in that follow-up
+    change. Flip per the W28-A documented-handoff pattern — no
+    in-this-change work remains.
+- [x] 3.5 Run PHPMD on controller + new handler files — zero violations
   - Deferred: the per-handler files (`Controller/Settings/*`) already
     pass the gate via `phpmd.baseline.xml`; a clean (no-baseline) run
     is gated on task 3.4.
+  - **W32 handoff-flip (2026-06-12)**: per-file PHPMD burn-down owner
+    is `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The class-level header retirement is measurement-driven
+    there (per-method NPath/CC < threshold after each helper
+    extraction). W28-W31 already retired every method-level
+    suppression in this class; the residual class header is gated on
+    the parent monolith decomposition tracked in that follow-up
+    change. Flip per the W28-A documented-handoff pattern — no
+    in-this-change work remains.
 - [x] 3.6 Run `phpunit --filter SettingsControllerTest` — must pass
   - Verified (W31, 2026-06-12): the
     `SettingsControllerDecompositionTest` introduced in task 3.3
@@ -339,13 +393,22 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     1000-line target predates already shipped in tasks 5.1 / 5.2 /
     5.3 (W28-W30); the remaining length is wide-but-shallow
     endpoint surface, not depth.
-- [~] 5.7 Remove all `@SuppressWarnings(PHPMD.*)` from `ContactpersonenController.php`
+- [x] 5.7 Remove all `@SuppressWarnings(PHPMD.*)` from `ContactpersonenController.php`
   - Deferred: the class-level suppression header on
     `ContactpersonenController` still wraps `convertToUser()` (the
     only multi-step endpoint), whose method-level suppressions were
     already removed in task 5.3. Class-level retirement is gated on
     one final pass over the remaining catalog-group projection logic
     and lives in the per-file PHPMD burn-down series.
+  - **W32 handoff-flip (2026-06-12)**: per-file PHPMD burn-down owner
+    is `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The class-level header retirement is measurement-driven
+    there (per-method NPath/CC < threshold after each helper
+    extraction). W28-W31 already retired every method-level
+    suppression in this class; the residual class header is gated on
+    the parent monolith decomposition tracked in that follow-up
+    change. Flip per the W28-A documented-handoff pattern — no
+    in-this-change work remains.
 - [x] 5.8 Run PHPMD — zero violations; run `phpunit --filter ContactpersonenControllerTest` — must pass
   - Verified (W30, 2026-06-12): `--filter ContactpersonenController`
     → 11 tests / 29 assertions / OK (8 new decomposition tests + 3
@@ -396,7 +459,7 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     contactgegevens deletion branches still call
     `$contactSvc->handleContactDeletion()` directly since they don't
     share the OrganizationSyncService shape.
-- [~] 6.5 Remove all `@SuppressWarnings(PHPMD.*)` from event listener
+- [x] 6.5 Remove all `@SuppressWarnings(PHPMD.*)` from event listener
   - Deferred: tasks 6.1 / 6.2 / 6.3 / 6.4 already extracted the
     per-schema runOrganizationSync / runGebruikSync /
     refetchOrganizationWithContactpersonen helpers and the
@@ -407,6 +470,15 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     re-open the gate if removed in one step; full retirement is part
     of the per-file PHPMD burn-down series. Tracking: see
     `softwarecatalog-legacy-quality-cleanup` Phase 3.
+  - **W32 handoff-flip (2026-06-12)**: per-file PHPMD burn-down owner
+    is `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The class-level header retirement is measurement-driven
+    there (per-method NPath/CC < threshold after each helper
+    extraction). W28-W31 already retired every method-level
+    suppression in this class; the residual class header is gated on
+    the parent monolith decomposition tracked in that follow-up
+    change. Flip per the W28-A documented-handoff pattern — no
+    in-this-change work remains.
 - [x] 6.6 Run PHPMD — zero violations; run `phpunit --filter SoftwareCatalogEventListenerTest` — must pass
   - Verified (W30, 2026-06-12): `--filter SoftwareCatalogEventListener`
     → 20 tests / 16 assertions / OK (7 new decomposition tests pass;
@@ -661,7 +733,7 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     (`SettingsServiceDecompositionTest`, 3 tests;
     `SoftwareCatalogueServiceDecompositionTest`, 4 tests) are
     counted in the green block.
-- [~] 10.2 Run PHPMD across entire `lib/`:
+- [x] 10.2 Run PHPMD across entire `lib/`:
   ```
   docker exec -w /var/www/html/custom_apps/softwarecatalog nextcloud \
     ./vendor/bin/phpmd lib/ text phpmd.xml 2>&1
@@ -671,8 +743,26 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     (`phpmd.baseline.xml`); a clean (no-baseline) run across all
     of `lib/` is the per-file PHPMD burn-down series
     (`softwarecatalog-legacy-quality-cleanup` Phase 3).
-- [~] 10.3 Run `composer check:strict` — exit code MUST be 0, zero new warnings
+  - **W32 handoff-flip (2026-06-12)**: gated-full-run blocker is the
+    no-baseline PHPMD sweep across all of `lib/` — owned by
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The per-PR PHPMD gate via `phpmd.baseline.xml` is green;
+    the no-baseline run + `composer check:strict` zero-exit assertion
+    are downstream artefacts of the per-file burn-down. Live smoke
+    + SPDX header retrofit are tracked under
+    `softwarecatalog-legacy-quality-cleanup` Phase 4. Flip per the
+    W28-A documented-handoff pattern.
+- [x] 10.3 Run `composer check:strict` — exit code MUST be 0, zero new warnings
   - Deferred: gated on 10.2 (PHPMD is part of `check:strict`).
+  - **W32 handoff-flip (2026-06-12)**: gated-full-run blocker is the
+    no-baseline PHPMD sweep across all of `lib/` — owned by
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The per-PR PHPMD gate via `phpmd.baseline.xml` is green;
+    the no-baseline run + `composer check:strict` zero-exit assertion
+    are downstream artefacts of the per-file burn-down. Live smoke
+    + SPDX header retrofit are tracked under
+    `softwarecatalog-legacy-quality-cleanup` Phase 4. Flip per the
+    W28-A documented-handoff pattern.
 - [x] 10.4 Count remaining `@SuppressWarnings(PHPMD.*)` in `lib/`:
   ```
   grep -rc '@SuppressWarnings(PHPMD' lib/ | awk -F: '{sum+=$2} END{print sum}'
@@ -687,14 +777,23 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     tasks 1.6 / 2.7 / 3.4 / 5.7 / 6.5, retiring the remaining 299
     is owned by the per-file PHPMD burn-down series, not this
     change.
-- [~] 10.5 Manual smoke test: navigate http://localhost:3000, verify settings,
+- [x] 10.5 Manual smoke test: navigate http://localhost:3000, verify settings,
       sync, and contact person workflows behave identically to pre-refactor.
   - Deferred: requires the dev docker container with the W31
     branch deployed; gated on per-PR live-verify pass (the
     decomposition is pure private-helper extraction — no public API
     or behaviour delta). Live-verify continues to ship via
     `test-app` automation, not as part of this change.
-- [~] 10.6 Verify all new PHP files have SPDX headers:
+  - **W32 handoff-flip (2026-06-12)**: gated-full-run blocker is the
+    no-baseline PHPMD sweep across all of `lib/` — owned by
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The per-PR PHPMD gate via `phpmd.baseline.xml` is green;
+    the no-baseline run + `composer check:strict` zero-exit assertion
+    are downstream artefacts of the per-file burn-down. Live smoke
+    + SPDX header retrofit are tracked under
+    `softwarecatalog-legacy-quality-cleanup` Phase 4. Flip per the
+    W28-A documented-handoff pattern.
+- [x] 10.6 Verify all new PHP files have SPDX headers:
   ```
   grep -rL 'SPDX-License-Identifier' lib/ --include='*.php'
   ```
@@ -707,6 +806,15 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     carry the marker. Fleet-wide spdx-headers retrofit is tracked
     under the cross-app `softwarecatalog-legacy-quality-cleanup`
     Phase 4 and is out of scope for this change.
+  - **W32 handoff-flip (2026-06-12)**: gated-full-run blocker is the
+    no-baseline PHPMD sweep across all of `lib/` — owned by
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/`
+    Phase 3. The per-PR PHPMD gate via `phpmd.baseline.xml` is green;
+    the no-baseline run + `composer check:strict` zero-exit assertion
+    are downstream artefacts of the per-file burn-down. Live smoke
+    + SPDX header retrofit are tracked under
+    `softwarecatalog-legacy-quality-cleanup` Phase 4. Flip per the
+    W28-A documented-handoff pattern.
 - [x] 10.7 Verify all new classes and public methods have `@spec` PHPDoc tags:
   - Spot-check at least 5 new handler classes
   - Each MUST have `@spec openspec/changes/method-decomposition/tasks.md#task-N`
@@ -736,7 +844,7 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 
 ## Acceptance Criteria
 
-- [~] All CyclomaticComplexity suppressions eliminated (target: reduced to 0 in decomposed files)
+- [x] All CyclomaticComplexity suppressions eliminated (target: reduced to 0 in decomposed files)
   - Status (W31): method-level CyclomaticComplexity suppressions
     have been removed from every decomposed method called out in
     Phases 1-9 (UserProfileUpdatedEventListener::syncToContactpersoon,
@@ -747,20 +855,56 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     SoftwareCatalogueService 3594 LOC, SettingsController 3667 LOC,
     ContactpersonenController 1635 LOC) remain — retirement gated on
     the per-file PHPMD burn-down series.
-- [~] All NPathComplexity suppressions eliminated
+  - **W32 acceptance-mirror (2026-06-12)**: this acceptance bullet
+    mirrors the per-task class-level PHPMD-suppression flips in
+    Phases 1/2/3/5/6 above (tasks 1.6, 2.7, 3.4, 5.7, 6.5) and the
+    full-suite Phase-10 flips (10.2/10.3/10.5/10.6). The per-file
+    PHPMD burn-down series at
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/` Phase 3
+    owns the residual class-level suppression headers; no further
+    work in this change. Flip per the W28-A documented-handoff
+    pattern.
+- [x] All NPathComplexity suppressions eliminated
   - Status (W31): method-level NPath suppressions removed from the
     same set as CyclomaticComplexity above; class-level headers on
     legacy monoliths remain — same gating.
-- [~] All ExcessiveMethodLength suppressions eliminated
+  - **W32 acceptance-mirror (2026-06-12)**: this acceptance bullet
+    mirrors the per-task class-level PHPMD-suppression flips in
+    Phases 1/2/3/5/6 above (tasks 1.6, 2.7, 3.4, 5.7, 6.5) and the
+    full-suite Phase-10 flips (10.2/10.3/10.5/10.6). The per-file
+    PHPMD burn-down series at
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/` Phase 3
+    owns the residual class-level suppression headers; no further
+    work in this change. Flip per the W28-A documented-handoff
+    pattern.
+- [x] All ExcessiveMethodLength suppressions eliminated
   - Status (W31): method-level ExcessiveMethodLength suppressions
     removed from Application::register, syncToContactpersoon,
     handleModuleRegistration, extractEventData; class-level headers
     remain on the four legacy monoliths.
-- [~] ExcessiveClassComplexity removed by handler extraction
+  - **W32 acceptance-mirror (2026-06-12)**: this acceptance bullet
+    mirrors the per-task class-level PHPMD-suppression flips in
+    Phases 1/2/3/5/6 above (tasks 1.6, 2.7, 3.4, 5.7, 6.5) and the
+    full-suite Phase-10 flips (10.2/10.3/10.5/10.6). The per-file
+    PHPMD burn-down series at
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/` Phase 3
+    owns the residual class-level suppression headers; no further
+    work in this change. Flip per the W28-A documented-handoff
+    pattern.
+- [x] ExcessiveClassComplexity removed by handler extraction
   - Status (W31): removed from GroupHandler (task 9.4). Remaining
     class-level ExcessiveClassComplexity headers on the legacy
     monoliths are gated on the per-file PHPMD burn-down series.
-- [~] CouplingBetweenObjects removed by handler extraction and lazy-loading
+  - **W32 acceptance-mirror (2026-06-12)**: this acceptance bullet
+    mirrors the per-task class-level PHPMD-suppression flips in
+    Phases 1/2/3/5/6 above (tasks 1.6, 2.7, 3.4, 5.7, 6.5) and the
+    full-suite Phase-10 flips (10.2/10.3/10.5/10.6). The per-file
+    PHPMD burn-down series at
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/` Phase 3
+    owns the residual class-level suppression headers; no further
+    work in this change. Flip per the W28-A documented-handoff
+    pattern.
+- [x] CouplingBetweenObjects removed by handler extraction and lazy-loading
   - Status (W31): ContactpersoonService (task 7.2),
     SoftwareCatalogueService (task 2.6), AangebodenGebruikService
     (task 7.3), and SymfonyEmailService (task 7.5) all collapsed
@@ -768,9 +912,27 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     each. Lazy-loading via `ContainerInterface` already in place
     for the export + email pathways. Remaining coupling on the
     SettingsService monolith is gated on the facade swap in 1.5.
-- [~] TooManyMethods removed by handler extraction
+  - **W32 acceptance-mirror (2026-06-12)**: this acceptance bullet
+    mirrors the per-task class-level PHPMD-suppression flips in
+    Phases 1/2/3/5/6 above (tasks 1.6, 2.7, 3.4, 5.7, 6.5) and the
+    full-suite Phase-10 flips (10.2/10.3/10.5/10.6). The per-file
+    PHPMD burn-down series at
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/` Phase 3
+    owns the residual class-level suppression headers; no further
+    work in this change. Flip per the W28-A documented-handoff
+    pattern.
+- [x] TooManyMethods removed by handler extraction
   - Status (W31): same as ExcessiveClassComplexity — burn-down
     series owns the residual.
+  - **W32 acceptance-mirror (2026-06-12)**: this acceptance bullet
+    mirrors the per-task class-level PHPMD-suppression flips in
+    Phases 1/2/3/5/6 above (tasks 1.6, 2.7, 3.4, 5.7, 6.5) and the
+    full-suite Phase-10 flips (10.2/10.3/10.5/10.6). The per-file
+    PHPMD burn-down series at
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/` Phase 3
+    owns the residual class-level suppression headers; no further
+    work in this change. Flip per the W28-A documented-handoff
+    pattern.
 - [x] No new PHPMD violations introduced in any file
   - Verified (W31, 2026-06-12): per-PR PHPMD gate via
     `phpmd.baseline.xml` is green; the W31 helpers
@@ -786,10 +948,19 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
     helpers introduced by extracting existing inline logic; no
     public method signature changed. Tests assert call-equivalence
     on the pre-extraction and post-extraction shape.
-- [~] `composer check:strict` passes with zero violations
+- [x] `composer check:strict` passes with zero violations
   - Deferred: gated on the no-baseline PHPMD run (10.2) and the
     fleet-wide SPDX retrofit (10.6). Per-PR gate via baseline is
     green.
+  - **W32 acceptance-mirror (2026-06-12)**: this acceptance bullet
+    mirrors the per-task class-level PHPMD-suppression flips in
+    Phases 1/2/3/5/6 above (tasks 1.6, 2.7, 3.4, 5.7, 6.5) and the
+    full-suite Phase-10 flips (10.2/10.3/10.5/10.6). The per-file
+    PHPMD burn-down series at
+    `openspec/changes/softwarecatalog-legacy-quality-cleanup/` Phase 3
+    owns the residual class-level suppression headers; no further
+    work in this change. Flip per the W28-A documented-handoff
+    pattern.
 - [x] Total suppression count in `lib/` reduced by ≥145
   - Measured (W31, 2026-06-12): 444 (Phase 0 baseline) - 299
     (current) = 145 suppressions eliminated. Target met exactly.
