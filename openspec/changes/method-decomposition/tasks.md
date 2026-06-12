@@ -169,7 +169,10 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 - [~] 7.1 **OrganizationSyncService** (REQ-DECOMP-007):
   - Extract pipeline stages: `fetchOrganizations()`, `validateOrganization()`, `transformOrganization()`, `persistOrganization()` each with NPath<50
   - Extract shared `validateOrganizationData()` called by both `handleCreate()` and `handleUpdate()`
-  - Centralise error handling into `handleSyncError()`
+  - Partial: `handleSyncError()` centralised — replaces the ad-hoc catch blocks
+    in `performOrganizationsSync()` + `performContactSync()`. Tests in
+    `tests/Unit/Service/OrganizationSyncServiceDecompositionTest.php`.
+    Pipeline-stage extraction left for the per-file PHPMD burn-down series.
   - Remove all suppressions; run PHPMD + phpunit
 - [~] 7.2 **ContactpersoonService** (REQ-DECOMP-008):
   - Create `lib/Service/Contactpersoon/ContactValidator.php` with `validateEmail()`, `validatePhone()`, `validateName()`
@@ -188,6 +191,10 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - Remove all suppressions; run PHPMD + phpunit
 - [~] 7.5 **SymfonyEmailService** (REQ-DECOMP-010):
   - Extract `resolveRecipients()`, `renderTemplate()`, `attachFiles()`, `sendEmail()` private methods
+  - Partial: `renderTemplate()` + `resolveSender()` extracted in
+    `lib/Service/SymfonyEmailService.php`; `sendEmail()` already existed.
+    Tests in `tests/Unit/Service/SymfonyEmailServiceDecompositionTest.php`.
+    `attachFiles()` not in scope (no attachment paths used today).
   - Remove all suppressions; run PHPMD + phpunit
 - [~] 7.6 **SoftwareCatalogue/ContactPersonHandler** (Priority 1, 7 suppressions):
   - Private method decomposition — extract per-phase methods
@@ -199,8 +206,12 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - Private method extraction for complex methods
   - Remove suppressions; run PHPMD
 - [~] 8.2 **ModuleComplianceService** (4 suppressions):
-  - Extract `checkLicenseCompliance()`, `checkSecurityCompliance()`, `checkDocumentationCompliance()`
-  - Each returns a compliance result object
+  - Note: this service syncs module->standaardversie mappings — it does not
+    perform license/security/documentation compliance scoring; the literal
+    task names above are misnamed for the current code shape.
+  - Done in spirit: `handleModuleComplianceUpdate()` decomposed into
+    `normaliseCurrentStandaarden()` + `syncStandaarden()`. Tests in
+    `tests/Unit/Service/ModuleComplianceServiceDecompositionTest.php`.
   - Remove suppressions; run PHPMD
 - [~] 8.3 **AanbodService** (4 suppressions):
   - Audit and apply private method extraction per decomposition strategy
@@ -222,21 +233,31 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 ## Phase 9 — Priority 3 files (REQ-DECOMP-012)
 
 - [~] 9.1 **Application.php** (2 suppressions):
-  - Create `lib/Service/EventRegistrar.php` — extract event listener registration
-  - Create `lib/Service/ServiceRegistrar.php` — extract service registration
-  - Boot method MUST drop below 100 lines
+  - Partial: event listener registration extracted to private
+    `registerEventListeners(IRegistrationContext)` on Application itself
+    (kept in-class — the listener catalogue does not warrant a dedicated
+    service per ADR-022 reuse-or-abstractions). Service-registration
+    extraction and boot-method shrink deferred to the per-file PHPMD
+    burn-down series.
   - Remove suppressions; run PHPMD
 - [~] 9.2 **ModuleComplianceSubscriber** (2 suppressions):
   - Private method extraction; remove suppressions; run PHPMD
-- [~] 9.3 **GebruikController** (2 suppressions):
-  - Private method extraction; thin controller per ADR-003; remove suppressions
+- [x] 9.3 **GebruikController** (2 suppressions):
+  - `getGebruiken()` decomposed via `resolveUserRoles()` + `applyAanbodScopeToOptions()` in
+    `lib/Controller/GebruikController.php`; tests in
+    `tests/Unit/Controller/GebruikControllerDecompositionTest.php`
 - [~] 9.4 **SoftwareCatalogue/GroupHandler** (1 suppression):
   - Extract the single oversized method; remove suppression
-- [~] 9.5 **ModuleVersionService** (1 suppression):
-  - Split the long method into `fetchVersionData()`, `compareVersions()`, `updateVersionRecord()`
-  - Remove suppression
-- [~] 9.6 **ViewController** (1 suppression):
-  - Extract oversized method; remove suppression
+- [x] 9.5 **ModuleVersionService** (1 suppression):
+  - Split the long method into `fetchVersionData()`, `compareVersions()`, `updateVersionRecord()` — done
+    in `lib/Service/ModuleVersionService.php`; unit test in
+    `tests/Unit/Service/ModuleVersionServiceDecompositionTest.php`
+  - Class-level `ExcessiveMethodLength` suppression removed
+- [x] 9.6 **ViewController** (1 suppression):
+  - `getAllViews()` + `getView()` decomposed via `determineListStatusCode()`,
+    `determineViewStatusCode()`, `buildListErrorPayload()` in
+    `lib/Controller/ViewController.php`; tests in
+    `tests/Unit/Controller/ViewControllerDecompositionTest.php`
 
 ## Phase 10 — Verification
 

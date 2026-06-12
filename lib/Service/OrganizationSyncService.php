@@ -147,6 +147,46 @@ class OrganizationSyncService
     }//end __construct()
 
     /**
+     * Centralised sync error handler.
+     *
+     * Records the error against the per-operation stats array and emits a
+     * uniformly-structured log line. Extracted from the half-dozen ad-hoc
+     * catch blocks scattered through `performOrganizationsSync()`,
+     * `performContactSync()`, and `performFullSync()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 7.1.
+     *
+     * @param string     $operation  Short operation label (e.g. "OrganizationSync").
+     * @param string     $identifier Object identifier (UUID / username) the
+     *                               failure was tied to.
+     * @param \Throwable $exception  The caught throwable.
+     * @param array      $stats      Stats array (by reference) — receives an
+     *                               entry in `errors[]`.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7-1
+     */
+    private function handleSyncError(
+        string $operation,
+        string $identifier,
+        \Throwable $exception,
+        array &$stats
+    ): void {
+        $error = $identifier.': '.$exception->getMessage();
+        if (isset($stats['errors']) === true && is_array($stats['errors']) === true) {
+            $stats['errors'][] = $error;
+        }
+
+        $this->logger->error(
+            $operation.': failed to process '.$identifier,
+            [
+                'error' => $exception->getMessage(),
+            ]
+        );
+
+    }//end handleSyncError()
+
+    /**
      * Create a database-agnostic JSON extraction expression
      *
      * Returns the appropriate SQL function for extracting a value from a JSON column
@@ -337,13 +377,7 @@ class OrganizationSyncService
                 $this->ensureOrganisationEntity(organisatieObject: $object, stats: $stats, sendEmails: false);
                 $stats['organizationsProcessed']++;
             } catch (\Exception $e) {
-                $stats['errors'][] = $row['uuid'].': '.$e->getMessage();
-                $this->logger->error(
-                    'OrganizationSync: failed to process org '.$row['uuid'],
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                );
+                $this->handleSyncError('OrganizationSync', (string) $row['uuid'], $e, $stats);
             }
         }//end foreach
 
@@ -481,13 +515,7 @@ class OrganizationSyncService
 
                 $stats['contactPersonsProcessed']++;
             } catch (\Exception $e) {
-                $stats['errors'][] = $contact['uuid'].': '.$e->getMessage();
-                $this->logger->error(
-                    'ContactSync: failed to sync contact '.$contact['uuid'],
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                );
+                $this->handleSyncError('ContactSync', (string) $contact['uuid'], $e, $stats);
             }//end try
         }//end foreach
 

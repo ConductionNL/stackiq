@@ -932,14 +932,8 @@ class SymfonyEmailService
         array $templateData
     ): bool {
         try {
-            // Get template content from settings service.
-            $emailSettings   = $this->settingsService->getEmailSettings();
-            $templates       = ($emailSettings['templates'] ?? []);
-            $templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate(templateName: $templateName));
-
-            // Replace template variables.
-            $htmlBody = $this->processTemplate(
-                template: $templateContent,
+            $htmlBody = $this->renderTemplate(
+                templateName: $templateName,
                 templateData: $templateData
             );
 
@@ -962,6 +956,56 @@ class SymfonyEmailService
             throw $e;
         }//end try
     }//end sendTemplatedEmail()
+
+    /**
+     * Render a named template against the provided data.
+     *
+     * Single-purpose helper extracted from `sendTemplatedEmail()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 7.5: combines
+     * template resolution (custom override from email settings, fallback to
+     * the built-in default) with variable substitution.
+     *
+     * @param string $templateName The template name.
+     * @param array  $templateData The data to substitute into the template.
+     *
+     * @return string The rendered HTML body.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
+     */
+    private function renderTemplate(string $templateName, array $templateData): string
+    {
+        $emailSettings   = $this->settingsService->getEmailSettings();
+        $templates       = ($emailSettings['templates'] ?? []);
+        $templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate(templateName: $templateName));
+
+        return $this->processTemplate(
+            template: $templateContent,
+            templateData: $templateData
+        );
+    }//end renderTemplate()
+
+    /**
+     * Resolve the configured sender for outbound mail.
+     *
+     * Single-purpose helper extracted from `sendEmail()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 7.5.
+     *
+     * @return array{0:string,1:string,2:string} Tuple of [senderEmail,
+     *                                           senderName, transportType]
+     *                                           with sane fallbacks when
+     *                                           unset in settings.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
+     */
+    private function resolveSender(): array
+    {
+        $emailSettings = $this->settingsService->getEmailSettings();
+        $senderEmail   = ($emailSettings['senderEmail'] ?? self::DEFAULT_SENDER);
+        $senderName    = ($emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME);
+        $transportType = ($emailSettings['transportType'] ?? 'smtp');
+
+        return [$senderEmail, $senderName, $transportType];
+    }//end resolveSender()
 
     /**
      * Gets the default template for a given template name.
@@ -1095,10 +1139,7 @@ class SymfonyEmailService
         string $htmlBody
     ): bool {
         try {
-            // Get sender configuration from settings service.
-            $emailSettings = $this->settingsService->getEmailSettings();
-            $senderEmail   = ($emailSettings['senderEmail'] ?? self::DEFAULT_SENDER);
-            $senderName    = ($emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME);
+            [$senderEmail, $senderName, $transportType] = $this->resolveSender();
 
             // Create Symfony Email.
             $email = (new Email())
@@ -1109,7 +1150,7 @@ class SymfonyEmailService
                 ->text(strip_tags($htmlBody));
             // Fallback text version.
             // Send email using Symfony Mailer.
-                        $this->getMailer()->send($email);
+            $this->getMailer()->send($email);
 
             $this->logger->info(
                     'Email sent successfully using Symfony Mailer',
@@ -1117,7 +1158,7 @@ class SymfonyEmailService
                         'recipient' => $recipientEmail,
                         'subject'   => $subject,
                         'sender'    => $senderEmail,
-                        'transport' => $emailSettings['transportType'] ?? 'smtp',
+                        'transport' => $transportType,
                     ]
                     );
 
