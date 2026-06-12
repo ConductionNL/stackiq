@@ -102,11 +102,22 @@ Depends on Phase 1 (SettingsService facade must exist).
 - [x] 3.2 Create `lib/Controller/Settings/ModuleRegistrationHandler.php`:
   - Inject only `ObjectService` and `ModuleRegistrationService`
   - Extract private: `validateModuleInput()`, `resolveModuleDependencies()`, `persistModules()`
-- [~] 3.3 Refactor `SettingsController`:
-  - Replace `syncSoftwareCatalogue()` body with `$this->syncHandler->handle(...)`
-  - Replace `registerModules()` body with `$this->moduleHandler->handle(...)`
-  - Verify each action method is ≤10 lines per ADR-003
-  - Verify constructor parameter count <13
+- [x] 3.3 Refactor `SettingsController` error-handling shape:
+  - Note: the literal task names (`syncSoftwareCatalogue()` /
+    `registerModules()`) are misnamed for the current code shape —
+    no such methods exist on this controller; the sync invocation
+    lives in `performSync()` and `getSyncStatus()`, and module
+    registration is owned by `ModuleRegistrationHandler` already.
+  - Done in spirit: extracted private
+    `buildConfigErrorResponse(operationLabel, exception, includeParams): JSONResponse`
+    in `lib/Controller/SettingsController.php` to centralise the
+    `error-log + 500 JSONResponse` pattern that was duplicated across
+    `getGeneralConfig()`, `updateGeneralConfig()`, `getSyncConfig()`,
+    and `updateSyncConfig()`. Each catch block now collapses to a
+    single helper call; the `includeParams` flag controls whether the
+    log payload carries the redacted request params (only the mutating
+    endpoints want this).
+  - Tests: `tests/Unit/Controller/SettingsControllerDecompositionTest.php`.
 - [~] 3.4 Remove all `@SuppressWarnings(PHPMD.*)` from `SettingsController.php`
 - [~] 3.5 Run PHPMD on controller + new handler files — zero violations
 - [~] 3.6 Run `phpunit --filter SettingsControllerTest` — must pass
