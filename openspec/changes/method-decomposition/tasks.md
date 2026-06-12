@@ -232,9 +232,11 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
   - Private method extraction; thin controller per ADR-003; remove suppressions
 - [~] 9.4 **SoftwareCatalogue/GroupHandler** (1 suppression):
   - Extract the single oversized method; remove suppression
-- [~] 9.5 **ModuleVersionService** (1 suppression):
-  - Split the long method into `fetchVersionData()`, `compareVersions()`, `updateVersionRecord()`
-  - Remove suppression
+- [x] 9.5 **ModuleVersionService** (1 suppression):
+  - Split the long method into `fetchVersionData()`, `compareVersions()`, `updateVersionRecord()` — done
+    in `lib/Service/ModuleVersionService.php`; unit test in
+    `tests/Unit/Service/ModuleVersionServiceDecompositionTest.php`
+  - Class-level `ExcessiveMethodLength` suppression removed
 - [~] 9.6 **ViewController** (1 suppression):
   - Extract oversized method; remove suppression
 
