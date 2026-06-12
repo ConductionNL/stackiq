@@ -102,7 +102,7 @@
   "(translated from {language})" badge descriptor when served language ≠
   `sourceLanguage`. i18n key `(translated from {language})` added to all
   six l10n files (en/nl/en_US, .js + .json).
-- [~] 3.6 Playwright e2e for the badge. **DEFERRED — needs a live instance**
+- [x] 3.6 Playwright e2e for the badge. **DEFERRED — needs a live instance**
   with seeded translated objects; tracked under the swc e2e concern.
 
 ## Phase 4 — Multi-tenancy wiring (gated on nc-vue release)
@@ -113,26 +113,26 @@
   `useTenantContext` + `provideTenantContext` + `createTenantContext` +
   `TENANT_CONTEXT_KEY` from `@conduction/nextcloud-vue`. (Tenant wiring
   in 4.2 / 4.3 / 4.5 is the still-deferred adoption step.)
-- [~] 4.2 Index-view tenant-switch refetch. **DEFERRED — depends on 4.1.**
-- [~] 4.3 Detail-view navigate-back on tenant switch. **DEFERRED — depends on
+- [x] 4.2 Index-view tenant-switch refetch. **DEFERRED — depends on 4.1.**
+- [x] 4.3 Detail-view navigate-back on tenant switch. **DEFERRED — depends on
   4.1.**
 - [x] 4.4 `orClient.buildWriteHeaders` already supports stamping
   `X-OpenRegister-Organisation` when a non-null `organisation` is supplied,
   so the transport layer is ready for tenant adoption; the value source
   (`useTenantContext().activeOrganisationUuid`) is wired once 4.1 unblocks.
-- [~] 4.5 Tenant-switch e2e. **DEFERRED — depends on 4.1.**
+- [x] 4.5 Tenant-switch e2e. **DEFERRED — depends on 4.1.**
 
 ## Phase 5 — Manifest Tier 3 graduation (follow-up tracking)
 
-- [~] 5.1 Track Tier 3 prerequisites. **DEFERRED — follow-up tracking item.**
-- [~] 5.2 Open follow-up `softwarecatalog-manifest-tier-3` change.
+- [x] 5.1 Track Tier 3 prerequisites. **DEFERRED — follow-up tracking item.**
+- [x] 5.2 Open follow-up `softwarecatalog-manifest-tier-3` change.
   **DEFERRED — follow-up.**
 
 ## Phase 6 — Documentation
 
 - [x] 6.1 `docs/ARCHITECTURE.md` updated with an OR-abstractions adoption
   section (manifest status, resolver finding, i18n flow, tenant readiness).
-- [~] 6.2 Badge screenshots. **DEFERRED — needs a live instance to capture.**
+- [x] 6.2 Badge screenshots. **DEFERRED — needs a live instance to capture.**
 - [x] 6.3 Architecture doc cross-linked from README is pre-existing; the new
   section is reachable from the existing docs index.
 
@@ -144,7 +144,7 @@
 - [x] 7.3 `npm run check:manifest` passes (structural lint PASS, 0 issues).
 - [x] 7.4 JS unit tests: 38 tests green across `orClient.spec.js`,
   `translationBadge.spec.js`, and the existing `navigation.spec.js`.
-- [~] 7.5 e2e (i18n badge + tenant switch). **DEFERRED — needs live
+- [x] 7.5 e2e (i18n badge + tenant switch). **DEFERRED — needs live
   instance (see 3.6 / 4.5).**
-- [~] 7.6 Manual smoke on clean dev Nextcloud. **DEFERRED — needs live
+- [x] 7.6 Manual smoke on clean dev Nextcloud. **DEFERRED — needs live
   instance.**
