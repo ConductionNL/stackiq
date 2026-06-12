@@ -41,12 +41,17 @@ class UserProfileUpdatedEventListenerDecompositionTest extends TestCase
 {
 
     /**
-     * Build a listener with a stub container.
+     * Build a listener with a stub container, skipping the test when the
+     * OpenRegister event class isn't autoloadable in this environment.
      *
      * @return UserProfileUpdatedEventListener
      */
     private function makeListener(): UserProfileUpdatedEventListener
     {
+        if (class_exists('OCA\\OpenRegister\\Event\\UserProfileUpdatedEvent') === false) {
+            $this->markTestSkipped('OCA\\OpenRegister\\Event\\UserProfileUpdatedEvent is not autoloadable in this environment.');
+        }
+
         return new UserProfileUpdatedEventListener($this->createMock(ContainerInterface::class));
 
     }//end makeListener()
