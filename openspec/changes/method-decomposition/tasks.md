@@ -150,9 +150,21 @@ Depends on Phase 1 (SettingsService facade used in ArchiMateContext).
 
 ## Phase 6 — SoftwareCatalogEventListener decomposition (REQ-DECOMP-002)
 
-- [~] 6.1 Create `lib/Service/ModuleEventProcessor.php`:
-  - SPDX header + `@spec openspec/changes/method-decomposition/tasks.md#task-6`
-  - Extract shared 60% logic from `handleModuleCreated` and `handleModuleUpdated`
+- [x] 6.1 SoftwareCatalogEventListener orchestration extraction:
+  - Note: the literal task name (`ModuleEventProcessor` /
+    `handleModuleCreated`/`handleModuleUpdated`) is misnamed for the
+    current code shape — the listener handles organisatie /
+    contactpersoon / gebruik schemas, not modules. Module sync runs
+    in `ModuleRegistrationService` + `ModuleComplianceService`.
+  - Done in spirit: `handle()` decomposed into a try/catch envelope
+    plus a private `dispatchEvent()` orchestration helper, and the
+    schema-id resolution now lives in `resolveCatalogSchemaIds()`
+    (returns a normalised `array{organisatie:?int, contactpersoon:?int,
+    contactgegevens:?int, gebruik:?int}` so the three lifecycle methods
+    no longer repeat the cast + null guard). Companion helpers
+    `matchesSchema()` and `isActiveStatus()` collapse the two checks
+    that previously appeared inline at every per-schema branch.
+  - Tests: `tests/Unit/EventListener/SoftwareCatalogEventListenerDecompositionTest.php`.
 - [~] 6.2 Decompose `handleModuleCreated()`:
   - Extract `validateModuleEvent()` with guard clauses (early-return validation)
   - Extract `processModuleByType()` for type-specific logic

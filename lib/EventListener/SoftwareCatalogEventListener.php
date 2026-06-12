@@ -91,38 +91,12 @@ class SoftwareCatalogEventListener implements IEventListener
                     ]
                     );
 
-            if ($event instanceof ObjectCreatedEvent) {
-                $this->handleObjectCreated(
-                    event: $event,
-                    contactSvc: $contactSvc,
-                    settingsService: $settingsService,
-                    logger: $logger
-                );
-            } else if ($event instanceof ObjectUpdatedEvent) {
-                $this->handleObjectUpdated(
-                    event: $event,
-                    contactSvc: $contactSvc,
-                    settingsService: $settingsService,
-                    logger: $logger
-                );
-            } else if ($event instanceof ObjectDeletedEvent) {
-                $this->handleObjectDeleted(
-                    event: $event,
-                    contactSvc: $contactSvc,
-                    settingsService: $settingsService,
-                    logger: $logger
-                );
-            } else if ($event instanceof ObjectLockedEvent
-                || $event instanceof ObjectUnlockedEvent
-                || $event instanceof ObjectRevertedEvent
-            ) {
-                $logger->debug(
-                        'SoftwareCatalog: Ignoring object lifecycle event',
-                        [
-                            'eventType' => get_class($event),
-                        ]
-                        );
-            }//end if
+            $this->dispatchEvent(
+                event: $event,
+                contactSvc: $contactSvc,
+                settingsService: $settingsService,
+                logger: $logger
+            );
         } catch (\Exception $e) {
             try {
                 $logger = $this->container->get(LoggerInterface::class);
@@ -141,6 +115,132 @@ class SoftwareCatalogEventListener implements IEventListener
             }
         }//end try
     }//end handle()
+
+    /**
+     * Dispatches the supplied event to the matching per-lifecycle handler.
+     *
+     * Extracted from {@see handle()} as part of the task 6.1 decomposition so the
+     * outer method retains only the try/catch envelope and the logging shell.
+     *
+     * @param Event                 $event           The event to dispatch.
+     * @param ContactpersoonService $contactSvc      Contact-person service handle.
+     * @param SettingsService       $settingsService Settings service handle.
+     * @param LoggerInterface       $logger          Logger handle.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-6
+     */
+    private function dispatchEvent(
+        Event $event,
+        ContactpersoonService $contactSvc,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): void {
+        if ($event instanceof ObjectCreatedEvent) {
+            $this->handleObjectCreated(
+                event: $event,
+                contactSvc: $contactSvc,
+                settingsService: $settingsService,
+                logger: $logger
+            );
+            return;
+        }
+
+        if ($event instanceof ObjectUpdatedEvent) {
+            $this->handleObjectUpdated(
+                event: $event,
+                contactSvc: $contactSvc,
+                settingsService: $settingsService,
+                logger: $logger
+            );
+            return;
+        }
+
+        if ($event instanceof ObjectDeletedEvent) {
+            $this->handleObjectDeleted(
+                event: $event,
+                contactSvc: $contactSvc,
+                settingsService: $settingsService,
+                logger: $logger
+            );
+            return;
+        }
+
+        if ($event instanceof ObjectLockedEvent
+            || $event instanceof ObjectUnlockedEvent
+            || $event instanceof ObjectRevertedEvent
+        ) {
+            $logger->debug(
+                'SoftwareCatalog: Ignoring object lifecycle event',
+                [
+                    'eventType' => get_class($event),
+                ]
+            );
+        }
+    }//end dispatchEvent()
+
+    /**
+     * Resolves the catalog schema-id lookup table for the supplied settings service.
+     *
+     * Replaces the four inline `getSchemaIdForObjectType()` calls that previously
+     * lived at the top of each per-lifecycle handler. Returning a normalised
+     * `int|null` map keeps callers from having to repeat the `(int)` cast and the
+     * null guard.
+     *
+     * @param SettingsService $settingsService The settings service handle.
+     *
+     * @return array{organisatie:int|null, contactpersoon:int|null, contactgegevens:int|null, gebruik:int|null}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-6
+     */
+    private function resolveCatalogSchemaIds(SettingsService $settingsService): array
+    {
+        $cast = static function ($raw): ?int {
+            if ($raw === null || $raw === '') {
+                return null;
+            }
+
+            return (int) $raw;
+        };
+
+        return [
+            'organisatie'     => $cast($settingsService->getSchemaIdForObjectType(objectType: 'organisatie')),
+            'contactpersoon'  => $cast($settingsService->getSchemaIdForObjectType(objectType: 'contactpersoon')),
+            'contactgegevens' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens')),
+            'gebruik'         => $cast($settingsService->getSchemaIdForObjectType(objectType: 'gebruik')),
+        ];
+    }//end resolveCatalogSchemaIds()
+
+    /**
+     * Returns true when the supplied status string is the active state (Dutch or English).
+     *
+     * @param string $status The status, lower-cased by caller.
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-6
+     */
+    private function isActiveStatus(string $status): bool
+    {
+        return in_array(needle: $status, haystack: ['actief', 'active'], strict: true) === true;
+    }//end isActiveStatus()
+
+    /**
+     * Returns true when the supplied object schema matches the configured catalog
+     * schema id (either side may be null).
+     *
+     * @param int      $objectSchemaIdInt The object's schema id (already cast).
+     * @param int|null $configured        The configured schema id from settings.
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-6
+     */
+    private function matchesSchema(int $objectSchemaIdInt, ?int $configured): bool
+    {
+        return $configured !== null && $objectSchemaIdInt === $configured;
+    }//end matchesSchema()
 
     /**
      * Handles object creation events
