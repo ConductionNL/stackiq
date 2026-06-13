@@ -1,37 +1,58 @@
 # Tasks: deelnames-gebruik
 
-> **Build note (2026-06-10):** the placeholder "Implementation planning"
-> task from the original draft has been replaced with observed-behaviour
-> tasks. The deelnames data layer has already shipped inside
-> `ViewService` — see file pointers below.
+## Task 1: Implementation planning
+- **Spec ref**: specs/deelnames-gebruik/spec.md
+- **Status**: done
+- **Acceptance criteria**: Requirements from spec are decomposed into implementable tasks
 
-## Backend: deelnames data layer
+## Task 2: Fix ViewService two-phase retrieval and RBAC bypass
+- **Spec ref**: specs/deelnames-gebruik/spec.md
+- **Status**: done
+- **Acceptance criteria**:
+  - `getGebruikData()` returns only regular (RBAC-filtered) gebruik ✓
+  - `getDeelnamesGebruikData()` queries with `_rbac: false` and `_multitenancy: false` ✓
+  - Deelnames query filters on `deelnemers` field containing the current org UUID ✓
+  - Uses `getVoorzieningenConfig()` for correct register/schema identifiers ✓
+  - `getCurrentOrganisation()` uses OrganisationService instead of placeholder ✓
 
-- [x] Task 1 — Opt-in deelnames enrichment via `include_deelnames_gebruik=1` —
-  `lib/Service/ViewService.php` `isDeelnamesGebruikIncluded()` (line 525+)
-  guards the additional fetch; absent or false-y option keeps the legacy
-  shape.
-- [x] Task 2 — Deelnames items fetched with RBAC disabled so participation
-  data is complete across organisation scopes — `ViewService::getDeelnamesGebruikData()`
-  (line 1150+) calls `ObjectService::searchObjects(..., _rbac: false)`
-  per the deelnames query.
-- [x] Task 3 — Deelnames items are merged into the gebruik pool with a
-  `type: 'deelnames'` discriminator so the renderer can colour-code them
-  — `ViewService::tagGebruikItems()` (line 880+) stamps the `type` field.
-- [x] Task 4 — Per-node deelnames aggregation — `ViewService::getNodeDeelnamesGebruik()`
-  (line 477+) returns the deelnames slice per architecture node so the
-  module overlay renderer can position them.
-- [x] Task 5 — Enrichment ledger names `deelnames_gebruik` when applied —
-  `ViewService::getView()` appends `'deelnames_gebruik'` to `enrichments_applied`
-  so consumers know to render the overlay.
+## Task 3: Add source organization metadata to deelnames nodes
+- **Spec ref**: specs/deelnames-gebruik/spec.md
+- **Status**: done
+- **Acceptance criteria**:
+  - Each deelnames item carries `_sourceOrganizationId` from the afnemer field ✓
+  - Each deelnames item carries `_sourceOrganization` name from the afnemer field ✓
+  - `_type: "deelnames"` is set on each deelnames item ✓
 
-## Cross-references
+## Task 4: Add deduplication logic in ViewService
+- **Spec ref**: specs/deelnames-gebruik/spec.md
+- **Status**: done
+- **Acceptance criteria**:
+  - When the same elementRef appears in both owned and deelnames results, the owned version wins ✓
+  - `enrichViewNodes()` applies `array_diff_key` deduplication after fetching both datasets ✓
+  - Double-assignment bugs in `enrichViews()` and `enrichViewNodes()` are fixed ✓
 
-- Capability spec: `openspec/changes/deelnames-gebruik/specs/deelnames-gebruik/spec.md`
-- Backend impl: `lib/Service/ViewService.php` (deelnames methods)
-- Consumed by: `view-enrichment-api` GET response when `include_deelnames_gebruik=1`
+## Task 5: Add deelnames frontend toggle and view store
+- **Spec ref**: specs/deelnames-gebruik/spec.md
+- **Status**: done
+- **Acceptance criteria**:
+  - Pinia store module `src/store/modules/view.js` with `includeGebruik`, `includeDeelnamesGebruik` state ✓
+  - `fetchViews()` action passes both flags to `/api/views` ✓
+  - `src/views/gemmaviews/GemmaViewIndex.vue` renders a toggle for deelnames, disabled by default ✓
+  - Deelnames toggle is independent from gebruik toggle ✓
 
-## Acceptance criteria
+## Task 6: Add test data with deelnemers to seed data
+- **Spec ref**: specs/deelnames-gebruik/spec.md
+- **Status**: done
+- **Acceptance criteria**:
+  - At least one gebruiksobject with `deelnemers` array containing a different org UUID ✓
+  - At least one gebruiksobject with 2+ organizations in `deelnemers` ✓
+  - Seed data added to `lib/Settings/softwarecatalogus_register.json` objects array ✓
 
-- A view request with `?include_deelnames_gebruik=1` returns enrichment markers + per-node deelnames slices.
-- Without the flag the response is byte-identical to the pre-deelnames shape (no regression).
+## Task 7: Write unit tests for ViewService
+- **Spec ref**: specs/deelnames-gebruik/spec.md
+- **Status**: done
+- **Acceptance criteria**:
+  - `tests/Unit/Service/ViewServiceTest.php` exists and tests pass ✓ (17/17 green)
+  - Tests cover `shouldIncludeGebruik`, `shouldIncludeDeelnamesGebruik`, `getAppliedEnrichments` ✓
+  - Tests cover `processGebruikItems` adding deelnames metadata ✓
+  - Tests cover deduplication behavior ✓
