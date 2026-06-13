@@ -173,6 +173,14 @@
         "Target schema": "Target schema",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "This password has been found in data breaches and is not secure. Please choose a different password.",
         "User": "User",
-        "Version Information": "Version Information"
+        "Version Information": "Version Information",
+        "Could not load views": "Could not load views",
+        "Deelnames": "Deelnames",
+        "Gebruik": "Gebruik",
+        "Includes deelnames": "Includes deelnames",
+        "Loading views...": "Loading views...",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "No views found": "No views found",
+        "View filters": "View filters"
     }
 }
