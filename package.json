@@ -8,6 +8,8 @@
 		"npm": "^10.0.0"
 	},
 	"scripts": {
+		"test:l10n": "node tests/l10n/check-l10n.js",
+		"test:l10n:write": "node tests/l10n/check-l10n.js --write",
 		"build": "NODE_ENV=production webpack --config webpack.config.js --progress",
 		"dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
 		"watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
@@ -15,6 +17,10 @@
 		"lint-fix": "npm run lint -- --fix",
 		"test": "jest --silent",
 		"test-coverage": "jest --silent --coverage",
+		"test:unit": "vitest run",
+		"test:coverage": "vitest run --coverage --coverage.provider=v8 --coverage.reporter=json-summary --coverage.reporter=text-summary --coverage.include=src/** --coverage.reportsDirectory=coverage-vitest",
+		"test:coverage-ratchet": "npm run test:coverage && bash tests/coverage-ratchet.sh vitest coverage-vitest/coverage-summary.json",
+		"test:unit:watch": "vitest",
 		"stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css",
 		"check:manifest": "node tests/validate-manifest.js"
 	},
@@ -120,6 +126,7 @@
 		"ts-jest": "^29.2.3",
 		"ts-loader": "^9.5.1",
 		"typescript": "^5.5.4",
+		"vitest": "^1.6.1",
 		"vue-eslint-parser": "^10.2.0",
 		"vue-jest": "^3.0.7"
 	}

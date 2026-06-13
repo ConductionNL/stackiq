@@ -50,3 +50,5 @@ Thumbs.db
 /test-results/**/*.png
 /reacties/screenshots/
 .last-update
+/coverage-vitest/
+/coverage/

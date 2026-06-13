@@ -192,7 +192,7 @@ Total: **2 customs** (vs. decidesk's `LiveMeeting` + `Settings` =
 - `decidesk/openspec/changes/decidesk-manifest-v1/` — canonical
   reference. Three-phase migration (manifest rewrite → Tier-4
   adoption → sidebar tab implementations).
-- `https://github.com/ConductionNL/decidesk/pull/160` — merged
+- `https://codeberg.org/Conduction/decidesk/pulls/160` — merged
   reference PR.
 - `nextcloud-vue/openspec/changes/manifest-resolve-sentinel/proposal.md`
   — `@resolve:` sentinel design (per-tenant register slug

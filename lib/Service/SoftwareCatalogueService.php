@@ -11,7 +11,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-3
  */
@@ -43,7 +43,7 @@ use OCP\IUserSession;
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -2079,14 +2079,13 @@ class SoftwareCatalogueService
             }
 
             // Get all contactpersonen for this organization.
-            $settingsService = $this->_container->get(SettingsService::class);
-            $registerId      = $settingsService->getVoorzieningenRegisterId();
-            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-
-            if ($registerId === null || $contactpersoonSchemaId === false) {
-                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersonen');
+            $ctx = $this->resolveVoorzieningenContext('contactpersoon', 'contactpersonen');
+            if ($ctx === null) {
                 return;
             }
+
+            $registerId             = $ctx['registerId'];
+            $contactpersoonSchemaId = $ctx['schemaId'];
 
             $contactpersonen = $objectService->findAll(
                 ['organisation' => $organizationUuid],
@@ -2164,14 +2163,13 @@ class SoftwareCatalogueService
             }
 
             // Get all contactpersonen for this organization.
-            $settingsService = $this->_container->get(SettingsService::class);
-            $registerId      = $settingsService->getVoorzieningenRegisterId();
-            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-
-            if ($registerId === null || $contactpersoonSchemaId === false) {
-                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersonen');
+            $ctx = $this->resolveVoorzieningenContext('contactpersoon', 'contactpersonen');
+            if ($ctx === null) {
                 return;
             }
+
+            $registerId             = $ctx['registerId'];
+            $contactpersoonSchemaId = $ctx['schemaId'];
 
             $contactpersonen = $objectService->findAll(
                 ['organisation' => $organizationUuid],
@@ -2762,13 +2760,13 @@ class SoftwareCatalogueService
             }
 
             // Get the organization object.
-            $settingsService     = $this->_container->get(SettingsService::class);
-            $registerId          = $settingsService->getVoorzieningenRegisterId();
-            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
-
-            if ($registerId === null || $organisatieSchemaId === false) {
+            $ctx = $this->resolveVoorzieningenContext('organisatie', 'organisatie');
+            if ($ctx === null) {
                 return false;
             }
+
+            $registerId          = $ctx['registerId'];
+            $organisatieSchemaId = $ctx['schemaId'];
 
             try {
                 $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
@@ -2846,14 +2844,13 @@ class SoftwareCatalogueService
             }
 
             // Get the organization object.
-            $settingsService     = $this->_container->get(SettingsService::class);
-            $registerId          = $settingsService->getVoorzieningenRegisterId();
-            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
-
-            if ($registerId === null || $organisatieSchemaId === false) {
-                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for organisatie');
+            $ctx = $this->resolveVoorzieningenContext('organisatie', 'organisatie');
+            if ($ctx === null) {
                 return false;
             }
+
+            $registerId          = $ctx['registerId'];
+            $organisatieSchemaId = $ctx['schemaId'];
 
             try {
                 $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
@@ -3591,4 +3588,56 @@ class SoftwareCatalogueService
             );
         }//end try
     }//end updateOrganizationReferences()
+
+
+    /**
+     * Resolves the voorzieningen register id + a schema id for a given
+     * object-type slug.
+     *
+     * Extracted from the repeated four-line "fetch SettingsService +
+     * getVoorzieningenRegisterId + getSchemaIdForObjectType + null/false
+     * guard" block that appeared in `activateUsersForOrganization()`,
+     * `deactivateUsersForOrganization()`,
+     * `shouldAddContactpersoonToOrganization()`,
+     * `addContactpersoonToOrganization()`, and
+     * `updateOrganizationReferences()`. Centralises the "missing config"
+     * log line so the per-method bodies no longer carry that boilerplate.
+     *
+     * W31 method-decomposition 2.6 — companion helper for the
+     * SoftwareCatalogue subservice wiring.
+     *
+     * @param string $schemaSlug Object-type slug as understood by
+     *                           `SettingsService::getSchemaIdForObjectType()`
+     *                           (e.g. `contactpersoon`, `organisatie`).
+     * @param string $logContext Short human label for the missing-config
+     *                           log line (e.g. `contactpersonen`).
+     *
+     * @return array{registerId:int, schemaId:int}|null Null when either
+     *                           the voorzieningen register or the schema
+     *                           is unconfigured; the matched (registerId,
+     *                           schemaId) pair otherwise.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-2-6
+     */
+    private function resolveVoorzieningenContext(string $schemaSlug, string $logContext): ?array
+    {
+        $settingsService = $this->_container->get(SettingsService::class);
+        $registerId      = $settingsService->getVoorzieningenRegisterId();
+        $schemaId        = $settingsService->getSchemaIdForObjectType($schemaSlug);
+
+        if ($registerId === null || $schemaId === null || $schemaId === false) {
+            $this->_logger->error(
+                'SoftwareCatalogueService: Register or schema not configured for '.$logContext
+            );
+            return null;
+        }
+
+        return [
+            'registerId' => $registerId,
+            'schemaId'   => $schemaId,
+        ];
+
+    }//end resolveVoorzieningenContext()
+
+
 }//end class

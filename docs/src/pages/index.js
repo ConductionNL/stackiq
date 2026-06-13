@@ -21,7 +21,7 @@ import {
   AppMock,
 } from '@conduction/docusaurus-preset/components';
 
-/* Catalog-grid icon. Identical shape to the mydash icon by design:
+/* Catalog-grid icon. Identical shape to the launchpad icon by design:
    the tile-grid motif reads as "rows in a register" for both apps
    (catalog of items vs. catalog of widgets) and ties the two product
    surfaces together visually. Cited from the connext detail page at
@@ -314,7 +314,7 @@ export default function Home() {
           secondaryCta={{ label: 'Read the docs', href: '/docs/FEATURES' }}
           tertiaryCta={{
             label: 'View on GitHub',
-            href: 'https://github.com/ConductionNL/softwarecatalog',
+            href: 'https://codeberg.org/Conduction/softwarecatalog',
           }}
           iconColor="var(--c-orange-knvb)"
           icon={SOFTWARECATALOG_ICON}

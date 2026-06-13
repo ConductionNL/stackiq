@@ -11,7 +11,7 @@ LarpingApp:
    (`hydra/openspec/architecture/`) and the migration order in
    `hydra/openspec/changes/adopt-app-manifest/`, SoftwareCatalog is
    in the second-wave cohort (small, schema-driven) — adopt after
-   MyDash (the pilot).
+   LaunchPad (the pilot).
 2. **`getValueString(...register/schema...)` consolidation** — five
    service classes (`ModuleComplianceService`, `GebruikSyncService`,
    `OrganizationSyncService`, `ViewService`, plus the
@@ -109,7 +109,10 @@ phases (see `tasks.md`):
 3. i18n wiring (`?_lang=`, `X-Translation-Target-Language`,
    `sourceLanguage` display).
 4. Multi-tenancy wiring (gated on nc-vue release).
-5. Manifest Tier 3 graduation (follow-up tracking).
+5. Manifest Tier 3 graduation (follow-up tracking — superseded
+   by `softwarecatalog-manifest-v1`, which graduates the app
+   directly from Tier 2 to Tier 4; see Phase 5 in `tasks.md` for
+   the W33 reconcile note).
 
 Each phase is independently shippable.
 

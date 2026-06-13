@@ -9,7 +9,7 @@
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: 1.0.0
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
  */
@@ -43,7 +43,7 @@ use Symfony\Component\Mime\Address;
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: 1.0.0
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -203,6 +203,39 @@ class SettingsService
 
         throw new \RuntimeException('Configuration service is not available.');
     }//end getConfigurationService()
+
+    /**
+     * Attempts to retrieve the RegisterResolverService from the container.
+     *
+     * The resolver centralises `<context>_register` / `<context>_schema` / `<context>_property`
+     * config-key reads so per-install admin overrides (and request-scoped caching + tenant
+     * awareness) behave identically across consumer apps. Returns `null` when OpenRegister
+     * is not installed, or when the OR version pre-dates the resolver class (graceful
+     * fallback — callers must consult their existing `getValueString` path in that case).
+     *
+     * @return \OCA\OpenRegister\Service\RegisterResolverService|null The resolver or null.
+     *
+     * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+     */
+    public function getRegisterResolverService(): ?\OCA\OpenRegister\Service\RegisterResolverService
+    {
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
+            return null;
+        }
+
+        if (class_exists('\OCA\OpenRegister\Service\RegisterResolverService') === false) {
+            // OR is installed but pre-dates the resolver (shipped on OR development 2026-06-12,
+            // commit 50a6a0afc). Caller falls back to the legacy IAppConfig path.
+            return null;
+        }
+
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\RegisterResolverService');
+        } catch (\Throwable $e) {
+            // Container resolution may fail in test contexts where OR services are not wired.
+            return null;
+        }
+    }//end getRegisterResolverService()
 
     /**
      * Retrieve the current settings
@@ -879,8 +912,32 @@ class SettingsService
         }
 
         // Fall back to generic configuration for backward compatibility.
+        // Prefer the OR RegisterResolverService when available so per-install admin
+        // overrides go through the same `<context>_schema` resolution pipeline used by
+        // every other Conduction app (request-scoped caching + tenant-aware). Falls back
+        // to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
+        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         if ($result === null) {
-            $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
+            $resolver = $this->getRegisterResolverService();
+            $schemaId = '';
+
+            if ($resolver !== null) {
+                try {
+                    $schemaId = $resolver->resolveSchemaId(
+                        appId: $this->appName,
+                        configKey: "{$objectType}_schema",
+                        default: '',
+                    );
+                } catch (\Throwable $e) {
+                    // MissingConfigException or transient resolver failure — fall through to legacy read.
+                    $schemaId = '';
+                }
+            }
+
+            if ($schemaId === '') {
+                $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
+            }
+
             if (empty($schemaId) === false) {
                 $result = (int) $schemaId;
             }
@@ -958,12 +1015,36 @@ class SettingsService
             }
         }
 
-        // Fallback to legacy per-object-type register config.
+        // Fallback to legacy per-object-type register config — route through the OR
+        // RegisterResolverService when available so per-install admin overrides flow
+        // through the same `<context>_register` resolution pipeline used by every
+        // other Conduction app (request-scoped caching + tenant-aware). Falls back
+        // to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
+        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         if ($result === null) {
-            $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
-            $result     = null;
+            $resolver   = $this->getRegisterResolverService();
+            $registerId = '';
+
+            if ($resolver !== null) {
+                try {
+                    $registerId = $resolver->resolveRegisterId(
+                        appId: $this->appName,
+                        configKey: "{$objectType}_register",
+                        default: '',
+                    );
+                } catch (\Throwable $e) {
+                    // MissingConfigException or transient resolver failure — fall through to legacy read.
+                    $registerId = '';
+                }
+            }
+
+            if ($registerId === '') {
+                $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
+            }
+
+            $result = null;
             if (empty($registerId) === false) {
-                $result = $registerId;
+                $result = (int) $registerId;
             }
         }
 
@@ -1151,30 +1232,38 @@ class SettingsService
      */
     public function getConfigurationStatus(): array
     {
-        // Use the correct object type names that match the schema configuration.
-        $objectTypes = ['organization', 'organisatie', 'contact', 'contactpersoon'];
-        $status      = [];
-
-        // Check organization (can be in AMEF as 'organization' or Voorzieningen as 'organisatie').
-        $orgSchemaId            = $this->getSchemaIdForObjectType(objectType: 'organization');
-        $orgRegisterId          = $this->getRegisterIdForObjectType(objectType: 'organization');
-        $status['organization'] = [
-            'configured' => empty($orgSchemaId) === false && empty($orgRegisterId) === false,
-            'schemaId'   => $orgSchemaId,
-            'registerId' => $orgRegisterId,
+        return [
+            'organization' => $this->buildObjectTypeStatusEntry(objectType: 'organization'),
+            'contact'      => $this->buildObjectTypeStatusEntry(objectType: 'contactpersoon'),
         ];
-
-        // Check contact (stored as 'contactpersoon' in Voorzieningen).
-        $contactSchemaId   = $this->getSchemaIdForObjectType(objectType: 'contactpersoon');
-        $contactRegisterId = $this->getRegisterIdForObjectType(objectType: 'contactpersoon');
-        $status['contact'] = [
-            'configured' => empty($contactSchemaId) === false && empty($contactRegisterId) === false,
-            'schemaId'   => $contactSchemaId,
-            'registerId' => $contactRegisterId,
-        ];
-
-        return $status;
     }//end getConfigurationStatus()
+
+
+    /**
+     * Builds a single object-type status entry (configured/schemaId/registerId).
+     *
+     * Extracted from getConfigurationStatus() (W31 method-decomposition 1.5) —
+     * collapses the duplicated three-line "lookup + array literal" block that
+     * was repeated per object type.
+     *
+     * @param string $objectType Schema object type slug ('organization',
+     *                           'contactpersoon', etc.)
+     *
+     * @return array{configured: bool, schemaId: ?int, registerId: ?int}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-1-5
+     */
+    private function buildObjectTypeStatusEntry(string $objectType): array
+    {
+        $schemaId   = $this->getSchemaIdForObjectType(objectType: $objectType);
+        $registerId = $this->getRegisterIdForObjectType(objectType: $objectType);
+
+        return [
+            'configured' => (empty($schemaId) === false && empty($registerId) === false),
+            'schemaId'   => $schemaId,
+            'registerId' => $registerId,
+        ];
+    }//end buildObjectTypeStatusEntry()
 
     /**
      * Initializes the app with all required components
@@ -1381,6 +1470,36 @@ class SettingsService
                 $softwareCatalogSettings = json_decode($softwareCatalogContent, true);
 
                 if (json_last_error() === JSON_ERROR_NONE) {
+                    // ADR-037: merge modular register fragments from Settings/register.d/*.json.
+                    // Each OpenSpec change drops its own fragment file instead of editing this
+                    // monolith, so concurrent builds touch disjoint files (no merge conflicts).
+                    // OpenAPI `components.schemas` / `paths` are keyed objects, so disjoint
+                    // fragments union cleanly by key.
+                    $fragmentDir = __DIR__.'/../Settings/register.d';
+                    $fragmentSig = '';
+                    if (is_dir($fragmentDir) === true) {
+                        $fragmentFiles = glob($fragmentDir.'/*.json');
+                        sort($fragmentFiles);
+                        foreach ($fragmentFiles as $fragmentFile) {
+                            $fragmentContent = file_get_contents($fragmentFile);
+                            if ($fragmentContent === false) {
+                                continue;
+                            }
+
+                            $fragmentData = json_decode($fragmentContent, true);
+                            if (json_last_error() !== JSON_ERROR_NONE) {
+                                $this->logger->warning(
+                                    'SettingsService: skipping malformed register fragment '.basename($fragmentFile)
+                                    .': '.json_last_error_msg()
+                                );
+                                continue;
+                            }
+
+                            $softwareCatalogSettings = self::deepMergeConfig(base: $softwareCatalogSettings, overlay: $fragmentData);
+                            $fragmentSig            .= basename($fragmentFile).':'.md5($fragmentContent).';';
+                        }
+                    }//end if
+
                     $results['softwarecatalog'] = $softwareCatalogSettings;
 
                     // Import via configuration service if available with version checking.
@@ -1390,6 +1509,12 @@ class SettingsService
                         // Use the configuration file's own version (from info.version) for change detection.
                         // This ensures changes to the JSON file trigger re-import even if app version is unchanged.
                         $configVersion = $softwareCatalogSettings['info']['version'] ?? '0.0.0';
+
+                        // Fold the fragment signature into the version so OpenRegister's
+                        // version-gated importFromApp re-imports whenever fragments change.
+                        if ($fragmentSig !== '') {
+                            $configVersion .= '+frag.'.substr(md5($fragmentSig), 0, 8);
+                        }
 
                         // Log the import attempt for debugging.
                         $this->logger->info(
@@ -4070,9 +4195,10 @@ class SettingsService
             $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
 
             // Use reflection to access the private getAmefConfig method.
+            // setAccessible() is unnecessary on PHP 8.1+ — private methods are
+            // already invokable via reflection without it.
             $reflection = new \ReflectionClass($archiMateService);
             $method     = $reflection->getMethod('getAmefConfig');
-            $method->setAccessible(true);
 
             return $method->invoke($archiMateService);
         } catch (\Exception $e) {
@@ -6552,4 +6678,39 @@ class SettingsService
             ];
         }//end try
     }//end getAvailableOrganisationsForCronjobs()
+
+    /**
+     * Deep-merge a register fragment onto the base config (ADR-037).
+     *
+     * Associative arrays (OpenAPI objects like `components.schemas`, `paths`) are
+     * merged by key union (recursing on shared keys); list arrays are concatenated;
+     * scalars in the fragment overwrite the base. Disjoint fragments never collide.
+     *
+     * @param array<mixed> $base    The accumulated config.
+     * @param array<mixed> $overlay The fragment to merge in.
+     *
+     * @return array<mixed> The merged config.
+     */
+    private static function deepMergeConfig(array $base, array $overlay): array
+    {
+        foreach ($overlay as $key => $value) {
+            if (is_array($value) === true
+                && isset($base[$key]) === true
+                && is_array($base[$key]) === true
+            ) {
+                $baseIsList    = ($base[$key] === [] || array_keys($base[$key]) === range(0, (count($base[$key]) - 1)));
+                $overlayIsList = ($value === [] || array_keys($value) === range(0, (count($value) - 1)));
+                if ($baseIsList === true && $overlayIsList === true) {
+                    $base[$key] = array_merge($base[$key], $value);
+                } else {
+                    $base[$key] = self::deepMergeConfig(base: $base[$key], overlay: $value);
+                }
+            } else {
+                $base[$key] = $value;
+            }
+        }
+
+        return $base;
+
+    }//end deepMergeConfig()
 }//end class

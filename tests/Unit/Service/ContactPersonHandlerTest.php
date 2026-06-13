@@ -32,7 +32,7 @@ use ReflectionMethod;
  * @package  OCA\SoftwareCatalog\Tests\Unit\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  * @version  1.0.0
  */
 class ContactPersonHandlerTest extends TestCase

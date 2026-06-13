@@ -11,7 +11,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/OpenConnector
+ * @link      https://codeberg.org/Conduction/OpenConnector
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/OpenConnector
+ * @link     https://codeberg.org/Conduction/OpenConnector
  */
 class TestEventListener implements IEventListener
 {

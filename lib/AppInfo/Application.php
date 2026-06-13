@@ -10,7 +10,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
@@ -85,7 +85,7 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
@@ -110,14 +110,36 @@ class Application extends App implements IBootstrap
      * @param IRegistrationContext $context Registration context
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function register(IRegistrationContext $context): void
     {
         include_once __DIR__.'/../../vendor/autoload.php';
 
-        // Register the handlers as services.
+        $this->registerHandlerServices($context);
+
+        // Wire up event-listener bindings — extracted to a single
+        // single-responsibility helper per
+        // `openspec/changes/method-decomposition/tasks.md` task 9.1.
+        $this->registerEventListeners($context);
+
+        $this->registerDomainServices($context);
+    }//end register()
+
+
+    /**
+     * Wire the four SoftwareCatalogue handler services as DI bindings.
+     *
+     * Single-responsibility helper extracted from `register()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.1.
+     *
+     * @param IRegistrationContext $context Registration context
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-1
+     */
+    private function registerHandlerServices(IRegistrationContext $context): void
+    {
         $context->registerService(
                 'OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler',
                 function (ContainerInterface $c) {
@@ -175,28 +197,23 @@ class Application extends App implements IBootstrap
                 }
                 );
 
-        // Register TEST event listener for easily triggerable Nextcloud events.
-        $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
+    }//end registerHandlerServices()
 
-        // Register event listeners for OpenRegister events.
-        $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectDeletedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
 
-        // Register module compliance subscriber for module updates.
-        $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
-        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
-
-        // Register module registration subscriber for auto-setting geregistreerdDoor.
-        $context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
-        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
-
-        // Register listener to sync user profile updates to contactpersoon objects.
-        $context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
-
+    /**
+     * Wire all domain-level services (sync/email/settings/ArchiMate/etc.).
+     *
+     * Single-responsibility helper extracted from `register()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.1.
+     *
+     * @param IRegistrationContext $context Registration context
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-1
+     */
+    private function registerDomainServices(IRegistrationContext $context): void
+    {
         // Organization event listeners removed - now using cron job for organization synchronization.
         // Contact person event listeners are still active for real-time processing.
         // Register new focused services.
@@ -443,7 +460,48 @@ class Application extends App implements IBootstrap
 
         // Dashboard widgets — see lib/Dashboard/*.php and src/*Widget.js.
         $context->registerDashboardWidget(ConceptOrganisatiesWidget::class);
-    }//end register()
+    }//end registerDomainServices()
+
+    /**
+     * Wire all OpenRegister event listeners.
+     *
+     * Single-responsibility helper extracted from `register()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.1. Keeps
+     * `register()` focused on service-binding wiring while this method
+     * owns the listener catalogue.
+     *
+     * @param IRegistrationContext $context Registration context.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-1
+     */
+    private function registerEventListeners(IRegistrationContext $context): void
+    {
+        // TEST event listener for easily triggerable Nextcloud events.
+        $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
+
+        // OpenRegister object lifecycle events — broadcast to the
+        // SoftwareCatalog cross-cutting listener.
+        $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectDeletedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
+        $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
+
+        // Module-compliance subscriber — runs on create/update only.
+        $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
+
+        // Module registration — sets geregistreerdDoor on each save.
+        $context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
+
+        // Sync user profile updates into the contactpersoon mirror.
+        $context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
+
+    }//end registerEventListeners()
 
     /**
      * Boot the application
@@ -473,17 +531,62 @@ class Application extends App implements IBootstrap
         // Keys must match every distinct `@resolve:<key>` sentinel in
         // src/manifest.json. Discover with:
         // grep -oE '@resolve:[a-z_]+' src/manifest.json | sort -u.
-        $resolveKeys = [
-            'voorzieningen_register',
-        ];
-        foreach ($resolveKeys as $key) {
-            $value       = $appConfig->getValueString(self::APP_ID, $key, '');
-            $provisioned = null;
-            if ($value !== '') {
-                $provisioned = $value;
-            }
-
-            $initialState->provideInitialState($key, $provisioned);
+        //
+        // The canonical home for the voorzieningen register id is the
+        // `voorzieningen_config` JSON blob (`{"register":"11", ...}`) written
+        // by the settings UI / auto-configure flow. The flat scalar key
+        // `voorzieningen_register` is a legacy fallback that is usually unset.
+        // We must provision the resolved numeric id from whichever source has
+        // it, otherwise the manifest sentinel resolves to null and every index
+        // page fires `GET .../objects/@resolve:voorzieningen_register/<schema>`
+        // (404). See node_modules/@conduction/nextcloud-vue/src/utils/resolveManifestSentinels.js.
+        $registerId  = $this->resolveVoorzieningenRegisterId(appConfig: $appConfig);
+        $provisioned = null;
+        if ($registerId !== '') {
+            $provisioned = $registerId;
         }
+
+        $initialState->provideInitialState('voorzieningen_register', $provisioned);
     }//end boot()
+
+    /**
+     * Resolve the numeric voorzieningen register id from the canonical config.
+     *
+     * Resolution order:
+     *  1. `voorzieningen_config` JSON blob's `register` field — the canonical
+     *     home written by the settings UI / auto-configure flow.
+     *  2. `voorzieningen` JSON blob's `configured.register` field — the legacy
+     *     auto-configure result envelope.
+     *  3. The flat `voorzieningen_register` scalar key — legacy fallback.
+     *
+     * @param IAppConfig $appConfig The app config service.
+     *
+     * @return string The numeric register id, or '' when none is configured.
+     */
+    private function resolveVoorzieningenRegisterId(IAppConfig $appConfig): string
+    {
+        $configJson = $appConfig->getValueString(self::APP_ID, 'voorzieningen_config', '');
+        if ($configJson !== '') {
+            $decoded = json_decode($configJson, true);
+            if (is_array($decoded) === true
+                && isset($decoded['register']) === true
+                && $decoded['register'] !== ''
+            ) {
+                return (string) $decoded['register'];
+            }
+        }
+
+        $envelopeJson = $appConfig->getValueString(self::APP_ID, 'voorzieningen', '');
+        if ($envelopeJson !== '') {
+            $decoded = json_decode($envelopeJson, true);
+            if (is_array($decoded) === true
+                && isset($decoded['configured']['register']) === true
+                && $decoded['configured']['register'] !== ''
+            ) {
+                return (string) $decoded['configured']['register'];
+            }
+        }
+
+        return $appConfig->getValueString(self::APP_ID, 'voorzieningen_register', '');
+    }//end resolveVoorzieningenRegisterId()
 }//end class

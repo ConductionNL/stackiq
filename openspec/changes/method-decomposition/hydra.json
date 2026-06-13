@@ -2,7 +2,7 @@
   "spec_slug": "method-decomposition",
   "title": "Method Decomposition -- SoftwareCatalog",
   "app": "softwarecatalog",
-  "repo": "https://github.com/ConductionNL/softwarecatalog",
+  "repo": "https://codeberg.org/Conduction/softwarecatalog",
   "depends_on": [],
-  "issue": "https://github.com/ConductionNL/softwarecatalog/issues/274"
+  "issue": "https://codeberg.org/Conduction/softwarecatalog/issues/274"
 }

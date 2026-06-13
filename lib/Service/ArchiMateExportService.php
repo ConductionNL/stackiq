@@ -20,7 +20,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -416,15 +416,47 @@ XML;
             return;
         }
 
-        $folder = $xml->addChild('folder');
-        $folder->addAttribute('name', $folderName);
-        $folder->addAttribute('id', $folderId);
-        $folder->addAttribute('type', $folderType);
+        $folder = $this->createFolderNode(
+            parent: $xml,
+            name: $folderName,
+            id: $folderId,
+            type: $folderType
+        );
 
         foreach ($objects as $object) {
             $this->addObjectToFolder(folder: $folder, object: $object, childTagName: $childTagName);
         }
     }//end addObjectsToXml()
+
+    /**
+     * Builds a `<folder>` child node with the standard ArchiMate attributes.
+     *
+     * Extracted as part of task 4.3 — the repeated four-line pattern
+     * (`addChild('folder')` + three `addAttribute` calls) appeared in both
+     * {@see addObjectsToXml()} and {@see addViewsToXml()}.
+     *
+     * @param \SimpleXMLElement $parent The parent XML element.
+     * @param string            $name   Folder name (e.g. "Application").
+     * @param string            $id     Folder id (e.g. "folder-elements").
+     * @param string            $type   Folder type (e.g. "application").
+     *
+     * @return \SimpleXMLElement The newly-added folder node.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-4
+     */
+    private function createFolderNode(
+        \SimpleXMLElement $parent,
+        string $name,
+        string $id,
+        string $type
+    ): \SimpleXMLElement {
+        $folder = $parent->addChild('folder');
+        $folder->addAttribute('name', $name);
+        $folder->addAttribute('id', $id);
+        $folder->addAttribute('type', $type);
+
+        return $folder;
+    }//end createFolderNode()
 
     /**
      * Convenience method for elements.
@@ -493,10 +525,12 @@ XML;
             return;
         }
 
-        $folder = $xml->addChild('folder');
-        $folder->addAttribute('name', 'Views');
-        $folder->addAttribute('id', 'folder-views');
-        $folder->addAttribute('type', 'diagrams');
+        $folder = $this->createFolderNode(
+            parent: $xml,
+            name: 'Views',
+            id: 'folder-views',
+            type: 'diagrams'
+        );
 
         foreach ($views as $view) {
             $this->addViewToFolder(folder: $folder, view: $view);
@@ -956,10 +990,10 @@ XML;
         $dbTime  = microtime(true) - $startTime;
 
         // Step 2: Process and generate XML in single optimized pass (no schema mapping needed).
-        $xml = $this->generateXmlDirectly(objects: $objects, schemaIdMap: []);
+        $xml = $this->generateXmlDirectly(objects: $objects);
 
         // Step 3: Run Quality Assurance checks on generated XML.
-        $this->runQualityAssuranceChecks(xmlString: $xml, sourceData: $objects);
+        $this->runQualityAssuranceChecks(xmlString: $xml);
 
         $totalTime = microtime(true) - $startTime;
 
@@ -985,12 +1019,11 @@ XML;
      * - Direct XML generation per section
      * - No unnecessary loops or checks
      *
-     * @param array $objects     Raw objects from database.
-     * @param array $schemaIdMap Schema ID to type mapping.
+     * @param array $objects Raw objects from database.
      *
      * @return string Generated XML.
      */
-    private function generateXmlDirectly(array $objects, array $schemaIdMap): string
+    private function generateXmlDirectly(array $objects): string
     {
         $this->logger->info(
                 'Starting section-based XML generation from objects',
@@ -2134,14 +2167,13 @@ XML;
     /**
      * Run comprehensive Quality Assurance checks on exported XML
      *
-     * @param string $xmlString  The generated XML string.
-     * @param array  $sourceData The original source data for reference.
+     * @param string $xmlString The generated XML string.
      *
      * @return void
      *
      * @throws \InvalidArgumentException If any QA check fails.
      */
-    private function runQualityAssuranceChecks(string $xmlString, array $sourceData): void
+    private function runQualityAssuranceChecks(string $xmlString): void
     {
         $this->logger->info('Running Quality Assurance checks on exported XML');
 

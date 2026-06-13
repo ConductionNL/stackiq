@@ -1,12 +1,14 @@
+> REVERTED 2026-06-01: archived prematurely; implementation not present on development — re-opened for real apply. REQ-001 (CronjobContextTrait::setCronjobContext / clearCronjobContext) names code that does NOT exist anywhere in lib/ or src/; that requirement has been removed from the synced main spec and task-1 re-opened. REQ-002 (OrganizationContactSyncJob::run) IS real and remains documented/checked.
+
 # Retrofit — cronjob-context
 
-Describes observed behavior of 3 methods as 2 REQ(s) under the `cronjob-context` capability. Code already exists — this change retroactively specifies it (strict coverage policy: every method gets a spec).
+Describes observed behavior of 1 real method (REQ-002) under the `cronjob-context` capability. The original retrofit also claimed a `CronjobContextTrait` (REQ-001) that does not exist — see the REVERTED note above.
 
 ## Affected code units
 
-- lib/BackgroundJob/CronjobContextTrait.php::setCronjobContext
-- lib/BackgroundJob/CronjobContextTrait.php::clearCronjobContext
-- lib/BackgroundJob/OrganizationContactSyncJob.php::run
+- lib/BackgroundJob/OrganizationContactSyncJob.php::run (REQ-002 — real)
+- ~~lib/BackgroundJob/CronjobContextTrait.php::setCronjobContext~~ (REQ-001 — NON-EXISTENT, reverted)
+- ~~lib/BackgroundJob/CronjobContextTrait.php::clearCronjobContext~~ (REQ-001 — NON-EXISTENT, reverted)
 
 ## Approach
 

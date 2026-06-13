@@ -12,7 +12,7 @@
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -383,19 +383,7 @@ class OrganizationHandler
                         ]
                     );
 
-                    // Generate title from name components.
-                    $titleParts = array_filter(
-                            [
-                                $contactpersoon['voornaam'] ?? '',
-                                $contactpersoon['tussenvoegsel'] ?? '',
-                                $contactpersoon['achternaam'] ?? '',
-                            ]
-                            );
-
-                        $title = $contactpersoon['email'] ?? 'Contact Person';
-                    if (empty($titleParts) === false) {
-                        $title = implode(' ', $titleParts);
-                    }
+                    $title = $this->buildContactpersoonTitle($contactpersoon);
 
                     // Create contactgegevens object with proper schema.
                     $contactFunctie      = $contactpersoon['functie'] ?? '';
@@ -786,4 +774,35 @@ class OrganizationHandler
             return false;
         }//end try
     }//end userBelongsToOrganization()
+
+    /**
+     * Builds a human-readable title for a contactpersoon row.
+     *
+     * Prefers `voornaam + tussenvoegsel + achternaam` (joined with single
+     * spaces); falls back to the email address; final fallback is the literal
+     * "Contact Person". Extracted from {@see processContactpersonen()} as part
+     * of task 8.1.
+     *
+     * @param array<string, mixed> $contactpersoon The raw contactpersoon payload.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-8
+     */
+    private function buildContactpersoonTitle(array $contactpersoon): string
+    {
+        $parts = array_filter(
+            [
+                $contactpersoon['voornaam'] ?? '',
+                $contactpersoon['tussenvoegsel'] ?? '',
+                $contactpersoon['achternaam'] ?? '',
+            ]
+        );
+
+        if (empty($parts) === false) {
+            return implode(' ', $parts);
+        }
+
+        return $contactpersoon['email'] ?? 'Contact Person';
+    }//end buildContactpersoonTitle()
 }//end class

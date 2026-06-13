@@ -11,7 +11,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Psr\Container\ContainerInterface;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
 class ModuleComplianceSubscriber implements IEventListener
 {
@@ -59,13 +59,9 @@ class ModuleComplianceSubscriber implements IEventListener
      * @param Event $event The event to handle
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function handle(Event $event): void
     {
-        // Log when subscriber is called for debugging.
         $logger = $this->container->get(LoggerInterface::class);
         $logger->info(
                 'ModuleComplianceSubscriber: SUBSCRIBER CALLED',
@@ -75,28 +71,56 @@ class ModuleComplianceSubscriber implements IEventListener
                 ]
                 );
 
-        // Only handle ObjectCreatedEvent and ObjectUpdatedEvent.
-        if (($event instanceof ObjectCreatedEvent) === false && ($event instanceof ObjectUpdatedEvent) === false) {
-            return;
-        }
-
-        // Get object from event - different methods for different event types.
-        $object = null;
-        if ($event instanceof ObjectCreatedEvent) {
-            $object = $event->getObject();
-        } else if ($event instanceof ObjectUpdatedEvent) {
-            // Use getNewObject() for updated events.
-            $object = $event->getNewObject();
-        }
-
+        $object = $this->extractObjectFromEvent($event);
         if ($object === null) {
             return;
         }
 
-        $objectId       = $object->getId();
-        $objectSchemaId = $object->getSchema();
+        if ($this->isModuleObject($object, $logger) === false) {
+            return;
+        }
 
-        // Get module schema ID from configuration.
+        $this->dispatchComplianceUpdate($object, $logger);
+        $this->dispatchEnsureDefaultVersion($object, $logger);
+    }//end handle()
+
+
+    /**
+     * Extract the object payload from a supported event type.
+     *
+     * Returns null for unsupported event types or when the event carries no
+     * object (ObjectCreatedEvent → getObject(); ObjectUpdatedEvent →
+     * getNewObject()).
+     *
+     * @param Event $event The dispatched event
+     *
+     * @return object|null The object payload or null
+     */
+    private function extractObjectFromEvent(Event $event): ?object
+    {
+        if ($event instanceof ObjectCreatedEvent) {
+            return $event->getObject();
+        }
+
+        if ($event instanceof ObjectUpdatedEvent) {
+            return $event->getNewObject();
+        }
+
+        return null;
+    }//end extractObjectFromEvent()
+
+
+    /**
+     * Decide whether the given object is a module — i.e. its schema id
+     * matches the configured module schema id.
+     *
+     * @param object          $object The object to check
+     * @param LoggerInterface $logger Logger for the not-configured branch
+     *
+     * @return bool True when the object is a module
+     */
+    private function isModuleObject(object $object, LoggerInterface $logger): bool
+    {
         $settingsService = $this->container->get(SettingsService::class);
         $moduleSchemaId  = $settingsService->getSchemaIdForObjectType('module');
 
@@ -104,30 +128,35 @@ class ModuleComplianceSubscriber implements IEventListener
             $logger->debug(
                     'ModuleComplianceSubscriber: Module schema not configured, skipping',
                     [
-                        'objectId' => $objectId,
-                        'schemaId' => $objectSchemaId,
+                        'objectId' => $object->getId(),
+                        'schemaId' => $object->getSchema(),
                     ]
                     );
-            return;
+            return false;
         }
 
-        $moduleSchemaIdInt = (int) $moduleSchemaId;
-        $objectSchemaIdInt = (int) $objectSchemaId;
+        return ((int) $object->getSchema()) === ((int) $moduleSchemaId);
+    }//end isModuleObject()
 
-        // Check if this is a module object.
-        if ($objectSchemaIdInt !== $moduleSchemaIdInt) {
-            return;
-        }
 
+    /**
+     * Dispatch the compliance-update flow with consistent error handling.
+     *
+     * @param object          $object The module object
+     * @param LoggerInterface $logger Logger for success/error reporting
+     *
+     * @return void
+     */
+    private function dispatchComplianceUpdate(object $object, LoggerInterface $logger): void
+    {
         try {
-            // Handle module compliance update.
             $complianceSvc = $this->container->get(ModuleComplianceService::class);
             $complianceSvc->handleModuleComplianceUpdate($object);
 
             $logger->info(
                     'ModuleComplianceSubscriber: Successfully processed module compliance update',
                     [
-                        'objectId'  => $objectId,
+                        'objectId'  => $object->getId(),
                         'timestamp' => date('Y-m-d H:i:s'),
                     ]
                     );
@@ -135,16 +164,27 @@ class ModuleComplianceSubscriber implements IEventListener
             $logger->error(
                     'ModuleComplianceSubscriber: Failed to process module compliance update',
                     [
-                        'objectId'  => $objectId,
+                        'objectId'  => $object->getId(),
                         'exception' => $e->getMessage(),
                         'file'      => $e->getFile(),
                         'line'      => $e->getLine(),
                         'trace'     => $e->getTraceAsString(),
                     ]
                     );
-        }//end try
+        }
+    }//end dispatchComplianceUpdate()
 
-        // Ensure the module has at least one version (default 1.0.0).
+
+    /**
+     * Ensure the module has at least one (default 1.0.0) version.
+     *
+     * @param object          $object The module object
+     * @param LoggerInterface $logger Logger for error reporting
+     *
+     * @return void
+     */
+    private function dispatchEnsureDefaultVersion(object $object, LoggerInterface $logger): void
+    {
         try {
             $moduleVersionService = $this->container->get(ModuleVersionService::class);
             $moduleVersionService->ensureDefaultVersion($object);
@@ -152,12 +192,12 @@ class ModuleComplianceSubscriber implements IEventListener
             $logger->error(
                     'ModuleComplianceSubscriber: Failed to ensure default module version',
                     [
-                        'objectId'  => $objectId,
+                        'objectId'  => $object->getId(),
                         'exception' => $e->getMessage(),
                         'file'      => $e->getFile(),
                         'line'      => $e->getLine(),
                     ]
                     );
         }
-    }//end handle()
+    }//end dispatchEnsureDefaultVersion()
 }//end class

@@ -17,10 +17,19 @@
 //   - openspec/changes/softwarecatalog-manifest-v1/design.md
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
+import OrganisatieIndexView from './views/organisaties/OrganisatieIndex.vue'
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'
 
 export default {
+	// --- Lib gap: bespoke card view + contactpersoon add flow. ---
+	// OrganisatieIndex ships a custom OrganisatieCard (inline contactpersoon
+	// toggle, multi-view orchestration) that does not fit CnIndexPage's
+	// built-in form-dialog pattern yet. Stays type='custom' until the lib
+	// grows a `cardComponent` config field on type='index'. Tracked as
+	// Open Question 2 in the manifest v1 design doc.
+	OrganisatieIndexView,
+
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
 	// widget rendering but not the multi-tab navigation pattern + ArchiMate

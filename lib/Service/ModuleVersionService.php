@@ -12,7 +12,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: 1.0.0
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
@@ -28,10 +28,15 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for ensuring modules always have at least one version.
  *
+ * Decomposed per `openspec/changes/method-decomposition/tasks.md` task 9.5:
+ * the previously long `ensureDefaultVersion()` is now an orchestrator that
+ * delegates to small, single-responsibility private helpers
+ * (`fetchVersionData()`, `compareVersions()`, `updateVersionRecord()`).
+ *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
  *
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @spec openspec/changes/method-decomposition/tasks.md#task-9-5
  */
 class ModuleVersionService
 {
@@ -52,121 +57,184 @@ class ModuleVersionService
     /**
      * Ensures a module has at least one version.
      *
-     * Queries moduleVersie objects linked to this module. If none exist,
-     * creates a default version with versie "1.0.0" using the module's
-     * name and short description.
+     * Thin orchestrator: resolves config + existing versions via
+     * `fetchVersionData()`, decides whether action is needed via
+     * `compareVersions()`, then writes through `updateVersionRecord()`.
      *
      * @param object $moduleObject The module object entity
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-5
      */
     public function ensureDefaultVersion(object $moduleObject): void
     {
         $moduleUuid = $moduleObject->getUuid();
 
         $this->logger->info(
-                'ModuleVersionService: Checking if module has versions',
-                [
-                    'moduleUuid' => $moduleUuid,
-                ]
-                );
+            'ModuleVersionService: Checking if module has versions',
+            ['moduleUuid' => $moduleUuid]
+        );
 
         try {
-            $objectService = $this->getObjectService();
-            if ($objectService === null) {
-                $this->logger->error('ModuleVersionService: ObjectService not available');
+            $context = $this->fetchVersionData($moduleObject);
+            if ($context === null) {
                 return;
             }
 
-            // Get schema and register IDs.
-            $moduleVersieSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
-            $voorzieningenConfig  = $this->settingsService->getVoorzieningenConfig();
-            $registerId           = $voorzieningenConfig['register'] ?? null;
-
-            if ($moduleVersieSchemaId === null || $registerId === null) {
-                $this->logger->warning(
-                        'ModuleVersionService: moduleVersie schema or register not configured',
-                        [
-                            'moduleVersieSchemaId' => $moduleVersieSchemaId,
-                            'registerId'           => $registerId,
-                        ]
-                        );
-                return;
-            }
-
-            // Query moduleVersie objects where module === this module's UUID.
-            $query            = [
-                '@self'  => [
-                    'schema'   => (int) $moduleVersieSchemaId,
-                    'register' => (int) $registerId,
-                ],
-                'module' => $moduleUuid,
-            ];
-            $existingVersions = $objectService->searchObjects(
-                query: $query,
-                _rbac: false,
-                _multitenancy: false
-            );
-
-            $versionCount = 0;
-            if (is_array($existingVersions) === true) {
-                $versionCount = count($existingVersions);
-            }
-
-            if ($versionCount > 0) {
+            if ($this->compareVersions($context) === true) {
                 $this->logger->info(
-                        'ModuleVersionService: Module already has versions, skipping',
-                        [
-                            'moduleUuid'   => $moduleUuid,
-                            'versionCount' => $versionCount,
-                        ]
-                        );
+                    'ModuleVersionService: Module already has versions, skipping',
+                    [
+                        'moduleUuid'   => $moduleUuid,
+                        'versionCount' => $context['versionCount'],
+                    ]
+                );
                 return;
             }
 
-            // No versions exist — create a default 1.0.0 version.
-            $moduleData        = $moduleObject->getObject();
-            $moduleName        = $moduleData['voorkeurnaam'] ?? $moduleData['naam'] ?? 'Onbekende applicatie';
-            $moduleDescription = $moduleData['beschrijvingKort'] ?? '';
-
-            $versionData = [
-                'module'           => $moduleUuid,
-                'versie'           => '1.0.0',
-                'beschrijvingKort' => $moduleDescription,
-                'beschrijvingLang' => '',
-                'status'           => 'in gebruik',
-            ];
-
-            $savedVersion = $objectService->saveObject(
-                object: $versionData,
-                register: (int) $registerId,
-                schema: (int) $moduleVersieSchemaId,
-                _rbac: false,
-                _multitenancy: false
-            );
-
-            $this->logger->info(
-                    'ModuleVersionService: Created default version 1.0.0',
-                    [
-                        'moduleUuid'  => $moduleUuid,
-                        'moduleName'  => $moduleName,
-                        'versionUuid' => $savedVersion->getUuid(),
-                    ]
-                    );
+            $this->updateVersionRecord($context);
         } catch (\Exception $e) {
             $this->logger->error(
-                    'ModuleVersionService: Failed to ensure default version',
-                    [
-                        'moduleUuid' => $moduleUuid,
-                        'exception'  => $e->getMessage(),
-                        'file'       => $e->getFile(),
-                        'line'       => $e->getLine(),
-                    ]
-                    );
+                'ModuleVersionService: Failed to ensure default version',
+                [
+                    'moduleUuid' => $moduleUuid,
+                    'exception'  => $e->getMessage(),
+                    'file'       => $e->getFile(),
+                    'line'       => $e->getLine(),
+                ]
+            );
         }//end try
     }//end ensureDefaultVersion()
+
+    /**
+     * Resolve all data needed to decide on a default version.
+     *
+     * Returns a structured context with module identity, schema/register
+     * coordinates and the currently existing versions. Returns null when
+     * the necessary configuration is missing — the caller treats that as
+     * a no-op.
+     *
+     * @param object $moduleObject The module object entity
+     *
+     * @return array{moduleUuid:string,moduleData:array,registerId:int,schemaId:int,existingVersions:array,versionCount:int}|null
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-5
+     */
+    private function fetchVersionData(object $moduleObject): ?array
+    {
+        $moduleUuid = $moduleObject->getUuid();
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            $this->logger->error('ModuleVersionService: ObjectService not available');
+            return null;
+        }
+
+        $moduleVersieSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+        $voorzieningenConfig  = $this->settingsService->getVoorzieningenConfig();
+        $registerId           = $voorzieningenConfig['register'] ?? null;
+
+        if ($moduleVersieSchemaId === null || $registerId === null) {
+            $this->logger->warning(
+                'ModuleVersionService: moduleVersie schema or register not configured',
+                [
+                    'moduleVersieSchemaId' => $moduleVersieSchemaId,
+                    'registerId'           => $registerId,
+                ]
+            );
+            return null;
+        }
+
+        $query = [
+            '@self'  => [
+                'schema'   => (int) $moduleVersieSchemaId,
+                'register' => (int) $registerId,
+            ],
+            'module' => $moduleUuid,
+        ];
+
+        $existingVersions = $objectService->searchObjects(
+            query: $query,
+            _rbac: false,
+            _multitenancy: false
+        );
+
+        $versionCount = 0;
+        if (is_array($existingVersions) === true) {
+            $versionCount = count($existingVersions);
+        }
+
+        return [
+            'moduleUuid'       => $moduleUuid,
+            'moduleData'       => $moduleObject->getObject(),
+            'registerId'       => (int) $registerId,
+            'schemaId'         => (int) $moduleVersieSchemaId,
+            'existingVersions' => is_array($existingVersions) === true ? $existingVersions : [],
+            'versionCount'     => $versionCount,
+            'objectService'    => $objectService,
+        ];
+    }//end fetchVersionData()
+
+    /**
+     * Decide whether the module already has at least one version.
+     *
+     * Pure decision helper — true means "skip, no default needed".
+     *
+     * @param array $context Result of fetchVersionData()
+     *
+     * @return bool True if a version already exists; false if a default
+     *              version must be created.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-5
+     */
+    private function compareVersions(array $context): bool
+    {
+        return ($context['versionCount'] ?? 0) > 0;
+    }//end compareVersions()
+
+    /**
+     * Persist a default 1.0.0 version record for the module.
+     *
+     * @param array $context Result of fetchVersionData() — must include
+     *                       moduleUuid, moduleData, registerId, schemaId,
+     *                       and the ObjectService handle.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-5
+     */
+    private function updateVersionRecord(array $context): void
+    {
+        $moduleData        = $context['moduleData'];
+        $moduleName        = $moduleData['voorkeurnaam'] ?? $moduleData['naam'] ?? 'Onbekende applicatie';
+        $moduleDescription = $moduleData['beschrijvingKort'] ?? '';
+
+        $versionData = [
+            'module'           => $context['moduleUuid'],
+            'versie'           => '1.0.0',
+            'beschrijvingKort' => $moduleDescription,
+            'beschrijvingLang' => '',
+            'status'           => 'in gebruik',
+        ];
+
+        $savedVersion = $context['objectService']->saveObject(
+            object: $versionData,
+            register: $context['registerId'],
+            schema: $context['schemaId'],
+            _rbac: false,
+            _multitenancy: false
+        );
+
+        $this->logger->info(
+            'ModuleVersionService: Created default version 1.0.0',
+            [
+                'moduleUuid'  => $context['moduleUuid'],
+                'moduleName'  => $moduleName,
+                'versionUuid' => $savedVersion->getUuid(),
+            ]
+        );
+    }//end updateVersionRecord()
 
     /**
      * Get the object service from the DI container.
@@ -179,11 +247,9 @@ class ModuleVersionService
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (\Exception $e) {
             $this->logger->error(
-                    'ModuleVersionService: Failed to get ObjectService',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
+                'ModuleVersionService: Failed to get ObjectService',
+                ['exception' => $e->getMessage()]
+            );
             return null;
         }
     }//end getObjectService()

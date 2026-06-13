@@ -9,7 +9,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
  */
@@ -39,7 +39,7 @@ use Twig\Loader\ArrayLoader;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  * @version  GIT: <git_id>
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
@@ -476,32 +476,12 @@ class SymfonyEmailService
      */
     public function sendOrganizationRegistrationEmail(array $organization): bool
     {
-        // Check if email system is fully configured.
-        $configStatus = $this->isEmailSystemConfigured();
-        if ($configStatus['configured'] === false) {
-            $this->logger->info(
-                    'OrganizationRegistrationEmail: Email system not configured, skipping',
-                    [
-                        'reason'           => $configStatus['reason'],
-                        'hasCredentials'   => $configStatus['hasCredentials'],
-                        'hasTemplates'     => $configStatus['hasTemplates'],
-                        'organizationName' => $organization['naam'] ?? 'Unknown',
-                    ]
-                    );
-
-            return false;
-        }
-
-        $emailSettings = $this->settingsService->getEmailSettings();
-
-        // Check if organization registration emails are enabled.
-        if ($emailSettings['organizationRegistrationEnabled'] === false) {
-            $this->logger->info(
-                    'OrganizationRegistrationEmail: Organization registration emails disabled',
-                    [
-                        'organizationName' => $organization['naam'] ?? 'Unknown',
-                    ]
-                    );
+        $configStatus = $this->ensureEmailDeliveryReady(
+            logPrefix: 'OrganizationRegistrationEmail',
+            settingsKey: 'organizationRegistrationEnabled',
+            extraLogContext: ['organizationName' => $organization['naam'] ?? 'Unknown']
+        );
+        if ($configStatus === null) {
             return false;
         }
 
@@ -584,31 +564,12 @@ class SymfonyEmailService
      */
     public function sendOrganizationActivationEmail(array $organization): bool
     {
-        // Check if email system is fully configured.
-        $configStatus = $this->isEmailSystemConfigured();
-        if ($configStatus['configured'] === false) {
-            $this->logger->info(
-                    'OrganizationActivationEmail: Email system not configured, skipping',
-                    [
-                        'reason'           => $configStatus['reason'],
-                        'hasCredentials'   => $configStatus['hasCredentials'],
-                        'hasTemplates'     => $configStatus['hasTemplates'],
-                        'organizationName' => $organization['naam'] ?? 'Unknown',
-                    ]
-                    );
-            return false;
-        }
-
-        $emailSettings = $this->settingsService->getEmailSettings();
-
-        // Check if organization activation emails are enabled.
-        if ($emailSettings['organizationActivationEnabled'] === false) {
-            $this->logger->info(
-                    'OrganizationActivationEmail: Organization activation emails disabled',
-                    [
-                        'organizationName' => $organization['naam'] ?? 'Unknown',
-                    ]
-                    );
+        $configStatus = $this->ensureEmailDeliveryReady(
+            logPrefix: 'OrganizationActivationEmail',
+            settingsKey: 'organizationActivationEnabled',
+            extraLogContext: ['organizationName' => $organization['naam'] ?? 'Unknown']
+        );
+        if ($configStatus === null) {
             return false;
         }
 
@@ -692,31 +653,12 @@ class SymfonyEmailService
      */
     public function sendUserCreationEmail(array $user, array $organization=[]): bool
     {
-        // Check if email system is fully configured.
-        $configStatus = $this->isEmailSystemConfigured();
-        if ($configStatus['configured'] === false) {
-            $this->logger->info(
-                    'UserCreationEmail: Email system not configured, skipping',
-                    [
-                        'reason'         => $configStatus['reason'],
-                        'hasCredentials' => $configStatus['hasCredentials'],
-                        'hasTemplates'   => $configStatus['hasTemplates'],
-                        'userEmail'      => $user['email'] ?? 'Unknown',
-                    ]
-                    );
-            return false;
-        }
-
-        $emailSettings = $this->settingsService->getEmailSettings();
-
-        // Check if user creation emails are enabled.
-        if ($emailSettings['userCreationEnabled'] === false) {
-            $this->logger->info(
-                    'UserCreationEmail: User creation emails disabled',
-                    [
-                        'userEmail' => $user['email'] ?? 'Unknown',
-                    ]
-                    );
+        $configStatus = $this->ensureEmailDeliveryReady(
+            logPrefix: 'UserCreationEmail',
+            settingsKey: 'userCreationEnabled',
+            extraLogContext: ['userEmail' => $user['email'] ?? 'Unknown']
+        );
+        if ($configStatus === null) {
             return false;
         }
 
@@ -807,31 +749,12 @@ class SymfonyEmailService
      */
     public function sendUserUpdateEmail(array $user, array $organization=[]): bool
     {
-        // Check if email system is fully configured.
-        $configStatus = $this->isEmailSystemConfigured();
-        if ($configStatus['configured'] === false) {
-            $this->logger->info(
-                    'UserCreationEmail: Email system not configured, skipping',
-                    [
-                        'reason'         => $configStatus['reason'],
-                        'hasCredentials' => $configStatus['hasCredentials'],
-                        'hasTemplates'   => $configStatus['hasTemplates'],
-                        'userEmail'      => $user['email'] ?? 'Unknown',
-                    ]
-                    );
-            return false;
-        }
-
-        $emailSettings = $this->settingsService->getEmailSettings();
-
-        // Check if user creation emails are enabled.
-        if ($emailSettings['userOrganisationEnabled'] === false) {
-            $this->logger->info(
-                    'UserOrganisationEmail: User creation emails disabled',
-                    [
-                        'userEmail' => $user['email'] ?? 'Unknown',
-                    ]
-                    );
+        $configStatus = $this->ensureEmailDeliveryReady(
+            logPrefix: 'UserOrganisationEmail',
+            settingsKey: 'userOrganisationEnabled',
+            extraLogContext: ['userEmail' => $user['email'] ?? 'Unknown']
+        );
+        if ($configStatus === null) {
             return false;
         }
 
@@ -932,14 +855,8 @@ class SymfonyEmailService
         array $templateData
     ): bool {
         try {
-            // Get template content from settings service.
-            $emailSettings   = $this->settingsService->getEmailSettings();
-            $templates       = ($emailSettings['templates'] ?? []);
-            $templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate(templateName: $templateName));
-
-            // Replace template variables.
-            $htmlBody = $this->processTemplate(
-                template: $templateContent,
+            $htmlBody = $this->renderTemplate(
+                templateName: $templateName,
                 templateData: $templateData
             );
 
@@ -962,6 +879,56 @@ class SymfonyEmailService
             throw $e;
         }//end try
     }//end sendTemplatedEmail()
+
+    /**
+     * Render a named template against the provided data.
+     *
+     * Single-purpose helper extracted from `sendTemplatedEmail()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 7.5: combines
+     * template resolution (custom override from email settings, fallback to
+     * the built-in default) with variable substitution.
+     *
+     * @param string $templateName The template name.
+     * @param array  $templateData The data to substitute into the template.
+     *
+     * @return string The rendered HTML body.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
+     */
+    private function renderTemplate(string $templateName, array $templateData): string
+    {
+        $emailSettings   = $this->settingsService->getEmailSettings();
+        $templates       = ($emailSettings['templates'] ?? []);
+        $templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate(templateName: $templateName));
+
+        return $this->processTemplate(
+            template: $templateContent,
+            templateData: $templateData
+        );
+    }//end renderTemplate()
+
+    /**
+     * Resolve the configured sender for outbound mail.
+     *
+     * Single-purpose helper extracted from `sendEmail()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 7.5.
+     *
+     * @return array{0:string,1:string,2:string} Tuple of [senderEmail,
+     *                                           senderName, transportType]
+     *                                           with sane fallbacks when
+     *                                           unset in settings.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
+     */
+    private function resolveSender(): array
+    {
+        $emailSettings = $this->settingsService->getEmailSettings();
+        $senderEmail   = ($emailSettings['senderEmail'] ?? self::DEFAULT_SENDER);
+        $senderName    = ($emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME);
+        $transportType = ($emailSettings['transportType'] ?? 'smtp');
+
+        return [$senderEmail, $senderName, $transportType];
+    }//end resolveSender()
 
     /**
      * Gets the default template for a given template name.
@@ -1095,10 +1062,7 @@ class SymfonyEmailService
         string $htmlBody
     ): bool {
         try {
-            // Get sender configuration from settings service.
-            $emailSettings = $this->settingsService->getEmailSettings();
-            $senderEmail   = ($emailSettings['senderEmail'] ?? self::DEFAULT_SENDER);
-            $senderName    = ($emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME);
+            [$senderEmail, $senderName, $transportType] = $this->resolveSender();
 
             // Create Symfony Email.
             $email = (new Email())
@@ -1109,7 +1073,7 @@ class SymfonyEmailService
                 ->text(strip_tags($htmlBody));
             // Fallback text version.
             // Send email using Symfony Mailer.
-                        $this->getMailer()->send($email);
+            $this->getMailer()->send($email);
 
             $this->logger->info(
                     'Email sent successfully using Symfony Mailer',
@@ -1117,7 +1081,7 @@ class SymfonyEmailService
                         'recipient' => $recipientEmail,
                         'subject'   => $subject,
                         'sender'    => $senderEmail,
-                        'transport' => $emailSettings['transportType'] ?? 'smtp',
+                        'transport' => $transportType,
                     ]
                     );
 
@@ -1501,4 +1465,63 @@ class SymfonyEmailService
 
         return 'Configuration incomplete: '.implode(separator: ', ', array: $issues);
     }//end getConfigurationIssues()
+
+    /**
+     * Combined precheck that the email delivery pipeline is ready for a given
+     * message type.
+     *
+     * Replaces the two-stage check ("isEmailSystemConfigured" + per-type
+     * `$emailSettings[$key] === false`) that every `send*Email()` opens with.
+     * Returns the configStatus array on success (caller still needs it for the
+     * transportType log entry), or null when delivery should be skipped — in
+     * which case the appropriate `info` log entry has already been emitted.
+     *
+     * Extracted from {@see sendOrganizationRegistrationEmail()},
+     * {@see sendOrganizationActivationEmail()},
+     * {@see sendUserCreationEmail()}, and {@see sendUserUpdateEmail()} as part
+     * of task 7.5.
+     *
+     * @param string               $logPrefix       Log-message prefix
+     *                                              (e.g. "OrganizationRegistrationEmail").
+     * @param string               $settingsKey     The per-type "enabled" key on
+     *                                              the EmailSettings array.
+     * @param array<string, mixed> $extraLogContext Extra fields to attach to the
+     *                                              log payloads.
+     *
+     * @return array<string, mixed>|null The configStatus array, or null on skip.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function ensureEmailDeliveryReady(
+        string $logPrefix,
+        string $settingsKey,
+        array $extraLogContext
+    ): ?array {
+        $configStatus = $this->isEmailSystemConfigured();
+        if ($configStatus['configured'] === false) {
+            $this->logger->info(
+                $logPrefix.': Email system not configured, skipping',
+                array_merge(
+                    [
+                        'reason'         => $configStatus['reason'],
+                        'hasCredentials' => $configStatus['hasCredentials'],
+                        'hasTemplates'   => $configStatus['hasTemplates'],
+                    ],
+                    $extraLogContext
+                )
+            );
+            return null;
+        }
+
+        $emailSettings = $this->settingsService->getEmailSettings();
+        if (($emailSettings[$settingsKey] ?? null) === false) {
+            $this->logger->info(
+                $logPrefix.': Delivery disabled for this message type',
+                $extraLogContext
+            );
+            return null;
+        }
+
+        return $configStatus;
+    }//end ensureEmailDeliveryReady()
 }//end class

@@ -11,7 +11,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -120,86 +120,13 @@ class ModuleComplianceService
                     ]
                     );
 
-            // Get compliance objects linked to this module.
-            $complianceObjects = $this->getComplianceObjectsForModule(moduleUuid: $moduleUuid);
-
-            $this->logger->debug(
-                    'ModuleComplianceService: Found compliance objects',
-                    [
-                        'moduleId'        => $moduleId,
-                        'moduleUuid'      => $moduleUuid,
-                        'complianceCount' => count($complianceObjects),
-                    ]
-                    );
-
-            // Extract standaardversie UUIDs from compliance objects.
-            $standaardversieUuids = $this->extractStandaardversieUuids(complianceObjects: $complianceObjects);
-
-            $this->logger->debug(
-                    'ModuleComplianceService: Extracted standaardversie UUIDs',
-                    [
-                        'moduleId'             => $moduleId,
-                        'moduleUuid'           => $moduleUuid,
-                        'standaardversieUuids' => $standaardversieUuids,
-                        'count'                => count($standaardversieUuids),
-                    ]
-                    );
-
-            // Get current standaarden from module.
-            $currentStandaarden = $moduleData['standaardVersies'] ?? [];
-
-            // Ensure currentStandaarden is an array.
-            if (is_array($currentStandaarden) === false) {
-                $currentStandaarden = [];
-            }
-
-            $this->logger->debug(
-                    'ModuleComplianceService: Current standaarden',
-                    [
-                        'moduleId'           => $moduleId,
-                        'moduleUuid'         => $moduleUuid,
-                        'currentStandaarden' => $currentStandaarden,
-                        'count'              => count($currentStandaarden),
-                    ]
-                    );
-
-            // Compare and update if different.
-            if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === true) {
-                $this->logger->info(
-                        'ModuleComplianceService: Standaarden differ, updating module',
-                        [
-                            'moduleId'       => $moduleId,
-                            'moduleUuid'     => $moduleUuid,
-                            'oldStandaarden' => $currentStandaarden,
-                            'newStandaarden' => $standaardversieUuids,
-                        ]
-                        );
-
-                // Update the module with new standaarden.
-                $this->updateModuleStandaarden(
-                    moduleObject: $moduleObject,
-                    standaardversieUuids: $standaardversieUuids
-                );
-
-                $this->logger->info(
-                        'ModuleComplianceService: Successfully updated module standaarden',
-                        [
-                            'moduleId'    => $moduleId,
-                            'moduleUuid'  => $moduleUuid,
-                            'standaarden' => $standaardversieUuids,
-                        ]
-                        );
-            }//end if
-
-            if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === false) {
-                $this->logger->debug(
-                        'ModuleComplianceService: Standaarden are already up to date',
-                        [
-                            'moduleId'   => $moduleId,
-                            'moduleUuid' => $moduleUuid,
-                        ]
-                        );
-            }
+            // Compute desired standaarden and apply if changed.
+            $this->syncStandaarden(
+                moduleObject: $moduleObject,
+                moduleId: (string) $moduleId,
+                moduleUuid: $moduleUuid,
+                currentStandaarden: $this->normaliseCurrentStandaarden($moduleData['standaardVersies'] ?? [])
+            );
 
             $endTime       = microtime(true);
             $executionTime = round(($endTime - $startTime) * 1000, 2);
@@ -227,6 +154,101 @@ class ModuleComplianceService
             throw $e;
         }//end try
     }//end handleModuleComplianceUpdate()
+
+    /**
+     * Normalise the module's stored standaardVersies value to an array.
+     *
+     * Extracted from `handleModuleComplianceUpdate()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 8.2.
+     *
+     * @param mixed $rawStandaarden The raw stored value (array or otherwise).
+     *
+     * @return array<int,string> A normalised array of standaardversie UUIDs.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-8-2
+     */
+    private function normaliseCurrentStandaarden(mixed $rawStandaarden): array
+    {
+        if (is_array($rawStandaarden) === false) {
+            return [];
+        }
+
+        return $rawStandaarden;
+
+    }//end normaliseCurrentStandaarden()
+
+    /**
+     * Resolve the desired standaarden for a module and apply if changed.
+     *
+     * Extracted from `handleModuleComplianceUpdate()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 8.2: composes
+     * the fetch / extract / diff / persist pipeline into one named step.
+     *
+     * @param object        $moduleObject       The module entity.
+     * @param string        $moduleId           The internal id, for logging.
+     * @param string        $moduleUuid         The module UUID, drives the query.
+     * @param array<string> $currentStandaarden The standaarden currently stored
+     *                                          on the module.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-8-2
+     */
+    private function syncStandaarden(
+        object $moduleObject,
+        string $moduleId,
+        string $moduleUuid,
+        array $currentStandaarden
+    ): void {
+        $complianceObjects = $this->getComplianceObjectsForModule(moduleUuid: $moduleUuid);
+
+        $this->logger->debug(
+            'ModuleComplianceService: Found compliance objects',
+            [
+                'moduleId'        => $moduleId,
+                'moduleUuid'      => $moduleUuid,
+                'complianceCount' => count($complianceObjects),
+            ]
+        );
+
+        $standaardversieUuids = $this->extractStandaardversieUuids(complianceObjects: $complianceObjects);
+
+        if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === false) {
+            $this->logger->debug(
+                'ModuleComplianceService: Standaarden are already up to date',
+                [
+                    'moduleId'   => $moduleId,
+                    'moduleUuid' => $moduleUuid,
+                ]
+            );
+            return;
+        }
+
+        $this->logger->info(
+            'ModuleComplianceService: Standaarden differ, updating module',
+            [
+                'moduleId'       => $moduleId,
+                'moduleUuid'     => $moduleUuid,
+                'oldStandaarden' => $currentStandaarden,
+                'newStandaarden' => $standaardversieUuids,
+            ]
+        );
+
+        $this->updateModuleStandaarden(
+            moduleObject: $moduleObject,
+            standaardversieUuids: $standaardversieUuids
+        );
+
+        $this->logger->info(
+            'ModuleComplianceService: Successfully updated module standaarden',
+            [
+                'moduleId'    => $moduleId,
+                'moduleUuid'  => $moduleUuid,
+                'standaarden' => $standaardversieUuids,
+            ]
+        );
+
+    }//end syncStandaarden()
 
     /**
      * Get compliance objects linked to a module

@@ -20,6 +20,7 @@ import {
 	registerIcons,
 	registerTranslations,
 	useAppManifest,
+	resolveManifestSentinels,
 } from '@conduction/nextcloud-vue'
 import Tooltip from '@nextcloud/vue/dist/Directives/Tooltip.js'
 import pinia from './pinia.js'
@@ -70,11 +71,33 @@ function tryLoadTranslations() {
 	}
 }
 
-const router = new VueRouter({
-	mode: 'history',
-	base: generateUrl('/apps/softwarecatalog'),
-	routes: routesFromManifest(bundledManifest),
-})
+/**
+ * ADR-037: merge modular manifest fragments from src/manifest.d/*.json onto the
+ * bundled base manifest. Each OpenSpec change drops its own fragment (pages/menu)
+ * instead of editing the monolith src/manifest.json, so concurrent builds touch
+ * disjoint files. `pages` and `menu` arrays are concatenated.
+ *
+ * @param {object} base The bundled base manifest.
+ * @return {object} The manifest with all fragment pages/menu appended.
+ */
+function mergeManifestFragments(base) {
+	const merged = { ...base, pages: [...(base.pages || [])], menu: [...(base.menu || [])] }
+	// require.context is resolved at build time; src/manifest.d/ must exist (it
+	// ships with a _placeholder.json). It is a no-op when no real fragments exist.
+	const ctx = require.context('./manifest.d/', false, /\.json$/)
+	ctx.keys().sort().forEach((key) => {
+		const frag = ctx(key)
+		if (Array.isArray(frag.pages)) {
+			merged.pages.push(...frag.pages)
+		}
+		if (Array.isArray(frag.menu)) {
+			merged.menu.push(...frag.menu)
+		}
+	})
+	return merged
+}
+
+const mergedManifest = mergeManifestFragments(bundledManifest)
 
 tryLoadTranslations()
 
@@ -89,36 +112,57 @@ const pageTypesProp = { ...defaultPageTypes }
 const customComponentsProp = { ...customComponents }
 const registryProp = { ...registry }
 
-// Resolve `@resolve:<key>` IAppConfig sentinels in `manifest.pages[].config`
-// (e.g. `@resolve:voorzieningen_register`) via the lib's
-// `manifest-resolve-sentinel` capability. The default `getAppConfigValue`
-// resolver consults `@nextcloud/initial-state` first (zero-network), then
-// falls back to `/apps/softwarecatalog/api/configs/{key}`. We don't pass
-// an override — the lib's default chain matches our backend provisioning.
-//
-// `useAppManifest` returns a reactive ref. The render function below reads
-// `manifestRef.value` so Vue re-renders App when sentinel resolution
-// completes. Until then, the bundled manifest (with raw sentinels) is the
-// initial value — fine for the first paint because the router is built
-// from page IDs / routes, which never carry sentinels per the lib's
-// schema validator.
-const { manifest: manifestRef } = useAppManifest('softwarecatalog', bundledManifest)
+/**
+ * Resolve `@resolve:<key>` IAppConfig sentinels in `manifest.pages[].config`
+ * (e.g. `@resolve:voorzieningen_register`) APP-SIDE, before the router and
+ * CnAppRoot ever read a page's `config.register`.
+ *
+ * Why we resolve here instead of relying on `useAppManifest`'s built-in
+ * backend-merge resolution: this app has no real `/api/manifest` JSON
+ * endpoint — Nextcloud's catch-all rewrites that path to the SPA's index
+ * HTML (HTTP 200). The lib's legacy `loadFromBackend` branch deep-merges
+ * that HTML, fails schema validation, and returns WITHOUT setting the
+ * resolved manifest — so the bundled manifest keeps its literal
+ * `@resolve:` sentinels and every CnIndexPage fires
+ * `GET .../objects/@resolve:voorzieningen_register/<schema>` (404).
+ *
+ * `resolveManifestSentinels` reads each key from `@nextcloud/initial-state`
+ * (zero-network) first; `Application::boot()` provisions
+ * `voorzieningen_register` there with the numeric register id. We pass the
+ * resolved manifest into the in-memory `useAppManifest({ manifest })`
+ * branch, which mounts it synchronously and issues NO backend fetch — so
+ * nothing can clobber the resolved sentinels afterwards.
+ *
+ * @return {Promise<void>}
+ */
+async function bootstrap() {
+	const { manifest: resolvedManifest } = await resolveManifestSentinels(mergedManifest, 'softwarecatalog')
 
-new Vue({
-	pinia,
-	router,
-	// Wrap manifestRef in a computed via `data()` so Vue re-renders App
-	// when sentinel resolution swaps the manifest value. Reading
-	// `manifestRef.value` inside `render` registers the dependency on the
-	// composable's reactive ref.
-	render(h) {
-		return h(App, {
-			props: {
-				manifest: manifestRef.value,
-				customComponents: customComponentsProp,
-				pageTypes: pageTypesProp,
-				registry: registryProp,
-			},
-		})
-	},
-}).$mount('#content')
+	const router = new VueRouter({
+		mode: 'history',
+		base: generateUrl('/apps/softwarecatalog'),
+		routes: routesFromManifest(resolvedManifest),
+	})
+
+	// In-memory branch: mount the already-resolved manifest synchronously,
+	// no backend fetch (see bootstrap() docblock for why the fetch path is
+	// unusable for this app).
+	const { manifest: manifestRef } = useAppManifest({ manifest: resolvedManifest })
+
+	new Vue({
+		pinia,
+		router,
+		render(h) {
+			return h(App, {
+				props: {
+					manifest: manifestRef.value,
+					customComponents: customComponentsProp,
+					pageTypes: pageTypesProp,
+					registry: registryProp,
+				},
+			})
+		},
+	}).$mount('#content')
+}
+
+bootstrap()

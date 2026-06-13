@@ -27,7 +27,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\Tests\Unit\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  * @version  1.0.0
  */
 class SoftwareCatalogEventListenerTest extends TestCase
@@ -69,7 +69,7 @@ class SoftwareCatalogEventListenerTest extends TestCase
         // service methods these tests assert. The tests need to be rewritten
         // against the new dispatch flow and additional collaborators
         // (SettingsService, AppManager, IUserManager, etc.) — tracked as a
-        // follow-up. See https://github.com/ConductionNL/softwarecatalog
+        // follow-up. See https://codeberg.org/Conduction/softwarecatalog
         $this->markTestSkipped(
             'Stale against current SoftwareCatalogEventListener — needs '
             . 'rewrite against new SettingsService-driven dispatch. '

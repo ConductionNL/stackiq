@@ -15,7 +15,7 @@
 // References:
 //   - hydra ADR-036
 //   - nextcloud-app-template scaffold-v2 (#44) — canonical layout
-//   - procest #512 / mydash #206 — first reference migrations
+//   - procest #512 / launchpad #206 — first reference migrations
 
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'

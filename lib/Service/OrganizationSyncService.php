@@ -10,7 +10,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
  */
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -147,6 +147,115 @@ class OrganizationSyncService
     }//end __construct()
 
     /**
+     * Centralised sync error handler.
+     *
+     * Records the error against the per-operation stats array and emits a
+     * uniformly-structured log line. Extracted from the half-dozen ad-hoc
+     * catch blocks scattered through `performOrganizationsSync()`,
+     * `performContactSync()`, and `performFullSync()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 7.1.
+     *
+     * @param string     $operation  Short operation label (e.g. "OrganizationSync").
+     * @param string     $identifier Object identifier (UUID / username) the
+     *                               failure was tied to.
+     * @param \Throwable $exception  The caught throwable.
+     * @param array      $stats      Stats array (by reference) — receives an
+     *                               entry in `errors[]`.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7-1
+     */
+    private function handleSyncError(
+        string $operation,
+        string $identifier,
+        \Throwable $exception,
+        array &$stats
+    ): void {
+        $error = $identifier.': '.$exception->getMessage();
+        if (isset($stats['errors']) === true && is_array($stats['errors']) === true) {
+            $stats['errors'][] = $error;
+        }
+
+        $this->logger->error(
+            $operation.': failed to process '.$identifier,
+            [
+                'error' => $exception->getMessage(),
+            ]
+        );
+
+    }//end handleSyncError()
+
+    /**
+     * Builds the per-run stats accumulator shared by the organisation /
+     * contactpersoon sync flows.
+     *
+     * Extracted from {@see performOrganizationsSync()} as part of task 7.1.
+     *
+     * @param int $batchSize           Configured batch size.
+     * @param int $maxExecutionSeconds Configured time budget.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function buildInitialSyncStats(int $batchSize, int $maxExecutionSeconds): array
+    {
+        return [
+            'organizationsProcessed' => 0,
+            'entitiesCreated'        => 0,
+            'entitiesUpdated'        => 0,
+            'errors'                 => [],
+            'batchSize'              => $batchSize,
+            'maxExecutionSeconds'    => $maxExecutionSeconds,
+            'timeoutReached'         => false,
+            'totalRemaining'         => 0,
+            'startTime'              => date('Y-m-d H:i:s'),
+            'endTime'                => null,
+            'duration'               => null,
+        ];
+    }//end buildInitialSyncStats()
+
+    /**
+     * Validates the voorzieningen register + organisatie_schema id pair as
+     * positive integers suitable for table-name interpolation.
+     *
+     * Returns a `[null, null]` pair (with the appropriate warning log) when
+     * either side is unset or non-positive — caller is expected to short-circuit
+     * the sync. Extracted from {@see performOrganizationsSync()} as part of
+     * task 7.1.
+     *
+     * @param mixed $register           Raw register id from voorzieningen config.
+     * @param mixed $organizationSchema Raw schema id from voorzieningen config.
+     *
+     * @return array{0: int|null, 1: int|null}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function validateOrgSyncConfig($register, $organizationSchema): array
+    {
+        if (empty($register) === true || empty($organizationSchema) === true) {
+            $this->logger->warning('OrganizationSync: voorzieningen config missing register or organisatie_schema');
+            return [null, null];
+        }
+
+        $registerIdOrg = (int) $register;
+        $schemaIdOrg   = (int) $organizationSchema;
+        if ($registerIdOrg <= 0 || $schemaIdOrg <= 0) {
+            $this->logger->warning(
+                'OrganizationSync: register or organisatie_schema is not a valid positive integer',
+                [
+                    'register'           => $register,
+                    'organizationSchema' => $organizationSchema,
+                ]
+            );
+            return [null, null];
+        }
+
+        return [$registerIdOrg, $schemaIdOrg];
+    }//end validateOrgSyncConfig()
+
+    /**
      * Create a database-agnostic JSON extraction expression
      *
      * Returns the appropriate SQL function for extracting a value from a JSON column
@@ -229,36 +338,13 @@ class OrganizationSyncService
         $organizationSchema  = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
         $startTime = time();
-        $stats     = [
-            'organizationsProcessed' => 0,
-            'entitiesCreated'        => 0,
-            'entitiesUpdated'        => 0,
-            'errors'                 => [],
-            'batchSize'              => $batchSize,
-            'maxExecutionSeconds'    => $maxExecutionSeconds,
-            'timeoutReached'         => false,
-            'totalRemaining'         => 0,
-            'startTime'              => date('Y-m-d H:i:s'),
-            'endTime'                => null,
-            'duration'               => null,
-        ];
+        $stats     = $this->buildInitialSyncStats($batchSize, $maxExecutionSeconds);
 
-        if (empty($register) === true || empty($organizationSchema) === true) {
-            $this->logger->warning('OrganizationSync: voorzieningen config missing register or organisatie_schema');
-            return $stats;
-        }
-
-        // Cast config values to integers before using in a table name to prevent injection.
-        $registerIdOrg = (int) $register;
-        $schemaIdOrg   = (int) $organizationSchema;
-        if ($registerIdOrg <= 0 || $schemaIdOrg <= 0) {
-            $this->logger->warning(
-                    'OrganizationSync: register or organisatie_schema is not a valid positive integer',
-                    [
-                        'register'           => $register,
-                        'organizationSchema' => $organizationSchema,
-                    ]
-                    );
+        [$registerIdOrg, $schemaIdOrg] = $this->validateOrgSyncConfig(
+            $register,
+            $organizationSchema
+        );
+        if ($registerIdOrg === null || $schemaIdOrg === null) {
             return $stats;
         }
 
@@ -337,13 +423,7 @@ class OrganizationSyncService
                 $this->ensureOrganisationEntity(organisatieObject: $object, stats: $stats, sendEmails: false);
                 $stats['organizationsProcessed']++;
             } catch (\Exception $e) {
-                $stats['errors'][] = $row['uuid'].': '.$e->getMessage();
-                $this->logger->error(
-                    'OrganizationSync: failed to process org '.$row['uuid'],
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                );
+                $this->handleSyncError('OrganizationSync', (string) $row['uuid'], $e, $stats);
             }
         }//end foreach
 
@@ -481,13 +561,7 @@ class OrganizationSyncService
 
                 $stats['contactPersonsProcessed']++;
             } catch (\Exception $e) {
-                $stats['errors'][] = $contact['uuid'].': '.$e->getMessage();
-                $this->logger->error(
-                    'ContactSync: failed to sync contact '.$contact['uuid'],
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                );
+                $this->handleSyncError('ContactSync', (string) $contact['uuid'], $e, $stats);
             }//end try
         }//end foreach
 
@@ -637,7 +711,7 @@ class OrganizationSyncService
                 organizationSchema: $organizationSchema,
                 minutesBack: $minutesBack
             );
-            $syncModeValue = 'incremental';
+            $syncModeValue      = 'incremental';
             if ($minutesBack === 0) {
                 $syncModeValue = 'full';
             }
