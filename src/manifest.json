@@ -65,7 +65,7 @@
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "icon-info",
-			"href": "https://codeberg.org/Conduction/SoftwareCatalogus",
+			"href": "https://softwarecatalog.conduction.nl",
 			"section": "footer",
 			"order": 90
 		},
