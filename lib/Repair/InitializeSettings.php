@@ -87,6 +87,18 @@ class InitializeSettings implements IRepairStep
             $output->info('Initializing settings for version '.$currentAppVersion);
             $this->logger->info('SoftwareCatalog repair: Starting initialization for version '.$currentAppVersion);
 
+            // Seed federation defaults only when unset (admin overrides survive).
+            // @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+            if ($this->config->hasKey(Application::APP_ID, 'federation_enabled') === false) {
+                $this->config->setValueBool(Application::APP_ID, 'federation_enabled', false);
+            }
+            if ($this->config->hasKey(Application::APP_ID, 'federation_directory_url') === false) {
+                $this->config->setValueString(Application::APP_ID, 'federation_directory_url', 'https://directory.opencatalogi.nl');
+            }
+            if ($this->config->hasKey(Application::APP_ID, 'federation_sync_interval') === false) {
+                $this->config->setValueInt(Application::APP_ID, 'federation_sync_interval', 3600);
+            }
+
             // Get the settings service and initialize.
             $settingsService = $this->container->get(SettingsService::class);
             $result          = $settingsService->initialize();

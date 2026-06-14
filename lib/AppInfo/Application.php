@@ -20,6 +20,9 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\AppInfo;
 
 use OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob;
+use OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob;
+use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
+use OCA\SoftwareCatalog\Service\Federation\FederationService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Dashboard\ConceptOrganisatiesWidget;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
@@ -431,6 +434,36 @@ class Application extends App implements IBootstrap
                     timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
                     orgSyncService: $container->get(OrganizationSyncService::class),
                     appManager: $container->get(IAppManager::class),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+
+        // Register the federation config + service + scheduled job.
+        $context->registerService(
+                FederationConfig::class,
+                function ($container) {
+                    return new FederationConfig(appConfig: $container->get(IAppConfig::class));
+                }
+                );
+        $context->registerService(
+                FederationService::class,
+                function ($container) {
+                    return new FederationService(
+                    container: $container,
+                    appManager: $container->get(IAppManager::class),
+                    config: $container->get(FederationConfig::class),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+        $context->registerService(
+                FederationSyncJob::class,
+                function ($container) {
+                    return new FederationSyncJob(
+                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                    federation: $container->get(FederationService::class),
+                    config: $container->get(FederationConfig::class),
                     logger: $container->get(LoggerInterface::class)
                     );
                 }

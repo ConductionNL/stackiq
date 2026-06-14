@@ -37,7 +37,7 @@
 
 | # | Eis | Status | Toelichting |
 |---|-----|--------|-------------|
-| F-06 | Gefedereerde synchronisatie | Beschikbaar | Catalogusdata delen tussen organisaties |
+| F-06 | Gefedereerde synchronisatie | Gedeeltelijk | Federatie-orkestratie via OpenCatalogi (DirectoryService/BroadcastService): instance-aankondiging, peer-discovery, geplande job, read-only provenance- en SSRF-bewaking — degradeert netjes als OpenCatalogi ontbreekt. De live publicatie- + peer-pull-leg wacht op een OpenRegister-fix (magic-mapped objecten kunnen `@self.published` nog niet zetten). |
 | F-07 | Import/merge van externe bronnen | Beschikbaar | Automatisch externe listings importeren |
 | F-08 | Open data publicatie via API | Beschikbaar | Gestandaardiseerde API voor publieke consumptie |
 
