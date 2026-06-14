@@ -7173,7 +7173,7 @@
         "slug": "compliancy",
         "title": "Compliancy",
         "description": "Schema voor compliancy en standaard ondersteuning",
-        "version": "0.0.10",
+        "version": "0.0.11",
         "summary": "",
         "icon": "CheckCircle",
         "required": [],
@@ -7237,6 +7237,14 @@
             "format": "url",
             "order": 1,
             "title": "URL",
+            "visible": true,
+            "facetable": false
+          },
+          "bewijsReferentie": {
+            "description": "Nextcloud Files-verwijzing naar het bewijsstuk (link, niet opslaan). De voorkeursmanier om nieuw bewijs te koppelen; het legacy base64-veld 'bewijs' blijft leesbaar voor bestaande records.",
+            "type": "string",
+            "order": 6,
+            "title": "Bewijs (Nextcloud Files)",
             "visible": true,
             "facetable": false
           }

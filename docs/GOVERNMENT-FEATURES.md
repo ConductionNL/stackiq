@@ -32,6 +32,7 @@
 | F-03 | Koppelingsmapping (connections tussen applicaties) | Beschikbaar | Systeemafhankelijkheden visualiseren |
 | F-04 | GEMMA-categorisering | Beschikbaar | Gemeentelijk Model Architectuur classificatie |
 | F-05 | Repository-links en licentie-informatie | Beschikbaar | Broncode- en licentietracking |
+| F-05a | Standaarden-compliance assessment | Beschikbaar | Compliancematrix (modules × standaardversies) met drie celstatussen: geverifieerd (met bewijs), geclaimd (zonder bewijs), geen. De catalogus registreert claims en bewijs; het is geen certificeringsautoriteit. Bewijs via Nextcloud Files (`bewijsReferentie`) of legacy base64. |
 
 ### Synchronisatie & Federatie
 

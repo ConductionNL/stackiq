@@ -56,9 +56,15 @@ class ModuleComplianceSubscriber implements IEventListener
     /**
      * Handle the event.
      *
+     * On a module create/update event this derives the module's `standaarden`
+     * from its linked compliancy records (see ModuleComplianceService) and
+     * ensures the module has at least a default version.
+     *
      * @param Event $event The event to handle
      *
      * @return void
+     *
+     * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
      */
     public function handle(Event $event): void
     {

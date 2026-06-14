@@ -77,6 +77,7 @@ class ModuleComplianceService
      * @throws \Exception If the update fails
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
      */
     public function handleModuleComplianceUpdate(object $moduleObject): void
     {
