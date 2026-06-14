@@ -32,6 +32,7 @@
 | F-03 | Koppelingsmapping (connections tussen applicaties) | Beschikbaar | Systeemafhankelijkheden visualiseren |
 | F-04 | GEMMA-categorisering | Beschikbaar | Gemeentelijk Model Architectuur classificatie |
 | F-05 | Repository-links en licentie-informatie | Beschikbaar | Broncode- en licentietracking |
+| F-05b | Contractadministratie | Beschikbaar | Contracten gekoppeld aan applicaties (dienst/gebruik): looptijd, type, kosten, status. Status-quickfilters, geannualiseerde kosten (Maandelijks ×12 / Jaarlijks ×1; Eenmalig apart), automatische `Actief → Verlopen` na einddatum (dagelijkse job), en contract-verloopt-notificatie (90-dagen venster). Documenten als Nextcloud Files-verwijzing. **Scope:** catalogus-metadata. Financieel contractlifecyclebeheer (verplichtingen, spend vs budget) hoort in shillinq CLM, niet hier. |
 
 ### Synchronisatie & Federatie
 

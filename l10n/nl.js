@@ -1,6 +1,10 @@
 OC.L10N.register(
     "softwarecatalog",
     {
+    "All" : "Alle",
+    "Active" : "Actief",
+    "Expiring / expired" : "Verlopend / verlopen",
+    "In negotiation" : "In onderhandeling",
     "(translated from {language})" : "(vertaald uit {language})",
     "+31 20 123 4567" : "+31 20 123 4567",
     "Accept" : "Accepteren",

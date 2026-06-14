@@ -3134,8 +3134,8 @@
         "slug": "contract",
         "x-openregister-notifications": {
           "contract-expiry": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"status": {"op": "equals", "value": "Actief"}}},
-            "enabled": false,
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"status": {"operator": "equals", "value": "Actief"}, "eindDatum": {"operator": "withinNext", "value": "P90D"}}},
+            "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
               {"kind": "groups", "groups": ["software-catalog-admins"]},
@@ -3148,8 +3148,8 @@
           }
         },
         "title": "Contract",
-        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
-        "version": "0.1.0",
+        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
+        "version": "0.1.1",
         "summary": "",
         "icon": "FileDocumentEdit",
         "required": [

@@ -77,10 +77,10 @@ it SHALL never modify `In onderhandeling` contracts, contracts without an
 
 ### Requirement: Contract expiry notifications are enabled
 
-Once the OpenRegister notification engine's `scheduled` date-window filtering
-("`eindDatum` within N days") is confirmed, the `contract-expiry` rule
-declared (disabled) by `softwarecatalog-notifications` SHALL be enabled with
-its window aligned to `contract_expiry_window_days` defaults. If the engine
+The `contract-expiry` notification rule SHALL be enabled once the OpenRegister
+notification engine's `scheduled` date-window filtering ("`eindDatum` within N
+days") is confirmed, with its window aligned to `contract_expiry_window_days`
+defaults. If the engine
 cannot express the window, the gap SHALL be filed against OpenRegister and
 the rule SHALL stay disabled — no app-local notification dispatch (ADR-031).
 
