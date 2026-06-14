@@ -139,7 +139,7 @@ async function bootstrap() {
 	const { manifest: resolvedManifest } = await resolveManifestSentinels(mergedManifest, 'softwarecatalog')
 
 	const router = new VueRouter({
-		mode: 'history',
+		mode: 'hash',
 		base: generateUrl('/apps/softwarecatalog'),
 		routes: routesFromManifest(resolvedManifest),
 	})
