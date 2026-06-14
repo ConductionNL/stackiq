@@ -169,11 +169,18 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "contract",
 				"columns": [
-					"naam",
-					"leverancier",
-					"ingangsdatum",
-					"einddatum",
+					"contractNummer",
+					"contractType",
+					"startDatum",
+					"eindDatum",
+					"kosten",
 					"status"
+				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Active", "filter": { "status": "Actief" }, "icon": "CheckCircle" },
+					{ "label": "Expiring / expired", "filter": { "status": "Verlopen" }, "icon": "AlertCircle" },
+					{ "label": "In negotiation", "filter": { "status": "In onderhandeling" }, "icon": "Handshake" }
 				],
 				"sidebar": {
 					"enabled": true,

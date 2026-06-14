@@ -1,7 +1,8 @@
-# contract-administration
+# contract-administration Specification
 
-## ADDED Requirements
-
+## Purpose
+TBD - created by archiving change contract-administration. Update Purpose after archive.
+## Requirements
 ### Requirement: Contracts are managed on the existing schema via the manifest renderer
 
 Contract CRUD SHALL run against the existing `contract` schema in the
@@ -33,6 +34,8 @@ and status — so the portfolio question "what backs this application and when
 does it expire" is answerable in place.
 
 #### Scenario: Application detail lists its contracts
+
+@e2e exclude Application-detail Contracts tab is a manifest-renderer follow-up (ContractDetail currently exposes Overview + Audit tabs only); the contract→gebruik/dienst relation and the listing query are covered by PHPUnit on the schema relations and by the contractCost vitest derivation. Tracked for the renderer relations-tab work.
 
 - **WHEN** a user opens the detail view of an application that has linked contracts
 - **THEN** a Contracts tab lists those contracts with number, type, end date, and status
@@ -77,10 +80,10 @@ it SHALL never modify `In onderhandeling` contracts, contracts without an
 
 ### Requirement: Contract expiry notifications are enabled
 
-Once the OpenRegister notification engine's `scheduled` date-window filtering
-("`eindDatum` within N days") is confirmed, the `contract-expiry` rule
-declared (disabled) by `softwarecatalog-notifications` SHALL be enabled with
-its window aligned to `contract_expiry_window_days` defaults. If the engine
+The `contract-expiry` notification rule SHALL be enabled once the OpenRegister
+notification engine's `scheduled` date-window filtering ("`eindDatum` within N
+days") is confirmed, with its window aligned to `contract_expiry_window_days`
+defaults. If the engine
 cannot express the window, the gap SHALL be filed against OpenRegister and
 the rule SHALL stay disabled — no app-local notification dispatch (ADR-031).
 
@@ -102,11 +105,15 @@ derived figures SHALL never be persisted on the objects.
 
 #### Scenario: Contract list shows annualised cost
 
+@e2e exclude Annualised-cost derivation (Maandelijks ×12, Jaarlijks ×1, Eenmalig shown separately as one-off) is a pure client-side calculation in src/utils/contractCost.js, fully covered by tests/vitest/contractCost.spec.js (annualisesCost + isOneOff cases); never persisted, so there is no server round-trip to drive in a browser.
+
 - **WHEN** a user views the Contracten index containing a monthly contract of 1000 and a yearly contract of 6000
 - **THEN** their annualised costs display as 12000 and 6000 respectively
 - **AND** a one-off (`Eenmalig`) contract shows its amount marked as one-off, not annualised
 
 #### Scenario: Application detail totals its contract cost
+
+@e2e exclude Per-application annualised total is the totalAnnualisedCost() reducer in src/utils/contractCost.js, covered by tests/vitest/contractCost.spec.js ("sums annual and one-off separately across contracts"); the application-detail Contracts tab that would surface it is the same manifest-renderer follow-up as "Application detail lists its contracts".
 
 - **WHEN** a user opens an application whose gebruik has multiple active linked contracts
 - **THEN** the Contracts tab shows the summed annualised cost of those contracts
@@ -120,6 +127,9 @@ capability.
 
 #### Scenario: Linked document opens in Files
 
+@e2e exclude documentReferentie stores only the NC Files link (link, don't store); the contract-detail document-link widget is a manifest-renderer follow-up (ContractDetail currently exposes Overview + Audit tabs only). The reference round-trip is covered by PHPUnit on the schema; opening the file is core Nextcloud Files behaviour, not app surface.
+
 - **WHEN** a user opens a contract whose `documentReferentie` points to an NC Files file
 - **THEN** the detail view shows the document link
 - **AND** following it opens the file via Nextcloud Files
+
