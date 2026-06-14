@@ -119,7 +119,8 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -148,7 +149,8 @@
 							{ "type": "audit-trail" }
 						]
 					}
-				]
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -169,7 +171,8 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -198,7 +201,8 @@
 							{ "type": "audit-trail" }
 						]
 					}
-				]
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -218,7 +222,8 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -247,7 +252,8 @@
 							{ "type": "audit-trail" }
 						]
 					}
-				]
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -267,7 +273,8 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -296,7 +303,8 @@
 							{ "type": "audit-trail" }
 						]
 					}
-				]
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -316,7 +324,8 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -345,7 +354,8 @@
 							{ "type": "audit-trail" }
 						]
 					}
-				]
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -365,7 +375,8 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
@@ -394,7 +405,8 @@
 							{ "type": "audit-trail" }
 						]
 					}
-				]
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{
