@@ -94,6 +94,13 @@ class InitializeSettings implements IRepairStep
                 $this->config->setValueInt(Application::APP_ID, 'contract_expiry_window_days', 90);
             }
 
+            // Seed the EOL warning window default only when unset, so an
+            // operator's chosen window survives upgrades.
+            // @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+            if ($this->config->hasKey(Application::APP_ID, 'eol_warning_window_days') === false) {
+                $this->config->setValueInt(Application::APP_ID, 'eol_warning_window_days', 180);
+            }
+
             // Get the settings service and initialize.
             $settingsService = $this->container->get(SettingsService::class);
             $result          = $settingsService->initialize();

@@ -19,6 +19,7 @@
 
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'
+import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 
 export default {
@@ -35,6 +36,12 @@ export default {
 	DashboardCustomView: {
 		kind: 'page',
 		component: DashboardCustomView,
+	},
+
+	// --- Lib gap: per-organisation lifecycle roadmap. ---
+	LifecycleRoadmapView: {
+		kind: 'page',
+		component: LifecycleRoadmapView,
 	},
 
 	// --- Lib gap: filter-first compliance matrix (modules × standards). ---

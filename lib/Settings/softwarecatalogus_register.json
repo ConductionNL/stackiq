@@ -2643,9 +2643,24 @@
         "slug": "gebruik",
         "title": "Gebruik",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "summary": "",
         "icon": "Usage",
+        "x-openregister-notifications": {
+          "phaseout-approaching": {
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"startDatumUitTeFaseren": {"operator": "withinNext", "value": "P180D"}}},
+            "enabled": true,
+            "channels": ["nc-notification", "email"],
+            "recipients": [
+              {"kind": "groups", "groups": ["software-catalog-admins"]},
+              {"kind": "object-acl", "permission": "manage"}
+            ],
+            "subject": {
+              "nl": "Uitfasering nadert: {{contractNummer}} (uit te faseren {{startDatumUitTeFaseren}})",
+              "en": "Phase-out approaching (phase-out date {{startDatumUitTeFaseren}})"
+            }
+          }
+        },
         "required": [
           "afnemer"
         ],
@@ -3029,6 +3044,28 @@
             "table": {
               "default": true
             }
+          },
+          "geplandeVervanging": {
+            "description": "De module die dit gebruik gepland gaat vervangen (opvolger). Wordt per gebruik vastgelegd, niet op de module zelf.",
+            "type": "object",
+            "visible": true,
+            "order": 30,
+            "facetable": false,
+            "title": "Geplande vervanging",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/module"
+          },
+          "geplandeVervangingsDatum": {
+            "description": "De geplande datum waarop de vervanging plaatsvindt.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 31,
+            "facetable": false,
+            "title": "Geplande vervangingsdatum",
+            "example": "Bijvoorbeeld: 2027-01-01"
           }
         },
         "archive": [],
@@ -7305,11 +7342,24 @@
               "nl": "Nieuwe moduleversie: {{versie}}",
               "en": "New module version: {{versie}}"
             }
+          },
+          "eol-approaching": {
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"datumEindeOndersteuning": {"operator": "withinNext", "value": "P180D"}}},
+            "enabled": true,
+            "channels": ["nc-notification", "email"],
+            "recipients": [
+              {"kind": "groups", "groups": ["software-catalog-admins"]},
+              {"kind": "object-acl", "permission": "manage"}
+            ],
+            "subject": {
+              "nl": "Einde ondersteuning nadert: {{versie}} (einddatum {{datumEindeOndersteuning}})",
+              "en": "End of support approaching: {{versie}} (end date {{datumEindeOndersteuning}})"
+            }
           }
         },
         "title": "Applicatieversie",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "summary": "",
         "icon": "ViewModule",
         "required": [],
