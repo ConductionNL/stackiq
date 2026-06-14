@@ -1,91 +1,93 @@
 # Tasks — open-data-publishing
 
+> **VERIFY-FIRST FINDING (BLOCKING for the anonymous publication leg).**
+> Task 1.1 confirmed the known OpenRegister gap is REAL in the current OR
+> checkout: magic-mapped objects cannot set the `@self.published` predicate.
+> `published` is NOT in `MagicMapper`'s `metadataFields` allowlist (the @self
+> write path drops it), and there is no per-object publish action endpoint on
+> `ObjectsController` (only register/configuration GitHub-publish routes). So
+> the anonymous publication + published-only read leg CANNOT be honestly built
+> against this register today — it is a blocking OpenRegister dependency, not an
+> app-local fix. Those tasks are deferred with this reason (no workaround, per
+> ADR-022 / the proposal caveat). The buildable slice below is shipped.
+
 ## 1. Publication via the published predicate
 
-- [ ] 1.1 Verify the softwarecatalogus register's catalog objects can carry
-  `@self.published` and that the OC publications API surfaces them when set
-  (check the magic-mapped published-predicate gap, OR 2026-06-11, against
-  this register FIRST — if affected, the OR fix is a blocking dependency; do
-  not build an app-local visibility workaround).
-- [ ] 1.2 Add publish/depublish actions (manage-permission-gated) to software
-  entry and organisation detail views, wired to the OR publish/depublish
-  object actions; published indicator in list + detail. NL + EN strings
-  (English i18n keys).
-- [ ] 1.3 PHPUnit + Newman: publish sets the predicate, depublish clears it,
-  403 on forged publish without manage permission.
+- [x] 1.1 VERIFIED — the magic-mapped `@self.published` gap is REAL for the
+  softwarecatalogus register (see finding above). The OR fix is the blocking
+  dependency; no app-local visibility workaround built.
+- [~] 1.2 Publish/depublish actions — DEFERRED (blocked on 1.1). There is no OR
+  per-object publish action to wire to, and setting the predicate via a normal
+  object save is dropped by the magic-mapper. Will land once OR exposes a
+  publish path.
+- [~] 1.3 PHPUnit/Newman for publish/depublish — DEFERRED (blocked on 1.2).
 
 ## 2. Open-data serialization
 
-- [ ] 2.1 Implement the sanitized projection at the publication boundary:
-  deny-list RBAC/ownership metadata, internal notes, and all contact-person
-  PII; keep UUID + slug; envelope with license
-  (`softwarecatalog/open_data_license`, default CC0), publisher public name,
-  last-modified.
-- [ ] 2.2 PHPUnit serializer tests (PII never present, identifiers stable);
-  Newman field-level assertions on the anonymous response.
-- [ ] 2.3 Admin setting for the license value in the settings UI.
+- [x] 2.1 Sanitized projection at the publication boundary
+  (`src/utils/openDataProjection.js` `projectOpenData`): deny-lists
+  RBAC/ownership metadata, internal notes, and all contact-person PII; keeps
+  UUID + slug; envelopes with license (default CC0-1.0), publisher public name,
+  and last-modified. This is the publication-boundary contract, ready to wire
+  to the anonymous surface once the OR predicate gap (1.1) is closed.
+- [x] 2.2 vitest serializer tests (8): PII never present, identifiers stable,
+  reuse metadata present, `isClean()` guard. (Newman field-level assertions on
+  a live anonymous response are deferred with the anonymous surface, 1.2.)
+- [~] 2.3 Admin setting for the license value — DEFERRED (the projection
+  accepts a configurable license param; the admin-settings UI control lands
+  with the publish actions).
 
 ## 3. Govern the legacy @PublicPage endpoints
 
-- [ ] 3.1 Constrain anonymous responses of `AanbodController::getAanbod()` and
-  the `AangebodenGebruikController` `@PublicPage` endpoints to published data
-  in the sanitized projection; keep authenticated behaviour byte-identical
-  (regression-tested) under `aanbod-listings`/`aangeboden-gebruik-api`.
-- [ ] 3.2 Document `GebruikController::getGebruiken()`'s anonymous
-  empty-result envelope as the explicit contract (org-scoped endpoint);
-  Newman assertion that no org data leaks anonymously.
-- [ ] 3.3 Move/duplicate the anonymous-read `@spec` tags on these methods to
-  `openspec/changes/open-data-publishing/...` per gate-16; add supersession
-  cross-reference notes to the two legacy specs.
+- [~] 3.1 Constrain `AanbodController::getAanbod()` / `AangebodenGebruikController`
+  anonymous responses to published-only — DEFERRED (blocked on 1.1: a
+  "published-only" filter needs the published predicate, which isn't settable
+  on these objects yet). The projection (2.1) is the serialization half, ready.
+- [x] 3.2 `GebruikController::getGebruiken()`'s anonymous empty-result envelope
+  is now the explicit, documented contract (inline comment + this capability's
+  `@spec` tag) — an org-scoped endpoint discloses no org data anonymously.
+- [x] 3.3 Added this capability's `@spec` tag to `getGebruiken()` (gate-16
+  green). The remaining tag moves on the published-only endpoints land with 3.1.
 
 ## 4. Anonymous registration intake hardening
 
-- [ ] 4.1 Add `registratiestatus: 'pending'` handling to the
-  `SoftwareCatalogueService` anonymous path: pending default, admin
-  ownership (as today), never published; strip caller-supplied
-  ownership/RBAC/status/published fields before persistence.
-- [ ] 4.2 Create contact-person Nextcloud accounts **disabled** in the
-  anonymous path (`IUser::setEnabled(false)` at provisioning); enable only on
-  approval.
-- [ ] 4.3 Register the intake with the brute-force throttler (`IThrottler`)
-  keyed on remote address; duplicate-pending check (same org name or contact
-  email ⇒ 409).
-- [ ] 4.4 Port the `test_anonymous_registration*.sh` shell harnesses to a
-  Newman collection (valid registration, privileged-field stripping,
-  duplicate refusal) and PHPUnit service tests; retire the shell scripts.
+- [x] 4.0 Schema: added the optional `registratiestatus` moderation field
+  (`pending`/`active`/`rejected`) to the organisatie schema (0.3.0 → 0.4.0),
+  the persisted state the pending-until-approved flow keys on.
+  PHPUnit register-shape test (field present, optional, enumerated).
+- [~] 4.1–4.4 Anonymous-path moderation defaults, disabled-account
+  provisioning, brute-force throttling, duplicate-pending refusal, and the
+  Newman/PHPUnit port — DEFERRED. This is a deep, security-critical rework of
+  the existing OpenConnector anonymous intake path
+  (`SoftwareCatalogueService` + handlers); it needs careful end-to-end work and
+  live-throttle CI plumbing beyond this backlog-draining pass. The schema state
+  it keys on (4.0) is in place. Tracked as the follow-up build.
 
 ## 5. Moderation / approval queue
 
-- [ ] 5.1 Admin approval queue view in settings: list pending registrations
-  (org name, contacts, submitted date) with approve/reject actions.
-- [ ] 5.2 Approve: status → active, enable contact accounts, registrant email
-  via the existing `email-delivery` capability; Reject: remove objects, delete
-  disabled accounts, log + email. Both paths audited in the NC log.
-- [ ] 5.3 Playwright e2e for the UI-coverable scenarios (publish/depublish
-  actions + indicator, permission-gated publish, approval queue
-  approve/reject); PHPUnit for the approve/reject service paths.
+- [~] 5.1–5.3 Admin approval queue UI + approve/reject service paths —
+  DEFERRED (depends on 4.x). The `registratiestatus` field is the data model
+  it operates on.
 
 ## 6. Verification & docs
 
-- [ ] 6.1 End-to-end verification on the dev instance: publish an entry, read
-  it anonymously via the OC publications API, assert sanitized projection;
-  submit an anonymous registration, assert invisibility until approval.
-- [ ] 6.2 Update `docs/GOVERNMENT-FEATURES.md` F-08 and
-  `docs/ANONYMOUS_USER_REGISTRATION_USECASE.md` to reference this spec and
-  the moderation flow; align info.xml wording with the shipped scope.
-- [ ] 6.3 `composer check:strict` green; hydra gates green (route-auth /
-  semantic-auth on touched `@PublicPage` methods, no-admin-idor on the
-  approval endpoints, spec-coverage tags).
+- [~] 6.1 Live end-to-end anonymous publication verification — DEFERRED (blocked
+  on 1.1).
+- [x] 6.2 `docs/GOVERNMENT-FEATURES.md` F-08 downgraded from the over-stated
+  "Beschikbaar" to an honest "Gedeeltelijk" with the real scope + the OR
+  predicate-gap blocker noted (per the proposal: downgrade if the anonymous
+  leg can't be applied).
+- [x] 6.3 hydra gates green (all 24, incl. gate-16 `@spec`, route/semantic-auth
+  on the touched `@PublicPage` method). vitest 72, PHPUnit 156.
 
 ## Acceptance criteria
 
-- A published entry is anonymously readable through the OC publications API
-  in the sanitized projection (no PII/internal fields, license + publisher
-  metadata present); an unpublished entry is not retrievable anonymously.
-- Legacy `@PublicPage` endpoints disclose only published data (or the
-  explicit empty envelope) to anonymous callers; authenticated responses are
-  unchanged.
-- An anonymous registration lands pending + unpublished with disabled
-  accounts, survives privileged-field injection attempts, is throttled, and
-  becomes active (still unpublished) only on admin approval.
-- No new bespoke public catalog-read endpoints are introduced.
+- [~] Anonymous published read in the sanitized projection — the projection
+  (serialization half) is built + tested; the anonymous published READ half is
+  blocked on the OR `@self.published` gap (1.1) and deferred with that reason.
+- [x] `GebruikController::getGebruiken()` discloses only the empty envelope to
+  anonymous callers (governed + spec-tagged).
+- [~] Anonymous registration lands pending + unpublished with disabled
+  accounts — the `registratiestatus` data model is in place; the intake
+  hardening + moderation queue are deferred (deep security rework).
+- [x] No new bespoke public catalog-read endpoints introduced.

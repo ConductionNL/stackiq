@@ -82,9 +82,13 @@ class GebruikController extends Controller
      * @SuppressWarnings(PHPMD.NPathComplexity)
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
      */
     public function getGebruiken(): JSONResponse
     {
+        // Open-data posture (open-data-publishing): gebruik is inherently
+        // organisation-scoped, so an anonymous caller receives the documented
+        // empty-result envelope — never RBAC-scoped internal data.
         $user = $this->userSession->getUser();
         if ($user === null) {
             return new JSONResponse($this->getEmptyResult());
