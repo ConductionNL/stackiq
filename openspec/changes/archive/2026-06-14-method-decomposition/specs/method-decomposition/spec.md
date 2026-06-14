@@ -1,109 +1,32 @@
-# method-decomposition Specification
+---
+status: draft
+priority: high
+estimated_effort: large
+---
+
+# Method Decomposition — SoftwareCatalog
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-24-method-decomposition. Update Purpose after archive.
 
-@e2e exclude PHP internal refactor (controller/service method decomposition into helpers) — pure backend structure with no observable UI behaviour; covered by PHPUnit unit tests.
-## Requirements
-### Requirement: SettingsController Settings CRUD endpoints (REQ-DECOMP-013)
+Specify the requirements for eliminating 145 PHPMD complexity suppressions in
+`lib/` by decomposing complex methods and classes into smaller, focused units.
+Each suppression bypasses a strict PHPMD threshold (CC>10, NPath>200,
+MethodLength>100, ClassLength>1000). This is a pure refactoring change — no
+behavioral changes, no schema modifications, no new public API.
 
-The SettingsController MUST expose JSON endpoints to read and write the four primary settings blocks — full settings tree, configuration + selected register, general config (`catalogLocation`), and sync config — plus a unified `create` endpoint that routes by request-body shape.
+**Current suppression inventory:**
 
-**Endpoints**: `index()`, `create()`, `getGeneralConfig()`, `updateGeneralConfig()`, `getSyncConfig()`, `updateSyncConfig()`.
+| Category | Count | Threshold |
+|----------|-------|-----------|
+| ExcessiveMethodLength | 35 | >100 lines |
+| CyclomaticComplexity | 31 | >10 branches |
+| NPathComplexity | 26 | >200 paths |
+| ExcessiveClassComplexity | 19 | — |
+| ExcessiveClassLength | 14 | >1000 lines |
+| CouplingBetweenObjects | 12 | >13 deps |
+| TooManyMethods | 8 | — |
 
-**Common contract**: Each endpoint MUST catch every `\Exception`, log it via `LoggerInterface::error`, and return `{error: <message>}` with HTTP 500. Successful reads MUST return either the raw settings tree (`index`) or `{success: true, config: {...}}` (the granular getters). Successful writes MUST return `{success: true, data: ..., message: ...}` (for `create`) or `{success: true, message: ..., config: {...}}` (for the granular setters).
-
-**`create()` routing**: It MUST inspect `request.params` and dispatch on the presence of `configuration` / `selectedRegister` → `SettingsService::updateSettings`; `userGroups.generic` / `.organizationAdmin` / `.superUser` → validate each via `validateGroups`, return HTTP 400 with the validation envelope on any `invalid` entries, otherwise persist via the matching setter; `emailSettings` → `updateEmailSettings`. Multiple sections in one body MUST be processed in sequence and reported under a combined `data` map.
-
-#### Scenario: index attaches openRegisters availability + isAdmin
-- GIVEN the OpenRegister app is installed and the current user is in the `admin` group
-- WHEN `GET /settings` is invoked
-- THEN the response body MUST include `openRegisters: true` and `isAdmin: true` alongside the settings tree
-
-#### Scenario: create with invalid generic group returns 400
-- GIVEN `request.params = { userGroups: { generic: ['no-such-group'] } }`
-- AND `validateGroups` flags `'no-such-group'` as invalid
-- WHEN `POST /settings` is invoked
-- THEN the response status MUST be `400`
-- AND the body MUST equal `{error: "Invalid generic group names provided", validation: {...}}`
-
-#### Scenario: getGeneralConfig surfaces catalogLocation
-- WHEN `GET /settings/general` is invoked
-- THEN the response body MUST equal `{success: true, config: {catalogLocation: <value>}}`
-
-### Requirement: Configuration bootstrap + status endpoints (REQ-DECOMP-014)
-
-The SettingsController MUST expose four endpoints that surface app readiness and version information for the admin UI: `load()` (initial UI bootstrap payload), `initialize()` (idempotent first-run setup), `status()` (current configuration health), `getVersionInfo()` (app version + cache-busting timestamp).
-
-`getVersionInfo()` MUST attach a `timestamp` field (Unix seconds at response time) to every response — including error responses — for cache-busting on the frontend.
-
-`status()` MUST aggregate the configuration health summary from `SettingsService` and return it as a JSON envelope without wrapping; consumers depend on the raw shape.
-
-#### Scenario: getVersionInfo attaches timestamp on success
-- WHEN `GET /settings/version` is invoked successfully
-- THEN the response body MUST include `timestamp: <int>` matching `time()` at response time
-
-#### Scenario: getVersionInfo attaches timestamp on error
-- GIVEN `SettingsService::getVersionInfo()` throws
-- WHEN the endpoint is invoked
-- THEN the response status MUST be `500`
-- AND the body MUST include `{error: <message>, timestamp: <int>}`
-
-### Requirement: Sync orchestration endpoints (REQ-DECOMP-015)
-
-The SettingsController MUST expose two endpoints for organisation synchronisation: `getSyncStatus(minutesBack=10)` (read-only sync status with error handling) and `performSync(minutesBack=0)` (trigger sync).
-
-`performSync` MUST branch on `minutesBack`: `0` → full optimized sync via `OrganizationSyncService::performOptimizedManualSync(maxRounds: 15, batchSize: 75)` returning `{success: true, results, message, isOptimized: true}`; non-zero → incremental sync via `performManualSync($minutesBack)` returning the service result.
-
-`getSyncStatus` MUST delegate without try/catch — the underlying service method already wraps errors into the response shape.
-
-#### Scenario: Full sync invokes optimized path
-- WHEN `POST /settings/sync` is called with `minutesBack=0`
-- THEN `performOptimizedManualSync` MUST be invoked with `maxRounds: 15` and `batchSize: 75`
-- AND the response body MUST contain `isOptimized: true`
-
-#### Scenario: Sync exception maps to 500 with success: false
-- GIVEN the underlying sync service throws
-- WHEN the endpoint is invoked
-- THEN the response status MUST be `500`
-- AND the body MUST equal `{success: false, message: "Synchronization failed: <msg>", error: <msg>}`
-
-### Requirement: Cache, heartbeat, and diagnostic endpoints (REQ-DECOMP-016)
-
-The SettingsController MUST expose lightweight endpoints for ops + diagnostics: `clearCache()` (force schema/register cache reload), `heartbeat()` (keep-alive for long-running browser-side operations), `stats()` (catalog statistics), `debug()` (diagnostic dump).
-
-`heartbeat()` MUST accept an optional `timestamp` query parameter (defaulting to `time() * 1000`), echo it back alongside the server's current timestamp, and respond with `{success: true, message: "Heartbeat received", timestamp, server_time}`. Both timestamps MUST be in milliseconds.
-
-`heartbeat()` is the only endpoint in this group annotated `@NoAdminRequired`; the rest require admin (default for `@NoCSRFRequired` without `@NoAdminRequired` is admin-required per ADR-005).
-
-#### Scenario: Heartbeat echoes timestamp in ms
-- GIVEN the client sends `timestamp=1716576000000`
-- WHEN `POST /settings/heartbeat` is invoked
-- THEN the response body MUST contain `timestamp: 1716576000000` and `server_time: <current-ms>`
-
-#### Scenario: Heartbeat default timestamp uses server time
-- GIVEN no `timestamp` parameter is provided
-- WHEN the endpoint is invoked
-- THEN the response `timestamp` MUST equal the server's current `time() * 1000`
-
-### Requirement: Progress snapshot + SSE streaming endpoints (REQ-DECOMP-017)
-
-The SettingsController MUST expose two progress-related endpoints that consume the `ProgressTracker` service (see `progress-tracking#REQ-005`): `getProgress(operationId)` (one-shot JSON snapshot) and `streamProgress(operationId)` (Server-Sent Events stream).
-
-`getProgress` MUST delegate to `ProgressTracker::getProgress($operationId)` and return `{success: true, progress: <snapshot>}` with HTTP 200 when a snapshot exists, or `{success: false, error: "Operation not found"}` with HTTP 404 when it does not.
-
-`streamProgress` MUST return an `OCP\AppFramework\Http\Response` subclass that streams `text/event-stream` events for the operation until the operation reaches phase `completed` or the client disconnects. The response MUST set `Content-Type: text/event-stream`, `Cache-Control: no-cache`, and `Connection: keep-alive`.
-
-#### Scenario: getProgress returns 404 for unknown id
-- GIVEN no operation with id `import_xyz` exists in the session
-- WHEN `GET /settings/progress/import_xyz` is invoked
-- THEN the response status MUST be `404`
-- AND the body MUST contain `{success: false, error: "Operation not found"}`
-
-#### Scenario: streamProgress sets SSE headers
-- WHEN `GET /settings/stream-progress/import_abc` is invoked
-- THEN the response Content-Type MUST be `text/event-stream`
-- AND `Cache-Control` MUST be `no-cache`
+## ADDED Requirements
 
 ### Requirement: REQ-DECOMP-001 SettingsController Decomposition
 
@@ -496,3 +419,31 @@ remove remaining suppressions.
 - THEN zero PHPMD violations MUST remain across the entire codebase for the targeted suppression categories
 - AND total `@SuppressWarnings(PHPMD.*)` annotations in `lib/` MUST be reduced by at least 145
 
+## Non-functional Requirements
+
+### Requirement: REQ-DECOMP-NFR-001 No behavioral changes
+
+- GIVEN any decomposed method or class
+- WHEN tests run before and after the decomposition
+- THEN test outcomes MUST be identical
+- AND no observable behavior (API response shape, database writes, event dispatching) MUST change
+
+### Requirement: REQ-DECOMP-NFR-002 @spec traceability
+
+- GIVEN any new class or public method introduced by this change
+- WHEN its PHPDoc block is read
+- THEN it MUST include at least one `@spec openspec/changes/method-decomposition/tasks.md#task-N` tag per ADR-003
+
+### Requirement: REQ-DECOMP-NFR-003 SPDX headers on new files
+
+- GIVEN any new PHP file created by this change
+- WHEN its contents are read
+- THEN the second line (after `<?php`) MUST be `// SPDX-License-Identifier: EUPL-1.2` per ADR-015
+
+### Requirement: REQ-DECOMP-NFR-004 Container invocation for tests
+
+- GIVEN a developer wants to verify a decomposed class
+- WHEN they run unit tests
+- THEN they MUST invoke PHPUnit via:
+  `docker exec -w /var/www/html/custom_apps/softwarecatalog nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- AND class-scoped filtering MUST be available via `--filter ClassName` per ADR-008
