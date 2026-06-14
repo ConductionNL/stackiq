@@ -9,7 +9,7 @@
  * and grouping/ordering logic are covered exhaustively by the vitest unit
  * tests on the lifecyclePhase utility.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 import { test, expect } from '@playwright/test'
 import { APP_MAIN, collectAppErrors, expectNoAppErrors, navClickTo } from './_helpers'

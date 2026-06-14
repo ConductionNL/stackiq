@@ -16,11 +16,15 @@ truth).
 
 #### Scenario: Phase follows the most recent past phase date
 
+@e2e exclude Phase derivation (most-advanced past phase date, recomputed never persisted) is the derivePhase() function in src/utils/lifecyclePhase.js, exhaustively covered by tests/vitest/lifecyclePhase.spec.js (most-advanced-past, advances-when-date-passes, inclusive-today-boundary, out-of-order-tolerance cases).
+
 - **WHEN** a gebruik has `startDatumInProductie` in the past and `startDatumUitTeFaseren` in the future
 - **THEN** its derived phase shows as `In productie` in list and detail views
 - **AND** once `startDatumUitTeFaseren` passes, the same gebruik derives as `Uit te faseren` without any object write
 
 #### Scenario: Undated gebruik shows as unknown, not hidden
+
+@e2e exclude Onbekend derivation for date-less gebruiken (and its never-hidden ordering, Onbekend group first) is covered by tests/vitest/lifecyclePhase.spec.js (derivePhase "returns Onbekend when no phase dates", phaseOrder "orders unknown first"); the roadmap renders the Onbekend group unconditionally.
 
 - **WHEN** a gebruik has none of the five phase dates set
 - **THEN** it is shown with phase `Onbekend` in listings and the roadmap
@@ -38,11 +42,15 @@ on `moduleVersie`; no end-of-support field SHALL be copied onto `gebruik`.
 
 #### Scenario: Past end-of-support shows an EOL indicator
 
+@e2e exclude End-of-support state (passed / withdrawn, read from the linked moduleVersie, never copied onto gebruik) is the endOfSupportState() function in src/utils/lifecyclePhase.js, covered by tests/vitest/lifecyclePhase.spec.js (flags-passed-date, flags-withdrawn, does-not-flag-future); the roadmap binds it to an EOL badge but rendering requires a seeded organisation dataset the data-independent e2e suite does not provision.
+
 - **WHEN** a user views an application list containing a gebruik whose moduleVersie's `datumEindeOndersteuning` is in the past
 - **THEN** that entry carries a visible end-of-support indicator
 - **AND** the detail view states the end-of-support date and, when set, the withdrawn date
 
 #### Scenario: EOL-approaching filter respects the window
+
+@e2e exclude The EOL-approaching window predicate (within window true, outside / already-passed / undated false) is the isEolApproaching() function in src/utils/lifecyclePhase.js, covered by tests/vitest/lifecyclePhase.spec.js (within-window, passed-is-not-approaching, no-date cases).
 
 - **WHEN** a user applies the EOL-approaching filter with versions ending support inside and outside the configured window
 - **THEN** only gebruiken whose version ends support within the window are listed, ordered by end-of-support date ascending
@@ -64,6 +72,8 @@ the roadmap SHALL show the successor module and planned date on the entry.
 
 #### Scenario: Replacement is visible on the roadmap
 
+@e2e exclude The roadmap renders the successor module name + planned-replacement date and links to the module detail (LifecycleRoadmapView.vue rm-replacement block); the successor-resolution + ordering-by-urgency logic is covered by tests/vitest/lifecyclePhase.spec.js (resolveUuid, phaseOrder), but rendering the populated entry requires a seeded organisation dataset the data-independent e2e suite does not provision.
+
 - **WHEN** a gebruik in phase `Uit te faseren` has a planned replacement set
 - **THEN** its roadmap entry shows the successor module and the planned replacement date
 - **AND** the successor links to that module's detail view
@@ -77,6 +87,8 @@ The `gebruik` schema SHALL gain two optional fields: `geplandeVervanging`
 objects SHALL remain valid without the new fields.
 
 #### Scenario: User records a planned replacement
+
+@e2e exclude geplandeVervanging (related-module reference) + geplandeVervangingsDatum are optional gebruik-schema fields persisted via the OpenRegister object store (no app-local controller, ADR-022); the field declaration and the set/clear round-trip are covered by the register-shape PHPUnit test on the gebruik schema. Gebruik editing has no dedicated manifest page to drive in isolation — it goes through the OrganisatieIndex custom view's data layer.
 
 - **WHEN** a user edits a gebruik and selects a successor module with a planned date
 - **THEN** the gebruik stores the `geplandeVervanging` reference and `geplandeVervangingsDatum`
