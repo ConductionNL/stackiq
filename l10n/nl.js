@@ -135,7 +135,15 @@ OC.L10N.register(
     "contact@example.com" : "contact@voorbeeld.nl",
     "https://catalog.example.com" : "https://catalogus.voorbeeld.nl",
     "https://example.com" : "https://voorbeeld.nl",
-    "{count} selected" : "{count} geselecteerd"
+    "{count} selected" : "{count} geselecteerd",
+    "View filters" : "Weergavefilters",
+    "Gebruik" : "Gebruik",
+    "Deelnames" : "Deelnames",
+    "Loading views..." : "Weergaven laden...",
+    "Could not load views" : "Kan weergaven niet laden",
+    "No views found" : "Geen weergaven gevonden",
+    "No GEMMA views are available." : "Er zijn geen GEMMA-weergaven beschikbaar.",
+    "Includes deelnames" : "Inclusief deelnames"
 },
 "nplurals=2; plural=(n != 1);"
 );

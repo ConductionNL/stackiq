@@ -173,6 +173,14 @@
         "Target schema": "Målskema",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Denne adgangskode er fundet i datalæk og er ikke sikker. Vælg venligst en anden adgangskode.",
         "User": "Bruger",
-        "Version Information": "Versionsoplysninger"
+        "Version Information": "Versionsoplysninger",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }

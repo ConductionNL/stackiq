@@ -173,6 +173,14 @@
         "Target schema": "Esquema de destino",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Esta contraseña se ha encontrado en filtraciones de datos y no es segura. Por favor, elija una contraseña diferente.",
         "User": "Usuario",
-        "Version Information": "Información de la versión"
+        "Version Information": "Información de la versión",
+        "View filters": "Filtros de vista",
+        "Gebruik": "Uso",
+        "Deelnames": "Participaciones",
+        "Loading views...": "Cargando vistas...",
+        "Could not load views": "No se pudieron cargar las vistas",
+        "No views found": "No se encontraron vistas",
+        "No GEMMA views are available.": "No hay vistas GEMMA disponibles.",
+        "Includes deelnames": "Incluye participaciones"
     }
 }

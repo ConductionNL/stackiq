@@ -173,6 +173,14 @@
         "Target schema": "Hedef şema",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Bu parola veri ihlallerinde bulundu ve güvenli değil. Lütfen farklı bir parola seçin.",
         "User": "Kullanıcı",
-        "Version Information": "Sürüm bilgileri"
+        "Version Information": "Sürüm bilgileri",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }

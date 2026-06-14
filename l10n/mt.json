@@ -173,6 +173,14 @@
         "Target schema": "Skema fil-mira",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Din il-password instabet fi ksur ta' data u mhix sigura. Jekk jogħġbok agħżel password differenti.",
         "User": "Utent",
-        "Version Information": "Informazzjoni dwar il-verżjoni"
+        "Version Information": "Informazzjoni dwar il-verżjoni",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }

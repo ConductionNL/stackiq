@@ -173,6 +173,14 @@
         "Target schema": "Doelschema",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Dit wachtwoord is aangetroffen in datalekken en is niet veilig. Kies een ander wachtwoord.",
         "User": "Gebruiker",
-        "Version Information": "Versie-informatie"
+        "Version Information": "Versie-informatie",
+        "View filters": "Weergavefilters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Weergaven laden...",
+        "Could not load views": "Kan weergaven niet laden",
+        "No views found": "Geen weergaven gevonden",
+        "No GEMMA views are available.": "Er zijn geen GEMMA-weergaven beschikbaar.",
+        "Includes deelnames": "Inclusief deelnames"
     }
 }

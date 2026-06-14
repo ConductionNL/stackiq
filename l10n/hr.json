@@ -173,6 +173,14 @@
         "Target schema": "Ciljna shema",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Ova lozinka pronađena je u povredama podataka i nije sigurna. Odaberite drugu lozinku.",
         "User": "Korisnik",
-        "Version Information": "Informacije o verziji"
+        "Version Information": "Informacije o verziji",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }

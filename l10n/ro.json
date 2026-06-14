@@ -173,6 +173,14 @@
         "Target schema": "Schemă țintă",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Această parolă a fost găsită în breșe de date și nu este sigură. Alegeți o altă parolă.",
         "User": "Utilizator",
-        "Version Information": "Informații despre versiune"
+        "Version Information": "Informații despre versiune",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }
