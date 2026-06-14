@@ -2023,7 +2023,7 @@
         "slug": "organisatie",
         "title": "Organisatie",
         "description": "Een organisatie die voorzieningen aanbiedt",
-        "version": "0.3.0",
+        "version": "0.4.0",
         "summary": "",
         "icon": "OfficeBuildingOutline",
         "required": [
@@ -2418,6 +2418,20 @@
               "Concept",
               "Actief",
               "Deactief"
+            ]
+          },
+          "registratiestatus": {
+            "description": "Moderatiestatus van een (anoniem) zelf-geregistreerde organisatie. 'pending' tot een beheerder de registratie goedkeurt; pas daarna 'active'. Anoniem geregistreerde organisaties zijn 'pending' en niet zichtbaar in de open-data/federatie-laag tot goedkeuring.",
+            "title": "Registratiestatus",
+            "type": "string",
+            "visible": false,
+            "hideOnCollection": true,
+            "facetable": true,
+            "order": 18,
+            "enum": [
+              "pending",
+              "active",
+              "rejected"
             ]
           },
           "samenwerkingtype": {
@@ -7173,7 +7187,7 @@
         "slug": "compliancy",
         "title": "Compliancy",
         "description": "Schema voor compliancy en standaard ondersteuning",
-        "version": "0.0.10",
+        "version": "0.0.11",
         "summary": "",
         "icon": "CheckCircle",
         "required": [],
@@ -7237,6 +7251,14 @@
             "format": "url",
             "order": 1,
             "title": "URL",
+            "visible": true,
+            "facetable": false
+          },
+          "bewijsReferentie": {
+            "description": "Nextcloud Files-verwijzing naar het bewijsstuk (link, niet opslaan). De voorkeursmanier om nieuw bewijs te koppelen; het legacy base64-veld 'bewijs' blijft leesbaar voor bestaande records.",
+            "type": "string",
+            "order": 6,
+            "title": "Bewijs (Nextcloud Files)",
             "visible": true,
             "facetable": false
           }

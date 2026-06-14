@@ -55,6 +55,13 @@
 			"order": 70
 		},
 		{
+			"id": "ComplianceMatrix",
+			"label": "Compliance matrix",
+			"icon": "icon-category-monitoring",
+			"route": "ComplianceMatrix",
+			"order": 75
+		},
+		{
 			"id": "Moduleversies",
 			"label": "Module versions",
 			"icon": "icon-files",
@@ -323,10 +330,10 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "compliancy",
 				"columns": [
-					"naam",
-					"standaard",
-					"status",
-					"datum"
+					"module",
+					"standaardversie",
+					"standaardGemma",
+					"url"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -364,6 +371,13 @@
 				],
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
+		},
+		{
+			"id": "ComplianceMatrix",
+			"route": "/compliance-matrix",
+			"type": "custom",
+			"title": "Compliance matrix",
+			"component": "ComplianceMatrixView"
 		},
 		{
 			"id": "Moduleversies",

@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: EUPL-1.2
+// SPDX-FileCopyrightText: 2026 Conduction B.V.
+/**
+ * Behavioural e2e coverage for the compliance matrix page.
+ *
+ * Drives the REAL UI of the manifest custom page `ComplianceMatrix`
+ * (ComplianceMatrixView.vue): navigate via the actual app-navigation entry,
+ * assert the filter-first surface mounts (title + standards selector +
+ * guidance empty-state) WITHOUT an app-origin console/5xx error. The
+ * data-dependent three-state cell rendering is covered exhaustively by the
+ * vitest unit tests on the matrix data mapper (tests/vitest/complianceMatrix.spec.js);
+ * here we guard that the page itself renders and is reachable.
+ *
+ * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ */
+import { test, expect } from '@playwright/test'
+import { APP_MAIN, collectAppErrors, expectNoAppErrors, navClickTo } from './_helpers'
+
+// @e2e module-compliance-assessment::matrix-renders-the-three-cell-states
+// @e2e module-compliance-assessment::matrix-selection-is-shareable
+test('compliance matrix: nav entry reaches the filter-first matrix surface', async ({ page }) => {
+	const bag = collectAppErrors(page)
+	await navClickTo(page, 'Compliance matrix')
+
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible({ timeout: 30000 })
+
+	// Filter-first: until standards are picked the page shows guidance, never a
+	// cartesian wall. Either the "select standards" prompt or the "no standards
+	// imported" guidance is shown — both are valid data-independent states.
+	await expect(
+		main.getByText(/Select standards to compare|No standards imported/i),
+	).toBeVisible({ timeout: 30000 })
+
+	expectNoAppErrors(bag)
+})

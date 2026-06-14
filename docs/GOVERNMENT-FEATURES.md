@@ -32,6 +32,7 @@
 | F-03 | Koppelingsmapping (connections tussen applicaties) | Beschikbaar | Systeemafhankelijkheden visualiseren |
 | F-04 | GEMMA-categorisering | Beschikbaar | Gemeentelijk Model Architectuur classificatie |
 | F-05 | Repository-links en licentie-informatie | Beschikbaar | Broncode- en licentietracking |
+| F-05a | Standaarden-compliance assessment | Beschikbaar | Compliancematrix (modules × standaardversies) met drie celstatussen: geverifieerd (met bewijs), geclaimd (zonder bewijs), geen. De catalogus registreert claims en bewijs; het is geen certificeringsautoriteit. Bewijs via Nextcloud Files (`bewijsReferentie`) of legacy base64. |
 | F-05b | Contractadministratie | Beschikbaar | Contracten gekoppeld aan applicaties (dienst/gebruik): looptijd, type, kosten, status. Status-quickfilters, geannualiseerde kosten (Maandelijks ×12 / Jaarlijks ×1; Eenmalig apart), automatische `Actief → Verlopen` na einddatum (dagelijkse job), en contract-verloopt-notificatie (90-dagen venster). Documenten als Nextcloud Files-verwijzing. **Scope:** catalogus-metadata. Financieel contractlifecyclebeheer (verplichtingen, spend vs budget) hoort in shillinq CLM, niet hier. |
 
 ### Synchronisatie & Federatie
@@ -40,7 +41,7 @@
 |---|-----|--------|-------------|
 | F-06 | Gefedereerde synchronisatie | Beschikbaar | Catalogusdata delen tussen organisaties |
 | F-07 | Import/merge van externe bronnen | Beschikbaar | Automatisch externe listings importeren |
-| F-08 | Open data publicatie via API | Beschikbaar | Gestandaardiseerde API voor publieke consumptie |
+| F-08 | Open data publicatie via API | Gedeeltelijk | Open-data-serialisatie (PII-/intern-veld-filtering + hergebruikmetadata) en de geregelde anonieme leesposture zijn aanwezig; de anonieme publicatie-leg (publiceren/depubliceren via het `@self.published`-predicaat) wacht op een OpenRegister-fix — magic-mapped objecten kunnen dit predicaat nu nog niet zetten. |
 
 ### Gebruikersbeheer
 
