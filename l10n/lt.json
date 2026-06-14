@@ -173,6 +173,14 @@
         "Target schema": "Tikslinė schema",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Šis slaptažodis buvo rastas duomenų pažeidimuose ir nėra saugus. Pasirinkite kitą slaptažodį.",
         "User": "Naudotojas",
-        "Version Information": "Informacija apie versiją"
+        "Version Information": "Informacija apie versiją",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }

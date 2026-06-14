@@ -173,6 +173,14 @@
         "Target schema": "Целевая схема",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Этот пароль был обнаружен в утечках данных и не является безопасным. Пожалуйста, выберите другой пароль.",
         "User": "Пользователь",
-        "Version Information": "Информация о версии"
+        "Version Information": "Информация о версии",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }

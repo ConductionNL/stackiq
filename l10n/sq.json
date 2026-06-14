@@ -173,6 +173,14 @@
         "Target schema": "Skema e synuar",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Ky fjalëkalim është gjetur në shkelje të të dhënave dhe nuk është i sigurt. Ju lutemi zgjidhni një fjalëkalim tjetër.",
         "User": "Përdorues",
-        "Version Information": "Informacion rreth versionit"
+        "Version Information": "Informacion rreth versionit",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }

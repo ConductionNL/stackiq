@@ -173,6 +173,14 @@
         "Target schema": "Cél séma",
         "This password has been found in data breaches and is not secure. Please choose a different password.": "Ez a jelszó megjelent adatszivárgásokban, és nem biztonságos. Válasszon másik jelszót.",
         "User": "Felhasználó",
-        "Version Information": "Verzióinformációk"
+        "Version Information": "Verzióinformációk",
+        "View filters": "View filters",
+        "Gebruik": "Gebruik",
+        "Deelnames": "Deelnames",
+        "Loading views...": "Loading views...",
+        "Could not load views": "Could not load views",
+        "No views found": "No views found",
+        "No GEMMA views are available.": "No GEMMA views are available.",
+        "Includes deelnames": "Includes deelnames"
     }
 }

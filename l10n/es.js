@@ -135,7 +135,15 @@ OC.L10N.register(
     "contact@example.com" : "contact@example.com",
     "https://catalog.example.com" : "https://catalog.example.com",
     "https://example.com" : "https://example.com",
-    "{count} selected" : "{count} seleccionados"
+    "{count} selected" : "{count} seleccionados",
+    "View filters" : "Filtros de vista",
+    "Gebruik" : "Uso",
+    "Deelnames" : "Participaciones",
+    "Loading views..." : "Cargando vistas...",
+    "Could not load views" : "No se pudieron cargar las vistas",
+    "No views found" : "No se encontraron vistas",
+    "No GEMMA views are available." : "No hay vistas GEMMA disponibles.",
+    "Includes deelnames" : "Incluye participaciones"
 },
 "nplurals=2; plural=(n != 1);"
 );
