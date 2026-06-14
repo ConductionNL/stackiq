@@ -20,6 +20,7 @@
 import OrganisatieIndexView from './views/organisaties/OrganisatieIndex.vue'
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'
+import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 
 export default {
 	// --- Lib gap: bespoke card view + contactpersoon add flow. ---
@@ -43,4 +44,10 @@ export default {
 	// fit any built-in widget type. Preserved verbatim until extraction
 	// to a generic schema-stats widget.
 	DashboardCustomView,
+
+	// --- Lib gap: filter-first compliance matrix. ---
+	// Modules × selected standard versions with verified/claimed/none cell
+	// states is a cross-tabulation no built-in index/detail type expresses.
+	// Stays a custom page until the lib grows a matrix/cross-tab widget.
+	ComplianceMatrixView,
 }

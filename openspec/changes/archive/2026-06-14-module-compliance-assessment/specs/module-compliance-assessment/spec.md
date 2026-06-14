@@ -28,13 +28,14 @@ marked unresolved rather than merged silently.
 
 ### Requirement: Module standards are derived by the compliance subscriber
 
-The existing `ModuleComplianceSubscriber`/`ModuleComplianceService` pipeline
-SHALL, on module create/update events, collect the `standaardversie` UUIDs
-of all compliancy objects linked to the module and synchronise the module's
-`standaarden` array to exactly that set. The module SHALL be re-saved only
-when the derived set differs from the stored one (loop guard). All compliance
-views SHALL treat `module.standaarden` as derived data — the compliancy
-records are the source of truth.
+The compliance subscriber pipeline SHALL derive module standards from
+compliancy records. On module create/update events the existing
+`ModuleComplianceSubscriber`/`ModuleComplianceService` pipeline collects the
+`standaardversie` UUIDs of all compliancy objects linked to the module and
+synchronises the module's `standaarden` array to exactly that set. The module
+SHALL be re-saved only when the derived set differs from the stored one (loop
+guard). All compliance views SHALL treat `module.standaarden` as derived data
+— the compliancy records are the source of truth.
 
 #### Scenario: Adding a compliancy record updates the module's standards
 
