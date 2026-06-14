@@ -154,7 +154,26 @@ OC.L10N.register(
     "contact@example.com" : "contact@example.com",
     "https://catalog.example.com" : "https://catalog.example.com",
     "https://example.com" : "https://example.com",
-    "{count} selected" : "{count} selected"
+    "{count} selected" : "{count} selected",
+    "All" : "All",
+    "Active" : "Active",
+    "Expiring / expired" : "Expiring / expired",
+    "In negotiation" : "In negotiation",
+    "Compliance matrix" : "Compliance matrix",
+    "Which applications support which standards. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence." : "Which applications support which standards. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.",
+    "Standards" : "Standards",
+    "Select one or more standards" : "Select one or more standards",
+    "No standards imported" : "No standards imported",
+    "Import GEMMA standards via the ArchiMate import before building a compliance matrix." : "Import GEMMA standards via the ArchiMate import before building a compliance matrix.",
+    "Select standards to compare" : "Select standards to compare",
+    "Pick one or more standards above to render the compliance matrix." : "Pick one or more standards above to render the compliance matrix.",
+    "Verified (with evidence)" : "Verified (with evidence)",
+    "Claimed (no evidence)" : "Claimed (no evidence)",
+    "None" : "None",
+    "Module" : "Module",
+    "Verified" : "Verified",
+    "Claimed" : "Claimed",
+    "Some compliancy records only reference a standard by name and could not be matched to a standard version. They are excluded from the matrix." : "Some compliancy records only reference a standard by name and could not be matched to a standard version. They are excluded from the matrix."
 },
 "nplurals=2; plural=(n != 1);"
 );
