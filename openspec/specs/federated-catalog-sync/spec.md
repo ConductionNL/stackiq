@@ -15,6 +15,8 @@ no directory traffic SHALL be attempted.
 
 #### Scenario: Admin enables federation and the instance announces itself
 
+@e2e exclude The announce path delegates to OpenCatalogi's BroadcastService/DirectoryService and needs a live OpenCatalogi install + a reachable directory (fed-testbed topology); covered by PHPUnit FederationServiceTest (testAnnounceDegradesWithoutOpenCatalogi, testAnnounceNoopWhenDisabled) and the OC-federation-testbed procedure. Federation settings is admin-only (ADR-004), not reachable from the in-app router the e2e suite drives.
+
 - **WHEN** an admin enables federation in the softwarecatalog admin settings with a directory URL configured
 - **THEN** the instance's catalog is announced to the directory via the OpenCatalogi broadcast machinery
 - **AND** the settings UI shows the registration status (registered / failed with reason)
@@ -60,11 +62,15 @@ SHALL NOT auto-subscribe to any peer.
 
 #### Scenario: Admin discovers and subscribes to a peer
 
+@e2e exclude Peer discovery requires the OpenCatalogi DirectoryService to return a populated directory listing (fed-testbed topology); the no-OpenCatalogi degradation is covered by PHPUnit FederationServiceTest::testDiscoverPeersDegrades and the subscribe allowlist (federation_peers app-config) by service tests. Federation settings is admin-only (ADR-004), outside the in-app router the e2e suite drives.
+
 - **WHEN** an admin opens the federation settings and the directory lists peer catalogs
 - **THEN** the peers are shown with organisation name and instance URL
 - **AND** subscribing adds the peer to the allowlist and an unsubscribe control appears
 
 #### Scenario: Unlisted instance cannot be subscribed
+
+@e2e exclude The "peer must be listed in the directory" check needs a populated OpenCatalogi directory to validate against (fed-testbed topology); the directory-membership guard is covered by PHPUnit service tests. Federation settings is admin-only (ADR-004), outside the in-app router the e2e suite drives.
 
 - **WHEN** an admin attempts to add a peer URL that is not present in the directory listing
 - **THEN** the subscription is rejected with a message explaining the peer must be listed in the directory
@@ -79,6 +85,8 @@ never modify locally-created entries; peer pulls SHALL only create, update, or
 remove objects originating from that same peer.
 
 #### Scenario: Peer entry shows its source and cannot be edited
+
+@e2e exclude Rendering a peer-sourced entry requires objects merged from a real peer pull (two-instance fed-testbed topology); the provenance/foreign-source detection and the write-refusal it drives are covered by PHPUnit FederationServiceTest::testIsPeerSourced and the server-side 403 contract (its own @e2e-excluded Newman scenario above).
 
 - **WHEN** a user views a software entry that was merged from a peer catalog
 - **THEN** the entry displays the source organisation and instance attribution
@@ -119,11 +127,15 @@ healthy peer's catalog no longer lists them.
 
 #### Scenario: Unreachable peer marks entries stale instead of deleting
 
+@e2e exclude The 3-strikes staleness transition needs a subscribed peer with merged entries plus a controllably-unreachable endpoint over repeated scheduled sync rounds (background TimedJob + two-instance fed-testbed topology); covered by PHPUnit service/job tests on the staleness counter and never-delete invariant.
+
 - **WHEN** a peer has failed 3 consecutive sync rounds
 - **THEN** that peer's entries are marked stale and the UI shows a staleness indicator with the last successful sync time
 - **AND** the entries remain readable
 
 #### Scenario: Unsubscribing removes the peer's entries
+
+@e2e exclude Unsubscribe-cleanup operates on peer-sourced objects that only exist after a real peer pull (two-instance fed-testbed topology); the "remove that peer's _source.instance entries, leave local entries untouched" invariant is covered by PHPUnit service tests on the merge/cleanup path.
 
 - **WHEN** an admin unsubscribes from a peer
 - **THEN** all entries with that peer's `_source.instance` are removed from the local catalog
