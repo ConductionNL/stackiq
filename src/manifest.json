@@ -62,6 +62,13 @@
 			"order": 80
 		},
 		{
+			"id": "LifecycleRoadmap",
+			"label": "Portfolio roadmap",
+			"icon": "icon-category-organization",
+			"route": "LifecycleRoadmap",
+			"order": 85
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "icon-info",
@@ -408,6 +415,13 @@
 				],
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
+		},
+		{
+			"id": "LifecycleRoadmap",
+			"route": "/portfolio-roadmap",
+			"type": "custom",
+			"title": "Portfolio roadmap",
+			"component": "LifecycleRoadmapView"
 		},
 		{
 			"id": "FeaturesRoadmap",

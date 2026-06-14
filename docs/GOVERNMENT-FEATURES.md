@@ -32,6 +32,7 @@
 | F-03 | Koppelingsmapping (connections tussen applicaties) | Beschikbaar | Systeemafhankelijkheden visualiseren |
 | F-04 | GEMMA-categorisering | Beschikbaar | Gemeentelijk Model Architectuur classificatie |
 | F-05 | Repository-links en licentie-informatie | Beschikbaar | Broncode- en licentietracking |
+| F-05c | Levenscyclus- & end-of-life-tracking | Beschikbaar | Afgeleide levenscyclusfase per gebruik (uit de bestaande fasedatums; niet opgeslagen), end-of-support-signalering vanaf de gekoppelde moduleversie, portfolio-roadmap per organisatie met geplande vervangingen, en geplande notificaties (einde ondersteuning / uitfasering, 180-dagen venster). |
 
 ### Synchronisatie & Federatie
 

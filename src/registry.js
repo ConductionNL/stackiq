@@ -19,6 +19,7 @@
 
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'
+import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 
 export default {
 	// --- Lib gap: settings sub-section orchestration. ---
@@ -34,5 +35,11 @@ export default {
 	DashboardCustomView: {
 		kind: 'page',
 		component: DashboardCustomView,
+	},
+
+	// --- Lib gap: per-organisation lifecycle roadmap. ---
+	LifecycleRoadmapView: {
+		kind: 'page',
+		component: LifecycleRoadmapView,
 	},
 }

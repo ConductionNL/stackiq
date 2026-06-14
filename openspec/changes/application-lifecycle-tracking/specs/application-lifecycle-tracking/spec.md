@@ -26,8 +26,9 @@ truth).
 
 ### Requirement: End-of-support is surfaced on applications in use
 
-A gebruik whose linked `moduleVersie` has a passed `datumEindeOndersteuning`
-or a set `datumTeruggetrokken` SHALL display an end-of-support indicator in
+The app SHALL surface end-of-support on applications in use. A gebruik whose
+linked `moduleVersie` has a passed `datumEindeOndersteuning`
+or a set `datumTeruggetrokken` displays an end-of-support indicator in
 application listings and the detail view. Application listings SHALL offer an
 "EOL approaching" filter selecting gebruiken whose linked version's
 `datumEindeOndersteuning` falls within the app-config window

@@ -20,6 +20,7 @@
 import OrganisatieIndexView from './views/organisaties/OrganisatieIndex.vue'
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'
+import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 
 export default {
 	// --- Lib gap: bespoke card view + contactpersoon add flow. ---
@@ -43,4 +44,11 @@ export default {
 	// fit any built-in widget type. Preserved verbatim until extraction
 	// to a generic schema-stats widget.
 	DashboardCustomView,
+
+	// --- Lib gap: per-organisation lifecycle roadmap. ---
+	// Gebruiken grouped by a DERIVED lifecycle phase (computed from dates, not
+	// stored) with EOL badges + planned replacements is a portfolio view no
+	// built-in index/detail type expresses. Stays custom until the lib grows a
+	// grouped-timeline widget.
+	LifecycleRoadmapView,
 }
