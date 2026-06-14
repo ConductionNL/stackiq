@@ -2023,7 +2023,7 @@
         "slug": "organisatie",
         "title": "Organisatie",
         "description": "Een organisatie die voorzieningen aanbiedt",
-        "version": "0.3.0",
+        "version": "0.4.0",
         "summary": "",
         "icon": "OfficeBuildingOutline",
         "required": [
@@ -2420,6 +2420,20 @@
               "Deactief"
             ]
           },
+          "registratiestatus": {
+            "description": "Moderatiestatus van een (anoniem) zelf-geregistreerde organisatie. 'pending' tot een beheerder de registratie goedkeurt; pas daarna 'active'. Anoniem geregistreerde organisaties zijn 'pending' en niet zichtbaar in de open-data/federatie-laag tot goedkeuring.",
+            "title": "Registratiestatus",
+            "type": "string",
+            "visible": false,
+            "hideOnCollection": true,
+            "facetable": true,
+            "order": 18,
+            "enum": [
+              "pending",
+              "active",
+              "rejected"
+            ]
+          },
           "samenwerkingtype": {
             "description": "Type samenwerking van de organisatie",
             "title": "Samenwerkingstype",
@@ -2629,9 +2643,24 @@
         "slug": "gebruik",
         "title": "Gebruik",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "summary": "",
         "icon": "Usage",
+        "x-openregister-notifications": {
+          "phaseout-approaching": {
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"startDatumUitTeFaseren": {"operator": "withinNext", "value": "P180D"}}},
+            "enabled": true,
+            "channels": ["nc-notification", "email"],
+            "recipients": [
+              {"kind": "groups", "groups": ["software-catalog-admins"]},
+              {"kind": "object-acl", "permission": "manage"}
+            ],
+            "subject": {
+              "nl": "Uitfasering nadert: {{contractNummer}} (uit te faseren {{startDatumUitTeFaseren}})",
+              "en": "Phase-out approaching (phase-out date {{startDatumUitTeFaseren}})"
+            }
+          }
+        },
         "required": [
           "afnemer"
         ],
@@ -3015,6 +3044,28 @@
             "table": {
               "default": true
             }
+          },
+          "geplandeVervanging": {
+            "description": "De module die dit gebruik gepland gaat vervangen (opvolger). Wordt per gebruik vastgelegd, niet op de module zelf.",
+            "type": "object",
+            "visible": true,
+            "order": 30,
+            "facetable": false,
+            "title": "Geplande vervanging",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/module"
+          },
+          "geplandeVervangingsDatum": {
+            "description": "De geplande datum waarop de vervanging plaatsvindt.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 31,
+            "facetable": false,
+            "title": "Geplande vervangingsdatum",
+            "example": "Bijvoorbeeld: 2027-01-01"
           }
         },
         "archive": [],
@@ -3134,8 +3185,8 @@
         "slug": "contract",
         "x-openregister-notifications": {
           "contract-expiry": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"status": {"op": "equals", "value": "Actief"}}},
-            "enabled": false,
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"status": {"operator": "equals", "value": "Actief"}, "eindDatum": {"operator": "withinNext", "value": "P90D"}}},
+            "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
               {"kind": "groups", "groups": ["software-catalog-admins"]},
@@ -3148,8 +3199,8 @@
           }
         },
         "title": "Contract",
-        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
-        "version": "0.1.0",
+        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
+        "version": "0.1.1",
         "summary": "",
         "icon": "FileDocumentEdit",
         "required": [
@@ -7173,7 +7224,7 @@
         "slug": "compliancy",
         "title": "Compliancy",
         "description": "Schema voor compliancy en standaard ondersteuning",
-        "version": "0.0.10",
+        "version": "0.0.11",
         "summary": "",
         "icon": "CheckCircle",
         "required": [],
@@ -7239,6 +7290,14 @@
             "title": "URL",
             "visible": true,
             "facetable": false
+          },
+          "bewijsReferentie": {
+            "description": "Nextcloud Files-verwijzing naar het bewijsstuk (link, niet opslaan). De voorkeursmanier om nieuw bewijs te koppelen; het legacy base64-veld 'bewijs' blijft leesbaar voor bestaande records.",
+            "type": "string",
+            "order": 6,
+            "title": "Bewijs (Nextcloud Files)",
+            "visible": true,
+            "facetable": false
           }
         },
         "archive": [],
@@ -7283,11 +7342,24 @@
               "nl": "Nieuwe moduleversie: {{versie}}",
               "en": "New module version: {{versie}}"
             }
+          },
+          "eol-approaching": {
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"datumEindeOndersteuning": {"operator": "withinNext", "value": "P180D"}}},
+            "enabled": true,
+            "channels": ["nc-notification", "email"],
+            "recipients": [
+              {"kind": "groups", "groups": ["software-catalog-admins"]},
+              {"kind": "object-acl", "permission": "manage"}
+            ],
+            "subject": {
+              "nl": "Einde ondersteuning nadert: {{versie}} (einddatum {{datumEindeOndersteuning}})",
+              "en": "End of support approaching: {{versie}} (end date {{datumEindeOndersteuning}})"
+            }
           }
         },
         "title": "Applicatieversie",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "summary": "",
         "icon": "ViewModule",
         "required": [],

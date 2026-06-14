@@ -20,6 +20,8 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\AppInfo;
 
 use OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob;
+use OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob;
+use OCA\SoftwareCatalog\Service\ContractStatusService;
 use OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob;
 use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
 use OCA\SoftwareCatalog\Service\Federation\FederationService;
@@ -433,6 +435,29 @@ class Application extends App implements IBootstrap
                     return new OrganizationContactSyncJob(
                     timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
                     orgSyncService: $container->get(OrganizationSyncService::class),
+                    appManager: $container->get(IAppManager::class),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+
+        // Register the contract-status maintenance service + its daily job.
+        $context->registerService(
+                ContractStatusService::class,
+                function ($container) {
+                    return new ContractStatusService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+        $context->registerService(
+                ContractStatusJob::class,
+                function ($container) {
+                    return new ContractStatusJob(
+                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                    statusService: $container->get(ContractStatusService::class),
                     appManager: $container->get(IAppManager::class),
                     logger: $container->get(LoggerInterface::class)
                     );

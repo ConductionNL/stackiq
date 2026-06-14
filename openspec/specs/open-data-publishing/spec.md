@@ -1,7 +1,8 @@
-# open-data-publishing
+# open-data-publishing Specification
 
-## ADDED Requirements
-
+## Purpose
+TBD - created by archiving change open-data-publishing. Update Purpose after archive.
+## Requirements
 ### Requirement: Catalog entries can be marked as published open data
 
 Catalogue maintainers SHALL be able to publish and depublish software entries
@@ -80,8 +81,9 @@ the published surface (API, federation, sitemap) sees the same shape.
 
 ### Requirement: Legacy @PublicPage read endpoints serve only published data to anonymous callers
 
-The existing `@PublicPage` endpoints on `GebruikController`,
-`AanbodController`, and `AangebodenGebruikController` SHALL have an explicit
+The legacy `@PublicPage` read endpoints SHALL serve only published data to
+anonymous callers. The existing `@PublicPage` endpoints on `GebruikController`,
+`AanbodController`, and `AangebodenGebruikController` have an explicit
 anonymous contract under this capability: an unauthenticated caller receives
 only published data, or the documented empty-result envelope where the
 endpoint is inherently organisation-scoped (e.g. `gebruik#getGebruiken`).
@@ -106,9 +108,10 @@ behaviour remains governed by `aanbod-listings` and `aangeboden-gebruik-api`.
 
 ### Requirement: Anonymous organisation self-registration is validated, throttled, and moderated
 
-The anonymous organisation self-registration flow
+The anonymous organisation self-registration flow SHALL be validated,
+throttled, and moderated. The flow
 (`SoftwareCatalogueService` anonymous path, entering via the OpenConnector
-API per `docs/ANONYMOUS_USER_REGISTRATION_USECASE.md`) SHALL be governed as a
+API per `docs/ANONYMOUS_USER_REGISTRATION_USECASE.md`) is governed as a
 public intake: input is validated against the organisation and contactpersoon
 schemas with caller-supplied ownership/RBAC/published fields stripped; the
 intake is rate-limited per remote address via Nextcloud's brute-force
@@ -164,3 +167,4 @@ email address was provided.
 - **WHEN** an admin rejects a pending registration
 - **THEN** the registration's organisation and contact objects are removed and the disabled accounts are deleted
 - **AND** the rejection is recorded in the log
+
