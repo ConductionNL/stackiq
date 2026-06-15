@@ -72,6 +72,7 @@ Vrij en open source onder de EUPL-licentie.
 	<repair-steps>
 		<post-migration>
 			<step>OCA\SoftwareCatalog\Repair\InitializeSettings</step>
+			<step>OCA\SoftwareCatalog\Repair\MigrateContactsToNc</step>
 		</post-migration>
 	</repair-steps>
 

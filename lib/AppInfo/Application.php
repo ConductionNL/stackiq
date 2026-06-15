@@ -44,6 +44,7 @@ use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\SoftwareCatalogContactSyncService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
@@ -306,6 +307,18 @@ class Application extends App implements IBootstrap
                 }
                 );
 
+        // Register the Nextcloud-Contacts bridge (identity → NC addressbook,
+        // relationship records keyed by contactsUid; ADR-019/ADR-022).
+        $context->registerService(
+                SoftwareCatalogContactSyncService::class,
+                function ($container) {
+                    return new SoftwareCatalogContactSyncService(
+                    contactsManager: $container->get('OCP\Contacts\IManager'),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
         // Register gebruik sync service.
         $context->registerService(
                 GebruikSyncService::class,
@@ -435,6 +448,8 @@ class Application extends App implements IBootstrap
                     return new OrganizationContactSyncJob(
                     timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
                     orgSyncService: $container->get(OrganizationSyncService::class),
+                    contactSync: $container->get(SoftwareCatalogContactSyncService::class),
+                    settingsService: $container->get(SettingsService::class),
                     appManager: $container->get(IAppManager::class),
                     logger: $container->get(LoggerInterface::class)
                     );
