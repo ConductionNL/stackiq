@@ -4,14 +4,16 @@
  * Softwarecatalog ContractApprovalController.
  *
  * Thin HTTP seam for delegating a contract approval / sign-off / renewal
- * DECISION to decidesk (cross-app interface contract #1) via the ADR-019
- * integration registry. It owns NO approval workflow — it raises the decision
- * in decidesk and projects the outcome back onto the catalog-local
- * `approvalState` / `status` fields through ContractApprovalService. It is NOT
- * a CRUD wrapper of OpenRegister's ObjectService (ADR-022): contract CRUD keeps
- * running through the manifest renderer's OR object store.
+ * DECISION to decidesk (cross-app interface contract #1) via the in-process
+ * `IEventDispatcher` event contract. It owns NO approval workflow — it raises
+ * the decision in decidesk (synchronous `DecisionRequestedEvent` dispatch) and
+ * stores the returned decision id; the terminal outcome is projected back onto
+ * the catalog-local `approvalState` / `status` fields by
+ * `DecisionConcludedListener` (NOT an HTTP callback). It is NOT a CRUD wrapper
+ * of OpenRegister's ObjectService (ADR-022): contract CRUD keeps running
+ * through the manifest renderer's OR object store.
  *
- * FAIL-CLOSED: when decidesk is not configured, submit endpoints error and the
+ * FAIL-CLOSED: when decidesk is not installed, submit endpoints error and the
  * contract stays `In onderhandeling`; `status` is never set to `Actief`.
  *
  * @category Controller
@@ -25,7 +27,7 @@
  *
  * @link https://codeberg.org/Conduction/softwarecatalog
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +42,6 @@ use OCA\SoftwareCatalog\Service\ContractApprovalService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -49,7 +50,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for the contract approval-delegation seam.
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
  */
 class ContractApprovalController extends Controller
 {
@@ -135,75 +136,6 @@ class ContractApprovalController extends Controller
         return $this->raise(contractUuid: $contractUuid, isRenewal: true);
 
     }//end submitRenewal()
-
-    /**
-     * Manually poll decidesk for a contract's decision outcome and project it.
-     *
-     * @param string $contractUuid The contract OR object uuid.
-     *
-     * @return JSONResponse `{status}` (the projected outcome status, or null).
-     *
-     * @NoAdminRequired
-     * @spec            openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
-     */
-    #[NoAdminRequired]
-    public function refresh(string $contractUuid): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
-        }
-
-        try {
-            $status = $this->approvalService->refreshOutcome(contractUuid: $contractUuid);
-        } catch (\Throwable $e) {
-            $this->logger->error('ContractApprovalController: refresh failed', ['error' => $e->getMessage()]);
-            return new JSONResponse(data: ['message' => 'Failed to refresh the outcome.'], statusCode: Http::STATUS_BAD_GATEWAY);
-        }
-
-        return new JSONResponse(data: ['status' => $status]);
-
-    }//end refresh()
-
-    /**
-     * Outcome callback target for the decidesk subscription push.
-     *
-     * Validates the pushed `decisionId` maps to the addressed contract's
-     * `approvalDecisionId` (IDOR guard) and projects the outcome idempotently.
-     * No CSRF (machine-to-machine push from the registered registry consumer).
-     *
-     * @param string $contractUuid The contract uuid this callback addresses.
-     *
-     * @return JSONResponse `{projected: bool}`.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @spec            openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
-     */
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function outcomeCallback(string $contractUuid): JSONResponse
-    {
-        $decisionId = (string) ($this->request->getParam('decisionId', ''));
-        $status     = (string) ($this->request->getParam('status', ''));
-        if ($status === '') {
-            return new JSONResponse(data: ['message' => 'Missing outcome status'], statusCode: Http::STATUS_BAD_REQUEST);
-        }
-
-        // IDOR guard: the pushed decision id must match the decision the
-        // contract actually carries, so a caller cannot project an arbitrary
-        // outcome onto an arbitrary contract.
-        if ($this->approvalService->isDecisionForContract(contractUuid: $contractUuid, decisionId: $decisionId) === false) {
-            $this->logger->warning(
-                'ContractApprovalController: outcome callback decision/contract mismatch rejected',
-                ['contractUuid' => $contractUuid, 'decisionId' => $decisionId]
-            );
-            return new JSONResponse(data: ['message' => 'Decision does not match contract'], statusCode: Http::STATUS_FORBIDDEN);
-        }
-
-        $projected = $this->approvalService->projectOutcome(contractUuid: $contractUuid, outcomeStatus: $status);
-        return new JSONResponse(data: ['projected' => $projected]);
-
-    }//end outcomeCallback()
 
     /**
      * Shared submit path for approval / renewal — fail-closed on error.

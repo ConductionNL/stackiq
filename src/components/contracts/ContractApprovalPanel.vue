@@ -49,17 +49,6 @@
 					</template>
 					{{ t('softwarecatalog', 'Submit renewal') }}
 				</NcButton>
-
-				<NcButton
-					v-if="decisionId"
-					type="secondary"
-					:disabled="busy"
-					@click="refresh">
-					<template #icon>
-						<Refresh :size="20" />
-					</template>
-					{{ t('softwarecatalog', 'Refresh outcome') }}
-				</NcButton>
 			</div>
 		</template>
 	</div>
@@ -75,7 +64,6 @@ import axios from '@nextcloud/axios'
 
 import Check from 'vue-material-design-icons/Check.vue'
 import Autorenew from 'vue-material-design-icons/Autorenew.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 
 /**
  * @class ContractApprovalPanel
@@ -102,7 +90,6 @@ export default {
 		CnStatusBadge,
 		Check,
 		Autorenew,
-		Refresh,
 	},
 	props: {
 		/**
@@ -266,30 +253,6 @@ export default {
 				// Fail-closed: the contract stays In onderhandeling.
 				const msg = e?.response?.data?.message
 					|| t('softwarecatalog', 'Submitting the contract failed; it remains in negotiation.')
-				this.error = msg
-				showError(msg)
-			} finally {
-				this.busy = false
-			}
-		},
-		/**
-		 * Poll decidesk on demand for the decision outcome and re-project it.
-		 *
-		 * @return {Promise<void>} Resolves once the outcome poll + reload completes.
-		 * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
-		 */
-		async refresh() {
-			this.busy = true
-			this.error = ''
-			try {
-				const url = generateUrl(
-					'/apps/softwarecatalog/api/contracts/{id}/approval/refresh',
-					{ id: String(this.objectId) },
-				)
-				await axios.post(url)
-				await this.loadContract()
-			} catch (e) {
-				const msg = t('softwarecatalog', 'Could not refresh the outcome.')
 				this.error = msg
 				showError(msg)
 			} finally {

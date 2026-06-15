@@ -80,7 +80,6 @@ Vrij en open source onder de EUPL-licentie.
 	<background-jobs>
 		<job>OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob</job>
 		<job>OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob</job>
-		<job>OCA\SoftwareCatalog\BackgroundJob\ContractApprovalReconcileJob</job>
 		<job>OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob</job>
 	</background-jobs>
 
