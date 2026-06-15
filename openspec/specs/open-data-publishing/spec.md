@@ -19,17 +19,23 @@ permission on the entry.
 
 #### Scenario: Maintainer publishes a software entry
 
+@e2e exclude Authenticated write action on the OR object store; covered by PHPUnit PublicationServiceTest (publish sets publicatiedatum) + PublishGateRbacTest (the resulting anon visibility). The publish control is a detail-view action, not its own in-app route the e2e suite drives.
+
 - **WHEN** a user with manage permission chooses "Publish as open data" on a software entry
 - **THEN** the entry's `publicatiedatum` is set to now (or a chosen moment) and `depublicatiedatum` is cleared
 - **AND** the entry's list/detail view shows a published indicator
 
 #### Scenario: Depublication removes the entry from the public surface
 
+@e2e exclude Authenticated write action + anonymous-visibility contract; covered by PHPUnit PublicationServiceTest (depublish clears publicatiedatum) + PublishGateRbacTest (no longer anon-visible).
+
 - **WHEN** a maintainer depublishes a previously published entry
 - **THEN** the entry's `depublicatiedatum` is set and `publicatiedatum` is cleared
 - **AND** subsequent anonymous reads of the public surface no longer contain the entry
 
 #### Scenario: User without manage permission cannot publish
+
+@e2e exclude Forged-request authorization (IDOR) contract; covered by the PublicationController per-object ownership guard (403) — a server-side HTTP contract, asserted by Newman/PHPUnit, not reachable from the in-app router.
 
 - **WHEN** a user without manage permission on an entry attempts the publish action
 - **THEN** the action is refused (not offered in the UI; HTTP 403 on a forged request)
@@ -163,11 +169,15 @@ email address was provided.
 
 #### Scenario: Admin approves a pending registration
 
+@e2e exclude DEFERRED — the admin approval-queue UI + approve/reject service paths are the deferred intake-hardening leg (tasks 4.x/5.x); admin settings are admin-only (ADR-004), outside the in-app router the e2e suite drives. To be covered by Playwright/Newman when the queue is built.
+
 - **WHEN** an admin approves a pending registration in the approval queue
 - **THEN** the organisation's status becomes active and its contact accounts are enabled
 - **AND** the organisation remains unpublished until a maintainer explicitly publishes it
 
 #### Scenario: Admin rejects a pending registration
+
+@e2e exclude DEFERRED — see the approve scenario; the approval queue is the deferred intake-hardening leg, admin-only and outside the e2e router.
 
 - **WHEN** an admin rejects a pending registration
 - **THEN** the registration's organisation and contact objects are removed and the disabled accounts are deleted

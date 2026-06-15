@@ -10,19 +10,21 @@
  * Applying the projection at the publication boundary means every consumer of
  * the published surface (API, federation, sitemap) sees the same safe shape.
  *
- * NOTE (build status): the anonymous READ surface that would serve this
- * projection is blocked upstream — OpenRegister magic-mapped objects cannot
- * currently set the `@self.published` predicate (2026-06-11 gap), so there is
- * no live anonymous publication path to attach this to yet. This projection is
- * the publication-boundary contract, fully unit-tested, ready to wire once the
- * OR predicate gap is closed.
+ * NOTE (build status, updated 2026-06-15): the anonymous READ surface is LIVE on
+ * the OpenRegister RBAC publish model — an entry is anonymously visible once its
+ * `publicatiedatum` is set (schema read rule `{group:public, match:
+ * {publicatiedatum:{$lte:$now}}}`); "publish" = set publicatiedatum via the
+ * PublicationService (`PUT /api/publication/{objectType}/{uuid}/publish`). The
+ * earlier `@self.published` gap note is stale (that predicate is removed from
+ * OpenRegister). This projection is the open-data serialization the public
+ * surface applies; it is fully unit-tested.
  *
  * @module utils/openDataProjection
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
  * @license AGPL-3.0-or-later
  *
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  */
 
 /**
@@ -89,7 +91,7 @@ function isStripped(name) {
  * @param {string} [options.publisherName]  The publishing organisation's public name.
  * @return {object} The sanitized projection.
  *
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  */
 export function projectOpenData(entry, { license = DEFAULT_LICENSE, publisherName = null } = {}) {
 	const { data, self } = split(entry)
@@ -128,7 +130,7 @@ export function projectOpenData(entry, { license = DEFAULT_LICENSE, publisherNam
  * @param {object} projection A result of projectOpenData().
  * @return {boolean} True when the projection is clean.
  *
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  */
 export function isClean(projection) {
 	if (!projection || typeof projection !== 'object') {
