@@ -200,6 +200,12 @@
 						]
 					},
 					{
+						"id": "approval",
+						"label": "Approval",
+						"icon": "icon-checkmark",
+						"component": "ContractApprovalPanel"
+					},
+					{
 						"id": "audit",
 						"label": "Audit trail",
 						"icon": "icon-history",

@@ -21,6 +21,7 @@ import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSetting
 import DashboardCustomView from './views/Dashboard.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
+import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 
 export default {
 	// --- Lib gap: settings sub-section orchestration. ---
@@ -48,5 +49,12 @@ export default {
 	ComplianceMatrixView: {
 		kind: 'page',
 		component: ComplianceMatrixView,
+	},
+
+	// --- Cross-app decision seam: contract approval delegated to decidesk. ---
+	// Resolved by CnObjectSidebar as a ContractDetail sidebar-tab `component`.
+	ContractApprovalPanel: {
+		kind: 'page',
+		component: ContractApprovalPanel,
 	},
 }
