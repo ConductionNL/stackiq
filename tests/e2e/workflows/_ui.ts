@@ -27,7 +27,12 @@ export async function showCards(page: Page): Promise<void> {
 
 /** Switch the CnIndexPage to Table view. */
 export async function showTable(page: Page): Promise<void> {
-	await indexMain(page).getByText('Table', { exact: true }).first().click()
+	const toggle = indexMain(page).getByText('Table', { exact: true }).first()
+	await toggle.waitFor({ state: 'visible', timeout: 15000 })
+	// The themed checkbox-radio-switch label can swallow Playwright's synthetic
+	// click (and a just-closed create dialog overlay may transiently intercept
+	// it); fire a native click on the label element.
+	await toggle.evaluate((el: HTMLElement) => el.click())
 	await page.waitForTimeout(400)
 }
 

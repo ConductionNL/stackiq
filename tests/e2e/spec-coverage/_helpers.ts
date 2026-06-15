@@ -38,6 +38,12 @@ export function collectAppErrors(page: Page): { errors: string[]; serverErrors: 
 		// generic "Failed to load resource" lines carry no URL/app attribution;
 		// the real 5xx URLs are captured separately via the response listener.
 		|| /^Failed to load resource:/.test(s)
+		// The optional ArchiMate `element` register (amefConfig) is not
+		// provisioned on every instance ("Register not found"); the matrix
+		// renders its empty state regardless, so a missing-element fetch is not
+		// an app fault.
+		|| /Error fetching element collection/i.test(s)
+		|| /Register not found/i.test(s)
 	page.on('console', m => {
 		if (m.type() !== 'error') return
 		const t = m.text()
@@ -88,7 +94,11 @@ export async function dismissSupportDialog(page: Page): Promise<void> {
 
 /** Deep-link to a route and wait for the Vue shell + main region to mount. */
 export async function gotoAppRoute(page: Page, route: string): Promise<void> {
-	const url = route === '/' ? APP_BASE : `${APP_BASE}${route}`
+	// The in-app router runs in hash mode, so deep links are `#<route>`. A bare
+	// path form (e.g. `/apps/softwarecatalog/settings`) boots the SPA but leaves
+	// the hash empty, so vue-router falls back to the default `/` (Dashboard)
+	// and the requested surface never mounts. Always navigate via the hash.
+	const url = route === '/' ? `${APP_BASE}#/` : `${APP_BASE}#${route}`
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
 	await page.locator(APP_SHELL).first().waitFor({ state: 'attached', timeout: 30000 })
 	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })

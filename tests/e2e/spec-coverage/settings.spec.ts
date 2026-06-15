@@ -53,9 +53,11 @@ test('settings: maintenance action buttons are present', async ({ page }) => {
 	const bag = collectAppErrors(page)
 	const main = await gotoSettings(page)
 
-	// Version Information section actions.
-	await expect(main.getByRole('button', { name: 'Force Update' }).first()).toBeVisible({ timeout: 30000 })
-	await expect(main.getByRole('button', { name: 'Reset Auto-Config' }).first()).toBeVisible()
+	// Version Information section actions. "Auto Configure" + "Force Update" are
+	// always rendered; "Reset Auto-Config" is conditional (`v-if` on
+	// autoConfigCompleted), so it is not asserted here.
+	await expect(main.getByRole('button', { name: 'Auto Configure' }).first()).toBeVisible({ timeout: 30000 })
+	await expect(main.getByRole('button', { name: 'Force Update' }).first()).toBeVisible()
 
 	// General Settings save + standards sync.
 	await expect(main.getByRole('button', { name: 'Sync Standards' }).first()).toBeVisible()

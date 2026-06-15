@@ -264,8 +264,36 @@ export default {
 		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
 		 */
 		async fetchType(type) {
+			// Register the object type from the resolved config before fetching —
+			// `initializeVoorzieningenObjectTypes` only auto-registers when the
+			// settings `availableRegisters` carries a register slugged exactly
+			// 'voorzieningen', which is not guaranteed on every instance. Without
+			// this the nc-vue object store throws "Object type <type> is not
+			// registered". Mirrors the OrganisatieIndex registration fallback.
+			if (typeof objectStore.registerObjectType === 'function'
+				&& !objectStore.objectTypeRegistry?.[type]) {
+				let cfg = null
+				try {
+					cfg = objectStore.getSchemaConfig?.(type)
+				} catch (cfgError) {
+					// getSchemaConfig throws when no schema/register resolves;
+					// fall through so fetchCollection surfaces its own error.
+				}
+				if (cfg?.register && cfg?.schema) {
+					objectStore.registerObjectType(type, cfg.schema, cfg.register)
+				}
+			}
+
 			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
+				// A single type whose register/schema is unavailable (e.g. the
+				// optional ArchiMate `element` register is not provisioned on this
+				// instance) must not abort the whole matrix load — the surface
+				// renders its filter-first empty state from whatever did resolve.
+				try {
+					await objectStore.fetchCollection(type, { _limit: 1000 })
+				} catch (error) {
+					console.warn(`ComplianceMatrixView: ${type} collection unavailable`, error)
+				}
 			}
 		},
 

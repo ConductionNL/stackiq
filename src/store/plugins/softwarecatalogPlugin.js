@@ -339,14 +339,34 @@ export function softwarecatalogPlugin() {
 				// secondary `/api/voorzieningen/config` fetch (when it resolves)
 				// stores it under `voorzieningen`. Accept either so the lookup
 				// works whichever populated first.
-				if (objectType === 'organisatie') {
-					const voorzieningenConfig = this.settings.voorzieningen || this.settings.voorzieningenConfig || {}
-					if (voorzieningenConfig.register && voorzieningenConfig.organisatie_schema) {
-						return {
-							source: 'openregister',
-							schema: voorzieningenConfig.organisatie_schema,
-							register: voorzieningenConfig.register,
-						}
+				//
+				// The blob carries a single `register` plus a `<type>_schema` key
+				// per object type (organisatie_schema, module_schema,
+				// compliancy_schema, …). Resolve ANY configured type from it — not
+				// just `organisatie` — so the dashboard/settings/compliance
+				// surfaces register their stores even when the settings
+				// `availableRegisters` list does not include the voorzieningen
+				// register (the slug-based auto-registration then finds nothing).
+				const voorzieningenConfig = this.settings.voorzieningen || this.settings.voorzieningenConfig || {}
+				if (voorzieningenConfig.register && voorzieningenConfig[`${objectType}_schema`]) {
+					return {
+						source: 'openregister',
+						schema: voorzieningenConfig[`${objectType}_schema`],
+						register: voorzieningenConfig.register,
+					}
+				}
+
+				// AMEF / ArchiMate types (element, relation, view, model,
+				// property_definition, organization) live in their own register
+				// with a `<type>_schema` key under `amefConfig`. The compliance
+				// matrix and ArchiMate surfaces fetch `element`, which is not part
+				// of the voorzieningen blob.
+				const amefConfig = this.settings.amef || this.settings.amefConfig || {}
+				if (amefConfig.register && amefConfig[`${objectType}_schema`]) {
+					return {
+						source: 'openregister',
+						schema: amefConfig[`${objectType}_schema`],
+						register: amefConfig.register,
 					}
 				}
 

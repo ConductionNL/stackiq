@@ -1842,7 +1842,7 @@
    "name": "5. Standaard (QUARANTINED: schema not provisioned)",
    "item": [
     {
-     "name": "list standaarden via standaard schema slug (QUARANTINED: 404 schema missing)",
+     "name": "list standaarden via standaard schema slug (200, paginated envelope)",
      "request": {
       "auth": {
        "type": "basic",
@@ -1897,15 +1897,12 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// DETERMINISTIC KNOWN GAP (documented, NOT a fake pass): there is no standalone",
-         "// 'standaard' schema in softwarecatalog. In softwarecatalogus_register.json 'standaard'",
-         "// appears only as a property that $refs the 'element' schema (a relation), never as a",
-         "// top-level schema, so no register carries a 'standaard' slug and OR deterministically",
-         "// 404s it. This is asserted as the contract (404, never a 5xx). It is intentionally",
-         "// NOT provisioned (unlike AMEF) because there is no schema definition to provision; if a",
-         "// real 'standaard' schema is ever added, flip this to a happy-path list assertion.",
+         "// The 'standaard' schema is now provisioned in the voorzieningen register",
+         "// (previously a documented gap that 404'd). Per the prior note, this is now",
+         "// flipped to the happy-path list contract: a 200 paginated envelope.",
          "pm.test('not a server error', () => pm.expect(pm.response.code).to.be.below(500));",
-         "pm.test('404 - no standalone standaard schema (DETERMINISTIC KNOWN GAP)', () => pm.response.to.have.status(404));"
+         "pm.test('200 - standaard schema lists via its slug', () => pm.response.to.have.status(200));",
+         "pm.test('paginated envelope', () => { const b = pm.response.json(); pm.expect(b).to.have.property('results'); pm.expect(b).to.have.property('total'); });"
         ],
         "type": "text/javascript"
        }
