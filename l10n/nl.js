@@ -220,7 +220,22 @@ OC.L10N.register(
     "At least 10 characters" : "Minimaal 10 tekens",
     "For a Service Level Agreement (SLA), contact" : "Voor een Service Level Agreement (SLA) neemt u contact op met",
     "Loading contactpersonen..." : "Contactpersonen laden…",
-    "Select a register" : "Selecteer een register"
+    "Select a register" : "Selecteer een register",
+    "Loading approval state" : "Goedkeuringsstatus laden",
+    "Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it." : "Delegatie van goedkeuring is niet geconfigureerd op deze instantie. Contractgoedkeuring verloopt via decidesk; vraag een beheerder om deze te installeren en in te schakelen.",
+    "Approval state" : "Goedkeuringsstatus",
+    "Decision reference" : "Besluitreferentie",
+    "Submit for approval" : "Indienen ter goedkeuring",
+    "Submit renewal" : "Verlenging indienen",
+    "Refresh outcome" : "Uitkomst vernieuwen",
+    "Not submitted" : "Niet ingediend",
+    "Pending decision" : "Besluit in behandeling",
+    "Approved" : "Goedgekeurd",
+    "Rejected" : "Afgewezen",
+    "Could not load the approval state." : "Kon de goedkeuringsstatus niet laden.",
+    "Contract submitted to decidesk for a decision." : "Contract ingediend bij decidesk voor een besluit.",
+    "Submitting the contract failed; it remains in negotiation." : "Het indienen van het contract is mislukt; het blijft in onderhandeling.",
+    "Could not refresh the outcome." : "Kon de uitkomst niet vernieuwen."
 },
 "nplurals=2; plural=(n != 1);"
 );

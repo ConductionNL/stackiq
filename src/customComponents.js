@@ -22,6 +22,7 @@ import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSetting
 import DashboardCustomView from './views/Dashboard.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
+import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 
 export default {
 	// --- Lib gap: bespoke card view + contactpersoon add flow. ---
@@ -58,4 +59,12 @@ export default {
 	// states is a cross-tabulation no built-in index/detail type expresses.
 	// Stays a custom page until the lib grows a matrix/cross-tab widget.
 	ComplianceMatrixView,
+
+	// --- Cross-app decision seam: contract approval delegated to decidesk. ---
+	// Read-only Approval panel rendered as a ContractDetail sidebar tab. The
+	// approval/sign-off/renewal DECISION is raised in decidesk via the ADR-019
+	// integration registry and projected back onto the contract; softwarecatalog
+	// owns no approval workflow. Stays a custom tab component because it surfaces
+	// a cross-app outcome no built-in detail widget expresses.
+	ContractApprovalPanel,
 }

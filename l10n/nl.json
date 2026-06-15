@@ -219,6 +219,21 @@
         "contact@example.com": "contact@voorbeeld.nl",
         "https://catalog.example.com": "https://catalogus.voorbeeld.nl",
         "https://example.com": "https://voorbeeld.nl",
-        "{count} selected": "{count} geselecteerd"
+        "{count} selected": "{count} geselecteerd",
+        "Loading approval state": "Goedkeuringsstatus laden",
+        "Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.": "Delegatie van goedkeuring is niet geconfigureerd op deze instantie. Contractgoedkeuring verloopt via decidesk; vraag een beheerder om deze te installeren en in te schakelen.",
+        "Approval state": "Goedkeuringsstatus",
+        "Decision reference": "Besluitreferentie",
+        "Submit for approval": "Indienen ter goedkeuring",
+        "Submit renewal": "Verlenging indienen",
+        "Refresh outcome": "Uitkomst vernieuwen",
+        "Not submitted": "Niet ingediend",
+        "Pending decision": "Besluit in behandeling",
+        "Approved": "Goedgekeurd",
+        "Rejected": "Afgewezen",
+        "Could not load the approval state.": "Kon de goedkeuringsstatus niet laden.",
+        "Contract submitted to decidesk for a decision.": "Contract ingediend bij decidesk voor een besluit.",
+        "Submitting the contract failed; it remains in negotiation.": "Het indienen van het contract is mislukt; het blijft in onderhandeling.",
+        "Could not refresh the outcome.": "Kon de uitkomst niet vernieuwen."
     }
 }
