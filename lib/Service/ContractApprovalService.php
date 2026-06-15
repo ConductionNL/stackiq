@@ -5,19 +5,19 @@
  * Delegates the contract approval / sign-off / renewal DECISION (the
  * `In onderhandeling -> Actief` transition, and the re-approval of an
  * expiring/`Verlopen` contract) to decidesk — the canonical fleet decision
- * authority (cross-app interface contract #1) — through the ADR-019
- * integration registry. softwarecatalog keeps the contract RECORD locally
+ * authority (cross-app interface contract #1) — through the in-process
+ * `IEventDispatcher` event contract (`OCA\Decidesk\Event\DecisionRequestedEvent`
+ * / `DecisionConcludedEvent`). softwarecatalog keeps the contract RECORD locally
  * and PROJECTS the decidesk outcome onto two catalog-local fields
  * (`approvalDecisionId`, `approvalState`).
  *
  * FAIL-CLOSED CONTRACT (mirrors the hydra-gate-unsafe-auth-resolver pattern):
- * a "service unavailable" / "endpoint not resolved" condition NEVER results in
- * an auto-approval. The decidesk endpoint is resolved through the integration
- * registry (the decidesk app installed + enabled on this instance, addressed
- * via the instance's own IURLGenerator — never a hard-coded host). When no
- * endpoint resolves, or the call fails, this service throws and the contract
- * stays `In onderhandeling`; `status` is never set to `Actief` on local
- * authority.
+ * a "decidesk not installed" / "listener did not handle" condition NEVER
+ * results in an auto-approval. Delegation is wired entirely in-process: when
+ * the decidesk app (and its `DecisionRequestedEvent` class) is absent, or its
+ * synchronous listener reports `isHandled() === false` / a null decision id,
+ * this service throws and the contract stays `In onderhandeling`; `status` is
+ * never set to `Actief` on local authority.
  *
  * @category  Service
  * @package   OCA\SoftwareCatalog\Service
@@ -26,7 +26,7 @@
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -37,24 +37,28 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Service\ObjectService;
-use OCP\App\IAppManager;
-use OCP\Http\Client\IClientService;
-use OCP\IURLGenerator;
+use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Raises and projects contract approval decisions delegated to decidesk.
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
  */
 class ContractApprovalService
 {
     /**
-     * The decidesk app id used to resolve the decision-hub endpoint through
-     * the integration registry (stage-1 existence filter, ADR-019).
+     * The fully-qualified decidesk request-event class — the in-process
+     * existence guard (decidesk installed + autoloaded) for delegation.
      */
-    public const DECIDESK_APP_ID = 'decidesk';
+    public const DECISION_REQUESTED_EVENT = '\\OCA\\Decidesk\\Event\\DecisionRequestedEvent';
+
+    /**
+     * This consumer app id, stamped on the request event as `sourceApp` and
+     * used by the conclusion listener to filter inbound events.
+     */
+    public const SOURCE_APP = 'softwarecatalog';
 
     /**
      * The decisionType raised for a first activation of an `In onderhandeling`
@@ -114,121 +118,60 @@ class ContractApprovalService
      *
      * @param ContainerInterface $container       The DI container (lazy OR lookup).
      * @param SettingsService    $settingsService Resolves register/schema ids.
-     * @param IAppManager        $appManager      Resolves the decidesk endpoint (stage-1 filter).
-     * @param IClientService     $clientService   HTTP client factory for the registry call.
-     * @param IURLGenerator      $urlGenerator    Builds the instance-local decidesk URL (no hard-coded host).
+     * @param IEventDispatcher   $eventDispatcher Dispatches the decidesk request event in-process.
      * @param LoggerInterface    $logger          Logger.
      */
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly SettingsService $settingsService,
-        private readonly IAppManager $appManager,
-        private readonly IClientService $clientService,
-        private readonly IURLGenerator $urlGenerator,
+        private readonly IEventDispatcher $eventDispatcher,
         private readonly LoggerInterface $logger
     ) {
     }//end __construct()
 
     /**
-     * Whether the decidesk decision-hub endpoint resolves on this instance.
+     * Whether the decidesk event contract is available on this instance.
      *
      * Drives the ContractDetail Approval panel: when false, the panel hides its
      * submit action ("approval delegation not configured") so no fail-open path
-     * exists. The host is taken from the instance's own URLGenerator — never a
-     * hard-coded decidesk hostname.
+     * exists. The check is purely in-process — the decidesk app's
+     * `DecisionRequestedEvent` class must be installed and autoloadable.
      *
-     * @return bool True when a decidesk decision endpoint resolves.
+     * @return bool True when decidesk's event contract is present.
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
     public function isDelegationConfigured(): bool
     {
-        return $this->resolveDecisionEndpoint() !== null;
+        return class_exists(self::DECISION_REQUESTED_EVENT);
 
     }//end isDelegationConfigured()
 
     /**
-     * Stage-1 existence filter: is the decidesk app installed and enabled?
-     *
-     * @return bool True when the decidesk app is present.
-     *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
-     */
-    private function isDecideskAvailable(): bool
-    {
-        try {
-            $installed = in_array(self::DECIDESK_APP_ID, $this->appManager->getInstalledApps(), true);
-            return $installed === true && $this->appManager->isInstalled(appId: self::DECIDESK_APP_ID) === true;
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                'ContractApprovalService: decidesk availability check failed (treated as unavailable)',
-                ['error' => $e->getMessage()]
-            );
-            return false;
-        }//end try
-
-    }//end isDecideskAvailable()
-
-    /**
-     * Resolve the absolute decidesk decision-hub base URL via the integration
-     * registry (the instance's own base URL — never a hard-coded host).
-     *
-     * @return string|null The absolute base URL, or null when not configured.
-     *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
-     */
-    private function resolveDecisionEndpoint(): ?string
-    {
-        if ($this->isDecideskAvailable() === false) {
-            return null;
-        }
-
-        try {
-            // The linkToRoute call resolves an instance-relative path;
-            // getAbsoluteURL prefixes the instance's OWN base URL. No decidesk
-            // hostname is hard-coded. When the decidesk hub route is not
-            // registered (the hub change not yet deployed on this instance)
-            // linkToRoute throws
-            // and we fail closed. The route name matches the decidesk hub
-            // IntegrationController (decidesk-contract-decision-hub REQ-DCDH-002,
-            // POST /apps/decidesk/api/v1/decisions).
-            $path = $this->urlGenerator->linkToRoute(routeName: 'decidesk.integration.create');
-            return $this->urlGenerator->getAbsoluteURL(url: $path);
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                'ContractApprovalService: decidesk decision route unavailable (hub not deployed); failing closed',
-                ['error' => $e->getMessage()]
-            );
-            return null;
-        }//end try
-
-    }//end resolveDecisionEndpoint()
-
-    /**
      * Raise a decidesk Decision for a contract approval or renewal.
      *
-     * FAIL-CLOSED: when no decidesk endpoint resolves, or the call fails, this
-     * throws a RuntimeException and the caller leaves the contract
-     * `In onderhandeling` with `approvalState` unchanged. On success it
-     * persists the returned decision id to `approvalDecisionId`, sets
-     * `approvalState = pending`, subscribes to the outcome, and returns the
-     * decision id. `status` is NEVER set to `Actief` here.
+     * FAIL-CLOSED: when decidesk's event class is absent, or its synchronous
+     * listener does not handle the dispatched request (`isHandled() === false`
+     * or a null decision id), this throws a RuntimeException and the caller
+     * leaves the contract `In onderhandeling` with `approvalState` unchanged. On
+     * success it persists the returned decision id to `approvalDecisionId`, sets
+     * `approvalState = pending`, and returns the decision id. `status` is NEVER
+     * set to `Actief` here.
      *
      * @param string $contractUuid The contract OR object uuid.
      * @param bool   $isRenewal    When true, raise decisionType=contract-renewal.
      *
      * @return string The decidesk decision id.
      *
-     * @throws \RuntimeException When delegation is not configured or the call fails.
+     * @throws \RuntimeException When delegation is not available or the listener did not handle it.
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
     public function submitForApproval(string $contractUuid, bool $isRenewal=false): string
     {
-        $endpoint = $this->resolveDecisionEndpoint();
-        if ($endpoint === null) {
-            // Fail closed — never auto-approve when the hub is unavailable.
-            throw new \RuntimeException('Contract approval delegation is not configured (decidesk endpoint not resolvable).');
+        if ($this->isDelegationConfigured() === false) {
+            // Fail closed — never auto-approve when decidesk is not installed.
+            throw new \RuntimeException('Contract approval delegation is not available (decidesk event contract not installed).');
         }
 
         $contract = $this->loadContract(contractUuid: $contractUuid);
@@ -243,41 +186,36 @@ class ContractApprovalService
             $decisionType = self::DECISION_TYPE_RENEWAL;
         }
 
-        $payload = [
-            'decisionType'       => $decisionType,
-            'sourceApp'          => 'softwarecatalog',
-            'subjectRegister'    => self::SUBJECT_REGISTER,
-            'subjectSchema'      => self::SUBJECT_SCHEMA,
-            'subjectId'          => $contractUuid,
-            'subjectLabel'       => $this->buildSubjectLabel(data: $data),
-            'externalReference'  => (string) ($data['contractNummer'] ?? ''),
-            'outcomeCallbackUrl' => $this->buildCallbackUrl(contractUuid: $contractUuid),
-        ];
+        $eventClass = self::DECISION_REQUESTED_EVENT;
+        $event      = new $eventClass(
+            self::SOURCE_APP,
+            self::SUBJECT_REGISTER,
+            self::SUBJECT_SCHEMA,
+            $contractUuid,
+            $this->buildSubjectLabel(data: $data),
+            $decisionType,
+            '',
+            ['title' => $this->buildSubjectLabel(data: $data)],
+            (string) ($data['contractNummer'] ?? ''),
+            $contractUuid
+        );
 
         try {
-            $client   = $this->clientService->newClient();
-            $response = $client->post(
-                $endpoint,
-                [
-                    'json'    => $payload,
-                    'timeout' => 30,
-                ]
-            );
-            $body     = json_decode($response->getBody(), true);
+            $this->eventDispatcher->dispatchTyped($event);
         } catch (\Throwable $e) {
-            // Fail closed — a transport/decidesk error never advances the contract.
+            // Fail closed — a listener error never advances the contract.
             $this->logger->error(
-                'ContractApprovalService: raising decidesk decision failed — contract left in negotiation',
+                'ContractApprovalService: dispatching decidesk decision request failed — contract left in negotiation',
                 ['contractUuid' => $contractUuid, 'error' => $e->getMessage()]
             );
             throw new \RuntimeException('Failed to raise the approval decision in decidesk.', 0, $e);
         }//end try
 
-        $decisionId = '';
-        if (is_array($body) === true) {
-            $decisionId = (string) ($body['decisionId'] ?? ($body['id'] ?? ''));
+        if ($event->isHandled() === false) {
+            throw new \RuntimeException('decidesk did not handle the approval request; contract left in negotiation.');
         }
 
+        $decisionId = (string) ($event->getDecisionId() ?? '');
         if ($decisionId === '') {
             throw new \RuntimeException('decidesk did not return a decision id; contract left in negotiation.');
         }
@@ -286,8 +224,6 @@ class ContractApprovalService
         $data['approvalState']      = self::APPROVAL_PENDING;
         // NOTE: status is intentionally NOT touched here — it stays In onderhandeling.
         $this->persistContract(contract: $contract, data: $data);
-
-        $this->subscribeToOutcome(endpoint: $endpoint, decisionId: $decisionId, contractUuid: $contractUuid);
 
         $this->logger->info(
             'ContractApprovalService: contract submitted for approval',
@@ -299,45 +235,9 @@ class ContractApprovalService
     }//end submitForApproval()
 
     /**
-     * Subscribe to the decidesk outcome push for a decision (best-effort).
-     *
-     * A failure here is non-fatal: the daily reconcile poll
-     * (reconcilePendingApprovals) covers any missed push.
-     *
-     * @param string $endpoint     The decidesk decision-hub base endpoint.
-     * @param string $decisionId   The decision id to subscribe to.
-     * @param string $contractUuid The contract uuid (for the callback).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
-     */
-    private function subscribeToOutcome(string $endpoint, string $decisionId, string $contractUuid): void
-    {
-        $subscribeUrl = rtrim($endpoint, '/').'/'.rawurlencode($decisionId).'/subscriptions';
-        try {
-            $client = $this->clientService->newClient();
-            $client->post(
-                $subscribeUrl,
-                [
-                    'json'    => ['outcomeCallbackUrl' => $this->buildCallbackUrl(contractUuid: $contractUuid)],
-                    'timeout' => 30,
-                ]
-            );
-        } catch (\Throwable $e) {
-            // Non-fatal — the reconcile poll is the safety net for missed pushes.
-            $this->logger->info(
-                'ContractApprovalService: outcome subscription failed; relying on reconcile poll',
-                ['decisionId' => $decisionId, 'error' => $e->getMessage()]
-            );
-        }//end try
-
-    }//end subscribeToOutcome()
-
-    /**
      * IDOR guard: whether the given decision id is the one this contract carries.
      *
-     * Used by the outcome callback so a caller cannot project an arbitrary
+     * Used when projecting an outcome so a caller cannot project an arbitrary
      * outcome onto an arbitrary contract. A blank stored or supplied id never
      * matches (fail-closed).
      *
@@ -346,7 +246,7 @@ class ContractApprovalService
      *
      * @return bool True when the decision id matches the contract's stored id.
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
     public function isDecisionForContract(string $contractUuid, string $decisionId): bool
     {
@@ -378,7 +278,7 @@ class ContractApprovalService
      *
      * @return bool True when the contract was changed.
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
     public function projectOutcome(string $contractUuid, string $outcomeStatus): bool
     {
@@ -439,139 +339,94 @@ class ContractApprovalService
     }//end projectOutcome()
 
     /**
-     * Poll decidesk for the outcome of a single contract's decision and project it.
+     * Resolve the catalog contract that a concluded decidesk outcome addresses.
      *
-     * @param string $contractUuid The contract uuid.
+     * Prefers the carried `subjectId` (the OR object uuid stamped on the request
+     * event), falling back to `externalReference` (the `contractNummer`). The
+     * resolved uuid is only returned when the carried `decisionId` matches the
+     * contract's stored `approvalDecisionId` (IDOR guard), so a spoofed event
+     * cannot project an outcome onto an unrelated contract.
      *
-     * @return string|null The derived outcome status, or null when unresolved.
+     * @param string $subjectId         The carried OR object uuid (may be blank).
+     * @param string $externalReference The carried contractNummer (fallback, may be blank).
+     * @param string $decisionId        The concluded decision id (IDOR guard).
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @return string|null The matched contract uuid, or null when none matches.
+     *
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
-    public function refreshOutcome(string $contractUuid): ?string
+    public function resolveContractForOutcome(string $subjectId, string $externalReference, string $decisionId): ?string
     {
-        $endpoint = $this->resolveDecisionEndpoint();
-        if ($endpoint === null) {
-            return null;
+        if ($subjectId !== '' && $this->isDecisionForContract(contractUuid: $subjectId, decisionId: $decisionId) === true) {
+            return $subjectId;
         }
 
-        $contract = $this->loadContract(contractUuid: $contractUuid);
-        if ($contract === null) {
-            return null;
+        $match = $this->findContractByExternalReference(externalReference: $externalReference, decisionId: $decisionId);
+        if ($match !== null) {
+            return $match;
         }
 
-        $data       = $contract->getObject();
-        $decisionId = (string) ($data['approvalDecisionId'] ?? '');
-        if ($decisionId === '') {
-            return null;
-        }
+        $this->logger->warning(
+            'ContractApprovalService: concluded outcome did not match any contract (decision/contract mismatch)',
+            ['subjectId' => $subjectId, 'externalReference' => $externalReference, 'decisionId' => $decisionId]
+        );
+        return null;
 
-        $status = $this->pollOutcomeStatus(endpoint: $endpoint, decisionId: $decisionId);
-        if ($status !== null) {
-            $this->projectOutcome(contractUuid: $contractUuid, outcomeStatus: $status);
-        }
-
-        return $status;
-
-    }//end refreshOutcome()
+    }//end resolveContractForOutcome()
 
     /**
-     * Daily reconcile: poll decidesk for every contract still `pending` and
-     * project any terminal outcome (covers missed pushes). Idempotent.
+     * Find a pending contract whose contractNummer + decisionId match.
      *
-     * @return int The number of contracts whose outcome was projected.
+     * @param string $externalReference The carried contractNummer.
+     * @param string $decisionId        The concluded decision id (IDOR guard).
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @return string|null The matched contract uuid, or null.
+     *
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
-    public function reconcilePendingApprovals(): int
+    private function findContractByExternalReference(string $externalReference, string $decisionId): ?string
     {
-        $endpoint = $this->resolveDecisionEndpoint();
-        if ($endpoint === null) {
-            $this->logger->info('ContractApprovalService: delegation not configured, skipping reconcile');
-            return 0;
+        if ($externalReference === '' || $decisionId === '') {
+            return null;
         }
 
         $objectService = $this->getObjectService();
         if ($objectService === null) {
-            return 0;
+            return null;
         }
 
         $registerId = $this->settingsService->getRegisterIdForObjectType(objectType: 'contract');
         $schemaId   = $this->settingsService->getSchemaIdForObjectType(objectType: 'contract');
         if ($registerId === null || $schemaId === null) {
-            $this->logger->info('ContractApprovalService: contract register/schema not configured, skipping reconcile');
-            return 0;
+            return null;
         }
 
         $query = [
-            'register'      => $registerId,
-            'schema'        => $schemaId,
-            'approvalState' => self::APPROVAL_PENDING,
+            'register'           => $registerId,
+            'schema'             => $schemaId,
+            'approvalDecisionId' => $decisionId,
         ];
 
         try {
             $contracts = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
         } catch (\Throwable $e) {
             $this->logger->error(
-                'ContractApprovalService: failed to query pending contracts',
+                'ContractApprovalService: failed to query contract by decision id',
                 ['error' => $e->getMessage()]
             );
-            return 0;
+            return null;
         }//end try
 
-        $projected = 0;
         foreach ($contracts as $contract) {
-            $data       = $contract->getObject();
-            $decisionId = (string) ($data['approvalDecisionId'] ?? '');
-            if ($decisionId === '') {
-                continue;
+            $data = $contract->getObject();
+            if ((string) ($data['contractNummer'] ?? '') === $externalReference) {
+                return $contract->getUuid();
             }
-
-            $status = $this->pollOutcomeStatus(endpoint: $endpoint, decisionId: $decisionId);
-            if ($status === null) {
-                continue;
-            }
-
-            if ($this->projectOutcome(contractUuid: $contract->getUuid(), outcomeStatus: $status) === true) {
-                $projected++;
-            }
-        }//end foreach
-
-        return $projected;
-
-    }//end reconcilePendingApprovals()
-
-    /**
-     * Poll the decidesk outcome envelope and return its derived status.
-     *
-     * @param string $endpoint   The decidesk decision-hub base endpoint.
-     * @param string $decisionId The decision id.
-     *
-     * @return string|null The derived status (approved|rejected|withdrawn|pending), or null on error.
-     *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
-     */
-    private function pollOutcomeStatus(string $endpoint, string $decisionId): ?string
-    {
-        $outcomeUrl = rtrim($endpoint, '/').'/'.rawurlencode($decisionId).'/outcome';
-        try {
-            $client   = $this->clientService->newClient();
-            $response = $client->get($outcomeUrl, ['timeout' => 30]);
-            $body     = json_decode($response->getBody(), true);
-        } catch (\Throwable $e) {
-            $this->logger->info(
-                'ContractApprovalService: outcome poll failed',
-                ['decisionId' => $decisionId, 'error' => $e->getMessage()]
-            );
-            return null;
-        }//end try
-
-        if (is_array($body) === false || isset($body['status']) === false) {
-            return null;
         }
 
-        return (string) $body['status'];
+        return null;
 
-    }//end pollOutcomeStatus()
+    }//end findContractByExternalReference()
 
     /**
      * Build the human-readable subject label for the decision provenance.
@@ -580,7 +435,7 @@ class ContractApprovalService
      *
      * @return string The subject label.
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
     private function buildSubjectLabel(array $data): string
     {
@@ -599,32 +454,13 @@ class ContractApprovalService
     }//end buildSubjectLabel()
 
     /**
-     * Build the absolute SC outcome-callback URL for a contract (instance-local).
-     *
-     * @param string $contractUuid The contract uuid.
-     *
-     * @return string The absolute callback URL.
-     *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
-     */
-    private function buildCallbackUrl(string $contractUuid): string
-    {
-        $path = $this->urlGenerator->linkToRoute(
-            routeName: 'softwarecatalog.contractApproval.outcomeCallback',
-            arguments: ['contractUuid' => $contractUuid]
-        );
-        return $this->urlGenerator->getAbsoluteURL(url: $path);
-
-    }//end buildCallbackUrl()
-
-    /**
      * Load a contract OR object by uuid.
      *
      * @param string $contractUuid The contract uuid.
      *
      * @return \OCA\OpenRegister\Db\ObjectEntity|null The object, or null.
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
     private function loadContract(string $contractUuid)
     {
@@ -667,7 +503,7 @@ class ContractApprovalService
      *
      * @return void
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
     private function persistContract($contract, array $data): void
     {
@@ -691,7 +527,7 @@ class ContractApprovalService
      *
      * @return ObjectService|null The service, or null when OpenRegister is absent.
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
      */
     private function getObjectService(): ?ObjectService
     {

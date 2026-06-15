@@ -21,7 +21,6 @@ namespace OCA\SoftwareCatalog\AppInfo;
 
 use OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob;
 use OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob;
-use OCA\SoftwareCatalog\BackgroundJob\ContractApprovalReconcileJob;
 use OCA\SoftwareCatalog\Service\ContractStatusService;
 use OCA\SoftwareCatalog\Service\ContractApprovalService;
 use OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob;
@@ -29,6 +28,7 @@ use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
 use OCA\SoftwareCatalog\Service\Federation\FederationService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Dashboard\ConceptOrganisatiesWidget;
+use OCA\SoftwareCatalog\EventListener\DecisionConcludedListener;
 use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
 use OCA\SoftwareCatalog\EventListener\TestEventListener;
 use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
@@ -68,6 +68,7 @@ use OCA\OpenRegister\Event\SchemaCreatedEvent;
 use OCA\OpenRegister\Event\SchemaDeletedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
+use OCA\Decidesk\Event\DecisionConcludedEvent;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -481,28 +482,16 @@ class Application extends App implements IBootstrap
                 }
                 );
 
-        // Register the contract-approval delegation service (decidesk via ADR-019)
-        // + its daily reconcile job.
+        // Register the contract-approval delegation service. Delegation runs
+        // in-process via decidesk's DecisionRequestedEvent / DecisionConcludedEvent
+        // contract (IEventDispatcher) — no HTTP client, no polling reconcile job.
         $context->registerService(
                 ContractApprovalService::class,
                 function ($container) {
                     return new ContractApprovalService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
-                    appManager: $container->get(IAppManager::class),
-                    clientService: $container->get('OCP\Http\Client\IClientService'),
-                    urlGenerator: $container->get('OCP\IURLGenerator'),
-                    logger: $container->get(LoggerInterface::class)
-                    );
-                }
-                );
-        $context->registerService(
-                ContractApprovalReconcileJob::class,
-                function ($container) {
-                    return new ContractApprovalReconcileJob(
-                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-                    approvalService: $container->get(ContractApprovalService::class),
-                    appManager: $container->get(IAppManager::class),
+                    eventDispatcher: $container->get('OCP\EventDispatcher\IEventDispatcher'),
                     logger: $container->get(LoggerInterface::class)
                     );
                 }
@@ -602,6 +591,14 @@ class Application extends App implements IBootstrap
 
         // Sync user profile updates into the contactpersoon mirror.
         $context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
+
+        // Project a concluded decidesk contract-approval Decision onto the
+        // catalog contract. Only fires when decidesk is installed (it owns the
+        // DecisionConcludedEvent class); the listener filters by sourceApp and
+        // IDOR-checks the decision id before projecting (the In onderhandeling
+        // -> Actief transition is reached only here). Replaces the former HTTP
+        // outcome-callback + daily reconcile poll.
+        $context->registerEventListener(DecisionConcludedEvent::class, DecisionConcludedListener::class);
 
     }//end registerEventListeners()
 

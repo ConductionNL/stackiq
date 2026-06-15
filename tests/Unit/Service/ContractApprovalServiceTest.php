@@ -4,11 +4,11 @@
  * delegation seam.
  *
  * The security core is fail-closed authorization (mirrors
- * hydra-gate-unsafe-auth-resolver): when no decidesk endpoint resolves through
- * the integration registry, the service NEVER advances a contract — it throws
- * on submit and degrades to a no-op on reconcile, and never sets status=Actief.
- * The IDOR guard (isDecisionForContract) and the unknown-contract projection
- * path also fail closed.
+ * hydra-gate-unsafe-auth-resolver): when decidesk's in-process event contract
+ * (`OCA\Decidesk\Event\DecisionRequestedEvent`) is absent, the service NEVER
+ * advances a contract — it throws on submit and never sets status=Actief. The
+ * IDOR guard (isDecisionForContract) and the unknown-contract projection path
+ * also fail closed.
  *
  * @category  Tests
  * @package   OCA\SoftwareCatalog\Tests\Unit\Service
@@ -17,7 +17,7 @@
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
  */
 
 declare(strict_types=1);
@@ -26,9 +26,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\SoftwareCatalog\Service\ContractApprovalService;
 use OCA\SoftwareCatalog\Service\SettingsService;
-use OCP\App\IAppManager;
-use OCP\Http\Client\IClientService;
-use OCP\IURLGenerator;
+use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Container\ContainerInterface;
@@ -50,19 +48,9 @@ class ContractApprovalServiceTest extends TestCase
     private SettingsService|MockObject $settingsService;
 
     /**
-     * @var IAppManager|MockObject
+     * @var IEventDispatcher|MockObject
      */
-    private IAppManager|MockObject $appManager;
-
-    /**
-     * @var IClientService|MockObject
-     */
-    private IClientService|MockObject $clientService;
-
-    /**
-     * @var IURLGenerator|MockObject
-     */
-    private IURLGenerator|MockObject $urlGenerator;
+    private IEventDispatcher|MockObject $eventDispatcher;
 
     /**
      * Set up the mocked collaborators.
@@ -73,9 +61,7 @@ class ContractApprovalServiceTest extends TestCase
     {
         $this->container       = $this->createMock(ContainerInterface::class);
         $this->settingsService = $this->createMock(SettingsService::class);
-        $this->appManager      = $this->createMock(IAppManager::class);
-        $this->clientService   = $this->createMock(IClientService::class);
-        $this->urlGenerator    = $this->createMock(IURLGenerator::class);
+        $this->eventDispatcher = $this->createMock(IEventDispatcher::class);
     }//end setUp()
 
     /**
@@ -88,48 +74,39 @@ class ContractApprovalServiceTest extends TestCase
         return new ContractApprovalService(
             $this->container,
             $this->settingsService,
-            $this->appManager,
-            $this->clientService,
-            $this->urlGenerator,
+            $this->eventDispatcher,
             $this->createMock(LoggerInterface::class)
         );
     }//end makeService()
 
     /**
-     * Delegation is NOT configured when decidesk is not installed.
+     * Delegation is NOT configured when decidesk's event class is absent.
+     *
+     * The decidesk app is not installed in the unit-test autoload scope, so the
+     * class_exists guard returns false — delegation is reported unconfigured.
      *
      * @return void
      */
     public function testDelegationNotConfiguredWhenDecideskAbsent(): void
     {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
+        $this->assertFalse(class_exists(ContractApprovalService::DECISION_REQUESTED_EVENT));
         $this->assertFalse($this->makeService()->isDelegationConfigured());
     }//end testDelegationNotConfiguredWhenDecideskAbsent()
 
     /**
-     * Submitting fails CLOSED (throws) when no decidesk endpoint resolves —
-     * the contract is never advanced and status is never set to Actief.
+     * Submitting fails CLOSED (throws) when decidesk's event class is absent —
+     * the contract is never advanced and status is never set to Actief, and the
+     * event dispatcher is NEVER invoked.
      *
      * @return void
      */
     public function testSubmitFailsClosedWhenDelegationNotConfigured(): void
     {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
+        $this->eventDispatcher->expects($this->never())->method('dispatchTyped');
 
         $this->expectException(\RuntimeException::class);
         $this->makeService()->submitForApproval('contract-uuid', false);
     }//end testSubmitFailsClosedWhenDelegationNotConfigured()
-
-    /**
-     * Reconcile degrades to 0 (no-op) when delegation is not configured.
-     *
-     * @return void
-     */
-    public function testReconcileDegradesWhenDelegationNotConfigured(): void
-    {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->assertSame(0, $this->makeService()->reconcilePendingApprovals());
-    }//end testReconcileDegradesWhenDelegationNotConfigured()
 
     /**
      * The IDOR guard fails closed on a blank decision id.
@@ -142,6 +119,19 @@ class ContractApprovalServiceTest extends TestCase
     }//end testIsDecisionForContractRejectsBlankId()
 
     /**
+     * Resolving a contract for an outcome fails closed on a blank decision id
+     * with no subjectId/externalReference match (returns null).
+     *
+     * @return void
+     */
+    public function testResolveContractForOutcomeFailsClosedOnBlankDecisionId(): void
+    {
+        // ObjectService unavailable → no lookup possible → null.
+        $this->container->method('get')->willThrowException(new \RuntimeException('no OR'));
+        $this->assertNull($this->makeService()->resolveContractForOutcome('', '', ''));
+    }//end testResolveContractForOutcomeFailsClosedOnBlankDecisionId()
+
+    /**
      * Projecting an outcome onto an unknown contract is a safe no-op (false).
      *
      * @return void
@@ -152,15 +142,4 @@ class ContractApprovalServiceTest extends TestCase
         $this->container->method('get')->willThrowException(new \RuntimeException('no OR'));
         $this->assertFalse($this->makeService()->projectOutcome('unknown-uuid', 'approved'));
     }//end testProjectOutcomeUnknownContractIsNoop()
-
-    /**
-     * refreshOutcome returns null when delegation is not configured (fail closed).
-     *
-     * @return void
-     */
-    public function testRefreshOutcomeReturnsNullWhenNotConfigured(): void
-    {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
-        $this->assertNull($this->makeService()->refreshOutcome('contract-uuid'));
-    }//end testRefreshOutcomeReturnsNullWhenNotConfigured()
 }//end class
