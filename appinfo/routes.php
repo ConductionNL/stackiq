@@ -191,6 +191,12 @@ return [
         ['name' => 'moderation#approve', 'url' => '/api/moderation/{uuid}/approve', 'verb' => 'POST'],
         ['name' => 'moderation#reject', 'url' => '/api/moderation/{uuid}/reject', 'verb' => 'POST'],
 
+        // FEDERATION SETTINGS / MANUAL PULL — admin-gated (AuthorizedAdminSetting).
+        ['name' => 'federation#status', 'url' => '/api/federation/status', 'verb' => 'GET'],
+        ['name' => 'federation#addPeer', 'url' => '/api/federation/peers', 'verb' => 'POST'],
+        ['name' => 'federation#removePeer', 'url' => '/api/federation/peers', 'verb' => 'DELETE'],
+        ['name' => 'federation#pull', 'url' => '/api/federation/pull', 'verb' => 'POST'],
+
         // ========================================================================
         // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks (Legacy)
         // ========================================================================

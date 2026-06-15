@@ -86,6 +86,12 @@
 		<!-- Email Configuration Section -->
 		<EmailConfiguration />
 
+		<!-- Registration Moderation Queue Section -->
+		<ModerationQueue />
+
+		<!-- Catalog Federation Section -->
+		<FederationSettings />
+
 		<!-- Background Jobs Configuration Section -->
 		<CronjobConfiguration />
 	</div>
@@ -109,6 +115,8 @@ import OrganizationSynchronization from './sections/OrganizationSynchronization.
 import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
 import EmailConfiguration from './sections/EmailConfiguration.vue'
 import CronjobConfiguration from './sections/CronjobConfiguration.vue'
+import ModerationQueue from './sections/ModerationQueue.vue'
+import FederationSettings from './sections/FederationSettings.vue'
 import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 
 /**
@@ -132,6 +140,8 @@ export default defineComponent({
 		ArchiMateImportExport,
 		EmailConfiguration,
 		CronjobConfiguration,
+		ModerationQueue,
+		FederationSettings,
 		AlwaysVisibleSection,
 		Web,
 	},
