@@ -1707,34 +1707,20 @@
         "version": "0.0.27",
         "summary": "",
         "icon": "AccountMultiple",
-        "required": [],
+        "required": [
+          "contactsUid"
+        ],
         "properties": {
-          "voornaam": {
+          "contactsUid": {
             "type": "string",
-            "description": "Voornaam van de contactpersoon",
+            "description": "Verwijzing (UID) naar de Nextcloud-contactpersoon in het adresboek (OCP\\Contacts\\IManager). Identiteit (naam, e-mail, telefoon) leeft in Nextcloud Contacts; dit record bewaart alleen de catalogus-specifieke rol/relatie.",
+            "required": true,
+            "visible": true,
             "facetable": false,
-            "title": "Voornaam",
-            "order": 1,
-            "maxLength": 100,
-            "example": "Bijvoorbeeld: Jan"
-          },
-          "tussenvoegsel": {
-            "type": "string",
-            "description": "Tussenvoegsel van de contactpersoon",
-            "facetable": false,
-            "title": "Tussenvoegsel",
-            "order": 2,
-            "maxLength": 20,
-            "example": "Bijvoorbeeld: van"
-          },
-          "achternaam": {
-            "type": "string",
-            "description": "Achternaam van de contactpersoon",
-            "facetable": false,
-            "title": "Achternaam",
-            "order": 3,
-            "maxLength": 100,
-            "example": "Bijvoorbeeld: Jansen"
+            "title": "Contact-UID",
+            "order": 0,
+            "maxLength": 255,
+            "example": "Bijvoorbeeld: 3f2b0c5e-1234-4a9b-8c1d-9f0e1a2b3c4d"
           },
           "functie": {
             "description": "Functie van de medewerker",
@@ -1777,44 +1763,6 @@
             },
             "$ref": "#/components/schemas/organisatie",
             "order": 9
-          },
-          "username": {
-            "description": "Gebruikersnaam van de contactpersoon",
-            "title": "Gebruikersnaam",
-            "type": "string",
-            "visible": false,
-            "hideOnCollection": true,
-            "facetable": false,
-            "order": 10,
-            "minLength": null,
-            "maxLength": 50,
-            "immutable": true,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "inversedBy": "",
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": []
-          },
-          "telefoonnummer": {
-            "type": "string",
-            "description": "Telefoonnummer van de contactpersoon",
-            "facetable": false,
-            "title": "Telefoonnummer",
-            "order": 5,
-            "example": "Bijvoorbeeld: 06 12345678"
           },
           "notificaties": {
             "type": "array",
@@ -1876,40 +1824,6 @@
                 "admin"
               ]
             }
-          },
-          "e-mailadres": {
-            "description": "E-mailadres van de contactpersoon",
-            "title": "E-mailadres",
-            "type": "string",
-            "format": "email",
-            "required": false,
-            "visible": true,
-            "facetable": false,
-            "order": 6,
-            "minLength": null,
-            "maxLength": 320,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "inversedBy": "",
-            "$ref": "",
-            "register": "",
-            "writeBack": false,
-            "removeAfterWriteBack": false,
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": [],
-            "example": "Bijvoorbeeld: jan.jansen@organisatie.nl"
           }
         },
         "archive": [],
@@ -2013,7 +1927,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "{{ voornaam }} {{ tussenvoegsel }} {{ achternaam }}",
+          "objectNameField": "contactsUid",
           "objectDescriptionField": "functie",
           "autoPublish": true
         }
@@ -2027,106 +1941,20 @@
         "summary": "",
         "icon": "OfficeBuildingOutline",
         "required": [
-          "naam",
-          "type",
-          "website"
+          "contactsUid",
+          "type"
         ],
         "properties": {
-          "naam": {
-            "description": "Naam van de organisatie",
+          "contactsUid": {
+            "description": "Verwijzing (UID) naar de Nextcloud-contactpersoon van het type organisatie in het adresboek (OCP\\Contacts\\IManager). Identiteit (naam, e-mail, website, logo, CBS/KvK-code) leeft in Nextcloud Contacts; dit record bewaart alleen de catalogus-specifieke relatie/rol.",
             "type": "string",
             "required": true,
             "visible": true,
-            "order": 1,
-            "minLength": null,
-            "maxLength": 200,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "inversedBy": "",
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": [],
+            "order": 0,
+            "maxLength": 255,
             "facetable": false,
-            "title": "Naam",
-            "example": "Bijvoorbeeld: VNG Realisatie"
-          },
-          "beschrijvingKort": {
-            "description": "Beschrijving van de leverancier",
-            "type": "string",
-            "visible": true,
-            "order": 1,
-            "facetable": false,
-            "title": "Samenvatting",
-            "maxLength": 255
-          },
-          "beschrijvingLang": {
-            "description": "Overige informatie",
-            "type": "string",
-            "visible": true,
-            "order": 2,
-            "facetable": false,
-            "title": "Beschrijving",
-            "format": "markdown",
-            "maxLength": 5000
-          },
-          "logo": {
-            "description": "Logo van de organisatie",
-            "type": "file",
-            "format": "base64",
-            "visible": true,
-            "order": 10,
-            "facetable": false,
-            "title": "Logo",
-            "fileConfiguration": {
-              "allowedMimeTypes": [
-                "image/jpeg",
-                "image/png",
-                "image/gif",
-                "image/svg+xml",
-                "image/webp"
-              ],
-              "maxSize": 5242880
-            }
-          },
-          "cbsCode": {
-            "description": "CBS nummer van de organisatie",
-            "type": "number",
-            "visible": true,
-            "minLength": null,
-            "maxLength": null,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "inversedBy": "",
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": [],
-            "facetable": false,
-            "title": "CBS Nummer",
-            "order": 3
+            "title": "Contact-UID",
+            "example": "Bijvoorbeeld: 3f2b0c5e-1234-4a9b-8c1d-9f0e1a2b3c4d"
           },
           "contactpersonen": {
             "description": "De contactpersoon van de organisatie",
@@ -2164,104 +1992,6 @@
             "oneOf": [],
             "facetable": false,
             "title": "Contactpersonen",
-            "authorization": {
-              "read": [
-                "authenticated"
-              ]
-            }
-          },
-          "e-mailadres": {
-            "description": "Het e-mailadres van de contactpersoon of de organisatie",
-            "type": "string",
-            "visible": true,
-            "order": 7,
-            "minLength": null,
-            "maxLength": null,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "inversedBy": "",
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": [],
-            "facetable": false,
-            "title": "E-mailadres",
-            "example": "contact@organisatie.nl",
-            "authorization": {
-              "read": [
-                "authenticated"
-              ]
-            }
-          },
-          "website": {
-            "description": "URL van de website van de organisatie",
-            "title": "Website",
-            "type": "string",
-            "required": false,
-            "visible": true,
-            "facetable": false,
-            "order": 16,
-            "minLength": null,
-            "maxLength": null,
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "inversedBy": "",
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": [],
-            "example": "https://www.organisatie.nl"
-          },
-          "telefoonnummer": {
-            "description": "Telefoonnummer van de contactpersoon of de organisatie",
-            "title": "Telefoonnummer",
-            "type": "string",
-            "visible": true,
-            "facetable": false,
-            "order": 15,
-            "minLength": null,
-            "maxLength": null,
-            "example": "06 12345678",
-            "minimum": null,
-            "maximum": null,
-            "multipleOf": null,
-            "minItems": null,
-            "maxItems": null,
-            "inversedBy": "",
-            "$ref": "",
-            "objectConfiguration": {
-              "handling": "nested-object",
-              "schema": ""
-            },
-            "fileConfiguration": {
-              "handling": "ignore",
-              "allowedMimeTypes": [],
-              "location": "",
-              "maxSize": 0
-            },
-            "oneOf": [],
             "authorization": {
               "read": [
                 "authenticated"
@@ -2575,10 +2305,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "naam",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
-          "objectImageField": "logo",
+          "objectNameField": "contactsUid",
           "allowFiles": true,
           "allowedTags": [
             "Verklaring betaling sociale premies",
