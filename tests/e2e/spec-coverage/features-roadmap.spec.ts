@@ -36,7 +36,7 @@ test('features-roadmap: deep-link route mounts the roadmap surface', async ({ pa
 // deep-link-only here (see BUG LIST — roadmap nav entry not rendered). Asserting
 // it now means a future shell fix that adds the entry will surface as a failure
 // to revisit, rather than silently changing behaviour.
-test('features-roadmap: roadmap nav entry is not rendered by the deployed shell (deep-link only)', async ({ page }) => {
+test('features-roadmap: roadmap nav entry is rendered by the deployed shell', async ({ page }) => {
 	const bag = collectAppErrors(page)
 	await gotoAppRoute(page, '/')
 
@@ -45,9 +45,10 @@ test('features-roadmap: roadmap nav entry is not rendered by the deployed shell 
 	await expect(nav.getByRole('link', { name: 'Organisations', exact: true }).first())
 		.toBeVisible({ timeout: 30000 })
 
-	// No "Features & roadmap" entry in the deployed app navigation.
-	await expect(nav.getByRole('link', { name: 'Features & roadmap', exact: true }))
-		.toHaveCount(0)
+	// The manifest FeaturesRoadmap page is navigable (title "Features & roadmap",
+	// no hidden/menu flag), so the deployed shell renders its nav entry.
+	await expect(nav.getByRole('link', { name: 'Features & roadmap', exact: true }).first())
+		.toBeVisible({ timeout: 15000 })
 
 	expectNoAppErrors(bag)
 })

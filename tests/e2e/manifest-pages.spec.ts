@@ -59,11 +59,11 @@ const APP_MAIN = 'main'
  * keeps the smoke test data-independent.
  */
 async function gotoAppRoute(page: Page, route: string): Promise<void> {
-	// The dashboard lives at the app root. NC serves it at `/apps/softwarecatalog`
-	// (no trailing slash) — the trailing-slash form `/apps/softwarecatalog/` 404s
-	// because the bare `/` page route does not match a trailing slash. So for the
-	// root route navigate to APP_BASE directly; deep routes keep their path.
-	const url = route === '/' ? APP_BASE : `${APP_BASE}${route}`
+	// The in-app router runs in hash mode, so deep links are `#<route>`. A bare
+	// path form boots the SPA but leaves the hash empty, so vue-router falls back
+	// to the default `/` (Dashboard) and the requested surface never mounts.
+	// Navigate via the hash; the dashboard is `#/`.
+	const url = route === '/' ? `${APP_BASE}#/` : `${APP_BASE}#${route}`
 	// Use `domcontentloaded`, not `networkidle`: the app fires a periodic
 	// heartbeat / keep-alive poll, so the network never goes idle and a
 	// `networkidle` wait times out at 60s. The explicit shell/main waits below
@@ -81,8 +81,12 @@ async function gotoAppRoute(page: Page, route: string): Promise<void> {
  * because the manifest title can appear both in the nav and the page header.
  */
 async function expectPageRendered(page: Page, title: string): Promise<void> {
-	await expect(page.locator(APP_MAIN).first()).toBeVisible()
-	await expect(page.getByText(title, { exact: false }).first()).toBeVisible({ timeout: 30000 })
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible({ timeout: 30000 })
+	// Scope the title match to the app's main content region: an unscoped
+	// `getByText('Dashboard')` latches onto the (hidden) global NC Apps-menu
+	// "Dashboard" entry, which is never visible in the collapsed header.
+	await expect(main.getByText(title, { exact: false }).first()).toBeVisible({ timeout: 30000 })
 }
 
 /**
