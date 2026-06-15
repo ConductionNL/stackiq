@@ -64,8 +64,9 @@ class ContractStatusJob extends TimedJob
      *
      * @return void
      *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function run($argument): void
     {

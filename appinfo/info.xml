@@ -73,12 +73,14 @@ Vrij en open source onder de EUPL-licentie.
 		<post-migration>
 			<step>OCA\SoftwareCatalog\Repair\InitializeSettings</step>
 			<step>OCA\SoftwareCatalog\Repair\MigrateContactsToNc</step>
+			<step>OCA\SoftwareCatalog\Repair\BackfillContractApprovalState</step>
 		</post-migration>
 	</repair-steps>
 
 	<background-jobs>
 		<job>OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob</job>
 		<job>OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob</job>
+		<job>OCA\SoftwareCatalog\BackgroundJob\ContractApprovalReconcileJob</job>
 		<job>OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob</job>
 	</background-jobs>
 

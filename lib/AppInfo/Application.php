@@ -21,7 +21,9 @@ namespace OCA\SoftwareCatalog\AppInfo;
 
 use OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob;
 use OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob;
+use OCA\SoftwareCatalog\BackgroundJob\ContractApprovalReconcileJob;
 use OCA\SoftwareCatalog\Service\ContractStatusService;
+use OCA\SoftwareCatalog\Service\ContractApprovalService;
 use OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob;
 use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
 use OCA\SoftwareCatalog\Service\Federation\FederationService;
@@ -473,6 +475,33 @@ class Application extends App implements IBootstrap
                     return new ContractStatusJob(
                     timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
                     statusService: $container->get(ContractStatusService::class),
+                    appManager: $container->get(IAppManager::class),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+
+        // Register the contract-approval delegation service (decidesk via ADR-019)
+        // + its daily reconcile job.
+        $context->registerService(
+                ContractApprovalService::class,
+                function ($container) {
+                    return new ContractApprovalService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    appManager: $container->get(IAppManager::class),
+                    clientService: $container->get('OCP\Http\Client\IClientService'),
+                    urlGenerator: $container->get('OCP\IURLGenerator'),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+        $context->registerService(
+                ContractApprovalReconcileJob::class,
+                function ($container) {
+                    return new ContractApprovalReconcileJob(
+                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                    approvalService: $container->get(ContractApprovalService::class),
                     appManager: $container->get(IAppManager::class),
                     logger: $container->get(LoggerInterface::class)
                     );
