@@ -22,6 +22,7 @@ CRUD owned by the `contract-administration` change.
 
 #### Scenario: Contract record stays local and routable
 
+- @e2e exclude record-persistence + federation contract — contract index/detail UI is owned by the contract-administration e2e suite; this scenario asserts no approval workflow is ADDED (a negative, code-review/gate-enforced) plus OR-store/federation persistence covered by Newman/PHPUnit
 - **GIVEN** an instance running softwarecatalog with the `contract` schema
 - **WHEN** a user opens the `Contracten` index or a `ContractDetail` page
 - **THEN** the contract record and all its metadata fields render from the OpenRegister object store
@@ -43,6 +44,7 @@ hard-coded HTTP URL — by calling `POST /api/v1/decisions` with
 
 #### Scenario: Submitting a contract for approval raises a decidesk decision
 
+- @e2e exclude cross-app backend contract — the POST /api/v1/decisions call shape + provenance fields are verified by ContractApprovalServiceTest (PHPUnit) and the decidesk decision-hub contract; an end-to-end raise requires the merged decidesk hub
 - **GIVEN** an `In onderhandeling` contract and a resolvable decidesk endpoint in the integration registry
 - **WHEN** a user clicks "Submit for approval" on the contract
 - **THEN** softwarecatalog POSTs `/api/v1/decisions` with `decisionType: contract` and the provenance fields populated from the contract object
@@ -51,6 +53,7 @@ hard-coded HTTP URL — by calling `POST /api/v1/decisions` with
 
 #### Scenario: Submitting a renewal uses contract-renewal
 
+- @e2e exclude cross-app backend contract — the decisionType=contract-renewal routing through the integration registry is verified by PHPUnit + the decidesk hub contract, not a UI flow
 - **GIVEN** an expiring or `Verlopen` contract
 - **WHEN** a user clicks "Submit renewal"
 - **THEN** softwarecatalog POSTs `/api/v1/decisions` with `decisionType: contract-renewal` and the same provenance fields
@@ -66,6 +69,7 @@ SHALL NOT mark the contract approved or active.
 
 #### Scenario: decidesk unavailable blocks approval
 
+- @e2e exclude fail-closed backend authorization — the throw-and-leave-in-negotiation path is verified by ContractApprovalServiceTest::testSubmitFailsClosedWhenDelegationNotConfigured (PHPUnit); its UI manifestation (submit hidden) is the e2e-covered REQ-SCCD-005 "Approval action hidden when delegation is not configured"
 - **GIVEN** an `In onderhandeling` contract and no resolvable decidesk endpoint
 - **WHEN** a user clicks "Submit for approval"
 - **THEN** the action fails with a visible error
@@ -85,6 +89,7 @@ SHALL occur only as a projection of an `approved` decidesk outcome.
 
 #### Scenario: Approved decision activates the contract
 
+- @e2e exclude server-side projection — the approved -> approvalState=approved + status=Actief idempotent projection is verified by PHPUnit + the reconcile job; the In onderhandeling -> Actief transition is applied server-side, not via a UI click
 - **GIVEN** a contract with `approvalState = pending` and a decidesk decision id
 - **WHEN** decidesk reports the outcome `approved` (via push or the reconcile poll)
 - **THEN** `contract.approvalState` becomes `approved`
@@ -93,6 +98,7 @@ SHALL occur only as a projection of an `approved` decidesk outcome.
 
 #### Scenario: Rejected decision leaves the contract in negotiation
 
+- @e2e exclude server-side projection — the rejected/withdrawn -> approvalState=rejected with status unchanged path is verified by PHPUnit; status is never forced to Actief on a rejecting outcome
 - **GIVEN** a contract with `approvalState = pending`
 - **WHEN** decidesk reports the outcome `rejected` or `withdrawn`
 - **THEN** `contract.approvalState` becomes `rejected`
@@ -109,6 +115,7 @@ move, rename, or unroute the `Contracten` nav entry (`order: 40`), the
 
 #### Scenario: Approval panel shows projected state and submit action
 
+- @e2e tests/e2e/spec-coverage/contract-approval-panel.spec.ts
 - **GIVEN** a `ContractDetail` page for an `In onderhandeling` contract and a resolvable decidesk endpoint
 - **WHEN** the user opens the page
 - **THEN** the Approval panel shows `approvalState` and a "Submit for approval" action
@@ -116,6 +123,7 @@ move, rename, or unroute the `Contracten` nav entry (`order: 40`), the
 
 #### Scenario: Approval action hidden when delegation is not configured
 
+- @e2e tests/e2e/spec-coverage/contract-approval-panel.spec.ts
 - **GIVEN** an instance where no decidesk endpoint resolves in the integration registry
 - **WHEN** the user opens a `ContractDetail` page
 - **THEN** the Approval panel shows an "approval delegation not configured" state
@@ -133,6 +141,7 @@ catalog-local and is NOT a decision delegated to decidesk.
 
 #### Scenario: Projection fields added without altering the status enum
 
+- @e2e exclude schema delta — the additive approvalDecisionId/approvalState fields, the unchanged status enum, and the idempotent backfill are verified by the register.d fragment + BackfillContractApprovalState repair (idempotent, fail-safe), not a UI flow
 - **GIVEN** the `contract` schema
 - **WHEN** the change is applied
 - **THEN** the schema gains `approvalDecisionId` and `approvalState` (default `none`)
