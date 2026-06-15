@@ -204,6 +204,143 @@ class FederationServiceTest extends TestCase
     }//end testIsPeerSourced()
 
     /**
+     * getStatus() surfaces a per-peer status object (failures + stale + allowed)
+     * for the federation settings UI, comparing the streak to the threshold.
+     *
+     * @return void
+     */
+    public function testStatusReportsPerPeerStaleAndAllowedState(): void
+    {
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn(['softwarecatalog', 'opencatalogi']);
+
+        $config = $this->createMock(FederationConfig::class);
+        $config->method('isEnabled')->willReturn(true);
+        $config->method('getDirectoryUrl')->willReturn('https://directory.opencatalogi.nl');
+        $config->method('getStaleAfterFailures')->willReturn(3);
+        $config->method('getLocalFederationHosts')->willReturn([]);
+        $config->method('getPeers')->willReturn(['https://healthy.example', 'https://broken.example']);
+        $config->method('getPeerFailures')->willReturnMap(
+            [
+                ['https://healthy.example', 1],
+                ['https://broken.example', 4],
+            ]
+        );
+
+        if (class_exists('OCA\\OpenCatalogi\\Service\\DirectoryService') === false) {
+            eval('namespace OCA\\OpenCatalogi\\Service; class DirectoryService {}');
+        }
+
+        $service = new FederationService(
+            $this->createMock(ContainerInterface::class),
+            $appManager,
+            $config,
+            new FederationMerger(),
+            $this->createMock(SettingsService::class),
+            $this->createMock(LoggerInterface::class)
+        );
+
+        $status = $service->getStatus();
+        $this->assertSame(3, $status['staleAfter']);
+        $this->assertCount(2, $status['peers']);
+
+        $this->assertSame('https://healthy.example', $status['peers'][0]['url']);
+        $this->assertSame(1, $status['peers'][0]['failures']);
+        $this->assertFalse($status['peers'][0]['stale']);
+        $this->assertTrue($status['peers'][0]['allowed']);
+
+        $this->assertSame('https://broken.example', $status['peers'][1]['url']);
+        $this->assertTrue($status['peers'][1]['stale']);
+    }//end testStatusReportsPerPeerStaleAndAllowedState()
+
+    /**
+     * addPeer() SSRF-guards the host, is idempotent, and persists via setPeers.
+     *
+     * @return void
+     */
+    public function testAddPeer(): void
+    {
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn(['softwarecatalog']);
+
+        $stored = [];
+        $config = $this->createMock(FederationConfig::class);
+        $config->method('getLocalFederationHosts')->willReturn([]);
+        $config->method('getPeers')->willReturnCallback(static function () use (&$stored) {
+            return $stored;
+        });
+        $config->method('setPeers')->willReturnCallback(static function (array $peers) use (&$stored): void {
+            $stored = $peers;
+        });
+
+        $service = new FederationService(
+            $this->createMock(ContainerInterface::class),
+            $appManager,
+            $config,
+            new FederationMerger(),
+            $this->createMock(SettingsService::class),
+            $this->createMock(LoggerInterface::class)
+        );
+
+        // Empty url rejected.
+        $this->assertFalse($service->addPeer('   ')['ok']);
+
+        // Private/loopback host blocked by the SSRF guard.
+        $blocked = $service->addPeer('http://127.0.0.1');
+        $this->assertFalse($blocked['ok']);
+        $this->assertStringContainsString('SSRF', $blocked['reason']);
+
+        // A public host is added and persisted.
+        $this->assertTrue($service->addPeer('https://peer.example')['ok']);
+        $this->assertSame(['https://peer.example'], $stored);
+
+        // Idempotent re-add.
+        $again = $service->addPeer('https://peer.example');
+        $this->assertTrue($again['ok']);
+        $this->assertSame(['https://peer.example'], $stored);
+    }//end testAddPeer()
+
+    /**
+     * removePeer() drops the peer, clears its failure streak, and reports a
+     * not-found peer.
+     *
+     * @return void
+     */
+    public function testRemovePeer(): void
+    {
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn(['softwarecatalog']);
+
+        $stored = ['https://peer.example'];
+        $config = $this->createMock(FederationConfig::class);
+        $config->method('getPeers')->willReturnCallback(static function () use (&$stored) {
+            return $stored;
+        });
+        $config->method('setPeers')->willReturnCallback(static function (array $peers) use (&$stored): void {
+            $stored = $peers;
+        });
+        // Failure streak must be cleared on removal.
+        $config->expects($this->once())->method('setPeerFailures')->with('https://peer.example', 0);
+
+        $service = new FederationService(
+            $this->createMock(ContainerInterface::class),
+            $appManager,
+            $config,
+            new FederationMerger(),
+            $this->createMock(SettingsService::class),
+            $this->createMock(LoggerInterface::class)
+        );
+
+        $ok = $service->removePeer('https://peer.example');
+        $this->assertTrue($ok['ok']);
+        $this->assertSame([], $stored);
+
+        $missing = $service->removePeer('https://nope.example');
+        $this->assertFalse($missing['ok']);
+        $this->assertSame('peer not found', $missing['reason']);
+    }//end testRemovePeer()
+
+    /**
      * SSRF guard blocks private/loopback hosts unless allowlisted.
      *
      * @return void
