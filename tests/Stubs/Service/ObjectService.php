@@ -59,4 +59,25 @@ abstract class ObjectService
         bool $_multitenancy=true
     ): array;
 
+    /**
+     * Persist an object.
+     *
+     * @param array      $object        The object data bag.
+     * @param int|string $register      Register slug or id.
+     * @param int|string $schema        Schema slug or id.
+     * @param string     $uuid          Object uuid.
+     * @param bool       $_rbac         Apply RBAC.
+     * @param bool       $_multitenancy Apply multitenancy.
+     *
+     * @return ObjectEntity
+     */
+    abstract public function saveObject(
+        array $object=[],
+        int|string $register='',
+        int|string $schema='',
+        string $uuid='',
+        bool $_rbac=true,
+        bool $_multitenancy=true
+    ): ObjectEntity;
+
 }//end class

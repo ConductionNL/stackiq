@@ -176,6 +176,11 @@ return [
         ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
         ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
 
+        // OPEN-DATA PUBLISH ENDPOINTS — set/clear publicatiedatum (the live OR
+        // RBAC publish gate). Authenticated + per-object ownership guard (IDOR-safe).
+        ['name' => 'publication#publish', 'url' => '/api/publication/{objectType}/{uuid}/publish', 'verb' => 'PUT'],
+        ['name' => 'publication#depublish', 'url' => '/api/publication/{objectType}/{uuid}/depublish', 'verb' => 'DELETE'],
+
         // ========================================================================
         // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks (Legacy)
         // ========================================================================
