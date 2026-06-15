@@ -181,6 +181,16 @@ return [
         ['name' => 'publication#publish', 'url' => '/api/publication/{objectType}/{uuid}/publish', 'verb' => 'PUT'],
         ['name' => 'publication#depublish', 'url' => '/api/publication/{objectType}/{uuid}/depublish', 'verb' => 'DELETE'],
 
+        // ANONYMOUS REGISTRATION INTAKE — public, write-only to the moderation
+        // queue (lands as registratiestatus=pending, no publicatiedatum → invisible
+        // until an admin approves). Anti-spam rate-limited.
+        ['name' => 'intake#submit', 'url' => '/api/intake/register', 'verb' => 'POST'],
+
+        // REGISTRATION MODERATION / APPROVAL QUEUE — admin-gated (isAdmin guard).
+        ['name' => 'moderation#pending', 'url' => '/api/moderation/pending', 'verb' => 'GET'],
+        ['name' => 'moderation#approve', 'url' => '/api/moderation/{uuid}/approve', 'verb' => 'POST'],
+        ['name' => 'moderation#reject', 'url' => '/api/moderation/{uuid}/reject', 'verb' => 'POST'],
+
         // ========================================================================
         // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks (Legacy)
         // ========================================================================

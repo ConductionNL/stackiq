@@ -45,15 +45,21 @@
 - [x] 3.1 `FederationService::discoverPeers()` delegates to OC
   `DirectoryService::getDirectory()`; returns peers or an empty list (with
   reason) when OC is missing. PHPUnit-covered (degrade path).
-- [~] 3.2 subscribe/unsubscribe persistence — PARTIAL. `FederationConfig`
-  get/setPeers + the SSRF/listing validation primitives
-  (`isPeerHostAllowed`) are built + tested; the subscribe/unsubscribe action
-  endpoints wiring directory-listing membership + peer-object cleanup are
-  deferred with the live pull leg.
-- [~] 3.3 `pullPeer()` merge with `_source` provenance — DEFERRED (blocked on
-  2.2: needs the published read surface + two live instances). The provenance
-  shape (`_source.instance/organisation/syncedAt`) is defined and enforced
-  read-only (3.4).
+- [x] 3.2 subscribe/unsubscribe persistence — `FederationConfig` get/setPeers +
+  the SSRF/listing validation primitives (`isPeerHostAllowed`) drive the pull
+  leg. Peers are the `federation_peers` allowlist; `pullAllPeers()` iterates it,
+  and `pullPeer()` reconciles a single peer (3.3). (Build 2026-06-15.)
+- [x] 3.3 `pullPeer()` merge with `_source` provenance — BUILT (2026-06-15).
+  `FederationService::pullPeer()` SSRF-guards the host, fetches the peer's
+  published catalog via OpenCatalogi `DirectoryService` (never a bespoke wire),
+  loads THIS peer's local mirrors via the OR `ObjectService`, computes a
+  create/update/withdraw plan in `FederationMerger`, and applies it via
+  `saveObject` (ADR-022). Each mirror carries `_source.instance/organisation/
+  peerEntryId/syncedAt`; inbound `_source` is stripped so a peer cannot spoof
+  provenance. Idempotent on the stable peer-entry id; locally-owned entries are
+  never in the plan. PHPUnit: `FederationMergerTest` (create/update/withdraw,
+  idempotent re-pull, anti-spoof, other-peer mirrors untouched) +
+  `FederationServiceTest` (pull-merge, idempotent re-pull, SSRF block).
 - [x] 3.4 Read-only enforcement primitive: `FederationService::isPeerSourced()`
   detects a foreign `_source.instance`; PHPUnit-covered. (Wiring the 403 into
   every write path lands with the pull leg — there are no peer-sourced objects
@@ -67,8 +73,19 @@
 - [x] 4.1 `lib/BackgroundJob/FederationSyncJob.php` (TimedJob, interval from
   config) registered via `appinfo/info.xml` `<background-jobs>` +
   `Application::register()`; announces and no-ops cleanly when OC unavailable.
-- [~] 4.2 Per-peer staleness tracking — DEFERRED (depends on the pull leg, 3.3).
-- [~] 4.3 PHPUnit for staleness/recovery — DEFERRED (depends on 4.2).
+- [x] 4.2 Per-peer staleness tracking — BUILT (2026-06-15). `FederationConfig`
+  keeps a per-peer consecutive-failure counter (`federation_peer_failures`); a
+  failed pull increments it and, at/after `federation_stale_after_failures`
+  (default 3), the peer's mirrors are marked `_source.stale: true` (surfaced,
+  NEVER silently deleted). A healthy pull clears the streak + the stale flag on
+  surviving mirrors. Entries the peer no longer publishes are withdrawn
+  (`_source.withdrawn:true` + stale), not deleted. Per-peer pull isolation +
+  timeout config (`federation_peer_timeout`) so one dead peer can't block the rest.
+- [x] 4.3 PHPUnit for staleness/recovery — `FederationMergerTest::testStaleness*`
+  + `FederationServiceTest::testPullPeerMarksStaleAfterFailureThreshold`
+  (3rd consecutive failure marks the mirror stale).
+- [x] 4.4 `FederationSyncJob` now pulls all peers after announce (each isolated;
+  failures protected so the cron pass never fails).
 
 ## 5. Admin UI
 
@@ -76,8 +93,13 @@
   (`FederationService::getStatus()`: available/enabled/directory/peers/message)
   is built + tested, ready to render; the settings-page section +
   subscribe/unsubscribe controls land with the live subscription leg.
-- [~] 5.2 Source attribution + stale indicator on peer entries — DEFERRED
-  (no peer-sourced entries exist until the pull leg, 3.3).
+- [x] 5.2 Source attribution + stale indicator DATA on peer entries — BUILT
+  (2026-06-15). Every merged mirror carries `_source` (instance/organisation/
+  syncedAt) + `_source.stale` / `_source.withdrawn`, the data the UI renders.
+  Read-only enforcement is wired into the local write paths: `PublicationController`
+  refuses to publish a peer-sourced entry (403) and `ModerationService` refuses
+  to moderate one. The Vue badge/disable-edit rendering is the remaining FE slice
+  (tracked with 5.1/5.3, the settings-page section + the live legs).
 - [~] 5.3 Playwright/Newman for the federation UI + HTTP contracts — DEFERRED
   (depends on the live legs).
 
@@ -105,6 +127,10 @@
   via `FederationService::publishEntryForFederation()` → `PublicationService`.
   Live cross-instance discover/subscribe/PULL stays deferred (two-instance
   testbed), with the provenance/read-only guard already in place.
-- [~] Peer-sourced entries are attributed + read-only (403 on write) + marked
-  stale — the read-only detection primitive is built + tested; the live
-  enforcement + staleness land with the pull leg.
+- [x] Peer-sourced entries are attributed + read-only (403 on write) + marked
+  stale — BUILT (2026-06-15). `pullPeer()` merges mirrors with `_source`
+  provenance; `PublicationController`/`ModerationService` reject local writes to
+  peer-sourced entries (403); per-peer failure tracking marks mirrors
+  `_source.stale` past the threshold (never deleted). PHPUnit-covered. The LIVE
+  cross-instance run against the two-instance fed-testbed (fed1:8081/fed2:8082)
+  remains the manual verification step (6.1).

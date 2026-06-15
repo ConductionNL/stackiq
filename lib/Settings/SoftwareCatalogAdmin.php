@@ -18,9 +18,9 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IAppConfig;
 use OCP\IL10N;
-use OCP\Settings\ISettings;
+use OCP\Settings\IDelegatedSettings;
 
-class SoftwareCatalogAdmin implements ISettings
+class SoftwareCatalogAdmin implements IDelegatedSettings
 {
 
     /**
@@ -103,4 +103,19 @@ class SoftwareCatalogAdmin implements ISettings
     {
         return 10;
     }//end getPriority()
+
+    /**
+     * The human-readable name of this delegated settings section.
+     *
+     * Required by IDelegatedSettings so an admin can authorize a non-admin group
+     * to manage this section (and so `#[AuthorizedAdminSetting]` can gate the
+     * moderation REST endpoints against it). Returns null to inherit the section
+     * label.
+     *
+     * @return string|null The settings name, or null to use the section name.
+     */
+    public function getName(): ?string
+    {
+        return null;
+    }//end getName()
 }//end class

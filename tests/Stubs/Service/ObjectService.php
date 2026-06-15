@@ -60,6 +60,27 @@ abstract class ObjectService
     ): array;
 
     /**
+     * Search objects (non-paginated).
+     *
+     * @param array       $query         Search query.
+     * @param bool        $_rbac         Apply RBAC.
+     * @param bool        $_multitenancy Apply multitenancy.
+     * @param array|null  $ids           Optional id filter.
+     * @param string|null $uses          Optional uses filter.
+     * @param array|null  $views         Optional views filter.
+     *
+     * @return array|int
+     */
+    abstract public function searchObjects(
+        array $query=[],
+        bool $_rbac=true,
+        bool $_multitenancy=true,
+        ?array $ids=null,
+        ?string $uses=null,
+        ?array $views=null
+    ): array|int;
+
+    /**
      * Persist an object.
      *
      * @param array      $object        The object data bag.

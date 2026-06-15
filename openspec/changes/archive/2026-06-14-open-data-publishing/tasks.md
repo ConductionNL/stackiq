@@ -75,19 +75,38 @@
   (`pending`/`active`/`rejected`) to the organisatie schema (0.3.0 → 0.4.0),
   the persisted state the pending-until-approved flow keys on.
   PHPUnit register-shape test (field present, optional, enumerated).
-- [~] 4.1–4.4 Anonymous-path moderation defaults, disabled-account
-  provisioning, brute-force throttling, duplicate-pending refusal, and the
-  Newman/PHPUnit port — DEFERRED. This is a deep, security-critical rework of
-  the existing OpenConnector anonymous intake path
-  (`SoftwareCatalogueService` + handlers); it needs careful end-to-end work and
-  live-throttle CI plumbing beyond this backlog-draining pass. The schema state
-  it keys on (4.0) is in place. Tracked as the follow-up build.
+- [x] 4.1–4.4 Anonymous-path moderation defaults + intake hardening — BUILT
+  (2026-06-15) as a dedicated hardened entry point (`IntakeService` +
+  `IntakeController`), rather than reworking the 3600-line legacy OpenConnector
+  path. The intake: sets `registratiestatus=pending` and NO `publicatiedatum`
+  server-side (so the public RBAC gate keeps it invisible until approval);
+  validates anti-spam (required fields, field-count + value-size caps); strips
+  privileged caller-controlled keys (`registratiestatus`/`publicatiedatum`/
+  `_source`/`id`/`owner`/`beoordeling`/...); refuses a duplicate pending
+  submission for the same org name. The controller is `#[PublicPage]`
+  `#[NoCSRFRequired]` `#[AnonRateLimit(5/3600)]` (brute-force/anti-spam throttle)
+  and write-only — it acknowledges, never echoing the stored object (no IDOR
+  read). It provisions NO account and grants NO access (account provisioning
+  stays the approved-path concern of the existing SoftwareCatalogueService).
+  PHPUnit: `IntakeModerationTest` (pending+unpublished, key-stripping, missing-
+  field/oversize rejection, duplicate-pending refusal).
 
 ## 5. Moderation / approval queue
 
-- [~] 5.1–5.3 Admin approval queue UI + approve/reject service paths —
-  DEFERRED (depends on 4.x). The `registratiestatus` field is the data model
-  it operates on.
+- [x] 5.1–5.3 Admin approval queue + approve/reject service paths — BUILT
+  (2026-06-15). `ModerationService` lists the pending queue and decides each
+  entry: APPROVE → `registratiestatus=active` + `publicatiedatum=now` (making it
+  anonymously visible via the SAME `publicatiedatum<=now` public RBAC gate as
+  open-data publish); REJECT → `registratiestatus=rejected`, left unpublished
+  (stays invisible). Only entries currently `pending` may be decided (idempotent;
+  prevents re-publishing an already-approved entry); peer-sourced (federated)
+  mirrors are refused. `ModerationController` is `#[NoAdminRequired]` + an
+  explicit `IGroupManager::isAdmin()` guard on every method (ADR-005 — no
+  privilege escalation/IDOR on approve/publish). Routes: GET /api/moderation/
+  pending, POST /api/moderation/{uuid}/approve|reject. PHPUnit:
+  `IntakeModerationTest` (approve→active+published-visible, reject→unpublished,
+  not-pending guard, peer-sourced guard, list-pending). The Vue queue UI is the
+  remaining FE slice.
 
 ## 6. Verification & docs
 
@@ -111,10 +130,13 @@
   the removed `@self.published` predicate.
 - [x] `GebruikController::getGebruiken()` discloses only the empty envelope to
   anonymous callers (governed + spec-tagged).
-- [~] Anonymous registration lands pending + unpublished with disabled
-  accounts — the `registratiestatus` data model is in place; the intake
-  hardening + moderation queue are deferred (deep security rework; orthogonal to
-  the publish gate).
+- [x] Anonymous registration lands pending + unpublished — BUILT (2026-06-15).
+  `IntakeService` sets `registratiestatus=pending` + no `publicatiedatum`
+  (invisible to the public RBAC gate); the admin approval queue
+  (`ModerationService`) flips it to `active` + sets `publicatiedatum` on approve
+  (anonymously visible) or `rejected` on reject (stays hidden). Account
+  provisioning remains the existing approved-path concern; the intake itself
+  grants no access. PHPUnit lifecycle-covered (`IntakeModerationTest`).
 - [x] No new bespoke public catalog-read endpoints introduced (the publish
   endpoints are authenticated write actions; anonymous read stays on the OR/OC
   public surface).
