@@ -88,21 +88,95 @@ class FederationService
     /**
      * Federation status for the admin settings UI.
      *
-     * @return array{available:bool, enabled:bool, directoryUrl:string, peers:array, message:string}
+     * Each entry in `peers` is a per-peer status object the settings UI renders:
+     * the peer URL, its consecutive-failure streak, whether it has crossed the
+     * stale threshold, and whether its host passes the SSRF allowlist guard. The
+     * top-level `staleAfter` is the threshold those streaks are compared against.
+     *
+     * @return array{available:bool, enabled:bool, directoryUrl:string, peers:array<int,array{url:string, failures:int, stale:bool, allowed:bool}>, staleAfter:int, message:string}
      *
      * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
      */
     public function getStatus(): array
     {
-        $available = $this->isAvailable();
+        $available  = $this->isAvailable();
+        $staleAfter = $this->config->getStaleAfterFailures();
+        $peers      = [];
+        foreach ($this->config->getPeers() as $peerUrl) {
+            $failures = $this->config->getPeerFailures($peerUrl);
+            $peers[]  = [
+                'url'      => $peerUrl,
+                'failures' => $failures,
+                'stale'    => ($failures >= $staleAfter),
+                'allowed'  => $this->isPeerHostAllowed($peerUrl),
+            ];
+        }
+
         return [
             'available'    => $available,
             'enabled'      => $this->config->isEnabled(),
+            'staleAfter'   => $staleAfter,
             'directoryUrl' => $this->config->getDirectoryUrl(),
-            'peers'        => $this->config->getPeers(),
+            'peers'        => $peers,
             'message'      => $available === true ? 'Federation available' : 'Federation unavailable — requires OpenCatalogi',
         ];
     }//end getStatus()
+
+    /**
+     * Add a peer to the federation allowlist (idempotent).
+     *
+     * SSRF-guards the host before persisting so a private/loopback peer can only
+     * be added when explicitly allowlisted via `local_federation_hosts`.
+     *
+     * @param string $peerUrl The peer base URL.
+     *
+     * @return array{ok:bool, reason:string} Result for the settings UI.
+     *
+     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     */
+    public function addPeer(string $peerUrl): array
+    {
+        $peerUrl = trim($peerUrl);
+        if ($peerUrl === '') {
+            return ['ok' => false, 'reason' => 'peer url is required'];
+        }
+
+        if ($this->isPeerHostAllowed($peerUrl) === false) {
+            return ['ok' => false, 'reason' => 'peer host blocked by SSRF guard'];
+        }
+
+        $peers = $this->config->getPeers();
+        if (in_array($peerUrl, $peers, true) === true) {
+            return ['ok' => true, 'reason' => 'peer already present'];
+        }
+
+        $peers[] = $peerUrl;
+        $this->config->setPeers(array_values($peers));
+        return ['ok' => true, 'reason' => 'peer added'];
+    }//end addPeer()
+
+    /**
+     * Remove a peer from the federation allowlist and clear its failure streak.
+     *
+     * @param string $peerUrl The peer base URL.
+     *
+     * @return array{ok:bool, reason:string} Result for the settings UI.
+     *
+     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     */
+    public function removePeer(string $peerUrl): array
+    {
+        $peerUrl = trim($peerUrl);
+        $peers   = $this->config->getPeers();
+        $filtered = array_values(array_filter($peers, static fn (string $p): bool => $p !== $peerUrl));
+        if (count($filtered) === count($peers)) {
+            return ['ok' => false, 'reason' => 'peer not found'];
+        }
+
+        $this->config->setPeers($filtered);
+        $this->config->setPeerFailures($peerUrl, 0);
+        return ['ok' => true, 'reason' => 'peer removed'];
+    }//end removePeer()
 
     /**
      * Announce this instance's catalog to the configured directory.

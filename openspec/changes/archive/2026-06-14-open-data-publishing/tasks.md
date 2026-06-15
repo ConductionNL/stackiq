@@ -105,8 +105,14 @@
   privilege escalation/IDOR on approve/publish). Routes: GET /api/moderation/
   pending, POST /api/moderation/{uuid}/approve|reject. PHPUnit:
   `IntakeModerationTest` (approve→active+published-visible, reject→unpublished,
-  not-pending guard, peer-sourced guard, list-pending). The Vue queue UI is the
-  remaining FE slice.
+  not-pending guard, peer-sourced guard, list-pending). The Vue queue UI is now
+  BUILT (2026-06-15): `src/views/settings/sections/ModerationQueue.vue` renders
+  inside the admin settings panel (admin-gated by `IDelegatedSettings`, NOT in
+  the in-app router), lists the pending registrations from `GET /api/moderation/
+  pending` with per-item Approve/Reject actions (`POST .../{uuid}/approve|reject`),
+  derives a human title/subtitle from each registration data bag, and shows a
+  clean empty state when the queue is empty. Vitest covers the title/subtitle
+  derivation (`tests/vitest/moderationItem.spec.js`) + the request helpers.
 
 ## 6. Verification & docs
 

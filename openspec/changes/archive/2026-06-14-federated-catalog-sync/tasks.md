@@ -89,19 +89,31 @@
 
 ## 5. Admin UI
 
-- [~] 5.1 Federation settings section UI — DEFERRED. The status contract
-  (`FederationService::getStatus()`: available/enabled/directory/peers/message)
-  is built + tested, ready to render; the settings-page section +
-  subscribe/unsubscribe controls land with the live subscription leg.
+- [x] 5.1 Federation settings section UI — BUILT (2026-06-15).
+  `src/views/settings/sections/FederationSettings.vue` renders inside the admin
+  settings panel (admin-gated by `IDelegatedSettings` + `AuthorizedAdminSetting`,
+  NOT in the in-app router): availability/enabled banners, the configured
+  directory, an add-peer field + remove-peer controls, a manual "Pull now"
+  action, and a per-peer status list (failure streak + Stale/Healthy/Blocked
+  badge against `staleAfter`). It wires the new admin endpoints exposed by
+  `FederationController` — `GET /api/federation/status`,
+  `POST|DELETE /api/federation/peers`, `POST /api/federation/pull` — which
+  delegate to `FederationService` (`getStatus()` now enriched per-peer; new
+  `addPeer()`/`removePeer()` allowlist helpers). Vitest covers the `adminApi`
+  request/normalise helpers; PHPUnit covers the enriched status + add/remove.
 - [x] 5.2 Source attribution + stale indicator DATA on peer entries — BUILT
   (2026-06-15). Every merged mirror carries `_source` (instance/organisation/
   syncedAt) + `_source.stale` / `_source.withdrawn`, the data the UI renders.
   Read-only enforcement is wired into the local write paths: `PublicationController`
   refuses to publish a peer-sourced entry (403) and `ModerationService` refuses
-  to moderate one. The Vue badge/disable-edit rendering is the remaining FE slice
-  (tracked with 5.1/5.3, the settings-page section + the live legs).
-- [~] 5.3 Playwright/Newman for the federation UI + HTTP contracts — DEFERRED
-  (depends on the live legs).
+  to moderate one. The Vue badge rendering is now BUILT in 5.1's
+  `FederationSettings.vue` (per-peer Stale/Healthy/Blocked badge + failure-streak
+  line); the disable-edit-of-peer-mirror UI rides on the live pull leg.
+- [~] 5.3 Playwright/Newman for the federation UI + HTTP contracts — PARTIAL.
+  The offline contract of the new admin endpoints (URL/body/ok/error shapes) +
+  the status normaliser is now vitest-covered (`tests/vitest/adminApi.spec.js`);
+  the live Playwright walk of the settings section + Newman against a running
+  instance stay DEFERRED with the two-instance testbed (live pull leg).
 
 ## 6. Verification & docs
 
