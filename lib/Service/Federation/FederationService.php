@@ -81,6 +81,7 @@ class FederationService
         if (in_array(self::OPENCATALOGI_APP_ID, $this->appManager->getInstalledApps(), true) === false) {
             return false;
         }
+
         return class_exists('OCA\\OpenCatalogi\\Service\\DirectoryService');
     }//end isAvailable()
 
@@ -99,9 +100,7 @@ class FederationService
             'enabled'      => $this->config->isEnabled(),
             'directoryUrl' => $this->config->getDirectoryUrl(),
             'peers'        => $this->config->getPeers(),
-            'message'      => $available === true
-                ? 'Federation available'
-                : 'Federation unavailable — requires OpenCatalogi',
+            'message'      => $available === true ? 'Federation available' : 'Federation unavailable — requires OpenCatalogi',
         ];
     }//end getStatus()
 
@@ -120,6 +119,7 @@ class FederationService
         if ($this->config->isEnabled() === false) {
             return ['ok' => false, 'reason' => 'federation disabled'];
         }
+
         if ($this->isAvailable() === false) {
             $this->logger->info('[Federation] announce skipped — OpenCatalogi unavailable');
             return ['ok' => false, 'reason' => 'OpenCatalogi unavailable'];
@@ -225,6 +225,7 @@ class FederationService
         if ($this->config->isEnabled() === false) {
             return ['ok' => false, 'reason' => 'federation disabled', 'peers' => []];
         }
+
         if ($this->isAvailable() === false) {
             return ['ok' => false, 'reason' => 'OpenCatalogi unavailable', 'peers' => []];
         }
@@ -287,8 +288,8 @@ class FederationService
             $this->now()
         );
 
-        $created = $this->applyMirrors($objectService, $target, $plan['create'], null);
-        $updated = $this->applyMirrors($objectService, $target, $plan['update'], 'id');
+        $created   = $this->applyMirrors($objectService, $target, $plan['create'], null);
+        $updated   = $this->applyMirrors($objectService, $target, $plan['update'], 'id');
         $withdrawn = $this->applyMirrors($objectService, $target, $plan['withdraw'], 'id');
 
         // Successful pull clears the failure streak and un-stales surviving mirrors.
@@ -332,7 +333,7 @@ class FederationService
         $entries = [];
         if (is_array($listing['results'] ?? null) === true) {
             $entries = $listing['results'];
-        } elseif (is_array($listing) === true) {
+        } else if (is_array($listing) === true) {
             $entries = $listing;
         }
 
@@ -362,6 +363,7 @@ class FederationService
             if ($target !== null && $objectService !== null) {
                 $this->staleMirrors($objectService, $target, $peerUrl);
             }
+
             $this->logger->warning(
                 '[Federation] peer marked stale after consecutive failures',
                 ['peer' => $peerUrl, 'failures' => $failures, 'reason' => $reason]
@@ -374,7 +376,7 @@ class FederationService
     /**
      * Load the locally-stored mirrors of a single peer (this peer's mirrors only).
      *
-     * @param string                       $peerUrl The peer base URL.
+     * @param string                         $peerUrl The peer base URL.
      * @param array{register:int,schema:int} $target  The mirror register/schema.
      *
      * @return array<int,array<string,mixed>> The peer's local mirror data bags.
@@ -389,7 +391,7 @@ class FederationService
         try {
             $objects = $objectService->searchObjects(
                 query: [
-                    '@self' => ['register' => $target['register'], 'schema' => $target['schema']],
+                    '@self'            => ['register' => $target['register'], 'schema' => $target['schema']],
                     '_source.instance' => $peerUrl,
                 ],
                 _rbac: false,
@@ -407,16 +409,17 @@ class FederationService
                 $mirrors[] = $data;
             }
         }
+
         return $mirrors;
     }//end loadPeerMirrors()
 
     /**
      * Apply a list of mirror data bags via ObjectService::saveObject.
      *
-     * @param object                          $objectService The OR ObjectService.
-     * @param array{register:int,schema:int}  $target        The mirror register/schema.
-     * @param array<int,array<string,mixed>>  $mirrors       The mirror data bags.
-     * @param string|null                     $uuidKey       Data key holding the existing uuid (null = create).
+     * @param object                         $objectService The OR ObjectService.
+     * @param array{register:int,schema:int} $target        The mirror register/schema.
+     * @param array<int,array<string,mixed>> $mirrors       The mirror data bags.
+     * @param string|null                    $uuidKey       Data key holding the existing uuid (null = create).
      *
      * @return int The count of successfully applied mirrors.
      */
@@ -437,6 +440,7 @@ class FederationService
                 $this->logger->error('[Federation] mirror save failed', ['error' => $e->getMessage()]);
             }
         }
+
         return $count;
     }//end applyMirrors()
 
@@ -472,10 +476,12 @@ class FederationService
             if (($mirror['_source']['stale'] ?? false) !== true) {
                 continue;
             }
+
             if (($mirror['_source']['withdrawn'] ?? false) === true) {
                 // Withdrawn mirrors stay stale by design.
                 continue;
             }
+
             $fresh = $this->merger->applyStale($mirror, false);
             $this->applyMirrors($objectService, $target, [$fresh], 'id');
         }
@@ -491,11 +497,13 @@ class FederationService
         if ($this->settingsService === null) {
             return null;
         }
+
         $register = $this->settingsService->getRegisterIdForObjectType(self::PEER_MIRROR_TYPE);
         $schema   = $this->settingsService->getSchemaIdForObjectType(self::PEER_MIRROR_TYPE);
         if ($register === null || $schema === null) {
             return null;
         }
+
         return ['register' => (int) $register, 'schema' => (int) $schema];
     }//end resolveMirrorTarget()
 
@@ -511,13 +519,16 @@ class FederationService
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
             $data = $object->getObject();
             if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
                 $data['id'] = $object->getUuid();
             }
+
             return is_array($data) ? $data : [];
         }
+
         return [];
     }//end toDataBag()
 
@@ -563,6 +574,7 @@ class FederationService
         if (is_array($source) === false) {
             return false;
         }
+
         $instance = $source['instance'] ?? null;
         return is_string($instance) && trim($instance) !== '';
     }//end isPeerSourced()
@@ -596,6 +608,7 @@ class FederationService
         if ($host === 'localhost' || str_ends_with($host, '.local') === true) {
             return false;
         }
+
         $ip = filter_var($host, FILTER_VALIDATE_IP);
         if ($ip !== false) {
             $public = filter_var(

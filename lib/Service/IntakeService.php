@@ -216,15 +216,16 @@ class IntakeService
         foreach (self::FORBIDDEN_KEYS as $key) {
             unset($payload[$key]);
         }
+
         return $payload;
     }//end sanitise()
 
     /**
      * Whether a pending registration already exists for the given org name.
      *
-     * @param object                          $objectService The OR ObjectService.
-     * @param array{register:int,schema:int}  $target        The intake register/schema.
-     * @param string                          $naam          The organisation name.
+     * @param object                         $objectService The OR ObjectService.
+     * @param array{register:int,schema:int} $target        The intake register/schema.
+     * @param string                         $naam          The organisation name.
      *
      * @return bool True when a pending duplicate exists.
      */
@@ -260,6 +261,7 @@ class IntakeService
         if ($register === null || $schema === null) {
             return null;
         }
+
         return ['register' => (int) $register, 'schema' => (int) $schema];
     }//end resolveTarget()
 
@@ -276,10 +278,12 @@ class IntakeService
             $uuid = $entity->getUuid();
             return is_string($uuid) ? $uuid : null;
         }
+
         if (is_array($entity) === true) {
             $uuid = $entity['id'] ?? $entity['uuid'] ?? null;
             return is_string($uuid) ? $uuid : null;
         }
+
         return null;
     }//end entityUuid()
 

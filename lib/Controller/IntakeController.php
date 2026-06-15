@@ -15,12 +15,12 @@
  * throttles the anonymous path (anti-spam); `#[NoCSRFRequired]` because an
  * anonymous client has no CSRF token.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
  *
@@ -69,12 +69,12 @@ class IntakeController extends Controller
      *
      * @PublicPage
      * @NoCSRFRequired
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec           openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
      */
     #[PublicPage]
     #[NoCSRFRequired]
     #[AnonRateLimit(limit: 5, period: 3600)]
-    public function submit(array $organisatie = []): JSONResponse
+    public function submit(array $organisatie=[]): JSONResponse
     {
         $result = $this->intake->submit($organisatie);
         if ($result['ok'] === false) {

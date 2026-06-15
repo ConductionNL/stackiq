@@ -8,20 +8,19 @@
  * RBAC gate as open-data publish); reject sets `registratiestatus = rejected`
  * and leaves it unpublished.
  *
- * AUTH (ADR-005): every method is `#[NoAdminRequired]` at the routing layer but
- * enforces an explicit admin guard in the body (`IGroupManager::isAdmin`).
- * Without the guard any authenticated user could approve/publish arbitrary
- * pending registrations (privilege escalation / IDOR — OWASP A01:2021), so the
- * guard runs first on every call. The decision targets a uuid; the
- * ModerationService refuses to act on anything not currently `pending` and on
- * peer-sourced (federated) mirrors.
+ * AUTH (ADR-005): every method is `#[AuthorizedAdminSetting(SoftwareCatalogAdmin::class)]`
+ * — Nextcloud's admin-settings middleware rejects any non-admin caller before
+ * the controller body runs, so an authenticated non-admin can never reach the
+ * approve/publish path (no privilege escalation / IDOR — OWASP A01:2021). The
+ * decision targets a uuid; the ModerationService refuses to act on anything not
+ * currently `pending` and on peer-sourced (federated) mirrors.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
  *
@@ -35,14 +34,12 @@ namespace OCA\SoftwareCatalog\Controller;
 
 use OCA\SoftwareCatalog\AppInfo\Application;
 use OCA\SoftwareCatalog\Service\ModerationService;
+use OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IGroupManager;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 
 /**
  * Admin-gated registration moderation queue.
@@ -52,18 +49,12 @@ class ModerationController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest          $request      The request.
-     * @param IUserSession      $userSession  The user session (auth guard).
-     * @param IGroupManager     $groupManager Group membership (admin check).
-     * @param ModerationService $moderation   The moderation service.
-     * @param LoggerInterface   $logger       Logger.
+     * @param IRequest          $request    The request.
+     * @param ModerationService $moderation The moderation service.
      */
     public function __construct(
         IRequest $request,
-        private readonly IUserSession $userSession,
-        private readonly IGroupManager $groupManager,
         private readonly ModerationService $moderation,
-        private readonly LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -71,19 +62,14 @@ class ModerationController extends Controller
     /**
      * List the pending anonymous registrations awaiting moderation.
      *
-     * @return JSONResponse `{ok, items}` or a 403.
+     * @return JSONResponse `{ok, items}` or a 400.
      *
-     * @NoAdminRequired
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+     * @spec                                                                               openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
      */
-    #[NoAdminRequired]
+    #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function pending(): JSONResponse
     {
-        $guard = $this->requireAdmin();
-        if ($guard instanceof JSONResponse) {
-            return $guard;
-        }
-
         $result = $this->moderation->listPending();
         if ($result['ok'] === false) {
             return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
@@ -97,19 +83,14 @@ class ModerationController extends Controller
      *
      * @param string $uuid The registration uuid.
      *
-     * @return JSONResponse `{ok, status}` or a 403/400.
+     * @return JSONResponse `{ok, status}` or a 400.
      *
-     * @NoAdminRequired
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+     * @spec                                                                               openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
      */
-    #[NoAdminRequired]
+    #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function approve(string $uuid): JSONResponse
     {
-        $guard = $this->requireAdmin();
-        if ($guard instanceof JSONResponse) {
-            return $guard;
-        }
-
         $result = $this->moderation->approve($uuid);
         if ($result['ok'] === false) {
             return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
@@ -123,19 +104,14 @@ class ModerationController extends Controller
      *
      * @param string $uuid The registration uuid.
      *
-     * @return JSONResponse `{ok, status}` or a 403/400.
+     * @return JSONResponse `{ok, status}` or a 400.
      *
-     * @NoAdminRequired
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+     * @spec                                                                               openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
      */
-    #[NoAdminRequired]
+    #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function reject(string $uuid): JSONResponse
     {
-        $guard = $this->requireAdmin();
-        if ($guard instanceof JSONResponse) {
-            return $guard;
-        }
-
         $result = $this->moderation->reject($uuid);
         if ($result['ok'] === false) {
             return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
@@ -143,33 +119,4 @@ class ModerationController extends Controller
 
         return new JSONResponse(data: $result);
     }//end reject()
-
-    /**
-     * Require the caller to be a Nextcloud admin. Returns a JSONResponse to
-     * short-circuit on failure, or null when the caller is an admin.
-     *
-     * @return JSONResponse|null Error response, or null when authorized.
-     *
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
-     */
-    private function requireAdmin(): ?JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
-        }
-
-        if ($this->groupManager->isAdmin($user->getUID()) === false) {
-            $this->logger->warning(
-                'ModerationController: moderation refused (not admin)',
-                ['uid' => $user->getUID()]
-            );
-            return new JSONResponse(
-                data: ['message' => 'Only administrators can moderate registrations'],
-                statusCode: Http::STATUS_FORBIDDEN
-            );
-        }
-
-        return null;
-    }//end requireAdmin()
 }//end class

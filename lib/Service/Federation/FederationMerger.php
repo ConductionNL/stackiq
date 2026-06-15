@@ -55,12 +55,13 @@ class FederationMerger
      *    locally-mirrored entries no longer in the peer catalog are WITHDRAWs
      *    (marked withdrawn + stale, never silently deleted).
      *
-     * @param string                                  $peerUrl      The peer base URL (provenance instance).
-     * @param string                                  $peerOrg      The peer organisation name (provenance).
-     * @param array<int,array<string,mixed>>          $peerEntries  The peer's published entries (each MUST
-     *                                                              carry a stable id under 'id' or 'uuid').
-     * @param array<int,array<string,mixed>>          $localMirrors The locally-stored mirrors of THIS peer.
-     * @param string                                  $syncedAt     The ISO-8601 sync moment.
+     * @param string                         $peerUrl      The peer base URL (provenance instance).
+     * @param string                         $peerOrg      The peer organisation name (provenance).
+     * @param array<int,array<string,mixed>> $peerEntries  The peer's published entries (each MUST
+     *                                                     carry a stable id under 'id' or
+     *                                                     'uuid').
+     * @param array<int,array<string,mixed>> $localMirrors The locally-stored mirrors of THIS peer.
+     * @param string                         $syncedAt     The ISO-8601 sync moment.
      *
      * @return array{create:array<int,array<string,mixed>>, update:array<int,array<string,mixed>>, withdraw:array<int,array<string,mixed>>}
      *               The reconciliation plan. Each create/update item is a full
@@ -87,6 +88,7 @@ class FederationMerger
                 // Defensive: never reconcile an entry that is not this peer's mirror.
                 continue;
             }
+
             $peerId = $this->peerEntryId($mirror);
             if ($peerId !== null) {
                 $localByPeerId[$peerId] = $mirror;
@@ -100,6 +102,7 @@ class FederationMerger
                 // Skip entries without a stable id — cannot be merged idempotently.
                 continue;
             }
+
             $seenPeerIds[$peerId] = true;
 
             $mirror = $this->buildMirror($entry, $peerUrl, $peerOrg, $peerId, $syncedAt);
@@ -118,13 +121,14 @@ class FederationMerger
             if ($this->isUnchanged($existing, $mirror) === false) {
                 $update[] = $mirror;
             }
-        }
+        }//end foreach
 
         // Local mirrors of this peer that the peer no longer publishes → withdraw.
         foreach ($localByPeerId as $peerId => $mirror) {
             if (isset($seenPeerIds[$peerId]) === true) {
                 continue;
             }
+
             $withdraw[] = $this->markWithdrawn($mirror, $syncedAt);
         }
 
@@ -145,7 +149,7 @@ class FederationMerger
      *
      * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
      */
-    public function isStale(int $consecutiveFailures, ?int $threshold = null): bool
+    public function isStale(int $consecutiveFailures, ?int $threshold=null): bool
     {
         $limit = ($threshold !== null && $threshold > 0) ? $threshold : self::DEFAULT_STALE_AFTER_FAILURES;
         return $consecutiveFailures >= $limit;
@@ -163,8 +167,8 @@ class FederationMerger
      */
     public function applyStale(array $mirror, bool $stale): array
     {
-        $source = (is_array($mirror['_source'] ?? null) === true) ? $mirror['_source'] : [];
-        $source['stale'] = $stale;
+        $source            = (is_array($mirror['_source'] ?? null) === true) ? $mirror['_source'] : [];
+        $source['stale']   = $stale;
         $mirror['_source'] = $source;
         return $mirror;
     }//end applyStale()
@@ -183,6 +187,7 @@ class FederationMerger
         if (is_array($source) === false) {
             return false;
         }
+
         return (string) ($source['instance'] ?? '') === $peerUrl;
     }//end isOwnedByPeer()
 
@@ -233,7 +238,7 @@ class FederationMerger
         $source['withdrawn']   = true;
         $source['stale']       = true;
         $source['withdrawnAt'] = $syncedAt;
-        $mirror['_source'] = $source;
+        $mirror['_source']     = $source;
         return $mirror;
     }//end markWithdrawn()
 
@@ -251,10 +256,12 @@ class FederationMerger
             if (is_string($value) === true && trim($value) !== '') {
                 return $value;
             }
+
             if (is_int($value) === true) {
                 return (string) $value;
             }
         }
+
         return null;
     }//end stableId()
 
@@ -271,6 +278,7 @@ class FederationMerger
         if (is_array($source) === false) {
             return null;
         }
+
         $value = $source['peerEntryId'] ?? null;
         return (is_string($value) === true && trim($value) !== '') ? $value : null;
     }//end peerEntryId()
@@ -303,6 +311,7 @@ class FederationMerger
         if (is_array($mirror['_source'] ?? null) === true) {
             unset($mirror['_source']['syncedAt'], $mirror['_source']['withdrawnAt']);
         }
+
         return $this->ksortRecursive($mirror);
     }//end normalise()
 
@@ -321,6 +330,7 @@ class FederationMerger
                 $value[$key] = $this->ksortRecursive($item);
             }
         }
+
         return $value;
     }//end ksortRecursive()
 }//end class

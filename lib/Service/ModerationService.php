@@ -170,10 +170,10 @@ class ModerationService
      * keeps the action idempotent and prevents re-deciding an already-approved
      * entry (which would re-stamp its publicatiedatum).
      *
-     * @param string                                   $uuid    The registration uuid.
+     * @param string                                            $uuid    The registration uuid.
      * @param callable(array<string,mixed>):array<string,mixed> $mutator The state mutation.
-     * @param string                                   $status  The resulting status.
-     * @param string                                   $action  Log label.
+     * @param string                                            $status  The resulting status.
+     * @param string                                            $action  Log label.
      *
      * @return array{ok:bool, reason:string, status:?string} Result.
      */
@@ -247,6 +247,7 @@ class ModerationService
         if ($register === null || $schema === null) {
             return null;
         }
+
         return ['register' => (int) $register, 'schema' => (int) $schema];
     }//end resolveTarget()
 
@@ -262,13 +263,16 @@ class ModerationService
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
             $data = $object->getObject();
             if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
                 $data['id'] = $object->getUuid();
             }
+
             return is_array($data) ? $data : [];
         }
+
         return [];
     }//end toDataBag()
 

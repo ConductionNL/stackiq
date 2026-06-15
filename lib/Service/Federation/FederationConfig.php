@@ -78,11 +78,12 @@ class FederationConfig
      */
     public function getPeers(): array
     {
-        $raw = $this->appConfig->getValueString(Application::APP_ID, 'federation_peers', '[]');
+        $raw     = $this->appConfig->getValueString(Application::APP_ID, 'federation_peers', '[]');
         $decoded = json_decode($raw, true);
         if (is_array($decoded) === false) {
             return [];
         }
+
         return array_values(array_filter(array_map('strval', $decoded)));
     }//end getPeers()
 
@@ -158,6 +159,7 @@ class FederationConfig
         if (is_array($decoded) === false) {
             return 0;
         }
+
         return (int) ($decoded[$peerUrl] ?? 0);
     }//end getPeerFailures()
 
@@ -178,11 +180,13 @@ class FederationConfig
         if (is_array($decoded) === false) {
             $decoded = [];
         }
+
         if ($failures <= 0) {
             unset($decoded[$peerUrl]);
         } else {
             $decoded[$peerUrl] = $failures;
         }
+
         $this->appConfig->setValueString(Application::APP_ID, 'federation_peer_failures', json_encode($decoded));
     }//end setPeerFailures()
 
@@ -202,6 +206,7 @@ class FederationConfig
         if (trim($raw) === '') {
             return [];
         }
+
         return array_values(array_filter(array_map('trim', explode(',', $raw))));
     }//end getLocalFederationHosts()
 }//end class
