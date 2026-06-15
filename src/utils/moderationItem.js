@@ -21,6 +21,7 @@ const SUBTITLE_FIELDS = ['email', 'contactEmail', 'url', 'website', 'beschrijvin
  *
  * @param {object} item - The registration data bag.
  * @return {string} A non-empty display title.
+ * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
  */
 export function moderationItemTitle(item) {
 	const bag = item || {}
@@ -40,6 +41,7 @@ export function moderationItemTitle(item) {
  *
  * @param {object} item - The registration data bag.
  * @return {string} A subtitle, or '' when none is available.
+ * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
  */
 export function moderationItemSubtitle(item) {
 	const bag = item || {}
