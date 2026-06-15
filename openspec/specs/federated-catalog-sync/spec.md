@@ -33,25 +33,29 @@ no directory traffic SHALL be attempted.
 
 The catalog published to the directory and readable by peers SHALL contain
 only software entries (applicaties/voorzieningen, modules, koppelingen) and
-organisation profiles whose OpenRegister published predicate
-(`@self.published`) is set and not depublished. Visibility SHALL be enforced
-by the OpenRegister/OpenCatalogi published-predicate read surface — the app
-SHALL NOT implement its own anonymous filtering.
+organisation profiles whose OpenRegister `publicatiedatum` is set and not in the
+future (and not superseded by a `depublicatiedatum`). Visibility SHALL be
+enforced by the OpenRegister/OpenCatalogi public RBAC read gate
+`{group:public, match:{publicatiedatum:{$lte:$now}}}` (NOT the removed
+`@self.published` predicate) — the app SHALL NOT implement its own anonymous
+filtering. Publishing an entry to the federation SHALL set `publicatiedatum` via
+`FederationService::publishEntryForFederation()` (delegating to the shared
+`PublicationService`).
 
 #### Scenario: Published entry is visible to a peer
 
 @e2e exclude Cross-instance read path needs two federated NC instances (fed-testbed topology); covered by Newman against the public publications API and PHPUnit service tests.
 
-- **WHEN** a software entry has its published predicate set and a peer pulls this instance's catalog
+- **WHEN** a software entry has its `publicatiedatum` set (and not in the future) and a peer pulls this instance's catalog
 - **THEN** the entry is present in the peer-readable catalog response
 
 #### Scenario: Draft entry never leaves the instance
 
 @e2e exclude Cross-instance read path needs two federated NC instances; covered by Newman anonymous-read assertions.
 
-- **WHEN** a software entry exists without the published predicate (draft/internal)
+- **WHEN** a software entry exists without a `publicatiedatum` (draft/internal)
 - **THEN** the peer-readable catalog response does not contain the entry
-- **AND** depublishing a previously published entry removes it from the peer-readable response
+- **AND** depublishing a previously published entry (set `depublicatiedatum`, clear `publicatiedatum`) removes it from the peer-readable response
 
 ### Requirement: Peer catalogs are discoverable and subscribable
 
