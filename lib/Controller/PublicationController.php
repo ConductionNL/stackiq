@@ -86,7 +86,7 @@ class PublicationController extends Controller
     #[NoAdminRequired]
     public function publish(string $objectType, string $uuid, ?string $when = null): JSONResponse
     {
-        $guard = $this->authorize($objectType, $uuid);
+        $guard = $this->authorizeEntry($objectType, $uuid);
         if ($guard instanceof JSONResponse) {
             return $guard;
         }
@@ -113,7 +113,7 @@ class PublicationController extends Controller
     #[NoAdminRequired]
     public function depublish(string $objectType, string $uuid): JSONResponse
     {
-        $guard = $this->authorize($objectType, $uuid);
+        $guard = $this->authorizeEntry($objectType, $uuid);
         if ($guard instanceof JSONResponse) {
             return $guard;
         }
@@ -141,7 +141,7 @@ class PublicationController extends Controller
      *
      * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
      */
-    private function authorize(string $objectType, string $uuid): ?JSONResponse
+    private function authorizeEntry(string $objectType, string $uuid): ?JSONResponse
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
@@ -199,7 +199,7 @@ class PublicationController extends Controller
         }
 
         return null;
-    }//end authorize()
+    }//end authorizeEntry()
 
     /**
      * Build a logged 403 forbidden response.
