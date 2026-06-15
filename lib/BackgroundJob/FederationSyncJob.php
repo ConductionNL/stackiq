@@ -73,6 +73,12 @@ class FederationSyncJob extends TimedJob
         try {
             $result = $this->federation->announce();
             $this->logger->info('[FederationSyncJob] Announce pass complete', ['result' => $result]);
+
+            // Pull subscribed peers (each peer is isolated — one unreachable
+            // peer cannot block the rest; failures mark mirrors stale, never
+            // silently delete them).
+            $pull = $this->federation->pullAllPeers();
+            $this->logger->info('[FederationSyncJob] Peer-pull pass complete', ['result' => $pull]);
         } catch (\Throwable $e) {
             $this->logger->error(
                 '[FederationSyncJob] Fatal error during federation pass — cron pass protected',

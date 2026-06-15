@@ -21,7 +21,9 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
+use OCA\SoftwareCatalog\Service\Federation\FederationMerger;
 use OCA\SoftwareCatalog\Service\Federation\FederationService;
+use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -69,7 +71,14 @@ class FederationServiceTest extends TestCase
         $this->config->method('getPeers')->willReturn([]);
         $this->config->method('getLocalFederationHosts')->willReturn([]);
 
-        return new FederationService($this->container, $this->appManager, $this->config, $logger);
+        return new FederationService(
+            $this->container,
+            $this->appManager,
+            $this->config,
+            new FederationMerger(),
+            $this->createMock(SettingsService::class),
+            $logger
+        );
     }//end makeService()
 
     /**
@@ -138,7 +147,7 @@ class FederationServiceTest extends TestCase
             ->with(\OCA\SoftwareCatalog\Service\PublicationService::class)
             ->willReturn($publication);
 
-        $service = new FederationService($container, $appManager, $config, $logger);
+        $service = new FederationService($container, $appManager, $config, new FederationMerger(), $this->createMock(SettingsService::class), $logger);
         $result  = $service->publishEntryForFederation('dienst', 'uuid-9');
 
         $this->assertTrue($result['ok']);
@@ -160,7 +169,7 @@ class FederationServiceTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $container->method('get')->willThrowException(new \RuntimeException('no service'));
 
-        $service = new FederationService($container, $appManager, $config, $logger);
+        $service = new FederationService($container, $appManager, $config, new FederationMerger(), $this->createMock(SettingsService::class), $logger);
         $result  = $service->publishEntryForFederation('dienst', 'uuid-9');
 
         $this->assertFalse($result['ok']);
@@ -222,9 +231,238 @@ class FederationServiceTest extends TestCase
         $config = $this->createMock(FederationConfig::class);
         $config->method('getLocalFederationHosts')->willReturn(['127.0.0.1', 'localhost']);
         $logger  = $this->createMock(LoggerInterface::class);
-        $service = new FederationService($container, $appManager, $config, $logger);
+        $service = new FederationService($container, $appManager, $config, new FederationMerger(), $this->createMock(SettingsService::class), $logger);
 
         $this->assertTrue($service->isPeerHostAllowed('http://127.0.0.1'));
         $this->assertTrue($service->isPeerHostAllowed('http://localhost:8081'));
     }//end testLocalFederationAllowlist()
+
+    /**
+     * pullPeer fetches the peer catalog via OpenCatalogi's DirectoryService and
+     * merges new entries as read-only, source-attributed local mirrors.
+     *
+     * @return void
+     */
+    public function testPullPeerMergesNewEntries(): void
+    {
+        $directory = new class {
+            public function getDirectory(array $query = []): array
+            {
+                return [
+                    'organisation' => 'Gemeente Peer',
+                    'results'      => [['id' => 'p-1', 'naam' => 'Peer Service']],
+                ];
+            }
+        };
+
+        $saved = [];
+        $objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectService->method('searchObjects')->willReturn([]); // no local mirrors yet
+        $objectService->method('saveObject')->willReturnCallback(
+            function (array $object) use (&$saved) {
+                $saved[] = $object;
+                return $this->createStub(\OCA\OpenRegister\Db\ObjectEntity::class);
+            }
+        );
+
+        $service = $this->makePullService($directory, $objectService, ['https://peer.example']);
+        $result  = $service->pullPeer('https://peer.example');
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame(1, $result['created']);
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(0, $result['withdrawn']);
+
+        // The persisted mirror carries provenance and is read-only (isPeerSourced).
+        $this->assertNotEmpty($saved);
+        $mirror = $saved[0];
+        $this->assertSame('https://peer.example', $mirror['_source']['instance']);
+        $this->assertTrue($service->isPeerSourced($mirror));
+    }//end testPullPeerMergesNewEntries()
+
+    /**
+     * pullPeer never overwrites a locally-owned entry: only this peer's mirrors
+     * are reconciled, and a stable peer id makes re-pulls idempotent.
+     *
+     * @return void
+     */
+    public function testPullPeerIsIdempotentAndLeavesLocalEntriesAlone(): void
+    {
+        $directory = new class {
+            public function getDirectory(array $query = []): array
+            {
+                return ['organisation' => 'Gemeente Peer', 'results' => [['id' => 'p-1', 'naam' => 'Same']]];
+            }
+        };
+
+        // Existing local mirror of this peer, identical payload.
+        $existingMirror = [
+            'id'      => 'or-uuid-1',
+            'naam'    => 'Same',
+            '_source' => [
+                'instance'     => 'https://peer.example',
+                'organisation' => 'Gemeente Peer',
+                'peerEntryId'  => 'p-1',
+                'syncedAt'     => '2026-06-01T00:00:00+00:00',
+                'stale'        => false,
+                'withdrawn'    => false,
+            ],
+        ];
+
+        $entity = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $entity->method('getObject')->willReturn($existingMirror);
+        $entity->method('getUuid')->willReturn('or-uuid-1');
+
+        $saved = [];
+        $objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectService->method('searchObjects')->willReturn([$entity]);
+        $objectService->method('saveObject')->willReturnCallback(
+            function (array $object) use (&$saved) {
+                $saved[] = $object;
+                return $this->createStub(\OCA\OpenRegister\Db\ObjectEntity::class);
+            }
+        );
+
+        $service = $this->makePullService($directory, $objectService, ['https://peer.example']);
+        $result  = $service->pullPeer('https://peer.example');
+
+        $this->assertTrue($result['ok']);
+        // Idempotent re-pull: nothing created/updated/withdrawn.
+        $this->assertSame(0, $result['created']);
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(0, $result['withdrawn']);
+    }//end testPullPeerIsIdempotentAndLeavesLocalEntriesAlone()
+
+    /**
+     * pullPeer marks a peer's mirrors stale after the consecutive-failure
+     * threshold is reached — never silently deleting them.
+     *
+     * @return void
+     */
+    public function testPullPeerMarksStaleAfterFailureThreshold(): void
+    {
+        // DirectoryService throws → fetch fails.
+        $directory = new class {
+            public function getDirectory(array $query = []): array
+            {
+                throw new \RuntimeException('peer unreachable');
+            }
+        };
+
+        $staledMirror = null;
+        $existingMirror = [
+            'id'      => 'or-uuid-1',
+            'naam'    => 'Service',
+            '_source' => [
+                'instance'    => 'https://peer.example',
+                'peerEntryId' => 'p-1',
+                'stale'       => false,
+                'withdrawn'   => false,
+            ],
+        ];
+        $entity = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $entity->method('getObject')->willReturn($existingMirror);
+        $entity->method('getUuid')->willReturn('or-uuid-1');
+
+        $objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectService->method('searchObjects')->willReturn([$entity]);
+        $objectService->method('saveObject')->willReturnCallback(
+            function (array $object) use (&$staledMirror) {
+                $staledMirror = $object;
+                return $this->createStub(\OCA\OpenRegister\Db\ObjectEntity::class);
+            }
+        );
+
+        // Config: already 2 prior failures → this failure is the 3rd (threshold).
+        $config = $this->createMock(FederationConfig::class);
+        $config->method('isEnabled')->willReturn(true);
+        $config->method('getPeers')->willReturn(['https://peer.example']);
+        $config->method('getLocalFederationHosts')->willReturn([]);
+        $config->method('getStaleAfterFailures')->willReturn(3);
+        $config->method('getPeerFailures')->willReturn(2);
+
+        $service = $this->makePullServiceWithConfig($directory, $objectService, $config);
+        $result  = $service->pullPeer('https://peer.example');
+
+        $this->assertFalse($result['ok']);
+        $this->assertTrue($result['stale']);
+        $this->assertNotNull($staledMirror);
+        $this->assertTrue($staledMirror['_source']['stale']);
+    }//end testPullPeerMarksStaleAfterFailureThreshold()
+
+    /**
+     * pullPeer refuses a peer whose host is blocked by the SSRF guard.
+     *
+     * @return void
+     */
+    public function testPullPeerBlockedBySsrfGuard(): void
+    {
+        $service = $this->makePullService(null, null, ['http://127.0.0.1']);
+        $result  = $service->pullPeer('http://127.0.0.1');
+        $this->assertFalse($result['ok']);
+        $this->assertStringContainsString('SSRF', $result['reason']);
+    }//end testPullPeerBlockedBySsrfGuard()
+
+    /**
+     * Build a FederationService wired for a pull: container resolves the OC
+     * DirectoryService + OR ObjectService; SettingsService resolves the mirror
+     * register/schema; federation enabled with the given peers.
+     *
+     * @param object|null       $directory     The fake OC DirectoryService (null = none).
+     * @param object|null       $objectService The OR ObjectService mock (null = none).
+     * @param array<int,string> $peers         The subscribed peers.
+     *
+     * @return FederationService The wired service.
+     */
+    private function makePullService(?object $directory, ?object $objectService, array $peers): FederationService
+    {
+        $config = $this->createMock(FederationConfig::class);
+        $config->method('isEnabled')->willReturn(true);
+        $config->method('getPeers')->willReturn($peers);
+        $config->method('getLocalFederationHosts')->willReturn([]);
+        $config->method('getStaleAfterFailures')->willReturn(3);
+        $config->method('getPeerFailures')->willReturn(0);
+
+        return $this->makePullServiceWithConfig($directory, $objectService, $config);
+    }//end makePullService()
+
+    /**
+     * Build a FederationService for a pull with a caller-supplied config mock.
+     *
+     * @param object|null            $directory     The fake OC DirectoryService.
+     * @param object|null            $objectService The OR ObjectService mock.
+     * @param FederationConfig|MockObject $config    The federation config.
+     *
+     * @return FederationService The wired service.
+     */
+    private function makePullServiceWithConfig(?object $directory, ?object $objectService, $config): FederationService
+    {
+        $container  = $this->createMock(ContainerInterface::class);
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn(['softwarecatalog', 'opencatalogi']);
+        $logger = $this->createMock(LoggerInterface::class);
+
+        $container->method('get')->willReturnCallback(
+            function (string $id) use ($directory, $objectService) {
+                if ($id === 'OCA\\OpenCatalogi\\Service\\DirectoryService' && $directory !== null) {
+                    return $directory;
+                }
+                if ($id === 'OCA\\OpenRegister\\Service\\ObjectService' && $objectService !== null) {
+                    return $objectService;
+                }
+                throw new \RuntimeException('not bound: '.$id);
+            }
+        );
+
+        $settings = $this->createMock(SettingsService::class);
+        $settings->method('getRegisterIdForObjectType')->willReturn(1);
+        $settings->method('getSchemaIdForObjectType')->willReturn(2);
+
+        // isAvailable() needs the OC DirectoryService class to exist.
+        if (class_exists('OCA\\OpenCatalogi\\Service\\DirectoryService') === false) {
+            eval('namespace OCA\\OpenCatalogi\\Service; class DirectoryService {}');
+        }
+
+        return new FederationService($container, $appManager, $config, new FederationMerger(), $settings, $logger);
+    }//end makePullServiceWithConfig()
 }//end class

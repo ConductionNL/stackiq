@@ -25,6 +25,7 @@ use OCA\SoftwareCatalog\Service\ContractStatusService;
 use OCA\SoftwareCatalog\Service\ContractApprovalService;
 use OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob;
 use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
+use OCA\SoftwareCatalog\Service\Federation\FederationMerger;
 use OCA\SoftwareCatalog\Service\Federation\FederationService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Dashboard\ConceptOrganisatiesWidget;
@@ -518,12 +519,20 @@ class Application extends App implements IBootstrap
                 }
                 );
         $context->registerService(
+                FederationMerger::class,
+                function ($container) {
+                    return new FederationMerger();
+                }
+                );
+        $context->registerService(
                 FederationService::class,
                 function ($container) {
                     return new FederationService(
                     container: $container,
                     appManager: $container->get(IAppManager::class),
                     config: $container->get(FederationConfig::class),
+                    merger: $container->get(FederationMerger::class),
+                    settingsService: $container->get(SettingsService::class),
                     logger: $container->get(LoggerInterface::class)
                     );
                 }

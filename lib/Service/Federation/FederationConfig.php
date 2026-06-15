@@ -115,6 +115,78 @@ class FederationConfig
     }//end getSyncInterval()
 
     /**
+     * The consecutive-failure threshold after which a peer's mirrors are marked
+     * stale (default 3, matching the spec).
+     *
+     * @return int The threshold.
+     *
+     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     */
+    public function getStaleAfterFailures(): int
+    {
+        $value = $this->appConfig->getValueInt(Application::APP_ID, 'federation_stale_after_failures', 3);
+        return $value > 0 ? $value : 3;
+    }//end getStaleAfterFailures()
+
+    /**
+     * The per-peer pull timeout in seconds (default 15), so one unreachable peer
+     * cannot block the rest of the sync pass.
+     *
+     * @return int The timeout in seconds.
+     *
+     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     */
+    public function getPeerTimeout(): int
+    {
+        $value = $this->appConfig->getValueInt(Application::APP_ID, 'federation_peer_timeout', 15);
+        return $value > 0 ? $value : 15;
+    }//end getPeerTimeout()
+
+    /**
+     * The current consecutive-failure count for a peer (keyed by its base URL).
+     *
+     * @param string $peerUrl The peer base URL.
+     *
+     * @return int The consecutive-failure count.
+     *
+     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     */
+    public function getPeerFailures(string $peerUrl): int
+    {
+        $raw     = $this->appConfig->getValueString(Application::APP_ID, 'federation_peer_failures', '{}');
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded) === false) {
+            return 0;
+        }
+        return (int) ($decoded[$peerUrl] ?? 0);
+    }//end getPeerFailures()
+
+    /**
+     * Record a peer's failure count (0 = healthy/clears the streak).
+     *
+     * @param string $peerUrl  The peer base URL.
+     * @param int    $failures The new consecutive-failure count.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     */
+    public function setPeerFailures(string $peerUrl, int $failures): void
+    {
+        $raw     = $this->appConfig->getValueString(Application::APP_ID, 'federation_peer_failures', '{}');
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded) === false) {
+            $decoded = [];
+        }
+        if ($failures <= 0) {
+            unset($decoded[$peerUrl]);
+        } else {
+            $decoded[$peerUrl] = $failures;
+        }
+        $this->appConfig->setValueString(Application::APP_ID, 'federation_peer_failures', json_encode($decoded));
+    }//end setPeerFailures()
+
+    /**
      * The config-gated local-federation host allowlist (comma-separated).
      *
      * Mirrors `opencatalogi/local_federation_hosts`: private/loopback peer
