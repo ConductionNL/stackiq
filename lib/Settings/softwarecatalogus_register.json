@@ -1274,7 +1274,7 @@
         "slug": "dienst",
         "title": "Dienst",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
-        "version": "0.1.6",
+        "version": "0.2.0",
         "summary": "",
         "icon": "Handshake",
         "required": [
@@ -1454,6 +1454,24 @@
               "$ref": "#/components/schemas/koppeling",
               "inversedBy": "dienst"
             }
+          },
+          "publicatiedatum": {
+            "description": "Publication date as open data. Anonymous (public) readers can see this dienst only once publicatiedatum is set and not in the future. Set by the open-data publish action; cleared by depublish.",
+            "type": "string",
+            "format": "date-time",
+            "visible": true,
+            "order": 50,
+            "facetable": false,
+            "title": "Publicatiedatum"
+          },
+          "depublicatiedatum": {
+            "description": "Depublication date. When set (and not in the future) the dienst is withdrawn from the open-data surface. Set by the depublish action.",
+            "type": "string",
+            "format": "date-time",
+            "visible": true,
+            "order": 51,
+            "facetable": false,
+            "title": "Depublicatiedatum"
           }
         },
         "archive": [],
@@ -1480,7 +1498,14 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
+            {
+              "group": "public",
+              "match": {
+                "publicatiedatum": {
+                  "$lte": "$now"
+                }
+              }
+            },
             "aanbod-beheerder",
             "ambtenaar",
             "functioneel-beheerder",
@@ -1937,7 +1962,7 @@
         "slug": "organisatie",
         "title": "Organisatie",
         "description": "Een organisatie die voorzieningen aanbiedt",
-        "version": "0.4.0",
+        "version": "0.5.0",
         "summary": "",
         "icon": "OfficeBuildingOutline",
         "required": [
@@ -2164,6 +2189,24 @@
               "rejected"
             ]
           },
+          "publicatiedatum": {
+            "description": "Publication date as open data. Anonymous (public) readers can see this organisation profile once publicatiedatum is set and not in the future. Set by the open-data publish action; cleared by depublish.",
+            "type": "string",
+            "format": "date-time",
+            "visible": true,
+            "order": 50,
+            "facetable": false,
+            "title": "Publicatiedatum"
+          },
+          "depublicatiedatum": {
+            "description": "Depublication date. When set (and not in the future) the organisation is withdrawn from the open-data surface. Set by the depublish action.",
+            "type": "string",
+            "format": "date-time",
+            "visible": true,
+            "order": 51,
+            "facetable": false,
+            "title": "Depublicatiedatum"
+          },
           "samenwerkingtype": {
             "description": "Type samenwerking van de organisatie",
             "title": "Samenwerkingstype",
@@ -2251,6 +2294,14 @@
           ],
           "read": [
             "gebruik-beheerder",
+            {
+              "group": "public",
+              "match": {
+                "publicatiedatum": {
+                  "$lte": "$now"
+                }
+              }
+            },
             {
               "group": "aanbod-beheerder",
               "match": {
@@ -3195,7 +3246,7 @@
         "slug": "koppeling",
         "title": "Koppeling",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "summary": "",
         "icon": "Link",
         "required": [
@@ -3451,6 +3502,24 @@
               "extern",
               "intern"
             ]
+          },
+          "publicatiedatum": {
+            "description": "Publication date as open data. Anonymous (public) readers can see this koppeling once publicatiedatum is set and not in the future. Set by the open-data publish action; cleared by depublish.",
+            "type": "string",
+            "format": "date-time",
+            "visible": true,
+            "order": 50,
+            "facetable": false,
+            "title": "Publicatiedatum"
+          },
+          "depublicatiedatum": {
+            "description": "Depublication date. When set (and not in the future) the koppeling is withdrawn from the open-data surface. Set by the depublish action.",
+            "type": "string",
+            "format": "date-time",
+            "visible": true,
+            "order": 51,
+            "facetable": false,
+            "title": "Depublicatiedatum"
           }
         },
         "archive": [],
@@ -3478,6 +3547,14 @@
           ],
           "read": [
             "gebruik-beheerder",
+            {
+              "group": "public",
+              "match": {
+                "publicatiedatum": {
+                  "$lte": "$now"
+                }
+              }
+            },
             {
               "group": "aanbod-beheerder",
               "match": {
@@ -6510,7 +6587,7 @@
         "slug": "module",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.2.3",
+        "version": "0.3.0",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6903,6 +6980,24 @@
               "Samenwerking",
               "Leverancier"
             ]
+          },
+          "publicatiedatum": {
+            "description": "Publication date as open data. Anonymous (public) readers can see this module once publicatiedatum is set and not in the future. Set by the open-data publish action; cleared by depublish.",
+            "type": "string",
+            "format": "date-time",
+            "visible": true,
+            "order": 50,
+            "facetable": false,
+            "title": "Publicatiedatum"
+          },
+          "depublicatiedatum": {
+            "description": "Depublication date. When set (and not in the future) the module is withdrawn from the open-data surface. Set by the depublish action.",
+            "type": "string",
+            "format": "date-time",
+            "visible": true,
+            "order": 51,
+            "facetable": false,
+            "title": "Depublicatiedatum"
           }
         },
         "archive": [],
@@ -6918,6 +7013,14 @@
         "authorization": {
           "read": [
             "gebruik-beheerder",
+            {
+              "group": "public",
+              "match": {
+                "publicatiedatum": {
+                  "$lte": "$now"
+                }
+              }
+            },
             {
               "group": "aanbod-beheerder",
               "match": {
