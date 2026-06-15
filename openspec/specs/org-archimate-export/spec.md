@@ -25,8 +25,8 @@ Organizations using the softwarecatalog map their applications to GEMMA referent
 ## Requirements
 
 ### Requirement: Export MUST produce valid ArchiMate XML with organization applications
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 The organization export MUST generate a valid AMEFF XML file that includes all base GEMMA objects plus synthesized application elements, specialization relationships, enriched view copies, and organization folder structure.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: Organization with mapped applications exports successfully
 - GIVEN an organization "Zeist" with 10 modules mapped to referentiecomponenten
@@ -66,8 +66,8 @@ The organization export MUST generate a valid AMEFF XML file that includes all b
 - AND the response MUST be streamed (not buffered entirely in memory) for files over 10MB
 
 ### Requirement: Application elements MUST be ApplicationComponent type with Bron property
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 Each organization application MUST be exported as an ArchiMate `<element>` with `xsi:type="ApplicationComponent"`, a unique identifier, and a `Bron=Softwarecatalogus` property.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: Application element has correct structure
 - GIVEN a module "Topdesk" belonging to organization "Zeist"
@@ -95,8 +95,8 @@ Each organization application MUST be exported as an ArchiMate `<element>` with 
 - AND the output MUST contain `R&amp;D Tool &lt;v2&gt;`
 
 ### Requirement: SpecializationRelationship MUST link applications to referentiecomponenten
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 Each application-to-referentiecomponent mapping MUST produce a `<relationship>` of type `SpecializationRelationship` in the export.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: Application mapped to one referentiecomponent
 - GIVEN module "Topdesk" is mapped to referentiecomponent "Zaakregistratiecomponent"
@@ -124,8 +124,8 @@ Each application-to-referentiecomponent mapping MUST produce a `<relationship>` 
 - AND the `target` attribute MUST reference an existing `<element>` identifier in the same file
 
 ### Requirement: Views MUST be copied with applications plotted inside referentiecomponenten
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 The export MUST create copies of qualifying GEMMA views and inject application nodes as children of their mapped referentiecomponent nodes.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: View with applications plotted on referentiecomponenten
 - GIVEN a GEMMA view "BBN poster" with referentiecomponent node "Zaakregistratiecomponent"
@@ -162,8 +162,8 @@ The export MUST create copies of qualifying GEMMA views and inject application n
 - AND both views MUST coexist in the XML
 
 ### Requirement: View copies MUST use Titel view SWC property for naming
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 Copied views MUST be named using the `Titel view SWC` property from the original view combined with the organization name.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: View has Titel view SWC property
 - GIVEN a GEMMA view with property `Titel view SWC` = "Applicatieservices bestuur"
@@ -185,8 +185,8 @@ Copied views MUST be named using the `Titel view SWC` property from the original
 - AND the name MUST NOT be truncated
 
 ### Requirement: SWC objects MUST be organized in typed folders
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 All SWC-added elements MUST be placed in organisation folders within the `<organizations>` section, separated by relationship type.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: Organisation folders created with typed subfolders
 - GIVEN an organization export for "Zeist" with modules, deelnames, and gebruik enabled
@@ -219,8 +219,8 @@ All SWC-added elements MUST be placed in organisation folders within the `<organ
 - AND no orphaned references MUST exist
 
 ### Requirement: File and model MUST follow naming convention
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 The export file name and ArchiMate model name MUST include the organization name and export date.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: File name includes date and organization
 - GIVEN the organization name is "Zeist"
@@ -240,8 +240,8 @@ The export file name and ArchiMate model name MUST include the organization name
 - AND the model `<name>` MUST preserve the original name: "Softwarecatalogus Gemeente 's-Hertogenbosch"
 
 ### Requirement: API endpoint MUST accept organization UUID and return XML download
-@e2e exclude pure backend/API contract - covered by PHPUnit/Newman
 The export MUST be triggered via `GET /api/archimate/export/organization/{organizationUuid}` with the organization UUID as a path parameter and optional boolean query parameters.
+@e2e exclude pure backend/API contract - covered by PHPUnit/Newman
 
 #### Scenario: Valid organization UUID provided
 - GIVEN a valid organization UUID "uuid-123"
@@ -276,8 +276,8 @@ The export MUST be triggered via `GET /api/archimate/export/organization/{organi
 - AND the response MUST indicate insufficient permissions
 
 ### Requirement: Bron property definition MUST be added to the model
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 The export MUST include a `<propertyDefinition>` for "Bron" so that the `Bron=Softwarecatalogus` property on SWC objects references a valid definition.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: Bron property definition does not already exist
 - GIVEN the base GEMMA model does not have a "Bron" property definition
@@ -296,8 +296,8 @@ The export MUST include a `<propertyDefinition>` for "Bron" so that the `Bron=So
 - THEN each `<property>` element's `propertyDefinitionRef` MUST point to a valid `<propertyDefinition>` identifier
 
 ### Requirement: Connection elements MUST be created for plotted applications
-@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 Each application node plotted inside a referentiecomponent MUST have a corresponding `<connection>` element in the view linking it via the specialization relationship.
+@e2e exclude pure backend/XML-generation contract - covered by PHPUnit/Newman
 
 #### Scenario: Connection links application node to referentiecomponent node
 - GIVEN application node "Topdesk" plotted inside referentiecomponent node "Zaakregistratiecomponent"
@@ -320,8 +320,8 @@ Each application node plotted inside a referentiecomponent MUST have a correspon
 - AND a warning MUST be logged about the missing relationship
 
 ### Requirement: Export MUST include deelname data when deelnames parameter is enabled
-@e2e exclude pure backend contract - covered by PHPUnit/Newman
 When the `deelnames` query parameter is `true`, the export MUST query gebruik objects where the current organisation's UUID appears in the `deelnemers` field (with RBAC disabled) and include those applications in the output.
+@e2e exclude pure backend contract - covered by PHPUnit/Newman
 
 #### Scenario: Organisation has deelname gebruik
 - GIVEN organisation "Zeist" appears in the `deelnemers` field of 5 gebruik objects owned by other organisations
@@ -351,8 +351,8 @@ When the `deelnames` query parameter is `true`, the export MUST query gebruik ob
 - AND both MUST be distinct elements in the XML
 
 ### Requirement: Deelname query MUST use RBAC-disabled ObjectService search
-@e2e exclude pure backend contract - covered by PHPUnit/Newman
 Deelname gebruik objects are owned by other organisations. The query MUST bypass RBAC to find records where the current organisation appears in the `deelnemers` array.
+@e2e exclude pure backend contract - covered by PHPUnit/Newman
 
 #### Scenario: Deelname query filters on deelnemers field
 - GIVEN organisation "Zeist" with UUID "uuid-zeist"
@@ -368,8 +368,8 @@ Deelname gebruik objects are owned by other organisations. The query MUST bypass
 - AND no error MUST be logged for empty results
 
 ### Requirement: Export MUST support query parameters for toggling data layers
-@e2e exclude pure backend/API contract - covered by PHPUnit/Newman
 The GET endpoint MUST accept boolean query parameters that control which data is included in the export.
+@e2e exclude pure backend/API contract - covered by PHPUnit/Newman
 
 #### Scenario: All parameters enabled
 - GIVEN a valid organisation UUID
