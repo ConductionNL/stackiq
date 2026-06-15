@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service\Federation;
 
+use OCA\SoftwareCatalog\Service\PublicationService;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -122,6 +123,53 @@ class FederationService
             return ['ok' => false, 'reason' => $e->getMessage()];
         }
     }//end announce()
+
+    /**
+     * Make a local catalog entry visible to the federation by PUBLISHING it —
+     * i.e. set its `publicatiedatum` (the live OR RBAC publish gate) via the
+     * PublicationService. Only entries past their publicatiedatum are exposed to
+     * anonymous federation reads through the OpenCatalogi/OpenRegister public
+     * read surface; drafts (no publicatiedatum) never leave the instance.
+     *
+     * This is the publication-visibility leg of federation: it reuses the exact
+     * same `{group:public, match:{publicatiedatum:{$lte:$now}}}` rule that
+     * governs anonymous open-data reads, so one publish model serves both. The
+     * live cross-instance pull/merge remains deferred (needs a two-instance
+     * testbed) — see the @spec'd federated-catalog-sync subscription leg.
+     *
+     * @param string $objectType The publishable catalog object type.
+     * @param string $uuid       The entry uuid.
+     *
+     * @return array{ok:bool, reason:string} Result.
+     *
+     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     */
+    public function publishEntryForFederation(string $objectType, string $uuid): array
+    {
+        $publication = $this->getPublicationService();
+        if ($publication === null) {
+            return ['ok' => false, 'reason' => 'PublicationService unavailable'];
+        }
+
+        $result = $publication->publish($objectType, $uuid);
+        return ['ok' => $result['ok'], 'reason' => $result['reason']];
+    }//end publishEntryForFederation()
+
+    /**
+     * Get the open-data PublicationService (lazy, via the container) — federation
+     * reuses the same publicatiedatum publish gate as anonymous open data.
+     *
+     * @return PublicationService|null The service, or null when unavailable.
+     */
+    private function getPublicationService(): ?PublicationService
+    {
+        try {
+            return $this->container->get(PublicationService::class);
+        } catch (\Throwable $e) {
+            $this->logger->error('[Federation] PublicationService unavailable', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }//end getPublicationService()
 
     /**
      * Discover peer catalogs from the configured directory.

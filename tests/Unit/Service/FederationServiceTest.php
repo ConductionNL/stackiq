@@ -114,6 +114,60 @@ class FederationServiceTest extends TestCase
     }//end testAnnounceNoopWhenDisabled()
 
     /**
+     * The federation publication leg delegates to PublicationService — i.e. it
+     * PUBLISHES the entry (sets publicatiedatum, the live OR RBAC gate) so
+     * federated anonymous reads can see it. No bespoke published predicate.
+     *
+     * @return void
+     */
+    public function testPublishEntryForFederationDelegatesToPublicationService(): void
+    {
+        $container  = $this->createMock(ContainerInterface::class);
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn(['softwarecatalog', 'opencatalogi']);
+        $config = $this->createMock(FederationConfig::class);
+        $logger = $this->createMock(LoggerInterface::class);
+
+        $publication = $this->createMock(\OCA\SoftwareCatalog\Service\PublicationService::class);
+        $publication->expects($this->once())
+            ->method('publish')
+            ->with('dienst', 'uuid-9')
+            ->willReturn(['ok' => true, 'reason' => 'published', 'publicatiedatum' => '2024-01-01T00:00:00+00:00']);
+
+        $container->method('get')
+            ->with(\OCA\SoftwareCatalog\Service\PublicationService::class)
+            ->willReturn($publication);
+
+        $service = new FederationService($container, $appManager, $config, $logger);
+        $result  = $service->publishEntryForFederation('dienst', 'uuid-9');
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame('published', $result['reason']);
+    }//end testPublishEntryForFederationDelegatesToPublicationService()
+
+    /**
+     * The federation publication leg degrades cleanly (no throw) when the
+     * PublicationService cannot be resolved.
+     *
+     * @return void
+     */
+    public function testPublishEntryForFederationDegradesWithoutPublicationService(): void
+    {
+        $container  = $this->createMock(ContainerInterface::class);
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn(['softwarecatalog']);
+        $config = $this->createMock(FederationConfig::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $container->method('get')->willThrowException(new \RuntimeException('no service'));
+
+        $service = new FederationService($container, $appManager, $config, $logger);
+        $result  = $service->publishEntryForFederation('dienst', 'uuid-9');
+
+        $this->assertFalse($result['ok']);
+        $this->assertSame('PublicationService unavailable', $result['reason']);
+    }//end testPublishEntryForFederationDegradesWithoutPublicationService()
+
+    /**
      * discoverPeers returns an empty list (no throw) when OpenCatalogi missing.
      *
      * @return void

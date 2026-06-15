@@ -359,6 +359,19 @@ class Application extends App implements IBootstrap
                 }
                 );
 
+        // Register open-data publication service (sets/clears publicatiedatum — the
+        // live OR RBAC publish gate; no @self.published, no app-local flag).
+        $context->registerService(
+                \OCA\SoftwareCatalog\Service\PublicationService::class,
+                function ($container) {
+                    return new \OCA\SoftwareCatalog\Service\PublicationService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
         // Register module version service (creates default 1.0.0 version for new modules).
         $context->registerService(
                 ModuleVersionService::class,

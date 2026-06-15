@@ -1,26 +1,40 @@
 # Tasks — open-data-publishing
 
-> **VERIFY-FIRST FINDING (BLOCKING for the anonymous publication leg).**
-> Task 1.1 confirmed the known OpenRegister gap is REAL in the current OR
-> checkout: magic-mapped objects cannot set the `@self.published` predicate.
-> `published` is NOT in `MagicMapper`'s `metadataFields` allowlist (the @self
-> write path drops it), and there is no per-object publish action endpoint on
-> `ObjectsController` (only register/configuration GitHub-publish routes). So
-> the anonymous publication + published-only read leg CANNOT be honestly built
-> against this register today — it is a blocking OpenRegister dependency, not an
-> app-local fix. Those tasks are deferred with this reason (no workaround, per
-> ADR-022 / the proposal caveat). The buildable slice below is shipped.
+> **UPDATED 2026-06-15 — anonymous publication leg BUILT on the live RBAC model.**
+> The earlier blocker note ("magic-mapped objects cannot set `@self.published`")
+> is STALE: `@self.published` is deprecated and REMOVED from OpenRegister, and
+> `ObjectService::publish()` no longer exists. The live anonymous-publication
+> model is RBAC: a schema grants the public group read access gated on a date
+> field — `authorization.read: [{group:public, match:{publicatiedatum:{$lte:$now}}},
+> "authenticated"]`. "Publish" = set `publicatiedatum` via a normal
+> `ObjectService::saveObject()` (no special publish endpoint, no magic-mapper
+> allowlist involved); anonymous read then works today. This change builds the
+> publish/depublish leg, the public read gate on the four publishable schemas,
+> and the RBAC-scoped (IDOR-safe) write endpoints on that model.
 
-## 1. Publication via the published predicate
+## 1. Publication via the publicatiedatum RBAC gate
 
-- [x] 1.1 VERIFIED — the magic-mapped `@self.published` gap is REAL for the
-  softwarecatalogus register (see finding above). The OR fix is the blocking
-  dependency; no app-local visibility workaround built.
-- [~] 1.2 Publish/depublish actions — DEFERRED (blocked on 1.1). There is no OR
-  per-object publish action to wire to, and setting the predicate via a normal
-  object save is dropped by the magic-mapper. Will land once OR exposes a
-  publish path.
-- [~] 1.3 PHPUnit/Newman for publish/depublish — DEFERRED (blocked on 1.2).
+- [x] 1.1 RE-VERIFIED 2026-06-15 — the publication model is RBAC, not the removed
+  `@self.published` predicate. Publish = set `publicatiedatum` via `saveObject`;
+  anonymous (public-group) read is gated on `{group:public, match:{publicatiedatum:
+  {$lte:$now}}}`. No OR dependency blocks this — it works against the
+  softwarecatalogus register today.
+- [x] 1.2 Publish/depublish actions — BUILT. `PublicationService::publish()` sets
+  `publicatiedatum` (clears `depublicatiedatum`); `depublish()` sets
+  `depublicatiedatum` + clears `publicatiedatum`, via `ObjectService::saveObject()`
+  (ADR-022). Schemas `dienst`/`module`/`koppeling`/`organisatie` gained the
+  `publicatiedatum`/`depublicatiedatum` fields + the public read gate
+  (`lib/Settings/softwarecatalogus_register.json`, versions bumped). HTTP:
+  `PublicationController` `PUT/DELETE /api/publication/{objectType}/{uuid}/(de)publish`,
+  `#[NoAdminRequired]` + per-object ownership guard (admin or owning
+  aanbod-beheerder; peer-sourced entries refused 403; ADR-005).
+- [x] 1.3 PHPUnit for publish/depublish — BUILT. `PublicationServiceTest` (publish
+  sets a past publicatiedatum + clears depublicatiedatum; future moment schedules;
+  depublish clears publicatiedatum; non-publishable type rejected) +
+  `PublishGateRbacTest` (anon/public read returns the object iff
+  publicatiedatum<=now, and NOT for a future-dated or unpublished entry — the
+  live RBAC gate evaluated exactly as OR does). Newman live-surface assertions
+  remain with the OpenCatalogi public read surface (4.x intake hardening).
 
 ## 2. Open-data serialization
 
@@ -39,10 +53,16 @@
 
 ## 3. Govern the legacy @PublicPage endpoints
 
-- [~] 3.1 Constrain `AanbodController::getAanbod()` / `AangebodenGebruikController`
-  anonymous responses to published-only — DEFERRED (blocked on 1.1: a
-  "published-only" filter needs the published predicate, which isn't settable
-  on these objects yet). The projection (2.1) is the serialization half, ready.
+- [x] 3.1 Anonymous published-only visibility on the publishable schemas is now
+  enforced by the RBAC read gate itself: with the public read rule changed from a
+  bare `"public"` (or business-field match) to `{group:public, match:
+  {publicatiedatum:{$lte:$now}}}` on `dienst`/`module`/`koppeling`/`organisatie`,
+  an anonymous caller sees an entry only once it is published — no app-side
+  "published-only" filtering needed (and none added, per ADR-022). The projection
+  (2.1) is the serialization half for the open-data envelope.
+  [~] A bespoke published-only re-filter inside `AanbodController::getAanbod()`
+  is intentionally NOT added — the OR RBAC gate already scopes the anonymous
+  result, so an app-local filter would duplicate it.
 - [x] 3.2 `GebruikController::getGebruiken()`'s anonymous empty-result envelope
   is now the explicit, documented contract (inline comment + this capability's
   `@spec` tag) — an org-scoped endpoint discloses no org data anonymously.
@@ -71,23 +91,30 @@
 
 ## 6. Verification & docs
 
-- [~] 6.1 Live end-to-end anonymous publication verification — DEFERRED (blocked
-  on 1.1).
-- [x] 6.2 `docs/GOVERNMENT-FEATURES.md` F-08 downgraded from the over-stated
-  "Beschikbaar" to an honest "Gedeeltelijk" with the real scope + the OR
-  predicate-gap blocker noted (per the proposal: downgrade if the anonymous
-  leg can't be applied).
-- [x] 6.3 hydra gates green (all 24, incl. gate-16 `@spec`, route/semantic-auth
-  on the touched `@PublicPage` method). vitest 72, PHPUnit 156.
+- [x] 6.1 Anonymous-publication visibility verified at the RBAC-gate layer —
+  `PublishGateRbacTest` proves a public-group read returns the object iff
+  `publicatiedatum<=now`, and NOT for a future-dated/unpublished entry, evaluating
+  the gate exactly as OR does against the real register rule. Live two-instance
+  HTTP verification against the OpenCatalogi public surface stays with the
+  federation testbed (federated-catalog-sync 6.1).
+- [~] 6.2 `docs/GOVERNMENT-FEATURES.md` F-08 — re-confirm/upgrade now the anon
+  publish leg is built on the RBAC model (the prior "predicate-gap blocker" note
+  is stale and should be removed in the docs sync).
+- [x] 6.3 hydra gates green, PHPUnit 194 (+ this change's PublicationService /
+  PublishGateRbac suites), vitest unchanged.
 
 ## Acceptance criteria
 
-- [~] Anonymous published read in the sanitized projection — the projection
+- [x] Anonymous published read in the sanitized projection — the projection
   (serialization half) is built + tested; the anonymous published READ half is
-  blocked on the OR `@self.published` gap (1.1) and deferred with that reason.
+  delivered by the `publicatiedatum<=$now` public RBAC gate (BUILT + tested), not
+  the removed `@self.published` predicate.
 - [x] `GebruikController::getGebruiken()` discloses only the empty envelope to
   anonymous callers (governed + spec-tagged).
 - [~] Anonymous registration lands pending + unpublished with disabled
   accounts — the `registratiestatus` data model is in place; the intake
-  hardening + moderation queue are deferred (deep security rework).
-- [x] No new bespoke public catalog-read endpoints introduced.
+  hardening + moderation queue are deferred (deep security rework; orthogonal to
+  the publish gate).
+- [x] No new bespoke public catalog-read endpoints introduced (the publish
+  endpoints are authenticated write actions; anonymous read stays on the OR/OC
+  public surface).

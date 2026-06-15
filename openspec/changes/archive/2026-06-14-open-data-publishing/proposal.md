@@ -31,15 +31,21 @@ via API"). The reality is partial and unspecced
   touch it but nothing specs the public entry point, its auth posture, or its
   abuse resistance.
 
-## Design constraint: route via the published-predicate abstraction
+## Design constraint: route via the OpenRegister RBAC publication model
 
 Per ADR-022, the app consumes the OpenRegister/OpenCatalogi publication
-abstraction instead of building bespoke public endpoints:
+abstraction instead of building bespoke public endpoints. **Updated 2026-06-15:**
+the `@self.published` predicate is deprecated and REMOVED from OpenRegister (and
+`ObjectService::publish()` no longer exists); the live model is RBAC:
 
-- "Published as open data" = the OpenRegister published predicate
-  (`@self.published`) on the object, surfaced through the OpenCatalogi public
-  read surface (`/api/{catalogSlug}` publications API). No per-app
-  publication pipeline, no app-local published flag.
+- "Published as open data" = a `publicatiedatum` field set (in the past/present)
+  on the object, with the schema granting the public group read access gated on
+  it: `authorization.read: [{group:public, match:{publicatiedatum:{$lte:$now}}},
+  "authenticated"]`. "Publish" = set `publicatiedatum` via a normal
+  `ObjectService::saveObject()`; "depublish" = set `depublicatiedatum` + clear
+  `publicatiedatum`. Anonymous read works today through the OpenCatalogi public
+  read surface (`/api/{catalogSlug}` publications API). No per-app publication
+  pipeline, no app-local published flag, no removed `@self.published`.
 - The existing softwarecatalog `@PublicPage` endpoints are **folded under this
   capability** as the legacy read surface: their anonymous behaviour is
   specced (and constrained to published data only), so they stop being
@@ -50,8 +56,8 @@ abstraction instead of building bespoke public endpoints:
 ## What Changes
 
 - Catalogue maintainers can mark software entries and organisation profiles
-  as published open data (set/unset the published predicate from the
-  softwarecatalog UI, permission-gated).
+  as published open data (set/unset `publicatiedatum`/`depublicatiedatum` from
+  the softwarecatalog UI, permission-gated).
 - Published entries are exposed anonymously through the existing OpenCatalogi
   public read surface with an open-data-friendly serialization: stable
   identifiers, no internal/RBAC/contact-PII fields, license + publisher
@@ -68,7 +74,7 @@ abstraction instead of building bespoke public endpoints:
 
 ### New Capabilities
 
-- `open-data-publishing`: published-predicate-based open data publication of
+- `open-data-publishing`: `publicatiedatum`-RBAC-gated open data publication of
   the software catalog — publish/depublish controls, anonymous read surface
   + serialization, governed legacy `@PublicPage` endpoints, and the
   moderated anonymous organisation self-registration intake.
@@ -82,10 +88,12 @@ abstraction instead of building bespoke public endpoints:
   `lib/Service/SoftwareCatalogueService.php` (registration moderation status),
   catalog entry UI (`src/`) for publish/depublish + pending-approval badge,
   admin settings (approval queue view).
-- **New:** publish/depublish action wiring to the OR published predicate;
-  registration approval queue (admin lists pending anonymous registrations,
-  approves/rejects); brute-force/rate-limit protection on the anonymous
-  intake.
+- **New:** `lib/Service/PublicationService.php` + `lib/Controller/PublicationController.php`
+  (publish/depublish set `publicatiedatum`/`depublicatiedatum` via `saveObject`,
+  RBAC-scoped IDOR-safe write endpoints); the `publicatiedatum`/`depublicatiedatum`
+  fields + the `{group:public, match:{publicatiedatum:{$lte:$now}}}` read gate on
+  `dienst`/`module`/`koppeling`/`organisatie`. DEFERRED (orthogonal): registration
+  approval queue + brute-force protection on the anonymous intake.
 - **Spec moves:** the anonymous-read scenarios of `aanbod-listings` and
   `aangeboden-gebruik-api` are superseded by this capability's requirements
   (those specs keep the authenticated HTTP contracts).
@@ -94,11 +102,12 @@ abstraction instead of building bespoke public endpoints:
 
 ## Caveats
 
-- **Magic-mapped published-predicate gap (OR, 2026-06-11):** magic-mapped
-  objects currently cannot set `@self.published`, which would make published
-  entries invisible to the anonymous surface. Verify against the
-  softwarecatalogus register early (task 1.2); if affected, the OR fix is a
-  blocking dependency — do not build an app-local visibility workaround.
+- **The earlier `@self.published` blocker is RESOLVED/STALE (2026-06-15):** the
+  predicate is deprecated and removed from OpenRegister; the live model is the
+  RBAC `publicatiedatum<=$now` gate, which works on the softwarecatalogus
+  register today via a normal `saveObject` (no magic-mapper allowlist, no OR
+  dependency). Do NOT call the removed `ObjectService::publish()` and do NOT add
+  an app-local `published` flag.
 - **Anonymous intake transport:** the current flow enters via the
   OpenConnector API (per `docs/ANONYMOUS_USER_REGISTRATION_USECASE.md`), not a
   softwarecatalog route. The spec governs the flow wherever it enters; if the

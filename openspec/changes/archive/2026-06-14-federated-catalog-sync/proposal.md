@@ -32,9 +32,11 @@ OpenCatalogi already ships a proven, live-tested federation stack
   are the public endpoints.
 - **Broadcast** — `BroadcastService` announces this instance to peers and the
   directory.
-- **Published-predicate visibility** — only objects with `@self.published` set
-  (and not depublished) are visible to anonymous federation traffic; the
-  public publications API is the read surface.
+- **RBAC publish-gate visibility (updated 2026-06-15)** — only objects whose
+  `publicatiedatum<=$now` (the public read rule `{group:public, match:
+  {publicatiedatum:{$lte:$now}}}`) are visible to anonymous federation traffic;
+  the public publications API is the read surface. The previously-cited
+  `@self.published` predicate is deprecated/removed from OpenRegister.
 - **SSRF local-federation allowlist** — the config-gated
   `opencatalogi/local_federation_hosts` app-config key (comma-separated,
   empty by default) lets private/loopback peer hosts through the SSRF guard
@@ -52,8 +54,8 @@ peer entries, the sync schedule, and the admin controls.
 - Register this instance's software catalog with an OpenCatalogi directory
   (configurable directory URL; default `directory.opencatalogi.nl`).
 - Publish own software entries to the catalog — **only** entries whose
-  published-predicate is set; drafts and internal records never leave the
-  instance.
+  `publicatiedatum` is set (and not in the future); drafts and internal records
+  never leave the instance.
 - Discover peer organisations' catalogs via the directory and let an admin
   subscribe to specific peers.
 - Pull subscribed peer catalogs on a schedule (background job) and merge the
@@ -83,27 +85,29 @@ peer entries, the sync schedule, and the admin controls.
   `softwarecatalog/federation_peers`, `softwarecatalog/local_federation_hosts`,
   `softwarecatalog/federation_sync_interval`.
 - **Depends on (runtime):** OpenCatalogi `DirectoryService`/`BroadcastService`
-  and its public publications API; OpenRegister published-predicate
-  (`@self.published`) on catalog objects.
+  and its public publications API; the OpenRegister `publicatiedatum<=$now`
+  public RBAC read gate on catalog objects (NOT the removed `@self.published`).
 - **Schema impact:** peer-merged objects carry provenance metadata
   (`_source.instance`, `_source.organisation`, `_source.syncedAt`) — stored via
   OR object metadata, no new app-local tables.
 - **Relation to `open-data-publishing`:** the publication leg (what is visible
-  to anonymous/peer readers) is the same published-predicate surface specced
-  there; this change consumes it for the federation direction.
+  to anonymous/peer readers) is the same `publicatiedatum<=$now` RBAC gate +
+  `PublicationService` specced there; this change consumes it for the federation
+  direction (`FederationService::publishEntryForFederation()`).
 
 ## Caveats
 
 - **OpenCatalogi is a hard runtime dependency for federation.** When
   OpenCatalogi is not installed/enabled, federation features MUST degrade to
   a disabled state with a clear admin message — not error.
-- **Magic-mapped publications gap (known OR limitation, 2026-06-11):**
-  magic-mapped objects cannot currently set `@self.published`, making them
-  invisible to anonymous federation reads. Publication of software entries
-  must go through a path that sets the published predicate; if the gap is not
-  fixed upstream first, task 2.x below covers the explicit publish action.
+- **The `@self.published` blocker is RESOLVED/STALE (2026-06-15):** the predicate
+  is deprecated and removed from OpenRegister; the live model is the RBAC
+  `publicatiedatum<=$now` gate, which works today via a normal `saveObject`.
+  Publication of software entries to the federation goes through
+  `FederationService::publishEntryForFederation()` → `PublicationService` (task
+  2.2). No magic-mapper allowlist or upstream OR fix is required.
 - **Import/merge from external (non-OpenCatalogi) sources** — F-07 — is out of
-  scope here; the directory/published-predicate path only federates
+  scope here; the directory/publication-gate path only federates
   OpenCatalogi-speaking instances. A generic `external-listing-import` can
   follow if needed.
 - The description/F-06 claim stays over-stated until this change is applied;

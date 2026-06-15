@@ -6,21 +6,26 @@
 
 Catalogue maintainers SHALL be able to publish and depublish software entries
 (applicaties/voorzieningen, modules, koppelingen) and organisation profiles
-from the softwarecatalog UI. Publishing SHALL set the OpenRegister published
-predicate (`@self.published`) on the object via the OR publish action — the
-app SHALL NOT introduce an app-local published flag. The action SHALL be
-available only to users with manage permission on the entry.
+from the softwarecatalog UI. Publishing SHALL set the OpenRegister
+`publicatiedatum` field (and clear any `depublicatiedatum`) via a normal
+`ObjectService::saveObject()`; depublishing SHALL set `depublicatiedatum` and
+clear `publicatiedatum`. Anonymous (public group) visibility SHALL be governed
+by the schema RBAC read rule `{group:public, match:{publicatiedatum:{$lte:$now}}}`.
+The app SHALL NOT use the removed `@self.published` predicate, SHALL NOT call the
+removed `ObjectService::publish()`, and SHALL NOT introduce an app-local
+published flag. The action SHALL be available only to users with manage
+permission on the entry.
 
 #### Scenario: Maintainer publishes a software entry
 
 - **WHEN** a user with manage permission chooses "Publish as open data" on a software entry
-- **THEN** the entry's published predicate is set
+- **THEN** the entry's `publicatiedatum` is set to now (or a chosen moment) and `depublicatiedatum` is cleared
 - **AND** the entry's list/detail view shows a published indicator
 
 #### Scenario: Depublication removes the entry from the public surface
 
 - **WHEN** a maintainer depublishes a previously published entry
-- **THEN** the published predicate is cleared
+- **THEN** the entry's `depublicatiedatum` is set and `publicatiedatum` is cleared
 - **AND** subsequent anonymous reads of the public surface no longer contain the entry
 
 #### Scenario: User without manage permission cannot publish
@@ -32,24 +37,24 @@ available only to users with manage permission on the entry.
 
 Published entries SHALL be readable anonymously through the OpenCatalogi
 publications API (`/api/{catalogSlug}` family) backed by the
-published-predicate visibility rules. The app SHALL NOT add bespoke public
-catalog-read endpoints. Anonymous discoverability (listing, single read,
+`publicatiedatum<=$now` public RBAC read rule. The app SHALL NOT add bespoke
+public catalog-read endpoints. Anonymous discoverability (listing, single read,
 search/facets) SHALL be whatever the OC public surface provides — the app
-contributes only the catalog mapping.
+contributes only the catalog mapping and the schema read gate.
 
 #### Scenario: Anonymous consumer lists the published catalog
 
 @e2e exclude Anonymous HTTP contract on the OC publications API; covered by Newman (anonymous GET list/single/negative) per the Playwright-UI-only / Newman-API convention.
 
 - **WHEN** an unauthenticated client requests the catalog through the OpenCatalogi publications API
-- **THEN** the response contains exactly the entries whose published predicate is set
+- **THEN** the response contains exactly the entries whose `publicatiedatum` is set and not in the future
 - **AND** each entry is retrievable individually by its stable identifier
 
 #### Scenario: Unpublished entry is not anonymously retrievable
 
 @e2e exclude Anonymous HTTP negative contract; covered by Newman.
 
-- **WHEN** an unauthenticated client requests an entry whose published predicate is not set (draft, internal, or pending registration)
+- **WHEN** an unauthenticated client requests an entry whose `publicatiedatum` is not set or is in the future (draft, internal, scheduled, or pending registration)
 - **THEN** the entry is absent from list responses and a direct fetch returns not-found
 
 ### Requirement: Open-data serialization strips internal fields and carries reuse metadata
@@ -125,7 +130,7 @@ provisioned for nested contact persons SHALL be created **disabled**.
 @e2e exclude Unauthenticated intake API flow; covered by Newman (replacing the test_anonymous_registration*.sh harnesses) and PHPUnit service tests.
 
 - **WHEN** an anonymous client submits a valid organisation registration with nested contact persons
-- **THEN** the organisation and contact objects are created with pending status, admin ownership, and no published predicate
+- **THEN** the organisation and contact objects are created with pending status, admin ownership, and no `publicatiedatum`
 - **AND** the provisioned contact-person Nextcloud accounts are disabled
 - **AND** the registration does not appear in any anonymous read surface
 
