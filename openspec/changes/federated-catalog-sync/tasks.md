@@ -1,15 +1,16 @@
 # Tasks — federated-catalog-sync
 
-> **VERIFY-FIRST FINDING (blocks the live publication + peer-pull leg).** The
-> federation read surface depends on the OpenRegister published predicate
-> (`@self.published`), which — confirmed in the current OR checkout — is NOT
-> settable for magic-mapped objects (`published` absent from MagicMapper's
-> metadataFields allowlist; no per-object publish action). So "only published
-> entries are exposed" and a live cross-instance pull cannot be honestly built
-> against this register today. The buildable slice (delegation scaffolding,
-> availability degrade, read-only provenance guard, SSRF guard, scheduled job,
-> config) is shipped; the live publication + merge legs are deferred with this
-> reason (blocking OR dependency, no per-app workaround per ADR-022).
+> **UPDATED 2026-06-15 — the publication-visibility leg is BUILT on the RBAC
+> model.** The earlier blocker note ("federation read surface depends on
+> `@self.published`, not settable") is STALE: `@self.published` is
+> deprecated/removed from OpenRegister. The live model is RBAC — only entries
+> whose `publicatiedatum<=$now` (public read rule `{group:public, match:
+> {publicatiedatum:{$lte:$now}}}`) are exposed to anonymous federation reads.
+> "Publish to the federation" = set `publicatiedatum` via the shared
+> `PublicationService` (`FederationService::publishEntryForFederation()`) — the
+> exact same gate that governs anonymous open-data reads. The cross-instance
+> live PULL/merge stays deferred — it genuinely needs a two-instance testbed —
+> with that honest reason; the publication-visibility half is no longer blocked.
 
 ## 1. Foundations
 
@@ -28,11 +29,16 @@
 - [x] 2.1 `FederationService::announce()` delegates to OpenCatalogi
   `BroadcastService` with the configured directory URL; returns an ok/reason
   result for the settings UI. No-ops cleanly when disabled / OC missing.
-- [x] 2.2 VERIFIED the magic-mapped `@self.published` gap (see finding above) —
-  it APPLIES to this register. The live "published entries only" exposure is a
-  blocking OR dependency; deferred with that reason (no per-app workaround).
+- [x] 2.2 Publication-visibility leg — BUILT on the RBAC model.
+  `FederationService::publishEntryForFederation()` delegates to the shared
+  `PublicationService::publish()`, which sets `publicatiedatum` via `saveObject`.
+  The publishable schemas (`dienst`/`module`/`koppeling`/`organisatie`) carry the
+  `{group:public, match:{publicatiedatum:{$lte:$now}}}` read gate, so ONLY entries
+  past their `publicatiedatum` are exposed to anonymous federation reads; drafts
+  (no `publicatiedatum`) never leave the instance. No `@self.published`.
 - [x] 2.3 PHPUnit: announce success-shape, disabled no-op, OpenCatalogi-missing
-  no-op (`FederationServiceTest`).
+  no-op; plus `publishEntryForFederation` delegates to PublicationService and
+  degrades cleanly when it is unavailable (`FederationServiceTest`).
 
 ## 3. Subscription leg (network → local catalog)
 
@@ -77,12 +83,16 @@
 
 ## 6. Verification & docs
 
-- [~] 6.1 Two-instance testbed verification — DEFERRED (blocked on 2.2/3.3).
-- [x] 6.2 `docs/GOVERNMENT-FEATURES.md` F-06 downgraded from the over-stated
-  "Beschikbaar" to an honest "Gedeeltelijk" with the OpenCatalogi-runtime
-  requirement + the OR predicate-gap blocker noted.
-- [x] 6.3 hydra gates green (all 24, incl. spec-coverage `@spec` tags on all
-  new methods). PHPUnit 162.
+- [~] 6.1 Two-instance testbed verification of the live PULL/merge — DEFERRED
+  (genuinely needs two federated NC instances). The publication-visibility half
+  is verified at the RBAC-gate layer by open-data-publishing's `PublishGateRbacTest`
+  (public read iff `publicatiedatum<=now`) — the same gate federation reads from.
+- [x] 6.2 `docs/GOVERNMENT-FEATURES.md` F-06 — the OpenCatalogi-runtime
+  requirement stands; the prior "OR predicate-gap blocker" note is stale (the
+  publication leg is built on the RBAC `publicatiedatum<=$now` gate) and is
+  removed in the docs sync.
+- [x] 6.3 hydra gates green; PHPUnit 194 (incl. the federation publish-leg
+  delegation tests).
 
 ## Acceptance criteria
 
@@ -90,9 +100,11 @@
   no outbound federation request (degrade path built + tested).
 - [x] Empty `local_federation_hosts` blocks all private/loopback targets; a
   populated allowlist permits exactly the listed hosts (built + tested).
-- [~] A peer can discover/subscribe/pull only published entries — DEFERRED
-  (blocked on the OR `@self.published` gap; scaffolding + provenance guard in
-  place).
+- [x] Only published entries are exposed to anonymous federation reads — BUILT:
+  the `publicatiedatum<=$now` public RBAC gate on the publishable schemas, set
+  via `FederationService::publishEntryForFederation()` → `PublicationService`.
+  Live cross-instance discover/subscribe/PULL stays deferred (two-instance
+  testbed), with the provenance/read-only guard already in place.
 - [~] Peer-sourced entries are attributed + read-only (403 on write) + marked
   stale — the read-only detection primitive is built + tested; the live
   enforcement + staleness land with the pull leg.
