@@ -373,6 +373,31 @@ class Application extends App implements IBootstrap
                 }
                 );
 
+        // Register the anonymous-registration intake service (queues submissions
+        // as registratiestatus=pending, no publicatiedatum — invisible until approved).
+        $context->registerService(
+                \OCA\SoftwareCatalog\Service\IntakeService::class,
+                function ($container) {
+                    return new \OCA\SoftwareCatalog\Service\IntakeService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
+        // Register the registration moderation/approval-queue service.
+        $context->registerService(
+                \OCA\SoftwareCatalog\Service\ModerationService::class,
+                function ($container) {
+                    return new \OCA\SoftwareCatalog\Service\ModerationService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
         // Register module version service (creates default 1.0.0 version for new modules).
         $context->registerService(
                 ModuleVersionService::class,
