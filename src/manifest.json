@@ -92,14 +92,16 @@
 			"route": "/",
 			"type": "custom",
 			"title": "Dashboard",
-			"component": "DashboardCustomView"
+			"component": "DashboardCustomView",
+			"_note": "Bespoke landing dashboard: composes CnDashboardPage with hand-authored named widget slots (a management info-box with deep-links and two custom statistics tables that render per-object-type counts with inline navigation). No standard dashboard config expresses these non-KPI slot bodies."
 		},
 		{
 			"id": "Organisaties",
 			"route": "/organisaties",
 			"type": "custom",
 			"title": "Organisation relationships",
-			"component": "OrganisatieIndexView"
+			"component": "OrganisatieIndexView",
+			"_note": "Card-grid index of organisations using the bespoke OrganisatieCard (inline contactpersoon toggle and multi-view orchestration). Cannot be a standard type:index until CnIndexPage exposes a cardComponent config field (tracked as Open Question 2 in the manifest v1 design doc)."
 		},
 		{
 			"id": "Contactpersonen",
@@ -375,7 +377,8 @@
 			"route": "/compliance-matrix",
 			"type": "custom",
 			"title": "Compliance matrix",
-			"component": "ComplianceMatrixView"
+			"component": "ComplianceMatrixView",
+			"_note": "Filter-first cross-tab grid of modules (rows) against user-selected GEMMA standard versions (columns), where each cell is a tri-state (verified-with-evidence / claimed / none). No standard index or detail type expresses a two-dimensional matrix whose columns are chosen at runtime."
 		},
 		{
 			"id": "Moduleversies",
@@ -433,7 +436,8 @@
 			"route": "/portfolio-roadmap",
 			"type": "custom",
 			"title": "Portfolio roadmap",
-			"component": "LifecycleRoadmapView"
+			"component": "LifecycleRoadmapView",
+			"_note": "Per-organisation roadmap: the selected organisation's applications-in-use grouped into derived lifecycle-phase swimlanes (Onbekend first) and ordered within each lane by nearest urgency (end-of-support / phase-out / planned replacement). No standard index/roadmap type derives and groups by computed lifecycle phase."
 		},
 		{
 			"id": "FeaturesRoadmap",
