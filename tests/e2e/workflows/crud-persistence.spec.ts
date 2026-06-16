@@ -22,11 +22,14 @@
  *     COLUMNS both work in this deployed shell, so it is the canonical
  *     UI-driven CRUD subject.
  *   - Component (`module` schema) + Moduleversie — persistence proven at the
- *     OpenRegister data layer (real create/find/update/delete verbs). Their
- *     UI-create paths are NOT headlessly drivable here (the Component schema
- *     has no manifest index page; the Moduleversie create form is blocked by a
- *     `maxLength: null` validation bug), so the UI legs are documented
- *     test.fixme. Organisatie has its own spec (organisatie-crud.spec.ts).
+ *     OpenRegister data layer (real create/find/update/delete verbs) AND the
+ *     Moduleversie UI-create leg is now driven end-to-end through the manifest
+ *     create modal (was previously blocked by a `maxLength: null` validation
+ *     bug on the `versie`/`pakketversie_beschrijving`/`beschrijvingLang` string
+ *     properties — fixed in the register schema, see the UI-create test below).
+ *     The Component schema still has no manifest index page, so its UI-create
+ *     leg is data-layer only. Organisatie has its own spec
+ *     (organisatie-crud.spec.ts).
  *
  * NOTE on other index pages: Contract (schema 41) requires object-reference
  * fields (`dienst`/`gebruik`) with no guaranteed referents; Reviews/Compliance
@@ -312,15 +315,18 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		expect(del.ok()).toBeTruthy()
 	})
 
-	// BUG (deployed nextcloud-vue CnIndexPage form validation): a string schema
-	// property declared with an explicit `maxLength: null` (moduleVersie.versie,
-	// pakketversie_beschrijving, beschrijvingLang) makes the create form render
-	// "Maximum null characters." for any typed value and refuse to save — the
-	// "Create" click never closes the dialog, so a Moduleversie can NOT be
-	// created through the UI. (Creation via the OR API succeeds — see the
-	// data-layer test above — so it is a FORM-VALIDATION defect, not a backend
-	// one.) Re-enable this UI leg once the validator treats `maxLength: null` as
-	// "no maximum".
+	// REGRESSION GUARD (was a real bug): the moduleVersie create modal used to
+	// refuse to save because the `versie` / `pakketversie_beschrijving` /
+	// `beschrijvingLang` string properties were declared with an explicit
+	// `maxLength: null`. The CnIndexPage form validator rendered "Maximum null
+	// characters." for any typed value and blocked the "Create" click, so a
+	// Moduleversie could not be created through the UI (a direct OR API create of
+	// the same payload persisted fine, and the contactpersoon manifest create
+	// worked — an isolated create-flow defect on the moduleVersie surface).
+	// FIX: removed the `maxLength: null` declarations from those string
+	// properties in lib/Settings/softwarecatalogus_register.json (absent = "no
+	// maximum", matching the working contactpersoon string fields). This test
+	// drives the real manifest create modal and asserts the new version persists.
 	test('UI create -> module-version row appears', async ({ page }) => {
 		await navClickTo(page, 'Module versions')
 		const main = indexMain(page)
